@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowUpRight, Search, Plus, Coffee } from 'lucide-react';
+import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 export type RecetaCatalogo = { id: string; nombre: string; activo: boolean };
 export function CatalogoRecetas({
@@ -39,14 +39,24 @@ export function CatalogoRecetas({
               : 'Organiza las preparaciones que comparten tus productos.'}
           </p>
         </div>
-        {editable && (
-          <Button asChild size="lg">
-            <Link href={`${ruta}/${tipo === 'producto' ? 'nuevo' : 'nueva'}`}>
-              <Plus aria-hidden="true" />
-              Crear {tipo === 'producto' ? 'producto' : 'sub-receta'}
-            </Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {tipo === 'producto' && (
+            <Button asChild variant="outline" size="lg">
+              <Link href="/productos/calculadora">
+                <Calculator aria-hidden="true" />
+                Calculadora de promociones
+              </Link>
+            </Button>
+          )}
+          {editable && (
+            <Button asChild size="lg">
+              <Link href={`${ruta}/${tipo === 'producto' ? 'nuevo' : 'nueva'}`}>
+                <Plus aria-hidden="true" />
+                Crear {tipo === 'producto' ? 'producto' : 'sub-receta'}
+              </Link>
+            </Button>
+          )}
+        </div>
       </header>
       <section className="panel !p-0 overflow-hidden" aria-label="Catálogo">
         <div className="flex flex-col sm:flex-row gap-4 p-5 border-b">
