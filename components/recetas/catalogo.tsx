@@ -4,24 +4,54 @@ import { useState } from 'react';
 import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Encabezado } from '@/components/portal/piezas';
+import { dinero } from '@/lib/portal/consultas';
+export type PreciosTamano = { tamano: string; costo: number | null; canales: Record<string, number | null> };
 export type RecetaCatalogo = {
   id: string;
   nombre: string;
   activo: boolean;
   categoria?: string;
   detalle?: string;
+  precios?: PreciosTamano[];
 };
+// Solo para mostrar: los textos de productos se leen en mayúsculas sin cambiar lo guardado.
+const texto = (tipo: 'producto' | 'subreceta', s: string) =>
+  tipo === 'producto' ? s.toLocaleUpperCase('es') : s;
+function PorTamano({
+  precios,
+  valor,
+}: {
+  precios: PreciosTamano[];
+  valor: (p: PreciosTamano) => number | null;
+}) {
+  if (!precios.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <ul className="space-y-0.5">
+      {precios.map((p) => (
+        <li key={p.tamano} className="flex items-baseline justify-end gap-2 whitespace-nowrap">
+          {precios.length > 1 && (
+            <span className="text-[11px] text-muted-foreground">{p.tamano.toLocaleUpperCase('es')}</span>
+          )}
+          <span className="tabular">{valor(p) === null ? '—' : dinero(valor(p))}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 export function CatalogoRecetas({
   filas,
   tipo,
   editable,
+  canales = [],
   consulta = '',
 }: {
   filas: RecetaCatalogo[];
   tipo: 'producto' | 'subreceta';
   editable: boolean;
+  canales?: { id: string; nombre: string }[];
   consulta?: string;
 }) {
+  const conPrecios = tipo === 'producto' && canales.length > 0;
   const [buscar, setBuscar] = useState(consulta);
   const [estado, setEstado] = useState('todos');
   const [pagina, setPagina] = useState(0);
@@ -109,7 +139,8 @@ export function CatalogoRecetas({
             </select>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        {/* relative: los textos sr-only (absolutos) quedan dentro del scroll y no ensanchan la página. */}
+        <div className="relative overflow-x-auto">
           <table className="tabla [&_td]:py-2">
             <caption className="sr-only">
               {tipo === 'producto' ? 'Productos' : 'Sub-recetas'} y su estado
@@ -120,6 +151,18 @@ export function CatalogoRecetas({
                 <th scope="col" className="hidden md:table-cell">
                   {tipo === 'producto' ? 'Categoría' : 'Rendimiento'}
                 </th>
+                {conPrecios && (
+                  <>
+                    <th scope="col" className="text-right">
+                      Costo
+                    </th>
+                    {canales.map((c) => (
+                      <th key={c.id} scope="col" className="text-right">
+                        {c.nombre}
+                      </th>
+                    ))}
+                  </>
+                )}
                 <th scope="col" className="w-36">
                   Estado
                 </th>
@@ -136,13 +179,27 @@ export function CatalogoRecetas({
                       href={`${ruta}/${r.id}`}
                       className="inline-flex items-center gap-3 font-medium hover:underline"
                     >
-                      <span className="hidden sm:grid size-8 place-items-center bg-crema-soft rounded-lg text-crema-strong">
+                      <span className="hidden sm:grid size-8 shrink-0 place-items-center bg-crema-soft rounded-lg text-crema-strong">
                         <Coffee size={16} aria-hidden="true" />
                       </span>
-                      {r.nombre}
+                      {texto(tipo, r.nombre)}
                     </Link>
                   </td>
-                  <td className="hidden md:table-cell text-ink-2">{r.categoria ?? r.detalle ?? '—'}</td>
+                  <td className="hidden md:table-cell text-ink-2">
+                    {r.categoria ? texto(tipo, r.categoria) : (r.detalle ?? '—')}
+                  </td>
+                  {conPrecios && (
+                    <>
+                      <td className="text-right text-sm">
+                        <PorTamano precios={r.precios ?? []} valor={(p) => p.costo} />
+                      </td>
+                      {canales.map((c) => (
+                        <td key={c.id} className="text-right text-sm">
+                          <PorTamano precios={r.precios ?? []} valor={(p) => p.canales[c.id] ?? null} />
+                        </td>
+                      ))}
+                    </>
+                  )}
                   <td>
                     <span
                       className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap ${r.activo ? 'bg-ok-soft text-ok' : 'border border-line text-muted-foreground'}`}

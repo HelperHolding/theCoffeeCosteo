@@ -1,5 +1,21 @@
 import { expect, it } from 'vitest';
-import { simularPromocion, type EscenarioPromo } from '../../lib/portal/promociones';
+import { simularPromocion, resumirCombo, type EscenarioPromo } from '../../lib/portal/promociones';
+
+it('un combo suma costos y precios de lista por cantidad; si falta un costo no hay costo', () => {
+  const combo = resumirCombo([
+    { costo: 12.5, precioLista: 55, cantidad: 2 },
+    { costo: 20, precioLista: 70, cantidad: 1 },
+  ]);
+  expect(combo).toEqual({ costo: 45, precioLista: 180, piezas: 3 });
+  expect(resumirCombo([{ costo: 10, precioLista: null, cantidad: 1 }])).toEqual({
+    costo: 10,
+    precioLista: null,
+    piezas: 1,
+  });
+  expect(resumirCombo([{ costo: null, precioLista: 50, cantidad: 1 }]).costo).toBeNull();
+  expect(resumirCombo([{ costo: 10, precioLista: 50, cantidad: 1.5 }]).costo).toBeNull();
+  expect(resumirCombo([]).costo).toBeNull();
+});
 
 const base: EscenarioPromo = {
   costo: 40,

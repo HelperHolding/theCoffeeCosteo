@@ -25,10 +25,25 @@ export function VistaCatalogo() {
         <CatalogoRecetas
           editable
           tipo="producto"
+          canales={[
+            { id: 'm', nombre: 'Mostrador' },
+            { id: 'r', nombre: 'Rappi' },
+            { id: 'a', nombre: 'App propia' },
+          ]}
           filas={Array.from({ length: 31 }, (_, i) => ({
             id: String(i),
             nombre: `${nombres[i % nombres.length]}${i >= 10 ? ` · prueba ${i}` : ''}`,
             activo: i !== 8,
+            categoria: i % 2 ? 'Bebidas calientes' : 'Bakery',
+            precios:
+              i % 3 === 0
+                ? [
+                    { tamano: 'Chica', costo: 12.4 + i, canales: { m: 55, r: 75, a: 55 } },
+                    { tamano: 'Grande', costo: 16.9 + i, canales: { m: 65, r: 89, a: 65 } },
+                  ]
+                : i === 4
+                  ? []
+                  : [{ tamano: 'Único', costo: 9.8 + i, canales: { m: 48, r: 66, a: null } }],
           }))}
         />
       </main>

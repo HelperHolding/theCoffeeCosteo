@@ -34,44 +34,54 @@ export function EditorReceta({
     setDirty(true);
     setD((v) => ({ ...v, ...patch }));
   };
-  const columna = d.tipo === 'producto' ? d.tamanos : [null];
+  // Columnas en el orden del catálogo de tamaños, no en el orden en que se marcaron.
+  const columna =
+    d.tipo === 'producto' ? tamanos.filter((t) => d.tamanos.includes(t.id)).map((t) => t.id) : [null];
   const linea = (i: number, patch: Partial<Borrador['lineas'][number]>) => {
     setDirty(true);
     setD((v) => ({ ...v, lineas: v.lineas.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
   };
+  // Quitar un tamaño solo lo oculta del borrador: sus cantidades se conservan por si se vuelve a marcar
+  // y se descartan al guardar. Sin window.confirm, que algunos navegadores bloquean y deja la casilla fija.
   function cambiarTamano(id: string, checked: boolean) {
-    if (
-      !checked &&
-      !window.confirm(
-        'Al quitar este tamaño se eliminan sus cantidades, precio de lista y precios manuales. ¿Continuar?',
-      )
-    )
-      return;
     update({
       tamanos: checked ? [...d.tamanos, id] : d.tamanos.filter((t) => t !== id),
-      lineas: d.lineas.map((l) => ({
-        ...l,
-        cantidades: checked
-          ? [...l.cantidades, { tamano_id: id, cantidad: 0 }]
-          : l.cantidades.filter((c) => c.tamano_id !== id),
-      })),
+      lineas: checked
+        ? d.lineas.map((l) =>
+            l.cantidades.some((c) => c.tamano_id === id)
+              ? l
+              : { ...l, cantidades: [...l.cantidades, { tamano_id: id, cantidad: 0 }] },
+          )
+        : d.lineas,
     });
   }
+  const tamanosQuitados =
+    d.tipo === 'producto' && inicial.id
+      ? tamanos.filter((t) => inicial.tamanos.includes(t.id) && !d.tamanos.includes(t.id))
+      : [];
   function guardar() {
     setError('');
+    const receta: Borrador = {
+      ...d,
+      nombre: d.nombre.trim(),
+      lineas: d.lineas.map((l, i) => ({
+        ...l,
+        orden: i,
+        cantidades:
+          d.tipo === 'producto'
+            ? l.cantidades.filter((c) => c.tamano_id !== null && d.tamanos.includes(c.tamano_id))
+            : l.cantidades,
+      })),
+    };
     try {
-      validarReceta(d);
+      validarReceta(receta);
     } catch (e) {
       setError((e as Error).message);
       return;
     }
     start(async () => {
       try {
-        const r = await guardarReceta({
-          ...d,
-          nombre: d.nombre.trim(),
-          lineas: d.lineas.map((l, i) => ({ ...l, orden: i })),
-        });
+        const r = await guardarReceta(receta);
         if (r.error) setError(r.error);
         else {
           setDirty(false);
@@ -166,6 +176,12 @@ export function EditorReceta({
               </label>
             ))}
           </div>
+        )}
+        {tamanosQuitados.length > 0 && (
+          <p className="aviso">
+            Al guardar se eliminan las cantidades, el precio de lista y los precios manuales de:{' '}
+            {tamanosQuitados.map((t) => t.nombre).join(', ')}. Vuelve a marcarlo para conservarlos.
+          </p>
         )}
         <div className="overflow-x-auto">
           <table className="tabla">

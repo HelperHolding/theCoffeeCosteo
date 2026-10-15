@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { simularPromocion } from '@/lib/portal/promociones';
+import { Plus, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { simularPromocion, resumirCombo } from '@/lib/portal/promociones';
 import { dinero, porcentaje } from '@/lib/portal/consultas';
 
 export type ProductoSimulacion = {
@@ -33,6 +35,33 @@ export function CalculadoraPromociones({
   const [extra, setExtra] = useState('0');
   const [objetivo, setObjetivo] = useState(String(objetivoDefault));
   const [base, setBase] = useState<'con-iva' | 'sin-iva'>('sin-iva');
+  const [modo, setModo] = useState<'producto' | 'combo'>('producto');
+  const [combo, setCombo] = useState<{ producto: string; cantidad: string }[]>([
+    { producto: '', cantidad: '1' },
+    { producto: '', cantidad: '1' },
+  ]);
+  const esCombo = modo === 'combo';
+  const lineasCombo = combo.map((l) => {
+    const p = productos.find((p) => p.id === l.producto);
+    return {
+      ...l,
+      p,
+      costo: p ? p.costo : null,
+      precioLista: p ? p.precioLista : null,
+      cantidadNum: Number(l.cantidad),
+    };
+  });
+  const resumen = resumirCombo(
+    lineasCombo.map((l) => ({ costo: l.costo, precioLista: l.precioLista, cantidad: l.cantidadNum })),
+  );
+  const comboListo = lineasCombo.every((l) => l.p) && resumen.costo !== null;
+  const cambiarCombo = (i: number, patch: Partial<(typeof combo)[number]>) =>
+    setCombo(combo.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  // En combo, el precio sigue la suma de precios de lista hasta que se captura uno propio.
+  const [precioCombo, setPrecioCombo] = useState<string | null>(null);
+  const precioEfectivo = esCombo
+    ? (precioCombo ?? (comboListo && resumen.precioLista !== null ? String(resumen.precioLista) : ''))
+    : precio;
 
   const elegirProducto = (id: string) => {
     setProducto(id);
@@ -50,14 +79,7 @@ export function CalculadoraPromociones({
     }
   };
 
-  const campos: {
-    nombre: string;
-    valor: string;
-    cambiar: (v: string) => void;
-    min?: number;
-    max?: number;
-    step: string;
-  }[] = [
+  const camposProducto = [
     { nombre: 'Costo por unidad, sin IVA', valor: costo, cambiar: setCosto, min: 0, step: '0.0001' },
     {
       nombre: 'Unidades del producto en la promoción',
@@ -66,10 +88,20 @@ export function CalculadoraPromociones({
       min: 1,
       step: '1',
     },
+  ];
+  const campos: {
+    nombre: string;
+    valor: string;
+    cambiar: (v: string) => void;
+    min?: number;
+    max?: number;
+    step: string;
+  }[] = [
+    ...(esCombo ? [] : camposProducto),
     {
-      nombre: 'Precio total de la promoción, con IVA',
-      valor: precio,
-      cambiar: setPrecio,
+      nombre: esCombo ? 'Precio total del combo, con IVA' : 'Precio total de la promoción, con IVA',
+      valor: precioEfectivo,
+      cambiar: esCombo ? setPrecioCombo : setPrecio,
       min: 0.01,
       step: '0.01',
     },
@@ -100,13 +132,14 @@ export function CalculadoraPromociones({
       step: '0.01',
     },
   ];
-  const incompleto = campos.some((c) => c.valor.trim() === '');
+  const incompleto = campos.some((c) => c.valor.trim() === '') || (esCombo && !comboListo);
   const r = incompleto
     ? null
     : simularPromocion({
-        costo: Number(costo),
-        unidades: Number(unidades),
-        precio: Number(precio),
+        // Un combo se simula como una sola unidad con el costo total de sus productos.
+        costo: esCombo ? resumen.costo! : Number(costo),
+        unidades: esCombo ? 1 : Number(unidades),
+        precio: Number(precioEfectivo),
         descuento: Number(descuento),
         iva: Number(iva),
         comision: Number(comision),
@@ -127,18 +160,114 @@ export function CalculadoraPromociones({
       </div>
       <div className="grid lg:grid-cols-[1fr_1fr] gap-6">
         <div className="space-y-4">
-          <label>
-            Producto de referencia
-            <select value={producto} onChange={(e) => elegirProducto(e.target.value)}>
-              <option value="">Captura manual / otro producto</option>
-              {productos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                  {p.costo === null ? ' · sin costo' : ''}
-                </option>
+          <div role="radiogroup" aria-label="Tipo de promoción" className="flex flex-wrap gap-2">
+            {(
+              [
+                ['producto', 'Un producto'],
+                ['combo', 'Combo de varios productos'],
+              ] as const
+            ).map(([valor, etiqueta]) => (
+              <Button
+                key={valor}
+                type="button"
+                role="radio"
+                aria-checked={modo === valor}
+                variant={modo === valor ? 'accent' : 'outline'}
+                size="sm"
+                onClick={() => setModo(valor)}
+              >
+                {etiqueta}
+              </Button>
+            ))}
+          </div>
+          {esCombo ? (
+            <fieldset className="space-y-3 rounded-xl border border-line p-4">
+              <legend className="px-1 text-sm font-semibold">Productos del combo</legend>
+              {lineasCombo.map((l, i) => (
+                <div key={i} className="grid grid-cols-[minmax(0,1fr)_5.5rem_auto] items-end gap-2">
+                  <label>
+                    <span className="sr-only">Producto {i + 1} del combo</span>
+                    <select
+                      aria-label={`Producto ${i + 1} del combo`}
+                      value={l.producto}
+                      onChange={(e) => cambiarCombo(i, { producto: e.target.value })}
+                    >
+                      <option value="">Seleccionar producto</option>
+                      {productos.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}
+                          {p.costo === null ? ' · sin costo' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span className="sr-only">Cantidad del producto {i + 1}</span>
+                    <input
+                      aria-label={`Cantidad del producto ${i + 1}`}
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      step="1"
+                      value={l.cantidad}
+                      onChange={(e) => cambiarCombo(i, { cantidad: e.target.value })}
+                    />
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Quitar producto ${i + 1} del combo`}
+                    disabled={combo.length <= 2}
+                    onClick={() => setCombo(combo.filter((_, j) => j !== i))}
+                  >
+                    <X aria-hidden="true" />
+                  </Button>
+                  {l.p && (
+                    <p className="col-span-3 -mt-1 text-xs text-muted-foreground">
+                      Costo {l.costo === null ? 'sin registrar' : dinero(l.costo)} · Precio de lista{' '}
+                      {dinero(l.precioLista)}
+                    </p>
+                  )}
+                </div>
               ))}
-            </select>
-          </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCombo([...combo, { producto: '', cantidad: '1' }])}
+              >
+                <Plus aria-hidden="true" />
+                Agregar producto
+              </Button>
+              <dl className="grid grid-cols-2 gap-2 border-t border-line pt-3 text-sm">
+                <dt className="text-muted-foreground">Costo del combo, sin IVA</dt>
+                <dd className="text-right font-semibold numero">
+                  {resumen.costo === null ? '—' : dinero(resumen.costo)}
+                </dd>
+                <dt className="text-muted-foreground">Suma de precios de lista</dt>
+                <dd className="text-right font-semibold numero">
+                  {resumen.precioLista === null ? '—' : dinero(resumen.precioLista)}
+                </dd>
+              </dl>
+              {lineasCombo.some((l) => l.p && l.costo === null) && (
+                <p className="aviso">Un producto del combo no tiene costo registrado; no se puede simular.</p>
+              )}
+            </fieldset>
+          ) : (
+            <label>
+              Producto de referencia
+              <select value={producto} onChange={(e) => elegirProducto(e.target.value)}>
+                <option value="">Captura manual / otro producto</option>
+                {productos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                    {p.costo === null ? ' · sin costo' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             Canal de referencia
             <select value={canal} onChange={(e) => elegirCanal(e.target.value)}>
@@ -200,6 +329,9 @@ export function CalculadoraPromociones({
               <dl className="divide-y rounded-lg border">
                 {[
                   ['Cobro al cliente', dinero(r.cobro)],
+                  ...(esCombo && resumen.precioLista !== null
+                    ? [['Ahorro para el cliente vs. precios de lista', dinero(resumen.precioLista - r.cobro)]]
+                    : []),
                   ['Venta sin IVA', dinero(r.neto)],
                   ['Costo de productos', dinero(r.costo)],
                   ['Margen bruto', `${dinero(r.bruto)} · ${porcentaje(r.margenBruto)}`],
@@ -225,15 +357,17 @@ export function CalculadoraPromociones({
                 ))}
               </dl>
               <p className="text-xs text-muted-foreground">
-                Los precios sugeridos son el total con IVA antes de aplicar el descuento indicado. Para un
-                combo mixto, captura manualmente el costo total y usa una unidad.
+                Los precios sugeridos son el total con IVA antes de aplicar el descuento indicado.
+                {esCombo && ' En combo, el costo es la suma de los costos oficiales de sus productos.'}
               </p>
             </>
           ) : (
             <p className="aviso">
-              {incompleto
-                ? 'Completa costo y precio para ver el escenario.'
-                : 'Revisa los importes: cantidades enteras positivas y porcentajes de descuento, comisión y objetivo menores a 100 %.'}
+              {esCombo && !comboListo
+                ? 'Elige los productos del combo con cantidades enteras positivas.'
+                : incompleto
+                  ? 'Completa costo y precio para ver el escenario.'
+                  : 'Revisa los importes: cantidades enteras positivas y porcentajes de descuento, comisión y objetivo menores a 100 %.'}
             </p>
           )}
           <p className="text-xs text-muted-foreground border-t pt-4">

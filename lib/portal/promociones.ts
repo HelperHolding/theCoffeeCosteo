@@ -10,6 +10,25 @@ export type EscenarioPromo = {
   objetivo: number;
 };
 
+export type LineaCombo = { costo: number | null; precioLista: number | null; cantidad: number };
+
+/**
+ * Suma un combo de varios productos. El costo total es null si falta el costo de algún producto
+ * o una cantidad no es entera positiva; el precio de lista sumado es null si alguno no tiene precio.
+ */
+export function resumirCombo(lineas: LineaCombo[]) {
+  const validas = lineas.length > 0 && lineas.every((l) => Number.isInteger(l.cantidad) && l.cantidad > 0);
+  const suma = (valor: (l: LineaCombo) => number | null) =>
+    validas && lineas.every((l) => valor(l) !== null)
+      ? lineas.reduce((n, l) => n + valor(l)! * l.cantidad, 0)
+      : null;
+  return {
+    costo: suma((l) => l.costo),
+    precioLista: suma((l) => l.precioLista),
+    piezas: validas ? lineas.reduce((n, l) => n + l.cantidad, 0) : 0,
+  };
+}
+
 /** Todos los cálculos conservan precisión; se redondea solo para mostrar. */
 export function simularPromocion(e: EscenarioPromo) {
   if (
