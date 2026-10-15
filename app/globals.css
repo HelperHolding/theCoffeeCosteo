@@ -1,103 +1,211 @@
 @import 'tailwindcss';
 @theme inline {
-  --color-primary: #000000;
-  --color-primary-foreground: #fff;
-  --color-background: #ffffff;
-  --color-foreground: #171717;
-  --color-border: #dedede;
-  --color-muted: #f3f3f3;
-  --color-muted-foreground: #666666;
-  --color-popover: #fff;
-  --color-popover-foreground: #171717;
-  --color-accent: #ededed;
-  --color-accent-foreground: #000000;
-  --color-ring: #000000;
-  --radius-md: 0.5rem;
+  /* Marca: minimalismo cálido. Tinta y papel; crema solo como acento. */
+  --color-ink: #111111;
+  --color-ink-2: #2b2926;
+  --color-paper: #f6f4ef;
+  --color-surface: #ffffff;
+  --color-surface-2: #efece5;
+  --color-line: #e3ded4;
+  --color-line-strong: #cfc8ba;
+  --color-crema: #a8774a;
+  --color-crema-strong: #8c5f36;
+  --color-crema-soft: #f3e6d6;
+  --color-ok: #2f7a4f;
+  --color-ok-soft: #e3f1e8;
+  --color-warn: #96600f;
+  --color-warn-soft: #fbefd9;
+  --color-bad: #b3362b;
+  --color-bad-soft: #fbe5e2;
+
+  /* Alias que usan los componentes existentes */
+  --color-primary: var(--color-ink);
+  --color-primary-foreground: #ffffff;
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-border: var(--color-line);
+  --color-muted: var(--color-surface-2);
+  --color-muted-foreground: #6b6560;
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-accent: var(--color-surface-2);
+  --color-accent-foreground: var(--color-ink);
+  --color-secondary: var(--color-surface);
+  --color-secondary-foreground: var(--color-ink);
+  --color-destructive: var(--color-bad);
+  --color-ring: var(--color-crema);
+
+  --font-sans: var(--font-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-titulo), var(--font-texto), ui-sans-serif, sans-serif;
+
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --shadow-card: 0 1px 2px rgb(17 17 17 / 0.04), 0 2px 8px -2px rgb(17 17 17 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(17 17 17 / 0.05), 0 12px 24px -8px rgb(17 17 17 / 0.14);
 }
 @layer base {
   fieldset {
     min-width: 0;
   }
   * {
-    border-color: #dedede;
+    border-color: var(--color-line);
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
   }
   body {
-    background: #ffffff;
-    color: #171717;
-    font-family: Arial, Helvetica, sans-serif;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
     margin: 0;
   }
-  input,
+  input:not([type='checkbox']):not([type='radio']),
   select,
   textarea {
-    border: 1px solid #bfbfbf;
-    border-radius: 6px;
-    padding: 0.65rem;
-    background: white;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    background: var(--color-surface);
     width: 100%;
+    font-size: 0.9rem;
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+  }
+  input:not([type='checkbox']):not([type='radio']):hover,
+  select:hover,
+  textarea:hover {
+    border-color: #b5ad9d;
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--color-crema);
+    box-shadow: 0 0 0 3px rgb(168 119 74 / 0.18);
+  }
+  input[type='checkbox'] {
+    accent-color: var(--color-ink);
+    width: 1rem;
+    height: 1rem;
   }
   label {
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    color: var(--color-ink-2);
   }
   label > input,
-  label > select {
+  label > select,
+  label > textarea {
     margin-top: 0.35rem;
+    font-weight: 400;
   }
   button {
     cursor: pointer;
   }
   button:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: 0.5;
   }
   a {
     text-underline-offset: 4px;
   }
   :focus-visible {
-    outline: 3px solid #000000;
-    outline-offset: 3px;
+    outline: 2px solid var(--color-crema);
+    outline-offset: 2px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 @layer components {
   .panel {
-    border: 1px solid #dedede;
-    border-radius: 12px;
-    background: white;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
     padding: 1.5rem;
+    box-shadow: var(--shadow-card);
   }
   .aviso {
-    background: #fff4d9;
-    color: #755318;
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--color-warn-soft);
+    color: var(--color-warn);
+    border: 1px solid #efd9ad;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
   }
   .error {
-    background: #fff0ee;
-    color: #9b3128;
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--color-bad-soft);
+    color: var(--color-bad);
+    border: 1px solid #f1c6c0;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+  }
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-muted-foreground);
   }
   .tabla {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.875rem;
   }
   .tabla th {
-    background: #f5f5f5;
-    color: #555555;
+    background: var(--color-surface-2);
+    color: #5c5650;
     text-align: left;
     font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
   }
   .tabla td,
   .tabla th {
-    padding: 0.8rem;
-    border-bottom: 1px solid #e5e5e5;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .tabla tbody tr {
+    transition: background-color 120ms;
+  }
+  .tabla tbody tr:hover {
+    background: #faf8f4;
+  }
+  .tabla tbody tr:last-child td {
+    border-bottom: 0;
   }
   .numero {
     font-variant-numeric: tabular-nums;
     text-align: right;
+    white-space: nowrap;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
   .chat-respuesta p,
   .chat-respuesta ul,
@@ -117,26 +225,19 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
   }
   .chat-respuesta th,
   .chat-respuesta td {
-    padding: 0.5rem;
-    border: 1px solid #e5e5e5;
+    padding: 0.45rem 0.55rem;
+    border-bottom: 1px solid var(--color-line);
     text-align: left;
   }
   .chat-respuesta th {
-    background: #f5f5f5;
+    background: var(--color-surface-2);
+    font-weight: 600;
   }
   .chat-respuesta {
     overflow-wrap: anywhere;
-  }
-  h1 {
-    font-size: 1.9rem;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-  }
-  h2 {
-    font-size: 1.2rem;
-    font-weight: 600;
   }
 }

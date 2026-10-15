@@ -39,7 +39,7 @@ function Precio({ f, manual, notaInicial = '' }: { f: Resumen; manual: boolean; 
     });
   };
   return (
-    <div className="space-y-3 border rounded-lg p-4">
+    <div className="space-y-3 rounded-xl border border-line bg-paper/50 p-4">
       <label>
         {f.tamano} · {manual ? `${f.canal} manual` : 'Precio de lista'}
         <input type="number" min="0.01" step="any" value={valor} onChange={(e) => setValor(e.target.value)} />
@@ -60,7 +60,7 @@ function Precio({ f, manual, notaInicial = '' }: { f: Resumen; manual: boolean; 
           {error}
         </p>
       )}
-      <Button disabled={pending} onClick={guardar}>
+      <Button variant="accent" size="sm" disabled={pending} onClick={guardar}>
         {pending ? 'Guardando…' : 'Guardar precio'}
       </Button>
     </div>
@@ -78,7 +78,12 @@ export function EditorPrecios({
   if (!editable) return null;
   return (
     <section className="panel space-y-4">
-      <h2>Precios · Finanzas</h2>
+      <div>
+        <h2>Precios · Finanzas</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Precio de lista por tamaño y precios manuales de delivery.
+        </p>
+      </div>
       <div className="grid md:grid-cols-3 gap-4">
         {filas
           .filter((f) => f.canal === 'Mostrador')

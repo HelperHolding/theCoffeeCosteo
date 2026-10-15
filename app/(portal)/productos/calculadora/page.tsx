@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { sesion } from '@/lib/supabase/sesion';
 import { todas } from '@/lib/portal/consultas';
+import { Encabezado } from '@/components/portal/piezas';
 import { CalculadoraPromociones } from '@/components/recetas/calculadora-promociones';
 
 export default async function Calculadora() {
@@ -38,15 +38,11 @@ export default async function Calculadora() {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1>Calculadora de promociones</h1>
-          <p className="text-muted-foreground">Precio, descuento y contribución por promoción.</p>
-        </div>
-        <Link href="/productos" className="text-sm underline underline-offset-4">
-          Volver a productos
-        </Link>
-      </div>
+      <Encabezado
+        area="Análisis"
+        titulo="Calculadora de promociones"
+        descripcion="Precio, descuento y contribución por promoción, con los costos oficiales de cada producto."
+      />
       <CalculadoraPromociones
         productos={opciones}
         canales={canales.map((c) => ({
