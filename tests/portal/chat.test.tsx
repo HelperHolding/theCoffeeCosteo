@@ -21,6 +21,8 @@ vi.mock('@ai-sdk/react', () => ({
     clearError: m.clear,
   }),
 }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
+vi.mock('thinking-orbs', () => ({ ThinkingOrb: () => null }));
 import { ChatPortal } from '../../components/portal/chat';
 beforeEach(() => {
   vi.clearAllMocks();
@@ -37,7 +39,7 @@ it('abre con foco, envía una pregunta y cierra con Escape sin perder el foco', 
   await userEvent.type(campo, 'Costos del café{Enter}');
   expect(m.send).toHaveBeenCalledWith({ text: 'Costos del café' });
   await userEvent.keyboard('{Escape}');
-  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   expect(abrir).toHaveFocus();
 });
 it('muestra tablas y enlaces internos, elimina scripts, imágenes y enlaces externos', async () => {
@@ -53,7 +55,7 @@ it('muestra tablas y enlaces internos, elimina scripts, imágenes y enlaces exte
       ],
     },
   ];
-  render(<ChatPortal />);
+  const { container } = render(<ChatPortal />);
   await userEvent.click(screen.getByRole('button', { name: 'Consultar' }));
   expect(screen.getByRole('table')).toBeVisible();
   expect(screen.getByRole('link', { name: 'Ficha' })).toHaveAttribute(
@@ -61,7 +63,7 @@ it('muestra tablas y enlaces internos, elimina scripts, imágenes y enlaces exte
     '/productos/11111111-1111-4111-8111-111111111111',
   );
   expect(screen.queryByRole('link', { name: 'Fuera' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  expect(container.querySelector('img')).toBeNull();
   await userEvent.click(screen.getByRole('button', { name: 'Nueva conversación' }));
   expect(m.reset).toHaveBeenCalledWith([]);
 });

@@ -199,7 +199,7 @@ export function EditorReceta({
                         }}
                       />
                       {o && !o.activo && (
-                        <p className="text-amber-700 text-xs">Componente inactivo: revisa su reemplazo.</p>
+                        <p className="mt-1 text-xs text-warn">Componente inactivo: revisa su reemplazo.</p>
                       )}
                     </td>
                     <td>{o?.unidad ?? '—'}</td>
@@ -302,7 +302,7 @@ export function EditorReceta({
           Receta activa
         </label>
       </fieldset>
-      <div className="bg-muted p-4 rounded-lg">
+      <div className="rounded-xl border border-dashed border-line-strong bg-paper p-4">
         <p className="text-sm font-semibold">Estimación mientras editas</p>
         {columna.map((t) => {
           const suma = d.lineas.reduce(
@@ -340,7 +340,7 @@ export function EditorReceta({
         </p>
       )}
       {editable && (
-        <Button disabled={pending} onClick={guardar}>
+        <Button variant="accent" size="lg" disabled={pending} onClick={guardar}>
           {pending ? 'Guardando…' : 'Guardar receta completa'}
         </Button>
       )}

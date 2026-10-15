@@ -3,7 +3,14 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-export type RecetaCatalogo = { id: string; nombre: string; activo: boolean };
+import { Encabezado } from '@/components/portal/piezas';
+export type RecetaCatalogo = {
+  id: string;
+  nombre: string;
+  activo: boolean;
+  categoria?: string;
+  detalle?: string;
+};
 export function CatalogoRecetas({
   filas,
   tipo,
@@ -29,36 +36,36 @@ export function CatalogoRecetas({
   const inicio = actual * 25;
   return (
     <>
-      <header className="flex flex-wrap justify-between items-start gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[.2em] text-muted-foreground mb-2">Catálogo de recetas</p>
-          <h1>{tipo === 'producto' ? 'Productos' : 'Sub-recetas'}</h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            {tipo === 'producto'
-              ? 'Consulta y administra las recetas de tu menú.'
-              : 'Organiza las preparaciones que comparten tus productos.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {tipo === 'producto' && (
-            <Button asChild variant="outline" size="lg">
-              <Link href="/productos/calculadora">
-                <Calculator aria-hidden="true" />
-                Calculadora de promociones
-              </Link>
-            </Button>
-          )}
-          {editable && (
-            <Button asChild size="lg">
-              <Link href={`${ruta}/${tipo === 'producto' ? 'nuevo' : 'nueva'}`}>
-                <Plus aria-hidden="true" />
-                Crear {tipo === 'producto' ? 'producto' : 'sub-receta'}
-              </Link>
-            </Button>
-          )}
-        </div>
-      </header>
-      <section className="panel !p-0 overflow-hidden" aria-label="Catálogo">
+      <Encabezado
+        area={tipo === 'producto' ? 'Menú' : 'Menú · Preparaciones'}
+        titulo={tipo === 'producto' ? 'Productos' : 'Sub-recetas'}
+        descripcion={
+          tipo === 'producto'
+            ? 'Consulta y administra las recetas de tu menú.'
+            : 'Organiza las preparaciones que comparten tus productos.'
+        }
+      >
+        {tipo === 'producto' && (
+          <Button asChild variant="outline" size="lg">
+            <Link href="/productos/calculadora">
+              <Calculator aria-hidden="true" />
+              Calculadora de promociones
+            </Link>
+          </Button>
+        )}
+        {editable && (
+          <Button asChild variant="accent" size="lg">
+            <Link href={`${ruta}/${tipo === 'producto' ? 'nuevo' : 'nueva'}`}>
+              <Plus aria-hidden="true" />
+              Crear {tipo === 'producto' ? 'producto' : 'sub-receta'}
+            </Link>
+          </Button>
+        )}
+      </Encabezado>
+      <section
+        className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card"
+        aria-label="Catálogo"
+      >
         <div className="flex flex-col sm:flex-row gap-4 p-5 border-b">
           <div className="flex-1">
             <label htmlFor="buscar-recetas" className="sr-only">
@@ -75,7 +82,7 @@ export function CatalogoRecetas({
                 type="search"
                 value={buscar}
                 placeholder="Buscar por nombre…"
-                className="!pl-10 !rounded-lg"
+                className="!pl-10"
                 onChange={(e) => {
                   setBuscar(e.target.value);
                   setPagina(0);
@@ -110,6 +117,9 @@ export function CatalogoRecetas({
             <thead>
               <tr>
                 <th scope="col">Nombre</th>
+                <th scope="col" className="hidden md:table-cell">
+                  {tipo === 'producto' ? 'Categoría' : 'Rendimiento'}
+                </th>
                 <th scope="col" className="w-36">
                   Estado
                 </th>
@@ -120,25 +130,26 @@ export function CatalogoRecetas({
             </thead>
             <tbody>
               {filtradas.slice(inicio, inicio + 25).map((r) => (
-                <tr key={r.id} className="group hover:bg-muted/50">
+                <tr key={r.id} className="group">
                   <td>
                     <Link
                       href={`${ruta}/${r.id}`}
                       className="inline-flex items-center gap-3 font-medium hover:underline"
                     >
-                      <span className="hidden sm:grid size-7 place-items-center bg-muted rounded-lg text-muted-foreground">
+                      <span className="hidden sm:grid size-8 place-items-center bg-crema-soft rounded-lg text-crema-strong">
                         <Coffee size={16} aria-hidden="true" />
                       </span>
                       {r.nombre}
                     </Link>
                   </td>
+                  <td className="hidden md:table-cell text-ink-2">{r.categoria ?? r.detalle ?? '—'}</td>
                   <td>
                     <span
-                      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap ${r.activo ? 'bg-neutral-100 text-neutral-800' : 'border text-neutral-500'}`}
+                      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap ${r.activo ? 'bg-ok-soft text-ok' : 'border border-line text-muted-foreground'}`}
                     >
                       <span
                         aria-hidden="true"
-                        className={`size-1.5 rounded-full ${r.activo ? 'bg-black' : 'bg-neutral-400'}`}
+                        className={`size-1.5 rounded-full ${r.activo ? 'bg-ok' : 'bg-line-strong'}`}
                       />
                       {r.activo ? 'Activo' : 'Inactivo'}
                     </span>
@@ -165,20 +176,25 @@ export function CatalogoRecetas({
             </p>
           </div>
         )}
-        <footer className="flex flex-wrap items-center justify-between gap-3 p-5 text-sm">
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 text-sm">
           <p role="status" className="text-muted-foreground">
             {filtradas.length
               ? `${inicio + 1}–${Math.min(inicio + 25, filtradas.length)} de ${filtradas.length}`
               : '0 resultados'}
           </p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" disabled={actual === 0} onClick={() => setPagina(actual - 1)}>
+            <Button variant="outline" size="sm" disabled={actual === 0} onClick={() => setPagina(actual - 1)}>
               Anterior
             </Button>
             <span className="text-xs text-muted-foreground">
               {actual + 1} / {paginas}
             </span>
-            <Button variant="outline" disabled={actual + 1 === paginas} onClick={() => setPagina(actual + 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={actual + 1 === paginas}
+              onClick={() => setPagina(actual + 1)}
+            >
               Siguiente
             </Button>
           </div>

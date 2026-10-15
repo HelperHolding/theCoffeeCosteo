@@ -2,6 +2,7 @@ import { sesion } from '@/lib/supabase/sesion';
 import { todas } from '@/lib/portal/consultas';
 import { TablaResumen } from '@/components/portal/tabla-resumen';
 import { AvisoComision } from '@/components/portal/aviso-comision';
+import { Encabezado } from '@/components/portal/piezas';
 export default async function ResumenPage({
   searchParams,
 }: {
@@ -15,10 +16,11 @@ export default async function ResumenPage({
   ]);
   return (
     <>
-      <header>
-        <p className="text-sm text-muted-foreground">Consulta</p>
-        <h1>Resumen de costeo</h1>
-      </header>
+      <Encabezado
+        area="Análisis"
+        titulo="Resumen de costeo"
+        descripcion="Costo, precio y margen de cada producto por tamaño y canal. Ordena por columna o cambia a la vista por producto para comparar canales lado a lado."
+      />
       <AvisoComision pendiente={canales.some((c) => !c.comision_confirmada)} />
       <TablaResumen filas={filas} alertas={alertas} filtros={await searchParams} />
     </>

@@ -1,4 +1,10 @@
 import { Ficha } from '@/components/recetas/ficha';
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
-  return <Ficha tipo="subreceta" id={(await params).id} />;
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  return <Ficha tipo="subreceta" id={(await params).id} tab={(await searchParams).tab} />;
 }

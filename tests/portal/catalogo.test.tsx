@@ -3,7 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import { CatalogoRecetas } from '../../components/recetas/catalogo';
 import { Navegacion } from '../../components/portal/navegacion';
-vi.mock('next/navigation', () => ({ usePathname: () => '/productos/receta-1' }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/productos/receta-1',
+  useSearchParams: () => new URLSearchParams(),
+}));
 it('pagina, filtra desde la segunda página y permite consultar a usuarios sin edición', async () => {
   const filas = Array.from({ length: 30 }, (_, i) => ({
     id: String(i),

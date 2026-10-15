@@ -24,7 +24,10 @@ export async function POST(req: Request) {
   const perfil = await db.from('perfiles').select('activo').eq('user_id', data.user.id).maybeSingle();
   if (perfil.error) return fallo('No se pudo verificar tu cuenta.', 503);
   if (!perfil.data?.activo) return fallo('Se requiere una cuenta activa.', 403);
-  if (!process.env.ANTHROPIC_API_KEY) return fallo('El asistente aún no está disponible.', 503);
+  // Modo demo solo en local: sin clave, fuera de producción y con CHAT_DEMO=1.
+  const demo =
+    process.env.CHAT_DEMO === '1' && process.env.NODE_ENV !== 'production' && !process.env.ANTHROPIC_API_KEY;
+  if (!process.env.ANTHROPIC_API_KEY && !demo) return fallo('El asistente aún no está disponible.', 503);
   let messages;
   try {
     if (Number(req.headers.get('content-length')) > 100000)
@@ -60,9 +63,11 @@ export async function POST(req: Request) {
   try {
     const signal = AbortSignal.any([req.signal, AbortSignal.timeout(55000)]);
     const resultado = streamText({
-      model: createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })(
-        process.env.CHAT_MODEL || 'claude-sonnet-5-5',
-      ),
+      model: demo
+        ? (await import('@/lib/chat/demo')).modeloDemo()
+        : createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })(
+            process.env.CHAT_MODEL || 'claude-sonnet-5-5',
+          ),
       instructions: instrucciones,
       messages,
       tools: herramientasChat(db, signal),
