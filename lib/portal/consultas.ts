@@ -21,6 +21,8 @@ export async function todas<T extends Fuente>(db: Db, tabla: T, orden: string): 
     if (pagina.length < 500) return filas;
   }
 }
+// Solo para mostrar: los textos que vienen de la base se leen en mayúsculas sin cambiar lo guardado.
+export const mayusculas = (s: string) => s.toLocaleUpperCase('es');
 export const dinero = (n: number | null) =>
   n === null
     ? 'Sin precio'

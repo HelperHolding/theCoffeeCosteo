@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search, X, Rows3, LayoutGrid } from 'lucide-react';
 import type { Resumen, Alerta } from '@/lib/supabase/database.types';
-import { dinero, porcentaje } from '@/lib/portal/consultas';
+import { dinero, porcentaje, mayusculas } from '@/lib/portal/consultas';
 import { Button } from '@/components/ui/button';
 import { Pill, estadoMargen, Insignia, Vacio } from '@/components/portal/piezas';
 type Fila = Resumen & { alerta: string | null };
@@ -25,21 +25,21 @@ const columns: ColumnDef<Fila>[] = [
         className="font-semibold hover:text-crema-strong hover:underline"
         href={`/productos/${row.original.producto_id}`}
       >
-        {row.original.producto}
+        {mayusculas(row.original.producto)}
       </Link>
     ),
   },
   {
     accessorKey: 'categoria',
     header: 'Categoría',
-    cell: ({ getValue }) => <span className="text-ink-2">{getValue<string>()}</span>,
+    cell: ({ getValue }) => <span className="text-ink-2">{mayusculas(getValue<string>())}</span>,
   },
   {
     accessorKey: 'tamano',
     header: 'Tamaño',
-    cell: ({ getValue }) => <Insignia>{getValue<string>()}</Insignia>,
+    cell: ({ getValue }) => <Insignia>{mayusculas(getValue<string>())}</Insignia>,
   },
-  { accessorKey: 'canal', header: 'Canal' },
+  { accessorKey: 'canal', header: 'Canal', cell: ({ getValue }) => mayusculas(getValue<string>()) },
   {
     accessorKey: 'costo',
     header: 'Costo',
@@ -203,7 +203,9 @@ export function TablaResumen({
               >
                 <option value="">Todos</option>
                 {[...new Set(valores)].map((v) => (
-                  <option key={v}>{v}</option>
+                  <option key={v} value={v}>
+                    {clave === 'alerta' ? v : mayusculas(v)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -393,7 +395,7 @@ function VistaProducto({ data }: { data: Fila[] }) {
               <th className="text-right">Costo</th>
               {canales.map((c) => (
                 <th key={c} className="text-center">
-                  {c}
+                  {mayusculas(c)}
                 </th>
               ))}
             </tr>
@@ -406,12 +408,12 @@ function VistaProducto({ data }: { data: Fila[] }) {
                     className="font-semibold hover:text-crema-strong hover:underline"
                     href={`/productos/${xs[0].producto_id}`}
                   >
-                    {xs[0].producto}
+                    {mayusculas(xs[0].producto)}
                   </Link>
-                  <span className="block text-xs text-muted-foreground">{xs[0].categoria}</span>
+                  <span className="block text-xs text-muted-foreground">{mayusculas(xs[0].categoria)}</span>
                 </td>
                 <td>
-                  <Insignia>{xs[0].tamano}</Insignia>
+                  <Insignia>{mayusculas(xs[0].tamano)}</Insignia>
                 </td>
                 <td className="numero">{dinero(xs[0].costo)}</td>
                 {canales.map((c) => {

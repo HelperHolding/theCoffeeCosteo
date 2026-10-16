@@ -31,7 +31,15 @@ it('incluye costo cero/sin precio, pagina todos los resultados y mantiene filtro
   render(<TablaResumen filas={filas} alertas={alertas} />);
   expect(screen.getAllByText('Sin precio')).toHaveLength(25);
   await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
-  expect(screen.getByRole('link', { name: 'Producto 29' })).toBeVisible();
+  expect(screen.getByRole('link', { name: 'PRODUCTO 29' })).toBeVisible();
+  const [fila] = screen.getAllByRole('row').slice(1);
+  expect(fila).toHaveTextContent('PRODUCTO 25BEBIDASÚNICOMOSTRADOR');
+  // Los filtros muestran mayúsculas pero filtran con el valor original de la base.
+  const categoria = screen.getByRole('option', { name: 'BEBIDAS' });
+  expect(categoria).toHaveValue('Bebidas');
+  await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'Bebidas');
+  expect(window.location.search).toContain('categoria=Bebidas');
+  expect(screen.getByRole('option', { name: 'Falta precio de lista' })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Buscar producto'), { target: { value: 'Producto 29' } });
   await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(1));
   expect(window.location.search).toContain('buscar=Producto+29');

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Encabezado } from '@/components/portal/piezas';
-import { dinero } from '@/lib/portal/consultas';
+import { dinero, mayusculas } from '@/lib/portal/consultas';
 export type PreciosTamano = { tamano: string; costo: number | null; canales: Record<string, number | null> };
 export type RecetaCatalogo = {
   id: string;
@@ -14,9 +14,7 @@ export type RecetaCatalogo = {
   detalle?: string;
   precios?: PreciosTamano[];
 };
-// Solo para mostrar: los textos de productos se leen en mayúsculas sin cambiar lo guardado.
-const texto = (tipo: 'producto' | 'subreceta', s: string) =>
-  tipo === 'producto' ? s.toLocaleUpperCase('es') : s;
+const texto = (tipo: 'producto' | 'subreceta', s: string) => (tipo === 'producto' ? mayusculas(s) : s);
 function PorTamano({
   precios,
   valor,
@@ -30,7 +28,7 @@ function PorTamano({
       {precios.map((p) => (
         <li key={p.tamano} className="flex items-baseline justify-end gap-2 whitespace-nowrap">
           {precios.length > 1 && (
-            <span className="text-[11px] text-muted-foreground">{p.tamano.toLocaleUpperCase('es')}</span>
+            <span className="text-[11px] text-muted-foreground">{mayusculas(p.tamano)}</span>
           )}
           <span className="tabular">{valor(p) === null ? '—' : dinero(valor(p))}</span>
         </li>
