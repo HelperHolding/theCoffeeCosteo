@@ -83,3 +83,37 @@ it('prueba el precio Rappi con costo, IVA, comisión sobre cobro y envase config
   await userEvent.selectOptions(screen.getByLabelText('Producto de referencia'), 'americano:u');
   expect(screen.getByLabelText('Márgenes de la simulación')).toBeVisible();
 });
+
+it('compara cuatro márgenes por canal en producto y combo al mismo precio', async () => {
+  render(
+    <CalculadoraPromociones
+      productos={productos}
+      canales={[
+        { id: 'mostrador', nombre: 'Mostrador', comisionPct: 0, costoEnvase: 0 },
+        { id: 'rappi', nombre: 'Rappi', comisionPct: 20, costoEnvase: 5 },
+      ]}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  await userEvent.selectOptions(screen.getByLabelText('Producto de referencia'), 'americano:u');
+  const precio = screen.getByLabelText('Precio total de la promoción, con IVA');
+  await userEvent.clear(precio);
+  await userEvent.type(precio, '116');
+  expect(screen.getByLabelText('Márgenes de la simulación').querySelectorAll('dt')).toHaveLength(4);
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen con comisión Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen bruto Rappi').nextSibling).toHaveTextContent('$85.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$61.80');
+  await userEvent.selectOptions(screen.getByLabelText('Canal de referencia'), 'rappi');
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$61.80');
+  await userEvent.click(screen.getByRole('radio', { name: 'Combo de varios productos' }));
+  await userEvent.selectOptions(screen.getByLabelText('Producto 1 del combo'), 'americano:u');
+  await userEvent.selectOptions(screen.getByLabelText('Producto 2 del combo'), 'croissant:u');
+  const precioCombo = screen.getByLabelText('Precio total del combo, con IVA');
+  await userEvent.clear(precioCombo);
+  await userEvent.type(precioCombo, '116');
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$75.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$46.80');
+});
