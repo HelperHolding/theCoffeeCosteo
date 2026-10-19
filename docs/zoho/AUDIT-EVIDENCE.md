@@ -42,11 +42,12 @@ Una sola llamada: `ZohoCRM_getModules` con `fields=api_name,module_name,plural_l
 | Tiendas | **`Franquicias`** | CustomModule1 | personalizado | sí |
 | Tareas | `Tasks` | Tasks | estándar | sí |
 
-Observaciones (solo como relación, fuera de alcance):
-- `Eventos_X_Tiendas` (linking Eventos ↔ Tiendas) y `Eventos` (personalizado).
-- `Prospectos_Expansion` ("Prospectos Expansión", personalizado): por el nombre podría solaparse con Leads en el flujo de franquicias. **Confirmar con Carlos** si entra en alcance.
-- Hay ~28 módulos `File_Upload_*__s` con etiquetas de documentos de franquiciatario (identificación, constancias fiscales, contratos). Son adjuntos con datos sensibles: no se leerán sin una decisión explícita.
-- Otros visibles: Accounts, Deals, Events, Calls, Rappi, Brokers_Inmobiliario, Nueva_BDD_2026, BBD_Last.
+**Alcance cerrado por Carlos (2026-10-19):** solo el workspace **The Coffee** y solo estos 4 módulos. Su menú lateral muestra Posibles clientes, Contactos, Cuentas, Tratos, Tiendas, Eventos, Tareas, Projects y Voz del cliente, y concuerda con los módulos que devolvió la API.
+
+Fuera de alcance (no se auditan; si un campo de los 4 módulos apunta a alguno de ellos, solo se anota la relación):
+- Cuentas, Tratos, Eventos (y `Eventos_X_Tiendas`), Projects, Voz del cliente.
+- Módulos que no están en el menú del workspace: `Prospectos_Expansion`, Rappi, Brokers_Inmobiliario, Nueva_BDD_2026, BBD_Last, entre otros.
+- Los 28 módulos `File_Upload_*__s` (documentos del franquiciatario: identificación, constancias fiscales, contratos). Son adjuntos con datos sensibles y no se leen sin una decisión explícita.
 
 ## 4. Organización
 
