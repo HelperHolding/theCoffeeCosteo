@@ -7,9 +7,10 @@ Basado en el snapshot de Zoho del 2026-10-19 22:02 UTC. Las propuestas son de Cl
 1. **Usuarios:** por ahora habrá **un solo usuario** en el CRM nuevo: la cuenta de Carlos en el portal (`cvalencia@…`), como **usuario desarrollador que ve todo** y es dueño de todos los registros importados. Después se abrirán más usuarios con su nombre y área, y entonces se definen las restricciones.
 2. **Usuarios deshabilitados o eliminados en Zoho:** sus registros se importan **sin ese usuario**: no se crea ni se referencia. Como todo queda en el usuario único, ninguno queda sin dueño. Si más adelante hay que asignarlos a alguien, Claude lo avisa.
 3. **Campos repetidos:** se quitan los innecesarios. La resolución por evidencia está abajo, en "Campos duplicados".
-4. **Archivos:** se copia **todo lo que ya existe en cada tarjeta y en cada apartado**: adjuntos del registro, adjuntos de sus notas y archivos de los campos de archivo, en la misma tarjeta y sección donde están en Zoho. Las ligas externas se conservan como liga. Solo se omite lo que pertenece a módulos fuera de alcance (7 adjuntos de Prospectos_Expansion).
-5. **Leads y tareas:** se importan **tal cual**: los 3,621 leads (con o sin estado) y las 268 tareas con su estado actual.
+4. **Archivos:** se copia **todo lo que ya existe en cada tarjeta y en cada apartado**: adjuntos del registro, adjuntos de sus notas y archivos de los campos de archivo, en la misma tarjeta y sección donde están en Zoho. Las ligas externas se conservan como liga. Solo se omite lo que pertenece a módulos fuera de alcance: 7 adjuntos de Prospectos_Expansion y 8 de Cuentas.
+5. **Leads y tareas:** se importan **tal cual**: los 3,621 leads (con o sin estado) y 231 tareas con su estado actual (las 268 menos las 37 ligadas a Cuentas).
 6. **Etapas de Tiendas:** las 58 tiendas en "Firma de contrato" están bien ahí; las etapas son pasos del procedimiento. El detalle operativo de cada paso lo explicará el equipo más adelante.
+7. **Cuentas fuera del CRM (cambio del 2026-10-19):** el módulo Cuentas se maneja aparte y **no se importa**: ni las 65 cuentas, ni sus 22 notas, 8 adjuntos, 37 tareas y 18 ligas `LINK`. Para no perder la referencia al franquiciatario, la tienda y el contacto guardan el **nombre de la cuenta como texto** ("Franquiciatario"), sin liga.
 
 ## Campos duplicados: resolución aprobada (por evidencia)
 
@@ -32,7 +33,7 @@ Comparación registro por registro sobre las 176 tiendas y los 3,621 leads (solo
 | Elemento | Zoho actual | Uso observado | Calidad | Propuesta | Decisión humana |
 |---|---|---|---|---|---|
 | Módulo | Tiendas (`Franquicias`) | 176 tiendas, 399 notas, 197 tareas, 536 cambios de etapa | Buena en etapa (100 %); media en fechas | **Conservar** como núcleo: tarjeta del Kanban | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
-| Módulo | Cuentas (`Accounts`) | 65 cuentas; 52 con tiendas | Media: 26 campos sin uso | **Adaptar** a "Franquiciatario" (persona física/moral) | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
+| Módulo | Cuentas (`Accounts`) | 65 cuentas; 52 con tiendas | Media: 26 campos sin uso | **Excluir**: se maneja aparte | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
 | Módulo | Contactos (`Contacts`) | 51; 23 ligados a cuenta | Media | **Adaptar** como personas de contacto del franquiciatario | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
 | Módulo | Posibles clientes (`Leads`) | 3,621; 59 % sin estado; 0 conversiones | Baja en estado; alta en contacto (correo/teléfono ~100 %) | **Adaptar**: embudo de prospectos separado del pipeline de tiendas. Importar todos | Aprobado (Carlos, 2026-10-19): todos, tal cual |
 | Módulo | Tareas (`Tasks`) | 268; 88 % "Not Started" | Baja: los estados no reflejan el avance | **Adaptar**: importar como actividades. Importar con su estado | Aprobado (Carlos, 2026-10-19): tal cual |
@@ -65,7 +66,7 @@ Comparación registro por registro sobre las 176 tiendas y los 3,621 leads (solo
 
 | Elemento | Zoho actual | Uso observado | Calidad | Propuesta | Decisión humana |
 |---|---|---|---|---|---|
-| Campo | Tiendas: Nombre, Status, Cuenta, Ciudad, Dirección, N.º Jestor | 100 · 100 · 99 · 66 · 59 · 47 % | Buena | **Conservar** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
+| Campo | Tiendas: Nombre, Status, Cuenta, Ciudad, Dirección, N.º Jestor | 100 · 100 · 99 · 66 · 59 · 47 % | Buena | **Conservar**. `Cuenta` pasa a texto "Franquiciatario" (nombre de la cuenta) | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
 | Campo | Tiendas: 3 fechas de apertura | 33 · 36 · 76 % | 2 duplicadas; `FECHA_DE_ARRANQUE` es otra fecha | **Unificar** las dos de apertura; conservar la fecha programada de arranque (ver "Campos duplicados") | Aprobado (Carlos, 2026-10-19): quitar repetidos |
 | Campo | Tiendas: 2 fechas de aprobación de local · 2 de firma | 33/23 % · 24/14 % | Aprobación: duplicada; firma: dos hitos distintos | **Unificar** aprobación; **conservar** las dos firmas | Aprobado (Carlos, 2026-10-19): quitar repetidos |
 | Campo | Tiendas: cafetera (marca/estado), contrato 5 años, vencimiento | 14–30 % | Media | **Conservar** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
@@ -74,8 +75,8 @@ Comparación registro por registro sobre las 176 tiendas y los 3,621 leads (solo
 | Campo | **Credenciales** (FINKOK usuario/contraseña en Tiendas; Contraseña en Cuentas) | 18+ registros | Riesgo de seguridad | **Descartar**: no replicar y retirar de Zoho | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
 | Campo | Leads: formulario de interés (capital, plan, por qué The Coffee…) | ~4 % | Bajo | **Conservar** en la ficha del prospecto | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
 | Campo | Leads: 8 campos de encargados, Linkedin, Industry, dirección | 0 % | Sin uso | **Descartar** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
-| Campo | Cuentas: RFC, Razón Social, Representante Legal | 20 · 12 · 3 % | Bajo | **Conservar** (datos fiscales) | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
-| Campo | Cuentas: direcciones de envío/facturación, Rating, Tipo, SI/NO/ENCENDIDO | 0 % | Sin uso | **Descartar** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
+| Campo | Cuentas: RFC, Razón Social, Representante Legal | 20 · 12 · 3 % | Bajo | **Excluir** con el módulo | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
+| Campo | Cuentas: direcciones de envío/facturación, Rating, Tipo, SI/NO/ENCENDIDO | 0 % | Sin uso | **Excluir** con el módulo | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
 | Campo | 27 campos eliminados de Tiendas (en el historial) | Datos inaccesibles | — | **Omitir**; preguntar si alguno debe volver como checklist | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
 
 ## Etiquetas
@@ -91,20 +92,20 @@ Comparación registro por registro sobre las 176 tiendas y los 3,621 leads (solo
 
 | Elemento | Zoho actual | Uso observado | Calidad | Propuesta | Decisión humana |
 |---|---|---|---|---|---|
-| Relación | Tienda → Cuenta | 174/176, 0 huérfanos | Buena | **Replicar** (franquiciatario 1:N tiendas) | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
-| Relación | Contacto → Cuenta | 23/51, 0 huérfanos | Media | **Replicar** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
+| Relación | Tienda → Cuenta | 174/176, 0 huérfanos | Buena | Sin liga: **nombre de la cuenta como texto** en la tienda | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
+| Relación | Contacto → Cuenta | 23/51, 0 huérfanos | Media | Sin liga: **nombre de la cuenta como texto** en el contacto | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
 | Relación | Tarea/Nota → registro (polimórfica) | 0 huérfanos | Buena | **Replicar** hacia tienda, franquiciatario, contacto o prospecto | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
-| Relación | Lead → Cuenta/Contacto (conversión) | 0 usos | No se usa | **Replantear**: acción "Convertir prospecto en franquiciatario" en el CRM nuevo | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
+| Relación | Lead → Contacto (conversión) | 0 usos | No se usa | **Replantear**: "Convertir prospecto" crea Contacto y Tienda (sin Cuenta) | Cambiado (Carlos, 2026-10-19): Cuentas fuera |
 | Relación | Propietario (Owner) | U04 deshabilitado tiene 111 tiendas | Riesgo | Un solo usuario (cuenta desarrollador de Carlos) dueño de todo; no se crean usuarios deshabilitados ni eliminados | Aprobado (Carlos, 2026-10-19) |
 
 ## Documentos
 
 | Elemento | Zoho actual | Uso observado | Calidad | Propuesta | Decisión humana |
 |---|---|---|---|---|---|
-| Documento | Adjuntos de Tiendas / Cuentas / Contactos / Notas | 149 archivos | PDF en su mayoría; INE y datos fiscales | **Copiar todo**, en la misma tarjeta y apartado, a Storage privado tras una descarga piloto | Aprobado (Carlos, 2026-10-19) |
+| Documento | Adjuntos de Tiendas / Contactos / Notas | 141 archivos (sin los 8 de Cuentas) | PDF en su mayoría; INE y datos fiscales | **Copiar todo**, en la misma tarjeta y apartado, a Storage privado tras una descarga piloto | Aprobado (Carlos, 2026-10-19) |
 | Documento | Fileupload Proyecto 3D / Ejecutivo | 83 archivos, 55 MB | Buena | **Copiar** en su sección ("Información Proyecto"), deduplicando contra adjuntos | Aprobado (Carlos, 2026-10-19) |
 | Documento | Adjuntos de Leads | 136 archivos | Desconocida | **Copiar todos** en la tarjeta de su lead | Aprobado (Carlos, 2026-10-19) |
-| Documento | Ligas externas (dictamen, carpeta de contrato, LINK) | 82 registros | Externas | **Enlazar** (guardar URL) en su campo | Aprobado (Carlos, 2026-10-19) |
+| Documento | Ligas externas (dictamen, carpeta de contrato) | 64 registros (sin los 18 LINK de Cuentas) | Externas | **Enlazar** (guardar URL) en su campo | Aprobado (Carlos, 2026-10-19) |
 | Documento | Adjuntos de Prospectos_Expansion | 7 | Fuera de alcance | **Omitir** | Aprobado (Carlos, 2026-10-19): propuesta tal cual |
 
 ## Preguntas abiertas para Carlos

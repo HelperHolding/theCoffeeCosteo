@@ -315,3 +315,7 @@ Por campo y registro, el auditor distingue: `ausente` (la clave no viene en la r
 ## F3.7 Comparación de campos duplicados (2026-10-19)
 
 20 llamadas GET adicionales (Records API: Tiendas 11 campos, Leads 6) para comparar pares de campos registro por registro. Solo se imprimieron conteos (iguales / distintos / solo uno / ninguno). El resultado y la resolución están en `CRM-SCOPE-DECISIONS.md` → "Campos duplicados". Cero mutaciones.
+
+## Cambio de alcance (2026-10-19)
+
+Carlos decidió que **Cuentas (`Accounts`) no entra al CRM**: se maneja aparte. Su auditoría queda en los entregables solo como referencia. Tiendas y Contactos guardarán el nombre de la cuenta como texto. Ver `CRM-SCOPE-DECISIONS.md`, decisión 7.

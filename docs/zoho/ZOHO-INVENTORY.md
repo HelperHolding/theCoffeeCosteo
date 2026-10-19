@@ -2,7 +2,7 @@
 
 - **Snapshot:** 2026-10-19 22:02 UTC (16:02 America/Mexico_City). Los conteos son de ese momento.
 - **Fuente:** API v8 con Self Client READ (`scripts/zoho/auditar.ts`) y MCP Data Insights. Solo lectura; detalle en `AUDIT-EVIDENCE.md`.
-- **Alcance:** workspace The Coffee; 5 módulos aprobados por Carlos.
+- **Alcance:** workspace The Coffee; 5 módulos auditados. **Cambio 2026-10-19: Cuentas queda fuera del CRM** (se maneja aparte); su auditoría se conserva solo como referencia.
 
 ## Organización
 
