@@ -70,6 +70,13 @@ export async function Ficha({
   const tamanosProducto = [...new Set(filas.map((f) => f.tamano_id))];
   const principal = tamanosProducto.at(-1);
   const mostrador = filas.find((f) => f.tamano_id === principal && f.canal === 'Mostrador');
+  const rappi = filas.find((f) => f.tamano_id === principal && f.canal === 'Rappi');
+  // El semáforo del margen bruto usa el mismo objetivo que el margen con comisión.
+  const bruto = (f: (typeof filas)[number]) => ({
+    ...f,
+    margen: f.margen_bruto,
+    margen_pct: f.margen_bruto_pct,
+  });
   const columna = tipo === 'producto' ? (principal ?? null) : null;
   const composicion = editor.borrador.lineas
     .map((l) => {
@@ -212,21 +219,46 @@ export async function Ficha({
       <AvisoComision pendiente={canales.some((c) => !c.comision_confirmada)} />
       {mostrador && (
         <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            ['Costo', dinero(mostrador.costo), `Tamaño ${mostrador.tamano}`],
-            ['Precio de lista', dinero(mostrador.precio_lista), 'Mostrador, con IVA'],
-            ['Margen mostrador', porcentaje(mostrador.margen_pct), `${dinero(mostrador.margen)} por venta`],
-          ].map(([etiqueta, valor, nota], i) => (
+          {(
+            [
+              ['Costo', dinero(mostrador.costo), `Tamaño ${mostrador.tamano}`],
+              ['Precio App propia/Mostrador', dinero(mostrador.precio_canal), 'Precio de lista, con IVA'],
+              [
+                'Precio Rappi',
+                dinero(rappi?.precio_canal ?? null),
+                rappi?.precio_manual != null ? 'Precio manual, con IVA' : 'Precio de lista, con IVA',
+              ],
+              [
+                'Margen bruto App propia/Mostrador',
+                porcentaje(mostrador.margen_bruto_pct),
+                `${dinero(mostrador.margen_bruto)} por venta, antes de comisión`,
+                bruto(mostrador),
+              ],
+              [
+                'Margen bruto Rappi',
+                porcentaje(rappi?.margen_bruto_pct ?? null),
+                rappi ? `${dinero(rappi.margen_bruto)} por venta, con envase y antes de comisión` : '—',
+                rappi && bruto(rappi),
+              ],
+              [
+                'Margen con comisión Rappi',
+                porcentaje(rappi?.margen_pct ?? null),
+                rappi ? `${dinero(rappi.margen)} por venta, comisión ${dinero(rappi.comision)}` : '—',
+                rappi,
+                true,
+              ],
+            ] as const
+          ).map(([etiqueta, valor, nota, estado, oscuro]) => (
             <div
               key={etiqueta}
-              className={`rounded-2xl border p-5 shadow-card ${i === 2 ? 'border-ink bg-ink text-white' : 'border-line bg-surface'}`}
+              className={`rounded-2xl border p-5 shadow-card ${oscuro ? 'border-ink bg-ink text-white' : 'border-line bg-surface'}`}
             >
-              <p className={`text-sm ${i === 2 ? 'text-neutral-400' : 'text-ink-2'}`}>{etiqueta}</p>
+              <p className={`text-sm ${oscuro ? 'text-neutral-400' : 'text-ink-2'}`}>{etiqueta}</p>
               <p className="mt-2 flex items-center gap-3 font-display text-3xl font-black tabular">
                 {valor}
-                {i === 2 && <Pill estado={estadoMargen(mostrador)} className="font-sans" />}
+                {estado && <Pill estado={estadoMargen(estado)} className="font-sans" />}
               </p>
-              <p className={`mt-1 text-xs ${i === 2 ? 'text-neutral-400' : 'text-muted-foreground'}`}>
+              <p className={`mt-1 text-xs ${oscuro ? 'text-neutral-400' : 'text-muted-foreground'}`}>
                 {nota}
               </p>
             </div>
