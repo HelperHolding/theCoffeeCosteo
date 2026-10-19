@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sesion } from '@/lib/supabase/sesion';
 import { todas, dinero, porcentaje } from '@/lib/portal/consultas';
+import { fusionarCanales } from '@/lib/portal/canales';
 import { cargarEditor } from '@/lib/portal/recetas';
 import { dependientes } from '@/lib/portal/dependencias';
 import { puede } from '@/lib/portal/permisos';
@@ -37,6 +38,8 @@ export async function Ficha({
   const filas = resumen
     .filter((r) => r.producto_id === id)
     .sort((a, b) => a.tamano_orden - b.tamano_orden || a.canal_orden - b.canal_orden);
+  // Mostrador y App propia en una sola fila cuando sus números coinciden.
+  const filasCanal = fusionarCanales(filas);
   const usos = id ? dependientes(editor.lineas, editor.recetas, id, 'subreceta') : [];
   const migas =
     tipo === 'producto'
@@ -240,7 +243,7 @@ export async function Ficha({
               <>
                 <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
                   {tamanosProducto.map((t) => {
-                    const xs = filas.filter((f) => f.tamano_id === t);
+                    const xs = filasCanal.filter((f) => f.tamano_id === t);
                     return (
                       <Tarjeta
                         key={t}
@@ -250,15 +253,31 @@ export async function Ficha({
                       >
                         <ul className="divide-y divide-line">
                           {xs.map((f) => (
-                            <li key={f.canal_id} className="flex items-center gap-3 px-5 py-3.5">
-                              <span className="min-w-0 flex-1">
-                                <span className="block text-sm font-semibold">{f.canal}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {dinero(f.precio_canal)}
-                                  {f.precio_manual !== null && ' · manual'} · margen {dinero(f.margen)}
-                                </span>
+                            <li key={f.canal_id} className="px-5 py-3.5">
+                              <span className="block text-sm font-semibold">{f.canal}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {dinero(f.precio_canal)}
+                                {f.precio_manual !== null && ' · manual'}
+                                {f.comision ? ` · comisión ${dinero(f.comision)}` : ''}
                               </span>
-                              <Pill estado={estadoMargen(f)}>{porcentaje(f.margen_pct)}</Pill>
+                              <dl className="mt-2 grid grid-cols-2 gap-3">
+                                <div>
+                                  <dt className="text-[11px] text-muted-foreground">Margen bruto</dt>
+                                  <dd className="text-sm font-semibold tabular">
+                                    {porcentaje(f.margen_bruto_pct)}{' '}
+                                    <span className="text-xs font-normal text-muted-foreground">
+                                      {dinero(f.margen_bruto)}
+                                    </span>
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="text-[11px] text-muted-foreground">Margen con comisión</dt>
+                                  <dd className="flex items-center gap-1.5 text-sm tabular">
+                                    <Pill estado={estadoMargen(f)}>{porcentaje(f.margen_pct)}</Pill>
+                                    <span className="text-xs text-muted-foreground">{dinero(f.margen)}</span>
+                                  </dd>
+                                </div>
+                              </dl>
                             </li>
                           ))}
                         </ul>
@@ -277,11 +296,13 @@ export async function Ficha({
                           <th className="text-right">Precio calculado</th>
                           <th className="text-right">Manual</th>
                           <th className="text-right">Precio final</th>
-                          <th className="text-right">Margen</th>
+                          <th className="text-right">Margen bruto</th>
+                          <th className="text-right">Comisión</th>
+                          <th className="text-right">Margen con comisión</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filas.map((f) => (
+                        {filasCanal.map((f) => (
                           <tr key={`${f.tamano_id}:${f.canal_id}`}>
                             <td>{f.tamano}</td>
                             <td>{f.canal}</td>
@@ -291,6 +312,10 @@ export async function Ficha({
                               {f.precio_manual === null ? '—' : dinero(f.precio_manual)}
                             </td>
                             <td className="numero font-semibold">{dinero(f.precio_canal)}</td>
+                            <td className="numero">
+                              {dinero(f.margen_bruto)} · {porcentaje(f.margen_bruto_pct)}
+                            </td>
+                            <td className="numero">{f.comision === null ? '—' : dinero(f.comision)}</td>
                             <td className="numero">
                               {dinero(f.margen)} · {porcentaje(f.margen_pct)}
                             </td>

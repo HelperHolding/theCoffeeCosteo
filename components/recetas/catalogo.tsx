@@ -5,7 +5,9 @@ import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Encabezado } from '@/components/portal/piezas';
 import { dinero, mayusculas } from '@/lib/portal/consultas';
-export type PreciosTamano = { tamano: string; costo: number | null; canales: Record<string, number | null> };
+// Un canal fusionado cuyos precios difieren guarda cada precio con el nombre de su canal.
+export type PrecioCanal = number | null | { nombre: string; precio: number | null }[];
+export type PreciosTamano = { tamano: string; costo: number | null; canales: Record<string, PrecioCanal> };
 export type RecetaCatalogo = {
   id: string;
   nombre: string;
@@ -20,7 +22,7 @@ function PorTamano({
   valor,
 }: {
   precios: PreciosTamano[];
-  valor: (p: PreciosTamano) => number | null;
+  valor: (p: PreciosTamano) => PrecioCanal;
 }) {
   if (!precios.length) return <span className="text-muted-foreground">—</span>;
   return (
@@ -30,10 +32,23 @@ function PorTamano({
           {precios.length > 1 && (
             <span className="text-[11px] text-muted-foreground">{mayusculas(p.tamano)}</span>
           )}
-          <span className="tabular">{valor(p) === null ? '—' : dinero(valor(p))}</span>
+          <Precio valor={valor(p)} />
         </li>
       ))}
     </ul>
+  );
+}
+function Precio({ valor }: { valor: PrecioCanal }) {
+  if (!Array.isArray(valor)) return <span className="tabular">{valor === null ? '—' : dinero(valor)}</span>;
+  return (
+    <span className="flex flex-col items-end">
+      {valor.map((v) => (
+        <span key={v.nombre} className="tabular">
+          <span className="mr-1 text-[10px] text-muted-foreground">{mayusculas(v.nombre)}</span>
+          {v.precio === null ? '—' : dinero(v.precio)}
+        </span>
+      ))}
+    </span>
   );
 }
 export function CatalogoRecetas({
