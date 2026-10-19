@@ -1,7 +1,7 @@
 # Zoho CRM — Evidencia de acceso read-only (Fase 1)
 
 - **Fecha:** 2026-10-19
-- **Alcance:** verificar acceso de solo lectura a Zoho CRM y ubicar los API names de los 4 módulos en alcance. Sin código de producto, migraciones, Supabase ni producción.
+- **Alcance:** verificar acceso de solo lectura a Zoho CRM y ubicar los API names de los módulos en alcance. Sin código de producto, migraciones, Supabase ni producción.
 - **Regla:** Zoho estrictamente read-only. Sin PII, tokens, URLs privadas ni IDs internos en este documento.
 
 ## 1. Conector usado
@@ -33,7 +33,7 @@ Se enumeraron y clasificaron **antes** de invocar cualquiera.
 
 Una sola llamada: `ZohoCRM_getModules` con `fields=api_name,module_name,plural_label,singular_label,generated_type,status,api_supported`. Resultado: `status: success`, 90 módulos (agregado; sin registros ni datos de personas).
 
-### API names de los 4 módulos en alcance
+### API names de los 5 módulos en alcance
 
 | Etiqueta en Zoho | API name | module_name | Tipo | API |
 | --- | --- | --- | --- | --- |
@@ -41,11 +41,12 @@ Una sola llamada: `ZohoCRM_getModules` con `fields=api_name,module_name,plural_l
 | Contactos | `Contacts` | Contacts | estándar | sí |
 | Tiendas | **`Franquicias`** | CustomModule1 | personalizado | sí |
 | Tareas | `Tasks` | Tasks | estándar | sí |
+| Cuentas | `Accounts` | Accounts | estándar | sí |
 
-**Alcance cerrado por Carlos (2026-10-19):** solo el workspace **The Coffee** y solo estos 4 módulos. Su menú lateral muestra Posibles clientes, Contactos, Cuentas, Tratos, Tiendas, Eventos, Tareas, Projects y Voz del cliente, y concuerda con los módulos que devolvió la API.
+**Alcance cerrado por Carlos (2026-10-19):** solo el workspace **The Coffee** y solo estos 5 módulos (Cuentas se agregó después, a petición de Carlos). Su menú lateral muestra Posibles clientes, Contactos, Cuentas, Tratos, Tiendas, Eventos, Tareas, Projects y Voz del cliente, y concuerda con los módulos que devolvió la API.
 
-Fuera de alcance (no se auditan; si un campo de los 4 módulos apunta a alguno de ellos, solo se anota la relación):
-- Cuentas, Tratos, Eventos (y `Eventos_X_Tiendas`), Projects, Voz del cliente.
+Fuera de alcance (no se auditan; si un campo de los 5 módulos apunta a alguno de ellos, solo se anota la relación):
+- Tratos, Eventos (y `Eventos_X_Tiendas`), Projects, Voz del cliente.
 - Módulos que no están en el menú del workspace: `Prospectos_Expansion`, Rappi, Brokers_Inmobiliario, Nueva_BDD_2026, BBD_Last, entre otros.
 - Los 28 módulos `File_Upload_*__s` (documentos del franquiciatario: identificación, constancias fiscales, contratos). Son adjuntos con datos sensibles y no se leen sin una decisión explícita.
 
@@ -74,7 +75,7 @@ Zoho API Console → Self Client, generado por el admin, código de corta duraci
 | Pipelines y etapas | `ZohoCRM.settings.pipeline.READ` | `GET /crm/v8/settings/pipeline?layout_id=…` | get-pipelines |
 | Listar adjuntos | `ZohoCRM.modules.attachments.READ` + `ZohoCRM.modules.<módulo>.READ` | `GET /crm/v8/{module}/{id}/Attachments` | get-attachments |
 | Campos, layouts, módulos | `ZohoCRM.settings.fields.READ`, `ZohoCRM.settings.layouts.READ`, `ZohoCRM.settings.modules.READ` | `/settings/…` | scopes |
-| Registros / COQL | `ZohoCRM.modules.leads.READ`, `.contacts.READ`, `.tasks.READ`, `.custom.READ`; `ZohoCRM.coql.READ` | — | scopes |
+| Registros / COQL | `ZohoCRM.modules.leads.READ`, `.contacts.READ`, `.accounts.READ`, `.tasks.READ`, `.custom.READ`; `ZohoCRM.coql.READ` | — | scopes |
 
 Pendientes de verificar antes de pedirlos: perfiles (`ZohoCRM.settings.profiles.READ`), blueprints y el scope/endpoint de **descarga** de adjuntos (la página v8 de adjuntos solo documenta el listado). Nunca se pedirá `ALL`, `CREATE`, `UPDATE` ni `DELETE`.
 
