@@ -3,7 +3,7 @@ export default function NotFound() {
   return (
     <main className="p-8">
       <h1>No encontramos este registro</h1>
-      <Link href="/resumen">Volver al resumen</Link>
+      <Link href="/">Volver al inicio</Link>
     </main>
   );
 }

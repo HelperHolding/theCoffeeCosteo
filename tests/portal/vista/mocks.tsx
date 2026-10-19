@@ -17,3 +17,4 @@ export async function guardarReceta(_: unknown) {
 export async function guardarRegistro(..._: unknown[]) {
   return { error: 'Vista de prueba: no se escriben datos.' };
 }
+export async function salir() {}

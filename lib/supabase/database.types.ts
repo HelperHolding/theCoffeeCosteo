@@ -13,6 +13,13 @@ export interface Perfil {
   rol: Rol;
   activo: boolean;
 }
+export type NivelModulo = 'desarrollador' | 'edicion' | 'lectura';
+export interface PerfilModulo {
+  user_id: string;
+  modulo: 'crm';
+  nivel: NivelModulo;
+  creado_en: string;
+}
 export interface Receta {
   id: string;
   nombre: string;
@@ -150,6 +157,7 @@ export interface Database {
   public: {
     Tables: {
       perfiles: Tabla<Perfil>;
+      perfil_modulos: Tabla<PerfilModulo>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;

@@ -192,3 +192,12 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
   2. Las columnas `file_size_limit` y `allowed_mime_types` de `storage.buckets`.
   3. Si Supabase tiene **integración con GitHub**: un merge a `main` podría aplicar las migraciones automáticamente. Hay que confirmarlo antes de abrir el PR.
 - Pendiente: generar `lib/supabase/database.types.ts` con las tablas nuevas (Fase 6).
+
+## 12. Fase 6 — Portal modular (implementada, 2026-10-19)
+
+- `/` = Inicio (`app/(inicio)`) con las tarjetas de los módulos visibles. `/costeo` = Tablero (movido con `git mv`). `/crm` = panel del CRM (`app/(crm)/crm`), con un estado vacío hasta la Fase 7.
+- `lib/portal/modulos.ts`: registro tipado de módulos. `lib/supabase/sesion.ts`: `accesos()` y `sesionCrm()`. **Falla cerrado:** si `perfil_modulos` aún no existe o hay cualquier error, no hay acceso al CRM y Costeo sigue funcionando. Por eso este código puede desplegarse antes que las migraciones.
+- `Marco` y `Navegacion` reciben la sección y los módulos visibles. El grupo "Portal" (Inicio y los otros módulos) aparece en todas las secciones. El asistente "Consultar" (Ctrl J) se muestra solo en Costeo.
+- Pruebas: `tests/portal/modulos.test.ts` y `tests/portal/navegacion.test.tsx`. La prueba vieja de navegación de Costeo pasa sin cambios.
+- **Verificación:** `tsc` sin errores; `next build` con `/`, `/costeo` y `/crm`; 216 pruebas aprobadas (solo falla `paridad`, que ya fallaba por el Excel local). Revisión visual en el arnés (`?modulos`, `?crm`) a 1280×800 y 390×844, sin errores en consola ni scroll horizontal.
+- **No verificado:** el flujo con sesión real de Supabase (en local no hay variables de Supabase). Queda para el preview protegido.

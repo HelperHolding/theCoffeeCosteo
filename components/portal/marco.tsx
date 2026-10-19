@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThinkingOrb } from 'thinking-orbs';
 import { LogOut, Menu, Search, X, Coffee, Layers } from 'lucide-react';
-import { Navegacion, grupos } from './navegacion';
+import { Navegacion, gruposDe, type Seccion } from './navegacion';
+import type { IdModulo } from '@/lib/portal/modulos';
 import { Marca } from './marca';
 import { Agente } from './agente';
 import { Button } from '@/components/ui/button';
@@ -18,17 +19,44 @@ import {
 } from '@/components/ui/command';
 import { salir } from '@/app/(auth)/login/actions';
 
-type Receta = { id: string; nombre: string; tipo: string };
+/** Registro buscable con Ctrl K (recetas en Costeo; tiendas, prospectos y contactos en el CRM). */
+export type ItemBusqueda = {
+  id: string;
+  nombre: string;
+  href: string;
+  detalle: string;
+  icono: 'producto' | 'subreceta';
+};
+const iconos = { producto: Coffee, subreceta: Layers };
+const textos: Record<Seccion, { marca: [string, string]; buscar: string; registros: string }> = {
+  inicio: { marca: ['The Coffee', 'portal'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
+  costeo: {
+    marca: ['Portal de', 'costeos'],
+    buscar: 'Buscar producto, insumo o pantalla…',
+    registros: 'Recetas',
+  },
+  crm: {
+    marca: ['CRM', 'franquicias'],
+    buscar: 'Buscar tienda, prospecto o pantalla…',
+    registros: 'Registros',
+  },
+};
 
 export function Marco({
   perfil,
-  recetas,
+  seccion,
+  visibles,
+  busqueda = [],
   children,
 }: {
   perfil: { nombre: string; rol: string };
-  recetas: Receta[];
+  seccion: Seccion;
+  visibles: IdModulo[];
+  busqueda?: ItemBusqueda[];
   children: React.ReactNode;
 }) {
+  const t = textos[seccion];
+  const conAgente = seccion === 'costeo';
   const [menu, setMenu] = useState(false);
   const [buscador, setBuscador] = useState(false);
   const [agente, setAgente] = useState(false);
@@ -42,14 +70,14 @@ export function Marco({
         e.preventDefault();
         setBuscador((v) => !v);
       }
-      if (e.key.toLowerCase() === 'j') {
+      if (e.key.toLowerCase() === 'j' && conAgente) {
         e.preventDefault();
         setAgente((v) => !v);
       }
     };
     window.addEventListener('keydown', tecla);
     return () => window.removeEventListener('keydown', tecla);
-  }, []);
+  }, [conAgente]);
   const ir = (href: string) => {
     setBuscador(false);
     router.push(href);
@@ -57,16 +85,16 @@ export function Marco({
 
   const lateral = (
     <div className="flex h-full flex-col gap-7 px-5 py-6">
-      <Link href="/" aria-label="The Coffee · Tablero" className="flex items-center gap-3">
+      <Link href="/" aria-label="The Coffee · Inicio" className="flex items-center gap-3">
         <Marca negativo className="size-14 -my-2 -ml-2" />
         <span className="border-l border-white/15 pl-3 text-[10px] font-semibold uppercase leading-relaxed tracking-[.24em] text-neutral-400">
-          Portal de
+          {t.marca[0]}
           <br />
-          costeos
+          {t.marca[1]}
         </span>
       </Link>
       <Suspense>
-        <Navegacion alNavegar={() => setMenu(false)} />
+        <Navegacion alNavegar={() => setMenu(false)} seccion={seccion} visibles={visibles} />
       </Suspense>
       <div className="flex-1" />
       <div className="flex items-center gap-3 rounded-xl bg-white/[.05] p-3 text-sm">
@@ -92,7 +120,7 @@ export function Marco({
 
   return (
     <div
-      className={`min-h-screen lg:grid ${agente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
+      className={`min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
     >
       <aside className="hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         {lateral}
@@ -132,25 +160,27 @@ export function Marco({
               className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface text-sm text-muted-foreground shadow-card transition-colors hover:border-ink/30 sm:w-full sm:max-w-sm sm:justify-start sm:px-3 lg:ml-0"
             >
               <Search size={16} aria-hidden="true" />
-              <span className="hidden flex-1 text-left sm:inline">Buscar producto, insumo o pantalla…</span>
+              <span className="hidden flex-1 text-left sm:inline">{t.buscar}</span>
               <kbd className="hidden rounded-md border border-line bg-paper px-1.5 py-0.5 font-sans text-[11px] sm:inline">
                 Ctrl K
               </kbd>
             </button>
-            <Button
-              variant={agente ? 'secondary' : 'default'}
-              onClick={() => setAgente((v) => !v)}
-              aria-expanded={agente}
-              className="shrink-0 rounded-full pl-2 sm:ml-auto"
-            >
-              <span className="grid size-7 place-items-center rounded-full bg-white">
-                <ThinkingOrb state="breathing" size={20} theme="light" aria-hidden />
-              </span>
-              <span className="hidden sm:inline">Consultar</span>
-              <kbd className="hidden rounded border border-white/20 px-1 text-[10px] font-normal opacity-70 md:inline">
-                Ctrl J
-              </kbd>
-            </Button>
+            {conAgente && (
+              <Button
+                variant={agente ? 'secondary' : 'default'}
+                onClick={() => setAgente((v) => !v)}
+                aria-expanded={agente}
+                className="shrink-0 rounded-full pl-2 sm:ml-auto"
+              >
+                <span className="grid size-7 place-items-center rounded-full bg-white">
+                  <ThinkingOrb state="breathing" size={20} theme="light" aria-hidden />
+                </span>
+                <span className="hidden sm:inline">Consultar</span>
+                <kbd className="hidden rounded border border-white/20 px-1 text-[10px] font-normal opacity-70 md:inline">
+                  Ctrl J
+                </kbd>
+              </Button>
+            )}
           </div>
         </div>
         <main className="mx-auto w-full min-w-0 max-w-[1400px] space-y-7 px-4 py-7 md:px-8 md:py-9">
@@ -158,19 +188,19 @@ export function Marco({
         </main>
       </div>
 
-      <Agente abierto={agente} alCerrar={() => setAgente(false)} />
+      {conAgente && <Agente abierto={agente} alCerrar={() => setAgente(false)} />}
 
       <CommandDialog
         open={buscador}
         onOpenChange={setBuscador}
         title="Buscar"
-        description="Ir a una pantalla o receta"
+        description="Ir a una pantalla o registro"
       >
-        <CommandInput placeholder="Escribe un producto, sub-receta o pantalla…" />
+        <CommandInput placeholder={t.buscar} />
         <CommandList>
           <CommandEmpty>Sin resultados.</CommandEmpty>
           <CommandGroup heading="Pantallas">
-            {grupos.flatMap((g) =>
+            {gruposDe(seccion, visibles).flatMap((g) =>
               g.enlaces.map(({ href, nombre, icono: Icono }) => (
                 <CommandItem key={href} value={`pantalla ${nombre}`} onSelect={() => ir(href)}>
                   <Icono aria-hidden="true" /> {nombre}
@@ -178,21 +208,20 @@ export function Marco({
               )),
             )}
           </CommandGroup>
-          <CommandGroup heading="Recetas">
-            {recetas.map((r) => (
-              <CommandItem
-                key={r.id}
-                value={`${r.nombre} ${r.id}`}
-                onSelect={() => ir(`/${r.tipo === 'producto' ? 'productos' : 'subrecetas'}/${r.id}`)}
-              >
-                {r.tipo === 'producto' ? <Coffee aria-hidden="true" /> : <Layers aria-hidden="true" />}
-                {r.nombre}
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {r.tipo === 'producto' ? 'Producto' : 'Sub-receta'}
-                </span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {busqueda.length > 0 && (
+            <CommandGroup heading={t.registros}>
+              {busqueda.map((r) => {
+                const Icono = iconos[r.icono];
+                return (
+                  <CommandItem key={r.id} value={`${r.nombre} ${r.id}`} onSelect={() => ir(r.href)}>
+                    <Icono aria-hidden="true" />
+                    {r.nombre}
+                    <span className="ml-auto text-xs text-muted-foreground">{r.detalle}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          )}
         </CommandList>
       </CommandDialog>
     </div>

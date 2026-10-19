@@ -13,6 +13,7 @@ export default defineConfig({
       { find: 'next/navigation', replacement: mocks },
       { find: '@/app/(portal)/productos/actions', replacement: mocks },
       { find: '@/app/(portal)/configuracion/actions', replacement: mocks },
+      { find: '@/app/(auth)/login/actions', replacement: mocks },
       { find: '@', replacement: raiz },
     ],
   },

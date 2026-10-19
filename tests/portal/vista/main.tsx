@@ -5,6 +5,7 @@ import type { Resumen } from '../../../lib/supabase/database.types';
 import '../../../app/globals.css';
 import { VistaCatalogo } from './catalogo';
 import { VistaChat } from './chat';
+import { VistaModulos } from './modulos';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
 // Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
 const americano = (canal: string, orden: number, precio: number, comision: number, envase: number) => {
@@ -38,6 +39,10 @@ const filas = [
 createRoot(document.getElementById('root')!).render(
   window.location.search.includes('chat') ? (
     <VistaChat />
+  ) : window.location.search.includes('modulos') ? (
+    <VistaModulos seccion="inicio" />
+  ) : window.location.search.includes('crm') ? (
+    <VistaModulos seccion="crm" />
   ) : window.location.search.includes('catalogo') ? (
     <VistaCatalogo />
   ) : window.location.search.includes('calculadora') ? (
