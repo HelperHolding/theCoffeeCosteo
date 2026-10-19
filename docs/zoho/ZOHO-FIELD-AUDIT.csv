@@ -1,51 +1,211 @@
 module,layout,section,field_label,api_name,data_type,required,read_only,record_count,filled_count,empty_count,filled_percentage,unique_values,proposed_action,notes
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Record Status,Record_Status__s,picklist,n/d,false,176,,,,3 opciones,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Nombre de Tienda,Name,text,sistema,false,176,176,0,100.0,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Tiendas Propietario,Owner,ownerlookup,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Creado por,Created_By,ownerlookup,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Modificado por,Modified_By,ownerlookup,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de creación,Created_Time,datetime,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de modificación,Modified_Time,datetime,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de la última actividad,Last_Activity_Time,datetime,n/d,true,176,173,3,98.3,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Etiqueta,Tag,text,n/d,false,176,158,18,89.8,,Pendiente,Etiquetas en uso en 158 de 176.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Modalidad de cancelación de suscripción,Unsubscribed_Mode,picklist,n/d,true,176,0,176,0.0,4 opciones,Pendiente,Campo de sistema sin uso.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de cancelación de suscripción,Unsubscribed_Time,datetime,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),ID de registro,id,bigint,n/d,true,176,176,0,100.0,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Imagen de Tiendas,Record_Image,profileimage,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Locked,Locked__s,boolean,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Cuenta Relacionada,Cuenta,lookup,n/d,false,176,174,2,98.9,,Pendiente,Lookup a Accounts.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Ciudad,Ciudad,text,n/d,false,176,116,60,65.9,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Dirección Tienda,Direcci_n,text,n/d,false,176,104,72,59.1,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Proyecto 3D,Proyecto_3D,fileupload,n/d,false,176,,,,,Pendiente,fileupload: COQL no permite filtrarlo. Se mide en inventario de documentos.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Proyecto Ejecutivo,Proyecto_Ejecutivo,fileupload,n/d,false,176,,,,,Pendiente,fileupload: COQL no permite filtrarlo. Se mide en inventario de documentos.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Arquitecto Asignado,Arquitecto_Asignado,text,n/d,false,176,29,147,16.5,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Entrega de Proyecto,Fecha_de_Entrega_de_Proyecto,date,n/d,false,176,37,139,21.0,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Número de Tienda / Jestor,N_mero_de_Tienda_Jestor,integer,n/d,false,176,82,94,46.6,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha en que aperturo la tienda,Fecha_en_que_apertur,date,n/d,false,176,63,113,35.8,,Pendiente,Ver Fecha_de_Apertura.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Status,Status,picklist,n/d,false,176,176,0,100.0,13 de 22 opciones usadas,Pendiente,"Etapa del pipeline de Tiendas. 0 nulos. 58 en ""Firma de contrato"" (primera opción: posible valor por defecto)."
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Aprobación de local,Aprobaci_n_de_local,date,n/d,false,176,58,118,33.0,,Pendiente,Posible duplicado de Fecha_aprobaci_n_de_local (58 vs 41).
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Firma de Contrato,Firma_de_Contrato,date,n/d,false,176,43,133,24.4,,Pendiente,Posible duplicado de Fecha_de_Firma (43 vs 25).
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Apertura,Fecha_de_Apertura,date,n/d,false,176,58,118,33.0,,Pendiente,"Tres fechas de apertura: Fecha_de_Apertura (58), Fecha_en_que_apertur (63), FECHA_DE_ARRANQUE (134)."
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Status de Cafetera,Status_de_Cafetera,picklist,n/d,false,176,52,124,29.5,4 opciones,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Marca de Cafetera,Marca_de_Cafetera,picklist,n/d,false,176,53,123,30.1,2 opciones,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de vencimiento de contrato de franquicia,Fecha_de_Vencimiento,date,n/d,false,176,25,151,14.2,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Firma de contrato de franquicia,Fecha_de_Firma,date,n/d,false,176,25,151,14.2,,Pendiente,Posible duplicado de Firma_de_Contrato.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Estatus Contrato de franquicia 5 años,Contrato_de_franquicia_5_a_os,picklist,n/d,false,176,26,150,14.8,3 opciones,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Link a carpeta de contrato,Link_a_carpeta_de_contrato,website,n/d,false,176,27,149,15.3,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Días Para Apertura,D_as_Para_Apertura,picklist,n/d,false,176,57,119,32.4,5 opciones,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Rappi,Rappi,boolean,n/d,false,176,2,0,1.1,,Pendiente,"Booleano: false es valor válido, no vacío (2 true + 174 false = 176)."
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Checklist Pre-Apertura,Checklist_Pre_Apertura,website,n/d,false,176,2,174,1.1,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Funcionamiento de Máquinas,Evidencias_de_M_quinas,website,n/d,false,176,1,175,0.6,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Certificado de Looker,Evidencias_de_Tienda,website,n/d,false,176,1,175,0.6,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Dictamen de Aprobación de Local,Dictamen_de_Aprobaci_n_de_Local,website,n/d,false,176,33,143,18.8,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Rollout,Rollout,boolean,n/d,false,176,46,,26.1,,Pendiente,Booleano: filled_count = true; 130 restantes son false o nulos (no medido).
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Correo de la tienda,Correo_de_la_tienda,email,n/d,false,176,8,168,4.5,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),FECHA DE ARRANQUE,FECHA_DE_ARRANQUE,date,n/d,false,176,134,42,76.1,,Pendiente,Ver Fecha_de_Apertura.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Contraseña FINKOK-PAC,Contrase_a_FINKOK_PAC,text,n/d,false,176,,,,,Pendiente,EXCLUIDO: credencial en texto plano. No se leyó ni contó. Hallazgo de seguridad.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Usuario FINKOK-PAC,Usuario_FINKOK_PAC,text,n/d,false,176,,,,,Pendiente,EXCLUIDO: credencial del PAC. No se leyó ni contó.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha aprobación de local,Fecha_aprobaci_n_de_local,date,n/d,false,176,41,135,23.3,,Pendiente,Posible duplicado de Aprobaci_n_de_local.
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Certificado de Facturación,Certificado_de_Facturaci_n,website,n/d,false,176,0,176,0.0,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Perfiles de Baristas,Perfiles_de_Baristas,website,n/d,false,176,0,176,0.0,,Pendiente,
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Configuración Partoo,Configuraci_n_Partoo,boolean,n/d,false,176,0,,0.0,,Pendiente,Booleano: filled_count = true; 176 restantes son false o nulos (no medido).
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Alta en Google Maps,Alta_en_Google_Maps,boolean,n/d,false,176,0,,0.0,,Pendiente,Booleano: filled_count = true; 176 restantes son false o nulos (no medido).
-Franquicias,Tiendas The Coffee,n/d (requiere layouts),Días para Aperturar (Dpto. de Aprobaciones),D_as_para_Aperturar_Dpto_de_Aprobaciones,text,n/d,false,176,29,147,16.5,,Pendiente,Tipo texto para un dato numérico.
+Leads,Standard,Lead Information,Propietario de Posible cliente,Owner,ownerlookup,no,true,3621,3621,0,100.0,2,Propuesta: Sistema (metadato),
+Leads,Standard,Lead Information,Empresa,Company,text,no,false,3621,4,3617,0.1,4,Propuesta: Revisar (uso < 10 %),nulo 3617
+Leads,Standard,Lead Information,Nombre,First_Name,text,no,false,3621,2923,698,80.7,1873,Propuesta: Conservar,nulo 698
+Leads,Standard,Lead Information,Apellidos,Last_Name,text,sí,false,3621,3621,0,100.0,2198,Propuesta: Conservar,
+Leads,Standard,Lead Information,Correo electrónico,Email,email,no,false,3621,3618,3,99.9,2598,Propuesta: Conservar,nulo 3
+Leads,Standard,Lead Information,Teléfono,Phone,phone,no,false,3621,3588,33,99.1,2592,Propuesta: Conservar,nulo 33
+Leads,Standard,Lead Information,Estado de Posible cliente,Lead_Status,picklist,no,false,3621,1491,2130,41.2,14,Propuesta: Conservar,"nulo 2130. 93 opciones, 79 sin uso"
+Leads,Standard,Lead Information,Sector,Industry,picklist,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),"nulo 3621. 16 opciones, 16 sin uso"
+Leads,Standard,Lead Information,Creado por,Created_By,ownerlookup,no,false,3621,3621,0,100.0,2,Propuesta: Sistema (metadato),
+Leads,Standard,Lead Information,Modificado por,Modified_By,ownerlookup,no,false,3621,3621,0,100.0,4,Propuesta: Sistema (metadato),
+Leads,Standard,Lead Information,Hora de creación,Created_Time,datetime,no,false,3621,3621,0,100.0,770,Propuesta: Sistema (metadato),rango 2024-04-01..2026-09-21
+Leads,Standard,Lead Information,Hora de modificación,Modified_Time,datetime,no,false,3621,3621,0,100.0,300,Propuesta: Sistema (metadato),rango 2024-11-25..2026-09-21
+Leads,Standard,Lead Information,Nombre completo,Full_Name,text,no,false,3621,3621,0,100.0,3264,Propuesta: Conservar,
+Leads,Standard,Address Information,Calle,Street,text,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Address Information,Ciudad,City,text,no,false,3621,132,3489,3.6,78,Propuesta: Revisar (uso < 10 %),nulo 3489
+Leads,Standard,Address Information,Estado/Provincia,State,text,no,false,3621,131,3490,3.6,53,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Address Information,Código postal,Zip_Code,text,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Address Information,País,Country,text,no,false,3621,708,2913,19.6,1,Propuesta: Conservar,nulo 2913
+Leads,Standard,Description Information,Descripción,Description,textarea,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Lead Information,No participación del correo electrónico,Email_Opt_Out,boolean,no,false,3621,5,3616,0.1,1,Propuesta: Conservar,false 3616; true 5
+Leads,Standard,Lead Information,Saludo,Salutation,picklist,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),"nulo 3621. 5 opciones, 5 sin uso"
+Leads,Standard,Lead Information,Hora de la última actividad,Last_Activity_Time,datetime,no,true,3621,2187,1434,60.4,334,Propuesta: Sistema (metadato),nulo 1434. rango 2024-11-25..2026-09-21
+Leads,Standard,Lead Information,Etiqueta,Tag,text,no,false,3621,31,3590,0.9,11,Propuesta: Sistema (metadato),lista_vacia 3590
+Leads,Standard,Record Image,Imagen de Posible cliente,Record_Image,profileimage,no,false,3621,0,3621,0.0,0,Propuesta: Sistema (metadato),nulo 3621
+Leads,Standard,Lead Information,Fecha y hora convertida,Converted_Date_Time,datetime,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Lead Information,Tiempo de conversión de Posible cliente,Lead_Conversion_Time,integer,no,true,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Lead Information,Modalidad de cancelación de suscripción,Unsubscribed_Mode,picklist,no,true,3621,5,3616,0.1,1,Propuesta: Sistema (metadato),"nulo 3616. 4 opciones, 3 sin uso"
+Leads,Standard,Lead Information,Hora de cancelación de suscripción,Unsubscribed_Time,datetime,no,true,3621,5,3616,0.1,5,Propuesta: Sistema (metadato),nulo 3616. rango 2025-09-09..2026-05-12
+Leads,Standard,Lead Information,Cuenta convertida,Converted_Account,lookup,no,true,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621. lookup→Accounts
+Leads,Standard,Lead Information,Contacto convertido,Converted_Contact,lookup,no,true,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621. lookup→Contacts
+Leads,Standard,Lead Information,Transacción convertida,Converted_Deal,lookup,no,true,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621. lookup→Deals
+Leads,Standard,Lead Information,ID de registro,id,bigint,no,true,3621,3621,0,100.0,3621,Propuesta: Sistema (metadato),
+Leads,Standard,Lead Information,Cambiar hora de registro,Change_Log_Time__s,datetime,no,true,3621,3621,0,100.0,294,Propuesta: Sistema (metadato),rango 2024-11-25..2026-09-21
+Leads,Standard,Lead Information,se ha convertido,Converted__s,boolean,no,true,3621,0,3621,0.0,0,Propuesta: Revisar: nunca true,false 3621
+Leads,Standard,Lead Information,Locked,Locked__s,boolean,no,true,3621,0,3621,0.0,0,Propuesta: Sistema (metadato),false 3621
+Leads,Standard,Lead Information,Hora de último enriquecimiento de datos,Last_Enriched_Time__s,datetime,no,true,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Lead Information,Estado de enriquecimiento de datos,Enrich_Status__s,picklist,no,true,3621,0,3621,0.0,0,Propuesta: Sistema (metadato),"nulo 3621. 3 opciones, 3 sin uso"
+Leads,Standard,Interés de Franquicia,Fuente de capital,Fuente_de_capital,textarea,no,false,3621,131,3490,3.6,119,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Lead Information,Ciudad de Interés,Ciudad_de_Inter_s,text,no,false,3621,3547,74,98.0,792,Propuesta: Conservar,nulo 74
+Leads,Standard,Interés de Franquicia,Interés en The Coffee,Inter_s_en_The_Coffee,textarea,no,false,3621,131,3490,3.6,131,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Interés de Franquicia,Nombre de Empresa,Nombre_de_Empresa,text,no,false,3621,12,3609,0.3,12,Propuesta: Revisar (uso < 10 %),nulo 3609
+Leads,Standard,Interés de Franquicia,Porque The Coffee tendra éxito en la zona,Porque_The_Coffee_tendra_xito_en_la_zona,textarea,no,false,3621,131,3490,3.6,131,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Interés de Franquicia,Página web de empresa,P_gina_web_de_empresa,text,no,false,3621,5,3616,0.1,5,Propuesta: Revisar (uso < 10 %),nulo 3616
+Leads,Standard,Interés de Franquicia,Plan de operación,Plan_de_operaci_n,textarea,no,false,3621,131,3490,3.6,131,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Interés de Franquicia,Involucrado en otra marca de retail o franquicia,Involucrado_en_otra_marca_de_retail_o_franquicia,text,no,false,3621,131,3490,3.6,2,Propuesta: Revisar (uso < 10 %),nulo 3490
+Leads,Standard,Interés de Franquicia,Linkedin,Linkedin,text,no,false,3621,1,3620,0.0,1,Propuesta: Revisar (uso < 10 %),nulo 3620
+Leads,Standard,Datos Operativos,Apellido de encargado operativo,Apellido_de_encargado_operativo,text,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Operativos,Nombre de encargado operativo,Nombre_de_encargado_operativo,text,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Operativos,Email encargado operativo,Email_encargado_operativo,email,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Operativos,Teléfono de encargado operativo,Tel_fono_de_encargado_operativo,phone,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Administrativos,Apellido de encargado administrativo,Apellido_de_encargado_administrativo,text,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Administrativos,Nombre de encargado administrativo,Nombre_de_encargado_administrativo,text,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Administrativos,Email de encargado administrativo,Email_de_encargado_administrativo,email,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Datos Administrativos,Teléfono de encargado administrativo,Tel_fono_de_encargado_administrativo,phone,no,false,3621,9,3612,0.2,9,Propuesta: Revisar (uso < 10 %),nulo 3612
+Leads,Standard,Lead Information,Estado de Interés,Estado_de_Inter_s,text,no,false,3621,146,3475,4.0,33,Propuesta: Revisar (uso < 10 %),nulo 3475
+Leads,Standard,Lead Information,Single Line 1,Single_Line_1,text,no,false,3621,0,3621,0.0,0,Propuesta: Descartar (0 % uso),nulo 3621
+Leads,Standard,Interés de Franquicia,Capital disponible,Capital_disponible,text,no,false,3621,762,2859,21.0,18,Propuesta: Conservar,nulo 2859
+Leads,Standard,Interés de Franquicia,Marca de involucramiento,Marca_de_involucramiento,text,no,false,3621,4,3617,0.1,4,Propuesta: Revisar (uso < 10 %),nulo 3617
+Leads,Standard,Lead Information,Record Status,Record_Status__s,picklist,no,false,3621,3621,0,100.0,1,Propuesta: Sistema (metadato),"3 opciones, 2 sin uso"
+Leads,Standard,Lead Information,Inversión,Inversi_n,text,no,false,3621,2755,866,76.1,12,Propuesta: Conservar,nulo 866
+Contacts,Standard,Contact Information,Propietario de Contacto,Owner,ownerlookup,no,true,51,51,0,100.0,4,Propuesta: Sistema (metadato),
+Contacts,Standard,Contact Information,Nombre,First_Name,text,no,false,51,51,0,100.0,48,Propuesta: Conservar,
+Contacts,Standard,Contact Information,Apellidos,Last_Name,text,sí,false,51,51,0,100.0,48,Propuesta: Conservar,
+Contacts,Standard,Contact Information,Nombre de Cuenta,Account_Name,lookup,no,false,51,23,28,45.1,21,Propuesta: Conservar,nulo 28. lookup→Accounts
+Contacts,Standard,Contact Information,Correo electrónico,Email,email,no,false,51,42,9,82.4,42,Propuesta: Conservar,nulo 9
+Contacts,Standard,Contact Information,Teléfono,Phone,phone,no,false,51,47,4,92.2,46,Propuesta: Conservar,nulo 4
+Contacts,Standard,Contact Information,Creado por,Created_By,ownerlookup,no,false,51,51,0,100.0,4,Propuesta: Sistema (metadato),
+Contacts,Standard,Contact Information,Modificado por,Modified_By,ownerlookup,no,false,51,51,0,100.0,4,Propuesta: Sistema (metadato),
+Contacts,Standard,Contact Information,Hora de creación,Created_Time,datetime,no,false,51,51,0,100.0,51,Propuesta: Sistema (metadato),rango 2025-01-29..2026-04-22
+Contacts,Standard,Contact Information,Hora de modificación,Modified_Time,datetime,no,false,51,51,0,100.0,51,Propuesta: Sistema (metadato),rango 2025-04-22..2026-04-22
+Contacts,Standard,Contact Information,Nombre completo,Full_Name,text,no,false,51,51,0,100.0,50,Propuesta: Conservar,
+Contacts,Standard,Contact Information,Saludo,Salutation,picklist,no,false,51,0,51,0.0,0,Propuesta: Descartar (0 % uso),"nulo 51. 5 opciones, 5 sin uso"
+Contacts,Standard,Contact Information,Hora de la última actividad,Last_Activity_Time,datetime,no,true,51,51,0,100.0,47,Propuesta: Sistema (metadato),rango 2025-04-22..2026-04-22
+Contacts,Standard,Contact Information,Etiqueta,Tag,text,no,false,51,39,12,76.5,24,Propuesta: Sistema (metadato),lista_vacia 12
+Contacts,Standard,Record Image,Imagen de Contacto,Record_Image,profileimage,no,false,51,0,51,0.0,0,Propuesta: Sistema (metadato),nulo 51
+Contacts,Standard,Contact Information,Modalidad de cancelación de suscripción,Unsubscribed_Mode,picklist,no,true,51,0,51,0.0,0,Propuesta: Sistema (metadato),"nulo 51. 4 opciones, 4 sin uso"
+Contacts,Standard,Contact Information,Hora de cancelación de suscripción,Unsubscribed_Time,datetime,no,true,51,0,51,0.0,0,Propuesta: Sistema (metadato),nulo 51
+Contacts,Standard,Contact Information,ID de registro,id,bigint,no,true,51,51,0,100.0,51,Propuesta: Sistema (metadato),
+Contacts,Standard,Contact Information,Cambiar hora de registro,Change_Log_Time__s,datetime,no,true,51,51,0,100.0,47,Propuesta: Sistema (metadato),rango 2025-04-22..2026-04-22
+Contacts,Standard,Contact Information,Locked,Locked__s,boolean,no,true,51,0,51,0.0,0,Propuesta: Sistema (metadato),false 51
+Contacts,Standard,Contact Information,Hora de último enriquecimiento de datos,Last_Enriched_Time__s,datetime,no,true,51,0,51,0.0,0,Propuesta: Descartar (0 % uso),nulo 51
+Contacts,Standard,Contact Information,Estado de enriquecimiento de datos,Enrich_Status__s,picklist,no,true,51,0,51,0.0,0,Propuesta: Sistema (metadato),"nulo 51. 3 opciones, 3 sin uso"
+Contacts,Standard,Contact Information,Record Status,Record_Status__s,picklist,no,false,51,51,0,100.0,1,Propuesta: Sistema (metadato),"3 opciones, 2 sin uso"
+Contacts,Standard,Contact Information,Puesto / Relación,Puesto_Relaci_n,text,no,false,51,30,21,58.8,4,Propuesta: Conservar,nulo 21
+Contacts,Standard,Contact Information,Tipo de Contacto,Phase,picklist,sí,false,51,42,9,82.4,2,Propuesta: Conservar,"nulo 9. 7 opciones, 5 sin uso"
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Propietario de Cuenta,Owner,ownerlookup,no,true,65,65,0,100.0,4,Propuesta: Sistema (metadato),
+Accounts,Standard,Account Information,Calificación,Rating,picklist,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 5 opciones, 5 sin uso"
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Nombre de Cuenta,Account_Name,text,sí,false,65,65,0,100.0,65,Propuesta: Conservar,
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Teléfono,Phone,phone,no,false,65,37,28,56.9,36,Propuesta: Conservar,nulo 28
+Accounts,Standard,Account Information,Sitio de Cuenta,Account_Site,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Account Information,Cuenta principal,Parent_Account,lookup,no,false,65,2,63,3.1,2,Propuesta: Revisar (uso < 10 %),nulo 63. lookup→Accounts
+Accounts,Standard,Account Information,Número de Cuenta,Account_Number,bigint,no,false,65,65,0,100.0,1,Propuesta: Conservar,
+Accounts,Standard,Account Information,Tipo de Cuenta,Account_Type,picklist,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 13 opciones, 13 sin uso"
+Accounts,Standard,Account Information,Propietario,Ownership,picklist,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 4 opciones, 4 sin uso"
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Creado por,Created_By,ownerlookup,no,false,65,65,0,100.0,5,Propuesta: Sistema (metadato),
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Modificado por,Modified_By,ownerlookup,no,false,65,65,0,100.0,4,Propuesta: Sistema (metadato),
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Hora de creación,Created_Time,datetime,no,false,65,65,0,100.0,65,Propuesta: Sistema (metadato),rango 2025-01-07..2026-07-28
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Hora de modificación,Modified_Time,datetime,no,false,65,65,0,100.0,65,Propuesta: Sistema (metadato),rango 2025-01-29..2026-07-28
+Accounts,Standard,Address Information,Domicilio de facturación,Billing_Street,text,no,false,65,5,60,7.7,5,Propuesta: Revisar (uso < 10 %),nulo 60
+Accounts,Standard,Address Information,Domicilio de envío,Shipping_Street,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Ciudad de facturación,Billing_City,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Ciudad de envío,Shipping_City,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Estado de facturación,Billing_State,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Estado de envío,Shipping_State,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Código de facturación,Billing_Code,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,Código de envío,Shipping_Code,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,País de facturación,Billing_Country,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Address Information,País de envío,Shipping_Country,text,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Standard,Description Information,Descripción,Description,textarea,no,false,65,5,60,7.7,5,Propuesta: Revisar (uso < 10 %),nulo 60
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Hora de la última actividad,Last_Activity_Time,datetime,no,true,65,35,30,53.8,35,Propuesta: Sistema (metadato),nulo 30. rango 2025-01-29..2026-04-22
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Diseño,Layout,layout,no,false,65,65,0,100.0,3,Propuesta: Sistema (metadato),
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Etiqueta,Tag,text,no,false,65,0,65,0.0,0,Propuesta: Sistema (metadato),lista_vacia 65
+Accounts,Persona Física | Persona Moral | Standard,Record Image,Imagen de Cuenta,Record_Image,profileimage,no,false,65,18,47,27.7,18,Propuesta: Sistema (metadato),nulo 47
+Accounts,Persona Física | Persona Moral | Standard,Account Information,ID de registro,id,bigint,no,true,65,65,0,100.0,65,Propuesta: Sistema (metadato),
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Cambiar hora de registro,Change_Log_Time__s,datetime,no,true,65,65,0,100.0,65,Propuesta: Sistema (metadato),rango 2025-01-29..2026-07-28
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Locked,Locked__s,boolean,no,true,65,0,65,0.0,0,Propuesta: Sistema (metadato),false 65
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Hora de último enriquecimiento de datos,Last_Enriched_Time__s,datetime,no,true,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Estado de enriquecimiento de datos,Enrich_Status__s,picklist,no,true,65,0,65,0.0,0,Propuesta: Sistema (metadato),"nulo 65. 3 opciones, 3 sin uso"
+Accounts,Persona Física | Persona Moral | Standard,Account Information,Record Status,Record_Status__s,picklist,no,false,65,65,0,100.0,1,Propuesta: Sistema (metadato),"3 opciones, 2 sin uso"
+Accounts,Persona Física | Persona Moral,Documentación,Estado de Cuenta Persona Moral,Estado_de_Cuenta,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,SAT Opinión de Cumplimiento Personal Moral,SAT_Opini_n_de_Cumplimiento,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,Constancia de Situación Fiscal Persona Moral,Constancia_de_Situaci_n_Fiscal,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,INE del Representante Legal,INE,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,IMSS Opinión de Cumplimiento Persona Moral,IMSS_Opini_n_de_Cumplimiento,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,Comprobante de Domicilio del Representante Legal,Comprobante_de_Domicilio,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Física | Persona Moral,Documentación,Contrato de Bloqueo de Zona,Contrato_de_Bloqueo_de_Zona,fileupload,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 0 archivos, 0.0 MB, ext "
+Accounts,Persona Moral,Account Information,Nombre del Representante Legal,Nombre_del_Representante_Legal,text,no,false,65,2,63,3.1,2,Propuesta: Revisar (uso < 10 %),nulo 63
+Accounts,Persona Moral,Account Information,Domicilio Fiscal de la Persona Moral,Domicilio_Fiscal_de_la_Persona_Moral,text,no,false,65,1,64,1.5,1,Propuesta: Revisar (uso < 10 %),nulo 64
+Accounts,Standard,Contrato,Estatus contrato de bloqueo de zona,Status_contrato_de_bloqueo_de_zona,picklist,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),"nulo 65. 3 opciones, 3 sin uso"
+Accounts,Standard,Contrato,Link a carpeta de contrato,Link_a_carpeta_de_contrato,website,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Persona Física,Rappi,SI,SI,boolean,no,false,65,0,65,0.0,0,Propuesta: Revisar: nunca true,false 65
+Accounts,Persona Física,Rappi,NO,NO,boolean,no,false,65,0,65,0.0,0,Propuesta: Revisar: nunca true,false 65
+Accounts,Persona Moral,RAPPI,ENCENDIDO,ENCENDIDO,boolean,no,false,65,0,65,0.0,0,Propuesta: Revisar: nunca true,false 65
+Accounts,Standard,Account Information,RFC,RFC,text,no,false,65,13,52,20.0,12,Propuesta: Conservar,nulo 52
+Accounts,Standard,Account Information,Correo electrónico 1,Correo_electr_nico_1,email,no,false,65,5,60,7.7,5,Propuesta: Revisar (uso < 10 %),nulo 60
+Accounts,Standard,Account Information,Razón Social,Raz_n_Social,text,no,false,65,8,57,12.3,8,Propuesta: Conservar,nulo 57
+Accounts,Standard,Address Information,Domicilio Personal del Franquiciatario,Domicilio_Personal_del_Franquiciatario,textarea,no,false,65,0,65,0.0,0,Propuesta: Descartar (0 % uso),nulo 65
+Accounts,Persona Moral | Standard,Analytics- Detailed Revenue | Detailed Revenue- Analytics,LINK,LINK,website,no,false,65,18,47,27.7,18,Propuesta: Conservar,nulo 47
+Accounts,,,Contrase_a,Contrase_a,text,,,65,,,,,Propuesta: Descartar (credencial),EXCLUIDO por seguridad: no se leyó
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Record Status,Record_Status__s,picklist,no,false,176,176,0,100.0,1,Propuesta: Sistema (metadato),"3 opciones, 2 sin uso"
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Nombre de Tienda,Name,text,sí,false,176,176,0,100.0,176,Propuesta: Conservar,
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Tiendas Propietario,Owner,ownerlookup,no,true,176,176,0,100.0,4,Propuesta: Sistema (metadato),
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Creado por,Created_By,ownerlookup,no,false,176,176,0,100.0,5,Propuesta: Sistema (metadato),
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Modificado por,Modified_By,ownerlookup,no,false,176,176,0,100.0,5,Propuesta: Sistema (metadato),
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Hora de creación,Created_Time,datetime,no,false,176,176,0,100.0,176,Propuesta: Sistema (metadato),rango 2025-01-13..2026-08-13
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Hora de modificación,Modified_Time,datetime,no,false,176,176,0,100.0,121,Propuesta: Sistema (metadato),rango 2025-09-18..2026-09-10
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Hora de la última actividad,Last_Activity_Time,datetime,no,true,176,173,3,98.3,118,Propuesta: Sistema (metadato),nulo 3. rango 2025-09-18..2026-09-10
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Etiqueta,Tag,text,no,false,176,158,18,89.8,16,Propuesta: Sistema (metadato),lista_vacia 18
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Modalidad de cancelación de suscripción,Unsubscribed_Mode,picklist,no,true,176,0,176,0.0,0,Propuesta: Sistema (metadato),"nulo 176. 4 opciones, 4 sin uso"
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Hora de cancelación de suscripción,Unsubscribed_Time,datetime,no,true,176,0,176,0.0,0,Propuesta: Sistema (metadato),nulo 176
+Franquicias,Tiendas The Coffee,CustomModule1 Information,ID de registro,id,bigint,no,true,176,176,0,100.0,176,Propuesta: Sistema (metadato),
+Franquicias,Tiendas The Coffee,Record Image,Imagen de Tiendas,Record_Image,profileimage,no,false,176,32,144,18.2,32,Propuesta: Sistema (metadato),nulo 144
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Locked,Locked__s,boolean,no,true,176,0,176,0.0,0,Propuesta: Sistema (metadato),false 176
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Cuenta Relacionada,Cuenta,lookup,no,false,176,174,2,98.9,52,Propuesta: Conservar,nulo 2. lookup→Accounts
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Ciudad,Ciudad,text,no,false,176,116,60,65.9,54,Propuesta: Conservar,nulo 60
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Dirección Tienda,Direcci_n,text,no,false,176,104,72,59.1,103,Propuesta: Conservar,nulo 72
+Franquicias,Tiendas The Coffee,Información Proyecto,Proyecto 3D,Proyecto_3D,fileupload,no,false,176,36,140,20.5,36,Propuesta: Conservar,"nulo 140. 36 archivos, 5.5 MB, ext pdf:35 jpeg:1"
+Franquicias,Tiendas The Coffee,Información Proyecto,Proyecto Ejecutivo,Proyecto_Ejecutivo,fileupload,no,false,176,47,129,26.7,47,Propuesta: Conservar,"nulo 129. 47 archivos, 49.7 MB, ext pdf:46 (sin extensión):1"
+Franquicias,Tiendas The Coffee,Información Proyecto,Arquitecto Asignado,Arquitecto_Asignado,text,no,false,176,29,147,16.5,9,Propuesta: Conservar,nulo 147
+Franquicias,Tiendas The Coffee,Información Proyecto,Fecha de Entrega de Proyecto,Fecha_de_Entrega_de_Proyecto,date,no,false,176,37,139,21.0,32,Propuesta: Conservar,nulo 139. rango 2024-01-01..2026-01-30
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Número de Tienda / Jestor,N_mero_de_Tienda_Jestor,integer,no,false,176,82,94,46.6,81,Propuesta: Conservar,nulo 94
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Fecha en que aperturo la tienda,Fecha_en_que_apertur,date,no,false,176,63,113,35.8,61,Propuesta: Conservar,nulo 113. rango 2024-01-15..2026-07-17
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Status,Status,picklist,no,false,176,176,0,100.0,13,Propuesta: Conservar,"22 opciones, 9 sin uso"
+Franquicias,Tiendas The Coffee,Fechas,Aprobación de local,Aprobaci_n_de_local,date,no,false,176,58,118,33.0,42,Propuesta: Conservar,nulo 118. rango 2023-04-26..2026-02-18
+Franquicias,Tiendas The Coffee,Fechas,Firma de Contrato,Firma_de_Contrato,date,no,false,176,43,133,24.4,33,Propuesta: Conservar,nulo 133. rango 2023-11-02..2025-07-16
+Franquicias,Tiendas The Coffee,Fechas,Fecha de Apertura,Fecha_de_Apertura,date,no,false,176,58,118,33.0,57,Propuesta: Conservar,nulo 118. rango 2024-01-15..2026-02-23
+Franquicias,Tiendas The Coffee,Cafetera,Status de Cafetera,Status_de_Cafetera,picklist,no,false,176,52,124,29.5,3,Propuesta: Conservar,"nulo 124. 4 opciones, 1 sin uso"
+Franquicias,Tiendas The Coffee,Cafetera,Marca de Cafetera,Marca_de_Cafetera,picklist,no,false,176,53,123,30.1,2,Propuesta: Conservar,"nulo 123. 2 opciones, 0 sin uso"
+Franquicias,Tiendas The Coffee,Contrato,Fecha de vencimiento de contrato de franquicia,Fecha_de_Vencimiento,date,no,false,176,25,151,14.2,24,Propuesta: Conservar,nulo 151. rango 2029-02-06..2030-07-05
+Franquicias,Tiendas The Coffee,Contrato,Fecha de Firma de contrato de franquicia,Fecha_de_Firma,date,no,false,176,25,151,14.2,24,Propuesta: Conservar,nulo 151. rango 2024-02-15..2025-08-14
+Franquicias,Tiendas The Coffee,Contrato,Estatus Contrato de franquicia 5 años,Contrato_de_franquicia_5_a_os,picklist,no,false,176,26,150,14.8,2,Propuesta: Conservar,"nulo 150. 3 opciones, 1 sin uso"
+Franquicias,Tiendas The Coffee,Contrato,Link a carpeta de contrato,Link_a_carpeta_de_contrato,website,no,false,176,27,149,15.3,24,Propuesta: Conservar,nulo 149
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Días Para Apertura,D_as_Para_Apertura,picklist,no,false,176,57,119,32.4,4,Propuesta: Conservar,"nulo 119. 5 opciones, 1 sin uso"
+Franquicias,Tiendas The Coffee,Proveedores,Rappi,Rappi,boolean,no,false,176,2,174,1.1,1,Propuesta: Conservar,false 174; true 2
+Franquicias,Tiendas The Coffee,Evidencias Pre-Apertura,Checklist Pre-Apertura,Checklist_Pre_Apertura,website,no,false,176,2,174,1.1,2,Propuesta: Revisar (uso < 10 %),nulo 174
+Franquicias,Tiendas The Coffee,Evidencias Pre-Apertura,Funcionamiento de Máquinas,Evidencias_de_M_quinas,website,no,false,176,1,175,0.6,1,Propuesta: Revisar (uso < 10 %),nulo 175
+Franquicias,Tiendas The Coffee,Evidencias Pre-Apertura,Certificado de Looker,Evidencias_de_Tienda,website,no,false,176,1,175,0.6,1,Propuesta: Revisar (uso < 10 %),nulo 175
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Dictamen de Aprobación de Local,Dictamen_de_Aprobaci_n_de_Local,website,no,false,176,33,143,18.8,33,Propuesta: Conservar,nulo 143
+Franquicias,Tiendas The Coffee,Proveedores,Rollout,Rollout,boolean,no,false,176,46,130,26.1,1,Propuesta: Conservar,false 130; true 46
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Correo de la tienda,Correo_de_la_tienda,email,no,false,176,8,168,4.5,8,Propuesta: Revisar (uso < 10 %),nulo 168
+Franquicias,Tiendas The Coffee,CustomModule1 Information,FECHA DE ARRANQUE,FECHA_DE_ARRANQUE,date,no,false,176,134,42,76.1,117,Propuesta: Conservar,nulo 42. rango 2024-01-16..2030-01-09
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Fecha aprobación de local,Fecha_aprobaci_n_de_local,date,no,false,176,41,135,23.3,24,Propuesta: Conservar,nulo 135. rango 2025-08-29..2026-07-29
+Franquicias,Tiendas The Coffee,Evidencias Pre-Apertura,Certificado de Facturación,Certificado_de_Facturaci_n,website,no,false,176,0,176,0.0,0,Propuesta: Descartar (0 % uso),nulo 176
+Franquicias,Tiendas The Coffee,Evidencias Pre-Apertura,Perfiles de Baristas,Perfiles_de_Baristas,website,no,false,176,0,176,0.0,0,Propuesta: Descartar (0 % uso),nulo 176
+Franquicias,Tiendas The Coffee,Google My business,Configuración Partoo,Configuraci_n_Partoo,boolean,no,false,176,0,176,0.0,0,Propuesta: Revisar: nunca true,false 176
+Franquicias,Tiendas The Coffee,Google My business,Alta en Google Maps,Alta_en_Google_Maps,boolean,no,false,176,0,176,0.0,0,Propuesta: Revisar: nunca true,false 176
+Franquicias,Tiendas The Coffee,CustomModule1 Information,Días para Aperturar (Dpto. de Aprobaciones),D_as_para_Aperturar_Dpto_de_Aprobaciones,text,no,false,176,29,147,16.5,18,Propuesta: Conservar,nulo 147
+Franquicias,,,Contrase_a_FINKOK_PAC,Contrase_a_FINKOK_PAC,text,,,176,,,,,Propuesta: Descartar (credencial),EXCLUIDO por seguridad: no se leyó
+Franquicias,,,Usuario_FINKOK_PAC,Usuario_FINKOK_PAC,text,,,176,,,,,Propuesta: Descartar (credencial),EXCLUIDO por seguridad: no se leyó
+Tasks,Standard,Task Information,Titular de la tarea,Owner,ownerlookup,no,true,268,268,0,100.0,7,Propuesta: Sistema (metadato),
+Tasks,Standard,Task Information,Asunto,Subject,text,sí,false,268,268,0,100.0,82,Propuesta: Conservar,"5 opciones, 5 sin uso"
+Tasks,Standard,Task Information,Fecha de vencimiento,Due_Date,date,no,false,268,226,42,84.3,37,Propuesta: Conservar,nulo 42. rango 2025-05-28..2026-06-01
+Tasks,Standard,Task Information,Nombre de contacto,Who_Id,lookup,no,false,268,2,266,0.7,2,Propuesta: Revisar (uso < 10 %),nulo 266. lookup→Contacts
+Tasks,Standard,Task Information,Relacionado con,What_Id,lookup,no,false,268,251,17,93.7,60,Propuesta: Conservar,nulo 17. lookup→se_module
+Tasks,Standard,Task Information,Estado,Status,picklist,no,false,268,268,0,100.0,4,Propuesta: Conservar,"6 opciones, 2 sin uso"
+Tasks,Standard,Task Information,Prioridad,Priority,picklist,no,false,268,268,0,100.0,4,Propuesta: Conservar,"5 opciones, 1 sin uso"
+Tasks,Standard,Task Information,Creado por,Created_By,ownerlookup,no,false,268,268,0,100.0,6,Propuesta: Sistema (metadato),
+Tasks,Standard,Task Information,Modificado por,Modified_By,ownerlookup,no,false,268,268,0,100.0,6,Propuesta: Sistema (metadato),
+Tasks,Standard,Task Information,Hora de creación,Created_Time,datetime,no,false,268,268,0,100.0,116,Propuesta: Sistema (metadato),rango 2025-05-27..2026-04-06
+Tasks,Standard,Task Information,Hora de modificación,Modified_Time,datetime,no,false,268,268,0,100.0,116,Propuesta: Sistema (metadato),rango 2025-05-29..2026-04-06
+Tasks,Standard,Description Information,Descripción,Description,textarea,no,false,268,4,264,1.5,4,Propuesta: Revisar (uso < 10 %),nulo 264
+Tasks,Standard,Task Information,Enviar mensaje de correo electrónico de notificación,Send_Notification_Email,boolean,no,false,268,7,261,2.6,1,Propuesta: Conservar,false 261; true 7
+Tasks,Standard,Task Information,Recordatorio,Remind_At,ALARM,no,false,268,7,261,2.6,7,Propuesta: Revisar (uso < 10 %),nulo 261
+Tasks,Standard,Task Information,Repetir,Recurring_Activity,RRULE,no,false,268,0,268,0.0,0,Propuesta: Descartar (0 % uso),nulo 268
+Tasks,Standard,Task Information,Hora de cierre,Closed_Time,datetime,no,true,268,29,239,10.8,28,Propuesta: Conservar,nulo 239. rango 2025-05-29..2026-03-17
+Tasks,Standard,Task Information,Etiqueta,Tag,text,no,false,268,0,268,0.0,0,Propuesta: Sistema (metadato),lista_vacia 268
+Tasks,Standard,Task Information,ID de registro,id,bigint,no,true,268,268,0,100.0,268,Propuesta: Sistema (metadato),
+Tasks,Standard,Task Information,Locked,Locked__s,boolean,no,true,268,0,268,0.0,0,Propuesta: Sistema (metadato),false 268
+Tasks,Standard,Task Information,Record Status,Record_Status__s,picklist,no,false,268,268,0,100.0,1,Propuesta: Sistema (metadato),"3 opciones, 2 sin uso"
+Tasks,Standard,Task Information,Hora de la última actividad,Last_Activity_Time,datetime,no,false,268,230,38,85.8,78,Propuesta: Sistema (metadato),nulo 38. rango 2025-05-29..2026-04-06

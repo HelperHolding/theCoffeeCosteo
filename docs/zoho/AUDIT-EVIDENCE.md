@@ -266,3 +266,52 @@ Claude no crea el cliente ni ve el secreto ni los tokens. Solo prepara el script
 Referencia de scopes: get-org-data, get-users, get-roles, get-profiles, layouts-meta, get-tag-list, get-attachments y scopes (Zoho CRM API v8). El refresh token no caduca hasta que se revoca. Zoho guarda como máximo 20 por usuario.
 
 **Revocar:** API Console → Self Client → Delete, o accounts.zoho.com → Seguridad → Aplicaciones conectadas. Después borra las variables `ZOHO_*` de `.env.local`.
+
+---
+
+# Fase 3 — Auditoría completa (2026-10-19)
+
+## F3.1 Acceso y herramientas
+
+- **Self Client** creado por Carlos con 16 scopes `*.READ` (F2.10). El refresh token está solo en `.env.local`, que git ignora. Claude nunca vio el secreto ni los tokens.
+- `scripts/zoho/cliente.ts`: cliente v8 que **bloquea antes de salir a la red** todo lo que no sea `GET /crm/v8/*` o `POST /crm/v8/coql` con `SELECT`. Lo prueba `tests/zoho/cliente.test.ts` (2 pruebas, pasan).
+- `scripts/zoho/auditar.ts`: lee los 5 módulos completos **en memoria** y escribe solo agregados (conteos, distribuciones de catálogos, rangos de fechas, usuarios con alias) en un JSON **fuera del repo** (scratchpad de la sesión). Los entregables se generan desde ese JSON.
+- La org se confirmó con `GET /crm/v8/org` (sección 4) y Carlos la validó.
+
+## F3.2 Corrida definitiva
+
+| Dato | Valor |
+| --- | --- |
+| **Snapshot** | **2026-10-19T22:02:17Z** (16:02 America/Mexico_City) |
+| Llamadas a la API | 247 por corrida. Hubo 3 corridas: la primera y la segunda corrigieron el auditor (F3.4) |
+| Errores | 0 |
+| Paginación | Records API: 200 por página con `page_token`, lotes de 49 campos + `id`, unión por id. COQL: 2,000 por página con `more_records` |
+| Conciliación | COQL `COUNT(id)` = registros leídos en los 5 módulos (Leads 3,621 · Contactos 51 · Cuentas 65 · Tiendas 176 · Tareas 268) |
+| Campos inaccesibles | 0, aparte de los excluidos a propósito |
+| Excluidos por seguridad | `Franquicias.Contrase_a_FINKOK_PAC`, `Franquicias.Usuario_FINKOK_PAC`, `Accounts.Contrase_a` |
+| Timeline | 176 tiendas (más paginación), filtrado a cambios de la propia tienda |
+| Notas / adjuntos | COQL sobre `Notes` (495) y `Attachments` (292). Del contenido de las notas solo se midió la longitud; de los adjuntos, extensión, tamaño y duplicados. **0 descargas** |
+
+## F3.3 Clasificación de vacíos
+
+Por campo y registro, el auditor distingue: `ausente` (la clave no viene en la respuesta), `nulo`, `texto_vacio`, `lista_vacia`, `false`, `cero` y `valor`. "Lleno" = `valor` + `true` + `cero`. `false` cuenta como valor válido de un booleano y se reporta aparte en `notes` del CSV. En la corrida definitiva no hubo casos `ausente` ni `texto_vacio` (la API devuelve `null`).
+
+## F3.4 Correcciones del auditor durante la fase
+
+1. El timeline de una tienda incluye cambios de registros relacionados (aparecían estados de Tareas como "Not Started → Completed"). Se filtró por `record.module.api_name = Franquicias`.
+2. COQL no devuelve `$se_module` en un `SELECT` simple de Notas/Adjuntos; sí con `GROUP BY`. Se usa la consulta agrupada.
+3. Se descubrió `Accounts.Contrase_a` (contraseñas en texto plano en 18 cuentas). En la primera corrida solo se contó su llenado, en memoria y sin escribir valores; desde la corrida definitiva **no se pide a la API**.
+
+## F3.5 Entregables
+
+`ZOHO-INVENTORY.md` · `ZOHO-FIELD-AUDIT.csv` (210 campos) · `ZOHO-PIPELINE-MAP.md` · `ZOHO-USERS-AND-OWNERSHIP.md` · `ZOHO-DOCUMENT-INVENTORY.md` · `CRM-SCOPE-DECISIONS.md` · este archivo.
+
+## F3.6 Cero mutaciones y PII
+
+- Ninguna escritura, webhook ni actualización en Zoho. El cliente no permite otro método (probado).
+- Sin nombres, correos, teléfonos, IDs de Zoho ni contenido de notas en el repo: usuarios con alias, una etiqueta que parecía nombre propio redactada y la muestra de F2.9 redactada. Se revisó con `grep` antes del commit.
+- Datos inaccesibles por diseño: los 27 campos eliminados de Tiendas (solo aparecen en el historial) y el contenido de los archivos (no se descargó).
+
+## F3.7 Comparación de campos duplicados (2026-10-19)
+
+20 llamadas GET adicionales (Records API: Tiendas 11 campos, Leads 6) para comparar pares de campos registro por registro. Solo se imprimieron conteos (iguales / distintos / solo uno / ninguno). El resultado y la resolución están en `CRM-SCOPE-DECISIONS.md` → "Campos duplicados". Cero mutaciones.
