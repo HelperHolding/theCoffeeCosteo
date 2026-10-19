@@ -173,6 +173,52 @@ export function CalculadoraPromociones({
   const objetivoFraccion = (esRappi ? objetivoDefault : Number(objetivo)) / 100;
   const bruto = r ? r.bruto - extraEfectivo : 0;
 
+  const canalMostrador =
+    canales.find((c) => c.nombre.toLowerCase() === 'mostrador') ??
+    canales.find((c) => c.nombre.toLowerCase() === 'app propia');
+  const canalElegido = canales.find((c) => c.id === canal);
+  const extrasAdicionales = Math.max(0, Number(extra) - (canalElegido?.costoEnvase ?? 0));
+  const tarjetas = (
+    esRappi
+      ? [{ nombre: 'Rappi', resultado: r, extras: extraEfectivo }]
+      : [
+          { nombre: 'Mostrador/App', config: canalMostrador },
+          { nombre: 'Rappi', config: canalRappi },
+        ].map(({ nombre, config }) => {
+          const esElegido = config?.id === canal;
+          const extras = esElegido ? Number(extra) : extrasAdicionales + (config?.costoEnvase ?? 0);
+          const resultado =
+            r && config
+              ? simularPromocion({
+                  costo: esCombo ? resumen.costo! : Number(costo),
+                  unidades: esCombo ? 1 : Number(unidades),
+                  precio: Number(precioEfectivo),
+                  descuento: Number(descuento),
+                  iva: Number(iva),
+                  comision: esElegido ? Number(comision) : config.comisionPct,
+                  baseComision: esElegido ? base : 'con-iva',
+                  extra: extras,
+                  objetivo: Number(objetivo),
+                })
+              : null;
+          return { nombre, resultado, extras };
+        })
+  ).flatMap(({ nombre, resultado, extras }) => {
+    const brutoCanal = resultado ? resultado.bruto - extras : null;
+    return [
+      [
+        `Margen bruto ${nombre}`,
+        resultado ? porcentaje(brutoCanal! / resultado.neto) : '—',
+        brutoCanal === null ? 'Canal sin configurar' : `${dinero(brutoCanal)} por venta`,
+      ],
+      [
+        `Margen con comisión ${nombre}`,
+        resultado ? porcentaje(resultado.margen) : '—',
+        resultado ? `${dinero(resultado.contribucion)} por venta` : 'Canal sin configurar',
+      ],
+    ];
+  });
+
   return (
     <section className="panel space-y-5">
       <div>
@@ -387,19 +433,24 @@ export function CalculadoraPromociones({
         <div aria-live="polite" aria-atomic="true" className="space-y-4">
           {r ? (
             <>
-              <dl aria-label="Cuatro indicadores de margen" className="grid grid-cols-2 gap-3">
-                {[
-                  ['Margen bruto $', dinero(bruto)],
-                  ['Margen bruto %', porcentaje(bruto / r.neto)],
-                  ['Margen con comisión $', dinero(r.contribucion)],
-                  ['Margen con comisión %', porcentaje(r.margen)],
-                ].map(([etiqueta, valor]) => (
+              <dl aria-label="Márgenes de la simulación" className="grid grid-cols-2 gap-3">
+                {tarjetas.map(([etiqueta, valor, importe]) => (
                   <div key={etiqueta} className="rounded-xl border border-line p-4">
                     <dt className="text-xs text-muted-foreground">{etiqueta}</dt>
-                    <dd className="mt-2 text-2xl font-bold numero">{valor}</dd>
+                    <dd className="mt-2">
+                      <strong className="block text-2xl font-bold numero">{valor}</strong>
+                      <span className="text-sm text-muted-foreground numero">{importe}</span>
+                    </dd>
                   </div>
                 ))}
               </dl>
+              {!esRappi && (
+                <p className="text-xs text-muted-foreground">
+                  Comparación al mismo precio y descuento capturados, con comisión y envase de cada canal. Los
+                  ajustes del canal de referencia se aplican a ese canal; los extras adicionales se aplican a
+                  ambos.
+                </p>
+              )}
               <span
                 className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                   r.contribucion < 0
