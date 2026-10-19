@@ -34,21 +34,34 @@ describe('v_resumen (mismas fórmulas que el Excel)', () => {
     expect(num(f.markup)).toBe(0);
   });
 
-  it('Rappi: precio castigado con tope 25%, comisión sobre venta neta y envase', async () => {
+  it('Rappi: precio castigado con tope 25%, comisión sobre precio con IVA y envase', async () => {
     const p = await productoCon(65, 20);
     const f = await fila(p, 'Rappi');
     // neutro = ROUND(65/0.82 + 6.14·1.16/0.82) = 88; tope = ROUNDDOWN(81.25) = 81
     expect(num(f.precio_canal)).toBe(81);
     expect(num(f.markup)).toBeCloseTo(0.246154, 5);
-    expect(num(f.margen)).toBeCloseTo(31.118621, 5);
-    expect(num(f.margen_pct)).toBeCloseTo(0.44565, 5);
+    // comisión = 81 · 0.18 = 14.58 (con IVA); margen = 81/1.16 − 14.58 − 20 − 6.14
+    expect(num(f.comision)).toBeCloseTo(14.58, 5);
+    expect(num(f.margen)).toBeCloseTo(29.107586, 5);
+    expect(num(f.margen_pct)).toBeCloseTo(0.416849, 5);
+    // margen bruto: antes de comisión, con envase
+    expect(num(f.margen_bruto)).toBeCloseTo(43.687586, 5);
+    expect(num(f.margen_bruto_pct)).toBeCloseTo(0.625649, 5);
+  });
+
+  it('mostrador sin comisión: margen bruto igual al margen con comisión', async () => {
+    const p = await productoCon(65, 20);
+    const f = await fila(p, 'Mostrador');
+    expect(num(f.comision)).toBe(0);
+    expect(num(f.margen_bruto)).toBeCloseTo(num(f.margen), 5);
+    expect(num(f.margen_bruto_pct)).toBeCloseTo(num(f.margen_pct), 5);
   });
 
   it('App propia: precio de mostrador, envase como costo y comisión configurable', async () => {
     const p = await productoCon(65, 20);
     expect(num((await fila(p, 'App propia')).margen)).toBeCloseTo(29.894483, 5);
     await db.query(`update canales set comision_pct = 0.035 where nombre = 'App propia'`);
-    expect(num((await fila(p, 'App propia')).margen)).toBeCloseTo(29.894483 - 56.034483 * 0.035, 5);
+    expect(num((await fila(p, 'App propia')).margen)).toBeCloseTo(29.894483 - 65 * 0.035, 5);
     await db.query(`update canales set comision_pct = 0 where nombre = 'App propia'`);
   });
 

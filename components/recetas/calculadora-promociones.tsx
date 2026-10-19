@@ -34,7 +34,7 @@ export function CalculadoraPromociones({
   const [comision, setComision] = useState('0');
   const [extra, setExtra] = useState('0');
   const [objetivo, setObjetivo] = useState(String(objetivoDefault));
-  const [base, setBase] = useState<'con-iva' | 'sin-iva'>('sin-iva');
+  const [base, setBase] = useState<'con-iva' | 'sin-iva'>('con-iva');
   const [modo, setModo] = useState<'producto' | 'combo'>('producto');
   const [combo, setCombo] = useState<{ producto: string; cantidad: string }[]>([
     { producto: '', cantidad: '1' },

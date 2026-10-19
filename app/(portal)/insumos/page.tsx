@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Package, PackageX, Archive, Truck, Search, Plus, X, Pencil } from 'lucide-react';
 import { sesion } from '@/lib/supabase/sesion';
-import { todas, dinero } from '@/lib/portal/consultas';
+import { todas, dinero, mayusculas } from '@/lib/portal/consultas';
 import { campos } from '@/lib/portal/configuracion';
 import { puede } from '@/lib/portal/permisos';
 import { dependientes } from '@/lib/portal/dependencias';
@@ -60,7 +60,13 @@ export default async function InsumosPage({
             ...c,
             opciones: (c.nombre === 'proveedor_id' ? proveedores : categorias)
               .filter((x) => x.activo || x.id === actual?.[c.nombre as 'proveedor_id' | 'categoria_id'])
-              .map((x) => ({ id: x.id, nombre: x.nombre + (x.activo ? '' : ' (inactivo)') })),
+              // Solo para mostrar: las categorías se leen en mayúsculas sin cambiar lo guardado.
+              .map((x) => ({
+                id: x.id,
+                nombre:
+                  (c.nombre === 'categoria_id' ? mayusculas(x.nombre) : x.nombre) +
+                  (x.activo ? '' : ' (inactivo)'),
+              })),
           }
         : c,
     );
@@ -150,7 +156,7 @@ export default async function InsumosPage({
                 <option value="">Todas</option>
                 {categorias.map((x) => (
                   <option key={x.id} value={x.id}>
-                    {x.nombre}
+                    {mayusculas(x.nombre)}
                   </option>
                 ))}
               </select>

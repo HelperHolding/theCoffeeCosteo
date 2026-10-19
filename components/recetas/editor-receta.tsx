@@ -7,7 +7,7 @@ import type { Borrador } from '@/lib/portal/validacion';
 import { validarReceta, numeroCapturado } from '@/lib/portal/validacion';
 import type { Catalogo, Tamano, Unidad } from '@/lib/supabase/database.types';
 import { guardarReceta } from '@/app/(portal)/productos/actions';
-import { dinero } from '@/lib/portal/consultas';
+import { dinero, mayusculas } from '@/lib/portal/consultas';
 export function EditorReceta({
   inicial,
   opciones,
@@ -130,7 +130,7 @@ export function EditorReceta({
                   .filter((c) => c.activo || c.id === d.categoria_id)
                   .map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.nombre}
+                      {mayusculas(c.nombre)}
                       {c.activo ? '' : ' (inactiva)'}
                     </option>
                   ))}

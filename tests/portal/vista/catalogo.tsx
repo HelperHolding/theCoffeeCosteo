@@ -26,9 +26,8 @@ export function VistaCatalogo() {
           editable
           tipo="producto"
           canales={[
-            { id: 'm', nombre: 'Mostrador' },
+            { id: 'm', nombre: 'App propia/Mostrador' },
             { id: 'r', nombre: 'Rappi' },
-            { id: 'a', nombre: 'App propia' },
           ]}
           filas={Array.from({ length: 31 }, (_, i) => ({
             id: String(i),
@@ -38,12 +37,27 @@ export function VistaCatalogo() {
             precios:
               i % 3 === 0
                 ? [
-                    { tamano: 'Chica', costo: 12.4 + i, canales: { m: 55, r: 75, a: 55 } },
-                    { tamano: 'Grande', costo: 16.9 + i, canales: { m: 65, r: 89, a: 65 } },
+                    { tamano: 'Chica', costo: 12.4 + i, canales: { m: 55, r: 75 } },
+                    { tamano: 'Grande', costo: 16.9 + i, canales: { m: 65, r: 89 } },
                   ]
                 : i === 4
                   ? []
-                  : [{ tamano: 'Único', costo: 9.8 + i, canales: { m: 48, r: 66, a: null } }],
+                  : [
+                      {
+                        tamano: 'Único',
+                        costo: 9.8 + i,
+                        canales: {
+                          m:
+                            i === 1
+                              ? [
+                                  { nombre: 'Mostrador', precio: 48 },
+                                  { nombre: 'App propia', precio: 52 },
+                                ]
+                              : 48,
+                          r: 66,
+                        },
+                      },
+                    ],
           }))}
         />
       </main>

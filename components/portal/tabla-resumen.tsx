@@ -13,6 +13,7 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search, X, Rows3, LayoutGrid } from 'lucide-react';
 import type { Resumen, Alerta } from '@/lib/supabase/database.types';
 import { dinero, porcentaje, mayusculas } from '@/lib/portal/consultas';
+import { esCanal, fusionarCanales } from '@/lib/portal/canales';
 import { Button } from '@/components/ui/button';
 import { Pill, estadoMargen, Insignia, Vacio } from '@/components/portal/piezas';
 type Fila = Resumen & { alerta: string | null };
@@ -62,13 +63,8 @@ const columns: ColumnDef<Fila>[] = [
       </span>
     ),
   },
-  {
-    accessorKey: 'margen_pct',
-    header: 'Margen',
-    meta: { numero: true },
-    sortUndefined: 'last',
-    cell: ({ row }) => <Pill estado={estadoMargen(row.original)}>{porcentaje(row.original.margen_pct)}</Pill>,
-  },
+  // Oculta: los márgenes se consultan en la ficha de cada producto; solo sirve para ?orden=margen.
+  { accessorKey: 'margen_pct', header: 'Margen', sortUndefined: 'last' },
   {
     accessorKey: 'alerta',
     header: 'Alerta',
@@ -91,8 +87,11 @@ function exportar(data: Fila[]) {
         Costo: f.costo,
         'Precio canal': f.precio_canal,
         'Precio manual': f.precio_manual,
-        'Margen $': f.margen,
-        'Margen %': f.margen_pct,
+        'Margen bruto $': f.margen_bruto,
+        'Margen bruto %': f.margen_bruto_pct,
+        'Comisión $': f.comision,
+        'Margen con comisión $': f.margen,
+        'Margen con comisión %': f.margen_pct,
         Alerta: f.alerta ?? '',
       })),
     );
@@ -131,22 +130,23 @@ export function TablaResumen({
   }
   const data = useMemo(() => {
     const mapa = new Map(alertas.map((a) => [`${a.producto_id}:${a.canal_id}`, a.alerta]));
-    return filas
-      .map((f) => ({ ...f, alerta: mapa.get(`${f.producto_id}:${f.canal_id}`) ?? null }))
-      .filter(
-        (f) =>
-          f.producto.toLocaleLowerCase('es').includes(buscar.toLocaleLowerCase('es')) &&
-          (!categoria || f.categoria === categoria) &&
-          (!canal || f.canal === canal) &&
-          (!tamano || f.tamano === tamano) &&
-          (!alerta || f.alerta === alerta) &&
-          (estado === 'todos' || f.activo === (estado === 'activos')),
-      );
+    return fusionarCanales(
+      filas.map((f) => ({ ...f, alerta: mapa.get(`${f.producto_id}:${f.canal_id}`) ?? null })),
+      { unir: (m, a) => ({ alerta: m.alerta ?? a.alerta }) },
+    ).filter(
+      (f) =>
+        f.producto.toLocaleLowerCase('es').includes(buscar.toLocaleLowerCase('es')) &&
+        (!categoria || f.categoria === categoria) &&
+        (!canal || esCanal(f.canal, canal)) &&
+        (!tamano || f.tamano === tamano) &&
+        (!alerta || f.alerta === alerta) &&
+        (estado === 'todos' || f.activo === (estado === 'activos')),
+    );
   }, [filas, alertas, buscar, categoria, canal, tamano, alerta, estado]);
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility: { margen_pct: false } },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -189,7 +189,7 @@ export function TablaResumen({
           {(
             [
               ['Categoría', 'categoria', categoria, setCategoria, filas.map((f) => f.categoria)],
-              ['Canal', 'canal', canal, setCanal, filas.map((f) => f.canal)],
+              ['Canal', 'canal', canal, setCanal, fusionarCanales(filas).map((f) => f.canal)],
               ['Tamaño', 'tamano', tamano, setTamano, filas.map((f) => f.tamano)],
               ['Alerta', 'alerta', alerta, setAlerta, alertas.flatMap((a) => (a.alerta ? [a.alerta] : []))],
             ] as const
@@ -202,7 +202,7 @@ export function TablaResumen({
                 className={valor ? '!border-crema !bg-crema-soft/40' : ''}
               >
                 <option value="">Todos</option>
-                {[...new Set(valores)].map((v) => (
+                {[...new Set([...valores, ...(valor ? [valor] : [])])].map((v) => (
                   <option key={v} value={v}>
                     {clave === 'alerta' ? v : mayusculas(v)}
                   </option>

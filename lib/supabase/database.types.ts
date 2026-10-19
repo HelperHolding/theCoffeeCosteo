@@ -113,6 +113,9 @@ export interface Resumen {
   margen: number | null;
   margen_pct: number | null;
   markup: number | null;
+  margen_bruto: number | null;
+  margen_bruto_pct: number | null;
+  comision: number | null;
 }
 export interface Alerta {
   producto_id: string;

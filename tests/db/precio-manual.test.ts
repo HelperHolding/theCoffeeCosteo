@@ -59,7 +59,7 @@ describe('precio de canal manual', () => {
     expect(num(f.precio_manual)).toBe(75);
     expect(num(f.precio_canal)).toBe(75);
     expect(num(f.venta_neta)).toBeCloseTo(75 / 1.16, 5);
-    expect(num(f.margen)).toBeCloseTo((75 / 1.16) * 0.82 - 20 - 6.14, 5);
+    expect(num(f.margen)).toBeCloseTo(75 / 1.16 - 75 * 0.18 - 20 - 6.14, 5);
     expect(f.markup).toBeNull();
     const mostrador = (
       await db.query<{ precio_canal: number | null }>(
@@ -79,7 +79,7 @@ describe('precio de canal manual', () => {
     expect(num(f.precio_manual)).toBe(75);
     expect(num(f.precio_canal)).toBe(75);
     expect(num(f.venta_neta)).toBeCloseTo(75 / 1.16, 5);
-    expect(num(f.margen)).toBeCloseTo((75 / 1.16) * 0.82 - 20 - 6.14, 5);
+    expect(num(f.margen)).toBeCloseTo(75 / 1.16 - 75 * 0.18 - 20 - 6.14, 5);
     expect(num(f.markup)).toBeCloseTo(75 / 65 - 1, 5);
   });
 

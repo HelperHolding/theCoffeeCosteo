@@ -6,21 +6,35 @@ import '../../../app/globals.css';
 import { VistaCatalogo } from './catalogo';
 import { VistaChat } from './chat';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
-const fila = {
-  producto_id: 'p',
-  producto: 'Latte de prueba',
-  activo: true,
-  categoria: 'Bebidas',
-  tamano_id: 't',
-  tamano: 'Único',
-  canal_id: 'c',
-  canal: 'Mostrador',
-  costo: 8.5,
-  precio_canal: 60,
-  precio_manual: null,
-  margen_pct: 0.7,
-  margen_objetivo: 0.55,
-} as Resumen;
+// Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
+const americano = (canal: string, orden: number, precio: number, comision: number, envase: number) => {
+  const neta = precio / 1.16;
+  return {
+    producto_id: 'p',
+    producto: 'Americano',
+    activo: true,
+    categoria: 'Hot',
+    tamano_id: 'g',
+    tamano: 'Grande',
+    tamano_orden: 2,
+    canal_id: canal,
+    canal,
+    canal_orden: orden,
+    costo: 11.2,
+    precio_calculado: precio,
+    precio_canal: precio,
+    precio_manual: null,
+    margen_bruto: neta - 11.2 - envase,
+    margen: neta - precio * comision - 11.2 - envase,
+    margen_pct: (neta - precio * comision - 11.2 - envase) / neta,
+    margen_objetivo: 0.55,
+  } as Resumen;
+};
+const filas = [
+  americano('Mostrador', 1, 62, 0, 0),
+  americano('Rappi', 2, 69, 0.18, 6.14),
+  americano('App propia', 3, 62, 0, 0),
+];
 createRoot(document.getElementById('root')!).render(
   window.location.search.includes('chat') ? (
     <VistaChat />
@@ -48,7 +62,7 @@ createRoot(document.getElementById('root')!).render(
     <main className="max-w-6xl mx-auto p-6 space-y-6">
       <p className="aviso">PRUEBA VISUAL · DATOS SINTÉTICOS · Sin Auth ni conexión a bases de datos</p>
       <h1>Resumen y editor de recetas</h1>
-      <TablaResumen filas={[fila]} alertas={[]} />
+      <TablaResumen filas={filas} alertas={[]} />
       <EditorReceta
         inicial={{
           nombre: 'Latte de prueba',

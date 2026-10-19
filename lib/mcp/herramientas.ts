@@ -70,13 +70,13 @@ export function crearConsultas(db: Db): Consulta[] {
   );
   registrar(
     'consultar_costos',
-    'Costos oficiales, precios (calculados y manuales), food cost y margen de un producto por tamaño/canal. Moneda MXN; porcentajes son fracciones (0.30 = 30%). Null significa dato ausente, no cero.',
+    'Costos oficiales, precios (calculados y manuales), food cost, margen bruto (antes de comisión) y margen con comisión (comisión sobre el precio con IVA) de un producto por tamaño/canal. Moneda MXN; porcentajes son fracciones (0.30 = 30%). Null significa dato ausente, no cero.',
     z.object({ producto_id: id, canal: texto, pagina, limite }),
     async (e) => {
       let q = db
         .from('v_resumen')
         .select(
-          'producto_id,producto,tamano_id,tamano,canal,costo,precio_lista,precio_calculado,precio_manual,precio_canal,venta_neta,food_cost,margen,margen_pct,margen_objetivo,comision_pct,comision_confirmada,usa_inactivo',
+          'producto_id,producto,tamano_id,tamano,canal,costo,precio_lista,precio_calculado,precio_manual,precio_canal,venta_neta,food_cost,margen_bruto,margen_bruto_pct,comision,margen,margen_pct,margen_objetivo,comision_pct,comision_confirmada,usa_inactivo',
         )
         .eq('producto_id', e.producto_id)
         .order('tamano_orden')
