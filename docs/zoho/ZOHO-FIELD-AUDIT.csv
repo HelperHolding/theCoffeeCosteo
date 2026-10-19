@@ -1,0 +1,51 @@
+module,layout,section,field_label,api_name,data_type,required,read_only,record_count,filled_count,empty_count,filled_percentage,unique_values,proposed_action,notes
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Record Status,Record_Status__s,picklist,n/d,false,176,,,,3 opciones,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Nombre de Tienda,Name,text,sistema,false,176,176,0,100.0,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Tiendas Propietario,Owner,ownerlookup,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Creado por,Created_By,ownerlookup,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Modificado por,Modified_By,ownerlookup,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de creación,Created_Time,datetime,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de modificación,Modified_Time,datetime,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de la última actividad,Last_Activity_Time,datetime,n/d,true,176,173,3,98.3,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Etiqueta,Tag,text,n/d,false,176,158,18,89.8,,Pendiente,Etiquetas en uso en 158 de 176.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Modalidad de cancelación de suscripción,Unsubscribed_Mode,picklist,n/d,true,176,0,176,0.0,4 opciones,Pendiente,Campo de sistema sin uso.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Hora de cancelación de suscripción,Unsubscribed_Time,datetime,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),ID de registro,id,bigint,n/d,true,176,176,0,100.0,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Imagen de Tiendas,Record_Image,profileimage,n/d,false,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Locked,Locked__s,boolean,n/d,true,176,,,,,Pendiente,Campo de sistema; no medido en piloto.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Cuenta Relacionada,Cuenta,lookup,n/d,false,176,174,2,98.9,,Pendiente,Lookup a Accounts.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Ciudad,Ciudad,text,n/d,false,176,116,60,65.9,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Dirección Tienda,Direcci_n,text,n/d,false,176,104,72,59.1,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Proyecto 3D,Proyecto_3D,fileupload,n/d,false,176,,,,,Pendiente,fileupload: COQL no permite filtrarlo. Se mide en inventario de documentos.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Proyecto Ejecutivo,Proyecto_Ejecutivo,fileupload,n/d,false,176,,,,,Pendiente,fileupload: COQL no permite filtrarlo. Se mide en inventario de documentos.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Arquitecto Asignado,Arquitecto_Asignado,text,n/d,false,176,29,147,16.5,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Entrega de Proyecto,Fecha_de_Entrega_de_Proyecto,date,n/d,false,176,37,139,21.0,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Número de Tienda / Jestor,N_mero_de_Tienda_Jestor,integer,n/d,false,176,82,94,46.6,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha en que aperturo la tienda,Fecha_en_que_apertur,date,n/d,false,176,63,113,35.8,,Pendiente,Ver Fecha_de_Apertura.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Status,Status,picklist,n/d,false,176,176,0,100.0,13 de 22 opciones usadas,Pendiente,"Etapa del pipeline de Tiendas. 0 nulos. 58 en ""Firma de contrato"" (primera opción: posible valor por defecto)."
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Aprobación de local,Aprobaci_n_de_local,date,n/d,false,176,58,118,33.0,,Pendiente,Posible duplicado de Fecha_aprobaci_n_de_local (58 vs 41).
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Firma de Contrato,Firma_de_Contrato,date,n/d,false,176,43,133,24.4,,Pendiente,Posible duplicado de Fecha_de_Firma (43 vs 25).
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Apertura,Fecha_de_Apertura,date,n/d,false,176,58,118,33.0,,Pendiente,"Tres fechas de apertura: Fecha_de_Apertura (58), Fecha_en_que_apertur (63), FECHA_DE_ARRANQUE (134)."
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Status de Cafetera,Status_de_Cafetera,picklist,n/d,false,176,52,124,29.5,4 opciones,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Marca de Cafetera,Marca_de_Cafetera,picklist,n/d,false,176,53,123,30.1,2 opciones,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de vencimiento de contrato de franquicia,Fecha_de_Vencimiento,date,n/d,false,176,25,151,14.2,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha de Firma de contrato de franquicia,Fecha_de_Firma,date,n/d,false,176,25,151,14.2,,Pendiente,Posible duplicado de Firma_de_Contrato.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Estatus Contrato de franquicia 5 años,Contrato_de_franquicia_5_a_os,picklist,n/d,false,176,26,150,14.8,3 opciones,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Link a carpeta de contrato,Link_a_carpeta_de_contrato,website,n/d,false,176,27,149,15.3,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Días Para Apertura,D_as_Para_Apertura,picklist,n/d,false,176,57,119,32.4,5 opciones,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Rappi,Rappi,boolean,n/d,false,176,2,0,1.1,,Pendiente,"Booleano: false es valor válido, no vacío (2 true + 174 false = 176)."
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Checklist Pre-Apertura,Checklist_Pre_Apertura,website,n/d,false,176,2,174,1.1,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Funcionamiento de Máquinas,Evidencias_de_M_quinas,website,n/d,false,176,1,175,0.6,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Certificado de Looker,Evidencias_de_Tienda,website,n/d,false,176,1,175,0.6,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Dictamen de Aprobación de Local,Dictamen_de_Aprobaci_n_de_Local,website,n/d,false,176,33,143,18.8,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Rollout,Rollout,boolean,n/d,false,176,46,,26.1,,Pendiente,Booleano: filled_count = true; 130 restantes son false o nulos (no medido).
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Correo de la tienda,Correo_de_la_tienda,email,n/d,false,176,8,168,4.5,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),FECHA DE ARRANQUE,FECHA_DE_ARRANQUE,date,n/d,false,176,134,42,76.1,,Pendiente,Ver Fecha_de_Apertura.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Contraseña FINKOK-PAC,Contrase_a_FINKOK_PAC,text,n/d,false,176,,,,,Pendiente,EXCLUIDO: credencial en texto plano. No se leyó ni contó. Hallazgo de seguridad.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Usuario FINKOK-PAC,Usuario_FINKOK_PAC,text,n/d,false,176,,,,,Pendiente,EXCLUIDO: credencial del PAC. No se leyó ni contó.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Fecha aprobación de local,Fecha_aprobaci_n_de_local,date,n/d,false,176,41,135,23.3,,Pendiente,Posible duplicado de Aprobaci_n_de_local.
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Certificado de Facturación,Certificado_de_Facturaci_n,website,n/d,false,176,0,176,0.0,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Perfiles de Baristas,Perfiles_de_Baristas,website,n/d,false,176,0,176,0.0,,Pendiente,
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Configuración Partoo,Configuraci_n_Partoo,boolean,n/d,false,176,0,,0.0,,Pendiente,Booleano: filled_count = true; 176 restantes son false o nulos (no medido).
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Alta en Google Maps,Alta_en_Google_Maps,boolean,n/d,false,176,0,,0.0,,Pendiente,Booleano: filled_count = true; 176 restantes son false o nulos (no medido).
+Franquicias,Tiendas The Coffee,n/d (requiere layouts),Días para Aperturar (Dpto. de Aprobaciones),D_as_para_Aperturar_Dpto_de_Aprobaciones,text,n/d,false,176,29,147,16.5,,Pendiente,Tipo texto para un dato numérico.

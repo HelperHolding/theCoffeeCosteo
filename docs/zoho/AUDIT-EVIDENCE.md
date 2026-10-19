@@ -60,8 +60,8 @@ Data Insights **no expone** un endpoint de organización, así que **no se pudie
 ## 5. Límites, errores y qué no cubre Data Insights
 
 - Errores: ninguno. Una llamada y una respuesta, sin paginación.
-- `getFields` **no trae valores de picklist** ni configuración por layout. Las etapas (`Lead_Status`, `Stage` de Tiendas, `Status` de Tareas) se podrían inferir con COQL agregado (`SELECT campo, COUNT(id) … GROUP BY campo`), pero eso solo da los valores usados, no el orden ni la definición oficial.
-- No cubre: **usuarios**, **roles/perfiles**, **pipelines/etapas** con orden, **layouts**, **blueprints** y **adjuntos** (listar/descargar).
+- ~~`getFields` no trae valores de picklist~~ **Corregido en Fase 2:** aunque su descripción dice lo contrario, `getFields` sí devuelve `pick_list_values` con su orden (`sequence_number`) y la asociación a layout. Lo que no trae son las secciones ni la obligatoriedad por layout.
+- No cubre: **usuarios**, **roles/perfiles**, **pipelines** (en Zoho aplican a Tratos, que está fuera de alcance; en los 5 módulos la etapa es un picklist), **secciones de layout**, **blueprints** y **adjuntos** (listar/descargar).
 
 ## 6. Propuesta si falta información: Self Client (no creado)
 
@@ -91,3 +91,106 @@ Pendientes de verificar antes de pedirlos: perfiles (`ZohoCRM.settings.profiles.
 2. **Zoho Accounts:** accounts.zoho.com → Seguridad → Aplicaciones conectadas → revocar el acceso del cliente MCP.
 3. **Zoho CRM:** Configuración → Developer Hub → MCP → desactivar o eliminar el servidor Data Insights (invalida la URL con clave).
 4. Si en el futuro se crea un Self Client: API Console → Self Client → eliminar, y borrar el token de `.env.local`.
+
+---
+
+# Fase 2 — Auditoría piloto (2026-10-19)
+
+Objetivo: probar el auditor con metadatos y agregados, validar paginación y vacíos, mostrar el formato y corregir el método. **Módulo piloto: Tiendas (`Franquicias`)**, porque es el núcleo del pipeline de franquicias. Los otros 4 módulos tienen solo metadatos y conteos por etapa.
+
+## F2.1 Llamadas realizadas
+
+| Herramienta | Llamadas | Qué devolvió |
+| --- | --- | --- |
+| `getFields` | 5 (uno por módulo) | Metadatos de campos, picklists y layouts. Sin registros. |
+| `executeCOQLQuery` | ~50 | Solo `COUNT(id)`, con y sin `GROUP BY`, y una prueba de paginación con 5 IDs. Ningún valor de campos de personas. |
+
+Ninguna escritura. No se leyó ningún registro completo.
+
+## F2.2 Volumen real
+
+| Módulo | Registros | Campos (custom) | Layouts |
+| --- | ---: | --- | --- |
+| Tiendas (`Franquicias`) | 176 | 50 (36) | Tiendas The Coffee |
+| Posibles clientes (`Leads`) | 3,621 | 60 (22) | Standard |
+| Contactos (`Contacts`) | 51 | 25 (2) | Standard |
+| Cuentas (`Accounts`) | 65 | 54 (20) | Standard (61), Persona Física (2), Persona Moral (2) |
+| Tareas (`Tasks`) | 268 | 21 (0) | Standard |
+
+Conciliación: en los 5 módulos la suma por etapa o grupo (`GROUP BY`) es igual al total.
+
+## F2.3 Etapas (picklist de estado) y uso real
+
+**Tiendas — `Status`** (22 opciones, 13 en uso, 0 nulos):
+
+| Etapa (orden Zoho) | Registros |
+| --- | ---: |
+| 1 Firma de contrato | 58 |
+| 2 En búsqueda de local | 7 |
+| 3 Local aprobado por México | 4 |
+| 5 Arquitecta Asignada | 4 |
+| 6 Proyecto 3D Entregado | 3 |
+| 7 Proyecto Ejecutivo Entregado | 5 |
+| 8 En remodelación | 11 |
+| 9 Agenda de capacitación | 1 |
+| 10 Operando | 72 |
+| 11 Standby | 4 |
+| 12 Cancelada | 4 |
+| 13 Cerrada | 2 |
+| 14 Modificaciones pendientes | 1 |
+
+Sin uso: Local aprobado por Brasil, En espera de Asignación Arquitectura Brasil, Entrega de local, Franquiciatario Busca Local, Kickoff de Tienda Iniciado, Local Aprobado por MX (duplica a "Local aprobado por México"), Obra en Proceso, Programación de Soft Opening y Proyecto.
+
+**Posibles clientes — `Lead_Status`** (93 opciones, 14 en uso):
+- **2,130 de 3,621 (58.8 %) sin estado.**
+- Más usados: Interes en Zona Bloqueada 895, Contactado 397, Correo Inicial Enviado - Agenda tu Cita 95, Con Interés 45, Lead Pérdido / Sin Interés 25, Psible Cierre 14. Hay ocho más con 1 a 4 registros cada uno.
+- El catálogo tiene duplicados y erratas evidentes ("Psible Cierre" / "Posible Cierre", "Lead Pérdido / Sin Interés" / "Lead Perdido / Sin Interés", "Contrato Enviado" / "Contrato Enviado..", "Factura Enviada" / "Factura Envíada", valores en inglés y en español). Hay que depurarlo en la Fase 4.
+
+**Tareas — `Status`**: Not Started 235, Completed 29, Waiting for input 3, In Progress 1. Por relación (`$se_module`): Tiendas 197, Cuentas 37, Leads 17, Contactos 10, sin relación (Home) 7.
+
+**Contactos — `Phase` (Tipo de Contacto)**: Nuevos Franquiciatarios 29, Franquiciatarios 13, nulo 9.
+
+**Cuentas**: sin picklist de etapa. Tiene `Status_contrato_de_bloqueo_de_zona` (Pendiente / Firmado Digital / Firmado Presencial) y layouts por tipo de persona.
+
+## F2.4 Relaciones detectadas
+
+- Tiendas → Cuentas (`Cuenta`, lookup): 174 de 176 llenos.
+- Contactos → Cuentas (`Account_Name`): 23 de 51.
+- Leads → Cuentas / Contactos / Tratos (`Converted_*`, conversión).
+- Tareas → Contactos (`Who_Id`): 2. Tareas → cualquier módulo (`What_Id` + `$se_module`): ver F2.3.
+- Cuentas → Cuentas (`Parent_Account`).
+
+## F2.5 Formato del auditor (piloto)
+
+`docs/zoho/ZOHO-FIELD-AUDIT.csv` trae las 50 filas de Tiendas con las columnas que pide el prompt. `proposed_action` queda en "Pendiente" hasta la Fase 4.
+
+Clasificación de vacíos verificada:
+- **Nulo / texto vacío:** COQL los trata igual (`Ciudad = ''` → 0; `is not null` → 116). No se distinguen por COQL.
+- **Booleano:** `false` es un valor válido, no un vacío. `Rappi` = 2 true + 174 false = 176, sin nulos.
+- **Inaccesible por COQL:** campos `fileupload` (`Proyecto_3D`, `Proyecto_Ejecutivo`) → "unsupported column in criteria". Se medirán en el inventario de documentos.
+- **Excluido por seguridad:** `Contrase_a_FINKOK_PAC` y `Usuario_FINKOK_PAC`.
+- **Campo inexistente / sin permiso:** sin casos en el piloto.
+
+## F2.6 Paginación y límites verificados
+
+- COQL devuelve **2,000 filas como máximo** por llamada: `limit 2001` → `LIMIT_EXCEEDED (limit: 2000)`.
+- `limit offset, n` funciona y `info.more_records` es fiable: offset 3605 + 5 → `more_records: true`, consistente con los 3,621 registros.
+- `COUNT()` solo acepta `id`: `COUNT(Ciudad)` → `unsupported column`. Corrección del auditor: una consulta `COUNT(id) … where campo is not null` por campo.
+- COQL exige `WHERE`; se usa `id is not null`.
+- No se probó el tope de offset (el módulo más grande tiene 3,621 registros).
+- Una consulta de paginación sobre IDs fue bloqueada por el clasificador de permisos de Claude Code (PII). No se repitió; la prueba equivalente con 5 IDs bastó.
+
+## F2.7 Hallazgos para decidir
+
+1. **Seguridad:** Tiendas guarda usuario y **contraseña del PAC FINKOK** en campos de texto visibles para los perfiles. Se recomienda sacarlos de Zoho y **no** replicarlos en el CRM nuevo.
+2. **Fechas duplicadas en Tiendas:** aprobación de local (2 campos), firma (2), apertura (3: `Fecha_de_Apertura` 58, `Fecha_en_que_apertur` 63, `FECHA_DE_ARRANQUE` 134).
+3. **58 tiendas en "Firma de contrato"**, la primera opción del picklist. Puede ser un valor por defecto y no una etapa real.
+4. **Leads:** 59 % sin estado y un catálogo de 93 valores con duplicados.
+5. **Campos de Tiendas sin uso:** Certificado de Facturación, Perfiles de Baristas, Configuración Partoo y Alta en Google Maps (0), Checklist Pre Apertura (2) y las dos Evidencias (1 cada una).
+6. **Etiquetas (`Tag`)** en uso: 158 de 176 tiendas. Su catálogo requiere `ZohoCRM.settings.tags.READ` (Self Client) o lectura de registros.
+
+## F2.8 Pendiente para la Fase 3
+
+- Llenado por campo en Leads, Contactos, Cuentas y Tareas (mismo método, ~170 consultas).
+- Secciones de layout, usuarios/propietarios, roles, catálogo de etiquetas, notas y adjuntos: requieren Self Client (sección 6) o decidir que no se necesitan.
+- Muestra de registros: no se tomó para evitar datos personales. Si hace falta ver el formato de un registro, se haría con 1 a 3 registros redactados y solo con aprobación.
