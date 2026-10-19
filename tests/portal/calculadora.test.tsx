@@ -66,19 +66,20 @@ it('prueba el precio Rappi con costo, IVA, comisión sobre cobro y envase config
   await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'acai:u');
   const precio = screen.getByLabelText('Precio de venta Rappi, con IVA');
   expect(precio).toHaveValue(188);
-  const indicadores = screen.getByLabelText('Cuatro indicadores de margen');
+  const indicadores = screen.getByLabelText('Márgenes de la simulación');
+  expect(indicadores.querySelectorAll('dt')).toHaveLength(2);
   // 188 / 1.16 − 43.74 − 5 − 188 × .20 = 75.729...
-  expect(within(indicadores).getByText('Margen con comisión $').nextSibling).toHaveTextContent('$75.73');
+  expect(within(indicadores).getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$75.73');
   await userEvent.clear(precio);
-  expect(screen.queryByLabelText('Cuatro indicadores de margen')).toBeNull();
+  expect(screen.queryByLabelText('Márgenes de la simulación')).toBeNull();
   await userEvent.type(precio, '116');
-  expect(screen.getByText('Margen con comisión $').nextSibling).toHaveTextContent('$28.06');
-  expect(screen.getByText('Margen bruto $').nextSibling).toHaveTextContent('$51.26');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$28.06');
+  expect(screen.getByText('Margen bruto Rappi').nextSibling).toHaveTextContent('$51.26');
   await userEvent.type(precio, '-');
   await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'nuevo:u');
   expect(screen.getByText(/Este producto no tiene costo registrado/)).toBeVisible();
-  expect(screen.queryByLabelText('Cuatro indicadores de margen')).toBeNull();
+  expect(screen.queryByLabelText('Márgenes de la simulación')).toBeNull();
   await userEvent.click(screen.getByRole('radio', { name: 'Un producto' }));
   await userEvent.selectOptions(screen.getByLabelText('Producto de referencia'), 'americano:u');
-  expect(screen.getByLabelText('Cuatro indicadores de margen')).toBeVisible();
+  expect(screen.getByLabelText('Márgenes de la simulación')).toBeVisible();
 });

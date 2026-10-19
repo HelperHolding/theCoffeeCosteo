@@ -387,16 +387,25 @@ export function CalculadoraPromociones({
         <div aria-live="polite" aria-atomic="true" className="space-y-4">
           {r ? (
             <>
-              <dl aria-label="Cuatro indicadores de margen" className="grid grid-cols-2 gap-3">
+              <dl aria-label="Márgenes de la simulación" className="grid grid-cols-2 gap-3">
                 {[
-                  ['Margen bruto $', dinero(bruto)],
-                  ['Margen bruto %', porcentaje(bruto / r.neto)],
-                  ['Margen con comisión $', dinero(r.contribucion)],
-                  ['Margen con comisión %', porcentaje(r.margen)],
-                ].map(([etiqueta, valor]) => (
+                  [
+                    esRappi ? 'Margen bruto Rappi' : 'Margen bruto',
+                    porcentaje(bruto / r.neto),
+                    dinero(bruto),
+                  ],
+                  [
+                    esRappi ? 'Margen con comisión Rappi' : 'Margen con comisión',
+                    porcentaje(r.margen),
+                    dinero(r.contribucion),
+                  ],
+                ].map(([etiqueta, valor, importe]) => (
                   <div key={etiqueta} className="rounded-xl border border-line p-4">
                     <dt className="text-xs text-muted-foreground">{etiqueta}</dt>
-                    <dd className="mt-2 text-2xl font-bold numero">{valor}</dd>
+                    <dd className="mt-2">
+                      <strong className="block text-2xl font-bold numero">{valor}</strong>
+                      <span className="text-sm text-muted-foreground numero">{importe} por venta</span>
+                    </dd>
                   </div>
                 ))}
               </dl>
