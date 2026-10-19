@@ -57,6 +57,20 @@ Data Insights **no expone** un endpoint de organización, así que **no se pudie
 - Opción A (sin crear nada): Carlos lo confirma en Zoho CRM → Configuración → Detalles de la compañía.
 - Opción B: Self Client (sección 6) con `ZohoCRM.org.READ` → `GET /crm/v8/org` devuelve `domain_name`, `time_zone`, `country`, `type` y `license_details.paid_type` (el equivalente a la edición).
 
+**Resultado (2026-10-19, Self Client, `GET /crm/v8/org`):**
+
+| Dato | Valor |
+| --- | --- |
+| Razón social | COMERCIALIZADORA MASTER SITRU SA DE CV |
+| `domain_name` | `org…` (valor completo solo en `.env.local` / Zoho) |
+| Zona horaria | America/Mexico_City |
+| País | MX |
+| Entorno | production |
+| Edición (`paid_type`) | zohooneenterprise (Zoho One Enterprise) |
+| Dominio API / centro de datos | `https://www.zohoapis.com` (US, `.com`) |
+
+`domain_name` no es "thecoffeemexico" (ese nombre probablemente es el alias del portal en la URL del CRM). **Confirmado por Carlos (2026-10-19): es la org correcta de The Coffee.**
+
 ## 5. Límites, errores y qué no cubre Data Insights
 
 - Errores: ninguno. Una llamada y una respuesta, sin paginación.
@@ -78,6 +92,8 @@ Zoho API Console → Self Client, generado por el admin, código de corta duraci
 | Registros / COQL | `ZohoCRM.modules.leads.READ`, `.contacts.READ`, `.accounts.READ`, `.tasks.READ`, `.custom.READ`; `ZohoCRM.coql.READ` | — | scopes |
 
 Pendientes de verificar antes de pedirlos: perfiles (`ZohoCRM.settings.profiles.READ`), blueprints y el scope/endpoint de **descarga** de adjuntos (la página v8 de adjuntos solo documenta el listado). Nunca se pedirá `ALL`, `CREATE`, `UPDATE` ni `DELETE`.
+
+> Actualización Fase 2: Carlos aprobó el Self Client. Scopes finales y pasos en **F2.10**. Perfiles (get-profiles), etiquetas (get-tag-list) y layouts (layouts-meta) quedaron verificados. `settings.pipeline.READ` se descarta porque los pipelines solo aplican a Tratos.
 
 ## 7. Confirmación de cero mutaciones
 
@@ -184,7 +200,7 @@ Clasificación de vacíos verificada:
 
 1. **Seguridad:** Tiendas guarda usuario y **contraseña del PAC FINKOK** en campos de texto visibles para los perfiles. Se recomienda sacarlos de Zoho y **no** replicarlos en el CRM nuevo.
 2. **Fechas duplicadas en Tiendas:** aprobación de local (2 campos), firma (2), apertura (3: `Fecha_de_Apertura` 58, `Fecha_en_que_apertur` 63, `FECHA_DE_ARRANQUE` 134).
-3. **58 tiendas en "Firma de contrato"**, la primera opción del picklist. Puede ser un valor por defecto y no una etapa real.
+3. **58 tiendas en "Firma de contrato"**, la primera opción del picklist. ~~Puede ser un valor por defecto~~ Descartado: la metadata de COQL muestra `default_value: null` en `Status`, así que la etapa se asignó a mano o por una automatización (por verificar).
 4. **Leads:** 59 % sin estado y un catálogo de 93 valores con duplicados.
 5. **Campos de Tiendas sin uso:** Certificado de Facturación, Perfiles de Baristas, Configuración Partoo y Alta en Google Maps (0), Checklist Pre Apertura (2) y las dos Evidencias (1 cada una).
 6. **Etiquetas (`Tag`)** en uso: 158 de 176 tiendas. Su catálogo requiere `ZohoCRM.settings.tags.READ` (Self Client) o lectura de registros.
@@ -193,4 +209,60 @@ Clasificación de vacíos verificada:
 
 - Llenado por campo en Leads, Contactos, Cuentas y Tareas (mismo método, ~170 consultas).
 - Secciones de layout, usuarios/propietarios, roles, catálogo de etiquetas, notas y adjuntos: requieren Self Client (sección 6) o decidir que no se necesitan.
-- Muestra de registros: no se tomó para evitar datos personales. Si hace falta ver el formato de un registro, se haría con 1 a 3 registros redactados y solo con aprobación.
+- Muestra de registros: tomada con aprobación de Carlos (F2.9).
+
+## F2.9 Muestra redactada (3 registros de Tiendas)
+
+Aprobada por Carlos (1 a 3 registros, redactados). Consulta: 12 campos operativos de Tiendas en etapas Operando / Firma de contrato / En remodelación, `order by Modified_Time desc limit 3`, con `include_meta: fields`. No se pidieron correo, dirección, credenciales, ligas ni propietario.
+
+Formato observado (valores personales y nombres de cuenta redactados; IDs omitidos):
+
+```json
+{
+  "Status": "En remodelación",
+  "Ciudad": "<ciudad>",
+  "Fecha_de_Apertura": null,
+  "FECHA_DE_ARRANQUE": "2026-05-26",
+  "Rappi": false,
+  "Rollout": false,
+  "Tag": [{ "name": "Contrato", "id": "<id>", "color_code": "#658BA8" }],
+  "Cuenta": { "name": "<redactado>", "id": "<id>" },
+  "Marca_de_Cafetera": null,
+  "Status_de_Cafetera": null,
+  "D_as_Para_Apertura": "90+",
+  "Created_Time": "2026-06-10T11:34:44-06:00",
+  "id": "<id>"
+}
+```
+
+Lo que aprendimos:
+- **Tipos JSON:** lookup = `{name, id}`; etiquetas = arreglo de `{name, id, color_code}` (vacío = `[]`, no `null`); picklist = texto o `null`; fecha = `YYYY-MM-DD`; fecha-hora ISO con desfase **-06:00** (consistente con America/Mexico_City; se confirma con `/org`).
+- **`include_meta: fields` da metadatos que `getFields` no trae:** `required` y `default_value` por campo. El auditor los usará para las columnas `required` del CSV.
+- **`FECHA_DE_ARRANQUE` coincide con la fecha de creación en 2 de 3 registros:** podría llenarse en automático al crear la tienda y no ser la apertura real. Se verifica en la Fase 3 con un agregado.
+- Ejemplos de etiquetas en uso: "Contrato", "Franquiciatario", "Marzocco".
+
+## F2.10 Self Client: pasos (los hace Carlos)
+
+Claude no crea el cliente ni ve el secreto ni los tokens. Solo prepara el script que los canjea.
+
+1. Entra a **api-console.zoho.com** con el usuario administrador de la org The Coffee → **Add Client → Self Client → Create**.
+2. En la pestaña **Client Secret**, copia Client ID y Client Secret a `.env.local` en la raíz del repo (ignorado por git):
+   ```env
+   ZOHO_CLIENT_ID=...
+   ZOHO_CLIENT_SECRET=...
+   ```
+3. Pestaña **Generate Code**: pega este scope (todo READ), duración **10 minutos** y descripción "Auditoría CRM read-only":
+   ```text
+   ZohoCRM.org.READ,ZohoCRM.users.READ,ZohoCRM.settings.roles.READ,ZohoCRM.settings.profiles.READ,ZohoCRM.settings.modules.READ,ZohoCRM.settings.fields.READ,ZohoCRM.settings.layouts.READ,ZohoCRM.settings.tags.READ,ZohoCRM.modules.leads.READ,ZohoCRM.modules.contacts.READ,ZohoCRM.modules.accounts.READ,ZohoCRM.modules.tasks.READ,ZohoCRM.modules.custom.READ,ZohoCRM.modules.notes.READ,ZohoCRM.modules.attachments.READ,ZohoCRM.coql.READ
+   ```
+   Elige la org The Coffee si la pide y copia el código a `.env.local` como `ZOHO_GRANT_CODE=...`.
+4. Antes de que caduque, en una terminal en la raíz del repo:
+   ```bash
+   npx tsx scripts/zoho/intercambiar-codigo.ts
+   ```
+   El script canjea el código, guarda `ZOHO_REFRESH_TOKEN`, `ZOHO_API_DOMAIN` y `ZOHO_ORG_ID` en `.env.local`, borra el código e imprime solo empresa, dominio, zona horaria, país, entorno y edición. **Nunca imprime tokens.**
+5. Si la cuenta no está en el centro de datos de EE. UU. (`.com`), agrega antes `ZOHO_ACCOUNTS_URL` con el dominio de cuentas correcto (por ejemplo `https://accounts.zoho.eu`).
+
+Referencia de scopes: get-org-data, get-users, get-roles, get-profiles, layouts-meta, get-tag-list, get-attachments y scopes (Zoho CRM API v8). El refresh token no caduca hasta que se revoca. Zoho guarda como máximo 20 por usuario.
+
+**Revocar:** API Console → Self Client → Delete, o accounts.zoho.com → Seguridad → Aplicaciones conectadas. Después borra las variables `ZOHO_*` de `.env.local`.
