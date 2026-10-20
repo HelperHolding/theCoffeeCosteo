@@ -343,8 +343,8 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 
 **Pendientes menores no corregidos:**
 
-- Si una subida desde el navegador se interrumpe entre el alta de la fila y la subida del objeto, queda una fila activa sin objeto. La descarga muestra un error claro. Es un caso raro; queda para una limpieza periódica.
-- El contador de archivos de la tarjeta del Kanban solo cuenta los de la tienda, no los de sus notas.
+- Si una subida desde el navegador se interrumpe entre el alta de la fila y la subida del objeto, queda una fila activa sin objeto. La descarga muestra un error claro. Es un caso raro. **Fase 10:** `archivos.ts huerfanos` lo detecta en modo de solo lectura.
+- El contador de archivos de la tarjeta del Kanban solo contaba los de la tienda. **Corregido en la Fase 10:** ahora suma también los adjuntos de sus notas (`archivosPorTienda`).
 
 **Migración 19 (`…19_crm_autoria.sql`), aplicada con `db push` el 2026-10-20 (dry-run primero, autorizada por Carlos).** Se verificó en producción dentro de una transacción revertida:
 
@@ -354,3 +354,13 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 - Lo que ve cada perfil no cambió: Carlos ve 176 tiendas, 3,621 prospectos y 178 archivos; OAuth y el perfil sin CRM ven 0.
 - Están los índices nuevos.
 - Las pantallas del CRM y de Costeo responden 200, en 0.5–1.2 s.
+
+## 19. Fase 10 — Despliegue (2026-10-20, autorizado por Carlos)
+
+- **Merge:** se integró origin/main en la rama (calculadora, PRs #4 y #5) sin conflictos. El PR sebascm0906/theCoffeeCosteo#6 se mergeó a main (`b96dee4`) y Vercel desplegó the-coffee-costeo.vercel.app.
+- **Integraciones:** Supabase Preview se omitió en el PR, así que no se creó una base de preview ni hubo costo. No hacen falta variables nuevas en Vercel.
+- **Producción sin sesión:** `/`, `/costeo`, `/crm`, `/crm/tiendas`, `/crm/prospectos` y `/productos/calculadora` responden 307 hacia `/login`, y `/login` responde 200. Hay HSTS activo.
+- **Secretos:** se revisaron los 12 scripts del cliente que carga `/login` en producción. No hay claves `sb_secret_`, de Zoho ni JWT de service role.
+- **Base:** después del merge, `supabase db push --dry-run` reporta "Remote database is up to date" (migraciones 13–19).
+- **Huérfanos de Storage:** `npx tsx scripts/zoho/archivos.ts huerfanos` (solo lectura) no encuentra filas activas sin objeto ni objetos sin fila.
+- **Pendiente:** la verificación con sesión iniciada en producción la hace Carlos. Claude no ingresa contraseñas.

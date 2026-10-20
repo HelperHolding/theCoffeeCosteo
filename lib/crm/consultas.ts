@@ -12,6 +12,7 @@ interface Filtro {
   neq(columna: string, valor: unknown): Filtro;
   is(columna: string, valor: null | boolean): Filtro;
   not(columna: string, operador: string, valor: unknown): Filtro;
+  or(filtros: string): Filtro;
 }
 type Consulta = Filtro & {
   range(desde: number, hasta: number): PromiseLike<{ data: unknown; error: unknown }>;
@@ -43,6 +44,19 @@ const contar = (filas: { tienda_id: string | null }[]) => {
 };
 
 /** Etapas y tarjetas del pipeline de tiendas con sus contadores. */
+/** Archivos por tienda, contando también los adjuntos de sus notas (como en el expediente). */
+export function archivosPorTienda(
+  archivos: { tienda_id: string | null; nota_id: string | null }[],
+  notas: { id: string; tienda_id: string | null }[],
+) {
+  const tiendaDeNota = new Map(notas.map((n) => [n.id, n.tienda_id]));
+  return contar(
+    archivos.map((a) => ({
+      tienda_id: a.tienda_id ?? (a.nota_id ? (tiendaDeNota.get(a.nota_id) ?? null) : null),
+    })),
+  );
+}
+
 export async function tablero(db: Db) {
   const [etapas, tiendas, notas, archivos, checklists, items, actividades] = await Promise.all([
     leerTodo<Pick<Etapa, 'id' | 'nombre' | 'orden' | 'tipo' | 'activa' | 'embudo'>>(
@@ -57,11 +71,14 @@ export async function tablero(db: Db) {
       'id,nombre,etapa_id,posicion,version,franquiciatario,ciudad,tipo_franquicia,fecha_programada_arranque,revisar',
       (q) => q.is('archivado_en', null),
     ),
-    leerTodo<{ tienda_id: string | null }>(db, 'crm_notas', 'tienda_id', (q) =>
+    leerTodo<{ id: string; tienda_id: string | null }>(db, 'crm_notas', 'id,tienda_id', (q) =>
       q.not('tienda_id', 'is', null).is('archivado_en', null),
     ),
-    leerTodo<{ tienda_id: string | null }>(db, 'crm_archivos', 'tienda_id', (q) =>
-      q.not('tienda_id', 'is', null).is('archivado_en', null),
+    leerTodo<{ tienda_id: string | null; nota_id: string | null }>(
+      db,
+      'crm_archivos',
+      'tienda_id,nota_id',
+      (q) => q.or('tienda_id.not.is.null,nota_id.not.is.null').is('archivado_en', null),
     ),
     leerTodo<{ id: string; tienda_id: string }>(db, 'crm_checklists', 'id,tienda_id', (q) =>
       q.is('archivado_en', null),
@@ -72,7 +89,7 @@ export async function tablero(db: Db) {
     ),
   ]);
   const nNotas = contar(notas);
-  const nArchivos = contar(archivos);
+  const nArchivos = archivosPorTienda(archivos, notas);
   const nActividades = contar(actividades);
   const tiendaDeLista = new Map(checklists.map((c) => [c.id, c.tienda_id]));
   const avance = new Map<string, { hechos: number; total: number }>();
