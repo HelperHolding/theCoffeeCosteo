@@ -117,3 +117,28 @@ it('la columna de margen con comisión Rappi solo aparece si el servidor la habi
   expect(celda).toHaveTextContent(/MEGA\s*—/);
   expect(celda).not.toHaveTextContent('$0.00');
 });
+it('el filtro y el orden por margen Rappi solo existen con la columna habilitada', async () => {
+  const canales = [{ id: 'r', nombre: 'Rappi' }];
+  const fila = (id: string, pct: number, estado: 'ok' | 'bajo') => ({
+    id,
+    nombre: `Producto ${id}`,
+    activo: true,
+    precios: [
+      { tamano: 'Único', costo: 10, canales: { r: 80 }, margenRappi: { pct, importe: pct * 80, estado } },
+    ],
+  });
+  const filas = [fila('A', 0.55, 'ok'), fila('B', 0.3, 'bajo'), fila('C', 0.42, 'bajo')];
+  const { unmount } = render(
+    <CatalogoRecetas tipo="producto" editable={false} canales={canales} filas={filas} />,
+  );
+  expect(screen.queryByLabelText('Margen con comisión Rappi')).toBeNull();
+  expect(screen.queryByLabelText('Ordenar por margen Rappi')).toBeNull();
+  unmount();
+
+  render(<CatalogoRecetas tipo="producto" editable={false} canales={canales} filas={filas} margenRappi />);
+  await userEvent.selectOptions(screen.getByLabelText('Margen con comisión Rappi'), 'bajo');
+  expect(screen.getByRole('status')).toHaveTextContent('1–2 de 2');
+  await userEvent.selectOptions(screen.getByLabelText('Ordenar por margen Rappi'), 'menor');
+  const nombres = screen.getAllByRole('link', { name: /^PRODUCTO / }).map((a) => a.textContent);
+  expect(nombres).toEqual(['PRODUCTO B', 'PRODUCTO C']);
+});
