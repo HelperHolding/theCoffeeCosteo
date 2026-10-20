@@ -2,6 +2,8 @@ import { sesion } from '@/lib/supabase/sesion';
 import { todas } from '@/lib/portal/consultas';
 import { puede } from '@/lib/portal/permisos';
 import { APP_PROPIA, FUSIONADO, MOSTRADOR, fusionarCanales } from '@/lib/portal/canales';
+import { veMargenRappiEnTabla } from '@/lib/portal/vistas';
+import { estadoMargen } from '@/components/portal/piezas';
 import { CatalogoRecetas, type PreciosTamano } from './catalogo';
 export async function ListaRecetas({ tipo, q = '' }: { tipo: 'producto' | 'subreceta'; q?: string }) {
   const { db, perfil } = await sesion();
@@ -36,6 +38,20 @@ export async function ListaRecetas({ tipo, q = '' }: { tipo: 'producto' | 'subre
     tamanos.set(r.tamano_id, t);
     precios.set(r.producto_id, tamanos);
   }
+  // Margen con comisión Rappi por tamaño (mismo dato que la tarjeta de la ficha). Solo se calcula, y solo
+  // llega al navegador, para la cuenta que lo tiene habilitado.
+  const conMargenRappi = tipo === 'producto' && veMargenRappiEnTabla(perfil.user_id);
+  if (conMargenRappi)
+    for (const r of resumen) {
+      if (r.canal.toLowerCase() !== 'rappi') continue;
+      const t = precios.get(r.producto_id)?.get(r.tamano_id);
+      if (t)
+        t.margenRappi = {
+          pct: r.margen_pct,
+          importe: r.margen,
+          estado: estadoMargen(r),
+        };
+    }
   const filas = recetas
     .filter((r) => r.tipo === tipo)
     .map(({ id, nombre, activo, categoria_id, rendimiento, unidad_rendimiento }) => ({
@@ -52,6 +68,7 @@ export async function ListaRecetas({ tipo, q = '' }: { tipo: 'producto' | 'subre
       filas={filas}
       canales={columnas}
       consulta={q}
+      margenRappi={conMargenRappi}
       editable={puede(perfil.rol, 'recetas')}
     />
   );

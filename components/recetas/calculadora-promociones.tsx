@@ -45,8 +45,12 @@ export function CalculadoraPromociones({
   const esRappi = modo === 'rappi';
   const canalRappi = canales.find((c) => c.nombre.toLowerCase() === 'rappi');
   const [productoRappi, setProductoRappi] = useState('');
-  const [precioRappi, setPrecioRappi] = useState('');
+  // El precio sigue el dato vigente del producto (llega en props) hasta que se captura uno para simular;
+  // la edición vive aparte y se descarta al elegir otro producto o tamaño.
+  const [edicionRappi, setEdicionRappi] = useState<string | null>(null);
   const seleccionadoRappi = productos.find((p) => p.id === productoRappi);
+  const registradoRappi = seleccionadoRappi?.precioRappi ?? null;
+  const precioRappi = edicionRappi ?? (registradoRappi === null ? '' : String(registradoRappi));
 
   const lineasCombo = combo.map((l) => {
     const p = productos.find((p) => p.id === l.producto);
@@ -263,8 +267,7 @@ export function CalculadoraPromociones({
                   value={productoRappi}
                   onChange={(e) => {
                     setProductoRappi(e.target.value);
-                    const p = productos.find((p) => p.id === e.target.value);
-                    setPrecioRappi(p?.precioRappi == null ? '' : String(p.precioRappi));
+                    setEdicionRappi(null);
                   }}
                 >
                   <option value="">Seleccionar producto</option>
@@ -284,7 +287,7 @@ export function CalculadoraPromociones({
                   min="0.01"
                   step="0.01"
                   value={precioRappi}
-                  onChange={(e) => setPrecioRappi(e.target.value)}
+                  onChange={(e) => setEdicionRappi(e.target.value)}
                 />
               </label>
               {canalRappi ? (
@@ -299,7 +302,8 @@ export function CalculadoraPromociones({
                 <p className="text-sm text-muted-foreground">
                   Costo vigente:{' '}
                   {seleccionadoRappi.costo === null ? 'sin registrar' : dinero(seleccionadoRappi.costo)} ·
-                  Precio Rappi registrado: {dinero(seleccionadoRappi.precioRappi ?? null)}
+                  Precio Rappi registrado:{' '}
+                  {registradoRappi === null ? 'sin registrar' : dinero(registradoRappi)}
                 </p>
               )}
             </div>

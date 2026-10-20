@@ -90,6 +90,7 @@ const estados: Record<Estado, { clase: string; icono: LucideIcon; texto: string 
   'sin-precio': { clase: 'bg-surface-2 text-muted-foreground', icono: CircleDashed, texto: 'Sin precio' },
   neutro: { clase: 'bg-surface-2 text-ink-2', icono: CircleDashed, texto: '' },
 };
+export const textoEstado = (estado: Estado) => estados[estado].texto;
 export function estadoMargen(f: {
   precio_canal: number | null;
   margen: number | null;

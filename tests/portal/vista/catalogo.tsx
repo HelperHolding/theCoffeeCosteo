@@ -25,6 +25,7 @@ export function VistaCatalogo() {
         <CatalogoRecetas
           editable
           tipo="producto"
+          margenRappi={window.location.search.includes('margen')}
           canales={[
             { id: 'm', nombre: 'App propia/Mostrador' },
             { id: 'r', nombre: 'Rappi' },
@@ -37,8 +38,18 @@ export function VistaCatalogo() {
             precios:
               i % 3 === 0
                 ? [
-                    { tamano: 'Chica', costo: 12.4 + i, canales: { m: 55, r: 75 } },
-                    { tamano: 'Grande', costo: 16.9 + i, canales: { m: 65, r: 89 } },
+                    {
+                      tamano: 'Chica',
+                      costo: 12.4 + i,
+                      canales: { m: 55, r: 75 },
+                      margenRappi: { pct: 0.5062, importe: 37.1, estado: 'ok' },
+                    },
+                    {
+                      tamano: 'Grande',
+                      costo: 16.9 + i,
+                      canales: { m: 65, r: 89 },
+                      margenRappi: { pct: 0.4867, importe: 36.5, estado: 'bajo' },
+                    },
                   ]
                 : i === 4
                   ? []
@@ -56,6 +67,10 @@ export function VistaCatalogo() {
                               : 48,
                           r: 66,
                         },
+                        margenRappi:
+                          i === 2
+                            ? { pct: null, importe: null, estado: 'sin-precio' }
+                            : { pct: 0.3449, importe: 21.4, estado: 'bajo' },
                       },
                     ],
           }))}

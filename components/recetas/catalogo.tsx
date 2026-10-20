@@ -3,11 +3,17 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Encabezado } from '@/components/portal/piezas';
-import { dinero, mayusculas } from '@/lib/portal/consultas';
+import { Encabezado, Pill, textoEstado, type Estado } from '@/components/portal/piezas';
+import { dinero, mayusculas, porcentaje } from '@/lib/portal/consultas';
 // Un canal fusionado cuyos precios difieren guarda cada precio con el nombre de su canal.
 export type PrecioCanal = number | null | { nombre: string; precio: number | null }[];
-export type PreciosTamano = { tamano: string; costo: number | null; canales: Record<string, PrecioCanal> };
+export type MargenRappi = { pct: number | null; importe: number | null; estado: Estado };
+export type PreciosTamano = {
+  tamano: string;
+  costo: number | null;
+  canales: Record<string, PrecioCanal>;
+  margenRappi?: MargenRappi;
+};
 export type RecetaCatalogo = {
   id: string;
   nombre: string;
@@ -38,6 +44,36 @@ function PorTamano({
     </ul>
   );
 }
+/** Margen con comisión Rappi por tamaño: porcentaje, importe por venta y estado frente al objetivo. */
+function MargenPorTamano({ precios }: { precios: PreciosTamano[] }) {
+  if (!precios.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <ul className="space-y-0.5">
+      {precios.map((p) => {
+        const m = p.margenRappi;
+        const sinDato = !m || m.pct === null || m.importe === null;
+        return (
+          <li key={p.tamano} className="flex items-baseline justify-end gap-2 whitespace-nowrap">
+            {precios.length > 1 && (
+              <span className="text-[11px] text-muted-foreground">{mayusculas(p.tamano)}</span>
+            )}
+            {sinDato ? (
+              <span className="text-muted-foreground">—</span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 tabular" title={textoEstado(m.estado)}>
+                <Pill estado={m.estado} className="px-2 py-0.5">
+                  {porcentaje(m.pct)}
+                  <span className="sr-only">, {textoEstado(m.estado)}</span>
+                </Pill>
+                <span className="text-[11px] text-muted-foreground">{dinero(m.importe)}</span>
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 function Precio({ valor }: { valor: PrecioCanal }) {
   if (!Array.isArray(valor)) return <span className="tabular">{valor === null ? '—' : dinero(valor)}</span>;
   return (
@@ -57,12 +93,15 @@ export function CatalogoRecetas({
   editable,
   canales = [],
   consulta = '',
+  margenRappi = false,
 }: {
   filas: RecetaCatalogo[];
   tipo: 'producto' | 'subreceta';
   editable: boolean;
   canales?: { id: string; nombre: string }[];
   consulta?: string;
+  /** Columna extra que el servidor habilita por cuenta (lib/portal/vistas.ts). */
+  margenRappi?: boolean;
 }) {
   const conPrecios = tipo === 'producto' && canales.length > 0;
   const [buscar, setBuscar] = useState(consulta);
@@ -174,6 +213,11 @@ export function CatalogoRecetas({
                         {c.nombre}
                       </th>
                     ))}
+                    {margenRappi && (
+                      <th scope="col" className="text-right">
+                        Margen con comisión Rappi
+                      </th>
+                    )}
                   </>
                 )}
                 <th scope="col" className="w-36">
@@ -211,6 +255,11 @@ export function CatalogoRecetas({
                           <PorTamano precios={r.precios ?? []} valor={(p) => p.canales[c.id] ?? null} />
                         </td>
                       ))}
+                      {margenRappi && (
+                        <td className="text-right text-sm">
+                          <MargenPorTamano precios={r.precios ?? []} />
+                        </td>
+                      )}
                     </>
                   )}
                   <td>
