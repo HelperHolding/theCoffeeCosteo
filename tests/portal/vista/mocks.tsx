@@ -18,3 +18,22 @@ export async function guardarRegistro(..._: unknown[]) {
   return { error: 'Vista de prueba: no se escriben datos.' };
 }
 export async function salir() {}
+// Acciones del CRM en la vista de prueba: mueven en pantalla y no escriben en ninguna base.
+const sinBase = async (..._: unknown[]) => ({ error: 'Vista de prueba: no se escriben datos.' });
+export async function moverTienda(..._: unknown[]) {
+  return { version: 2, posicion: 1 };
+}
+export const crearTienda = sinBase;
+export const guardarTienda = sinBase;
+export const archivarTienda = sinBase;
+export const agregarNota = sinBase;
+export const crearActividad = sinBase;
+export const cambiarEstadoActividad = sinBase;
+export const crearChecklist = sinBase;
+export const agregarElemento = sinBase;
+export const marcarElemento = sinBase;
+export const prepararArchivo = sinBase;
+export const confirmarArchivo = sinBase;
+export const archivarArchivo = sinBase;
+export const enlaceArchivo = sinBase;
+export const cambiarEtapaProspecto = sinBase;

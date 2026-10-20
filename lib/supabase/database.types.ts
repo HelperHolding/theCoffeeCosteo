@@ -1,4 +1,5 @@
 // Contrato basado en las migraciones locales. numeric llega como número vía PostgREST.
+import type * as Crm from '../crm/tipos';
 export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin';
 export type Unidad = 'gr' | 'ml' | 'pza';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
@@ -171,6 +172,19 @@ export interface Database {
       producto_tamanos: Tabla<ProductoTamano>;
       precio_canal_manual: Tabla<Manual>;
       bitacora: Tabla<Bitacora>;
+      crm_etapas: Tabla<Crm.Etapa>;
+      crm_tiendas: Tabla<Crm.Tienda>;
+      crm_prospectos: Tabla<Crm.Prospecto>;
+      crm_contactos: Tabla<Crm.Contacto>;
+      crm_tienda_contactos: Tabla<Crm.TiendaContacto>;
+      crm_actividades: Tabla<Crm.Actividad>;
+      crm_notas: Tabla<Crm.Nota>;
+      crm_etiquetas: Tabla<Crm.Etiqueta>;
+      crm_etiquetas_registro: Tabla<Crm.EtiquetaRegistro>;
+      crm_checklists: Tabla<Crm.Checklist>;
+      crm_checklist_items: Tabla<Crm.ChecklistItem>;
+      crm_archivos: Tabla<Crm.Archivo>;
+      crm_historial: Tabla<Crm.Historial>;
     };
     Views: {
       v_resumen: { Row: Registro<Resumen>; Relationships: [] };
@@ -188,6 +202,11 @@ export interface Database {
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
       mcp_lectura_habilitada: { Args: Record<string, never>; Returns: boolean };
       reservar_consulta_chat: { Args: Record<string, never>; Returns: boolean };
+      crm_mover_tienda: {
+        Args: { p_tienda: string; p_etapa: string; p_posicion: number; p_version: number };
+        Returns: Crm.Tienda;
+      };
+      crm_renumerar_etapa: { Args: { p_etapa: string }; Returns: number };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;

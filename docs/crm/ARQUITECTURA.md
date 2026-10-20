@@ -201,3 +201,31 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 - Pruebas: `tests/portal/modulos.test.ts` y `tests/portal/navegacion.test.tsx`. La prueba vieja de navegación de Costeo pasa sin cambios.
 - **Verificación:** `tsc` sin errores; `next build` con `/`, `/costeo` y `/crm`; 216 pruebas aprobadas (solo falla `paridad`, que ya fallaba por el Excel local). Revisión visual en el arnés (`?modulos`, `?crm`) a 1280×800 y 390×844, sin errores en consola ni scroll horizontal.
 - **No verificado:** el flujo con sesión real de Supabase (en local no hay variables de Supabase). Queda para el preview protegido.
+
+## 13. Aplicación en producción (2026-10-20, autorizada por Carlos)
+
+- Revisiones previas de solo lectura en producción: historial con las migraciones 1–12 (igual que el repo), sin objetos del CRM, columnas `file_size_limit` y `allowed_mime_types` presentes, y `create policy` en `storage.objects` permitido (probado dentro de una transacción revertida).
+- `supabase db push --dry-run` (CLI 2.121.0) listó solo las migraciones 13–17. Luego `supabase db push` las aplicó desde el commit `8ca1137`. Quedaron registradas en `supabase_migrations.schema_migrations`, así que la integración GitHub ↔ Supabase no las volverá a aplicar al hacer merge.
+- Verificado después: 14 tablas con RLS, 0 grants a `anon`, `delete` solo en ligas e ítems, `crm_sin_oauth` en las 14 tablas, las 42 políticas OAuth de Costeo intactas, staging sin acceso, bucket `crm-archivos` privado (25 MB, 8 MIME) con 2 políticas, 15 etapas sembradas.
+- Acceso (`perfil_modulos`, registrado en `bitacora`): **Sebastian Cervera Maltos = desarrollador**. **Carlos Valencia = desarrollador**: Carlos creó la cuenta en Auth y luego se le dio perfil `admin` (para que vea todo, a petición suya) y el CRM. Areli Lopez sigue solo con Costeo.
+- Preview local (`next dev` contra producción): Inicio muestra Costeo y CRM, `/crm` abre el panel y `/costeo` funciona con los datos reales. La app publicada en Vercel no cambia hasta el merge.
+
+## 14. Fase 7 — Pantallas del CRM (implementadas, 2026-10-20)
+
+| Ruta | Contenido |
+| --- | --- |
+| `/crm` | Panel: tiendas por grupo de etapas, prospectos (y cuántos sin estado), actividades vencidas, tiendas por revisar, próximas actividades a 14 días y arranques a 90 días |
+| `/crm/tiendas` | Pipeline Kanban con las 15 etapas, indicadores, búsqueda sin acentos, filtros (tipo de franquicia, por revisar), vista de tabla y "Nueva tienda" |
+| `/crm/tiendas/[id]` | Expediente: etapa con "Mover a…", archivar, aviso "Revisar"; pestañas Información (secciones del layout de Zoho, edición con versión), Notas e historial, Actividades, Checklists, Documentos y Contactos |
+| `/crm/prospectos`, `/[id]` | Lista paginada en el servidor (25 por página, búsqueda y estado en la URL); ficha con cambio de estado, notas e historial |
+| `/crm/contactos`, `/[id]` | Lista con búsqueda y tipo; ficha con sus tiendas ligadas y notas |
+| `/crm/actividades` | Abiertas, vencidas, completadas y todas, con cambio de estado y liga a su registro |
+
+- **Kanban:** `@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0 y `@dnd-kit/utilities` 3.2.2, en versiones exactas. Movimiento optimista con `crm_mover_tienda` (versión) y rollback visible si la base lo rechaza. Asa de arrastre para mouse, touch y teclado, con anuncios en español. "Mover a…" como alternativa accesible.
+- **Escrituras:** `app/(crm)/crm/acciones.ts`. Cada acción exige nivel de edición (`sesionCrm` + `puedeEditarCrm`); la RLS lo vuelve a exigir. La validación está en `lib/crm/validacion.ts` (lista blanca de campos, fechas, URLs http/https, correos, opciones y archivos de hasta 25 MB con MIME permitido).
+- **Archivos:** se registra la fila (la base genera la ruta), se sube directo al bucket privado con la sesión del usuario y se confirma (o se archiva si falla). La descarga usa una URL firmada de 60 s.
+- **Ctrl K en el CRM:** tiendas y contactos. Los prospectos se buscan en su lista.
+- **Pruebas:** `crm-kanban` (5), `crm-validacion` (3) y `crm-tablero` (3: "Mover a…", rollback, filtros y solo lectura). Suite completa: 230 aprobadas; solo falla `paridad`, que ya fallaba antes (Excel local). `next build` incluye las 8 rutas del CRM.
+- **Revisión visual** (arnés `?tiendas` y `?expediente`, datos sintéticos; 1280×800 y 390×844): sin errores de consola ni desborde horizontal. Corregido: el texto `sr-only` de las tarjetas ensanchaba la página (contenedores con scroll ahora `relative`). Rutas reales contra producción: estados vacíos correctos y 404 para IDs inexistentes.
+- **Limitación conocida:** con teclado, el arrastre reordena dentro de la columna, pero las flechas no saltan a otra columna. Para cambiar de etapa con teclado se usa "Mover a…".
+- **No probado con datos reales:** las escrituras (crear, editar, mover, subir) solo se probaron con datos sintéticos, para no escribir datos de prueba en producción. Se validan en el piloto de la Fase 8.

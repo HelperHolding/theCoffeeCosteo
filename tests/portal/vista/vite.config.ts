@@ -14,6 +14,7 @@ export default defineConfig({
       { find: '@/app/(portal)/productos/actions', replacement: mocks },
       { find: '@/app/(portal)/configuracion/actions', replacement: mocks },
       { find: '@/app/(auth)/login/actions', replacement: mocks },
+      { find: '@/app/(crm)/crm/acciones', replacement: mocks },
       { find: '@', replacement: raiz },
     ],
   },

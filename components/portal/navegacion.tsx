@@ -13,6 +13,9 @@ import {
   Tags,
   LayoutGrid,
   Store,
+  UsersRound,
+  Contact,
+  CalendarCheck,
   type LucideIcon,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
@@ -64,7 +67,13 @@ export const grupos: Grupo[] = [
 const gruposCrm: Grupo[] = [
   {
     titulo: 'CRM Franquicias',
-    enlaces: [{ href: '/crm', nombre: 'Panel', icono: LayoutDashboard, exacto: true }],
+    enlaces: [
+      { href: '/crm', nombre: 'Panel', icono: LayoutDashboard, exacto: true },
+      { href: '/crm/tiendas', nombre: 'Tiendas', icono: Store },
+      { href: '/crm/prospectos', nombre: 'Prospectos', icono: UsersRound },
+      { href: '/crm/contactos', nombre: 'Contactos', icono: Contact },
+      { href: '/crm/actividades', nombre: 'Actividades', icono: CalendarCheck },
+    ],
   },
 ];
 

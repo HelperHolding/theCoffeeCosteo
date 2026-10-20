@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThinkingOrb } from 'thinking-orbs';
-import { LogOut, Menu, Search, X, Coffee, Layers } from 'lucide-react';
+import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact } from 'lucide-react';
 import { Navegacion, gruposDe, type Seccion } from './navegacion';
 import type { IdModulo } from '@/lib/portal/modulos';
 import { Marca } from './marca';
@@ -19,15 +19,15 @@ import {
 } from '@/components/ui/command';
 import { salir } from '@/app/(auth)/login/actions';
 
-/** Registro buscable con Ctrl K (recetas en Costeo; tiendas, prospectos y contactos en el CRM). */
+const iconos = { producto: Coffee, subreceta: Layers, tienda: Store, contacto: Contact };
+/** Registro buscable con Ctrl K (recetas en Costeo; tiendas y contactos en el CRM). */
 export type ItemBusqueda = {
   id: string;
   nombre: string;
   href: string;
   detalle: string;
-  icono: 'producto' | 'subreceta';
+  icono: keyof typeof iconos;
 };
-const iconos = { producto: Coffee, subreceta: Layers };
 const textos: Record<Seccion, { marca: [string, string]; buscar: string; registros: string }> = {
   inicio: { marca: ['The Coffee', 'portal'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
   costeo: {
