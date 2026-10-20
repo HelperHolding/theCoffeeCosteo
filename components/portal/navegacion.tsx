@@ -11,12 +11,29 @@ import {
   Truck,
   SlidersHorizontal,
   Tags,
+  LayoutGrid,
+  Store,
+  UsersRound,
+  Contact,
+  CalendarCheck,
   type LucideIcon,
 } from 'lucide-react';
+import type { IdModulo } from '@/lib/portal/modulos';
 
 type Enlace = { href: string; nombre: string; icono: LucideIcon; exacto?: boolean };
-export const grupos: { titulo: string; enlaces: Enlace[] }[] = [
-  { titulo: 'Inicio', enlaces: [{ href: '/', nombre: 'Tablero', icono: LayoutDashboard, exacto: true }] },
+type Grupo = { titulo: string; enlaces: Enlace[] };
+export type Seccion = 'inicio' | IdModulo;
+
+const entradaModulo: Record<IdModulo, Enlace> = {
+  costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
+  crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
+};
+
+export const grupos: Grupo[] = [
+  {
+    titulo: 'Costeo',
+    enlaces: [{ href: '/costeo', nombre: 'Tablero', icono: LayoutDashboard, exacto: true }],
+  },
   {
     titulo: 'Análisis',
     enlaces: [
@@ -47,6 +64,36 @@ export const grupos: { titulo: string; enlaces: Enlace[] }[] = [
   },
 ];
 
+const gruposCrm: Grupo[] = [
+  {
+    titulo: 'CRM Franquicias',
+    enlaces: [
+      { href: '/crm', nombre: 'Panel', icono: LayoutDashboard, exacto: true },
+      { href: '/crm/tiendas', nombre: 'Tiendas', icono: Store },
+      { href: '/crm/prospectos', nombre: 'Prospectos', icono: UsersRound },
+      { href: '/crm/contactos', nombre: 'Contactos', icono: Contact },
+      { href: '/crm/actividades', nombre: 'Actividades', icono: CalendarCheck },
+    ],
+  },
+];
+
+/**
+ * Grupos de la sección: primero "Portal", luego los del módulo. En Inicio los módulos solo se
+ * muestran como tarjetas; dentro de un módulo, "Portal" lleva a Inicio y a los otros módulos visibles.
+ */
+export function gruposDe(seccion: Seccion, visibles: IdModulo[]): Grupo[] {
+  const otros = seccion === 'inicio' ? [] : visibles.filter((m) => m !== seccion);
+  const portal: Grupo = {
+    titulo: 'Portal',
+    enlaces: [
+      { href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true },
+      ...otros.map((m) => entradaModulo[m]),
+    ],
+  };
+  const propios = seccion === 'costeo' ? grupos : seccion === 'crm' ? gruposCrm : [];
+  return [portal, ...propios];
+}
+
 function esActivo(href: string, exacto: boolean | undefined, pathname: string, tab: string | null) {
   const [ruta, query] = href.split('?');
   if (ruta === '/configuracion') {
@@ -59,12 +106,20 @@ function esActivo(href: string, exacto: boolean | undefined, pathname: string, t
   return pathname === ruta || pathname.startsWith(`${ruta}/`);
 }
 
-export function Navegacion({ alNavegar }: { alNavegar?: () => void }) {
+export function Navegacion({
+  alNavegar,
+  seccion = 'costeo',
+  visibles = [],
+}: {
+  alNavegar?: () => void;
+  seccion?: Seccion;
+  visibles?: IdModulo[];
+}) {
   const pathname = usePathname();
   const tab = useSearchParams().get('tab');
   return (
     <nav aria-label="Principal" className="flex flex-col gap-5">
-      {grupos.map((g) => (
+      {gruposDe(seccion, visibles).map((g) => (
         <div key={g.titulo}>
           <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[.22em] text-neutral-500">
             {g.titulo}
