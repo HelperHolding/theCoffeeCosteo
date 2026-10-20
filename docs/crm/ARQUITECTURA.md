@@ -270,4 +270,17 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 | Actividades vencidas | — | 0.69 s |
 | Expediente | 1.0 s | 0.82 s |
 
-- **Pendiente:** archivos (piloto de 5 y luego todos). Necesita `SUPABASE_SECRET_KEY` en `.env.local` para subir a Storage.
+- **Archivos:** ver sección 17.
+
+## 17. Fase 8 — Archivos (2026-10-20, autorizado por Carlos)
+
+- **Script:** `scripts/zoho/archivos.ts` (`inventario` | `copiar [--limite N]`). Lee Zoho con `ClienteZoho.descargar` (solo GET a `/crm/v8/*`). Inserta la fila en `crm_archivos` (la ruta la genera el trigger) y luego sube el objeto al bucket privado `crm-archivos` con la clave secreta local. Si la subida falla, borra la fila. Es idempotente por `zoho_attachment_id` (`campo:<id>` para los archivos de campo) y borra las entradas de historial `archivo` de la importación.
+- **Inventario Zoho:** hay 292 adjuntos más 83 archivos de campo (Proyecto 3D y Proyecto Ejecutivo).
+  - 16 adjuntos quedaron fuera del alcance (Cuentas y Prospectos_Expansion).
+  - 83 adjuntos son el gemelo de un archivo de campo (mismo nombre en la misma tienda). Se conserva una sola copia, la del campo.
+  - **98 están vacíos en el propio Zoho**: tamaño 0, sin `File_Id`, y la descarga devuelve 0 bytes, verificado con 14 muestras. De ellos, 73 son archivos de campo y 25 son adjuntos, todos de Tiendas creados en 2025-2026. No hay contenido que copiar; quedan contados como omitidos.
+- **Copiados: 178 archivos, 94.7 MB.** Piloto de 4 (`0173b184-…`) y resto de 174 (`ccfdb0dc-…`), sin errores ni rechazos.
+  - Por destino: 136 de prospectos, 13 de notas, 10 de contactos, 9 adjuntos de tiendas, 7 de Proyecto Ejecutivo (49.7 MB, igual que la auditoría) y 3 de Proyecto 3D.
+  - Por tipo: 164 PDF, 8 JPEG y 6 PNG.
+- **Conciliación:** las 178 filas tienen su objeto con el mismo tamaño. No hay objetos huérfanos, ruido en el historial ni nombres rotos. La descarga desde el expediente (`next start` en 3100) devuelve un enlace firmado 200 con el PDF íntegro.
+- **Nombres:** Zoho guarda algunos nombres en NFD y con UTF-8 leído como Latin-1 ("PresentaciÃ³n"). `nombreLimpio` los repara (prueba en `tests/zoho/archivos.test.ts`).

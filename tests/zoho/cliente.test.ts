@@ -18,12 +18,14 @@ describe('ClienteZoho es de solo lectura', () => {
       pedir: (m: string, r: string, c?: unknown) => Promise<unknown>;
       coql: (q: string) => Promise<unknown>;
       get: (r: string) => Promise<unknown>;
+      descargar: (r: string) => Promise<unknown>;
     };
     await expect(z.pedir('POST', '/crm/v8/Leads', { data: [] })).rejects.toThrow('Bloqueado');
     await expect(z.pedir('PUT', '/crm/v8/Leads')).rejects.toThrow('Bloqueado');
     await expect(z.pedir('DELETE', '/crm/v8/Leads?ids=1')).rejects.toThrow('Bloqueado');
     await expect(z.get('/oauth/v2/token')).rejects.toThrow('Bloqueado');
     await expect(z.coql('delete from Leads')).rejects.toThrow('COQL solo admite SELECT');
+    await expect(z.descargar('/oauth/v2/token')).rejects.toThrow('Bloqueado');
     expect(red).not.toHaveBeenCalled();
   });
 

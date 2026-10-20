@@ -103,6 +103,26 @@ export class ClienteZoho {
     return this.pedir('GET', ruta) as Promise<T | null>;
   }
 
+  /** Descarga binaria (adjuntos y campos de archivo). Mismo candado: solo GET a /crm/v8/*. */
+  async descargar(ruta: string): Promise<{ datos: Buffer; tipo: string | null }> {
+    if (!ruta.startsWith('/crm/v8/')) throw new Error(`Bloqueado: GET ${ruta} no es una lectura permitida`);
+    for (let intento = 0; ; intento++) {
+      this.llamadas++;
+      const r = await fetch(`${this.env.get('ZOHO_API_DOMAIN')}${ruta}`, {
+        headers: { Authorization: `Zoho-oauthtoken ${await this.accessToken()}` },
+      });
+      if (r.status === 429 && intento < 4) {
+        await new Promise((ok) => setTimeout(ok, 2000 * (intento + 1)));
+        continue;
+      }
+      if (!r.ok) {
+        const j = (await r.json().catch(() => ({}))) as { code?: string };
+        throw new ErrorZoho(r.status, j.code ?? 'SIN_CODIGO', ruta.split('?')[0]);
+      }
+      return { datos: Buffer.from(await r.arrayBuffer()), tipo: r.headers.get('content-type') };
+    }
+  }
+
   /** COQL paginado (máx. 2,000 por página, según la prueba de la Fase 2). */
   async coqlTodo<T = Record<string, unknown>>(select: string, desde: string, donde: string): Promise<T[]> {
     const filas: T[] = [];
