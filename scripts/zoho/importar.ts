@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import pg from 'pg';
 import { ClienteZoho, ErrorZoho, leerEnvLocal, type Env } from './cliente';
 import { EXCLUIDOS, leerRegistros } from './registros';
-import { cargar, revertir, type Lote, type Transicion } from '../../lib/crm/importacion/carga';
+import { cambiosDelCrm, cargar, revertir, type Lote, type Transicion } from '../../lib/crm/importacion/carga';
 import {
   etiquetasDe,
   mapearContacto,
@@ -305,6 +305,10 @@ async function main() {
     throw new Error('Comando: ensayo | piloto | completa | revertir');
   const db = await base(env);
   try {
+    // Después del corte, reimportar pisaría con datos de Zoho lo que ya se trabaja en el CRM.
+    const cambios = await cambiosDelCrm(db);
+    if (cambios)
+      throw new Error(`No se importa: el CRM ya tiene ${cambios} cambios de usuarios (pasó el corte).`);
     const u = await db.query<{ id: string }>(
       `select u.id from auth.users u join public.perfiles p on p.user_id = u.id where lower(u.email) = $1 and p.activo`,
       [RESPONSABLE],

@@ -14,14 +14,16 @@ const peso = (b: number) =>
 const SECCIONES: Record<string, string> = {
   adjuntos: 'Adjuntos',
   'Información Proyecto': 'Información del proyecto',
+  notas: 'Adjuntos de notas',
 };
 
+/** Lista de documentos con descarga. La subida solo existe en tiendas (`tienda`). */
 export function DocumentosTienda({
   tienda,
   archivos,
   editable,
 }: {
-  tienda: string;
+  tienda?: string;
   archivos: Archivo[];
   editable: boolean;
 }) {
@@ -41,6 +43,7 @@ export function DocumentosTienda({
       } catch (e) {
         return setAviso({ tipo: 'error', texto: (e as Error).message });
       }
+      if (!tienda) return;
       const p = await prepararArchivo(tienda, { nombre: file.name, mime: file.type, tamano: file.size });
       if (p.error !== undefined) return setAviso({ tipo: 'error', texto: p.error });
       // Subida directa al bucket privado con la sesión del usuario: la RLS exige la fila recién creada.
@@ -62,20 +65,22 @@ export function DocumentosTienda({
   const archivar = (a: Archivo) =>
     iniciar(async () => {
       if (!window.confirm(`¿Archivar ${a.nombre}? Dejará de verse en el expediente.`)) return;
-      const r = await archivarArchivo(tienda, a.id);
+      const r = await archivarArchivo(tienda ?? '', a.id);
       if (r.error !== undefined) return setAviso({ tipo: 'error', texto: r.error });
       router.refresh();
     });
 
   return (
     <div className="space-y-5">
-      {editable && (
+      {editable && tienda && (
         <div className="flex flex-wrap items-center gap-3">
           <input
             ref={entrada}
             type="file"
             className="sr-only"
             id="subir-archivo"
+            tabIndex={-1}
+            aria-hidden="true"
             accept={Object.keys(TIPOS_ARCHIVO).join(',')}
             onChange={(e) => {
               const f = e.target.files?.[0];

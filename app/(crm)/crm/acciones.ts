@@ -2,6 +2,7 @@
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { camposActividad, camposTienda, validar, validarArchivo } from '@/lib/crm/validacion';
+import { posicionEntre } from '@/lib/crm/kanban';
 import type { Database } from '@/lib/supabase/database.types';
 
 type Resultado<T = undefined> =
@@ -31,30 +32,40 @@ export async function moverTienda(
   etapa: string,
   posicion: number | null,
   version: number,
-): Promise<Resultado<{ version: number; posicion: number }>> {
+  indice = Number.MAX_SAFE_INTEGER,
+): Promise<Resultado<{ version: number; posicion: number; renumerada: boolean }>> {
   try {
     const { db } = await editor();
     let p = posicion;
+    let v = version;
     if (p === null) {
-      // Sin espacio entre vecinos: se reparte la columna y la tarjeta queda al final.
-      await db.rpc('crm_renumerar_etapa', { p_etapa: etapa });
-      const ultima = await db
+      // Sin espacio entre vecinos: se reparte la columna y la tarjeta queda en el índice elegido.
+      // La renumeración sube la versión de toda la columna, así que la versión se valida antes.
+      const actual = await db.from('crm_tiendas').select('version').eq('id', tienda).maybeSingle();
+      if (actual.error || !actual.data || actual.data.version !== version)
+        return { error: mensaje({ code: '40001' }) };
+      const n = await db.rpc('crm_renumerar_etapa', { p_etapa: etapa });
+      if (n.error) return { error: mensaje(n.error) };
+      const col = await db
         .from('crm_tiendas')
-        .select('posicion')
+        .select('id,posicion,version')
         .eq('etapa_id', etapa)
         .is('archivado_en', null)
-        .order('posicion', { ascending: false })
-        .limit(1);
-      p = (ultima.data?.[0]?.posicion ?? 0) + 1024;
+        .order('posicion');
+      if (col.error) return { error: mensaje(col.error) };
+      const resto = col.data.filter((t) => t.id !== tienda);
+      const i = Math.max(0, Math.min(indice, resto.length));
+      p = posicionEntre(resto[i - 1]?.posicion, resto[i]?.posicion) ?? (resto.at(-1)?.posicion ?? 0) + 1024;
+      v = col.data.find((t) => t.id === tienda)?.version ?? version;
     }
     const r = await db.rpc('crm_mover_tienda', {
       p_tienda: tienda,
       p_etapa: etapa,
       p_posicion: p,
-      p_version: version,
+      p_version: v,
     });
     if (r.error) return { error: mensaje(r.error) };
-    return { version: r.data.version, posicion: r.data.posicion };
+    return { version: r.data.version, posicion: r.data.posicion, renumerada: posicion === null };
   } catch (e) {
     return fallo(e);
   }

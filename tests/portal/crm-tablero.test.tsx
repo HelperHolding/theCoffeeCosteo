@@ -5,6 +5,8 @@ import type { TarjetaTienda } from '../../lib/crm/kanban';
 
 const mover = vi.hoisted(() => vi.fn());
 vi.mock('../../app/(crm)/crm/acciones', () => ({ moverTienda: mover }));
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }));
 vi.mock('next/link', () => ({ default: (p: React.ComponentProps<'a'>) => <a {...p} /> }));
 import { TableroTiendas } from '../../components/crm/tablero-tiendas';
 
@@ -45,7 +47,7 @@ it('mueve con el menú accesible "Mover a…" y anuncia el resultado', async () 
   await userEvent.click(screen.getByRole('button', { name: 'Mover Centro a otra etapa' }));
   await userEvent.click(screen.getByRole('button', { name: 'Operando' }));
   expect(within(columna('Operando')).getByText('Centro')).toBeVisible();
-  expect(mover).toHaveBeenCalledWith('t1', 'operando', 1024, 3);
+  expect(mover).toHaveBeenCalledWith('t1', 'operando', 1024, 3, 0);
   expect(await screen.findByText('Centro se movió a Operando.')).toBeInTheDocument();
 });
 

@@ -16,18 +16,18 @@
 
 ### Rutas
 
-| Ruta | Hoy | Propuesta |
-| --- | --- | --- |
-| `/` | Tablero de Costeo | **Inicio**: tarjetas de los módulos a los que el usuario tiene acceso |
-| `/costeo` | — | **Tablero de Costeo** (se mueve desde `/`) |
-| `/resumen`, `/productos/*`, `/subrecetas/*`, `/insumos`, `/configuracion` | Costeo | **Sin cambio** (no se rompen enlaces ni el chat) |
-| `/crm` | — | Panel operativo del CRM |
-| `/crm/tiendas` | — | Pipeline Kanban de tiendas, con vista de tabla |
-| `/crm/tiendas/[id]` | — | Expediente de la tienda |
-| `/crm/prospectos`, `/crm/prospectos/[id]` | — | Leads: embudo y tabla, con ficha |
-| `/crm/contactos`, `/crm/contactos/[id]` | — | Contactos |
-| `/crm/actividades` | — | Tareas: lista y filtros |
-| `/login`, `/auth/*`, `/oauth/consent`, `/mcp`, `/.well-known/*`, `/api/chat` | Sistema | **Sin cambio** |
+| Ruta                                                                         | Hoy               | Propuesta                                                             |
+| ---------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------- |
+| `/`                                                                          | Tablero de Costeo | **Inicio**: tarjetas de los módulos a los que el usuario tiene acceso |
+| `/costeo`                                                                    | —                 | **Tablero de Costeo** (se mueve desde `/`)                            |
+| `/resumen`, `/productos/*`, `/subrecetas/*`, `/insumos`, `/configuracion`    | Costeo            | **Sin cambio** (no se rompen enlaces ni el chat)                      |
+| `/crm`                                                                       | —                 | Panel operativo del CRM                                               |
+| `/crm/tiendas`                                                               | —                 | Pipeline Kanban de tiendas, con vista de tabla                        |
+| `/crm/tiendas/[id]`                                                          | —                 | Expediente de la tienda                                               |
+| `/crm/prospectos`, `/crm/prospectos/[id]`                                    | —                 | Leads: embudo y tabla, con ficha                                      |
+| `/crm/contactos`, `/crm/contactos/[id]`                                      | —                 | Contactos                                                             |
+| `/crm/actividades`                                                           | —                 | Tareas: lista y filtros                                               |
+| `/login`, `/auth/*`, `/oauth/consent`, `/mcp`, `/.well-known/*`, `/api/chat` | Sistema           | **Sin cambio**                                                        |
 
 ### Layouts (route groups de Next 16)
 
@@ -51,10 +51,12 @@ Todos cuelgan del mismo `app/layout.tsx`, así que no hay recargas completas ent
 ### Modelo
 
 Nueva tabla **`perfil_modulos`** (`user_id`, `modulo`, `nivel`), con PK (`user_id`, `modulo`):
+
 - `modulo`: por ahora solo `'crm'`. Costeo sigue como hoy: entra cualquier perfil activo y sus permisos salen de `perfiles.rol`, sin tocar `rol_actual()` ni `tiene_rol()`.
 - `nivel`: `'desarrollador'` (todo), `'edicion'`, `'lectura'`. Las áreas o equipos se agregarán como otra columna cuando se abran más usuarios.
 
 Funciones `security definer` con `search_path` fijo:
+
 - `crm_nivel()`: devuelve el nivel del usuario si su perfil está activo y la sesión **no** es un token OAuth (`auth.jwt()->>'client_id' is null`).
 - `crm_puede_leer()` y `crm_puede_editar()`: las usan todas las políticas del CRM.
 
@@ -72,45 +74,45 @@ Todas en `public` con prefijo `crm_`. No se expone ningún esquema nuevo al Data
 
 **Trazabilidad Zoho**, en cada entidad importada: `zoho_org_id`, `zoho_module_api_name`, `zoho_record_id` (único), `zoho_created_at`, `zoho_modified_at`, `imported_at`, `import_run_id` y `import_hash`.
 
-| Tabla | Origen Zoho | Contenido |
-| --- | --- | --- |
-| `crm_etapas` | picklists | `embudo` ('tiendas' \| 'prospectos'), `nombre`, `orden`, `tipo` ('abierta', 'lateral', 'ganada', 'perdida'), `activa`, `zoho_valor` |
-| `crm_tiendas` | Franquicias (176) | La tarjeta del Kanban (detalle en 3.1) |
-| `crm_prospectos` | Leads (3,621) | Ficha del prospecto (3.2) |
-| `crm_contactos` | Contacts (51) | Persona de contacto (3.3) |
-| `crm_tienda_contactos` | derivada | Tienda ↔ contacto cuando comparten franquiciatario en Zoho (sustituye a la liga con Cuentas) |
-| `crm_actividades` | Tasks (231) | `asunto`, `fecha_vencimiento`, `estado`, `prioridad`, `descripcion`, `cerrada_en`, `recordatorio_zoho` (texto) y relación (3.4) |
-| `crm_notas` | Notes (472 en alcance: 495 menos 22 de Cuentas y 1 de Prospectos_Expansion) | `titulo`, `contenido`, `autor_id`, fecha original y relación |
-| `crm_etiquetas`, `crm_etiquetas_registro` | Tags | Catálogo y asignación a tienda, prospecto o contacto |
-| `crm_checklists`, `crm_checklist_items` | nuevo (+ campos adaptados) | Listas múltiples por tienda; ítem con `texto`, `hecho`, `orden`, `responsable_id`, `fecha_limite`, `url`, `completado_por`, `completado_en` |
-| `crm_archivos` | Attachments + fileupload | Metadata del archivo en Storage (sección 6) |
-| `crm_historial` | nuevo + timeline de Zoho | Bitácora del CRM (sección 5) |
+| Tabla                                     | Origen Zoho                                                                 | Contenido                                                                                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crm_etapas`                              | picklists                                                                   | `embudo` ('tiendas' \| 'prospectos'), `nombre`, `orden`, `tipo` ('abierta', 'lateral', 'ganada', 'perdida'), `activa`, `zoho_valor`         |
+| `crm_tiendas`                             | Franquicias (176)                                                           | La tarjeta del Kanban (detalle en 3.1)                                                                                                      |
+| `crm_prospectos`                          | Leads (3,621)                                                               | Ficha del prospecto (3.2)                                                                                                                   |
+| `crm_contactos`                           | Contacts (51)                                                               | Persona de contacto (3.3)                                                                                                                   |
+| `crm_tienda_contactos`                    | derivada                                                                    | Tienda ↔ contacto cuando comparten franquiciatario en Zoho (sustituye a la liga con Cuentas)                                                |
+| `crm_actividades`                         | Tasks (231)                                                                 | `asunto`, `fecha_vencimiento`, `estado`, `prioridad`, `descripcion`, `cerrada_en`, `recordatorio_zoho` (texto) y relación (3.4)             |
+| `crm_notas`                               | Notes (472 en alcance: 495 menos 22 de Cuentas y 1 de Prospectos_Expansion) | `titulo`, `contenido`, `autor_id`, fecha original y relación                                                                                |
+| `crm_etiquetas`, `crm_etiquetas_registro` | Tags                                                                        | Catálogo y asignación a tienda, prospecto o contacto                                                                                        |
+| `crm_checklists`, `crm_checklist_items`   | nuevo (+ campos adaptados)                                                  | Listas múltiples por tienda; ítem con `texto`, `hecho`, `orden`, `responsable_id`, `fecha_limite`, `url`, `completado_por`, `completado_en` |
+| `crm_archivos`                            | Attachments + fileupload                                                    | Metadata del archivo en Storage (sección 6)                                                                                                 |
+| `crm_historial`                           | nuevo + timeline de Zoho                                                    | Bitácora del CRM (sección 5)                                                                                                                |
 
 **Relaciones polimórficas** (actividades, notas, archivos, etiquetas): columnas FK reales y nulas (`tienda_id`, `prospecto_id`, `contacto_id`, `actividad_id`, `nota_id`) con `check` de "a lo más una" (exactamente una en etiquetas). Así hay integridad referencial y RLS simple, en lugar de `module + id` de texto.
 
 ### 3.1 `crm_tiendas` (mapeo aprobado)
 
-| Columna | Zoho | Nota |
-| --- | --- | --- |
-| `nombre` | Name | obligatorio |
-| `etapa_id`, `posicion` | Status | `posicion` = orden en la columna del Kanban |
-| `responsable_id` | Owner | todas → Carlos |
-| `franquiciatario` | Cuenta (nombre, texto) | sin liga: Cuentas está fuera |
-| `tipo_franquicia` | etiquetas Franquiciatario / Franquicia Maestra | 'franquiciatario' \| 'maestra' \| null |
-| `ciudad`, `direccion`, `numero_tienda_jestor` | Ciudad, Dirección, N.º Jestor | |
-| `arquitecto_asignado`, `fecha_entrega_proyecto` | | |
-| `fecha_aprobacion_local` | Aprobación de local **∪** Fecha aprobación de local | unificada (nunca se contradicen) |
-| `fecha_firma_contrato` | Firma de Contrato | primer contrato |
-| `fecha_firma_franquicia`, `estatus_contrato_franquicia`, `fecha_vencimiento_franquicia` | Fecha de Firma, Estatus 5 años, Vencimiento | contrato de 5 años |
-| `fecha_programada_arranque` | FECHA_DE_ARRANQUE | |
-| `fecha_apertura` | Fecha en que aperturó **∪** Fecha de Apertura | unificada; 1 conflicto → `revisar` |
-| `marca_cafetera`, `estatus_cafetera` | campos **∪** etiquetas Marzocco / VA | 2 conflictos → `revisar` |
-| `rappi`, `rollout` | booleanos | |
-| `correo_tienda`, `url_carpeta_contrato`, `url_dictamen_local` | | ligas externas |
-| `revisar text[]` | — | motivos de revisión post-importación |
-| — | Días para apertura (2 campos) | **se calculan** desde las fechas |
-| — | Checklist Pre-Apertura, Evidencias (ligas); Partoo, Google Maps, Cert. Facturación, Perfiles de Baristas | → checklist "Apertura" de la tienda, con la liga si existe |
-| — | FINKOK usuario/contraseña, Unsubscribed_*, Record_Image | no se replican |
+| Columna                                                                                 | Zoho                                                                                                     | Nota                                                       |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `nombre`                                                                                | Name                                                                                                     | obligatorio                                                |
+| `etapa_id`, `posicion`                                                                  | Status                                                                                                   | `posicion` = orden en la columna del Kanban                |
+| `responsable_id`                                                                        | Owner                                                                                                    | todas → Carlos                                             |
+| `franquiciatario`                                                                       | Cuenta (nombre, texto)                                                                                   | sin liga: Cuentas está fuera                               |
+| `tipo_franquicia`                                                                       | etiquetas Franquiciatario / Franquicia Maestra                                                           | 'franquiciatario' \| 'maestra' \| null                     |
+| `ciudad`, `direccion`, `numero_tienda_jestor`                                           | Ciudad, Dirección, N.º Jestor                                                                            |                                                            |
+| `arquitecto_asignado`, `fecha_entrega_proyecto`                                         |                                                                                                          |                                                            |
+| `fecha_aprobacion_local`                                                                | Aprobación de local **∪** Fecha aprobación de local                                                      | unificada (nunca se contradicen)                           |
+| `fecha_firma_contrato`                                                                  | Firma de Contrato                                                                                        | primer contrato                                            |
+| `fecha_firma_franquicia`, `estatus_contrato_franquicia`, `fecha_vencimiento_franquicia` | Fecha de Firma, Estatus 5 años, Vencimiento                                                              | contrato de 5 años                                         |
+| `fecha_programada_arranque`                                                             | FECHA_DE_ARRANQUE                                                                                        |                                                            |
+| `fecha_apertura`                                                                        | Fecha en que aperturó **∪** Fecha de Apertura                                                            | unificada; 1 conflicto → `revisar`                         |
+| `marca_cafetera`, `estatus_cafetera`                                                    | campos **∪** etiquetas Marzocco / VA                                                                     | 2 conflictos → `revisar`                                   |
+| `rappi`, `rollout`                                                                      | booleanos                                                                                                |                                                            |
+| `correo_tienda`, `url_carpeta_contrato`, `url_dictamen_local`                           |                                                                                                          | ligas externas                                             |
+| `revisar text[]`                                                                        | —                                                                                                        | motivos de revisión post-importación                       |
+| —                                                                                       | Días para apertura (2 campos)                                                                            | **se calculan** desde las fechas                           |
+| —                                                                                       | Checklist Pre-Apertura, Evidencias (ligas); Partoo, Google Maps, Cert. Facturación, Perfiles de Baristas | → checklist "Apertura" de la tienda, con la liga si existe |
+| —                                                                                       | FINKOK usuario/contraseña, Unsubscribed_*, Record_Image                                                  | no se replican                                             |
 
 ### 3.2 `crm_prospectos`
 
@@ -133,6 +135,7 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 ## 5. Historial y trazabilidad
 
 `crm_historial`: `entidad`, `entidad_id`, `accion` ('creado', 'editado', 'etapa', 'responsable', 'nota', 'checklist', 'archivo', 'importado'), `resumen`, `cambios jsonb` ({campo: {antes, despues}}, sin contenido de notas ni archivos), `actor_id`, `origen` ('crm' \| 'importacion' \| 'zoho'), `fecha`.
+
 - Un trigger en las tablas del CRM (separado de `bitacora`, cuyo CHECK y lógica son de recetas) registra los cambios. Solo lectura para usuarios.
 - **Historial de Zoho:** los 536 cambios de etapa de Tiendas (2025-01-13 a 2026-09-10) se importan con su fecha original y `origen = 'zoho'`, así el expediente conserva su línea de tiempo.
 
@@ -156,26 +159,26 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 
 ## 8. Migraciones previstas (revisables, NO aplicadas)
 
-| Archivo | Contenido |
-| --- | --- |
-| `…13_crm_modulos.sql` | `perfil_modulos`, `crm_nivel()`, `crm_puede_leer()`, `crm_puede_editar()` |
-| `…14_crm_esquema.sql` | tablas del CRM, índices, semilla de etapas de tiendas |
+| Archivo                 | Contenido                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `…13_crm_modulos.sql`   | `perfil_modulos`, `crm_nivel()`, `crm_puede_leer()`, `crm_puede_editar()`         |
+| `…14_crm_esquema.sql`   | tablas del CRM, índices, semilla de etapas de tiendas                             |
 | `…15_crm_seguridad.sql` | grants, RLS, `crm_sin_oauth`, triggers de historial y versión, `crm_mover_tienda` |
-| `…16_zoho_staging.sql` | esquema privado de importación |
-| `…17_crm_storage.sql` | bucket y políticas de `storage.objects` |
+| `…16_zoho_staging.sql`  | esquema privado de importación                                                    |
+| `…17_crm_storage.sql`   | bucket y políticas de `storage.objects`                                           |
 
 **Pruebas (PGlite):** usuario sin módulo no ve nada; `lectura` no escribe; OAuth no lee ni escribe; nadie borra tiendas; mover con versión vieja falla; el historial registra actor y fecha; Storage solo con fila válida; Costeo sigue igual (las pruebas actuales pasan sin tocarlas, incluida la de 42 políticas OAuth).
 
 ## 9. Riesgos y checkpoints
 
-| Riesgo | Mitigación |
-| --- | --- |
-| `main` despliega directo a producción | Todo en rama + PR. Preview protegido antes del merge. **Confirmar si Vercel tiene Deployment Protection en previews** |
-| Mover el Tablero cambia el enlace guardado de `/` | `/` sigue funcionando (Inicio) y `/costeo` lleva al Tablero |
-| Aplicar migraciones en producción | Solo con tu autorización explícita, después de pasar en PGlite |
-| Insertar tu fila en `perfil_modulos` | Script separado, con tu autorización |
-| Volumen de Storage (~95–150 MB) | Dentro del plan. Piloto de 5 archivos primero |
-| Datos personales de leads | RLS por módulo, sin OAuth y sin logs con PII |
+| Riesgo                                            | Mitigación                                                                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `main` despliega directo a producción             | Todo en rama + PR. Preview protegido antes del merge. **Confirmar si Vercel tiene Deployment Protection en previews** |
+| Mover el Tablero cambia el enlace guardado de `/` | `/` sigue funcionando (Inicio) y `/costeo` lleva al Tablero                                                           |
+| Aplicar migraciones en producción                 | Solo con tu autorización explícita, después de pasar en PGlite                                                        |
+| Insertar tu fila en `perfil_modulos`              | Script separado, con tu autorización                                                                                  |
+| Volumen de Storage (~95–150 MB)                   | Dentro del plan. Piloto de 5 archivos primero                                                                         |
+| Datos personales de leads                         | RLS por módulo, sin OAuth y sin logs con PII                                                                          |
 
 ## 10. Preguntas
 
@@ -212,14 +215,14 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 
 ## 14. Fase 7 — Pantallas del CRM (implementadas, 2026-10-20)
 
-| Ruta | Contenido |
-| --- | --- |
-| `/crm` | Panel: tiendas por grupo de etapas, prospectos (y cuántos sin estado), actividades vencidas, tiendas por revisar, próximas actividades a 14 días y arranques a 90 días |
-| `/crm/tiendas` | Pipeline Kanban con las 15 etapas, indicadores, búsqueda sin acentos, filtros (tipo de franquicia, por revisar), vista de tabla y "Nueva tienda" |
-| `/crm/tiendas/[id]` | Expediente: etapa con "Mover a…", archivar, aviso "Revisar"; pestañas Información (secciones del layout de Zoho, edición con versión), Notas e historial, Actividades, Checklists, Documentos y Contactos |
-| `/crm/prospectos`, `/[id]` | Lista paginada en el servidor (25 por página, búsqueda y estado en la URL); ficha con cambio de estado, notas e historial |
-| `/crm/contactos`, `/[id]` | Lista con búsqueda y tipo; ficha con sus tiendas ligadas y notas |
-| `/crm/actividades` | Abiertas, vencidas, completadas y todas, con cambio de estado y liga a su registro |
+| Ruta                       | Contenido                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/crm`                     | Panel: tiendas por grupo de etapas, prospectos (y cuántos sin estado), actividades vencidas, tiendas por revisar, próximas actividades a 14 días y arranques a 90 días                                    |
+| `/crm/tiendas`             | Pipeline Kanban con las 15 etapas, indicadores, búsqueda sin acentos, filtros (tipo de franquicia, por revisar), vista de tabla y "Nueva tienda"                                                          |
+| `/crm/tiendas/[id]`        | Expediente: etapa con "Mover a…", archivar, aviso "Revisar"; pestañas Información (secciones del layout de Zoho, edición con versión), Notas e historial, Actividades, Checklists, Documentos y Contactos |
+| `/crm/prospectos`, `/[id]` | Lista paginada en el servidor (25 por página, búsqueda y estado en la URL); ficha con cambio de estado, notas e historial                                                                                 |
+| `/crm/contactos`, `/[id]`  | Lista con búsqueda y tipo; ficha con sus tiendas ligadas y notas                                                                                                                                          |
+| `/crm/actividades`         | Abiertas, vencidas, completadas y todas, con cambio de estado y liga a su registro                                                                                                                        |
 
 - **Kanban:** `@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0 y `@dnd-kit/utilities` 3.2.2, en versiones exactas. Movimiento optimista con `crm_mover_tienda` (versión) y rollback visible si la base lo rechaza. Asa de arrastre para mouse, touch y teclado, con anuncios en español. "Mover a…" como alternativa accesible.
 - **Escrituras:** `app/(crm)/crm/acciones.ts`. Cada acción exige nivel de edición (`sesionCrm` + `puedeEditarCrm`); la RLS lo vuelve a exigir. La validación está en `lib/crm/validacion.ts` (lista blanca de campos, fechas, URLs http/https, correos, opciones y archivos de hasta 25 MB con MIME permitido).
@@ -246,14 +249,14 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 
 - **Corrida completa** `5e365756-802d-4c82-9c64-df47b766bc9f` (snapshot 2026-10-20T18:22Z; 13.6 min; 229 llamadas a Zoho):
 
-| Módulo | Zoho | En el CRM | Nota |
-| --- | ---: | ---: | --- |
-| Tiendas | 176 | 176 | 166 nuevas, 10 del piloto |
-| Prospectos | 3,621 | 3,621 | los 15 estados en uso (14 + sin estado) idénticos a la auditoría |
-| Contactos | 51 | 51 | 69 ligas tienda-contacto por cuenta compartida |
-| Actividades | 268 | 231 | 37 omitidas: eran de Cuentas (decisión 7) |
-| Notas | 497 | 472 | 25 omitidas: Cuentas y Prospectos_Expansion |
-| Historial de etapas | 536 | 536 | con su fecha original de Zoho |
+| Módulo              |  Zoho | En el CRM | Nota                                                             |
+| ------------------- | ----: | --------: | ---------------------------------------------------------------- |
+| Tiendas             |   176 |       176 | 166 nuevas, 10 del piloto                                        |
+| Prospectos          | 3,621 |     3,621 | los 15 estados en uso (14 + sin estado) idénticos a la auditoría |
+| Contactos           |    51 |        51 | 69 ligas tienda-contacto por cuenta compartida                   |
+| Actividades         |   268 |       231 | 37 omitidas: eran de Cuentas (decisión 7)                        |
+| Notas               |   497 |       472 | 25 omitidas: Cuentas y Prospectos_Expansion                      |
+| Historial de etapas |   536 |       536 | con su fecha original de Zoho                                    |
 
 - **Conciliación con la auditoría:** coinciden tiendas por etapa, prospectos por estado, notas por relación (399 / 56 / 11 / 6), fechas unificadas (apertura 63, aprobación 95, arranque 134), tipo de franquicia (138 / 11), marca de cafetera y estados de actividades. Las 3 tiendas "por revisar" son los conflictos detectados en la Fase 4.
 - **Diferencia explicada:** 8 tareas tienen `$se_module = Contacts` en Zoho pero ningún `What_Id` ni `Who_Id`, así que entraron sin relación.
@@ -262,13 +265,13 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 - **Migración 18 (`…18_crm_rls_rendimiento.sql`), aplicada con `db push` (dry-run primero):** las políticas del CRM envuelven las funciones en `(select …)`, así que se evalúan una vez por consulta y no por fila. Contar 3,621 prospectos como usuario pasó de 1,100 ms a 3 ms. El acceso es el mismo: Carlos ve 3,621, un perfil sin CRM ve 0 y OAuth ve 0. Las 42 políticas OAuth de Costeo siguen intactas.
 - **Tiempos con datos reales** (`next start` local contra producción, carga completa):
 
-| Pantalla | Antes | Después |
-| --- | ---: | ---: |
-| Panel | 3.8 s (con error) | 0.97 s |
-| Tiendas (176 tarjetas) | 2.6 s | 0.96 s |
-| Prospectos con búsqueda | 3.3 s | 0.68 s |
-| Actividades vencidas | — | 0.69 s |
-| Expediente | 1.0 s | 0.82 s |
+| Pantalla                |             Antes | Después |
+| ----------------------- | ----------------: | ------: |
+| Panel                   | 3.8 s (con error) |  0.97 s |
+| Tiendas (176 tarjetas)  |             2.6 s |  0.96 s |
+| Prospectos con búsqueda |             3.3 s |  0.68 s |
+| Actividades vencidas    |                 — |  0.69 s |
+| Expediente              |             1.0 s |  0.82 s |
 
 - **Archivos:** ver sección 17.
 
@@ -284,3 +287,70 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
   - Por tipo: 164 PDF, 8 JPEG y 6 PNG.
 - **Conciliación:** las 178 filas tienen su objeto con el mismo tamaño. No hay objetos huérfanos, ruido en el historial ni nombres rotos. La descarga desde el expediente (`next start` en 3100) devuelve un enlace firmado 200 con el PDF íntegro.
 - **Nombres:** Zoho guarda algunos nombres en NFD y con UTF-8 leído como Latin-1 ("PresentaciÃ³n"). `nombreLimpio` los repara (prueba en `tests/zoho/archivos.test.ts`).
+
+## 18. Fase 9 — Verificación (2026-10-20)
+
+**Calidad**
+
+- `tsc --noEmit` OK. `vitest run`: 234 pruebas pasan y 5 se omiten. La única que falla es `tests/migracion/paridad.test.ts`, que necesita el Excel de costeo local (`datos/…xlsx`, fuera del repo); viene de main.
+- `next build` OK, con las 29 rutas. `git diff --check origin/main...HEAD` limpio.
+- `format:check`: los 98 avisos se deben a CRLF de Windows (`core.autocrlf=true`). Con `--end-of-line auto` solo queda `tests/portal/canales.test.ts`, que viene de main.
+- No hay lint ni E2E configurados en el repo. Los flujos se verificaron en el navegador contra producción (`next start`, puerto 3100).
+
+**Seguridad.** Matriz RLS medida en producción, dentro de una transacción revertida:
+
+| Perfil                              | Tablas CRM                                                                             | Storage `crm-archivos` | Alta / cambio | Borrar tienda                | Falsificar `zoho_*`       |
+| ----------------------------------- | -------------------------------------------------------------------------------------- | ---------------------- | ------------- | ---------------------------- | ------------------------- |
+| anon                                | denegado                                                                               | 0                      | denegado      | denegado                     | denegado                  |
+| Sin CRM (admin)                     | 0 en todas (ve 2 filas de `perfil_modulos`: por diseño, administra accesos)            | 0                      | 0 filas       | denegado                     | sin filas                 |
+| Carlos (desarrollador)              | 176 tiendas, 3,621 prospectos, 51 contactos, 231 actividades, 472 notas, 178 archivos… | 178                    | permitido     | denegado (borrar = archivar) | ignorado por `crm_sellar` |
+| OAuth (MCP) con la sesión de Carlos | 0 en todas                                                                             | 0                      | 0 filas       | denegado                     | sin filas                 |
+
+- **Storage por HTTP sin sesión:** la URL pública, la autenticada con la clave anon y la firma con anon responden 400. Desde el expediente, el enlace firmado (60 s) responde 200 con el archivo íntegro.
+- **Secretos:** no hay ninguno en el historial de la rama ni en `.next/static`. La única coincidencia es el chequeo de prefijo `sb_secret_` dentro de supabase-js. `.env.local` está ignorado.
+- **Equivalentes de advisors (SQL):**
+  - Ninguna tabla de `public` está sin RLS.
+  - Las 57 políticas del CRM evalúan las funciones con `(select …)`.
+  - Las funciones `crm_*` tienen `search_path`.
+  - `zoho_staging` no da `usage` a anon ni a authenticated.
+  - El bucket es privado con límite de 25 MB.
+  - **Informativo:** 16 FK del CRM no tienen índice, todas en tablas de menos de 5 mil filas.
+  - **Costeo (ya existía, fuera del CRM):** 11 funciones sin `search_path` fijo y 2 `security definer` ejecutables por anon (`rol_actual`, `registrar_bitacora`).
+
+**QA visual y accesibilidad**
+
+- **Desborde horizontal:** ninguno en 1440, 768, 390 ni 360, en Inicio, Costeo, Productos, Calculadora, Panel CRM, Tiendas, fichas, listas, Actividades y búsqueda vacía.
+- **Kanban:** 176 botones "Mover … a otra etapa" como alternativa al arrastre.
+- **Movimiento reducido:** la regla global `prefers-reduced-motion` también anula las transiciones inline de dnd-kit.
+- **Consola:** limpia en pestaña nueva. El error React #441 solo apareció en una pestaña con mensajes viejos, del reinicio del servidor.
+- **Corregido:** el input de archivo del expediente (`sr-only`) recibía foco con Tab sin nombre accesible y duplicaba la parada del botón "Subir archivo". Ahora lleva `tabIndex={-1}` y `aria-hidden`; la ficha tiene 49 controles enfocables, todos con nombre.
+- **Costeo, ya existía (idéntico a main):** en 390 px, al abrir un desplegable del Tablero (`/costeo`) la página se ensancha a 544 px. No es regresión; queda como pendiente fuera del CRM.
+
+**Revisión adversarial (revisor independiente, solo lectura).** Cada hallazgo se verificó contra el código antes de corregirlo.
+
+| #   | Hallazgo                                                                                                                                                       | Estado                                                                                                                                                                                 |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Los 159 archivos de prospectos, contactos y notas estaban copiados, pero ninguna pantalla los mostraba                                                         | **Corregido:** pestaña "Documentos" en prospectos, sección en contactos y "Adjuntos de notas" en tiendas (`archivosDe`, `archivosDeNotas`). La descarga se verificó (200, PDF íntegro) |
+| 2   | Al renumerar una columna se subía la versión de la tarjeta movida: el movimiento fallaba o quedaba desincronizado                                              | **Corregido:** `moverTienda` valida la versión antes de renumerar, coloca la tarjeta en el índice elegido y el cliente se resincroniza (`router.refresh()`)                            |
+| 3   | El rollback optimista deshacía en pantalla movimientos de otras tarjetas que sí se guardaron, y se podía mover dos veces la misma tarjeta con la versión vieja | **Corregido:** `devolver()` regresa solo la tarjeta rechazada, y una tarjeta con un movimiento pendiente no acepta otro (con prueba)                                                   |
+| 4   | `revertir` fallaba por la llave foránea de `crm_archivos`, y después del corte borraría trabajo de usuarios                                                    | **Corregido:** se niega si hay archivos ligados o cambios de usuarios en el historial (con prueba)                                                                                     |
+| 5   | Reimportar después del corte pisaría con datos de Zoho lo editado en el CRM                                                                                    | **Corregido:** `importar.ts piloto/completa` se niega si `crm_historial` tiene cambios con origen `crm` (producción ya los tiene)                                                      |
+| 6   | La comilla `"` en la búsqueda podía romper el filtro `or` de PostgREST                                                                                         | **Corregido** en `textoBusqueda` (con prueba)                                                                                                                                          |
+| 7   | Por API, un editor podía fijar `autor_id`, `completado_por` y `archivado_por` ajenos                                                                           | **Migración 19:** `crm_sellar` los sella siempre con el actor real (con pruebas)                                                                                                       |
+| 8   | Por API, un editor podía editar `crm_etapas` (`zoho_valor`, `activa`) y desaparecer columnas o desviar la importación                                          | **Migración 19:** las etapas quedan como catálogo (sin alta ni cambio para `authenticated`; la app nunca las escribía)                                                                 |
+| 9   | `crm_tienda_contactos.origen` era falsificable                                                                                                                 | **Migración 19:** trigger que fija `origen = 'crm'` para usuarios                                                                                                                      |
+| 10  | 16 llaves foráneas sin índice                                                                                                                                  | **Migración 19:** índices parciales                                                                                                                                                    |
+
+**Pendientes menores no corregidos:**
+
+- Si una subida desde el navegador se interrumpe entre el alta de la fila y la subida del objeto, queda una fila activa sin objeto. La descarga muestra un error claro. Es un caso raro; queda para una limpieza periódica.
+- El contador de archivos de la tarjeta del Kanban solo cuenta los de la tienda, no los de sus notas.
+
+**Migración 19 (`…19_crm_autoria.sql`), aplicada con `db push` el 2026-10-20 (dry-run primero, autorizada por Carlos).** Se verificó en producción dentro de una transacción revertida:
+
+- El autor de una nota queda forzado al usuario real.
+- `crm_etapas` ya no se puede editar.
+- Mover tienda sigue funcionando.
+- Lo que ve cada perfil no cambió: Carlos ve 176 tiendas, 3,621 prospectos y 178 archivos; OAuth y el perfil sin CRM ven 0.
+- Están los índices nuevos.
+- Las pantallas del CRM y de Costeo responden 200, en 0.5–1.2 s.

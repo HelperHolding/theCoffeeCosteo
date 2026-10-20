@@ -4,10 +4,10 @@ import { claseCampo } from '@/lib/crm/formato';
 
 export const POR_PAGINA = 25;
 
-/** Texto seguro para un filtro `or` de PostgREST (sin comas, paréntesis ni comodines). */
+/** Texto seguro para un filtro `or` de PostgREST (sin comas, paréntesis, comillas ni comodines). */
 export const textoBusqueda = (q: string | undefined) =>
   (q ?? '')
-    .replace(/[,()*%\\]/g, ' ')
+    .replace(/[,()*%\\"]/g, ' ')
     .trim()
     .slice(0, 80);
 

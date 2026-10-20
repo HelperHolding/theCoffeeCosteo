@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -21,6 +22,7 @@ import { cn } from 'cn';
 import {
   columnas,
   coincide,
+  devolver,
   mover,
   sinFiltros,
   type Columna,
@@ -110,6 +112,14 @@ export function TableroTiendas({
   editable: boolean;
 }) {
   const [tablero, setTablero] = useState(() => columnas(etapas, tarjetas));
+  // Tras router.refresh() llegan datos nuevos del servidor: mandan sobre el estado optimista.
+  const [recibido, setRecibido] = useState({ etapas, tarjetas });
+  if (recibido.etapas !== etapas || recibido.tarjetas !== tarjetas) {
+    setRecibido({ etapas, tarjetas });
+    setTablero(columnas(etapas, tarjetas));
+  }
+  const enCurso = useRef(new Set<string>());
+  const router = useRouter();
   const [filtros, setFiltros] = useState<Filtros>(sinFiltros);
   const [vista, setVista] = useState<'kanban' | 'tabla'>('kanban');
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
@@ -128,22 +138,30 @@ export function TableroTiendas({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  /** Movimiento optimista con rollback visible si la base lo rechaza. */
+  /**
+   * Movimiento optimista. Si la base lo rechaza, solo esa tarjeta regresa (las demás que sí se guardaron
+   * se quedan) y se pide la versión vigente al servidor.
+   */
   function aplicar(tiendaId: string, etapaDestino: string, indice: number) {
-    const antes = tablero;
     const tarjeta = todas.find((t) => t.id === tiendaId);
+    if (!tarjeta) return;
+    if (enCurso.current.has(tiendaId))
+      return setAviso({ tipo: 'error', texto: `Espera a que se guarde el movimiento de ${tarjeta.nombre}.` });
     const r = mover(tablero, tiendaId, etapaDestino, indice);
-    if (!r || !tarjeta) return;
+    if (!r) return;
     setTablero(r.tablero);
+    enCurso.current.add(tiendaId);
     const destino = nombreEtapa(etapaDestino);
     iniciar(async () => {
-      const res = await moverTienda(tiendaId, etapaDestino, r.posicion, tarjeta.version);
+      const res = await moverTienda(tiendaId, etapaDestino, r.posicion, tarjeta.version, indice);
+      enCurso.current.delete(tiendaId);
       if (res.error !== undefined) {
-        setTablero(antes);
+        setTablero((actual) => devolver(actual, tarjeta));
         setAviso({ tipo: 'error', texto: `No se movió ${tarjeta.nombre}: ${res.error}` });
+        router.refresh();
         return;
       }
-      const { version, posicion } = res;
+      const { version, posicion, renumerada } = res;
       setTablero((actual) =>
         actual.map((c) => ({
           ...c,
@@ -151,6 +169,8 @@ export function TableroTiendas({
         })),
       );
       setAviso({ tipo: 'ok', texto: `${tarjeta.nombre} se movió a ${destino}.` });
+      // La columna se renumeró en la base (posiciones y versiones nuevas): se resincroniza.
+      if (renumerada) router.refresh();
     });
   }
 

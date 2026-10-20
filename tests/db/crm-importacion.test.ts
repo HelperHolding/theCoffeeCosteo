@@ -3,7 +3,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { crearUsuario } from './utilidades';
-import { cargar, revertir, type Lote } from '../../lib/crm/importacion/carga';
+import { cambiosDelCrm, cargar, revertir, type Lote } from '../../lib/crm/importacion/carga';
 
 let db: PGlite, responsable: string;
 const uno = async <T>(sql: string, p: unknown[] = []) => (await db.query<T>(sql, p)).rows[0];
@@ -271,4 +271,23 @@ it('revertir la última corrida borra lo que dejó y la marca como revertida', a
   expect(await uno(`select estado from zoho_staging.importaciones where id = $1`, [run])).toEqual({
     estado: 'revertida',
   });
+});
+
+it('revertir se niega si hay archivos ligados o cambios de usuarios (después del corte)', async () => {
+  const run = randomUUID();
+  await cargar(db, lote({ runId: run, tiendas: [{ ...tiendas[0], Ciudad: 'Toluca' }] }));
+  const t = await uno<{ id: string }>(`select id from crm_tiendas where zoho_record_id = 'zt1'`);
+  await db.query(
+    `insert into crm_archivos (nombre, mime, tamano, tienda_id, ruta) values ('a.pdf', 'application/pdf', 1, $1, 'x/prueba')`,
+    [t.id],
+  );
+  await expect(revertir(db, run)).rejects.toThrow('archivos ligados');
+  await db.query(`delete from crm_archivos where ruta like 'x/prueba%' or tienda_id = $1`, [t.id]);
+  await db.query(
+    `insert into crm_historial (entidad, entidad_id, tienda_id, accion, resumen, origen) values ('crm_tiendas', $1, $1, 'editado', 'prueba', 'crm')`,
+    [t.id],
+  );
+  expect(await cambiosDelCrm(db)).toBeGreaterThan(0);
+  await expect(revertir(db, run)).rejects.toThrow('cambios de usuarios');
+  await db.query(`delete from crm_historial where origen = 'crm'`);
 });

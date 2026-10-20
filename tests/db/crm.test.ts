@@ -242,6 +242,65 @@ describe('integridad y auditoría', () => {
     expect(h.rows[0].todo).toMatch(/Nota agregada/);
   });
 
+  it('un usuario no puede fijar el autor, quién completó ni quién archivó', async () => {
+    const t = await crearTienda(dev, 'Autoría');
+    const r = await comoUsuario(db, dev, async () => {
+      const n = await db.query<{ id: string; autor_id: string }>(
+        `insert into crm_notas (tienda_id, contenido, autor_id) values ($1, 'hola', $2) returning id, autor_id`,
+        [t.id, lector],
+      );
+      const editada = await db.query<{ autor_id: string }>(
+        `update crm_notas set autor_id = $2 where id = $1 returning autor_id`,
+        [n.rows[0].id, lector],
+      );
+      const c = await db.query<{ id: string }>(
+        `insert into crm_checklists (tienda_id, nombre) values ($1, 'Autoría') returning id`,
+        [t.id],
+      );
+      const item = await db.query<{ id: string; completado_por: string }>(
+        `insert into crm_checklist_items (checklist_id, texto, hecho, completado_por) values ($1, 'x', true, $2)
+         returning id, completado_por`,
+        [c.rows[0].id, lector],
+      );
+      const sinTransicion = await db.query<{ completado_por: string }>(
+        `update crm_checklist_items set completado_por = $2, texto = 'y' where id = $1 returning completado_por`,
+        [item.rows[0].id, lector],
+      );
+      return {
+        alta: n.rows[0].autor_id,
+        cambio: editada.rows[0].autor_id,
+        item: item.rows[0].completado_por,
+        itemCambio: sinTransicion.rows[0].completado_por,
+      };
+    });
+    expect(r).toEqual({ alta: dev, cambio: dev, item: dev, itemCambio: dev });
+  });
+
+  it('las etapas son catálogo: un usuario no las crea ni las edita', async () => {
+    await comoUsuario(db, dev, async () => {
+      await expect(db.query(`update crm_etapas set activa = false where id = $1`, [firma])).rejects.toThrow();
+      await expect(
+        db.query(`insert into crm_etapas (embudo, nombre, orden) values ('tiendas', 'Inventada', 99)`),
+      ).rejects.toThrow();
+    });
+  });
+
+  it('una liga tienda-contacto creada por un usuario queda con origen crm', async () => {
+    const t = await crearTienda(dev, 'Con liga');
+    const origen = await comoUsuario(db, dev, async () => {
+      const c = await db.query<{ id: string }>(
+        `insert into crm_contactos (nombre, apellidos) values ('Ana', 'Ruiz') returning id`,
+      );
+      return (
+        await db.query<{ origen: string }>(
+          `insert into crm_tienda_contactos (tienda_id, contacto_id, origen) values ($1, $2, 'importacion') returning origen`,
+          [t.id, c.rows[0].id],
+        )
+      ).rows[0].origen;
+    });
+    expect(origen).toBe('crm');
+  });
+
   it('marcar un ítem de checklist registra quién y cuándo', async () => {
     const t = await crearTienda(dev, 'Con checklist');
     const r = await comoUsuario(db, dev, async () => {

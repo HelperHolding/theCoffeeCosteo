@@ -5,6 +5,8 @@ import { Encabezado } from '@/components/portal/piezas';
 import { Pestanas } from '@/components/portal/pestanas';
 import { EtapaProspecto, SeccionesFicha } from '@/components/crm/ficha';
 import { ActividadTienda } from '@/components/crm/expediente/actividad';
+import { DocumentosTienda } from '@/components/crm/expediente/documentos';
+import { archivosDe } from '@/lib/crm/consultas';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -45,6 +47,12 @@ export default async function FichaProspecto({
     throw new Error('No se pudo consultar el prospecto. Intenta de nuevo.');
   if (!p.data) notFound();
   const x = p.data;
+  const archivos = await archivosDe(
+    db,
+    'prospecto_id',
+    id,
+    (notas.data ?? []).map((n) => n.id),
+  );
   const nombres = Object.fromEntries((perfiles.data ?? []).map((u) => [u.user_id, u.nombre]));
   const editable = puedeEditarCrm(accesos);
   return (
@@ -99,6 +107,12 @@ export default async function FichaProspecto({
                 ]}
               />
             ),
+          },
+          {
+            id: 'documentos',
+            nombre: 'Documentos',
+            contador: archivos.length,
+            contenido: <DocumentosTienda archivos={archivos} editable={editable} />,
           },
           {
             id: 'notas',

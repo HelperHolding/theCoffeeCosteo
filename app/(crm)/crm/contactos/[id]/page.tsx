@@ -5,6 +5,8 @@ import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { Encabezado } from '@/components/portal/piezas';
 import { SeccionesFicha } from '@/components/crm/ficha';
 import { ActividadTienda } from '@/components/crm/expediente/actividad';
+import { DocumentosTienda } from '@/components/crm/expediente/documentos';
+import { archivosDe } from '@/lib/crm/consultas';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -33,6 +35,12 @@ export default async function FichaContacto({ params }: { params: Promise<{ id: 
   if (c.error || ligas.error || notas.error || historial.error)
     throw new Error('No se pudo consultar el contacto. Intenta de nuevo.');
   if (!c.data) notFound();
+  const archivos = await archivosDe(
+    db,
+    'contacto_id',
+    id,
+    (notas.data ?? []).map((n) => n.id),
+  );
   const ids = (ligas.data ?? []).map((l) => l.tienda_id);
   const tiendas = ids.length
     ? ((await db.from('crm_tiendas').select('id,nombre,ciudad').in('id', ids).is('archivado_en', null))
@@ -87,6 +95,14 @@ export default async function FichaContacto({ params }: { params: Promise<{ id: 
           },
         ]}
       />
+      {archivos.length > 0 && (
+        <section aria-labelledby="documentos-contacto" className="space-y-3">
+          <h2 id="documentos-contacto" className="text-base font-semibold">
+            Documentos
+          </h2>
+          <DocumentosTienda archivos={archivos} editable={puedeEditarCrm(accesos)} />
+        </section>
+      )}
       <ActividadTienda
         relacion={{ contacto_id: x.id }}
         notas={notas.data ?? []}

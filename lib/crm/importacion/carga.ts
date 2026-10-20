@@ -312,7 +312,18 @@ export async function cargar(db: Ejecutor, lote: Lote) {
   }
 }
 
-/** Revierte una corrida antes del corte: borra lo que esa corrida creó o actualizó por última vez. */
+/** Movimientos hechos por usuarios en el CRM (el historial los marca con origen 'crm'). Si hay, ya pasó el corte. */
+export async function cambiosDelCrm(db: Ejecutor): Promise<number> {
+  const r = await db.query<{ n: number }>(
+    `select count(*)::int n from public.crm_historial where origen = 'crm'`,
+  );
+  return r.rows[0].n;
+}
+
+/**
+ * Revierte una corrida antes del corte: borra lo que esa corrida creó o actualizó por última vez.
+ * Se niega si ya hay trabajo de usuarios en el CRM o archivos ligados (sus objetos viven en Storage).
+ */
 export async function revertir(db: Ejecutor, runId: string) {
   await db.query('begin');
   try {
@@ -336,6 +347,20 @@ export async function revertir(db: Ejecutor, runId: string) {
       [runId, ti, pi, ci],
     );
     const ai = act.rows.map((x) => x.id);
+    const archivos = await db.query<{ n: number }>(
+      `select count(*)::int n from public.crm_archivos a
+       where a.tienda_id = any($1::uuid[]) or a.prospecto_id = any($2::uuid[]) or a.contacto_id = any($3::uuid[])
+          or a.nota_id in (select id from public.crm_notas where import_run_id = $4 or tienda_id = any($1::uuid[])
+            or prospecto_id = any($2::uuid[]) or contacto_id = any($3::uuid[]) or actividad_id = any($5::uuid[]))`,
+      [ti, pi, ci, runId, ai],
+    );
+    if (archivos.rows[0].n)
+      throw new Error(
+        `No se revierte: hay ${archivos.rows[0].n} archivos ligados a esos registros (con su objeto en Storage).`,
+      );
+    const cambios = await cambiosDelCrm(db);
+    if (cambios)
+      throw new Error(`No se revierte: el CRM ya tiene ${cambios} cambios de usuarios que se perderían.`);
     await db.query(
       `delete from public.crm_notas where import_run_id = $1 or tienda_id = any($2::uuid[])
        or prospecto_id = any($3::uuid[]) or contacto_id = any($4::uuid[]) or actividad_id = any($5::uuid[])`,

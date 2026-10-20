@@ -79,6 +79,23 @@ export function mover<T extends TarjetaTienda>(
   };
 }
 
+/**
+ * Devuelve una sola tarjeta a su lugar original (rollback de un movimiento rechazado) sin deshacer
+ * los movimientos de otras tarjetas que sí se guardaron mientras tanto.
+ */
+export function devolver<T extends TarjetaTienda>(tablero: Columna<T>[], original: T): Columna<T>[] {
+  return tablero.map((c) => {
+    const sin = c.tarjetas.filter((t) => t.id !== original.id);
+    if (c.etapa.id !== original.etapa_id)
+      return sin.length === c.tarjetas.length ? c : { ...c, tarjetas: sin };
+    const i = sin.findIndex((t) => t.posicion > original.posicion);
+    return {
+      ...c,
+      tarjetas: i === -1 ? [...sin, original] : [...sin.slice(0, i), original, ...sin.slice(i)],
+    };
+  });
+}
+
 export interface Filtros {
   texto: string;
   tipo: '' | 'franquiciatario' | 'maestra' | 'sin';

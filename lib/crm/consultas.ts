@@ -97,6 +97,39 @@ export async function tablero(db: Db) {
   };
 }
 
+/** Archivos adjuntos a notas (Zoho los guarda en la nota): se muestran en su propia sección del registro. */
+export async function archivosDeNotas(db: Db, idsNotas: string[]) {
+  if (!idsNotas.length) return [];
+  const r = await db
+    .from('crm_archivos')
+    .select('*')
+    .in('nota_id', idsNotas)
+    .is('archivado_en', null)
+    .order('subido_en', { ascending: false });
+  if (r.error) throw new Error('No se pudieron consultar los archivos. Intenta de nuevo.');
+  return r.data.map((a) => ({ ...a, seccion: 'notas' }));
+}
+
+/** Archivos de un prospecto o contacto, más los de sus notas. */
+export async function archivosDe(
+  db: Db,
+  columna: 'prospecto_id' | 'contacto_id',
+  id: string,
+  idsNotas: string[],
+) {
+  const [propios, deNotas] = await Promise.all([
+    db
+      .from('crm_archivos')
+      .select('*')
+      .eq(columna, id)
+      .is('archivado_en', null)
+      .order('subido_en', { ascending: false }),
+    archivosDeNotas(db, idsNotas),
+  ]);
+  if (propios.error) throw new Error('No se pudieron consultar los archivos. Intenta de nuevo.');
+  return [...propios.data, ...deNotas];
+}
+
 /** Todo lo que muestra el expediente de una tienda: dos rondas de consultas en paralelo. */
 export async function expediente(db: Db, id: string) {
   // La tienda va en la misma ronda que sus listas (todas filtran por tienda_id); si no existe, se descartan.
@@ -136,13 +169,17 @@ export async function expediente(db: Db, id: string) {
     if (r.error) throw new Error('No se pudo consultar el expediente. Intenta de nuevo.');
   const idsListas = (checklists.data ?? []).map((c) => c.id);
   const idsContactos = (ligas.data ?? []).map((l) => l.contacto_id);
-  const [items, contactos] = await Promise.all([
+  const [items, contactos, deNotas] = await Promise.all([
     idsListas.length
       ? db.from('crm_checklist_items').select('*').in('checklist_id', idsListas).order('orden')
       : Promise.resolve({ data: [], error: null }),
     idsContactos.length
       ? db.from('crm_contactos').select('id,nombre,apellidos,correo,telefono,puesto').in('id', idsContactos)
       : Promise.resolve({ data: [], error: null }),
+    archivosDeNotas(
+      db,
+      (notas.data ?? []).map((n) => n.id),
+    ),
   ]);
   if (items.error || contactos.error)
     throw new Error('No se pudo consultar el expediente. Intenta de nuevo.');
@@ -155,7 +192,7 @@ export async function expediente(db: Db, id: string) {
       ...c,
       items: (items.data ?? []).filter((i) => i.checklist_id === c.id),
     })),
-    archivos: archivos.data ?? [],
+    archivos: [...(archivos.data ?? []), ...deNotas],
     historial: historial.data ?? [],
     contactos: contactos.data ?? [],
   };

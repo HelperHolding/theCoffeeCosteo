@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import {
   columnas,
   coincide,
+  devolver,
   mover,
   posicionEntre,
   resumenPorGrupo,
@@ -67,6 +68,25 @@ it('reordena dentro de la misma columna', () => {
   const r = mover(tablero, '3', 'a', 0)!;
   expect(r.tablero[0].tarjetas.map((x) => x.id)).toEqual(['3', '1', '2']);
   expect(r.posicion).toBe(512);
+});
+
+it('el rollback devuelve solo la tarjeta rechazada y respeta los movimientos que sí se guardaron', () => {
+  const inicio = columnas(etapas, [t('x', 'a', 1024), t('y', 'a', 2048), t('z', 'b', 1024)]);
+  const original = inicio[0].tarjetas[0];
+  const conX = mover(inicio, 'x', 'b', 1)!.tablero;
+  const conY = mover(conX, 'y', 'o', 0)!.tablero;
+  const r = devolver(conY, original);
+  expect(r[0].tarjetas.map((c) => c.id)).toEqual(['x']);
+  expect(r[1].tarjetas.map((c) => c.id)).toEqual(['z']);
+  expect(r[2].tarjetas.map((c) => c.id)).toEqual(['y']);
+  // Regresa a su posición entre vecinos dentro de su columna original.
+  const misma = mover(
+    columnas(etapas, [t('1', 'a', 1024), t('2', 'a', 2048), t('3', 'a', 3072)]),
+    '2',
+    'a',
+    2,
+  )!;
+  expect(devolver(misma.tablero, t('2', 'a', 2048))[0].tarjetas.map((c) => c.id)).toEqual(['1', '2', '3']);
 });
 
 it('filtra por texto sin acentos, tipo de franquicia y pendientes de revisar', () => {
