@@ -246,15 +246,15 @@ export default async function Tablero() {
                     className="text-muted-foreground transition-transform group-open:rotate-180"
                   />
                 </summary>
-                <ul className="grid gap-1 border-t border-line px-2 py-2 sm:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-1 border-t border-line px-2 py-2 sm:grid-cols-2">
                   {g.filas.map((a) => (
-                    <li key={`${a.producto_id}:${a.canal_id}`}>
+                    <li key={`${a.producto_id}:${a.canal_id}`} className="min-w-0">
                       <Link
                         href={`/productos/${a.producto_id}`}
                         className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-paper"
                       >
-                        <span className="truncate">{a.producto}</span>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="min-w-0 truncate">{a.producto}</span>
+                        <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
                           {a.canal} <ArrowUpRight size={12} aria-hidden="true" />
                         </span>
                       </Link>
