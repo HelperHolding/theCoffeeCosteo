@@ -24,9 +24,8 @@ export default async function ExpedienteTienda({
   if (!UUID.test(id)) notFound();
   const { db, accesos } = await sesionCrm();
   const editable = puedeEditarCrm(accesos);
-  const e = await expediente(db, id);
+  const [e, perfiles] = await Promise.all([expediente(db, id), db.from('perfiles').select('user_id,nombre')]);
   if (!e) notFound();
-  const perfiles = await db.from('perfiles').select('user_id,nombre');
   const nombres = Object.fromEntries((perfiles.data ?? []).map((p) => [p.user_id, p.nombre]));
   const t = e.tienda;
   const subtitulo = [t.franquiciatario, t.ciudad].filter(Boolean).join(' · ');

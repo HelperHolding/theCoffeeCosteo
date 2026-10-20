@@ -97,12 +97,11 @@ export async function tablero(db: Db) {
   };
 }
 
-/** Todo lo que muestra el expediente de una tienda. */
+/** Todo lo que muestra el expediente de una tienda: dos rondas de consultas en paralelo. */
 export async function expediente(db: Db, id: string) {
-  const t = await db.from('crm_tiendas').select('*').eq('id', id).maybeSingle();
-  if (t.error) throw new Error('No se pudo consultar la tienda. Intenta de nuevo.');
-  if (!t.data) return null;
-  const [etapas, notas, actividades, checklists, archivos, historial, ligas] = await Promise.all([
+  // La tienda va en la misma ronda que sus listas (todas filtran por tienda_id); si no existe, se descartan.
+  const [t, etapas, notas, actividades, checklists, archivos, historial, ligas] = await Promise.all([
+    db.from('crm_tiendas').select('*').eq('id', id).maybeSingle(),
     leerTodo<Pick<Etapa, 'id' | 'nombre' | 'orden' | 'tipo' | 'activa' | 'embudo'>>(
       db,
       'crm_etapas',
@@ -131,6 +130,8 @@ export async function expediente(db: Db, id: string) {
     db.from('crm_historial').select('*').eq('tienda_id', id).order('fecha', { ascending: false }).limit(200),
     db.from('crm_tienda_contactos').select('contacto_id').eq('tienda_id', id),
   ]);
+  if (t.error) throw new Error('No se pudo consultar la tienda. Intenta de nuevo.');
+  if (!t.data) return null;
   for (const r of [notas, actividades, checklists, archivos, historial, ligas])
     if (r.error) throw new Error('No se pudo consultar el expediente. Intenta de nuevo.');
   const idsListas = (checklists.data ?? []).map((c) => c.id);

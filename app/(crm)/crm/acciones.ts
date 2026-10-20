@@ -1,5 +1,4 @@
 'use server';
-import { revalidatePath } from 'next/cache';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { camposActividad, camposTienda, validar, validarArchivo } from '@/lib/crm/validacion';
@@ -24,10 +23,8 @@ const mensaje = (e: { code?: string }) =>
     : e.code === '42501'
       ? 'No tienes permiso para este cambio.'
       : 'No se pudo guardar. Revisa la conexión e intenta de nuevo.';
-const refrescar = (tienda?: string) => {
-  revalidatePath('/crm', 'layout');
-  if (tienda) revalidatePath(`/crm/tiendas/${tienda}`);
-};
+// Sin revalidatePath: el Kanban actualiza en pantalla (optimista) y cada pantalla pide solo su página
+// con router.refresh(); revalidar todo /crm duplicaba el trabajo en cada acción.
 
 export async function moverTienda(
   tienda: string,
@@ -57,7 +54,6 @@ export async function moverTienda(
       p_version: version,
     });
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(tienda);
     return { version: r.data.version, posicion: r.data.posicion };
   } catch (e) {
     return fallo(e);
@@ -75,7 +71,6 @@ export async function crearTienda(datos: Record<string, unknown>): Promise<Resul
       .select('id')
       .single();
     if (r.error) return { error: mensaje(r.error) };
-    refrescar();
     return { id: r.data.id };
   } catch (e) {
     return fallo(e);
@@ -93,7 +88,6 @@ export async function guardarTienda(
     const r = await db.from('crm_tiendas').update(d).eq('id', id).eq('version', version).select('id');
     if (r.error) return { error: mensaje(r.error) };
     if (!r.data.length) return { error: mensaje({ code: '40001' }) };
-    refrescar(id);
     return {};
   } catch (e) {
     return fallo(e);
@@ -111,7 +105,6 @@ export async function archivarTienda(id: string, version: number): Promise<Resul
       .select('id');
     if (r.error) return { error: mensaje(r.error) };
     if (!r.data.length) return { error: mensaje({ code: '40001' }) };
-    refrescar(id);
     return {};
   } catch (e) {
     return fallo(e);
@@ -135,7 +128,6 @@ export async function agregarNota(rel: Relacion, contenido: string): Promise<Res
       .from('crm_notas')
       .insert({ ...relacion(rel), contenido: texto, autor_id: perfil.user_id });
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(rel.tienda_id);
     return {};
   } catch (e) {
     return fallo(e);
@@ -151,7 +143,6 @@ export async function crearActividad(rel: Relacion, datos: Record<string, unknow
       .from('crm_actividades')
       .insert({ ...d, ...relacion(rel), responsable_id: perfil.user_id });
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(rel.tienda_id);
     return {};
   } catch (e) {
     return fallo(e);
@@ -175,7 +166,6 @@ export async function cambiarEstadoActividad(
     if (r.error) return { error: mensaje(r.error) };
     if (!r.data.length)
       return { error: 'La actividad cambió mientras tanto. Recarga para ver la versión actual.' };
-    refrescar(r.data[0].tienda_id ?? undefined);
     return {};
   } catch (e) {
     return fallo(e);
@@ -190,7 +180,6 @@ export async function crearChecklist(tienda: string, nombre: string): Promise<Re
       .from('crm_checklists')
       .insert({ tienda_id: tienda, nombre: nombre.trim().slice(0, 120) });
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(tienda);
     return {};
   } catch (e) {
     return fallo(e);
@@ -213,7 +202,6 @@ export async function agregarElemento(tienda: string, checklist: string, texto: 
       orden: (ultimo.data?.[0]?.orden ?? 0) + 1024,
     });
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(tienda);
     return {};
   } catch (e) {
     return fallo(e);
@@ -226,7 +214,6 @@ export async function marcarElemento(tienda: string, id: string, hecho: boolean)
     const r = await db.from('crm_checklist_items').update({ hecho }).eq('id', id).select('id');
     if (r.error) return { error: mensaje(r.error) };
     if (!r.data.length) return { error: 'No se encontró el elemento.' };
-    refrescar(tienda);
     return {};
   } catch (e) {
     return fallo(e);
@@ -268,7 +255,6 @@ export async function confirmarArchivo(tienda: string, id: string, subido: boole
     const { db } = await editor();
     if (!subido)
       await db.from('crm_archivos').update({ archivado_en: new Date().toISOString() }).eq('id', id);
-    refrescar(tienda);
     return {};
   } catch (e) {
     return fallo(e);
@@ -284,7 +270,6 @@ export async function archivarArchivo(tienda: string, id: string): Promise<Resul
       .eq('id', id)
       .select('id');
     if (r.error) return { error: mensaje(r.error) };
-    refrescar(tienda);
     return {};
   } catch (e) {
     return fallo(e);
@@ -328,7 +313,6 @@ export async function cambiarEtapaProspecto(
     if (r.error) return { error: mensaje(r.error) };
     if (!r.data.length)
       return { error: 'El prospecto cambió mientras tanto. Recarga para ver la versión actual.' };
-    revalidatePath('/crm', 'layout');
     return {};
   } catch (e) {
     return fallo(e);
