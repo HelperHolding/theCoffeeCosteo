@@ -3,11 +3,20 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Encabezado, Pill, textoEstado, type Estado } from '@/components/portal/piezas';
+import { Encabezado, Pill, textoEstado } from '@/components/portal/piezas';
+import {
+  FILTROS_MARGEN,
+  ORDENES_MARGEN,
+  cumpleFiltro,
+  ordenarPorMargen,
+  type FiltroMargen,
+  type MargenRappi,
+  type OrdenMargen,
+} from '@/lib/portal/margen-rappi';
 import { dinero, mayusculas, porcentaje } from '@/lib/portal/consultas';
 // Un canal fusionado cuyos precios difieren guarda cada precio con el nombre de su canal.
 export type PrecioCanal = number | null | { nombre: string; precio: number | null }[];
-export type MargenRappi = { pct: number | null; importe: number | null; estado: Estado };
+export type { MargenRappi };
 export type PreciosTamano = {
   tamano: string;
   costo: number | null;
@@ -107,11 +116,18 @@ export function CatalogoRecetas({
   const [buscar, setBuscar] = useState(consulta);
   const [estado, setEstado] = useState('todos');
   const [pagina, setPagina] = useState(0);
+  // Solo existen si el servidor habilitó la columna de margen Rappi para esta cuenta.
+  const [filtroMargen, setFiltroMargen] = useState<FiltroMargen>('todos');
+  const [ordenMargen, setOrdenMargen] = useState<OrdenMargen>('nombre');
   const ruta = tipo === 'producto' ? '/productos' : '/subrecetas';
-  const filtradas = filas.filter(
-    (r) =>
-      r.nombre.toLocaleLowerCase('es').includes(buscar.trim().toLocaleLowerCase('es')) &&
-      (estado === 'todos' || r.activo === (estado === 'activos')),
+  const filtradas = ordenarPorMargen(
+    filas.filter(
+      (r) =>
+        r.nombre.toLocaleLowerCase('es').includes(buscar.trim().toLocaleLowerCase('es')) &&
+        (estado === 'todos' || r.activo === (estado === 'activos')) &&
+        (!margenRappi || cumpleFiltro(r, filtroMargen)),
+    ),
+    margenRappi ? ordenMargen : 'nombre',
   );
   const paginas = Math.max(1, Math.ceil(filtradas.length / 25));
   const actual = Math.min(pagina, paginas - 1);
@@ -148,8 +164,14 @@ export function CatalogoRecetas({
         className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card"
         aria-label="Catálogo"
       >
-        <div className="flex flex-col sm:flex-row gap-4 p-5 border-b">
-          <div className="flex-1">
+        <div
+          className={
+            margenRappi
+              ? 'grid gap-4 border-b p-5 sm:grid-cols-3 xl:grid-cols-[minmax(0,1fr)_11rem_13rem_13rem]'
+              : 'flex flex-col gap-4 border-b p-5 sm:flex-row'
+          }
+        >
+          <div className={margenRappi ? 'sm:col-span-3 xl:col-span-1' : 'flex-1'}>
             <label htmlFor="buscar-recetas" className="sr-only">
               Buscar por nombre
             </label>
@@ -172,7 +194,7 @@ export function CatalogoRecetas({
               />
             </div>
           </div>
-          <div className="sm:w-44">
+          <div className={margenRappi ? undefined : 'sm:w-44'}>
             <label htmlFor="estado-recetas" className="sr-only">
               Estado
             </label>
@@ -190,6 +212,50 @@ export function CatalogoRecetas({
               <option value="inactivos">Inactivos</option>
             </select>
           </div>
+          {margenRappi && (
+            <>
+              <div>
+                <label htmlFor="margen-recetas" className="sr-only">
+                  Margen con comisión Rappi
+                </label>
+                <select
+                  id="margen-recetas"
+                  value={filtroMargen}
+                  className="!rounded-lg"
+                  onChange={(e) => {
+                    setFiltroMargen(e.target.value as FiltroMargen);
+                    setPagina(0);
+                  }}
+                >
+                  {Object.entries(FILTROS_MARGEN).map(([valor, nombre]) => (
+                    <option key={valor} value={valor}>
+                      {nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="orden-recetas" className="sr-only">
+                  Ordenar por margen Rappi
+                </label>
+                <select
+                  id="orden-recetas"
+                  value={ordenMargen}
+                  className="!rounded-lg"
+                  onChange={(e) => {
+                    setOrdenMargen(e.target.value as OrdenMargen);
+                    setPagina(0);
+                  }}
+                >
+                  {Object.entries(ORDENES_MARGEN).map(([valor, nombre]) => (
+                    <option key={valor} value={valor}>
+                      {nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
         {/* relative: los textos sr-only (absolutos) quedan dentro del scroll y no ensanchan la página. */}
         <div className="relative overflow-x-auto">

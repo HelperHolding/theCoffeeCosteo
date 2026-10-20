@@ -13,6 +13,15 @@ const nombres = [
   'Apple and Cinnamon Muffin',
   'Banana Cake',
 ];
+// Margen Rappi de muestra, variado: en objetivo (≥ 50 %), bajo objetivo y con pérdida.
+const margen = (i: number, ajuste = 0) => {
+  const pct = i === 5 ? -0.04 : ((i * 17 + ajuste) % 45) / 100 + 0.22;
+  return {
+    pct,
+    importe: Math.round(pct * 75 * 100) / 100,
+    estado: pct < 0 ? ('pierde' as const) : pct < 0.5 ? ('bajo' as const) : ('ok' as const),
+  };
+};
 export function VistaCatalogo() {
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[248px_1fr]">
@@ -42,13 +51,13 @@ export function VistaCatalogo() {
                       tamano: 'Chica',
                       costo: 12.4 + i,
                       canales: { m: 55, r: 75 },
-                      margenRappi: { pct: 0.5062, importe: 37.1, estado: 'ok' },
+                      margenRappi: margen(i, 9),
                     },
                     {
                       tamano: 'Grande',
                       costo: 16.9 + i,
                       canales: { m: 65, r: 89 },
-                      margenRappi: { pct: 0.4867, importe: 36.5, estado: 'bajo' },
+                      margenRappi: margen(i),
                     },
                   ]
                 : i === 4
@@ -67,10 +76,7 @@ export function VistaCatalogo() {
                               : 48,
                           r: 66,
                         },
-                        margenRappi:
-                          i === 2
-                            ? { pct: null, importe: null, estado: 'sin-precio' }
-                            : { pct: 0.3449, importe: 21.4, estado: 'bajo' },
+                        margenRappi: i === 2 ? { pct: null, importe: null, estado: 'sin-precio' } : margen(i),
                       },
                     ],
           }))}
