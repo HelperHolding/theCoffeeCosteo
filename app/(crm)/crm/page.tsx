@@ -4,7 +4,7 @@ import { sesionCrm } from '@/lib/supabase/sesion';
 import { tablero } from '@/lib/crm/consultas';
 import { columnas, GRUPOS, resumenPorGrupo } from '@/lib/crm/kanban';
 import { Encabezado, Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
-import { fechaCorta } from '@/components/crm/expediente/actividades';
+import { fechaCorta } from '@/lib/crm/formato';
 
 const enDias = (d: number) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
 

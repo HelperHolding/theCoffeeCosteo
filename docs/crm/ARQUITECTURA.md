@@ -241,3 +241,33 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 - **Segunda corrida** `6ab34659-56db-4daa-9f89-e194bf0fe86a`: los 107 registros quedaron sin cambio (idempotencia confirmada en producción). Además limpió el ruido del historial: solo queda "Importado de Zoho" por registro más los cambios de etapa.
 - **Revertir el piloto:** `npx tsx scripts/zoho/importar.ts revertir af163e6f-9680-4c3f-9cbd-f270cd1479a7` (la segunda corrida no creó ni cambió registros).
 - **Sin archivos todavía:** su copia necesita la llave secreta de Supabase para subir a Storage. Las descargas de Zoho no requieren scopes nuevos (adjuntos y `download_fields_attachment`).
+
+## 16. Fase 8 — Importación completa y rendimiento (2026-10-20, autorizado por Carlos)
+
+- **Corrida completa** `5e365756-802d-4c82-9c64-df47b766bc9f` (snapshot 2026-10-20T18:22Z; 13.6 min; 229 llamadas a Zoho):
+
+| Módulo | Zoho | En el CRM | Nota |
+| --- | ---: | ---: | --- |
+| Tiendas | 176 | 176 | 166 nuevas, 10 del piloto |
+| Prospectos | 3,621 | 3,621 | los 15 estados en uso (14 + sin estado) idénticos a la auditoría |
+| Contactos | 51 | 51 | 69 ligas tienda-contacto por cuenta compartida |
+| Actividades | 268 | 231 | 37 omitidas: eran de Cuentas (decisión 7) |
+| Notas | 497 | 472 | 25 omitidas: Cuentas y Prospectos_Expansion |
+| Historial de etapas | 536 | 536 | con su fecha original de Zoho |
+
+- **Conciliación con la auditoría:** coinciden tiendas por etapa, prospectos por estado, notas por relación (399 / 56 / 11 / 6), fechas unificadas (apertura 63, aprobación 95, arranque 134), tipo de franquicia (138 / 11), marca de cafetera y estados de actividades. Las 3 tiendas "por revisar" son los conflictos detectados en la Fase 4.
+- **Diferencia explicada:** 8 tareas tienen `$se_module = Contacts` en Zoho pero ningún `What_Id` ni `Who_Id`, así que entraron sin relación.
+- **Error y corrección:** la huella incluía la posición del Kanban (que depende del lote). Por eso 9 tiendas del piloto se marcaron "actualizadas" y se reescribieron con los datos de Zoho. Lo único perdido fueron los 2 movimientos de etapa de prueba de "Aguascalientes 5". Corregido en `carga.ts` (la huella excluye los campos que solo se fijan al insertar) y cubierto por prueba. **Una próxima corrida actualizará una vez las 176 tiendas** para recalcular su huella con la fórmula nueva.
+- **Defectos que solo aparecieron con datos reales, corregidos:** el Panel y la lista de Actividades llamaban funciones de un módulo de cliente desde el servidor (`fechaCorta`, `vencida`), y `claseCampo` no llegaba a los componentes de servidor. Todo se movió a `lib/crm/formato.ts`.
+- **Migración 18 (`…18_crm_rls_rendimiento.sql`), aplicada con `db push` (dry-run primero):** las políticas del CRM envuelven las funciones en `(select …)`, así que se evalúan una vez por consulta y no por fila. Contar 3,621 prospectos como usuario pasó de 1,100 ms a 3 ms. El acceso es el mismo: Carlos ve 3,621, un perfil sin CRM ve 0 y OAuth ve 0. Las 42 políticas OAuth de Costeo siguen intactas.
+- **Tiempos con datos reales** (`next start` local contra producción, carga completa):
+
+| Pantalla | Antes | Después |
+| --- | ---: | ---: |
+| Panel | 3.8 s (con error) | 0.97 s |
+| Tiendas (176 tarjetas) | 2.6 s | 0.96 s |
+| Prospectos con búsqueda | 3.3 s | 0.68 s |
+| Actividades vencidas | — | 0.69 s |
+| Expediente | 1.0 s | 0.82 s |
+
+- **Pendiente:** archivos (piloto de 5 y luego todos). Necesita `SUPABASE_SECRET_KEY` en `.env.local` para subir a Storage.

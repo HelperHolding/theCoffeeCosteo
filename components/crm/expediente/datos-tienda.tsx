@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { guardarTienda } from '@/app/(crm)/crm/acciones';
-import { claseCampo } from '../nueva-tienda';
+import { claseCampo } from '@/lib/crm/formato';
 import { camposTienda, type CampoTienda } from '@/lib/crm/validacion';
 import type { Tienda } from '@/lib/crm/tipos';
 import { TIPOS_FRANQUICIA } from '@/lib/crm/tipos';

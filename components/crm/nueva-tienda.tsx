@@ -13,9 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { crearTienda } from '@/app/(crm)/crm/acciones';
-
-export const claseCampo =
-  'h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm shadow-card outline-none focus-visible:ring-[3px] focus-visible:ring-crema/35';
+import { claseCampo } from '@/lib/crm/formato';
 
 export function NuevaTienda({ etapas }: { etapas: { id: string; nombre: string }[] }) {
   const [abierto, setAbierto] = useState(false);

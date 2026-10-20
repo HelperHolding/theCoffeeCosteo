@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { Buscador, Paginacion, POR_PAGINA, paginaDe, textoBusqueda } from '@/components/crm/listas';
-import { claseCampo } from '@/components/crm/nueva-tienda';
+import { claseCampo } from '@/lib/crm/formato';
 
 export default async function Prospectos({
   searchParams,

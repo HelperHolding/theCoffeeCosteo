@@ -54,9 +54,12 @@ async function upsert(
   soloAlInsertar: string[] = [],
 ): Promise<Map<string, string>> {
   for (const f of filas) {
+    // La huella solo cubre lo que viene de Zoho: los campos que se fijan al insertar (p. ej. la posición
+    // en el Kanban, que depende del lote) no deben hacer que un registro sin cambios se reescriba.
+    const deZoho = Object.fromEntries(Object.entries(f).filter(([k]) => !soloAlInsertar.includes(k)));
     const fila = {
       ...f,
-      import_hash: huella(f),
+      import_hash: huella(deZoho),
       imported_at: new Date().toISOString(),
       import_run_id: runId,
     };

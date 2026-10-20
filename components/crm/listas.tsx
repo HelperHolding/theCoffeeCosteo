@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { claseCampo } from './nueva-tienda';
+import { claseCampo } from '@/lib/crm/formato';
 
 export const POR_PAGINA = 25;
 

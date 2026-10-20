@@ -221,6 +221,18 @@ it('repetir no duplica; un cambio en Zoho actualiza solo ese registro', async ()
     (await uno<{ n: number }>(`select count(*)::int n from crm_historial where origen = 'zoho'`)).n,
   ).toBe(1);
 
+  // Un lote más grande cambia la posición calculada, pero no debe reescribir tiendas sin cambios en Zoho.
+  const masGrande = await cargar(
+    db,
+    lote({
+      tiendas: [
+        ...tiendas,
+        { id: 'zt3', Name: 'Tienda Nueva', Status: 'Operando', Modified_Time: '2026-01-01T00:00:00Z' },
+      ],
+    }),
+  );
+  expect(masGrande.conteos.tiendas).toMatchObject({ nuevos: 1, actualizados: 0, sin_cambio: 2 });
+
   const cambio = await cargar(db, lote({ tiendas: [{ ...tiendas[0], Ciudad: 'CDMX' }, tiendas[1]] }));
   expect(cambio.conteos.tiendas).toMatchObject({ actualizados: 1, sin_cambio: 1 });
   expect(await uno(`select ciudad from crm_tiendas where zoho_record_id = 'zt1'`)).toEqual({
@@ -242,8 +254,20 @@ it('revertir la última corrida borra lo que dejó y la marca como revertida', a
   );
   const r = await revertir(db, run);
   expect(r.tiendas).toBe(2);
-  expect((await uno<{ n: number }>(`select count(*)::int n from crm_tiendas`)).n).toBe(0);
-  expect((await uno<{ n: number }>(`select count(*)::int n from crm_checklists`)).n).toBe(0);
+  expect(
+    (
+      await uno<{ n: number }>(
+        `select count(*)::int n from crm_tiendas where zoho_record_id in ('zt1', 'zt2')`,
+      )
+    ).n,
+  ).toBe(0);
+  expect(
+    (
+      await uno<{ n: number }>(
+        `select count(*)::int n from crm_checklists c join crm_tiendas t on t.id = c.tienda_id where t.zoho_record_id in ('zt1', 'zt2')`,
+      )
+    ).n,
+  ).toBe(0);
   expect(await uno(`select estado from zoho_staging.importaciones where id = $1`, [run])).toEqual({
     estado: 'revertida',
   });

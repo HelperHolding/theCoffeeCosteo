@@ -4,8 +4,9 @@ import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { Buscador, Paginacion, POR_PAGINA, paginaDe, textoBusqueda } from '@/components/crm/listas';
-import { claseCampo } from '@/components/crm/nueva-tienda';
-import { EstadoActividad, fechaCorta, vencida } from '@/components/crm/expediente/actividades';
+import { claseCampo } from '@/lib/crm/formato';
+import { EstadoActividad } from '@/components/crm/expediente/actividades';
+import { fechaCorta, vencida } from '@/lib/crm/formato';
 import { PRIORIDADES } from '@/lib/crm/tipos';
 
 const VISTAS = {

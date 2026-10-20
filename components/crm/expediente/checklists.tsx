@@ -5,7 +5,7 @@ import { ExternalLink, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { agregarElemento, crearChecklist, marcarElemento } from '@/app/(crm)/crm/acciones';
 import type { Checklist, ChecklistItem } from '@/lib/crm/tipos';
-import { claseCampo } from '../nueva-tienda';
+import { claseCampo } from '@/lib/crm/formato';
 
 type Lista = Checklist & { items: ChecklistItem[] };
 

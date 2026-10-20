@@ -7,7 +7,7 @@ import { cliente } from '@/lib/supabase/cliente';
 import { archivarArchivo, confirmarArchivo, enlaceArchivo, prepararArchivo } from '@/app/(crm)/crm/acciones';
 import { TAMANO_MAXIMO, TIPOS_ARCHIVO, validarArchivo } from '@/lib/crm/validacion';
 import type { Archivo } from '@/lib/crm/tipos';
-import { fechaHora } from './actividad';
+import { fechaHora } from '@/lib/crm/formato';
 
 const peso = (b: number) =>
   b < 1024 * 1024 ? `${Math.ceil(b / 1024)} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;

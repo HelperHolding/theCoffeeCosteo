@@ -6,18 +6,8 @@ import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import { cambiarEstadoActividad, crearActividad } from '@/app/(crm)/crm/acciones';
 import { ESTADOS_ACTIVIDAD, PRIORIDADES, type Actividad } from '@/lib/crm/tipos';
-import { claseCampo } from '../nueva-tienda';
-
-const hoy = () => new Date().toISOString().slice(0, 10);
-export const vencida = (a: Pick<Actividad, 'estado' | 'fecha_vencimiento'>) =>
-  a.estado !== 'Completed' && !!a.fecha_vencimiento && a.fecha_vencimiento < hoy();
-export const fechaCorta = (s: string) =>
-  new Intl.DateTimeFormat('es-MX', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${s}T00:00:00Z`));
+import { claseCampo } from '@/lib/crm/formato';
+import { fechaCorta, vencida } from '@/lib/crm/formato';
 
 export function EstadoActividad({ actividad, editable }: { actividad: Actividad; editable: boolean }) {
   const [error, setError] = useState('');

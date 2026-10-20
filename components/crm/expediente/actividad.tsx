@@ -5,16 +5,7 @@ import { ArrowRightLeft, FilePlus2, History, ListChecks, StickyNote } from 'luci
 import { Button } from '@/components/ui/button';
 import { agregarNota } from '@/app/(crm)/crm/acciones';
 import type { Historial, Nota } from '@/lib/crm/tipos';
-
-export const fechaHora = (s: string) =>
-  new Intl.DateTimeFormat('es-MX', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Mexico_City',
-  }).format(new Date(s));
+import { fechaHora } from '@/lib/crm/formato';
 
 const iconos = {
   etapa: ArrowRightLeft,
