@@ -11,6 +11,7 @@ import { TAMANO_MAXIMO, TIPOS_ARCHIVO } from '../../lib/crm/validacion';
  *   npx tsx scripts/zoho/archivos.ts inventario          cuenta y clasifica, sin descargar
  *   npx tsx scripts/zoho/archivos.ts copiar --limite 5   piloto
  *   npx tsx scripts/zoho/archivos.ts copiar              todos
+ *   npx tsx scripts/zoho/archivos.ts huerfanos           filas sin objeto y objetos sin fila (solo lectura)
  */
 type Destino = {
   columna: 'tienda_id' | 'prospecto_id' | 'contacto_id' | 'nota_id';
@@ -176,6 +177,24 @@ async function main() {
   const db = new pg.Client({ connectionString: env.get('DATABASE_URL'), ssl: { rejectUnauthorized: false } });
   await db.connect();
   try {
+    if (comando === 'huerfanos') {
+      // Solo lectura: una subida interrumpida deja una fila activa sin objeto (la descarga falla con aviso).
+      const r = await db.query<{ tipo: string; seccion: string | null; n: number; bytes: string | null }>(
+        `select 'fila sin objeto' tipo, a.seccion, count(*)::int n, sum(a.tamano)::text bytes
+           from public.crm_archivos a
+          where a.archivado_en is null
+            and not exists (select 1 from storage.objects o where o.bucket_id = 'crm-archivos' and o.name = a.ruta)
+          group by a.seccion
+         union all
+         select 'objeto sin fila', null, count(*)::int, sum((o.metadata->>'size')::bigint)::text
+           from storage.objects o
+          where o.bucket_id = 'crm-archivos'
+            and not exists (select 1 from public.crm_archivos a where a.ruta = o.name)
+         having count(*) > 0`,
+      );
+      console.log(JSON.stringify(r.rows.length ? r.rows : 'Sin huérfanos.', null, 2));
+      return;
+    }
     const inv = await inventario(z, db);
     const ya = new Set(
       (
@@ -201,7 +220,7 @@ async function main() {
       console.log(JSON.stringify(resumen, null, 2));
       return;
     }
-    if (comando !== 'copiar') throw new Error('Comando: inventario | copiar [--limite N]');
+    if (comando !== 'copiar') throw new Error('Comando: inventario | copiar [--limite N] | huerfanos');
 
     const lote = limite ? elegir(pendientes, limite) : pendientes;
     const supa = createClient(env.get('NEXT_PUBLIC_SUPABASE_URL')!, env.get('SUPABASE_SECRET_KEY')!, {

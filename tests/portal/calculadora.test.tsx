@@ -117,3 +117,72 @@ it('compara cuatro márgenes por canal en producto y combo al mismo precio', asy
   expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$75.00');
   expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$46.80');
 });
+
+it('el precio Rappi sigue el dato vigente hasta que se edita y cada tamaño carga el suyo', async () => {
+  const canalesRappi = [{ id: 'rappi', nombre: 'Rappi', comisionPct: 18, costoEnvase: 4 }];
+  const tamanos = (chica: number | null) => [
+    { id: 'tw:chica', nombre: 'True White · Chica', costo: 14.74, precioLista: 68, precioRappi: chica },
+    { id: 'tw:grande', nombre: 'True White · Grande', costo: 16.7, precioLista: 78, precioRappi: 87 },
+  ];
+  const { rerender } = render(
+    <CalculadoraPromociones
+      productos={tamanos(85)}
+      canales={canalesRappi}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  await userEvent.click(screen.getByRole('radio', { name: 'Precio Rappi' }));
+  const precio = screen.getByLabelText('Precio de venta Rappi, con IVA');
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'tw:chica');
+  expect(precio).toHaveValue(85);
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'tw:grande');
+  expect(precio).toHaveValue(87);
+  expect(screen.getByText(/Precio Rappi registrado: \$87\.00/)).toBeVisible();
+
+  // Sin edición, datos nuevos del servidor actualizan el campo.
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'tw:chica');
+  rerender(
+    <CalculadoraPromociones
+      productos={tamanos(90)}
+      canales={canalesRappi}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  expect(precio).toHaveValue(90);
+
+  // Una simulación editada se conserva aunque lleguen datos nuevos; la leyenda muestra el vigente.
+  await userEvent.clear(precio);
+  await userEvent.type(precio, '99');
+  rerender(
+    <CalculadoraPromociones
+      productos={tamanos(92)}
+      canales={canalesRappi}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  expect(precio).toHaveValue(99);
+  expect(screen.getByText(/Precio Rappi registrado: \$92\.00/)).toBeVisible();
+
+  // Cambiar de tamaño descarta la simulación anterior.
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'tw:grande');
+  expect(precio).toHaveValue(87);
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'tw:chica');
+  expect(precio).toHaveValue(92);
+
+  // Sin precio registrado: el campo queda vacío y se puede capturar.
+  rerender(
+    <CalculadoraPromociones
+      productos={tamanos(null)}
+      canales={canalesRappi}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  expect(precio).toHaveValue(null);
+  expect(screen.getByText(/Precio Rappi registrado: sin registrar/)).toBeVisible();
+  await userEvent.type(precio, '80');
+  expect(screen.getByLabelText('Márgenes de la simulación')).toBeVisible();
+});

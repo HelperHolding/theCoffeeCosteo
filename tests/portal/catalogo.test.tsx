@@ -74,3 +74,46 @@ it('resalta Productos también dentro de su ficha', () => {
   expect(screen.getByRole('link', { name: 'Productos' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'Tablero' })).not.toHaveAttribute('aria-current');
 });
+it('la columna de margen con comisión Rappi solo aparece si el servidor la habilita, por tamaño', () => {
+  const filas = [
+    {
+      id: 'tw',
+      nombre: 'True White',
+      activo: true,
+      precios: [
+        {
+          tamano: 'Chica',
+          costo: 14.74,
+          canales: { r: 85 },
+          margenRappi: { pct: 0.5062, importe: 37.1, estado: 'ok' as const },
+        },
+        {
+          tamano: 'Grande',
+          costo: 16.7,
+          canales: { r: 87 },
+          margenRappi: { pct: 0.4867, importe: 36.5, estado: 'bajo' as const },
+        },
+        {
+          tamano: 'Mega',
+          costo: 18,
+          canales: { r: null },
+          margenRappi: { pct: null, importe: null, estado: 'sin-precio' as const },
+        },
+      ],
+    },
+  ];
+  const canales = [{ id: 'r', nombre: 'Rappi' }];
+  const { unmount } = render(
+    <CatalogoRecetas tipo="producto" editable={false} canales={canales} filas={filas} />,
+  );
+  expect(screen.queryByRole('columnheader', { name: 'Margen con comisión Rappi' })).toBeNull();
+  unmount();
+
+  render(<CatalogoRecetas tipo="producto" editable={false} canales={canales} filas={filas} margenRappi />);
+  expect(screen.getByRole('columnheader', { name: 'Margen con comisión Rappi' })).toBeVisible();
+  const celda = screen.getAllByRole('cell').at(-3)!;
+  expect(celda).toHaveTextContent(/CHICA\s*50[.,]6\s*%, En objetivo\s*\$37\.10/);
+  expect(celda).toHaveTextContent(/GRANDE\s*48[.,]7\s*%, Bajo objetivo\s*\$36\.50/);
+  expect(celda).toHaveTextContent(/MEGA\s*—/);
+  expect(celda).not.toHaveTextContent('$0.00');
+});
