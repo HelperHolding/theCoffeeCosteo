@@ -17,6 +17,13 @@ it('en Costeo el Tablero vive en /costeo y el grupo Portal lleva a Inicio y al C
   expect(screen.queryByRole('link', { name: 'Costeo' })).toBeNull();
 });
 
+it('en Inicio el menú solo lleva a Inicio: los módulos van en las tarjetas', () => {
+  ruta.actual = '/';
+  render(<Navegacion seccion="inicio" visibles={['costeo', 'crm']} />);
+  expect(screen.getAllByRole('link').map((l) => l.textContent)).toEqual(['Inicio']);
+  ruta.actual = '/costeo';
+});
+
 it('sin acceso al CRM no aparece su enlace', () => {
   render(<Navegacion seccion="costeo" visibles={['costeo']} />);
   expect(screen.queryByRole('link', { name: 'CRM Franquicias' })).toBeNull();

@@ -68,13 +68,17 @@ const gruposCrm: Grupo[] = [
   },
 ];
 
-/** Grupos de la sección: primero "Portal" (Inicio y los otros módulos visibles), luego los del módulo. */
+/**
+ * Grupos de la sección: primero "Portal", luego los del módulo. En Inicio los módulos solo se
+ * muestran como tarjetas; dentro de un módulo, "Portal" lleva a Inicio y a los otros módulos visibles.
+ */
 export function gruposDe(seccion: Seccion, visibles: IdModulo[]): Grupo[] {
+  const otros = seccion === 'inicio' ? [] : visibles.filter((m) => m !== seccion);
   const portal: Grupo = {
     titulo: 'Portal',
     enlaces: [
       { href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true },
-      ...visibles.filter((m) => m !== seccion).map((m) => entradaModulo[m]),
+      ...otros.map((m) => entradaModulo[m]),
     ],
   };
   const propios = seccion === 'costeo' ? grupos : seccion === 'crm' ? gruposCrm : [];
