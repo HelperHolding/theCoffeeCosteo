@@ -10,6 +10,7 @@ export type ProductoSimulacion = {
   nombre: string;
   costo: number | null;
   precioLista: number | null;
+  precioRappi?: number | null;
 };
 export type CanalSimulacion = { id: string; nombre: string; comisionPct: number; costoEnvase: number };
 
@@ -35,12 +36,18 @@ export function CalculadoraPromociones({
   const [extra, setExtra] = useState('0');
   const [objetivo, setObjetivo] = useState(String(objetivoDefault));
   const [base, setBase] = useState<'con-iva' | 'sin-iva'>('con-iva');
-  const [modo, setModo] = useState<'producto' | 'combo'>('producto');
+  const [modo, setModo] = useState<'producto' | 'combo' | 'rappi'>('producto');
   const [combo, setCombo] = useState<{ producto: string; cantidad: string }[]>([
     { producto: '', cantidad: '1' },
     { producto: '', cantidad: '1' },
   ]);
   const esCombo = modo === 'combo';
+  const esRappi = modo === 'rappi';
+  const canalRappi = canales.find((c) => c.nombre.toLowerCase() === 'rappi');
+  const [productoRappi, setProductoRappi] = useState('');
+  const [precioRappi, setPrecioRappi] = useState('');
+  const seleccionadoRappi = productos.find((p) => p.id === productoRappi);
+
   const lineasCombo = combo.map((l) => {
     const p = productos.find((p) => p.id === l.producto);
     return {
@@ -75,7 +82,7 @@ export function CalculadoraPromociones({
     const c = canales.find((c) => c.id === id);
     if (c) {
       setComision(String(c.comisionPct));
-      if (c.costoEnvase) setExtra(String(c.costoEnvase));
+      setExtra(String(c.costoEnvase));
     }
   };
 
@@ -133,7 +140,7 @@ export function CalculadoraPromociones({
     },
   ];
   const incompleto = campos.some((c) => c.valor.trim() === '') || (esCombo && !comboListo);
-  const r = incompleto
+  const resultadoPromo = incompleto
     ? null
     : simularPromocion({
         // Un combo se simula como una sola unidad con el costo total de sus productos.
@@ -147,7 +154,70 @@ export function CalculadoraPromociones({
         extra: Number(extra),
         objetivo: Number(objetivo),
       });
-  const objetivoFraccion = Number(objetivo) / 100;
+  const r = esRappi
+    ? seleccionadoRappi?.costo != null && canalRappi && precioRappi.trim() !== ''
+      ? simularPromocion({
+          costo: seleccionadoRappi.costo,
+          unidades: 1,
+          precio: Number(precioRappi),
+          descuento: 0,
+          iva: ivaDefault,
+          comision: canalRappi.comisionPct,
+          baseComision: 'con-iva',
+          extra: canalRappi.costoEnvase,
+          objetivo: objetivoDefault,
+        })
+      : null
+    : resultadoPromo;
+  const extraEfectivo = esRappi ? (canalRappi?.costoEnvase ?? 0) : Number(extra);
+  const objetivoFraccion = (esRappi ? objetivoDefault : Number(objetivo)) / 100;
+  const bruto = r ? r.bruto - extraEfectivo : 0;
+
+  const canalMostrador =
+    canales.find((c) => c.nombre.toLowerCase() === 'mostrador') ??
+    canales.find((c) => c.nombre.toLowerCase() === 'app propia');
+  const canalElegido = canales.find((c) => c.id === canal);
+  const extrasAdicionales = Math.max(0, Number(extra) - (canalElegido?.costoEnvase ?? 0));
+  const tarjetas = (
+    esRappi
+      ? [{ nombre: 'Rappi', resultado: r, extras: extraEfectivo }]
+      : [
+          { nombre: 'Mostrador/App', config: canalMostrador },
+          { nombre: 'Rappi', config: canalRappi },
+        ].map(({ nombre, config }) => {
+          const esElegido = config?.id === canal;
+          const extras = esElegido ? Number(extra) : extrasAdicionales + (config?.costoEnvase ?? 0);
+          const resultado =
+            r && config
+              ? simularPromocion({
+                  costo: esCombo ? resumen.costo! : Number(costo),
+                  unidades: esCombo ? 1 : Number(unidades),
+                  precio: Number(precioEfectivo),
+                  descuento: Number(descuento),
+                  iva: Number(iva),
+                  comision: esElegido ? Number(comision) : config.comisionPct,
+                  baseComision: esElegido ? base : 'con-iva',
+                  extra: extras,
+                  objetivo: Number(objetivo),
+                })
+              : null;
+          return { nombre, resultado, extras };
+        })
+  ).flatMap(({ nombre, resultado, extras }) => {
+    const brutoCanal = resultado ? resultado.bruto - extras : null;
+    return [
+      [
+        `Margen bruto ${nombre}`,
+        resultado ? porcentaje(brutoCanal! / resultado.neto) : '—',
+        brutoCanal === null ? 'Canal sin configurar' : `${dinero(brutoCanal)} por venta`,
+      ],
+      [
+        `Margen con comisión ${nombre}`,
+        resultado ? porcentaje(resultado.margen) : '—',
+        resultado ? `${dinero(resultado.contribucion)} por venta` : 'Canal sin configurar',
+      ],
+    ];
+  });
 
   return (
     <section className="panel space-y-5">
@@ -163,6 +233,7 @@ export function CalculadoraPromociones({
           <div role="radiogroup" aria-label="Tipo de promoción" className="flex flex-wrap gap-2">
             {(
               [
+                ['rappi', 'Precio Rappi'],
                 ['producto', 'Un producto'],
                 ['combo', 'Combo de varios productos'],
               ] as const
@@ -180,7 +251,59 @@ export function CalculadoraPromociones({
               </Button>
             ))}
           </div>
-          {esCombo ? (
+          {esRappi ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Elige un producto y prueba su precio de venta. Se aplican automáticamente el costo vigente, el
+                envase y la comisión configurada de Rappi.
+              </p>
+              <label>
+                Producto Rappi
+                <select
+                  value={productoRappi}
+                  onChange={(e) => {
+                    setProductoRappi(e.target.value);
+                    const p = productos.find((p) => p.id === e.target.value);
+                    setPrecioRappi(p?.precioRappi == null ? '' : String(p.precioRappi));
+                  }}
+                >
+                  <option value="">Seleccionar producto</option>
+                  {productos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                      {p.costo === null ? ' · sin costo' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Precio de venta Rappi, con IVA
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0.01"
+                  step="0.01"
+                  value={precioRappi}
+                  onChange={(e) => setPrecioRappi(e.target.value)}
+                />
+              </label>
+              {canalRappi ? (
+                <p className="text-sm text-muted-foreground">
+                  Comisión Rappi: {porcentaje(canalRappi.comisionPct / 100)} sobre el precio con IVA · Envase:{' '}
+                  {dinero(canalRappi.costoEnvase)} · IVA: {ivaDefault}%
+                </p>
+              ) : (
+                <p className="aviso">No hay un canal Rappi configurado.</p>
+              )}
+              {seleccionadoRappi && (
+                <p className="text-sm text-muted-foreground">
+                  Costo vigente:{' '}
+                  {seleccionadoRappi.costo === null ? 'sin registrar' : dinero(seleccionadoRappi.costo)} ·
+                  Precio Rappi registrado: {dinero(seleccionadoRappi.precioRappi ?? null)}
+                </p>
+              )}
+            </div>
+          ) : esCombo ? (
             <fieldset className="space-y-3 rounded-xl border border-line p-4">
               <legend className="px-1 text-sm font-semibold">Productos del combo</legend>
               {lineasCombo.map((l, i) => (
@@ -268,44 +391,66 @@ export function CalculadoraPromociones({
               </select>
             </label>
           )}
-          <label>
-            Canal de referencia
-            <select value={canal} onChange={(e) => elegirCanal(e.target.value)}>
-              <option value="">Captura manual</option>
-              {canales.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {campos.map((c) => (
-              <label key={c.nombre}>
-                {c.nombre}
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min={c.min}
-                  max={c.max}
-                  step={c.step}
-                  value={c.valor}
-                  onChange={(e) => c.cambiar(e.target.value)}
-                />
+          {!esRappi && (
+            <>
+              <label>
+                Canal de referencia
+                <select value={canal} onChange={(e) => elegirCanal(e.target.value)}>
+                  <option value="">Captura manual</option>
+                  {canales.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
               </label>
-            ))}
-          </div>
-          <label>
-            Base de la comisión
-            <select value={base} onChange={(e) => setBase(e.target.value as typeof base)}>
-              <option value="sin-iva">Venta después del descuento, sin IVA</option>
-              <option value="con-iva">Cobro después del descuento, con IVA</option>
-            </select>
-          </label>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {campos.map((c) => (
+                  <label key={c.nombre}>
+                    {c.nombre}
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={c.min}
+                      max={c.max}
+                      step={c.step}
+                      value={c.valor}
+                      onChange={(e) => c.cambiar(e.target.value)}
+                    />
+                  </label>
+                ))}
+              </div>
+              <label>
+                Base de la comisión
+                <select value={base} onChange={(e) => setBase(e.target.value as typeof base)}>
+                  <option value="sin-iva">Venta después del descuento, sin IVA</option>
+                  <option value="con-iva">Cobro después del descuento, con IVA</option>
+                </select>
+              </label>
+            </>
+          )}
         </div>
         <div aria-live="polite" aria-atomic="true" className="space-y-4">
           {r ? (
             <>
+              <dl aria-label="Márgenes de la simulación" className="grid grid-cols-2 gap-3">
+                {tarjetas.map(([etiqueta, valor, importe]) => (
+                  <div key={etiqueta} className="rounded-xl border border-line p-4">
+                    <dt className="text-xs text-muted-foreground">{etiqueta}</dt>
+                    <dd className="mt-2">
+                      <strong className="block text-2xl font-bold numero">{valor}</strong>
+                      <span className="text-sm text-muted-foreground numero">{importe}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {!esRappi && (
+                <p className="text-xs text-muted-foreground">
+                  Comparación al mismo precio y descuento capturados, con comisión y envase de cada canal. Los
+                  ajustes del canal de referencia se aplican a ese canal; los extras adicionales se aplican a
+                  ambos.
+                </p>
+              )}
               <span
                 className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                   r.contribucion < 0
@@ -334,9 +479,9 @@ export function CalculadoraPromociones({
                     : []),
                   ['Venta sin IVA', dinero(r.neto)],
                   ['Costo de productos', dinero(r.costo)],
-                  ['Margen bruto', `${dinero(r.bruto)} · ${porcentaje(r.margenBruto)}`],
+                  ['Margen bruto', `${dinero(bruto)} · ${porcentaje(bruto / r.neto)}`],
                   ['Comisión', dinero(r.comision)],
-                  ['Costos extra', dinero(Number(extra))],
+                  [esRappi ? 'Envase' : 'Costos extra', dinero(extraEfectivo)],
                   [
                     'Precio de lista para equilibrio',
                     r.precioEquilibrio === null
@@ -363,11 +508,19 @@ export function CalculadoraPromociones({
             </>
           ) : (
             <p className="aviso">
-              {esCombo && !comboListo
-                ? 'Elige los productos del combo con cantidades enteras positivas.'
-                : incompleto
-                  ? 'Completa costo y precio para ver el escenario.'
-                  : 'Revisa los importes: cantidades enteras positivas y porcentajes de descuento, comisión y objetivo menores a 100 %.'}
+              {esRappi
+                ? !seleccionadoRappi
+                  ? 'Elige un producto para probar su precio Rappi.'
+                  : seleccionadoRappi.costo === null
+                    ? 'Este producto no tiene costo registrado; no se puede simular.'
+                    : !canalRappi
+                      ? 'Configura el canal Rappi para simular.'
+                      : 'Captura un precio Rappi mayor a cero.'
+                : esCombo && !comboListo
+                  ? 'Elige los productos del combo con cantidades enteras positivas.'
+                  : incompleto
+                    ? 'Completa costo y precio para ver el escenario.'
+                    : 'Revisa los importes: cantidades enteras positivas y porcentajes de descuento, comisión y objetivo menores a 100 %.'}
             </p>
           )}
           <p className="text-xs text-muted-foreground border-t pt-4">

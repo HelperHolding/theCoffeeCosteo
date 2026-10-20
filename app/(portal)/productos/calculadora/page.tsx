@@ -5,18 +5,25 @@ import { CalculadoraPromociones } from '@/components/recetas/calculadora-promoci
 
 export default async function Calculadora() {
   const { db } = await sesion();
-  const [recetas, tamanos, productoTamanos, costos, canales, parametros] = await Promise.all([
+  const [recetas, tamanos, productoTamanos, costos, canales, parametros, resumen] = await Promise.all([
     todas(db, 'recetas', 'nombre,id'),
     todas(db, 'tamanos', 'orden,id'),
     todas(db, 'producto_tamanos', 'producto_id,tamano_id'),
     todas(db, 'v_costo_producto', 'producto_id,tamano_id'),
     todas(db, 'canales', 'orden,id'),
     todas(db, 'parametros', 'id'),
+    todas(db, 'v_resumen', 'producto_id,tamano_id,canal_id'),
   ]);
 
   const recetaPorId = new Map(recetas.map((r) => [r.id, r]));
   const tamanoPorId = new Map(tamanos.map((t) => [t.id, t]));
   const costoPorClave = new Map(costos.map((c) => [`${c.producto_id}:${c.tamano_id}`, c]));
+
+  const rappiPorClave = new Map(
+    resumen
+      .filter((r) => r.canal.toLowerCase() === 'rappi')
+      .map((r) => [`${r.producto_id}:${r.tamano_id}`, r.precio_canal]),
+  );
 
   const opciones = productoTamanos
     .map((pt) => {
@@ -29,6 +36,7 @@ export default async function Calculadora() {
         nombre: `${receta.nombre} · ${tamano.nombre}`,
         costo: costo ? costo.costo : null,
         precioLista: pt.precio_lista,
+        precioRappi: rappiPorClave.get(`${pt.producto_id}:${pt.tamano_id}`) ?? null,
       };
     })
     .filter((o): o is NonNullable<typeof o> => o !== null)
@@ -41,7 +49,7 @@ export default async function Calculadora() {
       <Encabezado
         area="Análisis"
         titulo="Calculadora de promociones"
-        descripcion="Precio, descuento y contribución por promoción, con los costos oficiales de cada producto."
+        descripcion="Prueba precios Rappi, productos y combos con los costos oficiales y sus márgenes al instante."
       />
       <CalculadoraPromociones
         productos={opciones}

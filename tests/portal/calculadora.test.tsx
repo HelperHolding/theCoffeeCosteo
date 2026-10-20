@@ -39,7 +39,7 @@ it('simula un combo de varios productos con costo total y ahorro frente a precio
     '$44.00',
   );
   // 116 con IVA = 100 neto; 100 − 35 = 65.
-  expect(screen.getByText('$65.00')).toBeVisible();
+  expect(screen.getAllByText('$65.00').length).toBeGreaterThan(0);
 
   await userEvent.click(screen.getByRole('button', { name: 'Agregar producto' }));
   await userEvent.selectOptions(screen.getByLabelText('Producto 3 del combo'), 'nuevo:u');
@@ -47,4 +47,73 @@ it('simula un combo de varios productos con costo total y ahorro frente a precio
   expect(screen.queryByText('Costo de productos')).toBeNull();
   await userEvent.click(screen.getByRole('button', { name: 'Quitar producto 3 del combo' }));
   expect(screen.getByText('Costo de productos')).toBeVisible();
+});
+
+it('prueba el precio Rappi con costo, IVA, comisión sobre cobro y envase configurados', async () => {
+  render(
+    <CalculadoraPromociones
+      productos={[
+        ...productos,
+        { id: 'acai:u', nombre: 'Acai bowl', costo: 43.74, precioLista: 150, precioRappi: 188 },
+      ]}
+      canales={[{ id: 'rappi', nombre: 'Rappi', comisionPct: 20, costoEnvase: 5 }]}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  await userEvent.click(screen.getByRole('radio', { name: 'Precio Rappi' }));
+  expect(screen.queryByLabelText('Comisión del canal (%)')).toBeNull();
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'acai:u');
+  const precio = screen.getByLabelText('Precio de venta Rappi, con IVA');
+  expect(precio).toHaveValue(188);
+  const indicadores = screen.getByLabelText('Márgenes de la simulación');
+  expect(indicadores.querySelectorAll('dt')).toHaveLength(2);
+  // 188 / 1.16 − 43.74 − 5 − 188 × .20 = 75.729...
+  expect(within(indicadores).getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$75.73');
+  await userEvent.clear(precio);
+  expect(screen.queryByLabelText('Márgenes de la simulación')).toBeNull();
+  await userEvent.type(precio, '116');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$28.06');
+  expect(screen.getByText('Margen bruto Rappi').nextSibling).toHaveTextContent('$51.26');
+  await userEvent.type(precio, '-');
+  await userEvent.selectOptions(screen.getByLabelText('Producto Rappi'), 'nuevo:u');
+  expect(screen.getByText(/Este producto no tiene costo registrado/)).toBeVisible();
+  expect(screen.queryByLabelText('Márgenes de la simulación')).toBeNull();
+  await userEvent.click(screen.getByRole('radio', { name: 'Un producto' }));
+  await userEvent.selectOptions(screen.getByLabelText('Producto de referencia'), 'americano:u');
+  expect(screen.getByLabelText('Márgenes de la simulación')).toBeVisible();
+});
+
+it('compara cuatro márgenes por canal en producto y combo al mismo precio', async () => {
+  render(
+    <CalculadoraPromociones
+      productos={productos}
+      canales={[
+        { id: 'mostrador', nombre: 'Mostrador', comisionPct: 0, costoEnvase: 0 },
+        { id: 'rappi', nombre: 'Rappi', comisionPct: 20, costoEnvase: 5 },
+      ]}
+      ivaDefault={16}
+      objetivoDefault={50}
+    />,
+  );
+  await userEvent.selectOptions(screen.getByLabelText('Producto de referencia'), 'americano:u');
+  const precio = screen.getByLabelText('Precio total de la promoción, con IVA');
+  await userEvent.clear(precio);
+  await userEvent.type(precio, '116');
+  expect(screen.getByLabelText('Márgenes de la simulación').querySelectorAll('dt')).toHaveLength(4);
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen con comisión Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen bruto Rappi').nextSibling).toHaveTextContent('$85.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$61.80');
+  await userEvent.selectOptions(screen.getByLabelText('Canal de referencia'), 'rappi');
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$90.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$61.80');
+  await userEvent.click(screen.getByRole('radio', { name: 'Combo de varios productos' }));
+  await userEvent.selectOptions(screen.getByLabelText('Producto 1 del combo'), 'americano:u');
+  await userEvent.selectOptions(screen.getByLabelText('Producto 2 del combo'), 'croissant:u');
+  const precioCombo = screen.getByLabelText('Precio total del combo, con IVA');
+  await userEvent.clear(precioCombo);
+  await userEvent.type(precioCombo, '116');
+  expect(screen.getByText('Margen bruto Mostrador/App').nextSibling).toHaveTextContent('$75.00');
+  expect(screen.getByText('Margen con comisión Rappi').nextSibling).toHaveTextContent('$46.80');
 });
