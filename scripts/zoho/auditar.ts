@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { ClienteZoho, ErrorZoho, leerEnvLocal } from './cliente';
+import { EXCLUIDOS, leerRegistros } from './registros';
 
 /**
  * Auditoría read-only de los módulos en alcance. Lee registros completos en memoria y
@@ -10,11 +11,8 @@ import { ClienteZoho, ErrorZoho, leerEnvLocal } from './cliente';
  */
 const MODULOS = ['Leads', 'Contacts', 'Accounts', 'Franquicias', 'Tasks'] as const;
 type Modulo = (typeof MODULOS)[number];
-/** Credenciales en texto plano: no se piden a la API. */
-const EXCLUIDOS = new Set(['Contrase_a_FINKOK_PAC', 'Usuario_FINKOK_PAC', 'Contrase_a']);
 /** Tipos cuyo valor es un catálogo (no texto libre) y pueden reportarse por valor. */
 const CATALOGO = new Set(['picklist', 'multiselectpicklist', 'boolean', 'layout']);
-const POR_LOTE = 50;
 
 type Campo = {
   api_name: string;
@@ -67,42 +65,6 @@ function idDe(v: unknown): string | null {
 function extension(nombre: unknown): string {
   const m = /\.([a-z0-9]{1,6})$/i.exec(String(nombre ?? ''));
   return m ? m[1].toLowerCase() : '(sin extensión)';
-}
-
-async function leerRegistros(z: ClienteZoho, modulo: Modulo, campos: string[], inaccesibles: Set<string>) {
-  const porId = new Map<string, Registro>();
-  let pendientes = campos.filter((c) => c !== 'id');
-  while (pendientes.length) {
-    const lote = pendientes.slice(0, POR_LOTE - 1);
-    pendientes = pendientes.slice(POR_LOTE - 1);
-    let token: string | undefined;
-    for (let pagina = 1; ; pagina++) {
-      const base = `/crm/v8/${modulo}?fields=id,${lote.join(',')}&per_page=200`;
-      let r: { data?: Registro[]; info?: { more_records?: boolean; next_page_token?: string } } | null;
-      try {
-        r = await z.get(token ? `${base}&page_token=${encodeURIComponent(token)}` : `${base}&page=${pagina}`);
-      } catch (e) {
-        if (e instanceof ErrorZoho && e.status === 400 && lote.length > 1) {
-          // Un campo del lote no es legible por la API: se prueba uno por uno.
-          for (const c of lote) {
-            try {
-              await z.get(`/crm/v8/${modulo}?fields=id,${c}&per_page=1`);
-              pendientes.push(c);
-            } catch {
-              inaccesibles.add(c);
-            }
-          }
-          break;
-        }
-        throw e;
-      }
-      for (const fila of r?.data ?? [])
-        porId.set(String(fila.id), { ...porId.get(String(fila.id)), ...fila });
-      if (!r?.info?.more_records) break;
-      token = r.info.next_page_token;
-    }
-  }
-  return [...porId.values()];
 }
 
 async function main() {

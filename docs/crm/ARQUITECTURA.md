@@ -229,3 +229,15 @@ Tasks con `$se_module` Franquicias / Leads / Contacts → `tienda_id` / `prospec
 - **Revisión visual** (arnés `?tiendas` y `?expediente`, datos sintéticos; 1280×800 y 390×844): sin errores de consola ni desborde horizontal. Corregido: el texto `sr-only` de las tarjetas ensanchaba la página (contenedores con scroll ahora `relative`). Rutas reales contra producción: estados vacíos correctos y 404 para IDs inexistentes.
 - **Limitación conocida:** con teclado, el arrastre reordena dentro de la columna, pero las flechas no saltan a otra columna. Para cambiar de etapa con teclado se usa "Mover a…".
 - **No probado con datos reales:** las escrituras (crear, editar, mover, subir) solo se probaron con datos sintéticos, para no escribir datos de prueba en producción. Se validan en el piloto de la Fase 8.
+
+## 15. Fase 8 — Importación: piloto (2026-10-20, autorizado por Carlos)
+
+- **Código:** `lib/crm/importacion/mapeo.ts` (mapeo puro aprobado en la Fase 4), `lib/crm/importacion/carga.ts` (una transacción, upsert por `zoho_record_id` y huella, reversión) y `scripts/zoho/importar.ts` (comandos `ensayo`, `piloto`, `completa` y `revertir`). La lectura de registros está en `scripts/zoho/registros.ts`, compartida con el auditor.
+- **Integridad:** la extracción se detiene si un módulo no trae los mismos registros que `COUNT(id)` o si algún registro llega sin todos sus campos. Se agregó porque un primer ensayo trajo menos estados de Leads de los reales sin ningún error.
+- **Tokens:** Zoho limita las renovaciones (~10 cada 10 min, "Access Denied"). El cliente espera 60 s y reintenta hasta 12 veces.
+- **Pruebas (PGlite):** `tests/db/crm-importacion.test.ts` cubre el mapeo, la idempotencia, la actualización por huella, la reversión y el historial sin ruido.
+- **Ensayo en seco:** 10 tiendas de 10 etapas (en rondas, empezando por las etapas más pobladas y con prioridad a las que tienen más notas, tareas y archivos), 10 prospectos, 4 contactos, 16 actividades, 67 notas y 47 cambios de etapa. Nada se escribió.
+- **Piloto cargado en producción**, corrida `af163e6f-9680-4c3f-9cbd-f270cd1479a7` (snapshot 2026-10-20T17:43Z): 10 tiendas, 10 prospectos, 4 contactos, 16 actividades y 67 notas, todos nuevos y sin omisiones. Además 4 ligas tienda-contacto, 5 etiquetas, 10 checklists "Apertura" (70 elementos), 47 cambios de etapa de Zoho y los 14 estados de prospectos. Todo con Carlos como responsable. La conciliación en la base coincide con el ensayo.
+- **Segunda corrida** `6ab34659-56db-4daa-9f89-e194bf0fe86a`: los 107 registros quedaron sin cambio (idempotencia confirmada en producción). Además limpió el ruido del historial: solo queda "Importado de Zoho" por registro más los cambios de etapa.
+- **Revertir el piloto:** `npx tsx scripts/zoho/importar.ts revertir af163e6f-9680-4c3f-9cbd-f270cd1479a7` (la segunda corrida no creó ni cambió registros).
+- **Sin archivos todavía:** su copia necesita la llave secreta de Supabase para subir a Storage. Las descargas de Zoho no requieren scopes nuevos (adjuntos y `download_fields_attachment`).

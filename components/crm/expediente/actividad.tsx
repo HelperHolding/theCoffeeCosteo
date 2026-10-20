@@ -95,8 +95,8 @@ export function ActividadTienda({
                 {n.titulo && <p className="mb-1 text-sm font-semibold">{n.titulo}</p>}
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{n.contenido}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {autor(n.autor_id)} · {fechaHora(n.zoho_created_at ?? n.creado_en)}
-                  {n.imported_at && ' · de Zoho'}
+                  {n.autor_id || !n.imported_at ? autor(n.autor_id) : 'De Zoho'} ·{' '}
+                  {fechaHora(n.zoho_created_at ?? n.creado_en)}
                 </p>
               </li>
             ))}

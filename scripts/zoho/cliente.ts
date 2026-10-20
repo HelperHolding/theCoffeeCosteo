@@ -30,6 +30,8 @@ export class ClienteZoho {
   private token: string | null = null;
   private vence = 0;
   llamadas = 0;
+  /** Reintentos (de 60 s) cuando Zoho limita la renovación del token. */
+  reintentosToken = 12;
 
   constructor(private readonly env: Env) {
     for (const k of ['ZOHO_CLIENT_ID', 'ZOHO_CLIENT_SECRET', 'ZOHO_REFRESH_TOKEN', 'ZOHO_API_DOMAIN']) {
@@ -40,17 +42,28 @@ export class ClienteZoho {
   private async accessToken(): Promise<string> {
     if (this.token && Date.now() < this.vence) return this.token;
     const cuentas = this.env.get('ZOHO_ACCOUNTS_URL') || 'https://accounts.zoho.com';
-    const r = await fetch(`${cuentas}/oauth/v2/token`, {
-      method: 'POST',
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: this.env.get('ZOHO_REFRESH_TOKEN')!,
-        client_id: this.env.get('ZOHO_CLIENT_ID')!,
-        client_secret: this.env.get('ZOHO_CLIENT_SECRET')!,
-      }),
-    });
-    const t = (await r.json()) as { access_token?: string; expires_in?: number; error?: string };
-    if (!t.access_token) throw new Error(`No se pudo renovar el access token (${t.error ?? r.status})`);
+    let t: { access_token?: string; expires_in?: number; error?: string } = {};
+    // Zoho limita las renovaciones por refresh token (~10 cada 10 min) y responde "Access Denied":
+    // se espera y reintenta en lugar de cortar una corrida a la mitad.
+    for (let intento = 0; ; intento++) {
+      const r = await fetch(`${cuentas}/oauth/v2/token`, {
+        method: 'POST',
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: this.env.get('ZOHO_REFRESH_TOKEN')!,
+          client_id: this.env.get('ZOHO_CLIENT_ID')!,
+          client_secret: this.env.get('ZOHO_CLIENT_SECRET')!,
+        }),
+      });
+      t = (await r.json().catch(() => ({}))) as typeof t;
+      if (t.access_token || t.error !== 'Access Denied' || intento >= this.reintentosToken) break;
+      console.error(
+        `Zoho limitó la renovación del token; reintento en 60 s (${intento + 1}/${this.reintentosToken}).`,
+      );
+      await new Promise((ok) => setTimeout(ok, 60_000));
+    }
+    if (!t.access_token)
+      throw new Error(`No se pudo renovar el access token (${t.error ?? 'sin respuesta'})`);
     this.token = t.access_token;
     this.vence = Date.now() + ((t.expires_in ?? 3600) - 120) * 1000;
     return this.token;
