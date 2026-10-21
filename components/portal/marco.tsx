@@ -56,7 +56,9 @@ export function Marco({
   children: React.ReactNode;
 }) {
   const t = textos[seccion];
-  const conAgente = seccion === 'costeo';
+  // Cada módulo con su propio agente de solo lectura; Inicio no tiene.
+  const modulo = seccion === 'inicio' ? null : seccion;
+  const conAgente = modulo !== null;
   const [menu, setMenu] = useState(false);
   const [buscador, setBuscador] = useState(false);
   const [agente, setAgente] = useState(false);
@@ -188,7 +190,7 @@ export function Marco({
         </main>
       </div>
 
-      {conAgente && <Agente abierto={agente} alCerrar={() => setAgente(false)} />}
+      {modulo && <Agente key={modulo} modulo={modulo} abierto={agente} alCerrar={() => setAgente(false)} />}
 
       <CommandDialog
         open={buscador}

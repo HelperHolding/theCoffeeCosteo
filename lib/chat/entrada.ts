@@ -24,5 +24,8 @@ export function mensajesModelo(entrada: unknown) {
 }
 
 export function enlacePortal(href: string | undefined) {
-  return href && /^\/(?:productos|subrecetas)\/[0-9a-f-]{36}$/i.test(href) ? href : undefined;
+  return href &&
+    /^\/(?:productos|subrecetas|crm\/tiendas|crm\/prospectos|crm\/contactos)\/[0-9a-f-]{36}$/i.test(href)
+    ? href
+    : undefined;
 }

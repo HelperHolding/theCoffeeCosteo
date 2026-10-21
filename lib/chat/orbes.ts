@@ -9,6 +9,14 @@ export const pasosConsulta: Record<string, { estado: EstadoOrbe; texto: string }
   consultar_costos: { estado: 'solving', texto: 'Calculando costos y márgenes' },
   consultar_receta: { estado: 'solving', texto: 'Leyendo la receta' },
   recetas_por_insumo: { estado: 'connecting', texto: 'Cruzando insumos con recetas' },
+  resumen_pipeline: { estado: 'searching', texto: 'Revisando el pipeline' },
+  buscar_tiendas: { estado: 'searching', texto: 'Buscando tiendas' },
+  consultar_tienda: { estado: 'solving', texto: 'Leyendo el expediente' },
+  buscar_actividades: { estado: 'searching', texto: 'Revisando actividades' },
+  buscar_prospectos: { estado: 'searching', texto: 'Buscando prospectos' },
+  consultar_prospecto: { estado: 'solving', texto: 'Leyendo la ficha del prospecto' },
+  buscar_contactos: { estado: 'searching', texto: 'Buscando contactos' },
+  historial_cambios: { estado: 'connecting', texto: 'Revisando el historial' },
 };
 
 type Parte = { type: string; state?: string; text?: string };
@@ -37,6 +45,22 @@ export function estadoOrbe(status: string, partes: Parte[]): { estado: EstadoOrb
 }
 
 export function sugerenciasPara(ruta: string, titulo?: string): string[] {
+  if (ruta.startsWith('/crm/tiendas/') && titulo)
+    return [
+      `¿Cómo va ${titulo} y qué le falta?`,
+      `¿Quién modificó por última vez ${titulo}?`,
+      `¿Qué pendientes del checklist tiene ${titulo}?`,
+    ];
+  if (ruta.startsWith('/crm/prospectos'))
+    return ['¿Cuántos prospectos hay por etapa?', '¿Qué prospectos están con interés?'];
+  if (ruta.startsWith('/crm/actividades'))
+    return ['¿Qué actividades están vencidas?', '¿Qué actividades siguen en curso?'];
+  if (ruta.startsWith('/crm'))
+    return [
+      '¿Cuántas tiendas hay en cada etapa?',
+      '¿Qué tiendas están en remodelación y qué les falta?',
+      '¿Cuáles fueron los últimos cambios en el CRM y quién los hizo?',
+    ];
   if (ruta.startsWith('/productos/') && titulo && !ruta.endsWith('/nuevo') && !ruta.endsWith('/calculadora'))
     return [
       `¿Por qué ${titulo} tiene su margen actual en cada canal?`,
