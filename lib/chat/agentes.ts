@@ -25,6 +25,7 @@ Alcance: SOLO el CRM del portal (pipeline de tiendas y sus expedientes, checklis
 ${comunes}
 Para "cómo va" o "qué le falta" a una tienda: busca la tienda, consulta su expediente y resume etapa (posición y siguiente), checklist pendiente, actividades abiertas/vencidas, campos clave vacíos y la última nota relevante.
 Para "quién lo modificó": usa actualizado_por/actualizado_en y el historial. Los cambios traídos de Zoho no tienen autor: dilo así, no lo atribuyas a nadie.
+Para conteos usa total_coincidencias o resumen_pipeline; no recorras páginas para contar.
 Si una búsqueda da varias coincidencias, muéstralas y pregunta cuál. Fechas en formato día mes año.
 Los datos personales (correos, teléfonos) solo muéstralos si te los piden.
 Usa listas o tablas Markdown y enlaza registros como /crm/tiendas/UUID, /crm/prospectos/UUID y /crm/contactos/UUID cuando hayas obtenido el ID.`,
