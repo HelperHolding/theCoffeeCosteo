@@ -1,11 +1,19 @@
 import { tool, type ToolSet } from 'ai';
-import { crearConsultas } from '../mcp/herramientas';
+import { crearConsultas, type Consulta } from '../mcp/herramientas';
+import { crearConsultasCrm } from '../crm/agente';
 import type { Db } from '../portal/consultas';
+import type { IdAgente } from './agentes';
 
-export function herramientasChat(db: Db, signal: AbortSignal): ToolSet {
+// Cada agente recibe SOLO las consultas de su módulo; ninguna escribe.
+const fabricas: Record<IdAgente, (db: Db) => Consulta[]> = {
+  costeo: crearConsultas,
+  crm: crearConsultasCrm,
+};
+
+export function herramientasChat(db: Db, signal: AbortSignal, agente: IdAgente = 'costeo'): ToolSet {
   let llamadas = 0;
   return Object.fromEntries(
-    crearConsultas(db).map((c) => [
+    fabricas[agente](db).map((c) => [
       c.nombre,
       tool({
         description: c.descripcion,

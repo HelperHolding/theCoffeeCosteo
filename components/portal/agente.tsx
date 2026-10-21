@@ -12,34 +12,70 @@ import { X, ArrowUp, Square, RotateCcw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { enlacePortal, MAX_TURNOS } from '@/lib/chat/entrada';
 import { estadoOrbe, pasosDe, sugerenciasPara } from '@/lib/chat/orbes';
+import type { IdAgente } from '@/lib/chat/agentes';
 
-const transport = new DefaultChatTransport({
-  api: '/api/chat',
-  prepareSendMessagesRequest: ({ messages }) => ({
-    body: {
-      messages: messages
-        .map(({ role, parts }) => ({
-          role,
-          parts: parts.filter((p) => p.type === 'text').map((p) => ({ type: 'text', text: p.text })),
-        }))
-        .filter((m) => m.parts.length),
+const transporte = (api: string) =>
+  new DefaultChatTransport({
+    api,
+    prepareSendMessagesRequest: ({ messages }) => ({
+      body: {
+        messages: messages
+          .map(({ role, parts }) => ({
+            role,
+            parts: parts.filter((p) => p.type === 'text').map((p) => ({ type: 'text', text: p.text })),
+          }))
+          .filter((m) => m.parts.length),
+      },
+    }),
+    fetch: async (input, init) => {
+      const r = await fetch(input, init);
+      if (!r.ok) {
+        const body = await r.json().catch(() => null);
+        throw new Error(body?.error || 'No se pudo conectar con el asistente.');
+      }
+      return r;
     },
-  }),
-  fetch: async (input, init) => {
-    const r = await fetch(input, init);
-    if (!r.ok) {
-      const body = await r.json().catch(() => null);
-      throw new Error(body?.error || 'No se pudo conectar con el asistente.');
-    }
-    return r;
+  });
+// Mismo diseño, distinto agente: cada módulo tiene su endpoint, reglas y consultas.
+const perfiles: Record<
+  IdAgente,
+  { nombre: string; transport: ReturnType<typeof transporte>; saludo: string; ayuda: string; campo: string }
+> = {
+  costeo: {
+    nombre: 'Barista',
+    transport: transporte('/api/chat'),
+    saludo: '¿Qué quieres revisar hoy?',
+    ayuda:
+      'Pregunta por costos, márgenes, recetas o alertas. Consulta los datos del portal; no modifica nada.',
+    campo: 'Pregunta sobre tus costos…',
   },
-});
+  crm: {
+    nombre: 'Concierge',
+    transport: transporte('/api/chat/crm'),
+    saludo: '¿Qué cliente quieres revisar?',
+    ayuda:
+      'Pregunta cómo va una tienda, qué le falta, sus tareas o quién la modificó. Solo lee el CRM; no mueve ni modifica nada.',
+    campo: 'Pregunta sobre tiendas, tareas o prospectos…',
+  },
+};
 
-export function Agente({ abierto, alCerrar }: { abierto: boolean; alCerrar: () => void }) {
+export function Agente({
+  abierto,
+  alCerrar,
+  modulo = 'costeo',
+}: {
+  abierto: boolean;
+  alCerrar: () => void;
+  modulo?: IdAgente;
+}) {
+  const cfg = perfiles[modulo];
   const [entrada, setEntrada] = useState('');
   const [titulo, setTitulo] = useState<string>();
   const ruta = usePathname();
-  const { messages, sendMessage, status, error, stop, setMessages, clearError } = useChat({ transport });
+  const { messages, sendMessage, status, error, stop, setMessages, clearError } = useChat({
+    id: modulo,
+    transport: cfg.transport,
+  });
   const ocupado = status === 'submitted' || status === 'streaming';
   const turnos = messages.filter((m) => m.role === 'user').length;
   const limite = turnos >= MAX_TURNOS;
@@ -88,7 +124,7 @@ export function Agente({ abierto, alCerrar }: { abierto: boolean; alCerrar: () =
         </span>
         <div className="min-w-0 flex-1">
           <h2 id="agente-titulo" className="leading-tight">
-            Barista
+            {cfg.nombre}
           </h2>
           <p className="truncate text-xs text-muted-foreground" aria-live="polite">
             {orbe.texto} · Claude, solo lectura
@@ -119,11 +155,8 @@ export function Agente({ abierto, alCerrar }: { abierto: boolean; alCerrar: () =
             <div className="grid size-28 place-items-center rounded-full bg-paper">
               <ThinkingOrb state="breathing" size={64} theme="light" aria-hidden />
             </div>
-            <p className="mt-5 font-display text-lg font-bold">¿Qué quieres revisar hoy?</p>
-            <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-              Pregunta por costos, márgenes, recetas o alertas. Consulta los datos del portal; no modifica
-              nada.
-            </p>
+            <p className="mt-5 font-display text-lg font-bold">{cfg.saludo}</p>
+            <p className="mt-1 max-w-xs text-sm text-muted-foreground">{cfg.ayuda}</p>
             <div className="mt-6 flex w-full flex-col gap-2">
               {sugerenciasPara(ruta, titulo).map((s) => (
                 <button
@@ -238,7 +271,7 @@ export function Agente({ abierto, alCerrar }: { abierto: boolean; alCerrar: () =
             maxLength={2000}
             rows={2}
             disabled={ocupado || limite}
-            placeholder="Pregunta sobre tus costos…"
+            placeholder={cfg.campo}
             className="!border-0 !shadow-none !p-1.5 resize-none text-sm disabled:opacity-60"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
