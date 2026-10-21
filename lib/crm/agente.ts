@@ -105,6 +105,61 @@ export function crearConsultasCrm(db: Db): Consulta[] {
             'Zoho (sin autor registrado; importado al portal el ' + r.actualizado_en.slice(0, 10) + ')',
         };
 
+  /** Detalle legible de eventos del historial: elemento afectado y valores antes/después. */
+  const detallar = async (
+    filas: {
+      entidad: string;
+      entidad_id: string;
+      cambios: unknown;
+      actor_id: string | null;
+      origen: string;
+    }[],
+  ) => {
+    const ids = (entidad: string) => [
+      ...new Set(filas.filter((f) => f.entidad === entidad).map((f) => f.entidad_id)),
+    ];
+    const [items, actividades] = await Promise.all([
+      ids('crm_checklist_items').length
+        ? db.from('crm_checklist_items').select('id,texto').in('id', ids('crm_checklist_items'))
+        : { data: [], error: null },
+      ids('crm_actividades').length
+        ? db.from('crm_actividades').select('id,asunto').in('id', ids('crm_actividades'))
+        : { data: [], error: null },
+    ]);
+    const nombres = new Map<string, string>([
+      ...exigir(items).map((i): [string, string] => [i.id, i.texto]),
+      ...exigir(actividades).map((a): [string, string] => [a.id, a.asunto]),
+    ]);
+    const valor = async (campo: string, v: unknown) =>
+      campo.endsWith('_por') || campo === 'responsable_id'
+        ? await quien(typeof v === 'string' ? v : null)
+        : typeof v === 'string'
+          ? recorte(v, 80)
+          : v;
+    return Promise.all(
+      filas.map(async (h) => ({
+        elemento: nombres.get(h.entidad_id) ?? null,
+        // Contenido de notas/descripciones nunca se guarda: solo consta que cambió. Las etapas ya van en el resumen.
+        cambios:
+          h.cambios && typeof h.cambios === 'object'
+            ? Object.fromEntries(
+                await Promise.all(
+                  Object.entries(h.cambios as Record<string, { antes?: unknown; despues?: unknown }>)
+                    .filter(([k]) => k !== 'etapa_id')
+                    .map(async ([k, c]) => [
+                      k,
+                      'antes' in c
+                        ? { antes: await valor(k, c.antes), despues: await valor(k, c.despues) }
+                        : 'modificado',
+                    ]),
+                ),
+              )
+            : null,
+        quien: (await quien(h.actor_id)) ?? (h.origen === 'crm' ? 'Sistema' : 'Zoho (sin autor)'),
+      })),
+    );
+  };
+
   registrar(
     'resumen_pipeline',
     'Resumen del pipeline: etapas del embudo de tiendas (en orden) con cuántas tiendas hay en cada una y sus nombres, o del embudo de prospectos con conteos. Úsalo para preguntas generales de avance.',
@@ -158,6 +213,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         .from('crm_tiendas')
         .select(
           'id,nombre,ciudad,franquiciatario,etapa_id,responsable_id,fecha_programada_arranque,fecha_apertura,actualizado_en,actualizado_por,zoho_modified_at',
+          { count: 'exact' },
         )
         .is('archivado_en', null)
         .order('nombre')
@@ -167,7 +223,8 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         q = q.or(`nombre.ilike.${l},franquiciatario.ilike.${l},ciudad.ilike.${l}`);
       }
       if (etapa) q = q.eq('etapa_id', etapa.id);
-      const filas = exigir(await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite));
+      const r = await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite);
+      const filas = exigir(r);
       const datos = await Promise.all(
         filas.map(async (t) => ({
           id: t.id,
@@ -181,7 +238,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
           ...(await autoria(t)),
         })),
       );
-      return resultadoPagina(datos, e.pagina, e.limite);
+      return { total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
     },
   );
 
@@ -198,16 +255,15 @@ export function crearConsultasCrm(db: Db): Consulta[] {
       const i = orden.findIndex((s) => s.id === t.etapa_id);
       const items = x.checklists.flatMap((c) => c.items.map((it) => ({ ...it, lista: c.nombre })));
       const abiertas = x.actividades.filter((a) => a.estado !== 'Completed');
-      const historial = await Promise.all(
-        x.historial.slice(0, 15).map(async (h) => ({
-          fecha: h.fecha,
-          accion: h.accion,
-          resumen: h.resumen,
-          campos: h.cambios && typeof h.cambios === 'object' ? Object.keys(h.cambios) : [],
-          quien: (await quien(h.actor_id)) ?? (h.origen === 'crm' ? 'Sistema' : 'Zoho (sin autor)'),
-          origen: h.origen,
-        })),
-      );
+      const recientes = x.historial.filter((h) => h.accion !== 'importado').slice(0, 15);
+      const detalles = await detallar(recientes);
+      const historial = recientes.map((h, n) => ({
+        fecha: h.fecha,
+        accion: h.accion,
+        resumen: h.resumen,
+        ...detalles[n],
+        origen: h.origen,
+      }));
       return {
         tienda: {
           id: t.id,
@@ -323,7 +379,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
 
   registrar(
     'buscar_actividades',
-    'Lista tareas/actividades del CRM con filtros: texto en el asunto, estado (Sin iniciar, En curso, En espera, Pospuesta, Completada, Interesado), solo vencidas, solo abiertas o de una tienda. Incluye la tienda/prospecto/contacto relacionado y el responsable.',
+    'Lista tareas/actividades del CRM con filtros: texto en el asunto, estado (Sin iniciar, En curso, En espera, Pospuesta, Completada, Interesado), solo vencidas, solo abiertas o de una tienda. Incluye la tienda/prospecto/contacto relacionado, el responsable y total_coincidencias (el total exacto, no solo la página).',
     z.object({
       texto,
       estado: z.enum(Object.values(ESTADOS_ACTIVIDAD) as [string, ...string[]]).optional(),
@@ -338,6 +394,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         .from('crm_actividades')
         .select(
           'id,asunto,estado,prioridad,fecha_vencimiento,cerrada_en,descripcion,responsable_id,tienda_id,prospecto_id,contacto_id,actualizado_en,actualizado_por,zoho_modified_at',
+          { count: 'exact' },
         )
         .is('archivado_en', null)
         .order('fecha_vencimiento', { nullsFirst: false })
@@ -350,7 +407,8 @@ export function crearConsultasCrm(db: Db): Consulta[] {
       if (e.solo_abiertas || e.solo_vencidas) q = q.neq('estado', 'Completed');
       if (e.solo_vencidas) q = q.lt('fecha_vencimiento', hoy());
       if (e.tienda_id) q = q.eq('tienda_id', e.tienda_id);
-      const filas = exigir(await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite));
+      const r = await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite);
+      const filas = exigir(r);
       const ids = (k: 'tienda_id' | 'prospecto_id' | 'contacto_id') => [
         ...new Set(filas.flatMap((f) => (f[k] ? [f[k]!] : []))),
       ];
@@ -399,7 +457,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
           ...(await autoria(a)),
         })),
       );
-      return { hoy: hoy(), ...resultadoPagina(datos, e.pagina, e.limite) };
+      return { hoy: hoy(), total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
     },
   );
 
@@ -535,6 +593,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         .from('crm_contactos')
         .select(
           'id,nombre,apellidos,correo,telefono,puesto,tipo_contacto,franquiciatario,plaza,fee_pagado,actualizado_en,actualizado_por,zoho_modified_at',
+          { count: 'exact' },
         )
         .is('archivado_en', null)
         .order('apellidos')
@@ -545,7 +604,8 @@ export function crearConsultasCrm(db: Db): Consulta[] {
           `nombre.ilike.${l},apellidos.ilike.${l},correo.ilike.${l},franquiciatario.ilike.${l},plaza.ilike.${l}`,
         );
       }
-      const filas = exigir(await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite));
+      const r = await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite);
+      const filas = exigir(r);
       const ligas = filas.length
         ? exigir(
             await db
@@ -578,7 +638,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
           ...(await autoria(c)),
         })),
       );
-      return resultadoPagina(datos, e.pagina, e.limite);
+      return { total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
     },
   );
 
@@ -609,19 +669,17 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         crm_prospectos: 'Prospecto',
         crm_contactos: 'Contacto',
       };
-      const datos = await Promise.all(
-        filas.map(async (h) => ({
-          fecha: h.fecha,
-          tipo: entidades[h.entidad] ?? h.entidad,
-          tienda: h.tienda_id
-            ? { id: h.tienda_id, nombre: tiendas.find((t) => t.id === h.tienda_id)?.nombre }
-            : null,
-          resumen: h.resumen,
-          campos: h.cambios && typeof h.cambios === 'object' ? Object.keys(h.cambios) : [],
-          quien: (await quien(h.actor_id)) ?? (h.origen === 'crm' ? 'Sistema' : 'Zoho (sin autor)'),
-          origen: h.origen,
-        })),
-      );
+      const detalles = await detallar(filas);
+      const datos = filas.map((h, n) => ({
+        fecha: h.fecha,
+        tipo: entidades[h.entidad] ?? h.entidad,
+        tienda: h.tienda_id
+          ? { id: h.tienda_id, nombre: tiendas.find((t) => t.id === h.tienda_id)?.nombre }
+          : null,
+        resumen: h.resumen,
+        ...detalles[n],
+        origen: h.origen,
+      }));
       return resultadoPagina(datos, e.pagina, e.limite);
     },
   );
