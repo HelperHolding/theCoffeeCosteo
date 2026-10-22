@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ArrowUpRight, Calculator, Store, type LucideIcon } from 'lucide-react';
+import { Activity, ArrowUpRight, Calculator, Store, type LucideIcon } from 'lucide-react';
 import type { IdModulo, Modulo } from '@/lib/portal/modulos';
 import { Vacio } from './piezas';
 
-const iconos: Record<IdModulo, LucideIcon> = { costeo: Calculator, crm: Store };
+const iconos: Record<IdModulo, LucideIcon> = { costeo: Calculator, crm: Store, sucursales: Activity };
 
 export function TarjetasModulos({
   modulos,
@@ -11,7 +11,11 @@ export function TarjetasModulos({
   modulos: Pick<Modulo, 'id' | 'nombre' | 'descripcion' | 'href'>[];
 }) {
   if (modulos.length === 0)
-    return <Vacio titulo="Aún no tienes módulos asignados">Pide acceso al administrador del portal.</Vacio>;
+    return (
+      <div className="rounded-2xl border border-line bg-surface shadow-card">
+        <Vacio titulo="Aún no tienes módulos asignados">Pide acceso al administrador del portal.</Vacio>
+      </div>
+    );
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {modulos.map((m) => {

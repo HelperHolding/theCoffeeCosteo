@@ -1,6 +1,6 @@
 /** Esqueleto inmediato mientras llega la pantalla del CRM (navegar no se siente congelado). */
 export default function Cargando() {
-  const bloque = 'rounded-2xl bg-line/60 motion-safe:animate-pulse';
+  const bloque = 'rounded-2xl bg-white/60 motion-safe:animate-pulse';
   return (
     <div role="status" aria-live="polite" aria-label="Cargando" className="space-y-7">
       <div className="space-y-3">

@@ -97,7 +97,7 @@ export default async function FichaContacto({ params }: { params: Promise<{ id: 
       />
       {archivos.length > 0 && (
         <section aria-labelledby="documentos-contacto" className="space-y-3">
-          <h2 id="documentos-contacto" className="text-base font-semibold">
+          <h2 id="documentos-contacto" className="placa inline-block px-3 py-1.5 text-base font-semibold">
             Documentos
           </h2>
           <DocumentosTienda archivos={archivos} editable={puedeEditarCrm(accesos)} />

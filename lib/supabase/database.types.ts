@@ -17,7 +17,7 @@ export interface Perfil {
 export type NivelModulo = 'desarrollador' | 'edicion' | 'lectura';
 export interface PerfilModulo {
   user_id: string;
-  modulo: 'crm';
+  modulo: 'crm' | 'sucursales';
   nivel: NivelModulo;
   creado_en: string;
 }
@@ -134,6 +134,12 @@ export interface Alerta {
   canal_orden: number;
   alerta: string | null;
 }
+/** Sucursal de la API The Coffee (company_id) asignada explícitamente a un usuario. */
+export interface PerfilSucursal {
+  user_id: string;
+  company_id: number;
+  creado_en: string;
+}
 export interface Bitacora {
   id: number;
   tabla: string;
@@ -159,6 +165,7 @@ export interface Database {
     Tables: {
       perfiles: Tabla<Perfil>;
       perfil_modulos: Tabla<PerfilModulo>;
+      perfil_sucursales: Tabla<PerfilSucursal>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;

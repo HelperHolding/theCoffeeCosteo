@@ -272,7 +272,7 @@ export default async function Tablero() {
         </Tarjeta>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="placa px-3 py-2 text-xs text-muted-foreground">
         Food cost y márgenes: media simple por producto/tamaño, no ponderada por ventas. Conteos de productos
         distintos. Delivery incluye Rappi y App propia.
       </p>

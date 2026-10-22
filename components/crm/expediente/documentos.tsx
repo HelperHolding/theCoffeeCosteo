@@ -71,7 +71,7 @@ export function DocumentosTienda({
     });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-card">
       {editable && tienda && (
         <div className="flex flex-wrap items-center gap-3">
           <input

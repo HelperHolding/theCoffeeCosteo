@@ -54,7 +54,7 @@ export function EtapaProspecto({
       </span>
     );
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="placa flex flex-wrap items-center gap-2 px-3 py-2">
       <label htmlFor="etapa-prospecto" className="text-sm font-medium">
         Estado
       </label>
@@ -80,7 +80,7 @@ export function EtapaProspecto({
         ))}
       </select>
       {error && (
-        <p role="alert" className="text-sm text-bad">
+        <p role="alert" className="placa px-3 py-2 text-sm text-bad">
           {error}
         </p>
       )}

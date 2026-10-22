@@ -60,3 +60,43 @@ export async function sesionCrm(redirigir = true) {
   }
   return { ...s, accesos: a, nivel: a.crm };
 }
+
+type DenegacionSucursales = { ok: false; status: 401 | 403; destino: string; mensaje: string };
+
+/**
+ * Acceso al módulo Sucursales sin redirigir (para route handlers): perfil activo, fila explícita en
+ * perfil_modulos y las company_id asignadas en perfil_sucursales. Admin no tiene acceso implícito.
+ * Falla cerrado: cualquier error al leer las asignaciones = ninguna sucursal.
+ */
+export async function accesoSucursales(): Promise<
+  | { ok: true; db: Db; perfil: { user_id: string; nombre: string; rol: string }; companias: number[] }
+  | DenegacionSucursales
+> {
+  const c = await contexto();
+  if (!c.usuario) return { ok: false, status: 401, destino: '/login', mensaje: 'La sesión venció.' };
+  if (c.perfil.error || !c.perfil.data?.activo)
+    return {
+      ok: false,
+      status: 403,
+      destino: '/login?aviso=perfil',
+      mensaje: 'Tu cuenta necesita un perfil activo.',
+    };
+  if (!c.accesos.sucursales)
+    return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Sucursales.' };
+  const r = await c.db.from('perfil_sucursales').select('company_id').eq('user_id', c.usuario.id);
+  const companias =
+    !r || r.error || !Array.isArray(r.data)
+      ? []
+      : r.data.map((f) => Number(f.company_id)).filter((n) => Number.isSafeInteger(n) && n > 0);
+  return { ok: true, db: c.db, perfil: c.perfil.data, companias };
+}
+
+/** Sesión de páginas de Sucursales: redirige como el resto del portal. */
+export async function sesionSucursales(redirigir = true) {
+  const a = await accesoSucursales();
+  if (!a.ok) {
+    if (redirigir) redirect(a.destino);
+    throw new Error(a.mensaje);
+  }
+  return a;
+}

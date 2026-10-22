@@ -36,7 +36,10 @@ export function ActividadTienda({
   const autor = (id: string | null) => (id ? (nombres[id] ?? 'Usuario') : 'Sistema');
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <section aria-labelledby="titulo-notas" className="space-y-4">
+      <section
+        aria-labelledby="titulo-notas"
+        className="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-card"
+      >
         <h2 id="titulo-notas" className="text-base">
           Notas
         </h2>
@@ -94,7 +97,10 @@ export function ActividadTienda({
           </ul>
         )}
       </section>
-      <section aria-labelledby="titulo-historial" className="space-y-4">
+      <section
+        aria-labelledby="titulo-historial"
+        className="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-card"
+      >
         <h2 id="titulo-historial" className="text-base">
           Historial
         </h2>

@@ -1,9 +1,9 @@
 import type { NivelModulo } from '../supabase/database.types';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
-export type IdModulo = 'costeo' | 'crm';
+export type IdModulo = 'costeo' | 'crm' | 'sucursales';
 /** Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita. */
-export type Accesos = Partial<Record<'crm', NivelModulo>>;
+export type Accesos = Partial<Record<'crm' | 'sucursales', NivelModulo>>;
 
 export interface Modulo {
   id: IdModulo;
@@ -28,6 +28,14 @@ export const modulos: Modulo[] = [
     descripcion: 'Pipeline de tiendas, prospectos, contactos y actividades.',
     href: '/crm',
     acceso: (a) => a.crm !== undefined,
+  },
+  {
+    id: 'sucursales',
+    nombre: 'Sucursales',
+    descripcion: 'Ventas POS en vivo por sucursal: venta, pedidos, productos y pagos.',
+    href: '/sucursales',
+    // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales).
+    acceso: (a) => a.sucursales !== undefined,
   },
 ];
 

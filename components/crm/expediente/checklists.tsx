@@ -112,7 +112,7 @@ export function ChecklistsTienda({
   const [pendiente, iniciar] = useTransition();
   const router = useRouter();
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-card">
       {listas.length === 0 && (
         <p className="text-sm text-muted-foreground">Esta tienda aún no tiene checklists.</p>
       )}
