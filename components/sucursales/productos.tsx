@@ -6,7 +6,7 @@ import type { FiltroOrigen } from '@/lib/sucursales/metricas';
 import { enZona, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
-import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
 import { NOTA_LINEAS } from './en-vivo';
 import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
@@ -113,6 +113,7 @@ export function Productos({
         <>
           {error && <ErrorCarga error={error} alReintentar={recargar} />}
           <AvisosLectura lecturas={[{ nombre: 'Periodo', info: datos.lectura }]} />
+          <NotaRappi excluido={datos.rappiExcluido} moneda={m} periodo="en el periodo" />
           {datos.lectura.estado !== 'error' && (
             <>
               <p className="placa px-3 py-2 text-sm text-ink-2">

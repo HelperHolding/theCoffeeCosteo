@@ -7,12 +7,14 @@ import { EnVivo } from './en-vivo';
 import { Pedidos } from './pedidos';
 import { Productos } from './productos';
 import { Tendencias } from './tendencias';
+import { Rappi } from './rappi';
 
 export const PESTANAS = [
   { id: 'vivo', nombre: 'En vivo' },
   { id: 'tendencias', nombre: 'Tendencias' },
   { id: 'productos', nombre: 'Productos' },
   { id: 'pedidos', nombre: 'Pedidos' },
+  { id: 'rappi', nombre: 'Rappi' },
 ] as const;
 
 /**
@@ -46,6 +48,7 @@ export function VentasPos({
     if (id === 'tendencias') return <Tendencias key={clave} companyId={sucursal.companyId} origen={origen} />;
     if (id === 'productos')
       return <Productos key={clave} companyId={sucursal.companyId} origen={origen} zona={sucursal.zona} />;
+    if (id === 'rappi') return <Rappi companyId={sucursal.companyId} />;
     return <Pedidos key={clave} companyId={sucursal.companyId} origen={origen} zona={sucursal.zona} />;
   };
 
@@ -60,10 +63,10 @@ export function VentasPos({
             Hora local · {sucursal.zona}
           </span>
           <span className="rounded-full border border-line px-2.5 py-1 text-ink-2" title={sucursal.alcance}>
-            Rappi fuera del alcance
+            Sin Rappi (ver apartado Rappi)
           </span>
         </div>
-        <fieldset className="flex items-center gap-2">
+        <fieldset className={`flex items-center gap-2 ${tab === 'rappi' ? 'hidden' : ''}`}>
           <legend className="sr-only">Origen de los pedidos</legend>
           <span aria-hidden="true" className="text-xs font-medium text-muted-foreground">
             Origen

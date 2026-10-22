@@ -5,7 +5,7 @@ import type { RespuestaTendencias } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, etiquetaPago, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { AZUL, BarraCelda, COLOR_ORIGEN, Delta, colorPago } from './colores';
-import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
 import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import {
   ColumnasSemana,
@@ -15,6 +15,7 @@ import {
   etiquetaSemana,
 } from './graficas-tendencias';
 import { useLectura } from './use-lectura';
+import { NetoRappi } from './neto-rappi';
 
 const OPCIONES = [4, 8, 12] as const;
 
@@ -75,6 +76,13 @@ export function Tendencias({ companyId, origen }: { companyId: number; origen: F
       {selector}
       {error && <ErrorCarga error={error} alReintentar={recargar} />}
       <AvisosLectura lecturas={ss.map((s) => ({ nombre: `Semana ${s.etiqueta}`, info: s.lectura }))} />
+      {origen !== 'rappi' && (
+        <NotaRappi
+          excluido={d.rappiExcluido}
+          moneda={m}
+          periodo={`en las ${d.semanasCompletas} semanas completas`}
+        />
+      )}
 
       {d.semanasCompletas === 0 ? (
         <div className="rounded-2xl border border-line bg-surface shadow-card">
@@ -153,30 +161,34 @@ export function Tendencias({ companyId, origen }: { companyId: number; origen: F
             <MapaCalor celdas={d.mapa} semanas={d.semanasCompletas} />
           </Tarjeta>
 
-          <div className="grid gap-6 xl:grid-cols-2">
-            <Tarjeta titulo="Formas de pago por semana" descripcion="Participación en la venta cobrada.">
-              <FilasApiladas
-                claves={metodos.map((k) => ({ clave: k, etiqueta: etiquetaPago(k), color: colorPago(k) }))}
-                filas={ss.map((s) => ({
-                  clave: s.desde,
-                  etiqueta: s.etiqueta,
-                  segmentos: s.pagos.map((p) => ({ clave: p.metodo, participacion: p.participacion })),
-                }))}
-              />
-            </Tarjeta>
-            <Tarjeta titulo="Origen por semana" descripcion="Mostrador frente a App The Coffee.">
-              <FilasApiladas
-                claves={(['mostrador', 'app', 'desconocido'] as const)
-                  .filter((o) => ss.some((s) => s.origenes.some((x) => x.origen === o)))
-                  .map((o) => ({ clave: o, etiqueta: etiquetaOrigen[o], color: COLOR_ORIGEN[o] }))}
-                filas={ss.map((s) => ({
-                  clave: s.desde,
-                  etiqueta: s.etiqueta,
-                  segmentos: s.origenes.map((o) => ({ clave: o.origen, participacion: o.participacion })),
-                }))}
-              />
-            </Tarjeta>
-          </div>
+          {origen === 'rappi' ? (
+            <NetoRappi kpis={d.totales} moneda={m} periodo={`${d.semanasCompletas} semanas`} />
+          ) : (
+            <div className="grid gap-6 xl:grid-cols-2">
+              <Tarjeta titulo="Formas de pago por semana" descripcion="Participación en la venta cobrada.">
+                <FilasApiladas
+                  claves={metodos.map((k) => ({ clave: k, etiqueta: etiquetaPago(k), color: colorPago(k) }))}
+                  filas={ss.map((s) => ({
+                    clave: s.desde,
+                    etiqueta: s.etiqueta,
+                    segmentos: s.pagos.map((p) => ({ clave: p.metodo, participacion: p.participacion })),
+                  }))}
+                />
+              </Tarjeta>
+              <Tarjeta titulo="Origen por semana" descripcion="Mostrador frente a App The Coffee.">
+                <FilasApiladas
+                  claves={(['mostrador', 'app', 'desconocido'] as const)
+                    .filter((o) => ss.some((s) => s.origenes.some((x) => x.origen === o)))
+                    .map((o) => ({ clave: o, etiqueta: etiquetaOrigen[o], color: COLOR_ORIGEN[o] }))}
+                  filas={ss.map((s) => ({
+                    clave: s.desde,
+                    etiqueta: s.etiqueta,
+                    segmentos: s.origenes.map((o) => ({ clave: o.origen, participacion: o.participacion })),
+                  }))}
+                />
+              </Tarjeta>
+            </div>
+          )}
 
           <Tarjeta
             titulo="Detalle por semana"

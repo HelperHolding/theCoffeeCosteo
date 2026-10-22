@@ -4,7 +4,7 @@ import { resolverSucursal } from './acceso';
 import type { ConfigSucursal } from './config';
 import type { RespuestaError } from './contratos';
 import { hoyLocal } from './datos';
-import { filtrosOrigen, type FiltroOrigen } from './metricas';
+import { origenesValidos, type FiltroOrigen } from './metricas';
 import { diasEntre, fechaValida } from './tiempo';
 
 /** Respuestas personalizadas por permisos: nunca a una CDN ni a la caché del navegador. */
@@ -30,7 +30,7 @@ export const invalido = (mensaje: string) => error(400, mensaje);
 
 export function leerOrigen(q: URLSearchParams): FiltroOrigen | null {
   const o = q.get('origen') ?? 'todos';
-  return (filtrosOrigen as string[]).includes(o) ? (o as FiltroOrigen) : null;
+  return (origenesValidos as string[]).includes(o) ? (o as FiltroOrigen) : null;
 }
 
 /** Periodo cerrado o abierto hasta hoy (local de la sucursal), con máximo de días. */

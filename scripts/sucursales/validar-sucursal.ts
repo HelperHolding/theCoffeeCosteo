@@ -50,8 +50,8 @@ const conocidos = {
     'items',
     'createdAt',
   ]),
-  metodos: new Set(['CARTAO', 'DINHEIRO', 'VIRTUAL_WALLET', 'WALLET_BALANCE']),
-  tipos: new Set(['CONTACTLESS_EMV', 'EMV', 'CONTINGENCY', 'WALLET']),
+  metodos: new Set(['CARTAO', 'DINHEIRO', 'VIRTUAL_WALLET', 'WALLET_BALANCE', 'RAPPI']),
+  tipos: new Set(['CONTACTLESS_EMV', 'EMV', 'CONTINGENCY', 'WALLET', 'CREDIT']),
 };
 const camposNuevos = [...new Set(cruda.registros.flatMap((r) => Object.keys(r)))].filter(
   (k) => !conocidos.pedido.has(k),

@@ -19,10 +19,11 @@ import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { BarraApilada, CurvaAcumulada, PedidosPorHora, Ranking } from './graficas';
 import { COLOR_ORIGEN, Delta, Etiqueta, SERIE_HOY, colorPago } from './colores';
 import { DetallePedido } from './detalle-pedido';
-import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
 import { diaMes, dinero, hace, horaDe, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { useSonidoVentas } from './sonido-ventas';
+import { NetoRappi } from './neto-rappi';
 
 export const NOTA_LINEAS =
   'Líneas de producto. Unidades = estimación: una línea por unidad; pendiente de confirmar.';
@@ -105,7 +106,7 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {sonido.disponible && (
+          {sonido.disponible && origen !== 'rappi' && (
             <button
               type="button"
               onClick={sonido.alternar}
@@ -142,6 +143,13 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
           { nombre: `Base (${base})`, info: d.lecturas.base },
         ]}
       />
+      {origen !== 'rappi' && (
+        <NotaRappi
+          excluido={d.rappiExcluido}
+          moneda={m}
+          periodo={`hoy hasta las ${d.corte.hora.slice(0, 5)}`}
+        />
+      )}
       {d.posterioresAlCorte > 0 && (
         <p className="placa px-3 py-2 text-xs text-muted-foreground">
           {d.posterioresAlCorte} pedido(s) con hora posterior al corte no se cuentan todavía (reloj del punto
@@ -293,7 +301,7 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
                           <span className="tabular w-12 shrink-0 font-semibold">{p.hora.slice(0, 5)}</span>
                           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                             <Etiqueta color={colorPago(p.metodo)}>{p.pago}</Etiqueta>
-                            {p.origen !== 'mostrador' && (
+                            {p.origen !== 'mostrador' && p.origen !== 'rappi' && (
                               <Etiqueta color={COLOR_ORIGEN[p.origen]}>{etiquetaOrigen[p.origen]}</Etiqueta>
                             )}
                             <span className="text-xs text-muted-foreground">
@@ -309,65 +317,69 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
               </Tarjeta>
             </div>
 
-            <Tarjeta
-              titulo="Pagos, origen y descuentos de hoy"
-              descripcion="Distribución de lo cobrado; no es conciliación bancaria."
-            >
-              {d.pagos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin pedidos hoy todavía.</p>
-              ) : (
-                <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
-                  <div className="space-y-6">
-                    <BarraApilada
-                      titulo="Formas de pago"
-                      moneda={m}
-                      segmentos={d.pagos.map((p) => ({
-                        clave: p.metodo,
-                        etiqueta: p.etiqueta,
-                        color: colorPago(p.metodo),
-                        ventaCent: p.ventaCent,
-                        pedidos: p.pedidos,
-                        participacion: p.participacion,
-                      }))}
-                    />
-                    {d.origen === 'todos' && (
+            {origen === 'rappi' ? (
+              <NetoRappi kpis={d.kpis} moneda={m} />
+            ) : (
+              <Tarjeta
+                titulo="Pagos, origen y descuentos de hoy"
+                descripcion="Distribución de lo cobrado; no es conciliación bancaria."
+              >
+                {d.pagos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin pedidos hoy todavía.</p>
+                ) : (
+                  <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
+                    <div className="space-y-6">
                       <BarraApilada
-                        titulo="Origen del pedido"
+                        titulo="Formas de pago"
                         moneda={m}
-                        segmentos={d.origenes.map((o) => ({
-                          clave: o.origen,
-                          etiqueta: etiquetaOrigen[o.origen],
-                          color: COLOR_ORIGEN[o.origen],
-                          ventaCent: o.ventaCent,
-                          pedidos: o.pedidos,
-                          participacion: o.participacion,
+                        segmentos={d.pagos.map((p) => ({
+                          clave: p.metodo,
+                          etiqueta: p.etiqueta,
+                          color: colorPago(p.metodo),
+                          ventaCent: p.ventaCent,
+                          pedidos: p.pedidos,
+                          participacion: p.participacion,
                         }))}
                       />
-                    )}
+                      {d.origen === 'todos' && (
+                        <BarraApilada
+                          titulo="Origen del pedido"
+                          moneda={m}
+                          segmentos={d.origenes.map((o) => ({
+                            clave: o.origen,
+                            etiqueta: etiquetaOrigen[o.origen],
+                            color: COLOR_ORIGEN[o.origen],
+                            ventaCent: o.ventaCent,
+                            pedidos: o.pedidos,
+                            participacion: o.participacion,
+                          }))}
+                        />
+                      )}
+                    </div>
+                    <dl className="grid content-start gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                      <div className="rounded-xl bg-crema-soft/60 p-4">
+                        <dt className="text-xs font-medium text-ink-2">Descuento otorgado</dt>
+                        <dd className="mt-1 font-display text-2xl font-black tabular">
+                          {dinero(d.kpis.descuentoCent, m)}
+                        </dd>
+                      </div>
+                      <div className="rounded-xl bg-crema-soft/60 p-4">
+                        <dt className="text-xs font-medium text-ink-2">% del precio de lista</dt>
+                        <dd className="mt-1 font-display text-2xl font-black tabular">
+                          {porcentaje(d.kpis.tasaDescuento)}
+                        </dd>
+                      </div>
+                      <div className="rounded-xl bg-crema-soft/60 p-4">
+                        <dt className="text-xs font-medium text-ink-2">Pedidos con descuento</dt>
+                        <dd className="mt-1 font-display text-2xl font-black tabular">
+                          {numero(d.kpis.pedidosConDescuento)}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-                  <dl className="grid content-start gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                    <div className="rounded-xl bg-crema-soft/60 p-4">
-                      <dt className="text-xs font-medium text-ink-2">Descuento otorgado</dt>
-                      <dd className="mt-1 font-display text-2xl font-black tabular">
-                        {dinero(d.kpis.descuentoCent, m)}
-                      </dd>
-                    </div>
-                    <div className="rounded-xl bg-crema-soft/60 p-4">
-                      <dt className="text-xs font-medium text-ink-2">% del precio de lista</dt>
-                      <dd className="mt-1 font-display text-2xl font-black tabular">
-                        {porcentaje(d.kpis.tasaDescuento)}
-                      </dd>
-                    </div>
-                    <div className="rounded-xl bg-crema-soft/60 p-4">
-                      <dt className="text-xs font-medium text-ink-2">Pedidos con descuento</dt>
-                      <dd className="mt-1 font-display text-2xl font-black tabular">
-                        {numero(d.kpis.pedidosConDescuento)}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              )}
-            </Tarjeta>
+                )}
+              </Tarjeta>
+            )}
 
             <p className="placa px-3 py-2 text-xs text-muted-foreground">
               Corte común para KPIs, gráficas y frases: {d.corte.hora} hora local ({d.sucursal.zona}).

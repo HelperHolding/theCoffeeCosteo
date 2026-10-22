@@ -64,15 +64,16 @@ function dia(fecha: string, hastaSegundo: number, semilla: number): PedidoApi[] 
       }));
       const gross = items.reduce((t, x) => t + x.amount + x.itemsCustom.reduce((u, c) => u + c.amount, 0), 0);
       const app = azar() < 0.07;
-      const efectivo = !app && azar() < 0.12;
+      const rappi = !app && azar() < 0.3;
+      const efectivo = !app && !rappi && azar() < 0.12;
       ps.push(
         pedido(fecha, hora, {
           items,
           grossAmount: gross,
-          netAmout: gross,
+          netAmout: rappi ? Math.round(gross * 92) / 100 : gross,
           fromSmartphone: app,
-          paymentMethod: app ? 'VIRTUAL_WALLET' : efectivo ? 'DINHEIRO' : 'CARTAO',
-          paymentType: app ? 'WALLET' : efectivo ? 'CONTINGENCY' : 'CONTACTLESS_EMV',
+          paymentMethod: app ? 'VIRTUAL_WALLET' : rappi ? 'RAPPI' : efectivo ? 'DINHEIRO' : 'CARTAO',
+          paymentType: app ? 'WALLET' : rappi ? 'CREDIT' : efectivo ? 'CONTINGENCY' : 'CONTACTLESS_EMV',
         }),
       );
     }
