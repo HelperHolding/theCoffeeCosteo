@@ -4,10 +4,9 @@ import { COLOR_ORIGEN } from './colores';
 import { dinero, numero, porcentaje } from './formato';
 
 /**
- * Cobrado frente a neto en Rappi. `netAmout` es el "neto reportado por la API". Evidencia (Rubén Darío,
- * 501 pedidos): NO es lo cobrado menos la comisión del convenio. La diferencia son montos fijos ($22, $26.40…),
- * solo aparece en pedidos con promoción, y a veces el neto supera lo cobrado. Parece el ajuste de
- * promociones, así que se rotula como "ajuste reportado", nunca como comisión.
+ * Cobrado y neto de Rappi TAL COMO LOS REPORTA LA API (grossAmount y netAmout), sin interpretación:
+ * el proveedor no ha documentado qué incluye netAmout, así que no se rotula como comisión ni como ajuste
+ * y no se calcula ninguna estimación. Ver docs/sucursales/11.
  */
 export function NetoRappi({
   kpis,
@@ -24,7 +23,7 @@ export function NetoRappi({
   return (
     <Tarjeta
       titulo={`Cobrado y neto de Rappi (${periodo})`}
-      descripcion="Neto reportado por la API (netAmout). La diferencia NO es la comisión del convenio: solo aparece en pedidos con promoción (ajuste reportado). Definición pendiente con el proveedor."
+      descripcion="Montos tal como los reporta la API: cobrado (grossAmount) y neto (netAmout). El proveedor no ha documentado qué incluye el neto."
     >
       {kpis.pedidos === 0 ? (
         <p className="text-sm text-muted-foreground">Sin pedidos de Rappi en el periodo.</p>
@@ -47,7 +46,7 @@ export function NetoRappi({
           </div>
           <dl className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-xl bg-crema-soft/60 p-4">
-              <dt className="text-xs font-medium text-ink-2">Cobrado (precio Rappi)</dt>
+              <dt className="text-xs font-medium text-ink-2">Cobrado (grossAmount)</dt>
               <dd className="mt-1 font-display text-2xl font-black tabular">
                 {dinero(kpis.ventaCent, moneda)}
               </dd>
@@ -59,14 +58,14 @@ export function NetoRappi({
                   className="size-2 rounded-full"
                   style={{ backgroundColor: COLOR_ORIGEN.rappi }}
                 />
-                Neto reportado (API)
+                Neto (netAmout)
               </dt>
               <dd className="mt-1 font-display text-2xl font-black tabular">{dinero(neto, moneda)}</dd>
             </div>
             <div className="rounded-xl bg-crema-soft/60 p-4">
               <dt className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
                 <span aria-hidden="true" className="size-2 rounded-full bg-line-strong" />
-                Ajuste reportado
+                Diferencia cobrado − neto
               </dt>
               <dd className="mt-1 font-display text-2xl font-black tabular">
                 {dinero(diferencia, moneda)}{' '}

@@ -39,7 +39,7 @@ Esto corrige la conclusión anterior de los documentos 06 y 10, que solo se basa
   - Cada pestaña muestra «Excluido de Ventas POS: N pedidos de Rappi ($X)».
 - **Apartado Rappi** (pestaña nueva en todas las sucursales):
   - «Hoy en vivo» y «Semanas», con la misma lectura, fórmulas y diseño que Ventas POS, filtradas a Rappi.
-  - Bloque «Cobrado y neto»: `netAmout` se muestra como «neto reportado (API)» y la diferencia como «ajuste reportado». **No es la comisión** (ver sección siguiente).
+  - Bloque «Cobrado y neto»: `netAmout` se muestra como «neto reportado (API)» y la diferencia como «cobrado − neto», sin interpretación (decisión de Carlo: solo datos de la API, sin estimaciones).
   - En una tienda sin Rappi muestra ceros reales (lectura completa), nunca ceros por error.
 - **Neto:** `netAmout` ahora se conserva como `netoCent` y entra en el resumen (`netoCent`). No se usa en Ventas POS.
 - `validar-sucursal.ts` reconoce `RAPPI` y `CREDIT`.
@@ -58,7 +58,7 @@ Datos: Rubén Darío, 501 pedidos de Rappi, del 21-sep al 18-oct.
 
 **Conclusión:** ni `netAmout` ni `percentageOfTransfer` reflejan la comisión del convenio con Rappi. Se comportan como **ajustes de promociones** (quién absorbe el descuento).
 
-- En el portal, la diferencia se rotula «ajuste reportado».
+- En el portal la diferencia se muestra como «cobrado − neto», sin nombre interpretativo ni estimaciones.
 - La comisión real requiere el % del convenio o el reporte de liquidación de Rappi.
 - `refundId` trae, en pedidos de Rappi, un número de 10 dígitos (≈ 2,474–2,481 millones) que parece el **ID del pedido en Rappi**. Permitiría cruzar pedido por pedido con el reporte de Rappi.
 
@@ -75,5 +75,4 @@ Datos: Rubén Darío, 501 pedidos de Rappi, del 21-sep al 18-oct.
 
 - Confirmar el significado de `netAmout` y `percentageOfTransfer` en Rappi: ¿reparto de promociones?
 - ¿Llegan los pedidos de Rappi Turbo por esta integración? ¿Hay algún campo que los distinga?
-- Comisión del convenio (%, y si cambia entre Rappi y Turbo), para estimarla en el apartado Rappi.
 - `percentageOfTransfer`: ¿el porcentaje que se transfiere a la tienda?
