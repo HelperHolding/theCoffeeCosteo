@@ -32,7 +32,7 @@ import { GET as vivo } from '../../app/api/sucursales/[companyId]/vivo/route';
 import { GET as productosGet } from '../../app/api/sucursales/[companyId]/productos/route';
 import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
 import { normalizar } from '../../lib/sucursales/normalizar';
-import { filtrarOrigen, rappiExcluido, resumen } from '../../lib/sucursales/metricas';
+import { filtrarOrigen, resumen } from '../../lib/sucursales/metricas';
 import type { RespuestaProductos, RespuestaVivo } from '../../lib/sucursales/contratos';
 import { apiFalsa, pedido } from './sucursales-fixtures';
 
@@ -48,16 +48,19 @@ const rappi = (hora: string, fecha = '2026-10-22') =>
   });
 
 describe('normalización y filtros', () => {
-  it('RAPPI se clasifica como origen rappi aunque fromSmartphone sea false; "todos" (POS) lo excluye', () => {
+  it('RAPPI se clasifica como origen rappi aunque fromSmartphone sea false; "todos" lo incluye', () => {
     const { pedidos } = normalizar(
       [pedido('2026-10-22', '08:00:00'), rappi('09:00:00')] as never,
       { companyId: 612, modoTiempo: 'local-etiquetada-z', zona: 'America/Ciudad_Juarez' },
       { desde: '2026-10-22', hasta: '2026-10-22' },
     );
     expect(pedidos.map((p) => p.origen).sort()).toEqual(['mostrador', 'rappi']);
-    expect(filtrarOrigen(pedidos, 'todos').map((p) => p.origen)).toEqual(['mostrador']);
+    expect(
+      filtrarOrigen(pedidos, 'todos')
+        .map((p) => p.origen)
+        .sort(),
+    ).toEqual(['mostrador', 'rappi']);
     expect(filtrarOrigen(pedidos, 'mostrador').map((p) => p.origen)).toEqual(['mostrador']);
-    expect(rappiExcluido(pedidos)).toEqual({ pedidos: 1, ventaCent: 16500 });
     const r = resumen(filtrarOrigen(pedidos, 'rappi'));
     expect(r).toMatchObject({ ventaCent: 16500, netoCent: 14025 });
   });
@@ -81,12 +84,14 @@ describe('rutas con Rappi', () => {
       params: Promise.resolve({ companyId: '612' }),
     });
 
-  it('En vivo POS excluye Rappi y lo reporta; el apartado Rappi solo trae Rappi con su neto', async () => {
+  it('En vivo suma Rappi con Mostrador y App; filtrar por rappi trae solo Rappi con su neto', async () => {
     const pos = (await (await llamar(vivo, '')).json()) as RespuestaVivo;
-    expect(pos.kpis).toMatchObject({ pedidos: 1, ventaCent: 16500 });
-    expect(pos.rappiExcluido).toEqual({ pedidos: 2, ventaCent: 33000 });
-    expect(pos.origenes.map((o) => o.origen)).toEqual(['mostrador']);
-    expect(pos.origenes[0].participacion).toBe(1);
+    expect(pos.kpis).toMatchObject({ pedidos: 3, ventaCent: 49500 });
+    expect(pos.origenes.map((o) => o.origen)).toEqual(['mostrador', 'rappi']);
+    expect(pos.origenes[1].participacion).toBeCloseTo(2 / 3);
+    expect(pos.pagos.map((p) => p.metodo)).toContain('RAPPI');
+    const mostrador = (await (await llamar(vivo, '?origen=mostrador')).json()) as RespuestaVivo;
+    expect(mostrador.kpis).toMatchObject({ pedidos: 1, ventaCent: 16500 });
     const r = (await (await llamar(vivo, '?origen=rappi')).json()) as RespuestaVivo;
     expect(r.kpis).toMatchObject({ pedidos: 2, ventaCent: 33000, netoCent: 28050 });
     expect(r.kpisBase).toMatchObject({ pedidos: 1 });
@@ -94,10 +99,9 @@ describe('rutas con Rappi', () => {
     expect(r.ultimosPedidos.every((p) => p.origen === 'rappi' && p.metodo === 'RAPPI')).toBe(true);
   });
 
-  it('Productos POS no incluye ventas de Rappi y dice cuánto excluyó', async () => {
+  it('Productos y conciliación incluyen Rappi en "todos"', async () => {
     const d = (await (await llamar(productosGet, '?desde=2026-10-22')).json()) as RespuestaProductos;
-    expect(d.totales.pedidos).toBe(1);
-    expect(d.rappiExcluido.pedidos).toBe(2);
-    expect(d.conciliacion.ventaCent).toBe(16500);
+    expect(d.totales.pedidos).toBe(3);
+    expect(d.conciliacion).toMatchObject({ ventaCent: 49500, diferenciaCent: 0 });
   });
 });

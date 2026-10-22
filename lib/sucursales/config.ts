@@ -24,9 +24,9 @@ export interface ConfigSucursal {
   sonidoVenta?: string;
 }
 
-/** Rappi llega por la API con forma de pago RAPPI (visto en Rubén Darío, 2026-10-22): se excluye de Ventas POS y se consulta en el apartado Rappi. */
+/** Rappi llega por la API con forma de pago RAPPI (convenio): se suma a las ventas y se filtra arriba. */
 const ALCANCE_RAPPI =
-  'Rappi se excluye de Ventas POS: la API lo marca con forma de pago RAPPI y se consulta en el apartado Rappi.';
+  'Incluye Rappi (forma de pago RAPPI en la API). Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
 export const sucursalesConfiguradas: ConfigSucursal[] = [
   {

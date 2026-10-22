@@ -139,7 +139,7 @@ export function VistaSucursales() {
       <Encabezado
         titulo={cfg.nombre}
         migas={[{ href: '/sucursales', nombre: 'Sucursales' }]}
-        descripcion={`Ventas POS · ${cfg.ciudad} · tienda ${cfg.lookerStoreId} · ID API ${cfg.companyId}`}
+        descripcion={`Ventas · ${cfg.ciudad} · tienda ${cfg.lookerStoreId} · ID API ${cfg.companyId}`}
       />
       <VentasPos
         sucursal={sucursalInfo(cfg)}

@@ -32,7 +32,7 @@ export const modulos: Modulo[] = [
   {
     id: 'sucursales',
     nombre: 'Sucursales',
-    descripcion: 'Ventas POS en vivo por sucursal: venta, pedidos, productos y pagos.',
+    descripcion: 'Ventas en vivo por sucursal (mostrador, app y Rappi): venta, pedidos, productos y pagos.',
     href: '/sucursales',
     // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales).
     acceso: (a) => a.sucursales !== undefined,

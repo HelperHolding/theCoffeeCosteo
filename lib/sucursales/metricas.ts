@@ -2,29 +2,23 @@ import { importeLinea, type Origen, type PedidoNormal } from './normalizar';
 import { sumarDias } from './tiempo';
 
 /** Funciones puras sobre pedidos normalizados (todas en centavos). Mismo conjunto para KPIs, gráficas y tablas. */
-/** 'todos' = POS (Mostrador + App, sin Rappi). 'rappi' solo lo usa el apartado Rappi. */
+/** 'todos' = todas las ventas (Mostrador + App + Rappi). Cada origen también se puede ver por separado. */
 export type FiltroOrigen = 'todos' | 'mostrador' | 'app' | 'rappi';
-/** Opciones del selector de origen de Ventas POS (Rappi tiene su propio apartado). */
-export const filtrosOrigen: FiltroOrigen[] = ['todos', 'mostrador', 'app'];
+/** Opciones del selector de origen (arriba de las pestañas). */
+export const filtrosOrigen: FiltroOrigen[] = ['todos', 'mostrador', 'app', 'rappi'];
 /** Orígenes aceptados por las rutas de datos. */
 export const origenesValidos: FiltroOrigen[] = ['todos', 'mostrador', 'app', 'rappi'];
 export const etiquetaOrigen: Record<Origen | 'todos', string> = {
-  todos: 'Mostrador + App',
+  todos: 'Mostrador + App + Rappi',
   mostrador: 'Mostrador',
   app: 'App The Coffee',
   rappi: 'Rappi',
   desconocido: 'Origen sin dato',
 };
 
-/** POS = todo menos Rappi. 'todos' es Mostrador + App (+ sin dato); Rappi nunca entra en cifras POS. */
+/** 'todos' = todos los pedidos (incluye Rappi); cualquier otro valor filtra a ese origen. */
 export const filtrarOrigen = (ps: PedidoNormal[], o: FiltroOrigen) =>
-  o === 'todos' ? ps.filter((p) => p.origen !== 'rappi') : ps.filter((p) => p.origen === o);
-
-/** Pedidos de Rappi excluidos de Ventas POS (se informan, no se suman). */
-export function rappiExcluido(ps: PedidoNormal[]) {
-  const r = ps.filter((p) => p.origen === 'rappi');
-  return { pedidos: r.length, ventaCent: r.reduce((s, p) => s + p.ventaCent, 0) };
-}
+  o === 'todos' ? ps : ps.filter((p) => p.origen === o);
 
 export interface Resumen {
   ventaCent: number;
@@ -223,7 +217,7 @@ export function pagos(ps: PedidoNormal[]) {
 /** Desglose por origen (mostrador / app / sin dato), solo orígenes con pedidos. */
 export function origenes(ps: PedidoNormal[]) {
   const total = ps.reduce((s, p) => s + p.ventaCent, 0);
-  return (['mostrador', 'app', 'desconocido'] as Origen[])
+  return (['mostrador', 'app', 'rappi', 'desconocido'] as Origen[])
     .map((origen) => {
       const de = ps.filter((p) => p.origen === origen);
       const ventaCent = de.reduce((s, p) => s + p.ventaCent, 0);

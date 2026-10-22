@@ -76,3 +76,20 @@ Datos: Rubén Darío, 501 pedidos de Rappi, del 21-sep al 18-oct.
 - Confirmar el significado de `netAmout` y `percentageOfTransfer` en Rappi: ¿reparto de promociones?
 - ¿Llegan los pedidos de Rappi Turbo por esta integración? ¿Hay algún campo que los distinga?
 - `percentageOfTransfer`: ¿el porcentaje que se transfiere a la tienda?
+
+## Actualización (2026-10-22): Rappi se suma a las ventas
+
+Decisión de Carlo: hay convenio con Rappi, así que sus ventas **se suman** en todas las sucursales. Con esto queda sin efecto la exclusión descrita arriba.
+
+- **Filtro de origen** arriba de las pestañas: «Mostrador + App + Rappi» (por defecto) · «Mostrador» · «App The Coffee» · «Rappi».
+  - Aplica a En vivo, Tendencias, Productos, Pedidos y al directorio.
+- Se eliminan `rappiExcluido` y el aviso «Excluido de Ventas POS».
+- La pestaña **Rappi** se mantiene como vista dedicada, con cobrado (`grossAmount`) y neto (`netAmout`) tal como vienen de la API.
+- **Colores** revalidados con `validate_palette.js`, todos los pares sin FAIL:
+  - origen: Mostrador violeta · App naranja · Rappi aqua;
+  - pagos: Tarjeta azul · Efectivo amarillo · Monedero magenta · Saldo verde · Rappi aqua.
+  - Rappi tiene el mismo color en ambas gráficas.
+- **Verificación real** (Rubén Darío, hoy a las 16:09): «todos» = 28 pedidos / $4,683.80, que es la suma exacta de:
+  - Mostrador: 14 / $1,879.00
+  - App: 2 / $399.80
+  - Rappi: 12 / $2,405.00

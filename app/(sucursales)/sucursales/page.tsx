@@ -21,7 +21,7 @@ export default async function Directorio() {
       <Encabezado
         area="Sucursales"
         titulo="Directorio"
-        descripcion="Sucursales habilitadas para ti, con su venta POS de hoy (API The Coffee, se actualiza cada minuto)."
+        descripcion="Sucursales habilitadas para ti, con su venta de hoy (mostrador, app y Rappi) (API The Coffee, se actualiza cada minuto)."
       />
       {lista.length === 0 ? (
         <div className="rounded-2xl border border-line bg-surface shadow-card">

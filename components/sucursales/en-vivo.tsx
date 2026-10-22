@@ -19,7 +19,7 @@ import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { BarraApilada, CurvaAcumulada, PedidosPorHora, Ranking } from './graficas';
 import { COLOR_ORIGEN, Delta, Etiqueta, SERIE_HOY, colorPago } from './colores';
 import { DetallePedido } from './detalle-pedido';
-import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { diaMes, dinero, hace, horaDe, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { useSonidoVentas } from './sonido-ventas';
@@ -143,13 +143,6 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
           { nombre: `Base (${base})`, info: d.lecturas.base },
         ]}
       />
-      {origen !== 'rappi' && (
-        <NotaRappi
-          excluido={d.rappiExcluido}
-          moneda={m}
-          periodo={`hoy hasta las ${d.corte.hora.slice(0, 5)}`}
-        />
-      )}
       {d.posterioresAlCorte > 0 && (
         <p className="placa px-3 py-2 text-xs text-muted-foreground">
           {d.posterioresAlCorte} pedido(s) con hora posterior al corte no se cuentan todavía (reloj del punto

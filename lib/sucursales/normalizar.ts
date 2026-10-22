@@ -31,7 +31,7 @@ const PedidoApi = z.object({
   createdAt: z.string(),
 });
 
-/** `rappi`: forma de pago RAPPI (agregador). Fuera del alcance de Ventas POS: se excluye y se reporta aparte. */
+/** `rappi`: forma de pago RAPPI (convenio con Rappi). Se suma a las ventas y se puede filtrar aparte. */
 export type Origen = 'mostrador' | 'app' | 'rappi' | 'desconocido';
 
 export interface CustomNormal {
