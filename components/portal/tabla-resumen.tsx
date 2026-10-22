@@ -244,12 +244,12 @@ export function TablaResumen({
             </button>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="placa px-3 py-1.5 text-sm text-muted-foreground">
           <span className="font-semibold text-ink tabular">{data.length}</span> filas de producto × tamaño ×
           canal
         </p>
         {filtrosActivos > 0 && (
-          <Button variant="ghost" size="sm" onClick={limpiar}>
+          <Button variant="ghost" size="sm" onClick={limpiar} className="bg-surface">
             <X /> Limpiar filtros
           </Button>
         )}

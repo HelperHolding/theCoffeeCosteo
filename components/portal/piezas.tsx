@@ -23,7 +23,8 @@ export function Encabezado({
   children?: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4">
+    // Letrero de sucursal (tema "muro"): caja de luz con la marca impresa cuando no hay acciones.
+    <header className="letrero flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {migas?.length ? (
           <nav
@@ -46,7 +47,13 @@ export function Encabezado({
         <h1>{titulo}</h1>
         {descripcion && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{descripcion}</p>}
       </div>
-      {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
+      {children ? (
+        <div className="flex flex-wrap items-center gap-2">{children}</div>
+      ) : (
+        <span aria-hidden="true" className="letrero-marca hidden self-center md:block">
+          the coffee.<span className="ml-[1em]">ザ・コーヒー</span>
+        </span>
+      )}
     </header>
   );
 }
@@ -196,7 +203,7 @@ export function Kpi({
     bajo: 'bg-warn-soft text-warn',
     pierde: 'bg-bad-soft text-bad',
     'sin-precio': 'bg-surface-2 text-ink-2',
-    neutro: 'bg-crema-soft text-crema-strong',
+    neutro: 'ficha-madera',
   }[tono];
   const contenido = (
     <>

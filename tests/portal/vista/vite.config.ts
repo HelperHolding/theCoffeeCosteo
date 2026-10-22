@@ -11,6 +11,7 @@ export default defineConfig({
     alias: [
       { find: 'next/link', replacement: mocks },
       { find: 'next/navigation', replacement: mocks },
+      { find: 'server-only', replacement: mocks },
       { find: '@/app/(portal)/productos/actions', replacement: mocks },
       { find: '@/app/(portal)/configuracion/actions', replacement: mocks },
       { find: '@/app/(auth)/login/actions', replacement: mocks },

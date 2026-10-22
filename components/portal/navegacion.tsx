@@ -16,6 +16,7 @@ import {
   UsersRound,
   Contact,
   CalendarCheck,
+  Activity,
   type LucideIcon,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
@@ -27,6 +28,7 @@ export type Seccion = 'inicio' | IdModulo;
 const entradaModulo: Record<IdModulo, Enlace> = {
   costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
   crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
+  sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
 };
 
 export const grupos: Grupo[] = [
@@ -77,6 +79,20 @@ const gruposCrm: Grupo[] = [
   },
 ];
 
+const gruposSucursales: Grupo[] = [
+  {
+    titulo: 'Sucursales',
+    enlaces: [{ href: '/sucursales', nombre: 'Directorio', icono: LayoutGrid, exacto: true }],
+  },
+];
+
+const gruposPorSeccion: Record<Seccion, Grupo[]> = {
+  inicio: [],
+  costeo: grupos,
+  crm: gruposCrm,
+  sucursales: gruposSucursales,
+};
+
 /**
  * Grupos de la sección: primero "Portal", luego los del módulo. En Inicio los módulos solo se
  * muestran como tarjetas; dentro de un módulo, "Portal" lleva a Inicio y a los otros módulos visibles.
@@ -90,8 +106,7 @@ export function gruposDe(seccion: Seccion, visibles: IdModulo[]): Grupo[] {
       ...otros.map((m) => entradaModulo[m]),
     ],
   };
-  const propios = seccion === 'costeo' ? grupos : seccion === 'crm' ? gruposCrm : [];
-  return [portal, ...propios];
+  return [portal, ...gruposPorSeccion[seccion]];
 }
 
 function esActivo(href: string, exacto: boolean | undefined, pathname: string, tab: string | null) {

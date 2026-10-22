@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThinkingOrb } from 'thinking-orbs';
-import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact } from 'lucide-react';
+import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact, Activity } from 'lucide-react';
 import { Navegacion, gruposDe, type Seccion } from './navegacion';
 import type { IdModulo } from '@/lib/portal/modulos';
 import { Marca } from './marca';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { salir } from '@/app/(auth)/login/actions';
 
-const iconos = { producto: Coffee, subreceta: Layers, tienda: Store, contacto: Contact };
+const iconos = { producto: Coffee, subreceta: Layers, tienda: Store, contacto: Contact, sucursal: Activity };
 /** Registro buscable con Ctrl K (recetas en Costeo; tiendas y contactos en el CRM). */
 export type ItemBusqueda = {
   id: string;
@@ -40,6 +40,11 @@ const textos: Record<Seccion, { marca: [string, string]; buscar: string; registr
     buscar: 'Buscar tienda, prospecto o pantalla…',
     registros: 'Registros',
   },
+  sucursales: {
+    marca: ['Sucursales', 'ventas POS'],
+    buscar: 'Buscar sucursal o pantalla…',
+    registros: 'Sucursales',
+  },
 };
 
 export function Marco({
@@ -56,8 +61,8 @@ export function Marco({
   children: React.ReactNode;
 }) {
   const t = textos[seccion];
-  // Cada módulo con su propio agente de solo lectura; Inicio no tiene.
-  const modulo = seccion === 'inicio' ? null : seccion;
+  // Costeo y CRM tienen su agente de solo lectura; Inicio y Sucursales (por ahora) no.
+  const modulo = seccion === 'costeo' || seccion === 'crm' ? seccion : null;
   const conAgente = modulo !== null;
   const [menu, setMenu] = useState(false);
   const [buscador, setBuscador] = useState(false);
@@ -122,7 +127,7 @@ export function Marco({
 
   return (
     <div
-      className={`min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
+      className={`muro min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
     >
       <aside className="hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         {lateral}
@@ -142,7 +147,7 @@ export function Marco({
       )}
 
       <div className="flex min-w-0 flex-col">
-        <div className="sticky top-0 z-30 border-b border-line/80 bg-paper/85 backdrop-blur-md">
+        <div className="sticky top-0 z-30 border-b border-line/80 bg-muro/85 backdrop-blur-md">
           <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-3 px-4 md:px-8">
             <Button
               variant="ghost"

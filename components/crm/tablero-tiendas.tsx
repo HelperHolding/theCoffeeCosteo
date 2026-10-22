@@ -59,7 +59,7 @@ function ColumnaKanban({
     <section
       aria-labelledby={`columna-${columna.etapa.id}`}
       className={cn(
-        'flex w-[272px] shrink-0 snap-start flex-col rounded-2xl border border-t-[3px] border-line bg-surface-2/60',
+        'flex w-[272px] shrink-0 snap-start flex-col rounded-2xl border border-t-[3px] border-line bg-surface-2/95',
         tono,
         isOver && 'ring-2 ring-crema/40',
       )}
@@ -277,7 +277,7 @@ export function TableroTiendas({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="placa px-3 py-2 text-xs text-muted-foreground">
         {totalVisibles} de {todas.length} tiendas
         {editable && vista === 'kanban' && ' · Arrastra con el asa o usa "Mover a…" en cada tarjeta.'}
       </p>

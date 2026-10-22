@@ -82,7 +82,7 @@ export default async function ExpedienteTienda({
             contador: e.contactos.length,
             contenido:
               e.contactos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin contactos ligados.</p>
+                <p className="placa px-3 py-2 text-sm text-muted-foreground">Sin contactos ligados.</p>
               ) : (
                 <ul className="divide-y divide-line rounded-2xl border border-line bg-surface shadow-card">
                   {e.contactos.map((c) => (

@@ -27,7 +27,7 @@ export function AccionesTienda({
   const etapa = etapas.find((e) => e.id === tienda.etapa_id)?.nombre ?? '';
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="placa flex w-fit flex-wrap items-center gap-2 px-2 py-1.5">
         <span className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white">
           {etapa}
         </span>

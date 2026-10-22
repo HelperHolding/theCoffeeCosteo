@@ -41,6 +41,12 @@
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
   --radius-xl: 1rem;
+  /* Tema "muro de sucursal": muro blanco cálido arriba, lambrín de madera clara abajo. */
+  --color-muro: #efebe4;
+  --color-madera: #dcbf98;
+  --color-madera-canto: #d6b98f;
+  --color-madera-oscura: #c39c6c;
+  --color-madera-tinta: #3b2a19;
   --shadow-card: 0 1px 2px rgb(17 17 17 / 0.04), 0 2px 8px -2px rgb(17 17 17 / 0.06);
   --shadow-lift: 0 2px 4px rgb(17 17 17 / 0.05), 0 12px 24px -8px rgb(17 17 17 / 0.14);
 }
@@ -239,5 +245,141 @@
   }
   .chat-respuesta {
     overflow-wrap: anywhere;
+  }
+}
+
+/*
+ * Tema "muro de sucursal" (aprobado por Carlo, 2026-10-22): como en las tiendas, la mitad superior del
+ * muro es blanco cálido y la inferior un lambrín de madera clara en duelas verticales con moldura blanca.
+ * El texto nunca va directo sobre la madera: tarjetas, placas y el letrero son blancos.
+ */
+@layer components {
+  .muro {
+    isolation: isolate;
+    background: var(--color-muro);
+  }
+  .muro::before {
+    content: '';
+    position: fixed;
+    inset: auto 0 0 0;
+    height: 50vh;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgb(40 24 10 / 0.32), rgb(40 24 10 / 0) 22px),
+      linear-gradient(180deg, rgb(255 255 255 / 0) 70%, rgb(40 24 10 / 0.12)),
+      /* Duelas de 128px: junta hundida, cara abombada y tonos alternos (periodos de 3 y 5 duelas). */
+        repeating-linear-gradient(
+          90deg,
+          rgb(58 36 16 / 0.55) 0 1px,
+          rgb(58 36 16 / 0.28) 1px 3px,
+          rgb(255 246 232 / 0.55) 3px 4px,
+          rgb(255 246 232 / 0) 4px 125px,
+          rgb(58 36 16 / 0.12) 125px 128px
+        ),
+      repeating-linear-gradient(
+          90deg,
+          rgb(70 44 20 / 0.1) 0,
+          rgb(255 250 240 / 0.12) 30%,
+          rgb(255 250 240 / 0.06) 62%,
+          rgb(70 44 20 / 0.12) 100%
+        )
+        0 0 / 128px 100%,
+      repeating-linear-gradient(
+        90deg,
+        rgb(255 250 240 / 0.1) 0 128px,
+        rgb(120 78 38 / 0.1) 128px 256px,
+        rgb(255 250 240 / 0) 256px 384px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgb(0 0 0 / 0) 0 128px,
+        rgb(150 100 50 / 0.1) 128px 256px,
+        rgb(255 250 240 / 0.08) 256px 384px,
+        rgb(0 0 0 / 0) 384px 512px,
+        rgb(110 70 34 / 0.09) 512px 640px
+      ),
+      url('/madera.svg') 0 0 / 640px 1400px,
+      var(--color-madera);
+    box-shadow:
+      0 -12px 0 #f8f6f2,
+      0 -13px 0 rgb(17 17 17 / 0.12),
+      0 -16px 10px -6px rgb(17 17 17 / 0.08);
+  }
+  @media print {
+    .muro::before {
+      display: none;
+    }
+  }
+
+  /* Placa blanca para texto o controles que quedarían sobre el muro o la madera. */
+  .placa {
+    background: rgb(255 255 255 / 0.94);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px -14px rgb(60 40 20 / 0.45);
+  }
+
+  /*
+   * Letrero de sucursal (encabezado de página): caja de luz blanca, marco de madera clara, centro más
+   * luminoso con reflejo superior, cara inferior con profundidad y halo cálido.
+   */
+  .letrero {
+    position: relative;
+    padding: 1.4rem 1.75rem 1.5rem;
+    border: 2px solid var(--color-madera-canto);
+    border-radius: 6px;
+    background:
+      radial-gradient(
+        120% 140% at 50% 35%,
+        #ffffff 0%,
+        rgb(255 255 255 / 0.96) 45%,
+        rgb(246 239 226 / 0.92) 100%
+      ),
+      #ffffff;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.95),
+      inset 0 0 28px rgb(255 252 244 / 0.95),
+      inset 0 -14px 22px -14px rgb(214 185 143 / 0.55),
+      0 7px 0 -1px #ece4d6,
+      0 7px 0 1px var(--color-madera-canto),
+      0 0 44px 12px rgb(255 240 205 / 0.75),
+      0 22px 34px -18px rgb(60 40 20 / 0.5);
+  }
+  .letrero::after {
+    content: '';
+    position: absolute;
+    inset: 3px 3px auto 3px;
+    height: 40%;
+    border-radius: 4px 4px 50% 50% / 4px 4px 12px 12px;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0));
+    pointer-events: none;
+  }
+  .letrero > * {
+    position: relative;
+    z-index: 1;
+  }
+  .letrero-marca {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    color: #161616;
+  }
+
+  /* Ficha con textura de madera (íconos de KPI). */
+  .ficha-madera {
+    background:
+      url('/madera.svg') 0 0 / 320px 700px,
+      var(--color-madera);
+    color: var(--color-madera-tinta);
+  }
+}
+@layer components {
+  /* Sobre el muro, las tarjetas grandes (mostrador) proyectan una sombra cálida; los controles no. */
+  .muro main .rounded-2xl.shadow-card {
+    box-shadow:
+      0 1px 2px rgb(17 17 17 / 0.05),
+      0 14px 28px -16px rgb(60 40 20 / 0.45);
   }
 }

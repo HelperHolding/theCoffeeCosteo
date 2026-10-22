@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="1400" viewBox="0 0 640 1400">
+  <!-- Textura de madera clara (abedul) para la propuesta "muro de sucursal". Mosaico de 640×1400
+       = 5 duelas de 128 px. Veta ondulada (desplazamiento), relieve iluminado y nudos. -->
+  <defs>
+    <filter id="veta" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.0012" numOctaves="2" seed="4" stitchTiles="stitch" result="ondas" />
+      <feTurbulence type="fractalNoise" baseFrequency="1.1 0.009" numOctaves="3" seed="8" stitchTiles="stitch" result="fibra" />
+      <feDisplacementMap in="fibra" in2="ondas" scale="46" xChannelSelector="R" yChannelSelector="G" result="ondulada" />
+      <feColorMatrix in="ondulada" type="matrix"
+        values="0 0 0 0 0.40  0 0 0 0 0.25  0 0 0 0 0.11  0 0 0 1.5 -0.6" />
+    </filter>
+    <filter id="bandas" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.0018" numOctaves="2" seed="21" stitchTiles="stitch" result="b" />
+      <feColorMatrix in="b" type="matrix"
+        values="0 0 0 0 0.55  0 0 0 0 0.35  0 0 0 0 0.16  0 0 0 1.1 -0.42" />
+    </filter>
+    <filter id="relieve" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9 0.01" numOctaves="3" seed="8" stitchTiles="stitch" result="alto" />
+      <feDiffuseLighting in="alto" surfaceScale="2.2" lighting-color="#ffffff" result="luz">
+        <feDistantLight azimuth="210" elevation="58" />
+      </feDiffuseLighting>
+      <feColorMatrix in="luz" type="matrix"
+        values="0 0 0 0 0.25  0 0 0 0 0.16  0 0 0 0 0.08  -0.6 -0.6 -0.6 0 0.62" />
+    </filter>
+    <radialGradient id="nudo">
+      <stop offset="0" stop-color="#6e4824" stop-opacity="0.85" />
+      <stop offset="0.35" stop-color="#8b5f34" stop-opacity="0.55" />
+      <stop offset="0.7" stop-color="#a87a4a" stop-opacity="0.18" />
+      <stop offset="1" stop-color="#a87a4a" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="640" height="1400" fill="#dcbf98" />
+  <rect width="640" height="1400" filter="url(#bandas)" />
+  <rect width="640" height="1400" filter="url(#veta)" />
+  <rect width="640" height="1400" filter="url(#relieve)" />
+  <!-- Nudos (pocos, como en madera real) -->
+  <ellipse cx="70" cy="380" rx="9" ry="22" fill="url(#nudo)" />
+  <ellipse cx="452" cy="980" rx="7" ry="18" fill="url(#nudo)" />
+  <ellipse cx="300" cy="1240" rx="5" ry="13" fill="url(#nudo)" />
+</svg>

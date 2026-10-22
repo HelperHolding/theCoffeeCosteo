@@ -90,7 +90,7 @@ export function ActividadesTienda({
     </section>
   );
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl border border-line bg-surface p-5 shadow-card">
       {editable &&
         (nueva ? (
           <form

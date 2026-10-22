@@ -5,15 +5,19 @@ export function Pestanas({
   pestanas,
   inicial,
   parametro = 'tab',
+  alCambiar,
 }: {
   pestanas: { id: string; nombre: string; contenido: React.ReactNode; contador?: number }[];
   inicial?: string;
   parametro?: string;
+  /** Aviso opcional del cambio de pestaña (p. ej. para montar solo el contenido activo). */
+  alCambiar?: (id: string) => void;
 }) {
   const base = useId();
   const [actual, setActual] = useState(pestanas.some((p) => p.id === inicial) ? inicial! : pestanas[0]?.id);
   const elegir = (id: string) => {
     setActual(id);
+    alCambiar?.(id);
     const params = new URLSearchParams(window.location.search);
     params.set(parametro, id);
     window.history.replaceState(null, '', `${window.location.pathname}?${params}`);
@@ -23,7 +27,7 @@ export function Pestanas({
       <div
         role="tablist"
         aria-orientation="horizontal"
-        className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line [scrollbar-width:none]"
+        className="placa flex gap-1 overflow-x-auto overflow-y-hidden rounded-b-none border-b border-line px-2 [scrollbar-width:none]"
         onKeyDown={(e) => {
           if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
           const i = pestanas.findIndex((p) => p.id === actual);
@@ -46,7 +50,7 @@ export function Pestanas({
               tabIndex={activa ? 0 : -1}
               onClick={() => elegir(p.id)}
               className={`relative -mb-px flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                activa ? 'border-ink text-ink' : 'border-transparent text-muted-foreground hover:text-ink'
+                activa ? 'border-crema text-ink' : 'border-transparent text-muted-foreground hover:text-ink'
               }`}
             >
               {p.nombre}

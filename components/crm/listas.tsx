@@ -70,7 +70,7 @@ export function Paginacion({
   return (
     <nav
       aria-label="Paginación"
-      className="flex items-center justify-between gap-3 text-sm text-muted-foreground"
+      className="placa flex items-center justify-between gap-3 px-3 py-2 text-sm text-muted-foreground"
     >
       <span>
         {total === 0

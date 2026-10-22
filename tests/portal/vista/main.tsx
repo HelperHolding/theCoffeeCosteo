@@ -7,6 +7,7 @@ import { VistaCatalogo } from './catalogo';
 import { VistaChat } from './chat';
 import { VistaModulos } from './modulos';
 import { VistaExpediente, VistaTiendas } from './crm';
+import { VistaSucursales } from './sucursales';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
 // Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
 const americano = (canal: string, orden: number, precio: number, comision: number, envase: number) => {
@@ -38,7 +39,9 @@ const filas = [
   americano('App propia', 3, 62, 0, 0),
 ];
 createRoot(document.getElementById('root')!).render(
-  window.location.search.includes('chat') ? (
+  window.location.search.includes('sucursales') ? (
+    <VistaSucursales />
+  ) : window.location.search.includes('chat') ? (
     <VistaChat />
   ) : window.location.search.includes('tiendas') ? (
     <VistaTiendas />
