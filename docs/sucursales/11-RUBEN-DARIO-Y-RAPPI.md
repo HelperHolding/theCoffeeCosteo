@@ -39,13 +39,41 @@ Esto corrige la conclusión anterior de los documentos 06 y 10, que solo se basa
   - Cada pestaña muestra «Excluido de Ventas POS: N pedidos de Rappi ($X)».
 - **Apartado Rappi** (pestaña nueva en todas las sucursales):
   - «Hoy en vivo» y «Semanas», con la misma lectura, fórmulas y diseño que Ventas POS, filtradas a Rappi.
-  - Bloque «Cobrado y neto»: `netAmout` se muestra como «neto reportado (API)» y la diferencia «parece la comisión», pendiente de confirmar con el proveedor.
+  - Bloque «Cobrado y neto»: `netAmout` se muestra como «neto reportado (API)» y la diferencia como «ajuste reportado». **No es la comisión** (ver sección siguiente).
   - En una tienda sin Rappi muestra ceros reales (lectura completa), nunca ceros por error.
 - **Neto:** `netAmout` ahora se conserva como `netoCent` y entra en el resumen (`netoCent`). No se usa en Ventas POS.
 - `validar-sucursal.ts` reconoce `RAPPI` y `CREDIT`.
 
-## Pendiente con el proveedor
+## ¿`percentageOfTransfer` es la comisión? No
 
-- Confirmar que `RAPPI` es la única marca de Rappi y si hay otros agregadores (Uber Eats, DiDi).
-- Qué es exactamente `netAmout` en Rappi: ¿neto después de la comisión?
+Datos: Rubén Darío, 501 pedidos de Rappi, del 21-sep al 18-oct.
+
+| Evidencia | Resultado |
+|---|---|
+| `net = gross × percentageOfTransfer` | Solo se cumple en 190 de 501 pedidos, justo los que tienen 100 % y neto = cobrado. Con el % < 100 no se cumple ninguna fórmula proporcional (0 de 275) |
+| % < 100 frente a descuentos | **Los 275 pedidos con % < 100 tienen promoción**; ninguno sin descuento tiene % < 100 |
+| cobrado − neto | Son **montos fijos en pesos** (22.00 en 43 pedidos, 26.40 en 41, 24.40 en 26, 10.00 en 22, 36.60 en 22…), no un porcentaje |
+| Neto mayor que lo cobrado | 36 pedidos (por ejemplo, cobrado 200 y neto 224) |
+| Diferencia total | 7.7 % de lo cobrado. Muy por debajo de una comisión típica de agregador |
+
+**Conclusión:** ni `netAmout` ni `percentageOfTransfer` reflejan la comisión del convenio con Rappi. Se comportan como **ajustes de promociones** (quién absorbe el descuento).
+
+- En el portal, la diferencia se rotula «ajuste reportado».
+- La comisión real requiere el % del convenio o el reporte de liquidación de Rappi.
+- `refundId` trae, en pedidos de Rappi, un número de 10 dígitos (≈ 2,474–2,481 millones) que parece el **ID del pedido en Rappi**. Permitiría cruzar pedido por pedido con el reporte de Rappi.
+
+## ¿Rappi y Rappi Turbo se distinguen? No en esta API
+
+- Ningún campo menciona «turbo».
+- Todos los pedidos de Rappi tienen el mismo `paymentMethod` (`RAPPI`), `paymentType` (`CREDIT`) y `fromSmartphone` (false).
+- Los combos con dos precios (175 → 151, 150 → 130) cambian **por fecha**: es un ajuste de menú, no dos canales.
+- Si Turbo llega por la misma integración, viene mezclado. Para separarlo haría falta:
+  - un campo nuevo del proveedor; o
+  - cruzar `refundId` (ID de Rappi) con el reporte de Rappi que indique el tipo de pedido.
+
+## Pendiente con el proveedor y Rappi
+
+- Confirmar el significado de `netAmout` y `percentageOfTransfer` en Rappi: ¿reparto de promociones?
+- ¿Llegan los pedidos de Rappi Turbo por esta integración? ¿Hay algún campo que los distinga?
+- Comisión del convenio (%, y si cambia entre Rappi y Turbo), para estimarla en el apartado Rappi.
 - `percentageOfTransfer`: ¿el porcentaje que se transfiere a la tienda?

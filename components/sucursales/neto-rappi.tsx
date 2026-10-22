@@ -4,9 +4,10 @@ import { COLOR_ORIGEN } from './colores';
 import { dinero, numero, porcentaje } from './formato';
 
 /**
- * Cobrado frente a neto en Rappi. `netAmout` es el "neto reportado por la API": en Rappi es menor que lo
- * cobrado y la diferencia parece la comisión del agregador, pero la definición está pendiente con el
- * proveedor, así que se rotula como diferencia reportada, no como comisión confirmada.
+ * Cobrado frente a neto en Rappi. `netAmout` es el "neto reportado por la API". Evidencia (Rubén Darío,
+ * 501 pedidos): NO es lo cobrado menos la comisión del convenio. La diferencia son montos fijos ($22, $26.40…),
+ * solo aparece en pedidos con promoción, y a veces el neto supera lo cobrado. Parece el ajuste de
+ * promociones, así que se rotula como "ajuste reportado", nunca como comisión.
  */
 export function NetoRappi({
   kpis,
@@ -23,7 +24,7 @@ export function NetoRappi({
   return (
     <Tarjeta
       titulo={`Cobrado y neto de Rappi (${periodo})`}
-      descripcion="Neto reportado por la API (netAmout). La diferencia parece la comisión de Rappi; definición pendiente con el proveedor."
+      descripcion="Neto reportado por la API (netAmout). La diferencia NO es la comisión del convenio: solo aparece en pedidos con promoción (ajuste reportado). Definición pendiente con el proveedor."
     >
       {kpis.pedidos === 0 ? (
         <p className="text-sm text-muted-foreground">Sin pedidos de Rappi en el periodo.</p>
@@ -65,7 +66,7 @@ export function NetoRappi({
             <div className="rounded-xl bg-crema-soft/60 p-4">
               <dt className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
                 <span aria-hidden="true" className="size-2 rounded-full bg-line-strong" />
-                Diferencia
+                Ajuste reportado
               </dt>
               <dd className="mt-1 font-display text-2xl font-black tabular">
                 {dinero(diferencia, moneda)}{' '}
