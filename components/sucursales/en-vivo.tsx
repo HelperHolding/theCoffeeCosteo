@@ -9,6 +9,8 @@ import {
   ShoppingBag,
   TrendingDown,
   TrendingUp,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import type { PedidoVista, RespuestaVivo } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
@@ -20,6 +22,7 @@ import { DetallePedido } from './detalle-pedido';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { diaMes, dinero, hace, horaDe, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
+import { useSonidoVentas } from './sonido-ventas';
 
 export const NOTA_LINEAS =
   'Líneas de producto. Unidades = estimación: una línea por unidad; pendiente de confirmar.';
@@ -54,6 +57,13 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
   );
   const ahora = useReloj();
   const [pedido, setPedido] = useState<PedidoVista | null>(null);
+  // TEMPORAL: "cuac" por cada pedido nuevo (solo sucursales con sonidoVenta y lecturas completas).
+  const completa = datos?.lecturas.hoy.estado === 'completa';
+  const sonido = useSonidoVentas(
+    datos?.sucursal.sonidoVenta ?? null,
+    completa ? datos!.corte.fecha : null,
+    completa ? datos!.kpis.pedidos : null,
+  );
 
   if (!datos) return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto />;
 
@@ -94,15 +104,35 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
               : `Última lectura buena ${horaDe(d.lecturas.hoy.leidoEn, d.sucursal.zona)} (${hace(edadSeg)}) · corte ${d.corte.hora}`}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={recargar}
-          disabled={cargando}
-          className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card disabled:opacity-60"
-        >
-          <RefreshCw size={15} aria-hidden="true" className={cargando ? 'motion-safe:animate-spin' : ''} />
-          Actualizar
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {sonido.disponible && (
+            <button
+              type="button"
+              onClick={sonido.alternar}
+              aria-pressed={sonido.activo}
+              title="Suena un “cuac” por cada pedido nuevo mientras esta página esté abierta"
+              className={`inline-flex h-9 items-center gap-2 rounded-[10px] border px-3 text-sm font-semibold shadow-card ${
+                sonido.activo ? 'border-ok bg-ok-soft text-ok' : 'border-line-strong bg-surface'
+              }`}
+            >
+              {sonido.activo ? (
+                <Volume2 size={15} aria-hidden="true" />
+              ) : (
+                <VolumeX size={15} aria-hidden="true" />
+              )}
+              Sonido de ventas {sonido.activo ? 'activado' : 'apagado'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={recargar}
+            disabled={cargando}
+            className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card disabled:opacity-60"
+          >
+            <RefreshCw size={15} aria-hidden="true" className={cargando ? 'motion-safe:animate-spin' : ''} />
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {error && <ErrorCarga error={error} alReintentar={recargar} />}

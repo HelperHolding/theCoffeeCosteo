@@ -20,6 +20,8 @@ export interface ConfigSucursal {
   modoTiempo: ModoTiempo;
   /** Texto del alcance de canales para esta sucursal. */
   alcance: string;
+  /** TEMPORAL (pedido por Carlo, 2026-10-22): audio que suena en En vivo por cada pedido nuevo. */
+  sonidoVenta?: string;
 }
 
 export const sucursalesConfiguradas: ConfigSucursal[] = [
@@ -31,6 +33,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Ciudad_Juarez',
     modoTiempo: 'local-etiquetada-z',
+    sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
     alcance:
       'Rappi fuera del alcance: la API no identifica agregadores y el CRM registra esta tienda sin Rappi.',
   },

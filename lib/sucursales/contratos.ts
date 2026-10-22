@@ -9,6 +9,7 @@ export interface SucursalInfo {
   moneda: string;
   zona: string;
   alcance: string;
+  sonidoVenta: string | null;
 }
 
 export interface LecturaInfo {
