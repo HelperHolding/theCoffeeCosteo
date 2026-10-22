@@ -70,3 +70,14 @@ export const diaMes = (fecha: string) =>
   new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
     new Date(`${fecha}T12:00:00Z`),
   );
+
+/** Resultado de la conciliación venta vs suma de productos, explicando el redondeo del proveedor. */
+export function textoConciliacion(
+  c: { diferenciaCent: number; pedidosNoCuadran: number; soloRedondeo: boolean },
+  moneda = 'MXN',
+) {
+  if (c.diferenciaCent === 0 && c.pedidosNoCuadran === 0) return ' ✓';
+  if (c.soloRedondeo)
+    return ` ✓ (diferencia de ${dinero(c.diferenciaCent, moneda)} por redondeo del proveedor: ±1 ¢ en ${c.pedidosNoCuadran} pedido(s))`;
+  return ` · diferencia ${dinero(c.diferenciaCent, moneda)} en ${c.pedidosNoCuadran} pedido(s): revisar`;
+}

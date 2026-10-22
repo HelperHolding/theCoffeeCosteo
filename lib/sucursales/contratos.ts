@@ -47,6 +47,8 @@ export interface Conciliacion {
   productosCent: number;
   diferenciaCent: number;
   pedidosNoCuadran: number;
+  /** Todas las diferencias son de ±1 centavo por pedido (redondeo del proveedor). */
+  soloRedondeo: boolean;
 }
 
 export interface RespuestaVivo {
@@ -109,4 +111,37 @@ export interface RespuestaPedidos {
 
 export interface RespuestaError {
   error: string;
+}
+
+export interface SemanaTendencia {
+  desde: string;
+  hasta: string;
+  lectura: LecturaInfo;
+  /** null si la lectura de la semana no está completa (nunca se presenta como dato definitivo). */
+  kpis: Resumen | null;
+  pagos: {
+    metodo: string;
+    etiqueta: string;
+    pedidos: number;
+    ventaCent: number;
+    participacion: number | null;
+  }[];
+  origenes: { origen: Origen; pedidos: number; ventaCent: number; participacion: number | null }[];
+  /** Venta contra la semana anterior; null sin base comparable o con alguna lectura incompleta. */
+  variacionVenta: number | null;
+}
+
+export interface RespuestaTendencias {
+  sucursal: SucursalInfo;
+  origen: FiltroOrigen;
+  semanas: SemanaTendencia[];
+  semanasCompletas: number;
+  /** Totales solo de semanas completas. */
+  totales: Resumen;
+  /**
+   * Pedidos promedio por día (lunes = 0) y hora sobre las semanas completas.
+   * null si no hay ninguna semana completa (sin datos); 0 = la tienda no tuvo pedidos en esa celda.
+   */
+  mapa: (number | null)[][];
+  conciliacion: Conciliacion;
 }

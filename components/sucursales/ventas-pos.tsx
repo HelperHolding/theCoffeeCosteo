@@ -6,9 +6,11 @@ import { Pestanas } from '@/components/portal/pestanas';
 import { EnVivo } from './en-vivo';
 import { Pedidos } from './pedidos';
 import { Productos } from './productos';
+import { Tendencias } from './tendencias';
 
 export const PESTANAS = [
   { id: 'vivo', nombre: 'En vivo' },
+  { id: 'tendencias', nombre: 'Tendencias' },
   { id: 'productos', nombre: 'Productos' },
   { id: 'pedidos', nombre: 'Pedidos' },
 ] as const;
@@ -41,6 +43,7 @@ export function VentasPos({
   const contenido = (id: string) => {
     if (id !== tab) return null;
     if (id === 'vivo') return <EnVivo key={clave} companyId={sucursal.companyId} origen={origen} />;
+    if (id === 'tendencias') return <Tendencias key={clave} companyId={sucursal.companyId} origen={origen} />;
     if (id === 'productos')
       return <Productos key={clave} companyId={sucursal.companyId} origen={origen} zona={sucursal.zona} />;
     return <Pedidos key={clave} companyId={sucursal.companyId} origen={origen} zona={sucursal.zona} />;

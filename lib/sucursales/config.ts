@@ -34,6 +34,19 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     alcance:
       'Rappi fuera del alcance: la API no identifica agregadores y el CRM registra esta tienda sin Rappi.',
   },
+  {
+    // Validada el 2026-10-22 con scripts/sucursales/validar-sucursal.ts (docs/sucursales/10).
+    // Zona distinta a la piloto: el último pedido (13:40) solo es posible en hora local de Cancún.
+    companyId: 583,
+    lookerStoreId: 498,
+    nombre: 'Bonampak',
+    ciudad: 'Cancún',
+    moneda: 'MXN',
+    zona: 'America/Cancun',
+    modoTiempo: 'local-etiquetada-z',
+    alcance:
+      'Rappi fuera del alcance: la API no identifica agregadores y el CRM registra esta tienda sin Rappi.',
+  },
 ];
 
 export const configDe = (companyId: number) =>

@@ -1,4 +1,5 @@
 import { importeLinea, type Origen, type PedidoNormal } from './normalizar';
+import { sumarDias } from './tiempo';
 
 /** Funciones puras sobre pedidos normalizados (todas en centavos). Mismo conjunto para KPIs, gráficas y tablas. */
 export type FiltroOrigen = 'todos' | 'mostrador' | 'app';
@@ -217,11 +218,18 @@ export function origenes(ps: PedidoNormal[]) {
 export function conciliar(ps: PedidoNormal[]) {
   const ventaCent = ps.reduce((s, p) => s + p.ventaCent, 0);
   const productosCent = ps.reduce((s, p) => s + p.lineas.reduce((t, l) => t + importeLinea(l), 0), 0);
+  // El proveedor redondea el total cuando hay % de descuento en líneas y personalizaciones:
+  // diferencias de ±1 centavo por pedido se clasifican como redondeo, no como descuadre.
+  let soloRedondeo = true;
+  for (const p of ps)
+    if (!p.cuadra && Math.abs(p.ventaCent - p.lineas.reduce((t, l) => t + importeLinea(l), 0)) > 1)
+      soloRedondeo = false;
   return {
     ventaCent,
     productosCent,
     diferenciaCent: ventaCent - productosCent,
     pedidosNoCuadran: ps.filter((p) => !p.cuadra).length,
+    soloRedondeo,
   };
 }
 
@@ -299,4 +307,27 @@ export function insightsVivo(a: {
       tono: 'neutro',
     });
   return out;
+}
+
+/**
+ * Semanas cerradas lunes–domingo (fechas locales), de la más antigua a la más reciente.
+ * La última termina el domingo anterior a `hoy` (si hoy es lunes, ayer).
+ */
+export function semanasCerradas(hoy: string, n: number) {
+  const dia = new Date(`${hoy}T12:00:00Z`).getUTCDay(); // 0 = domingo
+  const ultimoDomingo = sumarDias(hoy, -(dia === 0 ? 7 : dia));
+  return Array.from({ length: n }, (_, i) => {
+    const hasta = sumarDias(ultimoDomingo, -7 * (n - 1 - i));
+    return { desde: sumarDias(hasta, -6), hasta };
+  });
+}
+
+/** Índice de día con lunes = 0 … domingo = 6. */
+export const diaLunes = (fecha: string) => (new Date(`${fecha}T12:00:00Z`).getUTCDay() + 6) % 7;
+
+/** Conteo de pedidos por día de la semana (lunes = 0) y hora local. */
+export function conteoDiaHora(ps: PedidoNormal[]) {
+  const m = Array.from({ length: 7 }, () => Array<number>(24).fill(0));
+  for (const p of ps) m[diaLunes(p.fecha)][Math.floor(p.segundo / 3600)]++;
+  return m;
 }

@@ -79,7 +79,28 @@ describe('normalización', () => {
       productosCent: 16500,
       diferenciaCent: 500,
       pedidosNoCuadran: 1,
+      soloRedondeo: false,
     });
+  });
+
+  it('±1 centavo por pedido (redondeo del proveedor con % en líneas y customs) se distingue de un descuadre', () => {
+    // Caso real de Polanco: 61.2 + 11.7 = 72.90, pero el proveedor reporta 72.91.
+    const { pedidos } = norm([
+      pedido('2026-10-21', '09:00:00', {
+        grossAmount: 72.91,
+        discount: 8.1,
+        items: [
+          {
+            defaultCode: 'X',
+            productName: 'Latte',
+            amount: 61.2,
+            discount: 10,
+            itemsCustom: [{ defaultCode: 'Y', productName: 'Shot', amount: 11.7, discount: 10 }],
+          },
+        ],
+      }),
+    ]);
+    expect(conciliar(pedidos)).toMatchObject({ diferenciaCent: 1, pedidosNoCuadran: 1, soloRedondeo: true });
   });
 });
 
