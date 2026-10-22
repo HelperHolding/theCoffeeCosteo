@@ -87,8 +87,8 @@ describe('En vivo', () => {
   it('muestra KPIs, comparativo, rótulos de alcance y la nota de unidades estimadas', async () => {
     render(<VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />);
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText('POS · API The Coffee · MXN')).toBeInTheDocument();
-    expect(screen.getByText('Sin Rappi (ver apartado Rappi)')).toBeInTheDocument();
+    expect(screen.getByText('Ventas · API The Coffee · MXN')).toBeInTheDocument();
+    expect(screen.getByText('Incluye Rappi')).toBeInTheDocument();
     await responder(0, vivoTodos);
     expect(screen.getByText('Venta cobrada hoy')).toBeInTheDocument();
     expect(screen.getAllByText('$330').length).toBeGreaterThan(0);

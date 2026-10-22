@@ -85,8 +85,6 @@ export interface RespuestaVivo {
   }[];
   insights: Insight[];
   conciliacion: Conciliacion;
-  /** Pedidos de Rappi excluidos de estas cifras (mismo periodo y corte): se informan, no se suman. */
-  rappiExcluido: { pedidos: number; ventaCent: number };
 }
 
 export interface RespuestaProductos {
@@ -97,8 +95,6 @@ export interface RespuestaProductos {
   productos: ProductoResumen[];
   personalizaciones: { nombre: string; veces: number; importeCent: number }[];
   conciliacion: Conciliacion;
-  /** Pedidos de Rappi excluidos de estas cifras (mismo periodo y corte): se informan, no se suman. */
-  rappiExcluido: { pedidos: number; ventaCent: number };
 }
 
 export interface RespuestaPedidos {
@@ -112,8 +108,6 @@ export interface RespuestaPedidos {
   porPagina: number;
   pedidos: PedidoVista[];
   metodos: { metodo: string; etiqueta: string }[];
-  /** Pedidos de Rappi excluidos de estas cifras (mismo periodo y corte): se informan, no se suman. */
-  rappiExcluido: { pedidos: number; ventaCent: number };
 }
 
 export interface RespuestaError {
@@ -151,6 +145,4 @@ export interface RespuestaTendencias {
    */
   mapa: (number | null)[][];
   conciliacion: Conciliacion;
-  /** Pedidos de Rappi excluidos de estas cifras (mismo periodo y corte): se informan, no se suman. */
-  rappiExcluido: { pedidos: number; ventaCent: number };
 }

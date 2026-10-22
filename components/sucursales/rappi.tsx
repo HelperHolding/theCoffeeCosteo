@@ -11,7 +11,7 @@ const VISTAS = [
 
 /**
  * Apartado Rappi de una sucursal: mismas lecturas, fórmulas y diseño que Ventas POS, pero SOLO pedidos
- * con forma de pago RAPPI (que en Ventas POS se excluyen). Sirve igual para todas las sucursales: si una
+ * con forma de pago RAPPI (que también se suman en el resto de pestañas). Sirve igual para todas las sucursales: si una
  * tienda no tiene Rappi, los periodos aparecen vacíos (cero real con lectura completa).
  */
 export function Rappi({ companyId }: { companyId: number }) {
@@ -27,7 +27,7 @@ export function Rappi({ companyId }: { companyId: number }) {
           />
           <span>
             <strong className="font-semibold">Solo pedidos de Rappi</strong> (forma de pago RAPPI en la API),
-            con precio Rappi. No se suman a Ventas POS.
+            con precio Rappi. También se suman en las demás pestañas con el filtro "Mostrador + App + Rappi".
           </span>
         </p>
         <div

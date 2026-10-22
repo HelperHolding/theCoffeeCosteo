@@ -18,7 +18,7 @@ export const PESTANAS = [
 ] as const;
 
 /**
- * Ventas POS de una sucursal. El filtro de origen es global: lo comparten KPIs, gráficas y tablas.
+ * Ventas de una sucursal (Mostrador + App + Rappi). El filtro de origen es global: lo comparten KPIs, gráficas y tablas.
  * Solo se monta la pestaña activa, y cada lectura va con su clave (sucursal + filtros), así que cambiar
  * de sucursal, origen o pestaña nunca deja datos de otra combinación en pantalla.
  */
@@ -57,13 +57,13 @@ export function VentasPos({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-card">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-full bg-ink px-2.5 py-1 font-semibold text-white">
-            POS · API The Coffee · {sucursal.moneda}
+            Ventas · API The Coffee · {sucursal.moneda}
           </span>
           <span className="rounded-full border border-line px-2.5 py-1 text-ink-2">
             Hora local · {sucursal.zona}
           </span>
           <span className="rounded-full border border-line px-2.5 py-1 text-ink-2" title={sucursal.alcance}>
-            Sin Rappi (ver apartado Rappi)
+            Incluye Rappi
           </span>
         </div>
         <fieldset className={`flex items-center gap-2 ${tab === 'rappi' ? 'hidden' : ''}`}>

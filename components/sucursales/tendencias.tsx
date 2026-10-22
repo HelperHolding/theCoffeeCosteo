@@ -5,7 +5,7 @@ import type { RespuestaTendencias } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, etiquetaPago, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { AZUL, BarraCelda, COLOR_ORIGEN, Delta, colorPago } from './colores';
-import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import {
   ColumnasSemana,
@@ -76,13 +76,6 @@ export function Tendencias({ companyId, origen }: { companyId: number; origen: F
       {selector}
       {error && <ErrorCarga error={error} alReintentar={recargar} />}
       <AvisosLectura lecturas={ss.map((s) => ({ nombre: `Semana ${s.etiqueta}`, info: s.lectura }))} />
-      {origen !== 'rappi' && (
-        <NotaRappi
-          excluido={d.rappiExcluido}
-          moneda={m}
-          periodo={`en las ${d.semanasCompletas} semanas completas`}
-        />
-      )}
 
       {d.semanasCompletas === 0 ? (
         <div className="rounded-2xl border border-line bg-surface shadow-card">
@@ -175,9 +168,9 @@ export function Tendencias({ companyId, origen }: { companyId: number; origen: F
                   }))}
                 />
               </Tarjeta>
-              <Tarjeta titulo="Origen por semana" descripcion="Mostrador frente a App The Coffee.">
+              <Tarjeta titulo="Origen por semana" descripcion="Mostrador, App The Coffee y Rappi.">
                 <FilasApiladas
-                  claves={(['mostrador', 'app', 'desconocido'] as const)
+                  claves={(['mostrador', 'app', 'rappi', 'desconocido'] as const)
                     .filter((o) => ss.some((s) => s.origenes.some((x) => x.origen === o)))
                     .map((o) => ({ clave: o, etiqueta: etiquetaOrigen[o], color: COLOR_ORIGEN[o] }))}
                   filas={ss.map((s) => ({
