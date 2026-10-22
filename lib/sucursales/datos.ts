@@ -168,6 +168,7 @@ export const sucursalInfo = (cfg: ConfigSucursal): SucursalInfo => ({
   moneda: cfg.moneda,
   zona: cfg.zona,
   alcance: cfg.alcance,
+  sonidoVenta: cfg.sonidoVenta ?? null,
 });
 
 export const vistaPedido = (p: PedidoNormal): PedidoVista => ({
