@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { CircleAlert, TriangleAlert } from 'lucide-react';
 import type { LecturaInfo } from '@/lib/sucursales/contratos';
 import type { ErrorLecturaUi } from './use-lectura';
+import { COLOR_ORIGEN } from './colores';
+import { dinero } from './formato';
 
 export function Esqueleto({ filas = 2 }: { filas?: number }) {
   const bloque = 'rounded-2xl bg-white/60 motion-safe:animate-pulse';
@@ -82,5 +84,31 @@ export function AvisosLectura({ lecturas }: { lecturas: { nombre: string; info: 
         </p>
       ))}
     </div>
+  );
+}
+
+/** Rappi se excluye de Ventas POS; se informa cuánto quedó fuera para que nada desaparezca en silencio. */
+export function NotaRappi({
+  excluido,
+  moneda,
+  periodo,
+}: {
+  excluido: { pedidos: number; ventaCent: number };
+  moneda: string;
+  periodo: string;
+}) {
+  if (excluido.pedidos === 0) return null;
+  return (
+    <p className="placa flex items-center gap-2 px-3 py-2 text-xs text-ink-2">
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 rounded-full"
+        style={{ backgroundColor: COLOR_ORIGEN.rappi }}
+      />
+      <span>
+        <strong className="font-semibold">Excluido de Ventas POS:</strong> {excluido.pedidos} pedido(s) de
+        Rappi ({dinero(excluido.ventaCent, moneda)}) {periodo}. Se identifican por la forma de pago RAPPI.
+      </span>
+    </p>
   );
 }

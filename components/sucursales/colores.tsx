@@ -13,6 +13,7 @@ import type { Origen } from '@/lib/sucursales/normalizar';
 export const COLOR_ORIGEN: Record<Origen, string> = {
   mostrador: '#6250d6',
   app: '#eb6834',
+  rappi: '#e34948',
   desconocido: '#a39e94',
 };
 
@@ -21,6 +22,7 @@ const PAGOS: Record<string, string> = {
   DINHEIRO: '#eda100',
   VIRTUAL_WALLET: '#e87ba4',
   WALLET_BALANCE: '#008300',
+  RAPPI: '#e34948',
 };
 export const colorPago = (metodo: string) => PAGOS[metodo] ?? '#a39e94';
 

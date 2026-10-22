@@ -7,7 +7,7 @@ import { diasEntre, enZona, fechaValida, sumarDias } from '@/lib/sucursales/tiem
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { DetallePedido } from './detalle-pedido';
-import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
+import { AvisosLectura, ErrorCarga, Esqueleto, NotaRappi } from './estados';
 import { dinero, fechaCorta, numero } from './formato';
 import { useLectura } from './use-lectura';
 import { COLOR_ORIGEN, Etiqueta, colorPago } from './colores';
@@ -117,6 +117,7 @@ export function Pedidos({
         <>
           {error && <ErrorCarga error={error} alReintentar={recargar} />}
           <AvisosLectura lecturas={[{ nombre: 'Periodo', info: datos.lectura }]} />
+          <NotaRappi excluido={datos.rappiExcluido} moneda={m} periodo="en el periodo" />
           {datos.lectura.estado !== 'error' && (
             <Tarjeta
               titulo="Pedidos"

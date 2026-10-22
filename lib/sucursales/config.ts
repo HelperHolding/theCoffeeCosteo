@@ -24,6 +24,10 @@ export interface ConfigSucursal {
   sonidoVenta?: string;
 }
 
+/** Rappi llega por la API con forma de pago RAPPI (visto en Rubén Darío, 2026-10-22): se excluye de Ventas POS y se consulta en el apartado Rappi. */
+const ALCANCE_RAPPI =
+  'Rappi se excluye de Ventas POS: la API lo marca con forma de pago RAPPI y se consulta en el apartado Rappi.';
+
 export const sucursalesConfiguradas: ConfigSucursal[] = [
   {
     companyId: 612,
@@ -34,8 +38,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     zona: 'America/Ciudad_Juarez',
     modoTiempo: 'local-etiquetada-z',
     sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
-    alcance:
-      'Rappi fuera del alcance: la API no identifica agregadores y el CRM registra esta tienda sin Rappi.',
+    alcance: ALCANCE_RAPPI,
   },
   {
     // Validada el 2026-10-22 con scripts/sucursales/validar-sucursal.ts (docs/sucursales/10).
@@ -47,8 +50,18 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Cancun',
     modoTiempo: 'local-etiquetada-z',
-    alcance:
-      'Rappi fuera del alcance: la API no identifica agregadores y el CRM registra esta tienda sin Rappi.',
+    alcance: ALCANCE_RAPPI,
+  },
+  {
+    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Tiene Rappi por la API.
+    companyId: 532,
+    lookerStoreId: 455,
+    nombre: 'Rubén Darío',
+    ciudad: 'Zapopan',
+    moneda: 'MXN',
+    zona: 'America/Mexico_City',
+    modoTiempo: 'local-etiquetada-z',
+    alcance: ALCANCE_RAPPI,
   },
 ];
 

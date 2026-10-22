@@ -119,7 +119,7 @@ describe('ruta de tendencias', () => {
 
   it('valida semanas y permisos antes de leer al proveedor', async () => {
     expect((await llamar('?semanas=5')).status).toBe(400);
-    expect((await llamar('?origen=rappi')).status).toBe(400);
+    expect((await llamar('?origen=uber')).status).toBe(400);
     sesion.usuario = null;
     expect((await llamar()).status).toBe(401);
     sesion.usuario = 'u1';

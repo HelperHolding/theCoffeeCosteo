@@ -25,6 +25,7 @@ import {
   pagos,
   personalizaciones,
   porHora,
+  rappiExcluido,
   productos,
   resumen,
   semanasCerradas,
@@ -237,7 +238,8 @@ export async function construirVivo(
           ? porHora(base).map(({ pedidos, ventaCent }) => ({ pedidos, ventaCent }))
           : null,
     },
-    origenes: origenes(hastaCorte(lh.pedidos, corte)),
+    origenes: origenes(filtrarOrigen(hastaCorte(lh.pedidos, corte), 'todos')),
+    rappiExcluido: rappiExcluido(hastaCorte(lh.pedidos, corte)),
     ritmo: { ultimos15: enVentana(hoy, corte, 900), ultimos60: enVentana(hoy, corte, 3600) },
     ultimoPedido: ultimo ? { hora: ultimo.hora, haceSeg: corte - ultimo.segundo } : null,
     posterioresAlCorte: todosHoy.length - hoy.length,
@@ -265,6 +267,7 @@ export async function construirProductos(
     productos: productos(ps),
     personalizaciones: personalizaciones(ps).slice(0, 30),
     conciliacion: conciliar(ps),
+    rappiExcluido: rappiExcluido(l.pedidos),
   };
 }
 
@@ -297,6 +300,7 @@ export async function construirPedidos(
     porPagina: POR_PAGINA_PEDIDOS,
     pedidos: ps.slice((actual - 1) * POR_PAGINA_PEDIDOS, actual * POR_PAGINA_PEDIDOS).map(vistaPedido),
     metodos,
+    rappiExcluido: rappiExcluido(l.pedidos),
   };
 }
 
@@ -311,6 +315,7 @@ export async function construirTendencias(
   const ventanas = semanasCerradas(hoyLocal(cfg).fecha, n);
   const lecturas = await Promise.all(ventanas.map((v) => leerVentana(cfg, v.desde, v.hasta)));
   const completas: PedidoNormal[] = [];
+  const rappiCompletas: PedidoNormal[] = [];
   let semanasCompletas = 0;
   const semanas: SemanaTendencia[] = lecturas.map((l, i) => {
     const ps = filtrarOrigen(l.pedidos, origen);
@@ -318,6 +323,7 @@ export async function construirTendencias(
     if (completa) {
       semanasCompletas++;
       completas.push(...ps);
+      rappiCompletas.push(...l.pedidos);
     }
     return {
       desde: ventanas[i].desde,
@@ -343,5 +349,6 @@ export async function construirTendencias(
     totales: resumen(completas),
     mapa: conteo.map((fila) => fila.map((v) => (semanasCompletas ? v / semanasCompletas : null))),
     conciliacion: conciliar(completas),
+    rappiExcluido: rappiExcluido(rappiCompletas),
   };
 }

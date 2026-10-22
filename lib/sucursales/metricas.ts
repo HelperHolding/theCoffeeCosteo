@@ -2,17 +2,29 @@ import { importeLinea, type Origen, type PedidoNormal } from './normalizar';
 import { sumarDias } from './tiempo';
 
 /** Funciones puras sobre pedidos normalizados (todas en centavos). Mismo conjunto para KPIs, gráficas y tablas. */
-export type FiltroOrigen = 'todos' | 'mostrador' | 'app';
+/** 'todos' = POS (Mostrador + App, sin Rappi). 'rappi' solo lo usa el apartado Rappi. */
+export type FiltroOrigen = 'todos' | 'mostrador' | 'app' | 'rappi';
+/** Opciones del selector de origen de Ventas POS (Rappi tiene su propio apartado). */
 export const filtrosOrigen: FiltroOrigen[] = ['todos', 'mostrador', 'app'];
+/** Orígenes aceptados por las rutas de datos. */
+export const origenesValidos: FiltroOrigen[] = ['todos', 'mostrador', 'app', 'rappi'];
 export const etiquetaOrigen: Record<Origen | 'todos', string> = {
   todos: 'Mostrador + App',
   mostrador: 'Mostrador',
   app: 'App The Coffee',
+  rappi: 'Rappi',
   desconocido: 'Origen sin dato',
 };
 
+/** POS = todo menos Rappi. 'todos' es Mostrador + App (+ sin dato); Rappi nunca entra en cifras POS. */
 export const filtrarOrigen = (ps: PedidoNormal[], o: FiltroOrigen) =>
-  o === 'todos' ? ps : ps.filter((p) => p.origen === o);
+  o === 'todos' ? ps.filter((p) => p.origen !== 'rappi') : ps.filter((p) => p.origen === o);
+
+/** Pedidos de Rappi excluidos de Ventas POS (se informan, no se suman). */
+export function rappiExcluido(ps: PedidoNormal[]) {
+  const r = ps.filter((p) => p.origen === 'rappi');
+  return { pedidos: r.length, ventaCent: r.reduce((s, p) => s + p.ventaCent, 0) };
+}
 
 export interface Resumen {
   ventaCent: number;
@@ -23,6 +35,8 @@ export interface Resumen {
   tasaDescuento: number | null;
   pedidosConDescuento: number;
   lineas: number;
+  /** Σ netAmout (neto reportado por la API); null si algún pedido no lo trae. */
+  netoCent: number | null;
 }
 
 export function resumen(ps: PedidoNormal[]): Resumen {
@@ -30,7 +44,9 @@ export function resumen(ps: PedidoNormal[]): Resumen {
   let descuentoCent = 0;
   let lineas = 0;
   let pedidosConDescuento = 0;
+  let netoCent: number | null = 0;
   for (const p of ps) {
+    netoCent = netoCent === null || p.netoCent === null ? null : netoCent + p.netoCent;
     ventaCent += p.ventaCent;
     descuentoCent += p.descuentoCent;
     lineas += p.lineas.length;
@@ -45,6 +61,7 @@ export function resumen(ps: PedidoNormal[]): Resumen {
     tasaDescuento: lista > 0 ? descuentoCent / lista : null,
     pedidosConDescuento,
     lineas,
+    netoCent,
   };
 }
 
@@ -179,6 +196,7 @@ const PAGOS: Record<string, string> = {
   DINHEIRO: 'Efectivo',
   VIRTUAL_WALLET: 'Monedero virtual',
   WALLET_BALANCE: 'Saldo en app',
+  RAPPI: 'Rappi',
 };
 export const etiquetaPago = (metodo: string) => PAGOS[metodo] ?? (metodo || 'Sin dato');
 export const metodosPago = Object.keys(PAGOS);

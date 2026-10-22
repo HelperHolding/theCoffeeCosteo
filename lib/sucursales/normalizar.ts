@@ -7,7 +7,8 @@ import { momentoPedido, textoHora } from './tiempo';
  * - grossAmount = importe cobrado, ya descontado = Σ items.amount + Σ itemsCustom.amount.
  * - discount del pedido = monto; discount de línea/custom = porcentaje (amount ya lo tiene aplicado).
  * - fromSmartphone = App The Coffee. No se usa paymentType ni refundId como origen.
- * Campos que no se conservan: netAmout, percentageOfTransfer, refundId (no se envían al navegador).
+ * netAmout se conserva como `netoCent` ("neto reportado por la API"; definición pendiente del proveedor),
+ * útil en Rappi, donde es menor que lo cobrado. No se conservan percentageOfTransfer ni refundId.
  * Un registro inválido NO se convierte en cero: se excluye y la lectura se marca incompleta.
  */
 const Custom = z.object({
@@ -22,6 +23,7 @@ const PedidoApi = z.object({
   companyId: z.number().int(),
   fromSmartphone: z.boolean().nullish(),
   grossAmount: z.number(),
+  netAmout: z.number().nullish(),
   discount: z.number(),
   paymentMethod: z.string().nullish(),
   paymentType: z.string().nullish(),
@@ -29,7 +31,8 @@ const PedidoApi = z.object({
   createdAt: z.string(),
 });
 
-export type Origen = 'mostrador' | 'app' | 'desconocido';
+/** `rappi`: forma de pago RAPPI (agregador). Fuera del alcance de Ventas POS: se excluye y se reporta aparte. */
+export type Origen = 'mostrador' | 'app' | 'rappi' | 'desconocido';
 
 export interface CustomNormal {
   codigo: string;
@@ -47,6 +50,8 @@ export interface PedidoNormal {
   hora: string;
   origen: Origen;
   ventaCent: number;
+  /** netAmout en centavos (null si no viene). */
+  netoCent: number | null;
   descuentoCent: number;
   metodo: string;
   tipo: string;
@@ -105,8 +110,16 @@ export function normalizar(
       fecha: m.fecha,
       segundo: m.segundo,
       hora: textoHora(m.segundo, true),
-      origen: d.fromSmartphone === true ? 'app' : d.fromSmartphone === false ? 'mostrador' : 'desconocido',
+      origen:
+        d.paymentMethod === 'RAPPI'
+          ? 'rappi'
+          : d.fromSmartphone === true
+            ? 'app'
+            : d.fromSmartphone === false
+              ? 'mostrador'
+              : 'desconocido',
       ventaCent,
+      netoCent: d.netAmout === null || d.netAmout === undefined ? null : centavos(d.netAmout),
       descuentoCent: centavos(d.discount),
       metodo: d.paymentMethod ?? '',
       tipo: d.paymentType ?? '',

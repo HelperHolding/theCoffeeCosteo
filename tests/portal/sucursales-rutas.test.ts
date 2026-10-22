@@ -198,7 +198,7 @@ describe('Productos y Pedidos', () => {
     expect((await llamar(productosGet, '612', '?desde=2026-09-01&hasta=2026-10-22')).status).toBe(400);
     expect((await llamar(productosGet, '612', '?desde=2026-10-23')).status).toBe(400);
     expect((await llamar(productosGet, '612', '?desde=2026-10-22&hasta=2026-10-21')).status).toBe(400);
-    expect((await llamar(productosGet, '612', '?origen=rappi')).status).toBe(400);
+    expect((await llamar(productosGet, '612', '?origen=uber')).status).toBe(400);
     expect((await llamar(pedidosGet, '612', '?desde=2026-10-10&hasta=2026-10-22')).status).toBe(400);
     expect((await llamar(pedidosGet, '612', '?pago=x;drop')).status).toBe(400);
     expect((await llamar(pedidosGet, '612', '?pagina=0')).status).toBe(400);
