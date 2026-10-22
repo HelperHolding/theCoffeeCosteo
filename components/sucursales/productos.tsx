@@ -8,7 +8,7 @@ import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { NOTA_LINEAS } from './en-vivo';
-import { dinero, fechaCorta, numero, porcentaje } from './formato';
+import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { BarraCelda, Etiqueta, TIPOS, tipoPersonalizacion } from './colores';
 
@@ -119,9 +119,7 @@ export function Productos({
                 Venta {dinero(datos.totales.ventaCent, m)} · {numero(datos.totales.pedidos)} pedidos ·{' '}
                 {numero(datos.totales.lineas)} líneas · suma por productos{' '}
                 {dinero(datos.conciliacion.productosCent, m)}
-                {datos.conciliacion.diferenciaCent === 0
-                  ? ' ✓'
-                  : ` (diferencia ${dinero(datos.conciliacion.diferenciaCent, m)})`}
+                {textoConciliacion(datos.conciliacion, m)}
               </p>
               <Tarjeta
                 titulo="Productos"

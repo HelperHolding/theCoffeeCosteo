@@ -18,7 +18,7 @@ import { BarraApilada, CurvaAcumulada, PedidosPorHora, Ranking } from './grafica
 import { COLOR_ORIGEN, Delta, Etiqueta, SERIE_HOY, colorPago } from './colores';
 import { DetallePedido } from './detalle-pedido';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
-import { diaMes, dinero, hace, horaDe, numero, porcentaje } from './formato';
+import { diaMes, dinero, hace, horaDe, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 
 export const NOTA_LINEAS =
@@ -343,10 +343,7 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
               Corte común para KPIs, gráficas y frases: {d.corte.hora} hora local ({d.sucursal.zona}).
               Conciliación: venta {dinero(d.conciliacion.ventaCent, m)} · suma de productos{' '}
               {dinero(d.conciliacion.productosCent, m)}
-              {d.conciliacion.diferenciaCent === 0
-                ? ' ✓'
-                : ` · diferencia ${dinero(d.conciliacion.diferenciaCent, m)}`}
-              .
+              {textoConciliacion(d.conciliacion, m)}.
             </p>
           </>
         )}

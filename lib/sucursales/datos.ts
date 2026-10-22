@@ -6,11 +6,14 @@ import type {
   PedidoVista,
   RespuestaPedidos,
   RespuestaProductos,
+  RespuestaTendencias,
+  SemanaTendencia,
   RespuestaVivo,
   SucursalInfo,
 } from './contratos';
 import {
   conciliar,
+  conteoDiaHora,
   curvaAcumulada,
   enVentana,
   etiquetaPago,
@@ -24,6 +27,7 @@ import {
   porHora,
   productos,
   resumen,
+  semanasCerradas,
   variacion,
   type FiltroOrigen,
 } from './metricas';
@@ -292,5 +296,51 @@ export async function construirPedidos(
     porPagina: POR_PAGINA_PEDIDOS,
     pedidos: ps.slice((actual - 1) * POR_PAGINA_PEDIDOS, actual * POR_PAGINA_PEDIDOS).map(vistaPedido),
     metodos,
+  };
+}
+
+export const SEMANAS_PERMITIDAS = [4, 8, 12] as const;
+
+/** Tendencias: semanas cerradas lunes–domingo, cada una con su propia lectura (y caché). */
+export async function construirTendencias(
+  cfg: ConfigSucursal,
+  n: (typeof SEMANAS_PERMITIDAS)[number],
+  origen: FiltroOrigen,
+): Promise<RespuestaTendencias> {
+  const ventanas = semanasCerradas(hoyLocal(cfg).fecha, n);
+  const lecturas = await Promise.all(ventanas.map((v) => leerVentana(cfg, v.desde, v.hasta)));
+  const completas: PedidoNormal[] = [];
+  let semanasCompletas = 0;
+  const semanas: SemanaTendencia[] = lecturas.map((l, i) => {
+    const ps = filtrarOrigen(l.pedidos, origen);
+    const completa = l.estado === 'completa';
+    if (completa) {
+      semanasCompletas++;
+      completas.push(...ps);
+    }
+    return {
+      desde: ventanas[i].desde,
+      hasta: ventanas[i].hasta,
+      lectura: info(l, ps.length),
+      kpis: completa ? resumen(ps) : null,
+      pagos: completa ? pagos(ps) : [],
+      origenes: completa ? origenes(ps) : [],
+      variacionVenta: null,
+    };
+  });
+  for (let i = 1; i < semanas.length; i++) {
+    const a = semanas[i].kpis;
+    const b = semanas[i - 1].kpis;
+    semanas[i].variacionVenta = a && b ? variacion(a.ventaCent, b.pedidos ? b.ventaCent : null) : null;
+  }
+  const conteo = conteoDiaHora(completas);
+  return {
+    sucursal: sucursalInfo(cfg),
+    origen,
+    semanas,
+    semanasCompletas,
+    totales: resumen(completas),
+    mapa: conteo.map((fila) => fila.map((v) => (semanasCompletas ? v / semanasCompletas : null))),
+    conciliacion: conciliar(completas),
   };
 }

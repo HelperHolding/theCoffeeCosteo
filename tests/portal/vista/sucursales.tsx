@@ -5,6 +5,7 @@ import { configDe } from '../../../lib/sucursales/config';
 import {
   __reiniciarParaPruebas,
   construirPedidos,
+  construirTendencias,
   construirProductos,
   construirVivo,
   sucursalInfo,
@@ -85,7 +86,7 @@ const datos: Record<string, PedidoApi[]> =
   estado === 'vacio'
     ? { [sumarDias(hoy, -7)]: dia(sumarDias(hoy, -7), 86_399, 7) }
     : Object.fromEntries(
-        Array.from({ length: 8 }, (_, i) => {
+        Array.from({ length: 90 }, (_, i) => {
           const f = sumarDias(hoy, -i);
           return [f, dia(f, i === 0 ? ahora.segundo : 86_399, 11 + i)];
         }),
@@ -108,7 +109,7 @@ __reiniciarParaPruebas({
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
-  const m = /^\/api\/sucursales\/(\d+)\/(vivo|productos|pedidos)$/.exec(url.pathname);
+  const m = /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos)$/.exec(url.pathname);
   if (!m) return fetchNavegador(entrada, init);
   await new Promise((r) => setTimeout(r, 250));
   const q = url.searchParams;
@@ -118,9 +119,11 @@ window.fetch = async (entrada, init) => {
   const cuerpo =
     m[2] === 'vivo'
       ? await construirVivo(cfg, origen, { forzar: q.get('fresco') === '1' })
-      : m[2] === 'productos'
-        ? await construirProductos(cfg, desde, hasta, origen)
-        : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1));
+      : m[2] === 'tendencias'
+        ? await construirTendencias(cfg, Number(q.get('semanas') ?? 4) as 4 | 8 | 12, origen)
+        : m[2] === 'productos'
+          ? await construirProductos(cfg, desde, hasta, origen)
+          : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1));
   return Response.json(cuerpo);
 };
 
@@ -137,7 +140,11 @@ export function VistaSucursales() {
         migas={[{ href: '/sucursales', nombre: 'Sucursales' }]}
         descripcion={`Ventas POS · ${cfg.ciudad} · tienda ${cfg.lookerStoreId} · ID API ${cfg.companyId}`}
       />
-      <VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />
+      <VentasPos
+        sucursal={sucursalInfo(cfg)}
+        tabInicial={new URLSearchParams(window.location.search).get('tab') ?? 'vivo'}
+        origenInicial="todos"
+      />
     </Marco>
   );
 }

@@ -11,7 +11,7 @@ import { dinero, numero, porcentaje } from './formato';
 
 type FilaTooltip = { color: string; etiqueta: string; valor: string; linea?: boolean };
 
-function Tooltip({
+export function Tooltip({
   x,
   titulo,
   filas,
