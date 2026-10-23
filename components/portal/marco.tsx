@@ -7,6 +7,7 @@ import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact, Activity } fro
 import { Navegacion, gruposDe, type Seccion } from './navegacion';
 import type { IdModulo } from '@/lib/portal/modulos';
 import { Marca } from './marca';
+import { InterruptorLuz } from './interruptor-luz';
 import { Agente } from './agente';
 import { Button } from '@/components/ui/button';
 import {
@@ -147,7 +148,7 @@ export function Marco({
       )}
 
       <div className="flex min-w-0 flex-col">
-        <div className="sticky top-0 z-30 border-b border-line/80 bg-muro/85 backdrop-blur-md">
+        <div className="barra-muro sticky top-0 z-30 border-b border-line/80 bg-muro/85 backdrop-blur-md">
           <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-3 px-4 md:px-8">
             <Button
               variant="ghost"
@@ -188,6 +189,7 @@ export function Marco({
                 </kbd>
               </Button>
             )}
+            <InterruptorLuz className={conAgente ? undefined : 'lg:ml-auto'} />
           </div>
         </div>
         <main className="mx-auto w-full min-w-0 max-w-[1400px] space-y-7 px-4 py-7 md:px-8 md:py-9">
