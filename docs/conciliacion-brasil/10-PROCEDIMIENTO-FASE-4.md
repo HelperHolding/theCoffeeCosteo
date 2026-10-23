@@ -2,6 +2,21 @@
 
 **Estado:** ✅ **Migración 21 aplicada en `jpqkmnfjwzniptszjuli` el 2026-10-23 a las 22:52:02–22:52:09 UTC** (aprobación condicionada de Carlo, con las condiciones cumplidas y documentadas). Verificaciones posteriores correctas; no hizo falta revertir. **Sin merge ni despliegue** (fase 5).
 
+## Cierre de la fase 4 (2026-10-23)
+
+| Punto | Estado |
+|---|---|
+| Migración 21 aplicada y verificada en producción | ✅ V1–V4, V6 y V8 (ver abajo); sin reversión |
+| Respaldo lógico con restauración comprobada (P2) | ✅ |
+| Recorrido autenticado del portal (V5) | ✅ Verificado por Carlo |
+| Permisos OAuth / MCP | ✅ **Por simulación** en la base (V6) |
+| **Flujo MCP completo con un cliente real (V7)** | ⚠️ **Sin verificar**: el Site URL de Auth apunta a un dominio de Vercel protegido. Por decisión de Carlo no se cambia aquí; queda como tarea independiente (`13-TAREA-AUTH-SITE-URL.md`) |
+| Merge y despliegue | Reservados para la fase 5 (`12-PROCEDIMIENTO-FASE-5.md`) |
+
+**Datos medidos de paso:**
+- Las funciones de Vercel corren en `iad1` (Washington; cabecera `x-vercel-id`).
+- La base está en East US (Ohio).
+
 ## Resultado de la aplicación
 
 | Paso | Resultado |
@@ -21,9 +36,9 @@
 | V2 | Mismo resultado bajo RLS | ✅ Huella `b51cf7ef69f043953ea39ac3d871e8ff`, 645 filas (idéntica). Conteos: `v_resumen` 645 · `v_alerta` 462 · `recetas` 160 |
 | V3 | `v_resumen` completo bajo RLS ≤ 40 ms | ✅ **26.5 ms** (mediana de 3; antes 100.3 ms). Buffers 8,708 → **1,034** |
 | V4 | Un producto y alertas | ✅ 16.7 → **5.5 ms** · 97.5 → **25.8 ms** |
-| V5 | Recorrido del portal con sesión real | ⏳ **Pendiente de Carlo** (Costeo, Resumen, ficha de producto, Insumos, Configuración) |
+| V5 | Recorrido del portal con sesión real | ✅ **Verificado por Carlo** con su sesión autenticada (Costeo, Resumen, ficha de producto, Insumos, Configuración) |
 | V6 | Permisos de lectura por escenario, comparados con la copia restaurada (estado previo) | ✅ **Idénticos antes y después**:<br>• usuario activo (todos los perfiles activos son `admin`): todo visible;<br>• sesión sin perfil: 0 filas en todo;<br>• OAuth/MCP de admin: catálogos visibles, `perfiles` = 1 (el propio), `bitacora` = 0;<br>• `anon`: sin permiso.<br>La escritura por rol queda cubierta por `tests/db/permisos.test.ts` y por la equivalencia lógica 145/145 (no se escribieron datos en producción) |
-| V7 | MCP de solo lectura con un cliente real | ⏳ **Pendiente de Carlo** (el escenario OAuth simulado en V6 da los mismos resultados que antes) |
+| V7 | MCP de solo lectura con un cliente real | ⚠️ **Sin verificar: bloqueo de configuración documentado.**<br>• Sin token: `/mcp` responde 401 con `WWW-Authenticate`, y el descubrimiento OAuth apunta a `…/mcp` y a Supabase Auth del proyecto ✅.<br>• Con token: el consentimiento OAuth redirige al Site URL `the-coffee-portal-thecoffee1.vercel.app`, protegido por Vercel, y un usuario sin cuenta de Vercel no puede completarlo.<br>• Los permisos OAuth sí se comprobaron **por simulación** en la base (V6): mismos resultados antes y después.<br>• Corrección registrada como tarea independiente: `13-TAREA-AUTH-SITE-URL.md` |
 | V8 | Advisors | ✅ **Performance:** 0 errores, **0 advertencias** (antes, las 89 políticas `auth_rls_initplan`); 25 sugerencias Info (8 FK sin índice ya conocidas, `linea_cantidades` sin PK, índices sin uso).<br>✅ **Security:** 0 errores; ya no aparecen `tiene_rol` (search_path) ni la ejecución de funciones SECURITY DEFINER por `anon`.<br>Quedan 15 advertencias fuera del alcance de la 21: 10 funciones de trigger sin `search_path`; 4 SECURITY DEFINER ejecutables por usuarios con sesión (`rol_actual`, necesaria para RLS; `registrar_bitacora`, `crm_nivel` y `reservar_consulta_chat`); y «Leaked Password Protection Disabled» (ajuste de Auth) |
 
 **Reversión:** no fue necesaria. Sigue disponible y probada:
