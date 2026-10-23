@@ -1,6 +1,36 @@
 # 10 · Procedimiento de la fase 4: aplicar la migración 21
 
-**Estado:** ensayo transaccional en producción **hecho y correcto, con ROLLBACK** (autorizado por Carlo). **La aplicación persistente espera aprobación.** No hubo merge ni despliegue (reservados para la fase 5).
+**Estado:** ✅ **Migración 21 aplicada en `jpqkmnfjwzniptszjuli` el 2026-10-23 a las 22:52:02–22:52:09 UTC** (aprobación condicionada de Carlo, con las condiciones cumplidas y documentadas). Verificaciones posteriores correctas; no hizo falta revertir. **Sin merge ni despliegue** (fase 5).
+
+## Resultado de la aplicación
+
+| Paso | Resultado |
+|---|---|
+| Incidente de Supabase (22:51 UTC) | «Elevated Mgmt API Error Rates in Multiple Regions»: *monitoring*, impacto menor, **solo Management API**. Todos los componentes operativos, incluidos Postgres y Connection Pooler. El procedimiento usa la conexión directa a Postgres → **no afecta**. El mantenimiento «07/02» figura programado, sin componentes |
+| Actividad previa | Sin consultas activas, bloqueos sobre Costeo ni transacciones largas |
+| Estado previo | Idéntico a `estado-antes-produccion.json` |
+| Línea base | `v_resumen` 100.3 ms · huella `b51cf7ef…`, 645 filas |
+| Ensayo previo (`--medir`) | 0/0 diferencias antes y después · huella idéntica · `v_resumen` 20.7 ms · **ROLLBACK** |
+| **Aplicación** (`--aplicar --confirmo …`) | 0/0 diferencias de partida · cambio en 162 ms · 0/0 diferencias con el estado esperado · versión 21 registrada · huella idéntica · **COMMIT** |
+
+### Verificación posterior (conexiones nuevas)
+
+| # | Criterio | Resultado |
+|---|---|---|
+| V1 | Estado igual al esperado; versión registrada | ✅ `estado-despues-produccion.json` frente al esperado derivado: **0 políticas y 0 funciones distintas**. Registro: `20261023000021 costeo_rls_rendimiento` |
+| V2 | Mismo resultado bajo RLS | ✅ Huella `b51cf7ef69f043953ea39ac3d871e8ff`, 645 filas (idéntica). Conteos: `v_resumen` 645 · `v_alerta` 462 · `recetas` 160 |
+| V3 | `v_resumen` completo bajo RLS ≤ 40 ms | ✅ **26.5 ms** (mediana de 3; antes 100.3 ms). Buffers 8,708 → **1,034** |
+| V4 | Un producto y alertas | ✅ 16.7 → **5.5 ms** · 97.5 → **25.8 ms** |
+| V5 | Recorrido del portal con sesión real | ⏳ **Pendiente de Carlo** (Costeo, Resumen, ficha de producto, Insumos, Configuración) |
+| V6 | Permisos de lectura por escenario, comparados con la copia restaurada (estado previo) | ✅ **Idénticos antes y después**:<br>• usuario activo (todos los perfiles activos son `admin`): todo visible;<br>• sesión sin perfil: 0 filas en todo;<br>• OAuth/MCP de admin: catálogos visibles, `perfiles` = 1 (el propio), `bitacora` = 0;<br>• `anon`: sin permiso.<br>La escritura por rol queda cubierta por `tests/db/permisos.test.ts` y por la equivalencia lógica 145/145 (no se escribieron datos en producción) |
+| V7 | MCP de solo lectura con un cliente real | ⏳ **Pendiente de Carlo** (el escenario OAuth simulado en V6 da los mismos resultados que antes) |
+| V8 | Advisors | ✅ **Performance:** 0 errores, **0 advertencias** (antes, las 89 políticas `auth_rls_initplan`); 25 sugerencias Info (8 FK sin índice ya conocidas, `linea_cantidades` sin PK, índices sin uso).<br>✅ **Security:** 0 errores; ya no aparecen `tiene_rol` (search_path) ni la ejecución de funciones SECURITY DEFINER por `anon`.<br>Quedan 15 advertencias fuera del alcance de la 21: 10 funciones de trigger sin `search_path`; 4 SECURITY DEFINER ejecutables por usuarios con sesión (`rol_actual`, necesaria para RLS; `registrar_bitacora`, `crm_nivel` y `reservar_consulta_chat`); y «Leaked Password Protection Disabled» (ajuste de Auth) |
+
+**Reversión:** no fue necesaria. Sigue disponible y probada:
+- `fase4-aplicar.ts --revertir --confirmo jpqkmnfjwzniptszjuli`, o `rollback-021.sql` en el SQL Editor;
+- ambas son atómicas e incluyen el registro.
+
+**Recordatorio para la fase 5:** con la 21 ya registrada, el merge del PR #18 a `main` no la volverá a aplicar («Deploy to production» está activo). Si se revirtiera antes del merge, hay que quitar también el archivo de la migración de la rama.
 
 ## Resultado del ensayo (2026-10-23, 22:29–22:31 UTC)
 
@@ -33,11 +63,41 @@ Panel abierto por Carlo con su cuenta; lectura sin cambios.
 | # | Condición | Resultado | Fuente |
 |---|---|---|---|
 | 1 | «Deploy to production» de la integración GitHub ↔ Supabase | **Activado.** Rama de producción: `main`. Branching automático desactivado (requiere Pro). Repositorio `sebascm0906/theCoffeeCosteo` | Settings → Integrations → GitHub |
-| 2 | Respaldo recuperable reciente o PITR | **No existe.** El proyecto está en el **plan Free**: «Free Plan does not include project backups». PITR es un complemento de Pro | Database → Backups (Scheduled backups y Point in time) |
+| 2 | Respaldo recuperable reciente o PITR | En Supabase **no existe** (plan Free; PITR es un complemento de Pro). **Cumplida con la opción B elegida por Carlo:** respaldo lógico del **2026-10-23 22:47 UTC**, **restauración verificada** en local (ver «Respaldo lógico») | Database → Backups; respaldo local |
+
+### Respaldo lógico (opción B, más los archivos de la opción A)
+
+| Dato | Valor |
+|---|---|
+| Ubicación | `C:\Users\carlo\Respaldos\thecoffee-supabase\2026-10-23T2247Z\`. Fuera del repo y de OneDrive (no hay cuenta configurada); ACL heredada del perfil: SYSTEM, Administradores, `carlo`. **Contiene datos personales: no compartir** |
+| Herramienta | PostgreSQL **17.11**, binarios oficiales de EDB (`postgresql-17.11-5-windows-x64-binaries.zip`, 381,531,864 bytes, sha256 `80379b2c04d51c30225532e0ae04509899141e9957ed096fe749d7fd9df8f82f`, descargado por HTTPS de `get.enterprisedb.com`). EDB no firma los binarios del zip (Authenticode *NotSigned*). Instalado en `C:\Users\carlo\Documents\AI\.tools\pg17`. **Sin Docker, sin cambio de plan, sin servicios contratados** |
+| `roles.sql` | Roles y membresías, **sin contraseñas** · 6,173 B · sha256 `3887292e…0f139` |
+| `base.dump` | Base completa en formato custom: esquema, datos, privilegios y `supabase_migrations`. 1,089 entradas; 71 tablas con datos (`public` 30, `auth` 27, `storage` 8, `realtime` 2, `zoho_staging` 2, `supabase_migrations` 1, `vault` 1) · 2,266,700 B · sha256 `92aef266…79aa2` |
+| `esquema.sql` | Solo esquema, en texto · 465,703 B · sha256 `5415c681…0591b` |
+| `LEEME.md`, `manifiesto.json` | Descripción, exclusiones y hashes (sin datos) |
+| Credenciales | `DATABASE_URL` → variables PG* del proceso hijo; nunca en argumentos, archivos ni salida |
+
+**Exclusiones documentadas:**
+- contraseñas de roles (por diseño);
+- **contenido de los archivos de Storage** (solo se respaldan los metadatos de `storage.objects`, 178 filas);
+- `vault` (extensión exclusiva de Supabase; `vault.secrets` tenía 0 filas);
+- configuración fuera de la base (Auth y API del panel, variables de Vercel, integraciones).
+
+**Restauración verificada** (Postgres 17.11 local, solo `localhost:55432`, base `restaurada`; servidor detenido al terminar):
+- `roles.sql`: las 22 membresías con `GRANTED BY supabase_admin` se aplican sin esa cláusula, porque la base local no tiene `supabase_admin` como otorgante.
+- `pg_restore`: 8 errores, **todos de `vault`**.
+- Comparación con producción (`verificar-restauracion.ts`, mismo formato de sesión):
+  - **71 de 72 tablas idénticas en filas y md5 del contenido** (19,437 filas en ambas); solo falta `vault.secrets`, que tiene 0 filas;
+  - **145 políticas y 26 funciones idénticas, con ACL**;
+  - membresías y secuencias idénticas;
+  - **huella de `v_resumen` bajo RLS idéntica** (`b51cf7ef…`, 645);
+  - los atributos de rol coinciden salvo `postgres` (superusuario en local, no en Supabase).
+
+**Archivos de la opción A, conservados:** `fase4/estado-antes-produccion.json` y `rollback-021.sql` (atómico).
 
 **Consecuencias:**
 - **Por la condición 1**, un merge del PR #18 a `main` aplicaría automáticamente la migración 21 si no está registrada. Se confirma la regla P1: no hacer merge antes de aplicar (o de decidir no aplicarla).
-- **Por la condición 2** no se cumple la condición de Carlo, así que **la aplicación no se ejecutó**. Tampoco se repitió el ensayo, porque está previsto justo antes de aplicar.
+- **Por la condición 2** (primera lectura): no había respaldo y la aplicación no se ejecutó. Se cumplió después con el respaldo lógico verificado (opción B).
 
 Al momento de la lectura, el panel mostraba además el aviso de Supabase «We are investigating a technical issue».
 
