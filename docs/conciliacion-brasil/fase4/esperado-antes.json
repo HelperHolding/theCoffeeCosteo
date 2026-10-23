@@ -1,0 +1,1497 @@
+{
+ "politicas": [
+  {
+   "tablename": "bitacora",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "bitacora",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "bitacora",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "bitacora",
+   "policyname": "oauth_sin_bitacora",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "bitacora",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "canales",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "canales",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "canales",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "canales",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "canales",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "canales",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{compras,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "categorias_insumo",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "categorias_producto",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_actividades",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_actividades",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_actividades",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_actividades",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_archivos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_archivos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_archivos",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_archivos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_checklist_items",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_checklist_items",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_checklist_items",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_checklist_items",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_checklist_items",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_checklists",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_checklists",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_checklists",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_checklists",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_contactos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_contactos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_contactos",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_contactos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_etapas",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_etapas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_etiquetas",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_etiquetas",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_etiquetas",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_etiquetas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_etiquetas_registro",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_etiquetas_registro",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_etiquetas_registro",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_etiquetas_registro",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_etiquetas_registro",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_historial",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_historial",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_notas",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_notas",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_notas",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_notas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_prospectos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_prospectos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_prospectos",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_prospectos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_tienda_contactos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_tienda_contactos",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_tienda_contactos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_tienda_contactos",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_tienda_contactos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "crm_tiendas",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_tiendas",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "( SELECT crm_puede_editar() AS crm_puede_editar)",
+   "with_check": "( SELECT crm_puede_editar() AS crm_puede_editar)"
+  },
+  {
+   "tablename": "crm_tiendas",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "crm_tiendas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "( SELECT crm_puede_leer() AS crm_puede_leer)",
+   "with_check": null
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{compras,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "insumos",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": null
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "linea_cantidades",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "objects",
+   "policyname": "crm_archivos_leer",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "((bucket_id = 'crm-archivos'::text) AND ( SELECT crm_puede_leer() AS crm_puede_leer) AND (EXISTS ( SELECT 1\n   FROM crm_archivos a\n  WHERE ((a.ruta = objects.name) AND (a.archivado_en IS NULL)))))",
+   "with_check": null
+  },
+  {
+   "tablename": "objects",
+   "policyname": "crm_archivos_subir",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((bucket_id = 'crm-archivos'::text) AND ( SELECT crm_puede_editar() AS crm_puede_editar) AND (EXISTS ( SELECT 1\n   FROM crm_archivos a\n  WHERE ((a.ruta = objects.name) AND (a.archivado_en IS NULL)))))"
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "parametros",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "perfil_modulos",
+   "policyname": "crm_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)",
+   "with_check": "((( SELECT auth.jwt() AS jwt) ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "perfil_modulos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT tiene_rol(VARIADIC ARRAY['admin'::text]) AS tiene_rol))",
+   "with_check": null
+  },
+  {
+   "tablename": "perfil_sucursales",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT tiene_rol(VARIADIC ARRAY['admin'::text]) AS tiene_rol))",
+   "with_check": null
+  },
+  {
+   "tablename": "perfil_sucursales",
+   "policyname": "sucursales_sin_oauth",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "ALL",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{admin}'::text[])"
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{admin}'::text[])"
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "oauth_perfil_propio",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(((auth.jwt() ->> 'client_id'::text) IS NULL) OR (user_id = auth.uid()))",
+   "with_check": null
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "perfiles",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC ARRAY['finanzas'::text, 'admin'::text])"
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "tiene_rol(VARIADIC ARRAY['finanzas'::text, 'admin'::text])",
+   "with_check": null
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC ARRAY['finanzas'::text, 'admin'::text])",
+   "with_check": "tiene_rol(VARIADIC ARRAY['finanzas'::text, 'admin'::text])"
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "precio_canal_manual",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC ARRAY['operaciones'::text, 'admin'::text])"
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "tiene_rol(VARIADIC ARRAY['operaciones'::text, 'admin'::text])",
+   "with_check": null
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC ARRAY['operaciones'::text, 'finanzas'::text, 'admin'::text])",
+   "with_check": "tiene_rol(VARIADIC ARRAY['operaciones'::text, 'finanzas'::text, 'admin'::text])"
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "producto_tamanos",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{compras,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{compras,admin}'::text[])"
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "proveedores",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "baja",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": null
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "receta_lineas",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{operaciones,admin}'::text[])"
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "recetas",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "alta",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "cambio",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])",
+   "with_check": "tiene_rol(VARIADIC '{finanzas,admin}'::text[])"
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "lectura",
+   "permissive": "PERMISSIVE",
+   "roles": "{authenticated}",
+   "cmd": "SELECT",
+   "qual": "(rol_actual() IS NOT NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "oauth_sin_altas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "INSERT",
+   "qual": null,
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "oauth_sin_bajas",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "DELETE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": null
+  },
+  {
+   "tablename": "tamanos",
+   "policyname": "oauth_sin_cambios",
+   "permissive": "RESTRICTIVE",
+   "roles": "{authenticated}",
+   "cmd": "UPDATE",
+   "qual": "((auth.jwt() ->> 'client_id'::text) IS NULL)",
+   "with_check": "((auth.jwt() ->> 'client_id'::text) IS NULL)"
+  }
+ ],
+ "funciones": [
+  {
+   "proname": "antes_de_actualizar_receta",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "auditar_baja_cantidad",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "bloquear_edicion_receta",
+   "proconfig": null,
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "crm_mover_tienda",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "crm_nivel",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "crm_origen_liga",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "crm_puede_editar",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "crm_puede_leer",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "crm_registrar_historial",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "crm_renumerar_etapa",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "crm_sellar",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "guardar_receta",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "limpiar_cantidades_antes_de_linea",
+   "proconfig": null,
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "limpiar_cantidades_de_tamano",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "mcp_lectura_habilitada",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "registrar_bitacora",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "reservar_consulta_chat",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": true
+  },
+  {
+   "proname": "rol_actual",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "tiene_rol",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "tocar_updated_at",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "validar_linea_cantidad",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "validar_producto_tamano",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "validar_receta_linea",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "versionar_componentes_receta",
+   "proconfig": [
+    "search_path=public, pg_temp"
+   ],
+   "anon": false,
+   "auth": false
+  },
+  {
+   "proname": "vigilar_precio_canal_manual",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  },
+  {
+   "proname": "vigilar_producto_tamanos",
+   "proconfig": null,
+   "anon": true,
+   "auth": true
+  }
+ ]
+}
