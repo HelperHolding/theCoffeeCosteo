@@ -1,6 +1,35 @@
 # 12 · Procedimiento de la fase 5: merge y despliegue
 
-**Estado:** preparado para aprobación. **No se hizo merge ni despliegue.**
+**Estado:** verificaciones previas Q1–Q5 **hechas y correctas** (2026-10-23). **Merge y despliegue pendientes** de la confirmación de Carlo. El flujo MCP completo sigue pendiente como limitación documentada (`13-TAREA-AUTH-SITE-URL.md`).
+
+## Resultado de las verificaciones previas
+
+| # | Resultado |
+|---|---|
+| Arranque | **Sin migraciones, sincronizaciones ni escrituras automáticas.** No hay `instrumentation.ts`, `middleware`, `vercel.json` ni scripts `predev`/`postinstall`. La app solo escribe en *server actions* (Guardar en recetas, precios, configuración o CRM) y en el cupo del chat; ninguno se usó. Iniciar sesión hace las escrituras propias de Supabase Auth (sesión y tokens), como cualquier acceso. Auth y sus controles, sin cambios |
+| Q1 | `main` = `b7416e1`; la rama (`1201038`) la contiene |
+| Q2 | `tsc` ✅ · `vitest`: 351 pasan, 5 omitidas; solo falla `paridad.test.ts` (requiere el Excel) · `next build` ✅ |
+| Q3 | Checks del PR en `1201038`: Vercel ✅ · Vercel Preview Comments ✅ · Supabase Preview *skipping* |
+| Q4 | Estado de la base idéntico a `fase4/estado-despues-produccion.json`; última migración `20261023000021` |
+| Q5 | Portal local de la rama (`next dev`, **solo `localhost`**, configuración `portal-local-solo`) contra producción, con la sesión de Carlo, **solo lecturas** (detalle abajo) |
+
+### Q5: prueba local con sesión real
+
+Rubén Darío (532), 23-oct-2026:
+
+| Verificación | Resultado |
+|---|---|
+| Productos · Hoy (23-oct) | 46 pedidos, $8,439.20; suma por productos ✓. **33 filas sin nombres repetidos.** «Generic (sin identificación del proveedor)» en el **#1**. «Black Ginger» una sola vez, con la marca «sin código» (hoy solo llegó desde la App sin código; no hay código conocido en el periodo) |
+| Tamaños | Solo vasos: Regular - 240ml / 440ml, Large - 355ml / 600ml. «Double shot (36ml)», «Single Shot (18ml)» y «Extra Double shot (36ml)» aparecen en Personalizaciones como Café |
+| Productos · 28 días (26-sep → 23-oct, por la ruta de la app) | 77 filas, sin nombres repetidos, claves únicas, ninguna «sin código». Generic #1, $20,735.00, con `nombreProveedor: "Generic"`. Conciliación: diferencia 2 ¢ = 2 pedidos con redondeo del proveedor (`soloRedondeo`); `rappiSinNumeroOrden` 0 |
+| Pedidos · 23-oct (46 pedidos, 2 páginas) | Pedido 31893730 (09:11:42, $568.00, descuento $84.00, Rappi): título «**Pedido POS 31893730 · $568.00**» y «**Orden Rappi 2482647582**»; 5 líneas iguales a la API (Generic $111 y las demás con personalizaciones) |
+| Pedido con tarjeta (31894079, Mostrador) | «Pedido POS 31894079 · $384.00», **sin** Orden Rappi |
+| Respuesta JSON de Pedidos (23-oct, ambas páginas) | Sin `refundId` ni UUID. 24 pedidos Rappi con número de orden; 0 Rappi sin número; 0 pedidos no Rappi con número |
+| Costeo · ficha de Iced Latte | Chica: costo $15.44; Mostrador/App $70.00, margen $44.90 (74.4 %); Rappi manual $88.00, margen con comisión $38.44 (50.7 %). Grande: costo $18.28; $80.00, margen $50.69 (73.5 %); Rappi manual $100.00, margen con comisión $43.79 (50.8 %). **Idéntico a `v_resumen` en producción** |
+| Escrituras | Ninguna. Bitácora: 323 filas, la última de las 17:02 UTC (antes de la prueba). Estado de la base idéntico. Único POST: el `/login` de Carlo |
+| Errores | Servidor sin errores. En la consola del navegador solo el WebSocket de recarga en caliente de `next dev` (`ws://localhost:3000/_next/hmr`), propio del modo desarrollo |
+
+El servidor local quedó detenido al terminar.
 
 Fecha: 2026-10-23. PR: [#18](https://github.com/sebascm0906/theCoffeeCosteo/pull/18) (`feat/conciliacion-fase3` → `main`).
 
