@@ -32,7 +32,7 @@ it('un administrador delegado no cambia datos ni perfiles, tampoco mediante RPC'
 });
 it('protege todas las tablas para cada tipo de escritura y conserva las sesiones del portal',async () => {
   const r=await db.query<{n:number}>(`select count(*)::int n from pg_policy where polname in ('oauth_sin_altas','oauth_sin_cambios','oauth_sin_bajas')`);
-  expect(r.rows[0].n).toBe(42);
+  expect(r.rows[0].n).toBe(45); // 15 tablas × 3 (la 22 agrega producto_codigo_pos)
   await comoUsuario(db,admin,async () => {
     expect((await db.query('update insumos set costo_paquete=101 where id=$1 returning id',[insumo])).rows).toHaveLength(1);
     expect((await db.query('select user_id from perfiles')).rows).toHaveLength(2);

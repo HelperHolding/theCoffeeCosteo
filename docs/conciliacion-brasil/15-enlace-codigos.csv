@@ -1,92 +1,92 @@
-﻿codigo_pos,nombre_observado,lineas_4_semanas,canales,receta_id,receta_nombre,estado
-4TW,True White,820,app/mostrador/rappi,a96339d6-80e7-440b-a33b-bca51440d8e6,True White,candidata (nombre exacto)
-5IL,Iced Latte,697,app/mostrador/rappi,fcf0d45d-76b2-48a4-8d96-d8abc228eca8,Iced Latte,candidata (nombre exacto)
-CPUMICAPP,Pumpkin Iced Latte,428,app/mostrador/rappi,,,sin receta local (requiere B3/B6)
-2AM,Americano,421,app/mostrador/rappi,500360bd-fd76-4e22-bf01-9bd3ed6e2ae7,Americano,candidata (nombre exacto)
-CPUMLAAPP,Pumpkin Latte,349,app/mostrador/rappi,,,sin receta local (requiere B3/B6)
-2SC,Salted Caramel,349,app/mostrador/rappi,7867787b-4957-485c-822b-3106558d33a1,Salted Caramel,candidata (nombre exacto)
-4MIL,Matcha Iced Latte,317,app/mostrador/rappi,9756eec9-1f09-45ee-a45b-21ac8c54bb22,Matcha Iced Latte,candidata (nombre exacto)
-1IC,Iced Vanilla,270,app/mostrador/rappi,15556232-34f4-490e-a9b7-0c01998bc4c1,Iced Vanilla,candidata (nombre exacto)
-MQ1,Grilled Ham & Cheese Sandwich,247,app/mostrador/rappi,ae3742b2-0188-4fc3-88c4-533a8ecb40c9,Grilled Ham & Cheese Sandwich,candidata (nombre exacto)
-2VLT,Vanilla Latte,230,app/mostrador/rappi,1183a781-40b8-4654-9f49-92d317873907,Vanilla Latte,candidata (nombre exacto)
-3FOOD3,Pain au Chocolat,220,mostrador/rappi,26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5,Pain Au Chocolat,candidata (requiere B2: forma del nombre)
-9IMT,Ichigo Matcha,218,app/mostrador/rappi,e201b60f-62e1-4c56-80e5-2b4873baf74f,Ichigo Matcha,candidata (nombre exacto)
-BR3,Grilled Ham Cheese and Tomato Sandwich,202,app/mostrador/rappi,ff0a88ca-d7c0-4d73-84a3-125815f9274e,Grilled Ham Cheese And Tomato Sandwich,candidata (requiere B2: forma del nombre)
-1ICHAI,Chai Iced Latte,196,app/mostrador/rappi,130033f6-dd70-4178-8366-945ea9674199,Chai Iced Latte,candidata (nombre exacto)
-PCFICEAPP,Isopure Iced Latte,195,app/mostrador/rappi,1a316b88-1212-4403-9dfd-4de2652653ab,Isopure Iced Latte,candidata (nombre exacto)
-CAKBANAPP,Banana Cake,173,app/mostrador/rappi,dfc7c79e-a484-4e61-8306-063acc0fe9c8,Banana Cake,candidata (nombre exacto)
-KOAMAVAPP,Hazelnut Kouign Amann,149,app/mostrador,8034ac0e-065e-49a8-98a4-26b0f98c9fb0,Hazelnut Kouign Amann,candidata (nombre exacto)
-5CR,Cinnamon Roll,148,app/mostrador,9de55f8e-f159-461f-b60e-22d70dfbd6b7,Cinnamon Roll,candidata (nombre exacto)
-6CM,Chai Latte,148,app/mostrador/rappi,5153b158-4329-4ffd-9e79-9cc9d4f06a2a,Chai Latte,candidata (nombre exacto)
-1FC,Flat Caramel,141,app/mostrador/rappi,f33b95a8-a338-4009-8c03-42edfd81bb6a,Flat Caramel,candidata (nombre exacto)
-COOTRAAPP,Cookie Traditional,131,app/mostrador/rappi,808d4a61-7086-468b-9879-9ce4cf9c9ae7,Cookie Traditional,candidata (nombre exacto)
-PCFMATAPP,Isopure Iced Matcha,130,app/mostrador/rappi,be97f8cd-e66b-4dca-a38a-c971bdecd3d3,Isopure Iced Matcha,candidata (nombre exacto)
-CAKLEMAPP,Lemon Cake,129,app/mostrador/rappi,6312fc43-adad-4eca-a8a9-7427bb099ea0,Lemon Cake,candidata (nombre exacto)
-CPUMFRAPP,Pumpkin Spice Frap,124,app/mostrador/rappi,,,sin receta local (requiere B3/B6)
-SOICAUAPP,Sora Iced Latte (Signature),121,mostrador,087d714a-45ca-44da-a3ad-55ce92a2bccb,Sora Iced Latte (Signature),candidata (nombre exacto)
-1COLDB,Cold brew,116,mostrador/rappi,00f47aba-88e6-4ebc-a815-5833f8b29871,Cold brew,candidata (nombre exacto)
-3BG,Black Ginger,112,app/mostrador/rappi,af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,Black Ginger,candidata (nombre exacto)
-SHCO,Gelato Frappé Coffee,112,mostrador/rappi,adfc682f-380c-41a9-a83d-63f94e0d3042,Gelato Frappé Coffee,candidata (nombre exacto)
-BRO13,Brownie,111,mostrador/rappi,be20a271-b39f-43bb-96d3-2ab7be6db227,Brownie,candidata (nombre exacto)
-4UC,Urban Chocolate,104,app/mostrador/rappi,2c8b49a6-7b2f-489e-8932-1d1ff8c7754c,Urban Chocolate,candidata (nombre exacto)
-SALFRAAPP,Salted Caramel Frap,101,mostrador/rappi,,,sin receta local (requiere B3/B6)
-ROUHAZAPP,Roulette Hazelnut,101,app/mostrador,99ec3251-4296-4cd2-9b66-b5fcb1f75ba4,Roulette Hazelnut,candidata (nombre exacto)
-3MC,Mad Mocha,100,app/mostrador/rappi,da45b5bd-3eca-452e-a18e-5a558e4dc517,Mad Mocha,candidata (nombre exacto)
-6ICB,Iced Black,100,app/mostrador/rappi,cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,candidata (nombre exacto)
-PANMUEAPP,Pan de Muerto,98,mostrador/rappi,,,sin receta local (requiere B3/B6)
-ICEBLMAPP,Iced Blueberry Matcha,95,app/mostrador/rappi,4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,Iced Blueberry Matcha,candidata (nombre exacto)
-2FOOD2,Croissant Traditional,93,app/mostrador/rappi,0720b789-f345-43d3-a742-de49e369e3f3,Croissant Traditional,candidata (nombre exacto)
-SHMA,Gelato Frappé Matcha,93,mostrador,22e7e73c-3f8e-471d-b86a-63a35fcfcb64,Gelato Frappé Matcha,candidata (nombre exacto)
-1PB,Pure Black (Double Shot),93,mostrador,89e80a88-123d-4b13-b166-f4e56c506525,Pure Black (Double Shot),candidata (nombre exacto)
-MACCHIAPP,Macchiato,91,mostrador,4255bb6b-1a50-42a4-896d-d3f424b6ceab,Macchiato,candidata (nombre exacto)
-CROSTUAPP,Croissant filled with cheese and ham,89,app/mostrador/rappi,4ac9187c-fdaf-4678-8e91-7ead2d596c9b,Croissant Filled With Cheese and Ham,candidata (requiere B2: forma del nombre)
-CROGOUAPP,Croissant Serrano & Gouda,88,app/mostrador/rappi,5e096086-8d78-4ea5-a570-b86d9f5a255d,Croissant Serrano & Gouda,candidata (nombre exacto)
-FRATARAPP,Taro Frap,80,mostrador/rappi,,,sin receta local (requiere B3/B6)
-ICECHOAPP,Iced Chocolate,79,app/mostrador,c55e8b1f-300e-42f7-9c4a-f57b038c987e,Iced Chocolate,candidata (nombre exacto)
-MISICEDAPP,Iced Latte +  Ham & Cheese Sandwich,75,mostrador/rappi,e95e45e9-b5fc-4d10-ab5c-170e13cedf15,Iced Latte + Ham & Cheese Sandwich,candidata (requiere B2: forma del nombre)
-SOLAAUAPP,Sora Latte (Signature),72,mostrador/rappi,2cc57a88-1966-4f7d-9604-461978c7c252,Sora Latte (Signature),candidata (nombre exacto)
-5MC,Matcha Latte,68,mostrador/rappi,c7ca994c-897c-45d7-a62f-a7ba2f66bbce,Matcha Latte,candidata (nombre exacto)
-COOMATAPP,Cookie Matcha & White Chocolate,68,mostrador,,,sin receta local (requiere B3/B6)
-ACABOWAPP,Açaí Bowl,61,app/mostrador/rappi,07360c9c-6930-46ef-b462-af625645b850,Açaí Bowl,candidata (nombre exacto)
-COOCHOAPP,Cookie Triple Chocolate,60,app/mostrador/rappi,c797afe9-e8be-4971-98f3-64396b651661,Cookie Triple Chocolate,candidata (nombre exacto)
-COFFRAAPP,Coffee Frap,59,mostrador/rappi,,,sin receta local (requiere B3/B6)
-FSOD2,Fresh Soda Pink Lemonade,56,mostrador/rappi,e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,candidata (nombre exacto)
-7IC,Matcha Iced Mint,55,app/mostrador/rappi,4b651700-0745-42fe-8e78-7b44dbdb66ee,Matcha Iced Mint,candidata (nombre exacto)
-EVIPETAPP,Still Evian Water 500ml,55,app/mostrador,b1b77782-47b2-4e05-820a-c1b75aa438d1,Still Evian Water 500ml,candidata (nombre exacto)
-QQ2,Grilled Cheese Sandwich,54,mostrador/rappi,9c5f7529-8809-464a-a61a-911d507e2d03,Grilled Cheese Sandwich,candidata (nombre exacto)
-SHCI,Gelato Frappé Chai,54,app/mostrador,0252e4e5-3d19-49c1-9f01-2b0f72c1e21b,Gelato Frappé Chai,candidata (nombre exacto)
-FRAMATAPP,Matcha Frap,46,mostrador/rappi,,,sin receta local (requiere B3/B6)
-FRACHAAPP,Chai Frap,42,mostrador/rappi,,,sin receta local (requiere B3/B6)
-7MVT,Matcha Vanilla Latte,40,app/mostrador,3f7f8456-b0a4-49fd-be25-32c1f4b0e17c,Matcha Vanilla Latte,candidata (nombre exacto)
-FSOD4,Fresh Soda Passion fruit,34,mostrador,6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,candidata (nombre exacto)
-WATPERAPP,Mineral Water Perrier,32,app/mostrador,a801c379-90ea-446f-a303-d58d579de592,Mineral Water Perrier,candidata (nombre exacto)
-ESPTONAPP,Espresso Tonic,28,mostrador,,,sin receta local (requiere B3/B6)
-FELSCHAPP,Félix Schorle,25,mostrador/rappi,fb4ffbc7-8a31-4261-8534-c9885f51fc58,Félix Schorle,candidata (nombre exacto)
-TRUGOUAPP,True White + Croissant Serrano & Gouda,24,mostrador,14c61cda-2564-402a-b70f-82ebafc8d7b4,True White + Croissant Serrano & Gouda,candidata (nombre exacto)
-1HDV60,Hot Drip V60,23,mostrador/rappi,e0b13ec8-1c24-4ed8-9be2-5198d63a5485,Hot Drip V60,candidata (nombre exacto)
-BRICE,Brownie with ice cream,22,mostrador,2c8f400b-525f-4c30-8d64-f18be8b9334c,Brownie With Ice Cream,candidata (requiere B2: forma del nombre)
-CROMATAPP,Croissant with matcha cream,21,app/mostrador,af32e295-9551-4f15-9071-520cb616cf57,Croissant with matcha cream,candidata (nombre exacto)
-KOAMDLAPP,Kouign Amann Dulce de Leche,19,app/mostrador,3f620d3f-01fe-4316-9050-78635a627841,Kouign Amann Dulce de Leche,candidata (nombre exacto)
-1CBWB,White bag 250g,19,mostrador/rappi,5ce9b244-40e2-4153-92b8-7c5dc38968d4,White Bag 250g,candidata (requiere B2: forma del nombre)
-ZOETWIAPP,Zoe Water Twist,18,mostrador,,,sin receta local (requiere B3/B6)
-HALCRCAPP,Hazelnut Cream Croissant,17,mostrador/rappi,19be1f5f-d141-4033-91e9-d6c22cb51878,Hazelnut Cream Croissant,candidata (nombre exacto)
-1CDV60,Cold Drip V60,13,mostrador/rappi,7799a6fe-bf6f-4247-842c-a071588cd9ac,Cold Drip V60,candidata (nombre exacto)
-TRUMISAPP,True White + Grilled Ham & Cheese Sandwich,13,app/mostrador,d950794b-23cf-4f1c-a775-ee71f5001eff,True White + Grilled Ham & Cheese Sandwich,candidata (nombre exacto)
-SPOBISAPP,Spooky Biscuits,12,mostrador,,,sin receta local (requiere B3/B6)
-ALMCROAPP,Almond Croissant,10,mostrador,d587f0e8-286f-4479-84da-3778a025a3ff,Almond Croissant,candidata (nombre exacto)
-1CDV60M,Cold Drip V60 + Milk,10,mostrador,49ef4055-997e-4fcc-a52d-16aca66d964b,Cold Drip V60 + Milk,candidata (nombre exacto)
-MATLEMAPP,Matcha Iced Latte + Lemon Cake,9,mostrador/rappi,,,sin receta local (requiere B3/B6)
-ZOEWATAPP,Zoé Water,8,mostrador,,,sin receta local (requiere B3/B6)
-2CBKE,Kraft edition 250g,8,mostrador,8359cad0-fe26-402b-9389-70775647164c,Kraft edition 250g,candidata (nombre exacto)
-COMILTAPP,Iced Latte + Cookie Tradicional,6,mostrador,480a3080-d543-4540-adfc-d4e64ba06248,Iced Latte + Cookie Tradicional,candidata (nombre exacto)
-3CBBE,Black edition 250g,5,mostrador/rappi,d22e139c-c4d7-49b7-b8e6-9b13b40a3519,Black Edition 250g,candidata (requiere B2: forma del nombre)
-5MUG,Mug,5,mostrador,cef677b4-0976-4640-8bc7-2ce82337466f,Mug,candidata (nombre exacto)
-4TBS,Tumbler (240ml),4,mostrador,7962a115-d69b-4b9d-afa8-8eb753b077ab,Tumbler (240ml),candidata (nombre exacto)
-KITWHIAPP,Kit Café White 1kg,4,mostrador,bae9c18a-4715-4efe-9517-f63871f3149f,Kit Café White 1kg,candidata (nombre exacto)
-TRWCROAPP,True White + Croissant filled with cheese and ham,3,rappi,,,sin receta local (requiere B3/B6)
-UMBRE,Umbrella,3,mostrador,74e9cffe-f459-42a5-ac57-4e58277ad8f7,Umbrella,candidata (nombre exacto)
-TRUPANAPP,True White + Pan de Muerto,3,rappi,,,sin receta local (requiere B3/B6)
-3TBB,Tumbler (360ml),3,mostrador,5d918d0f-3cbc-4c86-a0fb-f965df7ba976,Tumbler (360ml),candidata (nombre exacto)
-CHECROAPP,Croissant filled with cheese,2,mostrador,49a02218-0eb3-4a49-8742-c4b6c6c0da9c,Croissant filled with cheese,candidata (nombre exacto)
-1TB,Totebags,1,mostrador,96e85958-1f5a-44cf-98d7-acd7c7d8102c,Totebags,candidata (nombre exacto)
-KITEDIAPP,Kit Cafés Editions,1,mostrador,e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138,Kit Cafés Editions,candidata (nombre exacto)
+﻿codigo,nombre,lineas,contexto,receta_id,receta_nombre,nombre_check,variante_check,tamano_api,tamano_receta,tamano_check,precio_532,estado,motivos
+4TW,True White,820,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,a96339d6-80e7-440b-a33b-bca51440d8e6,True White,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 68=68 · Grande 78=78,lote 1 (verificado),
+2AM,Americano,421,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,500360bd-fd76-4e22-bf01-9bd3ed6e2ae7,Americano,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 52=52 · Grande 62=62,lote 1 (verificado),
+2SC,Salted Caramel,349,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·mostrador,7867787b-4957-485c-822b-3106558d33a1,Salted Caramel,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 94=94 · Grande 104=104,lote 1 (verificado),
+4MIL,Matcha Iced Latte,317,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,9756eec9-1f09-45ee-a45b-21ac8c54bb22,Matcha Iced Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 67=67 · Grande 77=77,lote 1 (verificado),
+1IC,Iced Vanilla,270,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,15556232-34f4-490e-a9b7-0c01998bc4c1,Iced Vanilla,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 99=99 · Grande 109=109,lote 1 (verificado),
+MQ1,Grilled Ham & Cheese Sandwich,247,532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,ae3742b2-0188-4fc3-88c4-533a8ecb40c9,Grilled Ham & Cheese Sandwich,exacto,sin variante,sin vaso,Único,coherente,Único 89=89,lote 1 (verificado),
+2VLT,Vanilla Latte,230,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,1183a781-40b8-4654-9f49-92d317873907,Vanilla Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 78=78 · Grande 88=88,lote 1 (verificado),
+9IMT,Ichigo Matcha,218,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,e201b60f-62e1-4c56-80e5-2b4873baf74f,Ichigo Matcha,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 87=87 · Grande 97=97,lote 1 (verificado),
+1ICHAI,Chai Iced Latte,196,532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,130033f6-dd70-4178-8366-945ea9674199,Chai Iced Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 70=70 · Grande 80=80,lote 1 (verificado),
+PCFICEAPP,Isopure Iced Latte,195,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,1a316b88-1212-4403-9dfd-4de2652653ab,Isopure Iced Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 109=109 · Grande 119=119,lote 1 (verificado),
+CAKBANAPP,Banana Cake,173,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,dfc7c79e-a484-4e61-8306-063acc0fe9c8,Banana Cake,exacto,sin variante,sin vaso,Único,coherente,Único 52=52,lote 1 (verificado),
+KOAMAVAPP,Hazelnut Kouign Amann,149,532·app 532·mostrador 583·mostrador 612·app 612·mostrador,8034ac0e-065e-49a8-98a4-26b0f98c9fb0,Hazelnut Kouign Amann,exacto,sin variante,sin vaso,Único,coherente,Único 52=52,lote 1 (verificado),
+5CR,Cinnamon Roll,148,532·mostrador 583·app 583·mostrador 612·app 612·mostrador,9de55f8e-f159-461f-b60e-22d70dfbd6b7,Cinnamon Roll,exacto,sin variante,sin vaso,Único,coherente,Único 50=50,lote 1 (verificado),
+6CM,Chai Latte,148,532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,5153b158-4329-4ffd-9e79-9cc9d4f06a2a,Chai Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 68=68 · Grande 78=78,lote 1 (verificado),
+1FC,Flat Caramel,141,532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,f33b95a8-a338-4009-8c03-42edfd81bb6a,Flat Caramel,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 77=77 · Grande 87=87,lote 1 (verificado),
+COOTRAAPP,Cookie Traditional,131,532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,808d4a61-7086-468b-9879-9ce4cf9c9ae7,Cookie Traditional,exacto,sin variante,sin vaso,Único,coherente,Único 52=52,lote 1 (verificado),
+PCFMATAPP,Isopure Iced Matcha,130,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,be97f8cd-e66b-4dca-a38a-c971bdecd3d3,Isopure Iced Matcha,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 109=109 · Grande 119=119,lote 1 (verificado),
+CAKLEMAPP,Lemon Cake,129,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,6312fc43-adad-4eca-a8a9-7427bb099ea0,Lemon Cake,exacto,sin variante,sin vaso,Único,coherente,Único 45=45,lote 1 (verificado),
+SOICAUAPP,Sora Iced Latte (Signature),121,532·mostrador 583·mostrador 612·mostrador,087d714a-45ca-44da-a3ad-55ce92a2bccb,Sora Iced Latte (Signature),exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 68=68 · Grande 78=78,lote 1 (verificado),
+1COLDB,Cold brew,116,532·mostrador 532·rappi 583·mostrador 612·mostrador,00f47aba-88e6-4ebc-a815-5833f8b29871,Cold brew,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 78=78 · Grande 88=88,lote 1 (verificado),
+3BG,Black Ginger,112,532·mostrador 532·rappi 583·app 583·mostrador 612·mostrador,af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,Black Ginger,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 94=94 · Grande 104=104,lote 1 (verificado),
+BRO13,Brownie,111,532·mostrador 532·rappi 583·mostrador 612·mostrador,be20a271-b39f-43bb-96d3-2ab7be6db227,Brownie,exacto,sin variante,sin vaso,Único,coherente,Único 63=63,lote 1 (verificado),
+ROUHAZAPP,Roulette Hazelnut,101,583·mostrador 612·app 612·mostrador,99ec3251-4296-4cd2-9b66-b5fcb1f75ba4,Roulette Hazelnut,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+3MC,Mad Mocha,100,532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,da45b5bd-3eca-452e-a18e-5a558e4dc517,Mad Mocha,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 84=84 · Grande 94=94,lote 1 (verificado),
+6ICB,Iced Black,100,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 52=52 · Grande 62=62,lote 1 (verificado),
+ICEBLMAPP,Iced Blueberry Matcha,95,532·rappi 583·mostrador 612·app 612·mostrador,4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,Iced Blueberry Matcha,exacto,sin variante,Large+Regular,Chica+Grande,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+2FOOD2,Croissant Traditional,93,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,0720b789-f345-43d3-a742-de49e369e3f3,Croissant Traditional,exacto,sin variante,sin vaso,Único,coherente,Único 47=47,lote 1 (verificado),
+SHMA,Gelato Frappé Matcha,93,532·mostrador 583·mostrador 612·mostrador,22e7e73c-3f8e-471d-b86a-63a35fcfcb64,Gelato Frappé Matcha,exacto,sin variante,sin vaso,Único,coherente,Único 90=90,lote 1 (verificado),
+1PB,Pure Black (Double Shot),93,532·mostrador 583·mostrador 612·mostrador,89e80a88-123d-4b13-b166-f4e56c506525,Pure Black (Double Shot),exacto,sin variante,sin vaso,Único,coherente,Único 58=58,lote 1 (verificado),
+MACCHIAPP,Macchiato,91,532·mostrador 583·mostrador 612·mostrador,4255bb6b-1a50-42a4-896d-d3f424b6ceab,Macchiato,exacto,sin variante,sin vaso,Único,coherente,Único 59=59,lote 1 (verificado),
+CROGOUAPP,Croissant Serrano & Gouda,88,532·app 532·mostrador 532·rappi 612·mostrador,5e096086-8d78-4ea5-a570-b86d9f5a255d,Croissant Serrano & Gouda,exacto,sin variante,sin vaso,Único,coherente,Único 94=94,lote 1 (verificado),
+ICECHOAPP,Iced Chocolate,79,532·mostrador 583·mostrador 612·app 612·mostrador,c55e8b1f-300e-42f7-9c4a-f57b038c987e,Iced Chocolate,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 99=99 · Grande 109=109,lote 1 (verificado),
+SOLAAUAPP,Sora Latte (Signature),72,532·mostrador 532·rappi 583·mostrador 612·mostrador,2cc57a88-1966-4f7d-9604-461978c7c252,Sora Latte (Signature),exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 63=63 · Grande 73=73,lote 1 (verificado),
+5MC,Matcha Latte,68,532·mostrador 532·rappi 583·mostrador 612·mostrador,c7ca994c-897c-45d7-a62f-a7ba2f66bbce,Matcha Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 68=68 · Grande 78=78,lote 1 (verificado),
+ACABOWAPP,Açaí Bowl,61,532·app 532·mostrador 532·rappi 612·app 612·mostrador,07360c9c-6930-46ef-b462-af625645b850,Açaí Bowl,exacto,sin variante,sin vaso,Único,coherente,Único 149=149,lote 1 (verificado),
+COOCHOAPP,Cookie Triple Chocolate,60,532·rappi 583·mostrador 612·app 612·mostrador,c797afe9-e8be-4971-98f3-64396b651661,Cookie Triple Chocolate,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+7IC,Matcha Iced Mint,55,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,4b651700-0745-42fe-8e78-7b44dbdb66ee,Matcha Iced Mint,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Grande 97=97,lote 1 (verificado),
+EVIPETAPP,Still Evian Water 500ml,55,583·mostrador 612·app 612·mostrador,b1b77782-47b2-4e05-820a-c1b75aa438d1,Still Evian Water 500ml,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+QQ2,Grilled Cheese Sandwich,54,532·mostrador 532·rappi 583·mostrador 612·mostrador,9c5f7529-8809-464a-a61a-911d507e2d03,Grilled Cheese Sandwich,exacto,sin variante,sin vaso,Único,coherente,Único 78=78,lote 1 (verificado),
+SHCI,Gelato Frappé Chai,54,532·mostrador 583·mostrador 612·app 612·mostrador,0252e4e5-3d19-49c1-9f01-2b0f72c1e21b,Gelato Frappé Chai,exacto,sin variante,sin vaso,Único,coherente,Único 118=118,lote 1 (verificado),
+7MVT,Matcha Vanilla Latte,40,532·app 532·mostrador 583·mostrador 612·mostrador,3f7f8456-b0a4-49fd-be25-32c1f4b0e17c,Matcha Vanilla Latte,exacto,sin variante,Large+Regular,Chica+Grande,coherente,Chica 77=77 · Grande 87=87,lote 1 (verificado),
+WATPERAPP,Mineral Water Perrier,32,532·mostrador 583·mostrador 612·app 612·mostrador,a801c379-90ea-446f-a303-d58d579de592,Mineral Water Perrier,exacto,sin variante,sin vaso,Único,coherente,Único 52=52,lote 1 (verificado),
+FELSCHAPP,Félix Schorle,25,532·mostrador 532·rappi 583·mostrador 612·mostrador,fb4ffbc7-8a31-4261-8534-c9885f51fc58,Félix Schorle,exacto,sin variante,sin vaso,Único,coherente,Único 63=63,lote 1 (verificado),
+1HDV60,Hot Drip V60,23,532·mostrador 532·rappi 583·mostrador 612·mostrador,e0b13ec8-1c24-4ed8-9be2-5198d63a5485,Hot Drip V60,exacto,sin variante,sin vaso,Único,coherente,Único 94=94,lote 1 (verificado),
+CROMATAPP,Croissant with matcha cream,21,612·app 612·mostrador,af32e295-9551-4f15-9071-520cb616cf57,Croissant with matcha cream,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+KOAMDLAPP,Kouign Amann Dulce de Leche,19,532·app 532·mostrador,3f620d3f-01fe-4316-9050-78635a627841,Kouign Amann Dulce de Leche,exacto,sin variante,sin vaso,Único,coherente,Único 52=52,lote 1 (verificado),
+HALCRCAPP,Hazelnut Cream Croissant,17,532·mostrador 532·rappi,19be1f5f-d141-4033-91e9-d6c22cb51878,Hazelnut Cream Croissant,exacto,sin variante,sin vaso,Único,coherente,Único 58=58,lote 1 (verificado),
+ALMCROAPP,Almond Croissant,10,583·mostrador,d587f0e8-286f-4479-84da-3778a025a3ff,Almond Croissant,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+2CBKE,Kraft edition 250g,8,583·mostrador 612·mostrador,8359cad0-fe26-402b-9389-70775647164c,Kraft edition 250g,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+5MUG,Mug,5,583·mostrador 612·mostrador,cef677b4-0976-4640-8bc7-2ce82337466f,Mug,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+4TBS,Tumbler (240ml),4,532·mostrador 583·mostrador 612·mostrador,7962a115-d69b-4b9d-afa8-8eb753b077ab,Tumbler (240ml),exacto,sin variante,sin vaso,Único,coherente,Único 426=426,lote 1 (verificado),
+KITWHIAPP,Kit Café White 1kg,4,612·mostrador,bae9c18a-4715-4efe-9517-f63871f3149f,Kit Café White 1kg,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+UMBRE,Umbrella,3,532·mostrador 583·mostrador 612·mostrador,74e9cffe-f459-42a5-ac57-4e58277ad8f7,Umbrella,exacto,sin variante,sin vaso,Único,coherente,Único 622=622,lote 1 (verificado),
+3TBB,Tumbler (360ml),3,612·mostrador,5d918d0f-3cbc-4c86-a0fb-f965df7ba976,Tumbler (360ml),exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+CHECROAPP,Croissant filled with cheese,2,583·mostrador,49a02218-0eb3-4a49-8742-c4b6c6c0da9c,Croissant filled with cheese,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+1TB,Totebags,1,583·mostrador,96e85958-1f5a-44cf-98d7-acd7c7d8102c,Totebags,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+KITEDIAPP,Kit Cafés Editions,1,612·mostrador,e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138,Kit Cafés Editions,exacto,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,lote 1 (verificado),
+5IL,Iced Latte,697,532·app 532·mostrador 532·rappi 583·app 583·mostrador 612·app 612·mostrador,fcf0d45d-76b2-48a4-8d96-d8abc228eca8,Iced Latte,exacto,ambiguo,Large+Regular,Chica+Grande,coherente,Chica 70=70 · Grande 80=80,pendiente,variante en Costeo: Iced Latte Large
+CPUMICAPP,Pumpkin Iced Latte,428,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+CPUMLAAPP,Pumpkin Latte,349,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+3FOOD3,Pain au Chocolat,220,532·mostrador 532·rappi 583·mostrador 612·mostrador,26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5,Pain Au Chocolat,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,Único 42=42,pendiente,forma del nombre (B2)
+BR3,Grilled Ham Cheese and Tomato Sandwich,202,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,ff0a88ca-d7c0-4d73-84a3-125815f9274e,Grilled Ham Cheese And Tomato Sandwich,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,Único 104=104,pendiente,forma del nombre (B2)
+CPUMFRAPP,Pumpkin Spice Frap,124,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+SHCO,Gelato Frappé Coffee,112,532·mostrador 532·rappi 583·mostrador 612·mostrador,adfc682f-380c-41a9-a83d-63f94e0d3042,Gelato Frappé Coffee,exacto,sin variante,mixto (95/109 sin vaso),Único,API mixto (95/109 sin vaso),Único 94=94,pendiente,tamaño mixto en la API
+4UC,Urban Chocolate,104,532·app 532·mostrador 532·rappi 583·mostrador 612·app 612·mostrador,2c8b49a6-7b2f-489e-8932-1d1ff8c7754c,Urban Chocolate,exacto,ambiguo,Large+Regular,Chica+Grande,coherente,Chica 78=78 · Grande 88=88,pendiente,variante en Costeo: Urban Chocolat
+SALFRAAPP,Salted Caramel Frap,101,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+PANMUEAPP,Pan de Muerto,98,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+CROSTUAPP,Croissant filled with cheese and ham,89,532·app 532·mostrador 532·rappi 583·mostrador 612·mostrador,4ac9187c-fdaf-4678-8e91-7ead2d596c9b,Croissant Filled With Cheese and Ham,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,Único 73=73,pendiente,forma del nombre (B2)
+FRATARAPP,Taro Frap,80,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+MISICEDAPP,Iced Latte +  Ham & Cheese Sandwich,75,532·mostrador 532·rappi 583·mostrador 612·mostrador,e95e45e9-b5fc-4d10-ab5c-170e13cedf15,Iced Latte + Ham & Cheese Sandwich,solo mayúsculas/espacios,sin variante,Large+Regular,Único,"API con vasos, receta Único",sin ventas sin descuento en 532,pendiente,"forma del nombre (B2); API con vasos, receta Único"
+COOMATAPP,Cookie Matcha & White Chocolate,68,532·mostrador 612·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+COFFRAAPP,Coffee Frap,59,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+FSOD2,Fresh Soda Pink Lemonade,56,532·mostrador 532·rappi 583·mostrador 612·mostrador,e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,exacto,sin variante,mixto (45/52 sin vaso),Chica+Grande,API mixto (45/52 sin vaso),sin ventas sin descuento en 532,pendiente,tamaño mixto en la API
+FRAMATAPP,Matcha Frap,46,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+FRACHAAPP,Chai Frap,42,532·mostrador 532·rappi 583·mostrador 612·mostrador,,,sin receta,sin variante,Large+Regular,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+FSOD4,Fresh Soda Passion fruit,34,532·mostrador 583·mostrador 612·mostrador,6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,exacto,sin variante,mixto (29/34 sin vaso),Chica+Grande,API mixto (29/34 sin vaso),sin ventas sin descuento en 532,pendiente,tamaño mixto en la API
+ESPTONAPP,Espresso Tonic,28,532·mostrador 583·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+TRUGOUAPP,True White + Croissant Serrano & Gouda,24,612·mostrador,14c61cda-2564-402a-b70f-82ebafc8d7b4,True White + Croissant Serrano & Gouda,exacto,sin variante,Large+Regular,Único,"API con vasos, receta Único",sin ventas sin descuento en 532,pendiente,"API con vasos, receta Único"
+BRICE,Brownie with ice cream,22,532·mostrador 612·mostrador,2c8f400b-525f-4c30-8d64-f18be8b9334c,Brownie With Ice Cream,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,Único 89=89,pendiente,forma del nombre (B2)
+1CBWB,White bag 250g,19,532·mostrador 532·rappi 583·mostrador 612·mostrador,5ce9b244-40e2-4153-92b8-7c5dc38968d4,White Bag 250g,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,Único 220=220,pendiente,forma del nombre (B2)
+ZOETWIAPP,Zoe Water Twist,18,532·mostrador 583·mostrador 612·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+1CDV60,Cold Drip V60,13,532·mostrador 532·rappi 583·mostrador 612·mostrador,7799a6fe-bf6f-4247-842c-a071588cd9ac,Cold Drip V60,exacto,sin variante,sin vaso,Chica+Grande,"API sin vaso, receta Chica+Grande",sin ventas sin descuento en 532,pendiente,"API sin vaso, receta Chica+Grande"
+TRUMISAPP,True White + Grilled Ham & Cheese Sandwich,13,532·app 532·mostrador,d950794b-23cf-4f1c-a775-ee71f5001eff,True White + Grilled Ham & Cheese Sandwich,exacto,sin variante,Large+Regular,Único,"API con vasos, receta Único",sin ventas sin descuento en 532,pendiente,"API con vasos, receta Único"
+SPOBISAPP,Spooky Biscuits,12,583·mostrador 612·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+1CDV60M,Cold Drip V60 + Milk,10,583·mostrador 612·mostrador,49ef4055-997e-4fcc-a52d-16aca66d964b,Cold Drip V60 + Milk,exacto,sin variante,sin vaso,Chica+Grande,"API sin vaso, receta Chica+Grande",sin ventas sin descuento en 532,pendiente,"API sin vaso, receta Chica+Grande"
+MATLEMAPP,Matcha Iced Latte + Lemon Cake,9,532·rappi 583·mostrador,,,sin receta,sin variante,Large,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+ZOEWATAPP,Zoé Water,8,532·mostrador,,,sin receta,sin variante,sin vaso,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+COMILTAPP,Iced Latte + Cookie Tradicional,6,583·mostrador,480a3080-d543-4540-adfc-d4e64ba06248,Iced Latte + Cookie Tradicional,exacto,sin variante,Large+Regular,Único,"API con vasos, receta Único",sin ventas sin descuento en 532,pendiente,"API con vasos, receta Único"
+3CBBE,Black edition 250g,5,532·rappi 583·mostrador 612·mostrador,d22e139c-c4d7-49b7-b8e6-9b13b40a3519,Black Edition 250g,solo mayúsculas/espacios,sin variante,sin vaso,Único,coherente,sin ventas sin descuento en 532,pendiente,forma del nombre (B2)
+TRWCROAPP,True White + Croissant filled with cheese and ham,3,532·rappi,,,sin receta,sin variante,solo Rappi,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)
+TRUPANAPP,True White + Pan de Muerto,3,532·rappi,,,sin receta,sin variante,solo Rappi,sin tamaños,coherente,sin ventas sin descuento en 532,pendiente,sin receta local (B3/B6)

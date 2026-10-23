@@ -19,7 +19,7 @@ const registrada = async () =>
   (await db.query(`select 1 from supabase_migrations.schema_migrations where version = $1`, [VERSION])).rows.length;
 
 beforeAll(async () => {
-  db = await crearDbLocal();
+  db = await crearDbLocal(VERSION);
   // crearDbLocal ya aplicó la 21: se simula su registro y se revierte con el archivo real para quedar como producción.
   await db.exec(`create schema supabase_migrations;
     create table supabase_migrations.schema_migrations (version text primary key, statements text[], name text);
