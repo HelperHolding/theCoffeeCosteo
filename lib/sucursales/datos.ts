@@ -180,6 +180,7 @@ export const vistaPedido = (p: PedidoNormal): PedidoVista => ({
   origen: p.origen,
   pago: etiquetaPago(p.metodo),
   metodo: p.metodo,
+  numeroPedidoRappi: p.numeroPedidoRappi,
   lineas: p.lineas.map((l) => ({
     codigo: l.codigo,
     nombre: l.nombre,

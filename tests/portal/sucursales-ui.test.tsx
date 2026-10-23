@@ -19,6 +19,7 @@ import { Navegacion } from '../../components/portal/navegacion';
 import { VentasPos } from '../../components/sucursales/ventas-pos';
 import { EnVivo } from '../../components/sucursales/en-vivo';
 import { Pedidos } from '../../components/sucursales/pedidos';
+import { DetallePedido } from '../../components/sucursales/detalle-pedido';
 import {
   __reiniciarParaPruebas,
   construirPedidos,
@@ -26,7 +27,7 @@ import {
   sucursalInfo,
 } from '../../lib/sucursales/datos';
 import { configDe } from '../../lib/sucursales/config';
-import type { RespuestaPedidos, RespuestaVivo } from '../../lib/sucursales/contratos';
+import type { PedidoVista, RespuestaPedidos, RespuestaVivo } from '../../lib/sucursales/contratos';
 import { apiFalsa, pedido } from './sucursales-fixtures';
 
 const cfg = configDe(612)!;
@@ -170,7 +171,9 @@ describe('En vivo', () => {
 
 describe('Pedidos', () => {
   it('pagina de 25 en 25 y abre el detalle con líneas y personalizaciones', async () => {
-    vi.spyOn(Date, 'now').mockReturnValue(AHORA);
+    // El componente calcula "hoy" con new Date(): se fija el reloj (solo Date) para que la prueba no dependa del día.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(AHORA);
     render(<Pedidos companyId={612} origen="todos" zona={cfg.zona} />);
     await waitFor(() => expect(pendientes).toHaveLength(1));
     expect(pendientes[0].url).toContain('desde=2026-10-22');
@@ -189,6 +192,37 @@ describe('Pedidos', () => {
     expect(dialogo).toHaveTextContent('Matcha Iced Latte');
     expect(dialogo).toHaveTextContent('Oatmilk+$13.00');
     vi.restoreAllMocks();
+  });
+
+  it('detalle: Orden Rappi junto al Pedido POS, sin inventarla si la API no la trae', () => {
+    const base: PedidoVista = {
+      id: 31893730,
+      fecha: '2026-10-23',
+      hora: '09:11:42',
+      ventaCent: 56800,
+      descuentoCent: 8400,
+      origen: 'rappi',
+      pago: 'Rappi',
+      metodo: 'RAPPI',
+      numeroPedidoRappi: '2482647582',
+      lineas: [{ codigo: 'GENERIC', nombre: 'Generic', importeCent: 11100, descuentoPct: 0, customs: [] }],
+    };
+    const { rerender } = render(<DetallePedido pedido={base} moneda="MXN" alCerrar={() => {}} />);
+    const dialogo = screen.getByRole('dialog');
+    expect(dialogo).toHaveTextContent('Pedido POS 31893730');
+    expect(dialogo).toHaveTextContent('Orden Rappi 2482647582');
+    rerender(
+      <DetallePedido pedido={{ ...base, numeroPedidoRappi: null }} moneda="MXN" alCerrar={() => {}} />,
+    );
+    expect(screen.getByRole('dialog')).toHaveTextContent('Orden Rappi no disponible en la API');
+    rerender(
+      <DetallePedido
+        pedido={{ ...base, origen: 'mostrador', metodo: 'CARTAO', pago: 'Tarjeta', numeroPedidoRappi: null }}
+        moneda="MXN"
+        alCerrar={() => {}}
+      />,
+    );
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('Orden Rappi');
   });
 
   it('periodo inválido: aviso y ninguna petición', async () => {

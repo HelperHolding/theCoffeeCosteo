@@ -80,6 +80,7 @@ describe('normalización', () => {
       diferenciaCent: 500,
       pedidosNoCuadran: 1,
       soloRedondeo: false,
+      rappiSinNumeroOrden: 0,
     });
   });
 
@@ -160,6 +161,84 @@ describe('métricas', () => {
     expect(lista.reduce((s, p) => s + p.importeCent, 0)).toBe(resumen(ps()).ventaCent);
     expect(conciliar(ps()).diferenciaCent).toBe(0);
     expect(personalizaciones(ps()).map((c) => c.nombre)).toEqual(['Oatmilk']);
+  });
+
+  // Datos reales: desde el 2026-10-02 la App manda defaultCode null (padre) y "" (customs). Ver conciliacion-brasil/05.
+  const sinCodigo = (fecha: string, hora: string) =>
+    pedido(fecha, hora, {
+      fromSmartphone: true,
+      paymentMethod: 'VIRTUAL_WALLET',
+      items: [
+        {
+          defaultCode: null,
+          productName: 'Matcha Iced Latte',
+          amount: 77,
+          discount: 0,
+          itemsCustom: [
+            { defaultCode: '', productName: 'Large - 600ml', amount: 10, discount: 0 },
+            { defaultCode: '', productName: 'Double shot (36ml)', amount: 0, discount: 0 },
+          ],
+        },
+        { defaultCode: null, productName: 'Pan de Muerto', amount: 78, discount: 0, itemsCustom: [] },
+      ],
+      grossAmount: 165,
+    });
+  const generico = (hora: string, amount: number) =>
+    pedido('2026-10-21', hora, {
+      paymentMethod: 'RAPPI',
+      paymentType: 'CREDIT',
+      items: [{ defaultCode: 'GENERIC', productName: 'Generic', amount, discount: 0, itemsCustom: [] }],
+      grossAmount: amount,
+    });
+
+  it('productos: una línea sin código se une al código del mismo nombre; los totales no cambian', () => {
+    const conMezcla = norm([pedido('2026-10-21', '09:00:00'), sinCodigo('2026-10-21', '10:00:00')]).pedidos;
+    const lista = productos(conMezcla);
+    expect(lista.filter((p) => p.nombre === 'Matcha Iced Latte')).toHaveLength(1);
+    const latte = lista.find((p) => p.codigo === '4MIL')!;
+    expect(latte.lineas).toBe(2);
+    expect(latte.tamanos).toHaveLength(2);
+    expect(latte.tamanos).toEqual(
+      expect.arrayContaining([
+        { nombre: 'Regular - 440ml', lineas: 1 },
+        { nombre: 'Large - 600ml', lineas: 1 },
+      ]),
+    );
+    // Sin ningún código conocido para ese nombre, se agrupa por nombre (no se inventa un código).
+    expect(lista.find((p) => p.nombre === 'Pan de Muerto')).toMatchObject({
+      codigo: 'Pan de Muerto',
+      lineas: 1,
+    });
+    const venta = conMezcla.reduce((s, p) => s + p.ventaCent, 0);
+    expect(lista.reduce((s, p) => s + p.importeCent, 0)).toBe(venta);
+    expect(lista.reduce((s, p) => s + p.extraCustomsCent, 0)).toBe(1300 + 1000);
+    expect(lista.reduce((s, p) => s + p.lineas, 0)).toBe(4);
+  });
+
+  it('tamaños: solo vasos; shots y dosis con ml quedan como personalizaciones', () => {
+    const lista = productos(norm([sinCodigo('2026-10-21', '10:00:00')]).pedidos);
+    expect(lista[0].tamanos).toEqual([{ nombre: 'Large - 600ml', lineas: 1 }]);
+    expect(lista[0].customs.map((c) => c.nombre)).toEqual(['Double shot (36ml)']);
+    expect(
+      personalizaciones(norm([sinCodigo('2026-10-21', '10:00:00')]).pedidos).map((c) => c.nombre),
+    ).toEqual(['Double shot (36ml)']);
+  });
+
+  it('Generic: visible con su peso, rotulado sin identificación y con el nombre crudo del proveedor', () => {
+    const lista = productos(
+      norm([generico('09:00:00', 199), generico('09:30:00', 111), pedido('2026-10-21', '10:00:00')]).pedidos,
+    );
+    const g = lista.find((p) => p.codigo === 'GENERIC')!;
+    expect(g).toMatchObject({
+      nombre: 'Generic (sin identificación del proveedor)',
+      nombreProveedor: 'Generic',
+      importeCent: 31000,
+      lineas: 2,
+      pedidos: 2,
+    });
+    expect(lista[0]).toBe(g);
+    expect(lista.reduce((s, p) => s + p.importeCent, 0)).toBe(31000 + 16500);
+    expect(lista.find((p) => p.codigo === '4MIL')).not.toHaveProperty('nombreProveedor');
   });
 
   it('filtro de origen y pagos con etiquetas', () => {

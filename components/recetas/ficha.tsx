@@ -26,12 +26,16 @@ export async function Ficha({
   const editor = await cargarEditor(db, tipo, id);
   if (!editor) notFound();
   const [resumen, historial, canales, manuales, usuarios] = await Promise.all([
-    id && tipo === 'producto' ? todas(db, 'v_resumen', 'producto_id,tamano_id,canal_id') : [],
+    id && tipo === 'producto'
+      ? todas(db, 'v_resumen', 'producto_id,tamano_id,canal_id', { producto_id: id })
+      : [],
     id
       ? db.from('bitacora').select('*').eq('receta_id', id).order('id', { ascending: false }).limit(50)
       : { data: [], error: null },
     todas(db, 'canales', 'orden,id'),
-    id && tipo === 'producto' ? todas(db, 'precio_canal_manual', 'producto_id,tamano_id,canal_id') : [],
+    id && tipo === 'producto'
+      ? todas(db, 'precio_canal_manual', 'producto_id,tamano_id,canal_id', { producto_id: id })
+      : [],
     todas(db, 'perfiles', 'user_id'),
   ]);
   if (historial.error) throw new Error('No se pudo consultar el historial');

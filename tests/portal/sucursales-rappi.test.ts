@@ -30,9 +30,9 @@ vi.mock('../../lib/supabase/servidor', () => ({
 
 import { GET as vivo } from '../../app/api/sucursales/[companyId]/vivo/route';
 import { GET as productosGet } from '../../app/api/sucursales/[companyId]/productos/route';
-import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
+import { __reiniciarParaPruebas, vistaPedido } from '../../lib/sucursales/datos';
 import { normalizar } from '../../lib/sucursales/normalizar';
-import { filtrarOrigen, resumen } from '../../lib/sucursales/metricas';
+import { conciliar, filtrarOrigen, resumen } from '../../lib/sucursales/metricas';
 import type { RespuestaProductos, RespuestaVivo } from '../../lib/sucursales/contratos';
 import { apiFalsa, pedido } from './sucursales-fixtures';
 
@@ -63,6 +63,48 @@ describe('normalización y filtros', () => {
     expect(filtrarOrigen(pedidos, 'mostrador').map((p) => p.origen)).toEqual(['mostrador']);
     const r = resumen(filtrarOrigen(pedidos, 'rappi'));
     expect(r).toMatchObject({ ventaCent: 16500, netoCent: 14025 });
+  });
+
+  it('Orden Rappi: solo con pago RAPPI y refundId de 10 dígitos; nunca expone refundId de otros pagos', () => {
+    const UUID = '3f0c1a2e-8b7d-4c1e-9a6f-2d4b5e6f7a8b';
+    const casos = [
+      rappi('08:00:00', '2026-10-22'), // refundId sintético con formato inesperado
+      { ...rappi('08:10:00'), refundId: '2482647582' },
+      { ...rappi('08:20:00'), refundId: null },
+      { ...rappi('08:30:00'), refundId: '' },
+      { ...rappi('08:40:00'), refundId: '248264758' }, // 9 dígitos
+      { ...rappi('08:50:00'), refundId: '24826475821' }, // 11 dígitos
+      { ...rappi('09:00:00'), refundId: 2482647582 }, // número, no string
+      { ...pedido('2026-10-22', '09:10:00'), refundId: UUID }, // tarjeta: UUID de transacción
+      { ...pedido('2026-10-22', '09:20:00', { paymentMethod: 'DINHEIRO' }), refundId: '2482647582' },
+    ];
+    const n = normalizar(
+      casos as never,
+      { companyId: 612, modoTiempo: 'local-etiquetada-z', zona: 'America/Ciudad_Juarez' },
+      { desde: '2026-10-22', hasta: '2026-10-22' },
+    );
+    // Un refundId de tipo inesperado no invalida el pedido.
+    expect(n.invalidos).toBe(0);
+    const orden = (hora: string) => n.pedidos.find((p) => p.hora === hora)!.numeroPedidoRappi;
+    expect(orden('08:10:00')).toBe('2482647582');
+    for (const h of [
+      '08:00:00',
+      '08:20:00',
+      '08:30:00',
+      '08:40:00',
+      '08:50:00',
+      '09:00:00',
+      '09:10:00',
+      '09:20:00',
+    ])
+      expect(orden(h)).toBeNull();
+    const json = JSON.stringify(n.pedidos.map(vistaPedido));
+    expect(json).not.toContain(UUID);
+    expect(json).not.toContain('refundId');
+    const c = conciliar(n.pedidos);
+    expect(c.rappiSinNumeroOrden).toBe(6);
+    // Los totales no dependen de la orden Rappi.
+    expect(c.ventaCent).toBe(casos.length * 16500);
   });
 });
 

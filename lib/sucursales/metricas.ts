@@ -1,4 +1,4 @@
-import { importeLinea, type Origen, type PedidoNormal } from './normalizar';
+import { importeLinea, type LineaNormal, type Origen, type PedidoNormal } from './normalizar';
 import { sumarDias } from './tiempo';
 
 /** Funciones puras sobre pedidos normalizados (todas en centavos). Mismo conjunto para KPIs, gráficas y tablas. */
@@ -88,11 +88,19 @@ export function porHora(ps: PedidoNormal[]) {
 export const enVentana = (ps: PedidoNormal[], corte: number, segundos: number) =>
   ps.filter((p) => p.segundo <= corte && p.segundo > corte - segundos).length;
 
-const ES_TAMANO = /\b\d{2,4}\s?ml\b/i;
+/** Solo vasos («Regular - 440ml», «Large - 355ml»…). Shots y dosis con ml («Double shot (36ml)») son personalizaciones. */
+export const ES_TAMANO = /^(Regular|Large) - \d{3}ml$/;
+
+/** Línea genérica del proveedor (Rappi en 532): se muestra, pero sin atribuirla a un producto (conciliacion-brasil/05). */
+export const CODIGO_GENERICO = 'GENERIC';
+export const ETIQUETA_GENERICO = 'Generic (sin identificación del proveedor)';
 
 export interface ProductoResumen {
   codigo: string;
+  /** Nombre para mostrar; igual al del proveedor salvo en la línea genérica. */
   nombre: string;
+  /** productName tal como llega, solo cuando difiere de `nombre`. */
+  nombreProveedor?: string;
   /** Línea + sus customs, una sola vez. */
   importeCent: number;
   extraCustomsCent: number;
@@ -117,13 +125,28 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
       customs: Map<string, { veces: number; importeCent: number }>;
     }
   >();
+  // Una línea sin defaultCode se une al código que el proveedor sí mandó para ese mismo nombre exacto en el periodo;
+  // si no hay ninguno, queda agrupada por nombre. Así un producto no aparece dos veces (código y sin código).
+  const codigosDe = new Map<string, Map<string, number>>();
+  for (const p of ps)
+    for (const l of p.lineas)
+      if (!l.sinCodigo) {
+        const c = codigosDe.get(l.nombre) ?? new Map<string, number>();
+        c.set(l.codigo, (c.get(l.codigo) ?? 0) + 1);
+        codigosDe.set(l.nombre, c);
+      }
+  const clave = (l: LineaNormal) =>
+    l.sinCodigo
+      ? ([...(codigosDe.get(l.nombre) ?? [])].sort((a, b) => b[1] - a[1])[0]?.[0] ?? l.codigo)
+      : l.codigo;
   let total = 0;
   for (const p of ps)
     for (const l of p.lineas) {
-      let x = m.get(l.codigo);
+      const k = clave(l);
+      let x = m.get(k);
       if (!x) {
         x = {
-          codigo: l.codigo,
+          codigo: k,
           nombre: l.nombre,
           importeCent: 0,
           extraCustomsCent: 0,
@@ -132,7 +155,7 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
           tamanos: new Map(),
           customs: new Map(),
         };
-        m.set(l.codigo, x);
+        m.set(k, x);
       }
       const imp = importeLinea(l);
       x.importeCent += imp;
@@ -153,7 +176,9 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
   return [...m.values()]
     .map((x) => ({
       codigo: x.codigo,
-      nombre: x.nombre,
+      ...(x.codigo === CODIGO_GENERICO
+        ? { nombre: ETIQUETA_GENERICO, nombreProveedor: x.nombre }
+        : { nombre: x.nombre }),
       importeCent: x.importeCent,
       extraCustomsCent: x.extraCustomsCent,
       lineas: x.lineas,
@@ -242,6 +267,7 @@ export function conciliar(ps: PedidoNormal[]) {
     diferenciaCent: ventaCent - productosCent,
     pedidosNoCuadran: ps.filter((p) => !p.cuadra).length,
     soloRedondeo,
+    rappiSinNumeroOrden: ps.filter((p) => p.origen === 'rappi' && p.numeroPedidoRappi === null).length,
   };
 }
 

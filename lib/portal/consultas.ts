@@ -8,11 +8,18 @@ type Fila<T extends Fuente> = T extends keyof Database['public']['Tables']
     ? Database['public']['Views'][T]['Row']
     : never;
 // Orden estable y páginas inferiores al límite por defecto de PostgREST.
-export async function todas<T extends Fuente>(db: Db, tabla: T, orden: string): Promise<Fila<T>[]> {
+// `igual` filtra en la base (columna = valor): en vistas como v_resumen evita recalcular todos los productos.
+export async function todas<T extends Fuente>(
+  db: Db,
+  tabla: T,
+  orden: string,
+  igual: Record<string, string> = {},
+): Promise<Fila<T>[]> {
   const filas: Fila<T>[] = [];
   for (let desde = 0; ; desde += 500) {
     // La sobrecarga del SDK separa tablas/vistas; Fuente limita los nombres válidos.
     let q = db.from(tabla as keyof Database['public']['Tables']).select('*');
+    for (const [columna, valor] of Object.entries(igual)) q = q.eq(columna as never, valor as never);
     for (const campo of orden.split(',')) q = q.order(campo);
     const r = await q.range(desde, desde + 499);
     if (r.error) throw new Error(`No se pudo consultar ${tabla}. Intenta de nuevo.`);
