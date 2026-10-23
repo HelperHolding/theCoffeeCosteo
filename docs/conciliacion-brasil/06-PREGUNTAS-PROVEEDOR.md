@@ -79,6 +79,36 @@ Borrador para que Carlo lo envíe si lo decide. **No se envió nada.** Los ejemp
 
 Para **Delivery o Rappi** (no para el proveedor de la API): el export o detalle completo de la orden `2482647582` con todos los artículos, acompañamientos, promoción y total, sin datos del cliente.
 
+## Complemento 23-oct, caso 2: cargos de tamaño ausentes (ver 14)
+
+18. **Tamaño perdido en un artículo identificado.** Orden Rappi `2482754188` = pedido POS `31905287` (`refundId`).
+    - Rappi muestra **2 × Pumpkin Iced Latte** con «Grande 355 ml.» **+$12 por unidad** (subtotal 270).
+    - La API manda 2 líneas así, sin ningún custom de vaso:
+
+      ```json
+      { "defaultCode": "CPUMICAPP", "productName": "Pumpkin Iced Latte", "amount": 110,
+        "itemsCustom": [{ "productName": "Single Shot (18ml)", "amount": 0 }, { "productName": "Lactose free", "amount": 13 }] }
+      ```
+
+    Preguntas:
+    - ¿Por qué no llega la opción de tamaño ni su cargo?
+    - ¿El POS descarta las opciones de Rappi que no puede mapear?
+    - En el pedido `31893730`, «Grande 590 ml.» sí llegó como `Large - 600ml` +12. ¿«Grande 355 ml.» en una bebida fría es una opción de menú de Rappi sin equivalente en el POS?
+19. **Dos casos con la misma forma de diferencia.**
+
+    | Pedido POS | Productos Rappi | `grossAmount` | Total final Rappi | `netAmout` | `discount` |
+    |---|---|---|---|---|---|
+    | 31893730 | 580 | 568 | 538 | 538 | 84 |
+    | 31905287 | 458 | 434 | 436 | 436 | 59.80 |
+
+    - ¿`netAmout` es el total que cobra Rappi después de promociones? Coincide en ambos casos, pero en otros 36 pedidos Rappi `netAmout` > `grossAmount`.
+    - ¿Qué representa `discount` (84 y 59.80), si la reducción visible en Rappi es 42 y 22?
+    - ¿`grossAmount` es la suma de los precios del menú del POS, sin los cargos que no se mapean?
+20. **Rappi frente a POS.** ¿Qué total debe usarse para conciliar con la liquidación de Rappi? ¿Puede la integración enviar los acompañamientos de Rappi aunque no tengan equivalente en el POS, por ejemplo como `itemsCustom` con su importe?
+21. **Cantidades.** Rappi agrupa «2 × Pumpkin Iced Latte» y la API manda 2 líneas. ¿Siempre se expanden por unidad? ¿Hay algún caso con campo de cantidad?
+
+Para Delivery o Rappi (no para el proveedor de la API): ¿el menú de Rappi de Rubén Darío Turbo ofrece «Grande 355 ml.» en bebidas frías? Es la etiqueta de un vaso caliente.
+
 ## Ya pendientes (docs/10 y docs/11)
 
 12. Zona horaria de `createdAt`, moneda, límites de servicio y significado de `netAmout` y `percentageOfTransfer` en Rappi.

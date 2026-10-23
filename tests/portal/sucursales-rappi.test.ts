@@ -32,7 +32,13 @@ import { GET as vivo } from '../../app/api/sucursales/[companyId]/vivo/route';
 import { GET as productosGet } from '../../app/api/sucursales/[companyId]/productos/route';
 import { __reiniciarParaPruebas, vistaPedido } from '../../lib/sucursales/datos';
 import { normalizar } from '../../lib/sucursales/normalizar';
-import { conciliar, filtrarOrigen, resumen } from '../../lib/sucursales/metricas';
+import {
+  conciliar,
+  filtrarOrigen,
+  personalizaciones,
+  productos,
+  resumen,
+} from '../../lib/sucursales/metricas';
 import type { RespuestaProductos, RespuestaVivo } from '../../lib/sucursales/contratos';
 import { apiFalsa, pedido } from './sucursales-fixtures';
 
@@ -105,6 +111,85 @@ describe('normalización y filtros', () => {
     expect(c.rappiSinNumeroOrden).toBe(6);
     // Los totales no dependen de la orden Rappi.
     expect(c.ventaCent).toBe(casos.length * 16500);
+  });
+});
+
+// Caso real POS 31905287 ↔ Rappi 2482754188 (conciliacion-brasil/14), con identificadores sintéticos.
+// Brasil manda 2 Pumpkin Iced Latte sin custom de vaso (Rappi mostraba «Grande 355 ml.» +$12 por unidad): el portal
+// debe reflejar exactamente lo que llega, sin inventar el cargo ni perder lo que sí llega.
+describe('Rappi: lo que Brasil entrega frente a lo que muestra Rappi', () => {
+  const cfg = { companyId: 612, modoTiempo: 'local-etiquetada-z' as const, zona: 'America/Ciudad_Juarez' };
+  const ventana = { desde: '2026-10-22', hasta: '2026-10-22' };
+  const bebida = (customs: { productName: string; amount: number }[]) => ({
+    defaultCode: 'CPUMICAPP',
+    productName: 'Pumpkin Iced Latte',
+    amount: 110,
+    discount: 0,
+    itemsCustom: customs.map((c) => ({ defaultCode: 'X', discount: 0, ...c })),
+  });
+  const caso = (items: ReturnType<typeof bebida>[], gross: number, net: number) => ({
+    ...rappi('15:05:58'),
+    refundId: '2400000001',
+    grossAmount: gross,
+    netAmout: net,
+    discount: 59.8,
+    percentageOfTransfer: 100,
+    items: [
+      ...items,
+      { defaultCode: 'ACABOWAPP', productName: 'Açaí Bowl', amount: 188, discount: 0, itemsCustom: [] },
+    ],
+  });
+  const leche = { productName: 'Lactose free', amount: 13 };
+  const shot = { productName: 'Single Shot (18ml)', amount: 0 };
+
+  it('pérdida en origen: sin custom de vaso, la venta es grossAmount (434) y no se agrega el cargo que no llegó', () => {
+    const { pedidos, invalidos } = normalizar(
+      [caso([bebida([shot, leche]), bebida([shot, leche])], 434, 436)] as never,
+      cfg,
+      ventana,
+    );
+    expect(invalidos).toBe(0);
+    const [p] = pedidos;
+    expect(p).toMatchObject({
+      ventaCent: 43400,
+      netoCent: 43600,
+      cuadra: true,
+      numeroPedidoRappi: '2400000001',
+    });
+    // Neto mayor que lo cobrado se conserva tal cual (no se interpreta ni se usa como venta).
+    expect(conciliar(pedidos)).toMatchObject({ ventaCent: 43400, productosCent: 43400, diferenciaCent: 0 });
+    const vista = vistaPedido(p);
+    expect(vista.lineas.map((l) => l.customs.map((c) => c.nombre))).toEqual([
+      ['Single Shot (18ml)', 'Lactose free'],
+      ['Single Shot (18ml)', 'Lactose free'],
+      [],
+    ]);
+  });
+
+  it('fallo local descartado: si Brasil SÍ mandara el cargo (aunque con otra etiqueta), se muestra y se suma', () => {
+    // Etiqueta al estilo Rappi, fuera del patrón de vasos: va a Personalizaciones, pero no se pierde ni su importe.
+    const grande = { productName: 'Grande 355 ml.', amount: 12 };
+    const { pedidos } = normalizar(
+      [caso([bebida([shot, grande, leche]), bebida([shot, grande, leche])], 458, 436)] as never,
+      cfg,
+      ventana,
+    );
+    const [p] = pedidos;
+    expect(p).toMatchObject({ ventaCent: 45800, cuadra: true });
+    expect(vistaPedido(p).lineas[0].customs).toContainEqual(
+      expect.objectContaining({ nombre: 'Grande 355 ml.', importeCent: 1200 }),
+    );
+    const pumpkin = productos(pedidos).find((x) => x.codigo === 'CPUMICAPP')!;
+    expect(pumpkin).toMatchObject({
+      lineas: 2,
+      importeCent: 2 * (11000 + 1200 + 1300),
+      extraCustomsCent: 2 * 2500,
+    });
+    expect(pumpkin.tamanos).toEqual([]);
+    expect(pumpkin.customs).toContainEqual({ nombre: 'Grande 355 ml.', veces: 2, importeCent: 2400 });
+    expect(personalizaciones(pedidos)).toContainEqual(
+      expect.objectContaining({ nombre: 'Grande 355 ml.', veces: 2, importeCent: 2400 }),
+    );
   });
 });
 
