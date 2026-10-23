@@ -2,6 +2,28 @@
 
 **Estado:** verificaciones previas Q1–Q5 **hechas y correctas** (2026-10-23). **Merge y despliegue pendientes** de la confirmación de Carlo. El flujo MCP completo sigue pendiente como limitación documentada (`13-TAREA-AUTH-SITE-URL.md`).
 
+## Cambios añadidos tras la prueba local (revisión de integridad Rappi, 2026-10-23)
+
+- **Aviso de calidad de fuente** (aprobado por Carlo), con el texto exacto:
+  - visible con «Mostrador + App + Rappi», «Rappi», la pestaña Rappi y el directorio;
+  - **no cambia cifras**.
+  - Detalle en `14-RAPPI-CASO-2-TAMANOS.md`.
+- **Pruebas sintéticas** que distinguen la pérdida en origen de un fallo local (caso 2).
+- **Documentación:** `14` (caso 2), `15` (SKU), `06` (preguntas).
+- **Fuera del PR #18:** la migración 22 y la carga de códigos POS, en la rama local `feat/sku-enlace-pos` (entrega separada).
+  - **No debe llegar a `main` sin su propio procedimiento**: «Deploy to production» la aplicaría automáticamente.
+
+**Verificación sobre el commit final `9ce6e64`:**
+- `tsc` ✅;
+- `vitest`: 354 pasan, 5 omitidas; solo falla paridad, que requiere el Excel;
+- `next build` ✅;
+- checks del PR en verde;
+- `main` = `b7416e1`, contenida en la rama;
+- base idéntica a `fase4/estado-despues-produccion.json`;
+- el PR **no** contiene la migración 22.
+
+La prueba local Q5 sigue valiendo para los casos verificados; el aviso se revisó en el arnés visual y en las pruebas de UI.
+
 ## Resultado de las verificaciones previas
 
 | # | Resultado |
