@@ -26,6 +26,29 @@
 
 Fecha: 2026-10-23. Proyecto Supabase: `jpqkmnfjwzniptszjuli`. PR: [#18](https://github.com/sebascm0906/theCoffeeCosteo/pull/18).
 
+## Confirmaciones previas a la aplicación (leídas en el panel de Supabase, 2026-10-23)
+
+Panel abierto por Carlo con su cuenta; lectura sin cambios.
+
+| # | Condición | Resultado | Fuente |
+|---|---|---|---|
+| 1 | «Deploy to production» de la integración GitHub ↔ Supabase | **Activado.** Rama de producción: `main`. Branching automático desactivado (requiere Pro). Repositorio `sebascm0906/theCoffeeCosteo` | Settings → Integrations → GitHub |
+| 2 | Respaldo recuperable reciente o PITR | **No existe.** El proyecto está en el **plan Free**: «Free Plan does not include project backups». PITR es un complemento de Pro | Database → Backups (Scheduled backups y Point in time) |
+
+**Consecuencias:**
+- **Por la condición 1**, un merge del PR #18 a `main` aplicaría automáticamente la migración 21 si no está registrada. Se confirma la regla P1: no hacer merge antes de aplicar (o de decidir no aplicarla).
+- **Por la condición 2** no se cumple la condición de Carlo, así que **la aplicación no se ejecutó**. Tampoco se repitió el ensayo, porque está previsto justo antes de aplicar.
+
+Al momento de la lectura, el panel mostraba además el aviso de Supabase «We are investigating a technical issue».
+
+**Alternativas para que Carlo decida** (ninguna se ejecutó):
+
+| Opción | Qué cubre | Costo o requisito |
+|---|---|---|
+| A. Aceptar como respaldo la captura exacta de los objetos afectados | La migración **no toca datos**, solo 89 políticas y 3 funciones. `fase4/estado-antes-produccion.json` (captura de producción del 2026-10-23 ~22:29 UTC, verificada de nuevo tras cada ensayo) más `rollback-021.sql` (atómico, probado) restauran exactamente esos objetos | Sin costo. **No es** un respaldo del resto de la base |
+| B. Respaldo lógico con `supabase db dump` (esquema y, si se quiere, datos) guardado **fuera del repo** | Toda la base, con su fecha | Descargar Supabase CLI con `npx` (no instalado). Los datos incluyen PII (perfiles, CRM): Carlo decide dónde guardarlos |
+| C. Plan Pro (respaldos diarios de 7 días; PITR como complemento) | Toda la base, con restauración desde el panel | Costo mensual; decisión de negocio |
+
 ## 0. Estado de partida verificado (solo lectura)
 
 | Comprobación | Resultado |
@@ -91,8 +114,8 @@ Cada función se identifica por **nombre y firma** (`pg_get_function_identity_ar
 
 | # | Verificación | Responsable | Cómo |
 |---|---|---|---|
-| P1 | ⏳ **No hacer merge del PR #18 antes de aplicar la 21.** Según `docs/crm/ARQUITECTURA.md:211`, la integración GitHub ↔ Supabase aplica al hacer merge las migraciones no registradas. Un merge previo la aplicaría sin estas verificaciones | Carlo | Confirmar en Supabase → Integrations → GitHub si «Deploy to production» está activo. Aunque lo esté, el orden de este procedimiento (aplicar y registrar primero) evita una doble aplicación |
-| P2 | ⏳ Punto de recuperación | Carlo | Confirmar en Settings → Database → Backups si hay PITR o un respaldo diario reciente. **No se asume PITR.** Con o sin él, la reversión exacta está en `rollback-021.sql` y en el modo `--revertir` |
+| P1 | ✅ Confirmado: «Deploy to production» activado (rama `main`). **No hacer merge del PR #18 antes de aplicar la 21.** Según `docs/crm/ARQUITECTURA.md:211`, la integración GitHub ↔ Supabase aplica al hacer merge las migraciones no registradas. Un merge previo la aplicaría sin estas verificaciones | Carlo | Confirmar en Supabase → Integrations → GitHub si «Deploy to production» está activo. Aunque lo esté, el orden de este procedimiento (aplicar y registrar primero) evita una doble aplicación |
+| P2 | ❌ **No hay respaldo ni PITR (plan Free)**. Punto de recuperación | Carlo | Confirmar en Settings → Database → Backups si hay PITR o un respaldo diario reciente. **No se asume PITR.** Con o sin él, la reversión exacta está en `rollback-021.sql` y en el modo `--revertir` |
 | P3 | Ventana de bajo uso | Carlo | La migración toma bloqueos exclusivos breves sobre las 15 tablas de Costeo. Con `lock_timeout = 3s`, si algo ocupa una tabla, **falla y revierte**; no se queda esperando |
 | P4 | Sin cambios desde la aprobación | Automático | El script compara políticas, funciones completas y registro con `fase4/estado-antes-produccion.json`. Ante cualquier diferencia se detiene sin aplicar nada |
 | P5 | Ensayo en producción | ✅ **Hecho** (ver «Resultado del ensayo») | `fase4-aplicar.ts` sin flags: aplica dentro de una transacción, verifica el resultado contra el estado esperado derivado y hace **ROLLBACK** |
