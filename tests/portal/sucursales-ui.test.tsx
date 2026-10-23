@@ -20,6 +20,7 @@ import { VentasPos } from '../../components/sucursales/ventas-pos';
 import { EnVivo } from '../../components/sucursales/en-vivo';
 import { Pedidos } from '../../components/sucursales/pedidos';
 import { DetallePedido } from '../../components/sucursales/detalle-pedido';
+import { AVISO_CALIDAD_RAPPI } from '../../components/sucursales/estados';
 import {
   __reiniciarParaPruebas,
   construirPedidos,
@@ -113,6 +114,26 @@ describe('En vivo', () => {
     await responder(1, vivoApp);
     expect(screen.getAllByText('$165').length).toBeGreaterThan(0);
     expect(screen.queryAllByText('$330')).toHaveLength(0);
+  });
+
+  it('aviso de calidad Rappi: visible siempre que las métricas incluyan Rappi, sin tocar cifras', async () => {
+    const aviso = () => screen.queryAllByRole('note').find((n) => n.textContent === AVISO_CALIDAD_RAPPI);
+    render(<VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />);
+    expect(aviso()).toBeDefined();
+    expect(AVISO_CALIDAD_RAPPI).toBe(
+      'Datos reportados por el POS de Brasil. Detectamos pedidos Rappi con artículos o cargos de tamaño no desglosados; estos importes pueden diferir de Rappi y no representan una liquidación.',
+    );
+    await responder(0, vivoTodos);
+    expect(screen.getAllByText('$330').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('radio', { name: 'Mostrador' }));
+    expect(aviso()).toBeUndefined();
+    fireEvent.click(screen.getByRole('radio', { name: 'App The Coffee' }));
+    expect(aviso()).toBeUndefined();
+    fireEvent.click(screen.getByRole('radio', { name: 'Rappi' }));
+    expect(aviso()).toBeDefined();
+    fireEvent.click(screen.getByRole('radio', { name: 'Mostrador' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Rappi' }));
+    expect(aviso()).toBeDefined();
   });
 
   it('un error del portal o del proveedor nunca se muestra como venta cero', async () => {

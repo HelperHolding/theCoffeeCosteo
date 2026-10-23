@@ -100,7 +100,7 @@ Utilidad: `scripts/conciliacion/tamanos-faltantes.ts`, local. Una «bebida con v
 - **Un solo tamaño en Rappi (no hay pérdida aparente).** Varias bebidas llegan *siempre* sin vaso en Rappi, con un precio base igual al precio Rappi del grande registrado en Costeo (Americano $69, Vanilla Latte $111, Mad Mocha $117, Matcha y Chai Latte $98). Indica que Rappi vende un solo tamaño. En el caso 1, Pumpkin Latte ($122 + leche) también coincidió exactamente con Rappi sin tamaño.
 - **Riesgo real.** **Pumpkin Iced Latte** en Rappi llega 46 veces con «Regular» (+$0), 12 con «Large» (+$12) y **46 sin vaso**, siempre con base $110.
   - Este caso demuestra que al menos 2 de esas 46 eran «Grande 355 ml.» con cargo perdido.
-  - **Cota superior** para este producto en 4 semanas: 46 × $12 = **$552** (≈ 0.56 % de los $98,984 cobrados por Rappi en 532).
+  - **Escenario máximo estimado** para este producto en 4 semanas: 46 × $12 = **$552** (≈ 0.56 % de los $98,984 cobrados por Rappi en 532). **No es una pérdida confirmada**: supone que todas las líneas sin vaso eran grandes, algo que no se sabe.
   - El número real no se puede saber sin el detalle de Rappi.
 - **Otras sucursales:** la diferencia solo afecta a la sucursal con Rappi (532). Mostrador y App no muestran el patrón.
 - **`netAmout` > `grossAmount`:** 36 pedidos Rappi en 4 semanas; 20 de ellos incluyen una bebida con vaso que llegó sin vaso. Es compatible con cargos ausentes, pero no lo demuestra.
@@ -119,7 +119,23 @@ Utilidad: `scripts/conciliacion/tamanos-faltantes.ts`, local. Una «bebida con v
 | Mostrador y App | Sin evidencia de efecto |
 | Neto Rappi (`netAmout`) | Ya se muestra como «neto reportado (API)», sin interpretación (decisión vigente) |
 
-## Recomendación sobre la publicación
+## Decisión de Carlo (2026-10-23)
+
+- **Aprobada la opción A** e implementada en el PR #18:
+  - aviso de calidad de fuente, con el texto aprobado, visible siempre que las métricas incluyan Rappi:
+    - filtro «Mostrador + App + Rappi» o «Rappi»;
+    - pestaña Rappi;
+    - directorio (la venta de hoy de cada tarjeta incluye Rappi);
+  - no aparece con «Mostrador» ni con «App».
+- Archivos:
+  - `components/sucursales/estados.tsx` (`AvisoCalidadRappi`, `AVISO_CALIDAD_RAPPI`);
+  - `components/sucursales/ventas-pos.tsx`;
+  - `app/(sucursales)/sucursales/page.tsx`.
+- Prueba: `tests/portal/sucursales-ui.test.tsx` («aviso de calidad Rappi…»). Revisado en el arnés visual.
+- **No se ajustan importes, no se completan tamaños y Generic no se identifica por estimación.**
+- **Ausencia de mapeo de SKU en Rappi/POS:** hipótesis pendiente de confirmación del proveedor (ver `15`).
+
+## Recomendación sobre la publicación (antes de la decisión)
 
 **No hace falta un fix de código para lo que entrega Brasil:** el portal suma bien lo que llega y no descarta datos. Las pruebas lo fijan. Sin embargo, el PR #18 **no corrige** la discrepancia con Rappi, porque es una limitación de la fuente.
 
