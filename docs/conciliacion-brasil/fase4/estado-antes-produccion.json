@@ -1308,190 +1308,541 @@
  ],
  "funciones": [
   {
-   "proname": "antes_de_actualizar_receta",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "auditar_baja_cantidad",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "bloquear_edicion_receta",
-   "proconfig": null,
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "crm_mover_tienda",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "crm_nivel",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "crm_origen_liga",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "crm_puede_editar",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "crm_puede_leer",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "crm_registrar_historial",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "crm_renumerar_etapa",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "crm_sellar",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "guardar_receta",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "limpiar_cantidades_antes_de_linea",
-   "proconfig": null,
-   "anon": false,
-   "auth": false
-  },
-  {
-   "proname": "limpiar_cantidades_de_tamano",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "mcp_lectura_habilitada",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": false,
-   "auth": true
-  },
-  {
-   "proname": "registrar_bitacora",
-   "proconfig": [
-    "search_path=public, pg_temp"
+   "nombre": "antes_de_actualizar_receta",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "2bc2f441aeae46f2efac542bf10020ff",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
    ],
    "anon": true,
-   "auth": true
+   "authenticated": true,
+   "service_role": true
   },
   {
-   "proname": "reservar_consulta_chat",
-   "proconfig": [
+   "nombre": "auditar_baja_cantidad",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": true,
+   "config": [
     "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "ea2e53e7c8f48b4ef0e04607a6bf615e",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
    ],
    "anon": false,
-   "auth": true
+   "authenticated": false,
+   "service_role": true
   },
   {
-   "proname": "rol_actual",
-   "proconfig": [
-    "search_path=public, pg_temp"
-   ],
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "tiene_rol",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "tocar_updated_at",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "validar_linea_cantidad",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "validar_producto_tamano",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "validar_receta_linea",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
-  },
-  {
-   "proname": "versionar_componentes_receta",
-   "proconfig": [
-    "search_path=public, pg_temp"
+   "nombre": "bloquear_edicion_receta",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "2fe6851bebcffc8beeab5a93d1eed08b",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
    ],
    "anon": false,
-   "auth": false
+   "authenticated": false,
+   "service_role": true
   },
   {
-   "proname": "vigilar_precio_canal_manual",
-   "proconfig": null,
-   "anon": true,
-   "auth": true
+   "nombre": "crm_mover_tienda",
+   "args": "p_tienda uuid, p_etapa uuid, p_posicion double precision, p_version integer",
+   "resultado": "crm_tiendas",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "a17eef86d0f6d7d2a2f487925f2d6bcd",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
   },
   {
-   "proname": "vigilar_producto_tamanos",
-   "proconfig": null,
+   "nombre": "crm_nivel",
+   "args": "",
+   "resultado": "text",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "a7bb0a50cea5d4f5e4df4364f3d7bc8b",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_origen_liga",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "dc6bbb8cb246c86034e1d40c746667d0",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": false,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_puede_editar",
+   "args": "",
+   "resultado": "boolean",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "485bd67a37261580062b03d3603fdb35",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_puede_leer",
+   "args": "",
+   "resultado": "boolean",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "a6912b65142283d5d0e9c092c0c81aeb",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_registrar_historial",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "b3f823b24463d04a050875c0132bb81d",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": false,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_renumerar_etapa",
+   "args": "p_etapa uuid",
+   "resultado": "integer",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "67972ac119c064438b5626ea40f3529c",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "crm_sellar",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "cab0d27151f216f66a3b49823e27daa9",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": false,
+   "service_role": true
+  },
+  {
+   "nombre": "guardar_receta",
+   "args": "p_datos jsonb",
+   "resultado": "jsonb",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "0888500db16f152d900626bb56017e15",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "limpiar_cantidades_antes_de_linea",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "4caac4c8a47391b95bc752ffdb030b0e",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": false,
+   "service_role": true
+  },
+  {
+   "nombre": "limpiar_cantidades_de_tamano",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "6569be456c04d9cd00469aeff79df927",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
    "anon": true,
-   "auth": true
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "mcp_lectura_habilitada",
+   "args": "",
+   "resultado": "boolean",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": false,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "36788f88936cdaeac7d5e519c67d3b33",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "registrar_bitacora",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "7feb522ef679a6d85ecda87345728bbf",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "reservar_consulta_chat",
+   "args": "",
+   "resultado": "boolean",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "328ed142c0f08670649976504dd4533e",
+   "acl": [
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "rol_actual",
+   "args": "",
+   "resultado": "text",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "67004a369aa1afb0b70142b3eecb53be",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "tiene_rol",
+   "args": "VARIADIC roles text[]",
+   "resultado": "boolean",
+   "lenguaje": "sql",
+   "volatilidad": "s",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "309403677e854792cdb717c02f38afa8",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "tocar_updated_at",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "0c6770827e9dd3fd05b6e792f0b506cc",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "validar_linea_cantidad",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "65424092baf9d82bd0be1df968e36d45",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "validar_producto_tamano",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "00952139a766c9687ef8248bc069d614",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "validar_receta_linea",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "bd3c82cc13d3456a8c0d2694b7bc3de1",
+   "acl": [
+    "=X/postgres",
+    "anon=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "versionar_componentes_receta",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": true,
+   "config": [
+    "search_path=public, pg_temp"
+   ],
+   "propietario": "postgres",
+   "cuerpo_md5": "6d22a6664d12bc4543357ebccef180da",
+   "acl": [
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": false,
+   "authenticated": false,
+   "service_role": true
+  },
+  {
+   "nombre": "vigilar_precio_canal_manual",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "92695c03ad448f47d58895a22615ed8d",
+   "acl": [
+    "=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
+  },
+  {
+   "nombre": "vigilar_producto_tamanos",
+   "args": "",
+   "resultado": "trigger",
+   "lenguaje": "plpgsql",
+   "volatilidad": "v",
+   "security_definer": false,
+   "config": null,
+   "propietario": "postgres",
+   "cuerpo_md5": "67bf13cd571663728f5a0446bb041a42",
+   "acl": [
+    "=X/postgres",
+    "authenticated=X/postgres",
+    "postgres=X/postgres",
+    "service_role=X/postgres"
+   ],
+   "anon": true,
+   "authenticated": true,
+   "service_role": true
   }
  ]
 }

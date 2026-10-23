@@ -1,6 +1,14 @@
--- Reversión de 20261023000021_costeo_rls_rendimiento.sql (generada del volcado de políticas previo, PGlite con migraciones 01–20).
--- Restaura el texto exacto de cada política y los privilegios previos. Ejecutar en una transacción, solo con aprobación.
+-- Reversión de 20261023000021_costeo_rls_rendimiento.sql (generada del volcado de políticas previo, PGlite con
+-- migraciones 01–20, idéntico byte a byte a producción el 2026-10-23).
+-- Restaura el texto exacto de cada política y los privilegios previos y quita el registro de la versión, TODO en una
+-- sola transacción: si la versión no está registrada, aborta antes de tocar nada. Solo con aprobación.
 begin;
+do $$
+begin
+  if not exists (select 1 from supabase_migrations.schema_migrations where version = '20261023000021') then
+    raise exception 'La migración 20261023000021 no está registrada: no hay nada que revertir';
+  end if;
+end $$;
 alter policy lectura on public.bitacora using ((rol_actual() IS NOT NULL));
 alter policy oauth_sin_altas on public.bitacora with check (((auth.jwt() ->> 'client_id'::text) IS NULL));
 alter policy oauth_sin_bajas on public.bitacora using (((auth.jwt() ->> 'client_id'::text) IS NULL));
@@ -93,4 +101,6 @@ alter policy oauth_sin_cambios on public.tamanos using (((auth.jwt() ->> 'client
 alter function public.tiene_rol(variadic text[]) reset search_path;
 grant execute on function public.rol_actual() to public, anon;
 grant execute on function public.registrar_bitacora() to public, anon;
+-- En la misma transacción: sin registro, la integración GitHub ↔ Supabase volvería a aplicar la 21 desde main.
+delete from supabase_migrations.schema_migrations where version = '20261023000021';
 commit;

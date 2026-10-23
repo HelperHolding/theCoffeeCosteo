@@ -1,12 +1,13 @@
 import pg from 'pg';
 import { leerEnvLocal } from '../zoho/cliente';
 import { PROYECTO } from './db-lectura';
-import { archivosFase4, fase4, type Modo } from './fase4';
+import { archivosFase4, fase4, medirBajoRls, type Modo } from './fase4';
 
 /**
  * Fase 4 · CLI de la migración 21 sobre el proyecto real (lógica y verificaciones en fase4.ts).
  *   ensayo (por defecto, termina en ROLLBACK):
  *     npx tsx scripts/conciliacion/fase4-aplicar.ts
+ *   --medir: además mide v_resumen/v_alerta bajo RLS dentro de la misma transacción (solo SELECT/EXPLAIN).
  *   aplicar / revertir (exigen confirmar el proyecto):
  *     npx tsx scripts/conciliacion/fase4-aplicar.ts --aplicar --confirmo jpqkmnfjwzniptszjuli
  *     npx tsx scripts/conciliacion/fase4-aplicar.ts --revertir --confirmo jpqkmnfjwzniptszjuli
@@ -32,6 +33,7 @@ try {
     { query: (sql, p) => c.query(sql, p) as never, ejecutar: async (sql) => void (await c.query(sql)) },
     modo,
     archivos,
+    args.includes('--medir') ? medirBajoRls : undefined,
   );
   console.log(JSON.stringify(informe, null, 1));
   if (informe.error) process.exitCode = 1;
