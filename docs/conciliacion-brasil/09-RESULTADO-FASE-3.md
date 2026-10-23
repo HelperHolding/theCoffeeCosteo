@@ -8,7 +8,7 @@
 
 | # | Cambio | Estado | Archivos |
 |---|---|---|---|
-| A1 | Ranking: una línea sin `defaultCode` se une al código del mismo nombre exacto en el periodo; si no hay ninguno, se agrupa por nombre | ✅ local | `lib/sucursales/normalizar.ts` (`sinCodigo`), `lib/sucursales/metricas.ts` (`productos`) |
+| A1 | Ranking: una línea sin `defaultCode` se une al código del mismo nombre exacto **solo si ese nombre tiene un único código** en el periodo de esa sucursal; si no, queda aparte, marcada «sin código». Las claves de código y de nombre no se cruzan, y el resultado no depende del orden de los pedidos (ver «Corrección del ranking») | ✅ local | `lib/sucursales/normalizar.ts` (`sinCodigo`), `lib/sucursales/metricas.ts` (`productos`), `components/sucursales/{productos,en-vivo}.tsx` |
 | A2 | Generic visible, rotulado «Generic (sin identificación del proveedor)»; código y nombre crudos conservados (`codigo: 'GENERIC'`, `nombreProveedor: 'Generic'`) | ✅ local | `lib/sucursales/metricas.ts` |
 | A3 | Tamaños solo vasos (`^(Regular\|Large) - \d{3}ml$`). Shots y dosis pasan a personalizaciones, también en el color de la etiqueta | ✅ local | `lib/sucursales/metricas.ts` (`ES_TAMANO` exportada), `components/sucursales/colores.tsx` |
 | A4 | Prueba de Pedidos independiente del reloj (fija `Date` con `vi.setSystemTime`) | ✅ | `tests/portal/sucursales-ui.test.tsx` |
@@ -27,7 +27,7 @@
 
 | Prueba | Resultado |
 |---|---|
-| `vitest run` (suite completa) | **338 pasan**, 5 omitidas. Solo falla el archivo `tests/migracion/paridad.test.ts`, que exige el Excel original (ya fallaba antes de estos cambios) |
+| `vitest run` (suite completa) | **343 pasan**, 5 omitidas. Solo falla el archivo `tests/migracion/paridad.test.ts`, que exige el Excel original (ya fallaba antes de estos cambios) |
 | Revisión en navegador | Arnés visual del repo (`prueba-visual`, datos sintéticos, sin sesión ni API real), con casos sintéticos nuevos: Generic en Rappi, App sin `defaultCode`, shots y orden Rappi de 10 dígitos. Resultados abajo |
 | Nuevas pruebas | Unión por código nulo con totales conservados; «Pan de Muerto» sin código conocido queda por nombre; tamaños solo vasos; Generic rotulado con su nombre crudo y su peso; filtro de `todas()` antes de ordenar y paginar; políticas con initPlan; `anon` sin `execute` |
 | Control negativo A5 | Sin la migración 21, las 2 pruebas nuevas de BD **fallan**; con ella, pasan |
@@ -82,9 +82,32 @@ El tiempo de pantalla en producción no se mide sin acceso a Vercel.
 - **No se puede medir localmente:** PGlite no tiene los datos ni el costo real, y aplicar DDL en producción está fuera de la fase 3.
 - Se mide en la fase 4, antes y después, con `scripts/conciliacion/explain-resumen.ts`.
 
+## Corrección del ranking (revisión del PR #18)
+
+Dos hallazgos de la primera versión de A1:
+
+| Hallazgo | Antes | Ahora |
+|---|---|---|
+| **Ambigüedad y orden de entrada** | Una línea sin código se unía al código «más frecuente» de su nombre. Si el nombre tenía varios códigos, la elección era arbitraria, y en un empate dependía del orden de los pedidos. La etiqueta de la fila era el primer nombre visto | Solo se une si el nombre tiene **un único** código en el periodo; si no, queda aparte con `sinCodigo: true` (la UI muestra «sin código»). La etiqueta es el nombre más frecuente (desempate alfabético). Tamaños, customs y filas tienen desempates estables |
+| **Colisión nombre/código** | Las claves de código y de nombre compartían espacio: una línea sin código llamada «4MIL» se unía al producto con código `4MIL`. Además, dos filas podían compartir `codigo` y, por tanto, la React key | Claves separadas (`codigo:X` / `nombre:Y`) y campo nuevo `clave`, única por fila, usado como key y para el despliegue en Productos y En vivo |
+
+**Pruebas nuevas** (`tests/portal/sucursales-metricas.test.ts`, «productos: identidad de la fila»):
+- **Ambigüedad:** dos códigos para «Latte» más una línea sin código; la línea no se asigna a ninguno de los dos.
+- **Código único:** cuando el nombre tiene un solo código, la línea sin código se une a él.
+- **Colisión** en ambos sentidos: un nombre igual al código de otro producto, y un código igual al nombre de otra línea sin código. Además, claves únicas por fila.
+- **Orden de entrada:** el mismo resultado con 3 órdenes distintos; la etiqueta queda fija para un código con dos nombres.
+- **Separación por sucursal:** el código aprendido en una sucursal no se aplica a otra.
+
+Todas verifican que se conserven importe, líneas e importe de customs.
+- Las 4 que dependían de la corrección **fallaban con el código anterior**; la de código único ya pasaba.
+
+**Datos reales** (4 semanas, 5,324 pedidos): mismas filas (612: 79, 583: 76, 532: 77) y totales idénticos. No hay nombres repetidos, ninguna fila «sin código» en «todos» y todas las claves son únicas. En esa ventana no hay casos ambiguos: la corrección cambia el comportamiento solo en los casos límite.
+
+**Navegador** (arnés visual): con el filtro App, un producto que hoy solo llegó sin código aparece una vez, marcado «sin código». La suma cuadra y la consola está limpia.
+
 ## Riesgos
 
-- **A1:** si el proveedor usara un mismo nombre para dos productos distintos, una línea sin código se uniría al más frecuente. No se observó en la ventana, y la regla solo aplica cuando falta el código.
+- **A1:** corregido (ver «Corrección del ranking»). Riesgo residual: si un producto renombrado conserva su código, sus líneas sin código con el nombre nuevo solo se unen cuando el nombre nuevo tiene un código único en el periodo. Si no, se ven como una fila aparte «sin código»; no se pierde importe.
 - **A5:** cambia el texto de 89 políticas. La lógica está demostrada idéntica en PGlite (145/145) y las pruebas de permisos y MCP pasan. El rollback es exacto y está probado.
 - **A2/A3:** cambio solo de presentación; los totales no se tocan.
 

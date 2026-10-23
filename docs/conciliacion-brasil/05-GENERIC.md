@@ -88,7 +88,15 @@ Simulación: `scripts/conciliacion/simular-ranking.ts`, sobre los mismos 5,324 p
 
 **Residual venta − líneas:** 17 ¢ en 612, 2 ¢ en 583 y 5 ¢ en 532. Coincide exactamente con los pedidos que no cuadran (17, 2 y 5), cada uno de ±1 ¢. Es el **redondeo del proveedor** ya documentado en docs/10; no lo causa ninguna opción.
 
-**Propuesta para fase 3** (pendiente de aprobación):
+**Implementado en fase 3:** la opción B, corregida tras la revisión del PR #18.
+- Se une solo cuando el nombre tiene un único código en el periodo de esa sucursal.
+- Los casos ambiguos quedan aparte, marcados «sin código».
+- Las claves de código y de nombre van separadas.
+- El resultado no depende del orden de los pedidos.
+
+Detalle en `09-RESULTADO-FASE-3.md`.
+
+**Propuesta original:**
 - Opción **B** para el ranking.
 - **Generic se mantiene visible**, sin excluirlo ni reetiquetarlo como producto, con la etiqueta «Generic (sin identificación del proveedor)» y su peso.
 - Prueba de conservación de totales con fixtures.

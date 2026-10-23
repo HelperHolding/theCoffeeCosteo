@@ -263,7 +263,7 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
                     <Ranking
                       moneda={m}
                       filas={d.productosTop.map((p) => ({
-                        clave: p.codigo,
+                        clave: p.clave,
                         nombre: p.nombre,
                         importeCent: p.importeCent,
                         lineas: p.lineas,
