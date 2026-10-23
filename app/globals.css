@@ -376,8 +376,8 @@
     /* closest-side: llega a cero antes de la orilla de la capa, sin cortes rectos */
     background: radial-gradient(
       ellipse closest-side at 50% 40%,
-      rgb(255 248 230 / calc(0.18 * var(--enc))) 0 45%,
-      rgb(255 244 220 / calc(0.07 * var(--enc))) 75%,
+      rgb(255 248 230 / calc(0.18 * var(--enc) * var(--halo, 1))) 0 45%,
+      rgb(255 244 220 / calc(0.07 * var(--enc) * var(--halo, 1))) 75%,
       rgb(255 244 220 / 0) 100%
     );
   }
@@ -436,7 +436,7 @@
       inset 0 2px 3px 6px rgb(120 100 70 / 0.05),
       inset 0 0 30px 6px rgb(255 253 246 / calc(0.9 * var(--enc))),
       /* canto del aro (define la caja sobre el muro claro) y halo tenue */ 0 0 0 1px rgb(90 70 45 / 0.08),
-      0 0 56px 10px rgb(255 247 226 / calc(0.3 * var(--enc))),
+      0 0 56px 10px rgb(255 247 226 / calc(0.3 * var(--enc) * var(--halo, 1))),
       /* sombra lejana: la caja cuelga separada del muro; encendida se aclara */ 0 54px 42px -30px
         rgb(70 50 25 / calc(0.36 - 0.14 * var(--enc)));
   }
@@ -525,4 +525,94 @@
       0 1px 2px rgb(17 17 17 / 0.05),
       0 14px 28px -16px rgb(60 40 20 / 0.45);
   }
+}
+
+/*
+ * Modo noche del muro (interruptor sol/luna de la barra superior; lo aplica app/layout.tsx antes de pintar):
+ * la tienda de noche. Muro y lambrín en penumbra y el letrero ilumina más; tarjetas, placas y letrero
+ * siguen blancos, así que el texto no cambia.
+ */
+@layer components {
+  html[data-luz='noche'] .muro {
+    background: #3a342d;
+  }
+  html[data-luz='noche'] .muro::before {
+    filter: brightness(0.5) saturate(0.9);
+  }
+  html[data-luz='noche'] .letrero-escena {
+    --halo: 1.4;
+  }
+  html[data-luz='noche'] .letrero-varilla {
+    background: linear-gradient(90deg, #1d1b19, #0f0e0d 45%, #2a2826);
+  }
+
+  /* Interruptor día/noche: sol · riel · luna, sin texto. */
+  .interruptor-luz {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 4px;
+    border-radius: 999px;
+    color: var(--color-muted-foreground);
+  }
+  .interruptor-luz svg {
+    width: 15px;
+    height: 15px;
+    transition: opacity 0.25s;
+  }
+  .interruptor-luz .luna,
+  html[data-luz='noche'] .interruptor-luz .sol {
+    opacity: 0.45;
+  }
+  html[data-luz='noche'] .interruptor-luz .luna {
+    opacity: 1;
+  }
+  .interruptor-luz .riel {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--color-line-strong);
+    transition: background-color 0.25s;
+  }
+  .interruptor-luz .perilla {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+    transition: transform 0.25s;
+  }
+  html[data-luz='noche'] .interruptor-luz {
+    color: #d9d1c4;
+  }
+  html[data-luz='noche'] .interruptor-luz .riel {
+    background: #f1ece4;
+  }
+  html[data-luz='noche'] .interruptor-luz .perilla {
+    background: #3a342d;
+    transform: translateX(14px);
+  }
+  .interruptor-luz:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Fuera de capa: la barra superior lleva utilidades de color (bg-muro/85, border-line/80) que ganan a components. */
+html[data-luz='noche'] .barra-muro {
+  background: rgb(58 52 45 / 0.85);
+  border-color: rgb(255 255 255 / 0.08);
+  color: #f1ece4;
+}
+html[data-luz='noche'] .barra-muro [aria-label='Abrir menú'] {
+  color: #f1ece4;
+}
+/* El logo de la barra pasa a su versión negativa (como en el lateral). */
+html[data-luz='noche'] .barra-muro img {
+  filter: invert(1);
+  mix-blend-mode: screen;
 }
