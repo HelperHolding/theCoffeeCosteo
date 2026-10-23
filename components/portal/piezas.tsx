@@ -23,38 +23,43 @@ export function Encabezado({
   children?: React.ReactNode;
 }) {
   return (
-    // Letrero de sucursal (tema "muro"): caja de luz con la marca impresa cuando no hay acciones.
-    <header className="letrero flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {migas?.length ? (
-          <nav
-            aria-label="Migas de pan"
-            className="mb-3 flex items-center gap-1 text-xs text-muted-foreground"
-          >
-            {migas.map((m) => (
-              <span key={m.href} className="flex items-center gap-1">
-                <Link href={m.href} className="hover:text-ink hover:underline">
-                  {m.nombre}
-                </Link>
-                <ChevronRight size={12} aria-hidden="true" />
-              </span>
-            ))}
-            <span className="text-ink-2">{titulo}</span>
-          </nav>
+    // Letrero de sucursal (tema "muro"): caja de luz colgante con la marca impresa cuando no hay acciones.
+    <div className="letrero-escena">
+      <span aria-hidden="true" className="letrero-luz" />
+      <span aria-hidden="true" className="letrero-varilla" />
+      <span aria-hidden="true" className="letrero-varilla" />
+      <header className="letrero flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          {migas?.length ? (
+            <nav
+              aria-label="Migas de pan"
+              className="mb-3 flex items-center gap-1 text-xs text-muted-foreground"
+            >
+              {migas.map((m) => (
+                <span key={m.href} className="flex items-center gap-1">
+                  <Link href={m.href} className="hover:text-ink hover:underline">
+                    {m.nombre}
+                  </Link>
+                  <ChevronRight size={12} aria-hidden="true" />
+                </span>
+              ))}
+              <span className="text-ink-2">{titulo}</span>
+            </nav>
+          ) : (
+            area && <p className="eyebrow mb-2">{area}</p>
+          )}
+          <h1>{titulo}</h1>
+          {descripcion && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{descripcion}</p>}
+        </div>
+        {children ? (
+          <div className="flex flex-wrap items-center gap-2">{children}</div>
         ) : (
-          area && <p className="eyebrow mb-2">{area}</p>
+          <span aria-hidden="true" className="letrero-marca hidden self-center md:block">
+            the coffee.<span className="ml-[0.8em] text-[0.92em]">ザ・コーヒー</span>
+          </span>
         )}
-        <h1>{titulo}</h1>
-        {descripcion && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{descripcion}</p>}
-      </div>
-      {children ? (
-        <div className="flex flex-wrap items-center gap-2">{children}</div>
-      ) : (
-        <span aria-hidden="true" className="letrero-marca hidden self-center md:block">
-          the coffee.<span className="ml-[1em]">ザ・コーヒー</span>
-        </span>
-      )}
-    </header>
+      </header>
+    </div>
   );
 }
 

@@ -248,6 +248,39 @@
   }
 }
 
+/* Intensidad de la luz del letrero; registrada para poder animarla (parpadeo de encendido). */
+@property --enc {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+@keyframes letrero-encender {
+  0% {
+    --enc: 0;
+  }
+  7% {
+    --enc: 0.55;
+  }
+  10% {
+    --enc: 0.08;
+  }
+  16% {
+    --enc: 0.8;
+  }
+  19% {
+    --enc: 0.25;
+  }
+  24% {
+    --enc: 0.9;
+  }
+  34% {
+    --enc: 0.82;
+  }
+  100% {
+    --enc: 1;
+  }
+}
+
 /*
  * Tema "muro de sucursal" (aprobado por Carlo, 2026-10-22): como en las tiendas, la mitad superior del
  * muro es blanco cálido y la inferior un lambrín de madera clara en duelas verticales con moldura blanca.
@@ -320,39 +353,119 @@
   }
 
   /*
-   * Letrero de sucursal (encabezado de página): caja de luz blanca, marco de madera clara, centro más
-   * luminoso con reflejo superior, cara inferior con profundidad y halo cálido.
+   * Letrero de sucursal (encabezado de página, aprobado por Carlo 2026-10-23): caja de luz colgante como
+   * la del mostrador. Dos varillas al techo, aro de aluminio blanco, cara de acrílico pareja, cara inferior
+   * vista desde abajo, halo tenue y un charco de luz suave en el muro. Todo lo luminoso se multiplica por
+   * --enc (0 apagado, 1 encendido) para el parpadeo de encendido.
    */
+  .letrero-escena {
+    --enc: 1;
+    position: relative;
+    isolation: isolate;
+    padding-top: 1.75rem;
+  }
+  /* Primera carga de la sesión: el letrero se enciende con un parpadeo corto (lo marca app/layout.tsx). */
+  html[data-letrero='encender'] .letrero-escena {
+    animation: letrero-encender 1.4s linear both;
+  }
+  .letrero-luz {
+    position: absolute;
+    z-index: -1;
+    inset: -2.5rem -1rem -9rem;
+    pointer-events: none;
+    /* closest-side: llega a cero antes de la orilla de la capa, sin cortes rectos */
+    background: radial-gradient(
+      ellipse closest-side at 50% 40%,
+      rgb(255 248 230 / calc(0.18 * var(--enc))) 0 45%,
+      rgb(255 244 220 / calc(0.07 * var(--enc))) 75%,
+      rgb(255 244 220 / 0) 100%
+    );
+  }
+  .letrero-varilla {
+    position: absolute;
+    z-index: 0;
+    top: -2.5rem;
+    left: 14%;
+    width: 4px;
+    height: calc(2.5rem + 1.75rem + 2px);
+    border-radius: 2px;
+    background:
+      linear-gradient(90deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 40%, rgb(0 0 0 / 0.25)),
+      linear-gradient(
+        180deg,
+        #2a2725 0 55%,
+        color-mix(in oklab, #b9b1a4 calc(var(--enc) * 100%), #3a3633) 100%
+      );
+    box-shadow: 7px 12px 9px -3px rgb(40 30 20 / calc(0.22 - 0.1 * var(--enc)));
+  }
+  .letrero-varilla + .letrero-varilla {
+    left: auto;
+    right: 14%;
+  }
+  .letrero-varilla::after {
+    /* casquillo sobre la tapa de la caja */
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: -5px;
+    width: 14px;
+    height: 6px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(
+      180deg,
+      #f2efe9,
+      color-mix(in oklab, #fffaf0 calc(var(--enc) * 100%), #b7b2aa)
+    );
+    box-shadow: 0 0 6px rgb(255 248 228 / calc(0.9 * var(--enc)));
+  }
   .letrero {
     position: relative;
-    padding: 1.4rem 1.75rem 1.5rem;
-    border: 2px solid var(--color-madera-canto);
-    border-radius: 6px;
-    background:
-      radial-gradient(
-        120% 140% at 50% 35%,
-        #ffffff 0%,
-        rgb(255 255 255 / 0.96) 45%,
-        rgb(246 239 226 / 0.92) 100%
-      ),
-      #ffffff;
+    padding: 1.75rem 2.25rem 1.85rem;
+    border-radius: 3px;
+    /* Cara pareja: la luz se reparte uniforme y solo cae un poco en las esquinas. */
+    background: radial-gradient(
+      130% 160% at 50% 40%,
+      color-mix(in oklab, #ffffff calc(var(--enc) * 100%), #e9e6e0) 0 50%,
+      color-mix(in oklab, #fdfbf7 calc(var(--enc) * 100%), #e4e0d8) 78%,
+      color-mix(in oklab, #f6f2ea calc(var(--enc) * 100%), #dbd6cc) 100%
+    );
     box-shadow:
-      inset 0 0 0 1px rgb(255 255 255 / 0.95),
-      inset 0 0 28px rgb(255 252 244 / 0.95),
-      inset 0 -14px 22px -14px rgb(214 185 143 / 0.55),
-      0 7px 0 -1px #ece4d6,
-      0 7px 0 1px var(--color-madera-canto),
-      0 0 44px 12px rgb(255 240 205 / 0.75),
-      0 22px 34px -18px rgb(60 40 20 / 0.5);
+      /* aro de aluminio: no emite, así que es apenas más gris que la cara encendida */
+      inset 0 0 0 5px color-mix(in oklab, #efece6 calc(var(--enc) * 100%), #e2ded6),
+      inset 0 0 0 6px rgb(0 0 0 / 0.07),
+      inset 0 2px 3px 6px rgb(120 100 70 / 0.05),
+      inset 0 0 30px 6px rgb(255 253 246 / calc(0.9 * var(--enc))),
+      /* canto del aro (define la caja sobre el muro claro) y halo tenue */ 0 0 0 1px rgb(90 70 45 / 0.08),
+      0 0 56px 10px rgb(255 247 226 / calc(0.3 * var(--enc))),
+      /* sombra lejana: la caja cuelga separada del muro; encendida se aclara */ 0 54px 42px -30px
+        rgb(70 50 25 / calc(0.36 - 0.14 * var(--enc)));
   }
+  /* Cara inferior de la caja, vista desde abajo: trapecio que se angosta hacia el fondo. */
+  .letrero::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 11px;
+    clip-path: polygon(0 0, 100% 0, 98.6% 100%, 1.4% 100%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, #f7f3ea calc(var(--enc) * 100%), #d9d4ca) 0,
+      color-mix(in oklab, #e3dccd calc(var(--enc) * 100%), #c9c3b7) 70%,
+      color-mix(in oklab, #d6cebe calc(var(--enc) * 100%), #bdb7ab) 100%
+    );
+  }
+  /* Grano del acrílico, apenas perceptible. */
   .letrero::after {
     content: '';
     position: absolute;
-    inset: 3px 3px auto 3px;
-    height: 40%;
-    border-radius: 4px 4px 50% 50% / 4px 4px 12px 12px;
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0));
+    inset: 6px;
     pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+      0 0 / 180px 180px;
+    mix-blend-mode: multiply;
+    opacity: 0.045;
   }
   .letrero > * {
     position: relative;
@@ -361,10 +474,40 @@
   .letrero-marca {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     letter-spacing: -0.01em;
     white-space: nowrap;
     color: #161616;
+  }
+  @media (max-width: 639px) {
+    .letrero {
+      padding: 1.4rem 1.25rem;
+    }
+    .letrero-varilla {
+      left: 10%;
+    }
+    .letrero-varilla + .letrero-varilla {
+      right: 10%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-letrero='encender'] .letrero-escena {
+      animation: none;
+    }
+  }
+  @media print {
+    .letrero-luz,
+    .letrero-varilla,
+    .letrero::before,
+    .letrero::after {
+      display: none;
+    }
+    .letrero-escena {
+      padding-top: 0;
+    }
+    .letrero {
+      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+    }
   }
 
   /* Ficha con textura de madera (íconos de KPI). */
