@@ -8,7 +8,9 @@ import { momentoPedido, textoHora } from './tiempo';
  * - discount del pedido = monto; discount de línea/custom = porcentaje (amount ya lo tiene aplicado).
  * - fromSmartphone = App The Coffee. No se usa paymentType ni refundId como origen.
  * netAmout se conserva como `netoCent` ("neto reportado por la API"; definición pendiente del proveedor),
- * útil en Rappi, donde es menor que lo cobrado. No se conservan percentageOfTransfer ni refundId.
+ * útil en Rappi, donde es menor que lo cobrado. No se conserva percentageOfTransfer. De refundId solo se toma
+ * el número de orden de Rappi (pago RAPPI y 10 dígitos, conciliacion-brasil/11); en otros pagos es un UUID de
+ * transacción, vacío o null, y nunca sale del servidor.
  * Un registro inválido NO se convierte en cero: se excluye y la lectura se marca incompleta.
  */
 const Custom = z.object({
@@ -27,6 +29,8 @@ const PedidoApi = z.object({
   discount: z.number(),
   paymentMethod: z.string().nullish(),
   paymentType: z.string().nullish(),
+  // Sin tipo estricto: un cambio de tipo en refundId no debe invalidar el pedido (solo deja la orden en null).
+  refundId: z.unknown(),
   items: z.array(Item),
   createdAt: z.string(),
 });
@@ -35,10 +39,13 @@ const PedidoApi = z.object({
 export type Origen = 'mostrador' | 'app' | 'rappi' | 'desconocido';
 
 export interface CustomNormal {
+  /** defaultCode del proveedor; si viene vacío o nulo, el productName (ver `sinCodigo`). */
   codigo: string;
   nombre: string;
   importeCent: number;
   descuentoPct: number;
+  /** true si el proveedor no mandó defaultCode (App desde 2026-10-02, docs/conciliacion-brasil/05). */
+  sinCodigo?: boolean;
 }
 export interface LineaNormal extends CustomNormal {
   customs: CustomNormal[];
@@ -56,6 +63,8 @@ export interface PedidoNormal {
   metodo: string;
   tipo: string;
   lineas: LineaNormal[];
+  /** Número de orden en Rappi (string de 10 dígitos de refundId) solo en pagos RAPPI; null si falta o no cumple. */
+  numeroPedidoRappi: string | null;
   /** ventaCent = Σ líneas + Σ customs. Si es false, la conciliación lo reporta (no se ajusta). */
   cuadra: boolean;
 }
@@ -67,6 +76,7 @@ const custom = (c: z.infer<typeof Custom>): CustomNormal => ({
   nombre: c.productName,
   importeCent: centavos(c.amount),
   descuentoPct: c.discount,
+  ...(c.defaultCode ? {} : { sinCodigo: true }),
 });
 
 export const importeLinea = (l: LineaNormal) =>
@@ -123,6 +133,10 @@ export function normalizar(
       descuentoCent: centavos(d.discount),
       metodo: d.paymentMethod ?? '',
       tipo: d.paymentType ?? '',
+      numeroPedidoRappi:
+        d.paymentMethod === 'RAPPI' && typeof d.refundId === 'string' && /^\d{10}$/.test(d.refundId)
+          ? d.refundId
+          : null,
       lineas,
       cuadra: lineas.reduce((s, l) => s + importeLinea(l), 0) === ventaCent,
     });

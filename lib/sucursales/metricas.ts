@@ -1,4 +1,4 @@
-import { importeLinea, type Origen, type PedidoNormal } from './normalizar';
+import { importeLinea, type LineaNormal, type Origen, type PedidoNormal } from './normalizar';
 import { sumarDias } from './tiempo';
 
 /** Funciones puras sobre pedidos normalizados (todas en centavos). Mismo conjunto para KPIs, gráficas y tablas. */
@@ -88,11 +88,24 @@ export function porHora(ps: PedidoNormal[]) {
 export const enVentana = (ps: PedidoNormal[], corte: number, segundos: number) =>
   ps.filter((p) => p.segundo <= corte && p.segundo > corte - segundos).length;
 
-const ES_TAMANO = /\b\d{2,4}\s?ml\b/i;
+/** Solo vasos («Regular - 440ml», «Large - 355ml»…). Shots y dosis con ml («Double shot (36ml)») son personalizaciones. */
+export const ES_TAMANO = /^(Regular|Large) - \d{3}ml$/;
+
+/** Línea genérica del proveedor (Rappi en 532): se muestra, pero sin atribuirla a un producto (conciliacion-brasil/05). */
+export const CODIGO_GENERICO = 'GENERIC';
+export const ETIQUETA_GENERICO = 'Generic (sin identificación del proveedor)';
 
 export interface ProductoResumen {
+  /** Identidad única de la fila (React key, despliegue): «codigo:X» o «nombre:Y», nunca se cruzan. */
+  clave: string;
+  /** defaultCode del proveedor; en filas sin código, el productName (ver `sinCodigo`). */
   codigo: string;
+  /** Fila de líneas sin defaultCode que no se pudieron unir a un código único del mismo nombre. */
+  sinCodigo?: true;
+  /** Nombre para mostrar; igual al del proveedor salvo en la línea genérica. */
   nombre: string;
+  /** productName tal como llega, solo cuando difiere de `nombre`. */
+  nombreProveedor?: string;
   /** Línea + sus customs, una sola vez. */
   importeCent: number;
   extraCustomsCent: number;
@@ -107,8 +120,11 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
   const m = new Map<
     string,
     {
+      clave: string;
       codigo: string;
-      nombre: string;
+      sinCodigo: boolean;
+      /** Nombres vistos con su frecuencia: la etiqueta no depende del orden de los pedidos. */
+      nombres: Map<string, number>;
       importeCent: number;
       extraCustomsCent: number;
       lineas: number;
@@ -117,14 +133,34 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
       customs: Map<string, { veces: number; importeCent: number }>;
     }
   >();
+  // `ps` es siempre de una sola sucursal: los códigos aprendidos aquí no se aplican a otra.
+  // Una línea sin defaultCode se une al código del mismo nombre exacto solo si ese nombre tiene UN código en el
+  // periodo; con varios es ambigua y queda aparte, marcada sin código (no se elige uno). Las claves de código y de
+  // nombre van en espacios separados para que un nombre igual al código de otro producto no se mezcle con él.
+  const codigosDe = new Map<string, Set<string>>();
+  for (const p of ps)
+    for (const l of p.lineas)
+      if (!l.sinCodigo) codigosDe.set(l.nombre, (codigosDe.get(l.nombre) ?? new Set<string>()).add(l.codigo));
+  const identidad = (l: LineaNormal) => {
+    const unico =
+      l.sinCodigo && codigosDe.get(l.nombre)?.size === 1 ? [...codigosDe.get(l.nombre)!][0] : null;
+    if (!l.sinCodigo || unico !== null) {
+      const codigo = unico ?? l.codigo;
+      return { clave: `codigo:${codigo}`, codigo, sinCodigo: false };
+    }
+    return { clave: `nombre:${l.nombre}`, codigo: l.codigo, sinCodigo: true };
+  };
   let total = 0;
   for (const p of ps)
     for (const l of p.lineas) {
-      let x = m.get(l.codigo);
+      const { clave: k, codigo, sinCodigo } = identidad(l);
+      let x = m.get(k);
       if (!x) {
         x = {
-          codigo: l.codigo,
-          nombre: l.nombre,
+          clave: k,
+          codigo,
+          sinCodigo,
+          nombres: new Map(),
           importeCent: 0,
           extraCustomsCent: 0,
           lineas: 0,
@@ -132,8 +168,9 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
           tamanos: new Map(),
           customs: new Map(),
         };
-        m.set(l.codigo, x);
+        m.set(k, x);
       }
+      x.nombres.set(l.nombre, (x.nombres.get(l.nombre) ?? 0) + 1);
       const imp = importeLinea(l);
       x.importeCent += imp;
       x.extraCustomsCent += imp - l.importeCent;
@@ -150,24 +187,36 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
         }
       }
     }
+  // Desempates por nombre y clave: mismo resultado sea cual sea el orden de los pedidos.
+  const porNombre = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   return [...m.values()]
-    .map((x) => ({
-      codigo: x.codigo,
-      nombre: x.nombre,
-      importeCent: x.importeCent,
-      extraCustomsCent: x.extraCustomsCent,
-      lineas: x.lineas,
-      pedidos: x.pedidos.size,
-      participacion: total > 0 ? x.importeCent / total : null,
-      tamanos: [...x.tamanos]
-        .map(([nombre, lineas]) => ({ nombre, lineas }))
-        .sort((a, b) => b.lineas - a.lineas),
-      customs: [...x.customs]
-        .map(([nombre, v]) => ({ nombre, ...v }))
-        .sort((a, b) => b.veces - a.veces)
-        .slice(0, 8),
-    }))
-    .sort((a, b) => b.importeCent - a.importeCent || a.nombre.localeCompare(b.nombre));
+    .map((x) => {
+      const nombre = [...x.nombres].sort((a, b) => b[1] - a[1] || porNombre(a[0], b[0]))[0][0];
+      return {
+        clave: x.clave,
+        codigo: x.codigo,
+        ...(x.sinCodigo ? { sinCodigo: true as const } : {}),
+        ...(x.codigo === CODIGO_GENERICO && !x.sinCodigo
+          ? { nombre: ETIQUETA_GENERICO, nombreProveedor: nombre }
+          : { nombre }),
+        importeCent: x.importeCent,
+        extraCustomsCent: x.extraCustomsCent,
+        lineas: x.lineas,
+        pedidos: x.pedidos.size,
+        participacion: total > 0 ? x.importeCent / total : null,
+        tamanos: [...x.tamanos]
+          .map(([nombre, lineas]) => ({ nombre, lineas }))
+          .sort((a, b) => b.lineas - a.lineas || porNombre(a.nombre, b.nombre)),
+        customs: [...x.customs]
+          .map(([nombre, v]) => ({ nombre, ...v }))
+          .sort((a, b) => b.veces - a.veces || porNombre(a.nombre, b.nombre))
+          .slice(0, 8),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.importeCent - a.importeCent || a.nombre.localeCompare(b.nombre) || porNombre(a.clave, b.clave),
+    );
 }
 
 /** Personalizaciones de todo el periodo (sin tamaños): frecuencia e importe adicional. */
@@ -242,6 +291,7 @@ export function conciliar(ps: PedidoNormal[]) {
     diferenciaCent: ventaCent - productosCent,
     pedidosNoCuadran: ps.filter((p) => !p.cuadra).length,
     soloRedondeo,
+    rappiSinNumeroOrden: ps.filter((p) => p.origen === 'rappi' && p.numeroPedidoRappi === null).length,
   };
 }
 

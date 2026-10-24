@@ -153,15 +153,15 @@ export function Productos({
                       </thead>
                       <tbody>
                         {lista.map((x) => {
-                          const exp = abierto === x.codigo;
+                          const exp = abierto === x.clave;
                           return (
-                            <Fragment key={x.codigo}>
+                            <Fragment key={x.clave}>
                               <tr>
                                 <td>
                                   <button
                                     type="button"
                                     aria-expanded={exp}
-                                    onClick={() => setAbierto(exp ? null : x.codigo)}
+                                    onClick={() => setAbierto(exp ? null : x.clave)}
                                     className="flex items-center gap-1.5 text-left font-medium"
                                   >
                                     {exp ? (
@@ -170,6 +170,11 @@ export function Productos({
                                       <ChevronRight size={14} aria-hidden="true" className="shrink-0" />
                                     )}
                                     {x.nombre}
+                                    {x.sinCodigo && (
+                                      <span className="text-xs font-normal text-muted-foreground">
+                                        sin código
+                                      </span>
+                                    )}
                                   </button>
                                 </td>
                                 <td className="numero">{dinero(x.importeCent, m)}</td>

@@ -12,7 +12,7 @@ export interface PedidoApi {
   paymentMethod: string;
   paymentType: string;
   items: {
-    defaultCode: string;
+    defaultCode: string | null;
     productName: string;
     amount: number;
     discount: number;

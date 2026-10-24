@@ -8,6 +8,7 @@ import { Pedidos } from './pedidos';
 import { Productos } from './productos';
 import { Tendencias } from './tendencias';
 import { Rappi } from './rappi';
+import { AvisoCalidadRappi } from './estados';
 
 export const PESTANAS = [
   { id: 'vivo', nombre: 'En vivo' },
@@ -94,6 +95,8 @@ export function VentasPos({
         </fieldset>
       </div>
       <p className="placa px-3 py-2 text-xs text-muted-foreground">{sucursal.alcance}</p>
+      {/* Las métricas incluyen Rappi en la pestaña Rappi y con el filtro «Mostrador + App + Rappi» o «Rappi». */}
+      {(tab === 'rappi' || origen === 'todos' || origen === 'rappi') && <AvisoCalidadRappi />}
       <Pestanas
         inicial={tab}
         alCambiar={setTab}

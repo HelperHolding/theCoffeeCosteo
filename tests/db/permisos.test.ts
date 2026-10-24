@@ -36,6 +36,29 @@ describe('permisos', () => {
   const contar = (uid: string, tabla: 'insumos' | 'v_resumen') =>
     comoUsuario(db, uid, async () => num((await db.query<{ n: number }>(`select count(*)::int as n from ${tabla}`)).rows[0].n));
 
+  it('las políticas evalúan rol_actual/tiene_rol/auth.* una vez por consulta (initPlan), no por fila', async () => {
+    const r = await db.query<{ tabla: string; politica: string; expr: string }>(`
+      select tablename as tabla, policyname as politica, coalesce(qual, '') || ' ' || coalesce(with_check, '') as expr
+      from pg_policies where schemaname = 'public'`);
+    // Cada llamada debe ir precedida de SELECT (subconsulta escalar): mismo número de llamadas que de "SELECT f(".
+    const llamada = /(?:public\.)?(?:rol_actual|tiene_rol|crm_puede_leer|crm_puede_editar|auth\.uid|auth\.jwt)\(/gi;
+    const envuelta = /SELECT\s+(?:public\.)?(?:rol_actual|tiene_rol|crm_puede_leer|crm_puede_editar|auth\.uid|auth\.jwt)\(/gi;
+    const porFila = r.rows.filter((p) => (p.expr.match(llamada) ?? []).length !== (p.expr.match(envuelta) ?? []).length);
+    expect(porFila.map((p) => `${p.tabla}.${p.politica}`)).toEqual([]);
+  });
+
+  it('anon no ejecuta las funciones SECURITY DEFINER de roles y bitácora', async () => {
+    const r = await db.query<{ f: string; anon: boolean; auth: boolean }>(`
+      select p.proname as f, has_function_privilege('anon', p.oid, 'execute') as anon,
+             has_function_privilege('authenticated', p.oid, 'execute') as auth
+      from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname in ('rol_actual', 'registrar_bitacora')
+      order by 1`);
+    expect(r.rows).toEqual([
+      { f: 'registrar_bitacora', anon: false, auth: true },
+      { f: 'rol_actual', anon: false, auth: true },
+    ]);
+  });
+
   it('un usuario con sesión pero sin perfil no lee nada', async () => {
     expect(await contar(sinPerfil, 'insumos')).toBe(0);
     expect(await contar(sinPerfil, 'v_resumen')).toBe(0);

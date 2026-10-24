@@ -12,6 +12,17 @@ it('consulta todas las páginas y falla si el API falla en una página posterior
   range.mockResolvedValueOnce({ data: null, error: { message: 'error' } });
   await expect(todas(db, 'insumos', 'id')).rejects.toThrow('No se pudo consultar');
 });
+it('filtra en la base antes de ordenar y paginar', async () => {
+  const llamadas: string[] = [];
+  const q = {
+    eq: vi.fn((c: string, v: string) => (llamadas.push(`eq:${c}=${v}`), q)),
+    order: vi.fn((c: string) => (llamadas.push(`order:${c}`), q)),
+    range: vi.fn().mockResolvedValue({ data: [{ producto_id: 'p1' }], error: null }),
+  };
+  const db = { from: vi.fn().mockReturnValue({ select: () => q }) } as unknown as Db;
+  expect(await todas(db, 'v_resumen', 'producto_id,tamano_id', { producto_id: 'p1' })).toHaveLength(1);
+  expect(llamadas).toEqual(['eq:producto_id=p1', 'order:producto_id', 'order:tamano_id']);
+});
 it('preserva nulo frente a cero', () => {
   expect(dinero(null)).toBe('Sin precio');
   expect(dinero(0)).toContain('0.00');

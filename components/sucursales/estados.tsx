@@ -56,6 +56,23 @@ export function ErrorCarga({ error, alReintentar }: { error: ErrorLecturaUi; alR
   );
 }
 
+/** Texto aprobado por Carlo (conciliacion-brasil/14): limitación de la fuente, no un ajuste de cifras. */
+export const AVISO_CALIDAD_RAPPI =
+  'Datos reportados por el POS de Brasil. Detectamos pedidos Rappi con artículos o cargos de tamaño no desglosados; estos importes pueden diferir de Rappi y no representan una liquidación.';
+
+/** Aviso de calidad de fuente: se muestra siempre que las métricas incluyan el canal Rappi. */
+export function AvisoCalidadRappi() {
+  return (
+    <p
+      role="note"
+      className="flex items-start gap-2 rounded-2xl border border-warn/30 bg-warn-soft px-4 py-3 text-sm text-ink-2"
+    >
+      <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warn" />
+      <span>{AVISO_CALIDAD_RAPPI}</span>
+    </p>
+  );
+}
+
 /** Avisos de cobertura: lectura parcial o con registros excluidos. */
 export function AvisosLectura({ lecturas }: { lecturas: { nombre: string; info: LecturaInfo }[] }) {
   const conAviso = lecturas.filter((l) => l.info.estado !== 'completa' || l.info.avisos.length > 0);

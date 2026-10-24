@@ -22,8 +22,19 @@ export function DetallePedido({
           <>
             <DialogHeader>
               <DialogTitle className="font-display">
-                Pedido {pedido.id} · {dinero(pedido.ventaCent, moneda)}
+                Pedido POS {pedido.id} · {dinero(pedido.ventaCent, moneda)}
               </DialogTitle>
+              {pedido.origen === 'rappi' && (
+                // Identificador distinto del pedido POS: no lo reemplaza ni se reconstruye si la API no lo trae.
+                <p className="text-sm">
+                  Orden Rappi{' '}
+                  {pedido.numeroPedidoRappi ? (
+                    <span className="tabular font-medium">{pedido.numeroPedidoRappi}</span>
+                  ) : (
+                    <span className="text-muted-foreground">no disponible en la API</span>
+                  )}
+                </p>
+              )}
               <DialogDescription className="flex flex-wrap items-center gap-1.5">
                 <span>
                   {fechaCorta(pedido.fecha)}, {pedido.hora}

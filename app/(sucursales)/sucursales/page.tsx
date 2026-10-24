@@ -3,6 +3,7 @@ import { sesionSucursales } from '@/lib/supabase/sesion';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { Encabezado, Vacio } from '@/components/portal/piezas';
 import { TarjetaHoy } from '@/components/sucursales/tarjeta-hoy';
+import { AvisoCalidadRappi } from '@/components/sucursales/estados';
 
 /** Máximo de sucursales con lectura de "hoy" en el directorio (el resto se abre bajo demanda). */
 const MAX_HOY = 12;
@@ -30,30 +31,34 @@ export default async function Directorio() {
           </Vacio>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {lista.map((s, i) => (
-            <li key={s.companyId}>
-              {i < MAX_HOY ? (
-                <TarjetaHoy
-                  companyId={s.companyId}
-                  nombre={s.nombre}
-                  ciudad={s.ciudad}
-                  tienda={s.lookerStoreId}
-                />
-              ) : (
-                <Link
-                  href={`/sucursales/${s.companyId}`}
-                  className="flex h-full flex-col gap-1 rounded-2xl border border-line bg-surface p-5 shadow-card hover:border-ink/30"
-                >
-                  <span className="font-display text-lg font-bold">{s.nombre}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {s.ciudad} · Tienda {s.lookerStoreId} · ID API {s.companyId}
-                  </span>
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
+        <>
+          {/* La venta de hoy de cada tarjeta incluye Rappi. */}
+          <AvisoCalidadRappi />
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {lista.map((s, i) => (
+              <li key={s.companyId}>
+                {i < MAX_HOY ? (
+                  <TarjetaHoy
+                    companyId={s.companyId}
+                    nombre={s.nombre}
+                    ciudad={s.ciudad}
+                    tienda={s.lookerStoreId}
+                  />
+                ) : (
+                  <Link
+                    href={`/sucursales/${s.companyId}`}
+                    className="flex h-full flex-col gap-1 rounded-2xl border border-line bg-surface p-5 shadow-card hover:border-ink/30"
+                  >
+                    <span className="font-display text-lg font-bold">{s.nombre}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {s.ciudad} · Tienda {s.lookerStoreId} · ID API {s.companyId}
+                    </span>
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       {lista.length > MAX_HOY && (
         <p className="placa px-3 py-2 text-xs text-muted-foreground">

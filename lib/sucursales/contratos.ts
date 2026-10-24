@@ -34,6 +34,8 @@ export interface PedidoVista {
   pago: string;
   /** Código de la API (CARTAO, DINHEIRO…), para el color de la etiqueta. */
   metodo: string;
+  /** Orden en Rappi (validada en el servidor); null fuera de Rappi o si la API no la trae. */
+  numeroPedidoRappi: string | null;
   lineas: {
     codigo: string;
     nombre: string;
@@ -50,6 +52,8 @@ export interface Conciliacion {
   pedidosNoCuadran: number;
   /** Todas las diferencias son de ±1 centavo por pedido (redondeo del proveedor). */
   soloRedondeo: boolean;
+  /** Pedidos Rappi sin número de orden válido: detecta si el proveedor cambia el contenido de refundId. */
+  rappiSinNumeroOrden: number;
 }
 
 export interface RespuestaVivo {

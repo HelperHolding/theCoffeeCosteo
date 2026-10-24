@@ -1,4 +1,5 @@
 import { cn } from 'cn';
+import { ES_TAMANO } from '@/lib/sucursales/metricas';
 import type { Origen } from '@/lib/sucursales/normalizar';
 
 /**
@@ -43,8 +44,8 @@ export const TIPOS: Record<TipoPersonalizacion, { nombre: string; color: string 
 
 /** Clasificación por nombre (heurística visual; no cambia ninguna cifra). */
 export function tipoPersonalizacion(nombre: string): TipoPersonalizacion {
+  if (ES_TAMANO.test(nombre)) return 'tamano';
   const n = nombre.toLocaleLowerCase('es-MX');
-  if (/\b\d{2,4}\s?ml\b/.test(n)) return 'tamano';
   if (/milk|leche|lactose|deslact|almond|almendra|oat|avena|coco|soy|soya/.test(n)) return 'leche';
   if (/shot|espresso|decaf|descaf|caf[eé]/.test(n)) return 'cafe';
   if (/[º°]c|hot|iced|fr[ií]o|caliente|temp/.test(n)) return 'temperatura';

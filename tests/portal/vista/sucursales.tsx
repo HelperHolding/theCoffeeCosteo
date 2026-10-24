@@ -45,14 +45,23 @@ function dia(fecha: string, hastaSegundo: number, semilla: number): PedidoApi[] 
       const lineas = PRODUCTOS.filter(() => azar() < 0.3).slice(0, 3);
       const usar = lineas.length ? lineas : [PRODUCTOS[Math.floor(azar() * PRODUCTOS.length)]];
       const conAvena = azar() < 0.3;
-      const items = usar.map(([defaultCode, productName, amount], j) => ({
-        defaultCode,
+      const conShot = azar() < 0.4;
+      const app = azar() < 0.07;
+      const rappi = !app && azar() < 0.3;
+      const efectivo = !app && !rappi && azar() < 0.12;
+      // Como en la API real: la App manda a veces defaultCode null (desde 2026-10-02, conciliacion-brasil/05).
+      const sinCodigo = app && azar() < 0.6;
+      const items: PedidoApi['items'] = usar.map(([defaultCode, productName, amount], j) => ({
+        defaultCode: sinCodigo ? null : (defaultCode as string | null),
         productName,
         amount,
         discount: 0,
         itemsCustom: [
           ...(j === 0 && conAvena
             ? [{ defaultCode: 'LVG', productName: 'Oatmilk', amount: 13, discount: 0 }]
+            : []),
+          ...(j === 0 && conShot
+            ? [{ defaultCode: 'ORCF', productName: 'Double shot (36ml)', amount: 0, discount: 0 }]
             : []),
           {
             defaultCode: 'TRADICAPP',
@@ -62,13 +71,21 @@ function dia(fecha: string, hastaSegundo: number, semilla: number): PedidoApi[] 
           },
         ],
       }));
+      // Línea genérica del proveedor en algunos pedidos Rappi (sin nombre ni personalizaciones).
+      if (rappi && azar() < 0.2)
+        items.push({
+          defaultCode: 'GENERIC',
+          productName: 'Generic',
+          amount: 111,
+          discount: 0,
+          itemsCustom: [],
+        });
       const gross = items.reduce((t, x) => t + x.amount + x.itemsCustom.reduce((u, c) => u + c.amount, 0), 0);
-      const app = azar() < 0.07;
-      const rappi = !app && azar() < 0.3;
-      const efectivo = !app && !rappi && azar() < 0.12;
       ps.push(
         pedido(fecha, hora, {
           items,
+          // Rappi: número de orden sintético de 10 dígitos; los demás pagos conservan el UUID sintético del fixture.
+          ...(rappi ? { refundId: String(2_400_000_000 + Math.floor(azar() * 99_999_999)) } : {}),
           grossAmount: gross,
           netAmout: rappi ? Math.round(gross * 92) / 100 : gross,
           fromSmartphone: app,
