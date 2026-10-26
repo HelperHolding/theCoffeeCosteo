@@ -1,6 +1,6 @@
 # 23 · H2: hielo en gramos, línea por línea
 
-**Estado (2026-10-26): lote 1 aprobado por Carlo; Cold brew queda fuera.** El cierre de la aplicación está en el §8.
+**Estado (2026-10-26): lote 1 aplicado y verificado (26 líneas; Cold brew fuera).** Cierre en el §8.
 
 **Independencia del lote 3b (doc 24).** Al excluir Cold brew, H2 y 3b no comparten ninguna receta. Cada uno tiene su propio manifiesto, sus pruebas, su ejecución y su reversión, y el orden de aplicación no afecta al otro.
 
@@ -107,3 +107,22 @@ BD completa en esta rama: **195/195**; `tsc` sin errores.
 - **15 líneas de `HIELO`** (§1).
 - **Costo y presentación de compra del hielo:** pregunta 7 del doc 22 §6.
 - **Lotes 3a, 3c, 3d y 3e:** doc 22 §5 y §6.
+
+## 8. Cierre: aplicado el 2026-10-26 (23:26 UTC) y verificado
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2321Z`** | Restaurado en una copia local aislada y comparado con producción: 19,606 filas idénticas; solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS idénticas |
+| **Revalidación** (solo lectura) | Las 26 recetas con la versión del manifiesto y sus 26 líneas en `HIELO`; `HIELO (g)` no existía; 41 líneas de `HIELO`; perfil admin activo; bitácora sin cambios desde el respaldo |
+| **Ensayo remoto** (ROLLBACK) | 26 cambiadas, 27 registros propios (alta + 26) y 0 ajenos; costos y resto idénticos; 15 líneas sin migrar antes y después. Una conexión nueva confirmó que no persistió nada |
+| **Aplicación** | **COMMIT**. `HIELO (g)` creado (gr; $0 / 1 g como supuesto). Bitácora **#505** (alta) y **#506–531** (`receta_lineas.insumo_id`, `HIELO` → `HIELO (g)`), todas `carga_masiva`, con autor Carlo y la nota de la ejecución |
+| **Verificación** (conexión nueva) | 26 líneas en `HIELO (g)`; **15 siguen en `HIELO`**, Cold brew incluida. Cada una de las 26 recetas subió exactamente +1 de versión. Huellas idénticas de `v_resumen` (costo, precio y margen de todos los productos y canales), `v_costo_producto`, alertas, `linea_cantidades`, precios, precios manuales, 62 enlaces, el resto de insumos, de líneas y de recetas, parámetros y canales |
+| **Segundo ensayo** | 26 «sin cambio», 0 registros nuevos, destino no recreado, ROLLBACK |
+
+**Costo de compra del hielo: sigue sin confirmar.** El $0 y la presentación de 1 g de `HIELO (g)` son supuestos que solo preservan los costos actuales.
+
+**Reversión** (solo con aprobación):
+- Ejecución `c9d715df-d576-4db9-8427-5227daaafae8`.
+- Comando: `--lote hielo-gramos-lote-1 --revertir --ejecucion c9d715df-d576-4db9-8427-5227daaafae8 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`.
+- Restaura las líneas. `HIELO (g)` quedaría como objeto residual declarado.
+- Los informes y el respaldo se guardan fuera del repo.
