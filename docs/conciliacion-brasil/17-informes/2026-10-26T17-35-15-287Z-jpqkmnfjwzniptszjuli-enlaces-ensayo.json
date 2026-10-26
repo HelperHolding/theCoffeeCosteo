@@ -1,0 +1,548 @@
+{
+ "fecha": "2026-10-26T17:35:15.287Z",
+ "destino": "jpqkmnfjwzniptszjuli",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "carga_id": "a4cb5461-1e9b-454d-887b-1d081d4a5dfa",
+ "lote": {
+  "filas": 57,
+  "huella": "7c889bd4620bbd3c09b28526561fe8badf3c14c9e0baf4529631277d8f25c47a"
+ },
+ "antes": {
+  "filasEnTabla": 0,
+  "delLote": 0,
+  "deEstaCarga": 0
+ },
+ "enlaces": [
+  {
+   "codigo": "1COLDB",
+   "receta_id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "230da732-7f09-42a2-93fb-f9d8ebdf7f66",
+   "bitacora": 336
+  },
+  {
+   "codigo": "1FC",
+   "receta_id": "f33b95a8-a338-4009-8c03-42edfd81bb6a",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "6b9612e3-81c0-4221-b0e5-f47ce3e1c8f1",
+   "bitacora": 337
+  },
+  {
+   "codigo": "1HDV60",
+   "receta_id": "e0b13ec8-1c24-4ed8-9be2-5198d63a5485",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "ba087682-810d-4ff4-a658-b576ef506fea",
+   "bitacora": 338
+  },
+  {
+   "codigo": "1IC",
+   "receta_id": "15556232-34f4-490e-a9b7-0c01998bc4c1",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "1270da3d-b134-4a72-8229-27a13c3bbb13",
+   "bitacora": 339
+  },
+  {
+   "codigo": "1ICHAI",
+   "receta_id": "130033f6-dd70-4178-8366-945ea9674199",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "389fbdd5-58c5-4298-8df2-efb45b183561",
+   "bitacora": 340
+  },
+  {
+   "codigo": "1PB",
+   "receta_id": "89e80a88-123d-4b13-b166-f4e56c506525",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "884dd1f7-f1fa-417d-bbec-10ddc00ba449",
+   "bitacora": 341
+  },
+  {
+   "codigo": "1TB",
+   "receta_id": "96e85958-1f5a-44cf-98d7-acd7c7d8102c",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "3b0a56ad-9f59-40f3-a451-4063c2e5694e",
+   "bitacora": 342
+  },
+  {
+   "codigo": "2AM",
+   "receta_id": "500360bd-fd76-4e22-bf01-9bd3ed6e2ae7",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "d7306b84-5807-4476-a528-17eb0b3d79e8",
+   "bitacora": 343
+  },
+  {
+   "codigo": "2CBKE",
+   "receta_id": "8359cad0-fe26-402b-9389-70775647164c",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "44ac9195-8abf-488f-bdfc-82b7036d5c28",
+   "bitacora": 344
+  },
+  {
+   "codigo": "2FOOD2",
+   "receta_id": "0720b789-f345-43d3-a742-de49e369e3f3",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "42d4f08e-f073-4735-ab2a-19ca7b06d491",
+   "bitacora": 345
+  },
+  {
+   "codigo": "2SC",
+   "receta_id": "7867787b-4957-485c-822b-3106558d33a1",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "0066f1d9-666f-4203-b8cc-f67ae9b72679",
+   "bitacora": 346
+  },
+  {
+   "codigo": "2VLT",
+   "receta_id": "1183a781-40b8-4654-9f49-92d317873907",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "3775d3ef-f764-4838-afa5-c2ba9959fab6",
+   "bitacora": 347
+  },
+  {
+   "codigo": "3BG",
+   "receta_id": "af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "7424cbfa-a07b-414a-a2f3-67e80363ca46",
+   "bitacora": 348
+  },
+  {
+   "codigo": "3MC",
+   "receta_id": "da45b5bd-3eca-452e-a18e-5a558e4dc517",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "3b41b31d-fb38-4820-b78f-92bf4a03d77b",
+   "bitacora": 349
+  },
+  {
+   "codigo": "3TBB",
+   "receta_id": "5d918d0f-3cbc-4c86-a0fb-f965df7ba976",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "ec743dbe-1af0-43e6-b0c6-bda9f428e241",
+   "bitacora": 350
+  },
+  {
+   "codigo": "4MIL",
+   "receta_id": "9756eec9-1f09-45ee-a45b-21ac8c54bb22",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "3225c242-210b-499c-a219-d24dbe044efb",
+   "bitacora": 351
+  },
+  {
+   "codigo": "4TBS",
+   "receta_id": "7962a115-d69b-4b9d-afa8-8eb753b077ab",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "58a90593-2f46-486c-9598-89731d91a86b",
+   "bitacora": 352
+  },
+  {
+   "codigo": "4TW",
+   "receta_id": "a96339d6-80e7-440b-a33b-bca51440d8e6",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "6f5a29be-4284-4a50-a294-56eceebcf39a",
+   "bitacora": 353
+  },
+  {
+   "codigo": "5CR",
+   "receta_id": "9de55f8e-f159-461f-b60e-22d70dfbd6b7",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "64476880-38ed-4466-82fd-a9c5507187eb",
+   "bitacora": 354
+  },
+  {
+   "codigo": "5MC",
+   "receta_id": "c7ca994c-897c-45d7-a62f-a7ba2f66bbce",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "c23b13bf-e786-439d-9ced-db68119b1dae",
+   "bitacora": 355
+  },
+  {
+   "codigo": "5MUG",
+   "receta_id": "cef677b4-0976-4640-8bc7-2ce82337466f",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "381a6a55-7d42-4963-958d-843f479c9ec8",
+   "bitacora": 356
+  },
+  {
+   "codigo": "6CM",
+   "receta_id": "5153b158-4329-4ffd-9e79-9cc9d4f06a2a",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "41ffb97b-2410-4c58-982d-fa26a8130f27",
+   "bitacora": 357
+  },
+  {
+   "codigo": "6ICB",
+   "receta_id": "cb33752f-e335-46ec-b091-a8a2229eb946",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "11b846b7-4123-43a3-91da-9f5cfd1c11a8",
+   "bitacora": 358
+  },
+  {
+   "codigo": "7IC",
+   "receta_id": "4b651700-0745-42fe-8e78-7b44dbdb66ee",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "ef09a061-8baf-4de5-9050-b47dd0768a10",
+   "bitacora": 359
+  },
+  {
+   "codigo": "7MVT",
+   "receta_id": "3f7f8456-b0a4-49fd-be25-32c1f4b0e17c",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "42fb8d3a-c476-46ef-ba49-2505df7fc7dd",
+   "bitacora": 360
+  },
+  {
+   "codigo": "9IMT",
+   "receta_id": "e201b60f-62e1-4c56-80e5-2b4873baf74f",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "41504d0a-685b-4ddd-81b1-a7a15e063a95",
+   "bitacora": 361
+  },
+  {
+   "codigo": "ACABOWAPP",
+   "receta_id": "07360c9c-6930-46ef-b462-af625645b850",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "cf79f24a-a603-4ae8-ab4a-b5333599e42c",
+   "bitacora": 362
+  },
+  {
+   "codigo": "ALMCROAPP",
+   "receta_id": "d587f0e8-286f-4479-84da-3778a025a3ff",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "9b3212e7-5fd4-437e-956e-97605449d97e",
+   "bitacora": 363
+  },
+  {
+   "codigo": "BRO13",
+   "receta_id": "be20a271-b39f-43bb-96d3-2ab7be6db227",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "da785d94-2fd0-424d-b09b-d4b11041ef82",
+   "bitacora": 364
+  },
+  {
+   "codigo": "CAKBANAPP",
+   "receta_id": "dfc7c79e-a484-4e61-8306-063acc0fe9c8",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "c569899b-b552-4ea4-930b-394857c3de9e",
+   "bitacora": 365
+  },
+  {
+   "codigo": "CAKLEMAPP",
+   "receta_id": "6312fc43-adad-4eca-a8a9-7427bb099ea0",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "dffb1ded-9ea8-4986-bdd5-ded2f58b9193",
+   "bitacora": 366
+  },
+  {
+   "codigo": "CHECROAPP",
+   "receta_id": "49a02218-0eb3-4a49-8742-c4b6c6c0da9c",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "82f42a8d-d33c-4a10-bde3-b14e16400a50",
+   "bitacora": 367
+  },
+  {
+   "codigo": "COOCHOAPP",
+   "receta_id": "c797afe9-e8be-4971-98f3-64396b651661",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "74739b9f-3e7c-4139-a74b-fbd7da61bb46",
+   "bitacora": 368
+  },
+  {
+   "codigo": "COOTRAAPP",
+   "receta_id": "808d4a61-7086-468b-9879-9ce4cf9c9ae7",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "44cde71e-cf42-4083-ad1b-7d15a37b1eb9",
+   "bitacora": 369
+  },
+  {
+   "codigo": "CROGOUAPP",
+   "receta_id": "5e096086-8d78-4ea5-a570-b86d9f5a255d",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "d9798178-1e8a-4db5-9783-3a73b4acca85",
+   "bitacora": 370
+  },
+  {
+   "codigo": "CROMATAPP",
+   "receta_id": "af32e295-9551-4f15-9071-520cb616cf57",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "6658834c-4a0c-472e-ae0b-e32eaffe2374",
+   "bitacora": 371
+  },
+  {
+   "codigo": "EVIPETAPP",
+   "receta_id": "b1b77782-47b2-4e05-820a-c1b75aa438d1",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "1c395679-7622-4987-8c1c-c2398dfe9b39",
+   "bitacora": 372
+  },
+  {
+   "codigo": "FELSCHAPP",
+   "receta_id": "fb4ffbc7-8a31-4261-8534-c9885f51fc58",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "c83d7eb1-ba0b-41ad-b630-ed03efd713d2",
+   "bitacora": 373
+  },
+  {
+   "codigo": "HALCRCAPP",
+   "receta_id": "19be1f5f-d141-4033-91e9-d6c22cb51878",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "c05c21d4-b368-4bcd-92db-6ee203c1af04",
+   "bitacora": 374
+  },
+  {
+   "codigo": "ICEBLMAPP",
+   "receta_id": "4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "bfa2e584-30d5-4e7a-817b-082273ffbbf5",
+   "bitacora": 375
+  },
+  {
+   "codigo": "ICECHOAPP",
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "22d50260-2d4e-476f-8d8c-995b98556b67",
+   "bitacora": 376
+  },
+  {
+   "codigo": "KITEDIAPP",
+   "receta_id": "e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "bb78004f-3c7b-450e-b24e-d79ee21eb43a",
+   "bitacora": 377
+  },
+  {
+   "codigo": "KITWHIAPP",
+   "receta_id": "bae9c18a-4715-4efe-9517-f63871f3149f",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "ebfcae7a-5ef1-4cdc-88d2-dd2e5db4bb8c",
+   "bitacora": 378
+  },
+  {
+   "codigo": "KOAMAVAPP",
+   "receta_id": "8034ac0e-065e-49a8-98a4-26b0f98c9fb0",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "f02606fb-fdb5-427c-8d2b-a763e8f8ee99",
+   "bitacora": 379
+  },
+  {
+   "codigo": "KOAMDLAPP",
+   "receta_id": "3f620d3f-01fe-4316-9050-78635a627841",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "fc00d5c9-fe84-41be-a8f5-37a635710d38",
+   "bitacora": 380
+  },
+  {
+   "codigo": "MACCHIAPP",
+   "receta_id": "4255bb6b-1a50-42a4-896d-d3f424b6ceab",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "da3d8e23-d719-421f-94c9-524812c9af25",
+   "bitacora": 381
+  },
+  {
+   "codigo": "MQ1",
+   "receta_id": "ae3742b2-0188-4fc3-88c4-533a8ecb40c9",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "464f8c02-0538-4dce-b846-4402247b70ae",
+   "bitacora": 382
+  },
+  {
+   "codigo": "PCFICEAPP",
+   "receta_id": "1a316b88-1212-4403-9dfd-4de2652653ab",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "7088150b-c9c9-4882-88b0-3b275ce676b4",
+   "bitacora": 383
+  },
+  {
+   "codigo": "PCFMATAPP",
+   "receta_id": "be97f8cd-e66b-4dca-a38a-c971bdecd3d3",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "9bfb0e22-b396-4f0f-be79-b20f670642ce",
+   "bitacora": 384
+  },
+  {
+   "codigo": "QQ2",
+   "receta_id": "9c5f7529-8809-464a-a61a-911d507e2d03",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "e3aa40dc-c20c-4c0b-89e1-bbabed54a49b",
+   "bitacora": 385
+  },
+  {
+   "codigo": "ROUHAZAPP",
+   "receta_id": "99ec3251-4296-4cd2-9b66-b5fcb1f75ba4",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "70317e10-6137-43ae-ae03-34c8248aa1c0",
+   "bitacora": 386
+  },
+  {
+   "codigo": "SHCI",
+   "receta_id": "0252e4e5-3d19-49c1-9f01-2b0f72c1e21b",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "cd02a736-3b41-4001-b66e-bd1b5325a135",
+   "bitacora": 387
+  },
+  {
+   "codigo": "SHMA",
+   "receta_id": "22e7e73c-3f8e-471d-b86a-63a35fcfcb64",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "9760e10e-8eb9-4090-83a2-4923f8341e8d",
+   "bitacora": 388
+  },
+  {
+   "codigo": "SOICAUAPP",
+   "receta_id": "087d714a-45ca-44da-a3ad-55ce92a2bccb",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "a5c11bb7-4e24-49c9-aece-ca9f4dbf148e",
+   "bitacora": 389
+  },
+  {
+   "codigo": "SOLAAUAPP",
+   "receta_id": "2cc57a88-1966-4f7d-9604-461978c7c252",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "e7af0837-b57e-4613-84a7-78dd69ba88ad",
+   "bitacora": 390
+  },
+  {
+   "codigo": "UMBRE",
+   "receta_id": "74e9cffe-f459-42a5-ac57-4e58277ad8f7",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "faa3f1ab-9f53-45c9-8a33-9f552c1b0046",
+   "bitacora": 391
+  },
+  {
+   "codigo": "WATPERAPP",
+   "receta_id": "a801c379-90ea-446f-a303-d58d579de592",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "9ce884d7-d2c9-4626-8a65-6b8951385d84",
+   "bitacora": 392
+  }
+ ],
+ "totales": {
+  "alta": 57,
+  "sin cambio": 0,
+  "baja": 0,
+  "problema": 0
+ },
+ "idsPropios": [
+  "230da732-7f09-42a2-93fb-f9d8ebdf7f66",
+  "6b9612e3-81c0-4221-b0e5-f47ce3e1c8f1",
+  "ba087682-810d-4ff4-a658-b576ef506fea",
+  "1270da3d-b134-4a72-8229-27a13c3bbb13",
+  "389fbdd5-58c5-4298-8df2-efb45b183561",
+  "884dd1f7-f1fa-417d-bbec-10ddc00ba449",
+  "3b0a56ad-9f59-40f3-a451-4063c2e5694e",
+  "d7306b84-5807-4476-a528-17eb0b3d79e8",
+  "44ac9195-8abf-488f-bdfc-82b7036d5c28",
+  "42d4f08e-f073-4735-ab2a-19ca7b06d491",
+  "0066f1d9-666f-4203-b8cc-f67ae9b72679",
+  "3775d3ef-f764-4838-afa5-c2ba9959fab6",
+  "7424cbfa-a07b-414a-a2f3-67e80363ca46",
+  "3b41b31d-fb38-4820-b78f-92bf4a03d77b",
+  "ec743dbe-1af0-43e6-b0c6-bda9f428e241",
+  "3225c242-210b-499c-a219-d24dbe044efb",
+  "58a90593-2f46-486c-9598-89731d91a86b",
+  "6f5a29be-4284-4a50-a294-56eceebcf39a",
+  "64476880-38ed-4466-82fd-a9c5507187eb",
+  "c23b13bf-e786-439d-9ced-db68119b1dae",
+  "381a6a55-7d42-4963-958d-843f479c9ec8",
+  "41ffb97b-2410-4c58-982d-fa26a8130f27",
+  "11b846b7-4123-43a3-91da-9f5cfd1c11a8",
+  "ef09a061-8baf-4de5-9050-b47dd0768a10",
+  "42fb8d3a-c476-46ef-ba49-2505df7fc7dd",
+  "41504d0a-685b-4ddd-81b1-a7a15e063a95",
+  "cf79f24a-a603-4ae8-ab4a-b5333599e42c",
+  "9b3212e7-5fd4-437e-956e-97605449d97e",
+  "da785d94-2fd0-424d-b09b-d4b11041ef82",
+  "c569899b-b552-4ea4-930b-394857c3de9e",
+  "dffb1ded-9ea8-4986-bdd5-ded2f58b9193",
+  "82f42a8d-d33c-4a10-bde3-b14e16400a50",
+  "74739b9f-3e7c-4139-a74b-fbd7da61bb46",
+  "44cde71e-cf42-4083-ad1b-7d15a37b1eb9",
+  "d9798178-1e8a-4db5-9783-3a73b4acca85",
+  "6658834c-4a0c-472e-ae0b-e32eaffe2374",
+  "1c395679-7622-4987-8c1c-c2398dfe9b39",
+  "c83d7eb1-ba0b-41ad-b630-ed03efd713d2",
+  "c05c21d4-b368-4bcd-92db-6ee203c1af04",
+  "bfa2e584-30d5-4e7a-817b-082273ffbbf5",
+  "22d50260-2d4e-476f-8d8c-995b98556b67",
+  "bb78004f-3c7b-450e-b24e-d79ee21eb43a",
+  "ebfcae7a-5ef1-4cdc-88d2-dd2e5db4bb8c",
+  "f02606fb-fdb5-427c-8d2b-a763e8f8ee99",
+  "fc00d5c9-fe84-41be-a8f5-37a635710d38",
+  "da3d8e23-d719-421f-94c9-524812c9af25",
+  "464f8c02-0538-4dce-b846-4402247b70ae",
+  "7088150b-c9c9-4882-88b0-3b275ce676b4",
+  "9bfb0e22-b396-4f0f-be79-b20f670642ce",
+  "e3aa40dc-c20c-4c0b-89e1-bbabed54a49b",
+  "70317e10-6137-43ae-ae03-34c8248aa1c0",
+  "cd02a736-3b41-4001-b66e-bd1b5325a135",
+  "9760e10e-8eb9-4090-83a2-4923f8341e8d",
+  "a5c11bb7-4e24-49c9-aece-ca9f4dbf148e",
+  "e7af0837-b57e-4613-84a7-78dd69ba88ad",
+  "faa3f1ab-9f53-45c9-8a33-9f552c1b0046",
+  "9ce884d7-d2c9-4626-8a65-6b8951385d84"
+ ],
+ "bitacoraPropia": 57,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "despues": {
+  "filasEnTabla": 57,
+  "delLote": 57,
+  "deEstaCarga": 57
+ },
+ "comercialSinCambios": true
+}

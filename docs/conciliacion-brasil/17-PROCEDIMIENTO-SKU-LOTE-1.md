@@ -1,8 +1,8 @@
 # 17 · Procedimiento: migración 22 y lote 1 de códigos POS (57)
 
-**Estado al 2026-10-26 17:31 UTC:**
+**Estado al 2026-10-26 17:35 UTC:**
 - **La migración 22 está aplicada y registrada en producción**, con la tabla vacía.
-- **Los 57 enlaces no se han cargado.**
+- **Los 57 enlaces no se han cargado.** El ensayo remoto de los 57 terminó en ROLLBACK sin problemas.
 - No hubo merge ni despliegue.
 - La rama `feat/sku-enlace-pos` está actualizada con `main` (`ba69a00`) y va en el PR #23, **solo para revisión**.
 - **El merge sigue sin autorizar.** Como la 22 ya está registrada, la integración «Deploy to production» no debería volver a aplicarla. Aun así, el merge se hará solo con aprobación y se verificará después.
@@ -229,7 +229,45 @@ Se tomó una captura previa de 145 políticas, 26 funciones y 34 tablas, con su 
 - **roles**, en una transacción de solo lectura: anon recibe *permission denied*; un perfil admin activo lee la tabla (0 filas).
 
   La escritura de operaciones y admin, y que OAuth no pueda escribir, están probadas en PGlite y en la copia local. No se probaron en producción, para no escribir.
-5. **Ensayo remoto de los 57:** `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --usuario <uuid>` (ROLLBACK). Esperado: 57 altas, 0 problemas, 57 registros propios en la bitácora y sin cambios comerciales.
+5. ~~**Ensayo remoto de los 57**~~ **Hecho el 2026-10-26 a las 17:35 UTC, con ROLLBACK** (detalle abajo).
+
+## Ensayo remoto del lote de 57 (2026-10-26 17:35 UTC, autorizado por Carlo)
+
+**Desde:** commit `85395a7` del PR #23, idéntico a `origin`.
+
+**Comando:**
+
+```
+npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --usuario 63e994a6-5cbc-4605-b0d0-78bde4264890
+```
+
+Modo ensayo: sin `--aplicar`. El perfil de Carlo se validó dentro de la transacción: admin, activo.
+
+El informe está en `17-informes/2026-10-26T17-35-15-287Z-jpqkmnfjwzniptszjuli-enlaces-ensayo.json`, sin URL ni credenciales.
+
+**Partida (solo lectura):**
+- la 22 es la última migración (22 en total);
+- tabla vacía;
+- bitácora con 329 filas (id máximo 335) y 0 registros de la tabla de enlaces.
+
+| Dato | Resultado |
+|---|---|
+| Lote | 57 filas; el archivo coincide con el sha256 fijado |
+| Altas simuladas | **57** (los 57 códigos), con `carga_id` `a4cb5461-…` |
+| Conflictos o problemas | **0** |
+| Autoría | `creado_por` = perfil de Carlo en cada fila (verificado por fila) |
+| Bitácora propia | **57** registros (ids 336–392): uno por alta, `producto_codigo_pos`, campo `*`, `carga_masiva`, usuario de Carlo, con el código y la receta en la fila |
+| Bitácora ajena | 0 |
+| Datos comerciales en la transacción | **Sin cambios**: recetas, `producto_tamanos`, precios manuales, líneas, cantidades e insumos |
+| Cierre | **ROLLBACK** confirmado (salida 0) |
+
+**Verificación con una conexión nueva** (solo lectura):
+- `producto_codigo_pos` sigue **vacía**;
+- bitácora **idéntica** a la partida: 329 filas, id máximo 335 y 0 registros de enlaces. **Ningún registro del ensayo persistió**; los ids 336–392 quedan como salto de numeración;
+- **última migración: 22**;
+- las huellas de 12 tablas comerciales y de configuración son idénticas (recetas, nombres, precios y costos).
+
+**No se hizo la carga permanente, ni merge ni despliegue.**
 6. **Carga:** `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`. Anotar el `carga_id`.
 7. **Comprobar:**
    - un segundo ensayo da 57 «sin cambio» y 0 registros en la bitácora;
