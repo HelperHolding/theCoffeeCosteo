@@ -1,6 +1,6 @@
 # 24 · Lote 3b: agua de Cold brew según el rendimiento documentado
 
-**Estado (2026-10-26): aprobado por Carlo.** El alcance son **únicamente** las tres cantidades de AGUA. No se tocan el café, el hielo ni los precios. El cierre de la aplicación está en el §6.
+**Estado (2026-10-26): aplicado y verificado.** El alcance son **únicamente** las tres cantidades de AGUA. No se tocan el café, el hielo ni los precios. El cierre de la aplicación está en el §6.
 
 **Independencia de H2 (doc 23).** H2 excluye Cold brew, así que los dos lotes no comparten recetas. Cada uno tiene su propio manifiesto, sus pruebas, su ejecución y su reversión.
 
