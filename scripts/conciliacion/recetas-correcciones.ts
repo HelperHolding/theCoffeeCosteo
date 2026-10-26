@@ -54,6 +54,10 @@ export const LOTES_RECETAS_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/21-lote-2-cold-brew.manifiesto.json',
     sha256: 'fd9669b63d556bb3071bb1fe8927dcd7744a76e4a8405caf2e7bbd75db1661b8',
   },
+  'recetario-lote-3b-coldbrew-agua': {
+    manifiesto: 'docs/conciliacion-brasil/24-lote-3b-cold-brew-agua.manifiesto.json',
+    sha256: '1995cf248495e3da7ba2e5668ec975638de5ad72584ba9746051db7501101b5d',
+  },
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

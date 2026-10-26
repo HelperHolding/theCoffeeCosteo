@@ -1,9 +1,12 @@
 # 22 · Propuesta: Fresh Sodas, hielo y agua de Cold brew
 
-**Estado (2026-10-26): solo propuesta, para revisión.**
-- No se escribió nada en producción y no hay escrituras preparadas: ni manifiestos ni ensayos.
+**Estado (2026-10-26, 23:26 UTC):**
+- **Aplicados con aprobación de Carlo:**
+  - **lote 3b**, el agua de Cold brew (doc 24);
+  - **H2 lote 1**, el hielo en gramos en 26 líneas verificadas, sin Cold brew (doc 23).
+- **Pendientes:** 3a, 3c, 3d, 3e, las 15 líneas de hielo sin migrar y el costo de compra del hielo (§5 y §6).
 - No cambia ninguna unidad de forma global.
-- Cada lote necesita su propia aprobación. Que el script actual pueda ejecutarlo **no** significa que esté aprobado.
+- Cada lote necesita su propia aprobación. Que un script pueda ejecutarlo **no** significa que esté aprobado.
 
 **Fuentes:**
 - `RECETARIO OFICIAL 2026.pdf`. Las páginas se citan por su número dentro del PDF. Ver [21](21-RECETARIO-OFICIAL-COTEJO.md) §1.
@@ -199,7 +202,7 @@ Mientras no se defina, **no se cambia el ingrediente ni la cantidad**.
 3. Aplicación en transacciones separadas.
 4. Verificación desde una conexión nueva y segundo ensayo.
 
-**Orden si se aprueban 3b y H2.** Los dos son lotes independientes, pero Cold brew está en ambos. El orden definido es **3b → H2**: el manifiesto de H2 se regenera contra la versión vigente de Cold brew y se revisa su diff antes de registrarlo. El control de versión no se elimina. Detalle en los docs 23 (H2) y 24 (3b).
+**3b y H2: aplicados de forma independiente.** Carlo excluyó Cold brew de H2, así que los dos lotes no comparten recetas y cada uno conserva su propia reversión. Detalle y cierre en los docs 23 (H2) y 24 (3b).
 
 **Fuera de alcance:**
 - el AGUA de 10 ml de Iced Chocolate (doc 21, posible duplicación con su subreceta);
