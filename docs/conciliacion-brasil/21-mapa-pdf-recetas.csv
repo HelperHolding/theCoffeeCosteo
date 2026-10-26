@@ -1,0 +1,77 @@
+pagina_pdf,seccion,ficha_pdf,tamanos_pdf,receta_costeo,receta_id,activo,codigo_pos,identidad,nota
+3,Preparados,Preparado de Matcha,lote,Mix MATCHA GOURMET ORGÁNICO 1 KG,5ff9eefe-ad90-4ecd-808e-22e34175738f,true,,confirmada (proporción),"30 g matcha / 250 ml agua = proporción de la subreceta; rendimiento = suma de masas (supuesto, sin merma documentada)"
+4,Preparados,Preparado de Chai,lote,Mix CHAI 1 KG,953642a4-24cf-465b-95a6-ac588c73f32c,true,,confirmada (proporción),CONTRADICCIÓN interna: ingredientes 400 ml de agua; indicaciones 200 + 200 ml. Costeo usa 400. Se cuela 2 veces: merma no documentada
+5,Preparados,Preparado de Chocolate,lote,Mix AZUCAR MASCABADO USO BARRA + COCOA POWDER - EXTRA BRUTE 1 KG,66f03b96-3453-4a00-8b02-25483037861a,true,,confirmada (proporción),(1) = 90 g azúcar / 100 g cocoa / 200 ml agua exacto; (2) = (1) + 10 ml de agua de dilución por porción de 36 g (deducido: proporciones idénticas)
+5,Preparados,Preparado de Chocolate,lote,Mix AZUCAR MASCABADO USO BARRA + COCOA POWDER - EXTRA BRUTE 1 KG (2),97c72752-a758-48e9-8f33-577562221e2d,true,,confirmada (proporción),(1) = 90 g azúcar / 100 g cocoa / 200 ml agua exacto; (2) = (1) + 10 ml de agua de dilución por porción de 36 g (deducido: proporciones idénticas)
+7,Preparados,Preparado de fresas congeladas,lote,,,,,sin subreceta (en línea),Costeo registra fresa congelada directa en las bebidas; sin rendimiento documentado
+8,Preparados,Jugo de limón,3 limones → ~90 ml,,,,,sin subreceta (en línea),Costeo registra LIMON EUREKA en g; el PDF da rendimiento en ml sin peso
+9,Preparados,Cold Brew Concentrado,200 g café + 1 L agua → 1 L,,,,,sin subreceta (en línea en Cold brew),Rendimiento documentado 1 L; Costeo equivale a 1.2 L (16.67 g por 100 ml)
+10,Preparados,Mezcla Azul,lote,Mix JARABE DE COCO 1 LT (1 PZA) + JARABE DE VANILLA 1 LT (3 PZAS) + TERNEATEA 500 GRS,82a8c319-0a52-479d-bfb5-8e996e36440d,true,,confirmada (proporción),Combinada con Blend Sora en una sola subreceta (Sora Latte); en línea en Sora Iced Latte
+11,Preparados,Blend Sora,lote,Mix JARABE DE COCO 1 LT (1 PZA) + JARABE DE VANILLA 1 LT (3 PZAS) + TERNEATEA 500 GRS,82a8c319-0a52-479d-bfb5-8e996e36440d,true,,confirmada (proporción),Ver Mezcla Azul
+12,Preparados,Maracuyá (pulpa),—,,,,,sin subreceta (en línea),Solo almacenamiento (120 g por dispensador); sin receta
+14,Puristas,Pure Black (Espresso Doble),Único,Pure Black (Double Shot),89e80a88-123d-4b13-b166-f4e56c506525,true,1PB,confirmada,18 g → 36 ml; Costeo usa grano BLACK
+15,Puristas,Ristretto,Único,Ristretto (Pure Black),f7e60a35-7421-4fa2-b788-076614a37a32,true,,confirmada,PDF: 18 g × 22 ml en ingredientes y 27 ml en el título (contradicción menor de volumen; no afecta costo)
+16,Puristas,Pure Black Single,Único,,,,,sin receta local,Mitad de un doble
+17,Puristas,Lungo,Único,Lungo (Pure Black),d1d3282c-7810-4ef3-8bb5-60d0cdbc1aaa,true,,confirmada,
+18,Puristas,Americano,Regular 240 / Grande 360,Americano,500360bd-fd76-4e22-bf01-9bd3ed6e2ae7,true,2AM,confirmada,
+19,Puristas,True White,Regular 240 / Grande 360,True White,a96339d6-80e7-440b-a33b-bca51440d8e6,true,4TW,confirmada,
+20,Puristas,Matcha Latte,Regular 240 / Grande 360,Matcha Latte,c7ca994c-897c-45d7-a62f-a7ba2f66bbce,true,5MC,confirmada,Grande también 36 ml de preparado
+21,Puristas,Iced Latte,Regular 440 / Grande 600,Iced Latte,fcf0d45d-76b2-48a4-8d96-d8abc228eca8,true,,confirmada (Iced Latte); Iced Latte Large = variante C6,
+21,Puristas,Iced Latte,Regular 440 / Grande 600,Iced Latte Large,7b5b57b7-5436-49c4-affc-cc3f00d46c4c,true,,confirmada (Iced Latte); Iced Latte Large = variante C6,
+22,Puristas,Iced Black,Regular 440 / Grande 600,Iced Black,cb33752f-e335-46ec-b091-a8a2229eb946,true,6ICB,confirmada,
+23,Puristas,Matcha Iced Latte,Regular 440 / Grande 600,Matcha Iced Latte,9756eec9-1f09-45ee-a45b-21ac8c54bb22,true,4MIL,confirmada,
+24,Puristas,Iced Chocolate,Regular 440 / Grande 600,Iced Chocolate,c55e8b1f-300e-42f7-9c4a-f57b038c987e,true,ICECHOAPP,confirmada,AGUA 10 ml aparte posiblemente duplicada (costo $0)
+25,Puristas,Macchiato,Único (vaso 120 ml),Macchiato,4255bb6b-1a50-42a4-896d-d3f424b6ceab,true,MACCHIAPP,confirmada,CONTRADICCIÓN: 170 ml vaporizados vs 40 ml servidos
+26,Puristas,Chai Latte,Regular 240 / Grande 360,Chai Latte,5153b158-4329-4ffd-9e79-9cc9d4f06a2a,true,6CM,confirmada,En Costeo con chai y agua directos (equivalente)
+27,Puristas,Cold Brew,Regular 440 / Grande 600,Cold brew,00f47aba-88e6-4ebc-a815-5833f8b29871,true,1COLDB,confirmada,Discrepancia de rendimiento del concentrado
+28,Puristas,Chai Iced Latte,Regular 440 / Grande 600,Chai Iced Latte,130033f6-dd70-4178-8366-945ea9674199,true,1ICHAI,confirmada,CONTRADICCIÓN: Regular «170 ml de agua» vs pasos «leche»
+30,Temporada,Sora Latte,Regular 240 / Grande 360,Sora Latte,6d8ab183-81b0-4470-b061-da09b8b6f70a,true,,confirmada (composición); 3 registros idénticos en Costeo,POS SOLAAUAPP → Sora Latte (Signature)
+30,Temporada,Sora Latte,Regular 240 / Grande 360,Sora Latte (Authors),1ce9c30c-2f97-45be-9222-81b408d35f76,true,,confirmada (composición); 3 registros idénticos en Costeo,POS SOLAAUAPP → Sora Latte (Signature)
+30,Temporada,Sora Latte,Regular 240 / Grande 360,Sora Latte (Signature),2cc57a88-1966-4f7d-9604-461978c7c252,true,SOLAAUAPP,confirmada (composición); 3 registros idénticos en Costeo,POS SOLAAUAPP → Sora Latte (Signature)
+31,De autor,Flat Caramel,Regular 240 / Grande 360,Flat Caramel,f33b95a8-a338-4009-8c03-42edfd81bb6a,true,1FC,confirmada,
+32,De autor,Mad Mocha,Regular 240 / Grande 360,Mad Mocha,da45b5bd-3eca-452e-a18e-5a558e4dc517,true,3MC,confirmada,"10 g salsa ↔ 10 ml subreceta (1 g = 1 ml, supuesto)"
+33,De autor,Vanilla Latte,Regular 240 / Grande 360,Vanilla Latte,1183a781-40b8-4654-9f49-92d317873907,true,2VLT,confirmada,
+34,De autor,Urban Chocolat,Regular 240 / Grande 360,Urban Chocolat,77aed410-00a8-4b70-b04e-fdf15ddb1761,true,,"confirmada: Urban Chocolat; candidata: Urban Chocolate (O1, C1)",Ninguna medida lleva vainilla en el PDF; Urban Chocolate Grande tiene 10 ml
+34,De autor,Urban Chocolat,Regular 240 / Grande 360,Urban Chocolate,2c8b49a6-7b2f-489e-8932-1d1ff8c7754c,true,,"confirmada: Urban Chocolat; candidata: Urban Chocolate (O1, C1)",Ninguna medida lleva vainilla en el PDF; Urban Chocolate Grande tiene 10 ml
+35,De autor,Matcha Vanilla Latte,Regular 240 / Grande 360,Matcha Vanilla Latte,3f7f8456-b0a4-49fd-be25-32c1f4b0e17c,true,7MVT,confirmada,
+36,De autor,Iced Vanilla,Regular 440 / Grande 600,Iced Vanilla,15556232-34f4-490e-a9b7-0c01998bc4c1,true,1IC,confirmada,
+37,De autor,Matcha Iced Mint,Regular 440 / Grande 600,Matcha Iced Mint,4b651700-0745-42fe-8e78-7b44dbdb66ee,true,7IC,confirmada,
+38,De autor,Ichigo Matcha,Regular 440 / Grande 600,Ichigo Matcha,e201b60f-62e1-4c56-80e5-2b4873baf74f,true,9IMT,confirmada,
+39,De autor,Black Ginger,Regular 440 / Grande 600,Black Ginger,af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,true,3BG,confirmada,Pasos dicen «3 pumps» y la ficha 15 ml
+40,Temporada,Sora Iced Latte,Regular 440 / Grande 600,Sora Iced Latte,ff2dbf97-34b0-476f-bd87-0e087089bb00,true,,confirmada (composición); 3 registros idénticos en Costeo,POS SOICAUAPP → Signature
+40,Temporada,Sora Iced Latte,Regular 440 / Grande 600,Sora Iced Latte (Authors),41822ed0-ab3c-49c4-925a-11177e7caafe,true,,confirmada (composición); 3 registros idénticos en Costeo,POS SOICAUAPP → Signature
+40,Temporada,Sora Iced Latte,Regular 440 / Grande 600,Sora Iced Latte (Signature),087d714a-45ca-44da-a3ad-55ce92a2bccb,true,SOICAUAPP,confirmada (composición); 3 registros idénticos en Costeo,POS SOICAUAPP → Signature
+41,De autor,Salted Caramel,Regular 440 / Grande 600,Salted Caramel,7867787b-4957-485c-822b-3106558d33a1,true,2SC,confirmada,
+43,Fresh Soda,Pink Lemonade,Regular 440 / Grande 600,Fresh Soda Pink Lemonade,e5b9dc6b-e750-4a91-8120-065cd719582c,true,,confirmada (nombre); tamaño API mixto (E3),Agua con gas vs tónica; zumo vs limón entero; Grande con varias diferencias
+44,Fresh Soda,Maracuyá,Regular 440 / Grande 600,Fresh Soda Passion fruit,6465a09a-6612-4542-8298-67108c507e12,true,,candidata (traducción); tamaño API mixto (E3),Agua con gas vs tónica; pulpa g vs ml; Grande con diferencias
+46,Gelato,Gelato Frappé Coffee,Regular 440 / Grande 600,Gelato Frappé Coffee,adfc682f-380c-41a9-a83d-63f94e0d3042,true,,confirmada (Regular),Grande documentada (200 g / 140 ml) pero sin tamaño en Costeo (E4)
+47,Gelato,Gelato Frappé Chai,Regular 440 / Grande 600,Gelato Frappé Chai,0252e4e5-3d19-49c1-9f01-2b0f72c1e21b,true,SHCI,confirmada (Regular),Grande sin tamaño en Costeo (E4)
+48,Gelato,Gelato Frappé Matcha,Regular 440 / Grande 600,Gelato Frappé Matcha,22e7e73c-3f8e-471d-b86a-63a35fcfcb64,true,SHMA,confirmada (Regular),Grande sin tamaño en Costeo (E4)
+50,Frappé,Frappé Coffee,Regular 440 / Grande 600,Coffee Frappé,ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf,true,,confirmada (composición),Alias D6 con el POS sigue pendiente
+51,Frappé,Frappé Salted Caramel,Regular 440 / Grande 600,Salted Caramel Frappé,052a61f6-55ff-4ac8-9459-ab4939789420,true,,confirmada (composición),Caramelos en g vs ml (supuesto 1:1); alias D4 pendiente
+52,Frappé,Frappé Matcha,Regular 440 / Grande 600,Matcha Frappé,bb72c7a6-d900-4d47-bf56-4a74654ccf4b,true,,confirmada (composición),Alias D7 pendiente
+53,Frappé,Frappé Chai,Regular 440 / Grande 600,Chai Frappé,a00da002-92a3-4a48-ab47-b62ee9aa6a13,true,,confirmada (composición),Alias D8 pendiente
+54,Frappé,Frappé Taro,Regular 440 / Grande 600,Taro Frappé,817fe3be-7d8b-49be-8e1a-6acde12ccb1c,true,,confirmada (composición),Alias D5 pendiente
+56,Temporada,Iced Latte Protein Cold Foam,Regular 440 / Grande 600,Isopure Iced Latte,1a316b88-1212-4403-9dfd-4de2652653ab,true,PCFICEAPP,ambigua (dos recetas con la misma composición),POS PCFICEAPP → Isopure Iced Latte; AGUA 36 ml extra en Isopure (costo $0)
+56,Temporada,Iced Latte Protein Cold Foam,Regular 440 / Grande 600,Iced Latte Protein Cold Foam,7679cffd-2651-49de-9481-0cf22626e707,true,,ambigua (dos recetas con la misma composición),POS PCFICEAPP → Isopure Iced Latte; AGUA 36 ml extra en Isopure (costo $0)
+57,Temporada,Chai Iced Latte Protein Cold Foam,Regular 440 / Grande 600,Chai Iced Latte Protein Cold Foam,f9d4dfef-ef3c-4e80-ad4e-707f1837a0bd,true,,confirmada,Sin precio de lista en Costeo
+58,Temporada,Matcha Iced Latte Protein Cold Foam,Regular 440 / Grande 600,Isopure Iced Matcha,be97f8cd-e66b-4dca-a38a-c971bdecd3d3,true,PCFMATAPP,candidata (composición),POS PCFMATAPP
+59,Temporada,Iced Blueberry Matcha,Regular 440 / Grande 600,Iced Blueberry Matcha,4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,true,ICEBLMAPP,confirmada,
+60,Temporada,Pumkin Spice Latte,Regular 240 / Grande 360,Pumpkin Spice Latte,170be377-ff76-4bbc-b6d5-85cd9708b21c,true,,confirmada (composición; errata «Pumkin»),Alias D2 con el POS pendiente
+61,Temporada,Pumkin Spice Iced Latte,Regular 440 / Grande 600,Pumpkin Spice Iced Latte,38847fe5-2d6f-4050-9fd7-aa94bb3d4024,true,,confirmada (composición; errata «Pumkin»),Alias D1 pendiente
+62,Temporada,Frappé Pumkin Spice,Regular 440 / Grande 600,Pumpkin Spice Frappé,7769fb2e-d7ac-46b6-abeb-e23634d40bd5,true,,candidata fuerte (7 de 10 valores idénticos; errata «Pumkin»),LOTE 1 propuesto; alias D3 con el POS pendiente
+64,Métodos,V60,Único,Hot Drip V60,e0b13ec8-1c24-4ed8-9be2-5198d63a5485,true,1HDV60,candidata (composición),
+65,Métodos,V60 con Hielo (1 porción),1 porción,Cold Drip V60,7799a6fe-bf6f-4247-842c-a071588cd9ac,true,,"candidata (composición, Chica)",Grande en Costeo (30 g café) sin respaldo del PDF (E2)
+66,Métodos,V60 con hielo y leche,1 porción,Cold Drip V60 + Milk,49ef4055-997e-4fcc-a52d-16aca66d964b,true,,"candidata (composición, Chica)",Grande sin respaldo del PDF (E2)
+70,Foods,Aderezo de Chipotle,rinde 1 kg,,,,,sin receta local,"Costeo no tiene mayonesa, chipotle ni pimienta como insumos"
+71,Foods,Croissant relleno de queso y jamón,Único,Croissant filled with cheese and ham,4ac9187c-fdaf-4678-8e91-7ead2d596c9b,true,CROSTUAPP,confirmada (composición),POS CROSTUAPP (lote 2)
+72,Foods,Croissant relleno de queso,Único,Croissant filled with cheese,49a02218-0eb3-4a49-8742-c4b6c6c0da9c,true,CHECROAPP,confirmada (composición),
+73,Foods,Croissant Serrano y Gouda,Único,Croissant Serrano & Gouda,5e096086-8d78-4ea5-a570-b86d9f5a255d,true,CROGOUAPP,"confirmada (composición, con supuesto de 100 g por pza)",Costo del jamón serrano a revisar con Compras
+74,Foods,Sándwich de Queso,Único,Grilled Cheese Sandwich,9c5f7529-8809-464a-a61a-911d507e2d03,true,QQ2,ambigua (dos recetas idénticas),POS QQ2 → Grilled Cheese Sandwich
+74,Foods,Sándwich de Queso,Único,Queijo Quente,d58d7455-e6a7-4d9f-88ad-f6d36e641947,true,,ambigua (dos recetas idénticas),POS QQ2 → Grilled Cheese Sandwich
+75,Foods,Sándwich Jamón y Queso,Único,Grilled Ham & Cheese Sandwich,ae3742b2-0188-4fc3-88c4-533a8ecb40c9,true,MQ1,confirmada (composición),POS MQ1
+76,Foods,Sándwich Jamón y Queso con Tomate Cherry,Único,Grilled Ham Cheese and Tomato Sandwich,ff0a88ca-d7c0-4d73-84a3-125815f9274e,true,BR3,ambigua (dos recetas idénticas),3 tomates (piezas) vs 3 g en Costeo
+76,Foods,Sándwich Jamón y Queso con Tomate Cherry,Único,Misto + Tomate Cereja,7766397b-0414-4d25-a5d7-2dc089be4fab,true,,ambigua (dos recetas idénticas),3 tomates (piezas) vs 3 g en Costeo
+77,Foods,Focaccia de Jamón y Pesto,Único,Focaccia Ham,3a89083e-caeb-4abe-8288-c70b0dfe005e,true,,candidata (nombre); Costeo la registra como pieza comprada,"Sin pesto, arúgula ni aceite en Costeo"
+78,Foods,AÇAÍ BOWL,Único,Acai Cup,ea7b36dd-a3c9-4f05-a2bb-24a8cfa709e8,true,,ambigua: composición = Acai Cup; nombre = Açaí Bowl (POS ACABOWAPP),Índice p.69 la llama «Açai cup»; observaciones mencionan leche condensada no listada
+78,Foods,AÇAÍ BOWL,Único,Açaí Bowl,07360c9c-6930-46ef-b462-af625645b850,true,ACABOWAPP,ambigua: composición = Acai Cup; nombre = Açaí Bowl (POS ACABOWAPP),Índice p.69 la llama «Açai cup»; observaciones mencionan leche condensada no listada
