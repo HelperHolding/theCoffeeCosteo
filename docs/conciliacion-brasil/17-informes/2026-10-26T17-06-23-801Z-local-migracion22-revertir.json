@@ -1,0 +1,26 @@
+{
+ "fecha": "2026-10-26T17:06:23.801Z",
+ "destino": "local",
+ "modo": "revertir",
+ "registroAntes": [
+  "20261024000022",
+  "20261023000021"
+ ],
+ "objetosAntes": [],
+ "msCambio": 5,
+ "diferenciasEnLoPrevio": {
+  "politicas": 0,
+  "funciones": 0,
+  "detalle": [],
+  "tablas": 0
+ },
+ "politicasTotales": {
+  "antes": 152,
+  "despues": 145
+ },
+ "registroDespues": [
+  "20261023000021",
+  "20261022000020"
+ ],
+ "transaccion": "commit"
+}

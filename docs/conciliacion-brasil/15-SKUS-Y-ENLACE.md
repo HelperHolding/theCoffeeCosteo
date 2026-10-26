@@ -114,30 +114,17 @@ Cada código se verifica en cinco dimensiones:
 
 **No se renombraron ni crearon recetas.**
 
-## 5. Migración 22 y dry-run local (entrega separada, sin aplicar)
+## 5. Migración 22 y carga del lote 1 (sin aplicar)
 
-**Rama aparte:** `feat/sku-enlace-pos`, encima del PR #18 porque necesita la 21. **No forma parte del PR #18.**
+**Rama:** `feat/sku-enlace-pos`, actualizada con `main` el 2026-10-26.
 
-| Pieza | Contenido |
-|---|---|
-| `supabase/migrations/20261024000022_producto_codigo_pos.sql` | Tabla `producto_codigo_pos` (`id`, `codigo` único, `receta_id` → `recetas` **on delete restrict**, `nombre_observado`, `evidencia`, `creado_en/por`). CHECK que rechaza `GENERIC`, vacío y espacios; trigger que exige que la receta sea producto; bitácora; RLS con lectura para perfiles activos y escritura para operaciones y admin, restrictivas OAuth y patrón `(select …)`. **No toca `recetas`** |
-| `tests/db/producto-codigo-pos.test.ts` | Unicidad; varios códigos por receta; rechazo de `GENERIC`, vacío, espacios y sub-recetas; `restrict` al borrar una receta; permisos por rol; bitácora; OAuth lee pero no escribe; patrón initPlan (6 de 6) |
-| `scripts/conciliacion/cargar-enlaces.ts` | Carga solo el lote 1, **solo en bases locales**. Dry-run por defecto; verifica existencia, tipo y nombre de cada receta (cambios concurrentes); idempotente; un conflicto de código aborta todo; bitácora con origen `carga_masiva` |
-| Ajustes de pruebas | `crearDbLocal(hasta)` para reproducir producción en `fase4.test.ts`. `mcp-lectura.test.ts` ahora espera 45 políticas OAuth (15 tablas × 3) |
+**El procedimiento vigente está en [`17-PROCEDIMIENTO-SKU-LOTE-1.md`](17-PROCEDIMIENTO-SKU-LOTE-1.md):**
+- el modelo revisado: `carga_id`, autoría fijada por un trigger, bitácora sin `receta_id`;
+- el lote fijado [`17-lote-1.csv`](17-lote-1.csv), con 57 códigos;
+- los scripts de ensayo, aplicación y reversión, con sus pruebas;
+- el ensayo sobre la copia local del 2026-10-26;
+- los pasos remotos, cada uno pendiente de aprobación.
 
-**Dry-run local sobre la copia restaurada de producción** (respaldo del 2026-10-23 22:47 UTC, Postgres 17.11, solo `localhost`):
+**Historial:** el primer dry-run (respaldo del 2026-10-23, con el script `cargar-enlaces.ts` que solo funcionaba en local, ya retirado) dio 57 altas, 0 problemas e idempotencia.
 
-| Paso | Resultado |
-|---|---|
-| Migraciones 21 y 22 sobre la copia | Aplicadas sin errores; 7 políticas en la tabla nueva |
-| Dry-run del lote 1 | 57 insertados, 0 problemas, 57 registros de bitácora `carga_masiva` → **ROLLBACK** |
-| Aplicación local + segunda corrida | 57 insertados; luego **0 insertados, 57 sin cambio** (idempotente) |
-| Cambio concurrente (receta renombrada en la copia) | Detectado (`2AM` «Americano» → «Americano (renombrada)») → **no carga nada** |
-| Pruebas de BD | 127 de 127 |
-
-La copia local quedó modificada por estas pruebas; es solo de verificación. Los archivos del respaldo no cambian.
-
-**Para producción, con aprobación aparte:**
-1. Aplicar la 22 con un procedimiento como el de la fase 4: captura previa, ensayo con ROLLBACK, verificación y reversión (`drop table` y sus funciones; no hay datos previos).
-2. Habilitar la carga en producción en el script, hoy bloqueada a propósito, y cargar el lote 1.
-3. Los lotes 2 y 3 solo después de B2, B3, B5 y B6.
+**Lotes siguientes:** los 6 códigos de B1–B6 son un lote adicional propuesto. Los demás, solo después de las decisiones C–F pendientes.
