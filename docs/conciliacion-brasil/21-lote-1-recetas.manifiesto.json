@@ -1,0 +1,47 @@
+{
+ "lote": "recetario-lote-1",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3",
+  "ficha": "Frappé Pumkin Spice",
+  "pagina": 62
+ },
+ "receta": {
+  "id": "7769fb2e-d7ac-46b6-abeb-e23634d40bd5",
+  "nombre": "Pumpkin Spice Frappé",
+  "version": 29
+ },
+ "celdas": [
+  {
+   "linea_id": "413c6ae1-7961-42e6-8629-54897252b57c",
+   "insumo_id": "5aea25ba-5af1-4119-886c-3f02e46c1eba",
+   "insumo": "LECHE ENTERA",
+   "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+   "tamano": "Chica",
+   "previo": 30,
+   "nuevo": 35,
+   "fuente": "p.62 Regular (440 ml): 35 ml de leche fría"
+  },
+  {
+   "linea_id": "413c6ae1-7961-42e6-8629-54897252b57c",
+   "insumo_id": "5aea25ba-5af1-4119-886c-3f02e46c1eba",
+   "insumo": "LECHE ENTERA",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 55,
+   "nuevo": 70,
+   "fuente": "p.62 Grande (600 ml): 70 ml de leche fría"
+  },
+  {
+   "linea_id": "e85b3d4f-4530-428e-9731-6bb5d9e06d8d",
+   "insumo_id": "ee89a9e2-cea2-444e-b1b1-e1d862761f54",
+   "insumo": "CHOBANI D.CREAMER PUMPKIN SPICE",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 55,
+   "nuevo": 50,
+   "fuente": "p.62 Grande (600 ml): 50 ml de creamer"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-26: aprueba el diagnóstico (doc 21), el lote 1 (Pumpkin Spice Frappé, 3 valores) y el UPDATE dirigido con manifiesto. Autoriza implementación y pruebas locales; NO ejecución remota."
+}
