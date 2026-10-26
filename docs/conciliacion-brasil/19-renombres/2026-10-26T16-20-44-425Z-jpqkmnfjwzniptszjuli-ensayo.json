@@ -1,0 +1,136 @@
+{
+ "fecha": "2026-10-26T16:20:44.425Z",
+ "destino": "jpqkmnfjwzniptszjuli",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "recetas": [
+  {
+   "decision": "B1",
+   "receta_id": "26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5",
+   "desde": "Pain Au Chocolat",
+   "hacia": "Pain au Chocolat",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 9,
+    "despues": 10
+   },
+   "bitacora": {
+    "id": 324,
+    "campo": "nombre",
+    "valor_anterior": "Pain Au Chocolat",
+    "valor_nuevo": "Pain au Chocolat",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  },
+  {
+   "decision": "B2",
+   "receta_id": "ff0a88ca-d7c0-4d73-84a3-125815f9274e",
+   "desde": "Grilled Ham Cheese And Tomato Sandwich",
+   "hacia": "Grilled Ham Cheese and Tomato Sandwich",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 20,
+    "despues": 21
+   },
+   "bitacora": {
+    "id": 325,
+    "campo": "nombre",
+    "valor_anterior": "Grilled Ham Cheese And Tomato Sandwich",
+    "valor_nuevo": "Grilled Ham Cheese and Tomato Sandwich",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  },
+  {
+   "decision": "B3",
+   "receta_id": "4ac9187c-fdaf-4678-8e91-7ead2d596c9b",
+   "desde": "Croissant Filled With Cheese and Ham",
+   "hacia": "Croissant filled with cheese and ham",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 15,
+    "despues": 16
+   },
+   "bitacora": {
+    "id": 326,
+    "campo": "nombre",
+    "valor_anterior": "Croissant Filled With Cheese and Ham",
+    "valor_nuevo": "Croissant filled with cheese and ham",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  },
+  {
+   "decision": "B4",
+   "receta_id": "2c8f400b-525f-4c30-8d64-f18be8b9334c",
+   "desde": "Brownie With Ice Cream",
+   "hacia": "Brownie with ice cream",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 10,
+    "despues": 11
+   },
+   "bitacora": {
+    "id": 327,
+    "campo": "nombre",
+    "valor_anterior": "Brownie With Ice Cream",
+    "valor_nuevo": "Brownie with ice cream",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  },
+  {
+   "decision": "B5",
+   "receta_id": "5ce9b244-40e2-4153-92b8-7c5dc38968d4",
+   "desde": "White Bag 250g",
+   "hacia": "White bag 250g",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 5,
+    "despues": 6
+   },
+   "bitacora": {
+    "id": 328,
+    "campo": "nombre",
+    "valor_anterior": "White Bag 250g",
+    "valor_nuevo": "White bag 250g",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  },
+  {
+   "decision": "B6",
+   "receta_id": "d22e139c-c4d7-49b7-b8e6-9b13b40a3519",
+   "desde": "Black Edition 250g",
+   "hacia": "Black edition 250g",
+   "resultado": "renombrada",
+   "problemas": [],
+   "version": {
+    "antes": 5,
+    "despues": 6
+   },
+   "bitacora": {
+    "id": 329,
+    "campo": "nombre",
+    "valor_anterior": "Black Edition 250g",
+    "valor_nuevo": "Black edition 250g",
+    "origen": "carga_masiva",
+    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+   }
+  }
+ ],
+ "totales": {
+  "renombrada": 6,
+  "sin cambio": 0,
+  "problema": 0
+ },
+ "bitacoraNueva": 6,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback"
+}
