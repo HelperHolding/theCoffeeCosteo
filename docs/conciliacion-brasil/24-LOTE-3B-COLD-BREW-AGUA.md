@@ -55,3 +55,21 @@ Contexto: [22](22-PROPUESTA-FRESH-SODAS-HIELO-AGUA.md) §3.
 
 - **Reversión:** la de 3b es por ejecución, con `--lote recetario-lote-3b-coldbrew-agua --revertir --ejecucion <uuid>`. Se niega si Cold brew tiene registros posteriores en la bitácora.
 - **Por qué H2 excluye Cold brew:** en un ensayo previo, H2 incluía Cold brew. Después de que H2 lo tocara, la reversión de 3b ya no era posible: «Hubo 2 cambio(s) posterior(es) en la receta». Al excluir Cold brew de H2, la reversión de 3b queda disponible.
+
+## 6. Cierre: aplicado el 2026-10-26 (23:25 UTC) y verificado
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2321Z`** | Restaurado en una copia local aislada y comparado con producción: 19,606 filas idénticas; solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS idénticas |
+| **Revalidación** (solo lectura) | Cold brew v30 con 136 / 183.333 / 233.333; perfil admin activo; 62 enlaces; migración 22; bitácora sin cambios desde el respaldo (397 registros, máx. 471) |
+| **Ensayo remoto** (ROLLBACK) | 3 cambiadas, 3 registros propios y 0 ajenos. Una conexión nueva confirmó que no persistió nada |
+| **Aplicación** | **COMMIT**: v30 → **v33**; bitácora **#502–504** (`linea_cantidades.cantidad`, `carga_masiva`, autor Carlo, con la nota de la ejecución) |
+| **Verificación** (conexión nueva) | Solo cambiaron las 3 celdas de AGUA. Café 20/20 y hielo 130/245 iguales. Costos, márgenes y precios iguales ($14.50/$14.70; Mostrador $52.74/$61.16; Rappi $46.88/$54.87). Huellas idénticas de `v_resumen`, `v_costo_producto`, alertas, precios, precios manuales, enlaces, insumos, el resto de recetas y el resto de cantidades |
+| **Segundo ensayo** | 3 «sin cambio», 0 registros nuevos, ROLLBACK |
+
+**Resultado:** AGUA de Cold brew = concentrado 100/100 + dilución 100/150, es decir 200/250.
+
+**Reversión** (solo con aprobación):
+- Ejecución `3c909f2e-14d1-4fd6-8aa1-22e7301bf604`.
+- Comando: `--lote recetario-lote-3b-coldbrew-agua --revertir --ejecucion 3c909f2e-14d1-4fd6-8aa1-22e7301bf604 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`.
+- Los informes de ejecución y el respaldo se guardan fuera del repo.
