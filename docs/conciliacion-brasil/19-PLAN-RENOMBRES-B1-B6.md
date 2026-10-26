@@ -152,3 +152,26 @@ npx tsx scripts/conciliacion/renombres-b-aplicar.ts --revertir --confirmo jpqkmn
    - el tablero sigue con el mismo número de productos activos.
 5. **Revalidar los candidatos SKU** afectados, sin modificar correspondencias.
 6. **Reversión**, solo si hiciera falta.
+
+## Resultado del ensayo en producción (2026-10-26 16:20 UTC)
+
+Autorizado por Carlo. Se ejecutó sin `--aplicar` ni `--revertir`, en `jpqkmnfjwzniptszjuli`, con `--usuario 63e994a6-5cbc-4605-b0d0-78bde4264890` (Carlos Valencia, admin, activo).
+
+El informe está en `19-renombres/2026-10-26T16-20-44-425Z-jpqkmnfjwzniptszjuli-ensayo.json`.
+
+| Dato | Resultado |
+|---|---|
+| Transacción | **ROLLBACK** |
+| Renombres simulados | 6 (B1–B6), versión +1 cada uno |
+| Problemas | 0 |
+| Bitácora propia | 6 registros: ids 324–329, `recetas.nombre`, `carga_masiva`, con el usuario de Carlo |
+| Actividad ajena durante el ensayo | 0 registros |
+
+**Verificación posterior (solo lectura, comparada con una captura previa):**
+- Las 6 recetas quedaron **idénticas**: nombre, versión, autor (`updated_by`), `updated_at` y estado activo.
+- Bitácora: máximo 323, total 323, igual que antes. Los ids 324–329 **no existen**. Quedan como salto de numeración, aceptado por Carlo.
+- Migraciones: la última sigue siendo `20261023000021` (21 en total).
+
+**Nota sobre la autoría:** hoy `updated_by` es null en las 6 recetas. Al aplicar quedará Carlo como autor, en `recetas.updated_by` y en la bitácora.
+
+**Siguiente paso:** la aplicación persistente, con `--aplicar --confirmo jpqkmnfjwzniptszjuli --usuario …`. **Sigue pendiente de aprobación.**
