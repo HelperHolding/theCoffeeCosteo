@@ -437,3 +437,100 @@ describe('lote 2 (Urban Chocolate y Cold brew)', () => {
     expect(await cantidades(receta)).toEqual(original);
   });
 });
+
+describe('lote 3b (agua de Cold brew, borrador)', () => {
+  const ruta = 'docs/conciliacion-brasil/24-lote-3b-cold-brew-agua.manifiesto.json';
+  const texto = () =>
+    readFileSync(ruta, 'utf8')
+      .replace(/^\uFEFF/, '')
+      .replace(/\r\n/g, '\n');
+
+  it('borrador: Cold brew v30, solo AGUA (concentrado 100/100, dilución 100/150) y no está aprobado', async () => {
+    expect(Object.keys(LOTES_RECETAS_APROBADOS)).not.toContain('recetario-lote-3b-coldbrew-agua');
+    await expect(leerLoteRecetas('recetario-lote-3b-coldbrew-agua')).rejects.toThrow(/no está aprobado/);
+    const sha256 = createHash('sha256').update(texto()).digest('hex');
+    const m = await leerLoteRecetas('recetario-lote-3b-coldbrew-agua', '.', {
+      'recetario-lote-3b-coldbrew-agua': { manifiesto: ruta, sha256 },
+    });
+    expect(m.receta).toEqual({
+      id: '00f47aba-88e6-4ebc-a815-5833f8b29871',
+      nombre: 'Cold brew',
+      version: 30,
+    });
+    expect(m.celdas.map((c) => `${c.insumo} ${c.tamano} ${c.previo}→${c.nuevo}`)).toEqual([
+      'AGUA Grande 136→100',
+      'AGUA Chica 183.333→100',
+      'AGUA Grande 233.333→150',
+    ]);
+    expect(new Set(m.celdas.map((c) => c.insumo_id)).size).toBe(1);
+    expect(m.aprobacion).toMatch(/BORRADOR/);
+  });
+
+  it('con la forma de Cold brew: el agua queda 200/250, el café, el hielo y el costo no cambian, y se revierte exacto', async () => {
+    const agua = await crearInsumo(db, { nombre: 'AGUA 3B', costoPaquete: 0, presentacion: 1, unidad: 'ml' });
+    const cafe = await crearInsumo(db, { nombre: 'CAFE 3B', costoPaquete: 750, presentacion: 1500 });
+    const hielo = await crearInsumo(db, {
+      nombre: 'HIELO 3B',
+      costoPaquete: 0,
+      presentacion: 1,
+      unidad: 'ml',
+    });
+    const receta = await crearProducto(db, { nombre: 'Cold brew 3B', precios: { Chica: 78, Grande: 88 } });
+    const concentrado = await agregarLinea(db, receta, {
+      insumoId: agua,
+      cantidades: { Chica: 100, Grande: 136 },
+    });
+    await agregarLinea(db, receta, { insumoId: hielo, cantidades: { Chica: 130, Grande: 245 } });
+    const dilucion = await agregarLinea(db, receta, {
+      insumoId: agua,
+      cantidades: { Chica: 183.333, Grande: 233.333 },
+    });
+    await agregarLinea(db, receta, { insumoId: cafe, cantidades: { Chica: 20, Grande: 20 } });
+    const real = JSON.parse(texto()) as ManifiestoRecetas;
+    const lineaDe = { [real.celdas[0].linea_id]: concentrado, [real.celdas[1].linea_id]: dilucion };
+    const m: ManifiestoRecetas = {
+      ...real,
+      receta: { id: receta, nombre: 'Cold brew 3B', version: await version(receta) },
+      celdas: await Promise.all(
+        real.celdas.map(async (c) => ({
+          ...c,
+          linea_id: lineaDe[c.linea_id],
+          insumo_id: agua,
+          insumo: 'AGUA 3B',
+          tamano_id: await idTamano(db, c.tamano as 'Chica' | 'Grande'),
+        })),
+      ),
+    };
+    const costos = async () =>
+      (
+        await db.query<{ c: string }>(
+          `select tamano_id::text || '=' || round(costo, 6)::text as c from v_costo_producto where producto_id = $1 order by 1`,
+          [receta],
+        )
+      ).rows.map((x) => x.c);
+    const original = { c: await cantidades(receta), costo: await costos() };
+    const ap = await corregir(cx, 'aplicar', m, { usuario: admin });
+    expect(ap.error).toBeUndefined();
+    expect(ap).toMatchObject({
+      transaccion: 'commit',
+      totales: { cambiada: 3 },
+      bitacoraPropia: 3,
+      restoSinCambios: true,
+    });
+    expect(await cantidades(receta)).toEqual([
+      'AGUA 3B Chica=100',
+      'AGUA 3B Chica=100',
+      'AGUA 3B Grande=100',
+      'AGUA 3B Grande=150',
+      'CAFE 3B Chica=20',
+      'CAFE 3B Grande=20',
+      'HIELO 3B Chica=130',
+      'HIELO 3B Grande=245',
+    ]);
+    expect(await costos()).toEqual(original.costo);
+    expect((await corregir(cx, 'aplicar', m, { usuario: admin })).totales['sin cambio']).toBe(3);
+    const rv = await corregir(cx, 'revertir', m, { usuario: admin, ejecucion: ap.ejecucion });
+    expect(rv).toMatchObject({ transaccion: 'commit', totales: { revertida: 3 } });
+    expect({ c: await cantidades(receta), costo: await costos() }).toEqual(original);
+  });
+});

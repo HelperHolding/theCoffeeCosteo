@@ -1,0 +1,47 @@
+{
+ "lote": "recetario-lote-3b-coldbrew-agua",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3",
+  "ficha": "Cold Brew Concentrado (p.9) y Cold Brew (p.27)",
+  "pagina": 27
+ },
+ "receta": {
+  "id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+  "nombre": "Cold brew",
+  "version": 30
+ },
+ "celdas": [
+  {
+   "linea_id": "18380e85-3375-4caa-8d88-2f97d511d416",
+   "insumo_id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "insumo": "AGUA",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 136,
+   "nuevo": 100,
+   "fuente": "p.9: 1 L de concentrado consume 1,000 de agua (280 g + 720 ml) → 100 ml de concentrado = 100 de agua; la Grande también lleva 100 ml de concentrado (p.27)"
+  },
+  {
+   "linea_id": "6a115969-b9f0-436a-99fe-05afb78073b8",
+   "insumo_id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "insumo": "AGUA",
+   "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+   "tamano": "Chica",
+   "previo": 183.333,
+   "nuevo": 100,
+   "fuente": "p.27: Regular 100 ml de agua fría (dilución); el agua del concentrado va en la línea de orden 0"
+  },
+  {
+   "linea_id": "6a115969-b9f0-436a-99fe-05afb78073b8",
+   "insumo_id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "insumo": "AGUA",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 233.333,
+   "nuevo": 150,
+   "fuente": "p.27: Grande 150 ml de agua fría (dilución); el agua del concentrado va en la línea de orden 0"
+  }
+ ],
+ "aprobacion": "BORRADOR: no aprobado. Propuesta de consumo según rendimiento documentado (doc 22 §3.3, W1; doc 24); requiere aprobación expresa."
+}
