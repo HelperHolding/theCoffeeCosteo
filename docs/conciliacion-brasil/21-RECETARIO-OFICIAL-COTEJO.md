@@ -272,3 +272,105 @@ Se leyeron 160 recetas (154 productos y 6 subrecetas), 215 precios de lista por 
 - **Archivos privados:** los informes de ejecución y el respaldo se guardan fuera del repo. No forman parte de este documento.
 
 La autorización cubrió **solo** estas tres correcciones.
+
+## 9. Lote 2 (preparado en local, NO aplicado)
+
+Carlo autorizó **solo la preparación local**: manifiestos, pruebas y simulación. Aplicar en producción requiere otra aprobación.
+
+### Alcance
+
+| Receta (UUID, versión) | Celda | Actual | Propuesto | Fuente |
+|---|---|---|---|---|
+| Urban Chocolate (`2c8b49a6-7b2f-489e-8932-1d1ff8c7754c`, v20) | JARABE DE VANILLA, Grande | 10 ml | **0 ml** | p.34: la ficha no lleva vainilla en ninguna medida |
+| Cold brew (`00f47aba-88e6-4ebc-a815-5833f8b29871`, v28) | CAFÉ BLACK, Chica | 16.67 g | **20 g** | p.9: 200 g → **1 L** de concentrado (rendimiento oficial); p.27: 100 ml de cold brew por bebida |
+| Cold brew | CAFÉ BLACK, Grande | 16.67 g | **20 g** | Igual: la Grande también lleva 100 ml de concentrado |
+
+**Manifiestos aprobados.** Su huella está fijada en `LOTES_RECETAS_APROBADOS`:
+- `21-lote-2-urban-chocolate.manifiesto.json` (`recetario-lote-2-urban`);
+- `21-lote-2-cold-brew.manifiesto.json` (`recetario-lote-2-coldbrew`).
+
+Cada uno se aplica en su propia transacción.
+
+**Fuera del lote:**
+- Urban Chocolate: no se desactiva ni se fusiona ningún registro (C1 sigue abierta).
+- Las Fresh Sodas.
+- Las líneas de AGUA de Cold brew; ver abajo.
+
+### Cold brew: representación actual
+
+| Línea | Chica | Grande | Lectura |
+|---|---|---|---|
+| CAFÉ BLACK | 16.67 g | 16.67 g | Café del concentrado, suponiendo que rinde 1.2 L (200 g en 1,200 g de agua y café). **No está duplicado** |
+| AGUA (orden 6) | 183.333 | 233.333 | Agua del concentrado (83.333, con el mismo supuesto de 1.2 L) + dilución de 100/150 ml (p.27) |
+| **AGUA (orden 0)** | **100** | **136** | Los «100 ml de cold brew» registrados otra vez como agua; 136 = 100 × 600/440, un escalado que el PDF no sostiene. **El concentrado está duplicado** |
+
+- **El AGUA cuesta $0**, así que la duplicación no altera el costo. El único efecto en el costo es el café.
+- **Con el rendimiento oficial de 1 L,** la representación coherente sería:
+  - café 20 g;
+  - agua del concentrado 100 ml más dilución 100/150, es decir AGUA 200/250 en una sola línea;
+  - la línea AGUA de orden 0 en 0 ml.
+- **Propuesta (no incluida en el lote):** corregir AGUA en una aprobación aparte, sin efecto en el costo.
+
+### Impacto (simulación local con el motor de vistas, copia del respaldo de 2026-10-26 20:26 UTC)
+
+| Producto | Tamaño | Costo | Food cost (Mostrador) | Margen Mostrador | Margen Rappi |
+|---|---|---|---|---|---|
+| Urban Chocolate | Grande | $16.69 → **$14.39** | 22.0% → 19.0% | $59.17 → $61.47 | $52.20 → $54.50 |
+| Cold brew | Chica | $12.84 → **$14.50** | 19.1% → 21.6% | $54.41 → $52.74 | $48.55 → $46.88 |
+| Cold brew | Grande | $13.04 → **$14.70** | 17.2% → 19.4% | $62.83 → $61.16 | $56.53 → $54.87 |
+
+- Urban Chocolate Chica no cambia.
+- Los precios de venta no cambian, y las alertas siguen igual: 6 antes y 6 después.
+- Ninguno de los dos productos es subreceta de otro.
+
+### Pruebas y ensayo local
+
+- `tests/db/recetas-correcciones.test.ts`: **11/11**. Se agregaron los manifiestos reales del lote 2 y un caso con un valor que baja a 0 y otro con decimales (16.67): aplicar, repetir y revertir.
+- BD completa: **181/181**. `tsc` sin errores.
+
+**Ensayo local** con la CLI real, sobre la copia aislada:
+
+| Paso | Urban Chocolate | Cold brew |
+|---|---|---|
+| Ensayo (ROLLBACK) | 1 celda, v20 → 21 | 2 celdas, v28 → 30 |
+| Aplicación local | Costos iguales a la simulación | Costos iguales a la simulación |
+| Repetición | «sin cambio» | «sin cambio» |
+| Reversión | Costos de vuelta a los originales | Costos de vuelta a los originales |
+
+Los informes locales están en `21-informes/`.
+
+### Fresh Sodas: lo que se verificó antes de proponer cambios
+
+- **Preparado de fresa (p.7).** Son solo 500 g de fresa congelada (insumo `FRESA NATURAL CONGELADA`), descongelada 30 min y licuada hasta un puré rústico, **sin otros ingredientes**.
+  - La ficha **no documenta el rendimiento**: no dice cuánto puré resulta ni cuánto se pierde en la licuadora o al descongelar.
+  - Por eso «30 g de preparado = 30 g de fresa» es un supuesto de masa sin pérdida, aunque Costeo ya lo use en la Chica, en Ichigo y en el Açaí.
+  - **Hace falta medirlo:** pesar el puré que dan 500 g de fresa.
+- **Hielo.**
+  - El insumo `HIELO` está en **ml** y cuesta $0; lo usan 41 recetas. Las fichas lo dan en **gramos**: 130/245 g, 250/360 g, etc.
+  - Un gramo de hielo equivale a 1 ml de agua derretida, pero **no** a 1 ml de volumen de hielo (~1.09 ml).
+  - La representación correcta sería registrar el hielo **en gramos** (cambiar la unidad del insumo a `gr`, sin cambiar los números). Es una decisión de catálogo que toca 41 recetas, sin efecto en el costo; **queda propuesta y no se aplica**.
+  - Mientras tanto, cambiar 190 → 245 «ml» repetiría la convención sin validarla.
+
+### Agua con gas y tónica (diagnóstico actualizado)
+
+**Qué dicen las fichas:**
+- **Pink Lemonade y Maracuyá (pp.43–44).** La base es **agua con gas**: 170 ml en Regular y 220 ml en Grande. La observación de la ficha dice: «esta bebida se personaliza: el agua de filtro o tónica. Agregar la misma cantidad». O sea, la tónica y el agua de filtro son **personalizaciones** que sustituyen al agua con gas en la misma cantidad; no son la base.
+- **Cold Brew (p.27).** Lo mismo al revés: «Cuando el cliente pida con agua tónica o mineral, sustituir los 100 ml de agua de filtro». La base es agua de filtro y la tónica o mineral son la personalización.
+
+**Qué tiene Costeo:**
+- Las dos Fresh Sodas usan como base `SCHWEPPES AGUA TÓNICA 296 ML`, es decir, **una personalización**, con 170/232 ml.
+- Costeo no tiene un insumo de agua con gas por ml. `AGUA MINERAL TOPO CHICO 355 ML` y `AGUA MINERAL PERRIER 330 ML` existen solo como **pieza**, y Topo Chico no se usa en ninguna receta.
+
+**Para corregirlo hace falta:**
+1. Que Operaciones o Compras digan qué agua con gas se usa (marca y presentación).
+2. Que digan si la botella abierta se reutiliza, para costear por ml, o se usa una por bebida, para costear por pieza.
+3. Un insumo por ml o una conversión documentada.
+
+**Estimación provisional,** si fuera Topo Chico ($20.55 / 355 ml = $0.0579/ml) y la botella se reutilizara:
+
+| Tamaño | Hoy (tónica) | Con agua con gas | Diferencia |
+|---|---|---|---|
+| Chica | 170 ml × $0.0473 = $8.04 | 170 ml = $9.84 | **+$1.80** |
+| Grande | 232 ml = $10.97 | 220 ml = $12.74 | **+$1.76** |
+
+Si fuera una botella por bebida, el aumento sería mucho mayor. **No se propone cambio** hasta tener la respuesta. Esto amplía las preguntas P6 y K6.

@@ -336,3 +336,104 @@ describe('corrección dirigida', () => {
     expect(await cantidades(receta)).toEqual(antes);
   });
 });
+
+describe('lote 2 (Urban Chocolate y Cold brew)', () => {
+  it('manifiestos reales: Urban Grande vainilla 10 → 0 (v20) y Cold brew café 16.67 → 20 en Chica y Grande (v28)', async () => {
+    const u = await leerLoteRecetas('recetario-lote-2-urban');
+    expect(u.receta).toEqual({
+      id: '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c',
+      nombre: 'Urban Chocolate',
+      version: 20,
+    });
+    expect(u.celdas.map((c) => `${c.insumo} ${c.tamano} ${c.previo}→${c.nuevo}`)).toEqual([
+      'JARABE DE VANILLA 1 LT (3 PZAS) Grande 10→0',
+    ]);
+    expect(u.fuente.pagina).toBe(34);
+    const c = await leerLoteRecetas('recetario-lote-2-coldbrew');
+    expect(c.receta).toEqual({
+      id: '00f47aba-88e6-4ebc-a815-5833f8b29871',
+      nombre: 'Cold brew',
+      version: 28,
+    });
+    expect(c.celdas.map((x) => `${x.insumo} ${x.tamano} ${x.previo}→${x.nuevo}`)).toEqual([
+      'CAFÉ TOSTADO EN GRANO BLACK 1.5 KG Chica 16.67→20',
+      'CAFÉ TOSTADO EN GRANO BLACK 1.5 KG Grande 16.67→20',
+    ]);
+    // Solo el café: las líneas de AGUA quedan fuera de este lote.
+    expect(c.celdas.every((x) => !/AGUA/.test(x.insumo))).toBe(true);
+  });
+
+  it('un valor que baja a 0 y un valor previo con decimales: aplicar, repetir y revertir', async () => {
+    const vainilla = await crearInsumo(db, {
+      nombre: 'VAINILLA L2',
+      costoPaquete: 690,
+      presentacion: 3000,
+      unidad: 'ml',
+    });
+    const cafe = await crearInsumo(db, { nombre: 'CAFE L2', costoPaquete: 750, presentacion: 1500 });
+    const receta = await crearProducto(db, { nombre: 'Lote 2 prueba', precios: { Chica: 78, Grande: 88 } });
+    const lV = await agregarLinea(db, receta, { insumoId: vainilla, cantidades: { Grande: 10 } });
+    const lC = await agregarLinea(db, receta, {
+      insumoId: cafe,
+      cantidades: { Chica: 16.67, Grande: 16.67 },
+    });
+    const [chica, grande] = [await idTamano(db, 'Chica'), await idTamano(db, 'Grande')];
+    const m: ManifiestoRecetas = {
+      lote: 'prueba-l2',
+      fuente: { archivo: 'prueba.pdf', sha256: 'x', ficha: 'prueba', pagina: 1 },
+      receta: { id: receta, nombre: 'Lote 2 prueba', version: await version(receta) },
+      celdas: [
+        {
+          linea_id: lV,
+          insumo_id: vainilla,
+          insumo: 'VAINILLA L2',
+          tamano_id: grande,
+          tamano: 'Grande',
+          previo: 10,
+          nuevo: 0,
+          fuente: 'p',
+        },
+        {
+          linea_id: lC,
+          insumo_id: cafe,
+          insumo: 'CAFE L2',
+          tamano_id: chica,
+          tamano: 'Chica',
+          previo: 16.67,
+          nuevo: 20,
+          fuente: 'p',
+        },
+        {
+          linea_id: lC,
+          insumo_id: cafe,
+          insumo: 'CAFE L2',
+          tamano_id: grande,
+          tamano: 'Grande',
+          previo: 16.67,
+          nuevo: 20,
+          fuente: 'p',
+        },
+      ],
+      aprobacion: 'prueba',
+    };
+    const original = await cantidades(receta);
+    const ap = await corregir(cx, 'aplicar', m, { usuario: admin });
+    expect(ap.error).toBeUndefined();
+    expect(ap).toMatchObject({
+      transaccion: 'commit',
+      totales: { cambiada: 3 },
+      bitacoraPropia: 3,
+      restoSinCambios: true,
+    });
+    expect(await cantidades(receta)).toEqual([
+      'CAFE L2 Chica=20',
+      'CAFE L2 Grande=20',
+      'VAINILLA L2 Grande=0',
+    ]);
+    const rep = await corregir(cx, 'aplicar', m, { usuario: admin });
+    expect(rep).toMatchObject({ totales: { 'sin cambio': 3 }, bitacoraPropia: 0 });
+    const rv = await corregir(cx, 'revertir', m, { usuario: admin, ejecucion: ap.ejecucion });
+    expect(rv).toMatchObject({ transaccion: 'commit', totales: { revertida: 3 } });
+    expect(await cantidades(receta)).toEqual(original);
+  });
+});

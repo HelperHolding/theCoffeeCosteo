@@ -46,6 +46,14 @@ export const LOTES_RECETAS_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/21-lote-1-recetas.manifiesto.json',
     sha256: '97e3f56af242dff45a834eecaf55831a8346f436ab707d892babb9906c7cdb43',
   },
+  'recetario-lote-2-urban': {
+    manifiesto: 'docs/conciliacion-brasil/21-lote-2-urban-chocolate.manifiesto.json',
+    sha256: '79b31a016111f677c058a7a823b4a360a0eae8fc1b7696afcbe0bca18570d899',
+  },
+  'recetario-lote-2-coldbrew': {
+    manifiesto: 'docs/conciliacion-brasil/21-lote-2-cold-brew.manifiesto.json',
+    sha256: 'fd9669b63d556bb3071bb1fe8927dcd7744a76e4a8405caf2e7bbd75db1661b8',
+  },
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

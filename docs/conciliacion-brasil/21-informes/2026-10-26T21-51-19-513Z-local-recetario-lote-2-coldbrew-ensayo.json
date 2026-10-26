@@ -1,0 +1,49 @@
+{
+ "fecha": "2026-10-26T21:51:19.513Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "lote": "recetario-lote-2-coldbrew",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "ejecucion": "d5c5bb18-b8c2-4974-a0e7-e37b112b4b78",
+ "receta": {
+  "id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+  "nombre": "Cold brew",
+  "versionEsperada": 28,
+  "versionAntes": 28,
+  "versionDespues": 30
+ },
+ "celdas": [
+  {
+   "insumo": "CAFÉ TOSTADO EN GRANO BLACK 1.5 KG",
+   "tamano": "Chica",
+   "previo": 16.67,
+   "nuevo": 20,
+   "antes": 16.67,
+   "resultado": "cambiada",
+   "problemas": [],
+   "despues": 20,
+   "bitacora": 462
+  },
+  {
+   "insumo": "CAFÉ TOSTADO EN GRANO BLACK 1.5 KG",
+   "tamano": "Grande",
+   "previo": 16.67,
+   "nuevo": 20,
+   "antes": 16.67,
+   "resultado": "cambiada",
+   "problemas": [],
+   "despues": 20,
+   "bitacora": 463
+  }
+ ],
+ "totales": {
+  "cambiada": 2,
+  "sin cambio": 0,
+  "revertida": 0,
+  "problema": 0
+ },
+ "bitacoraPropia": 2,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "restoSinCambios": true
+}
