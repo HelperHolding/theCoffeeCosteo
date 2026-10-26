@@ -1,9 +1,10 @@
 # 21 · Recetario oficial ↔ recetas de Costeo: diagnóstico y primer lote (propuesta)
 
-**Estado:** diagnóstico y propuesta, 2026-10-26. **No se escribió nada en la base.**
-- No se cambiaron recetas, cantidades, insumos, precios ni enlaces.
-- No se aplicaron migraciones.
-- La simulación de costos se hizo en una copia local aislada y terminó en ROLLBACK.
+**Estado al 2026-10-26 20:35 UTC:**
+- **El lote 1 está aplicado en producción**: 3 cantidades del Pumpkin Spice Frappé. Detalle en §8.
+- Carlo confirmó que este PDF es el recetario vigente.
+- **Los lotes 2–4 no se han aplicado:** cada uno requiere su propia aprobación.
+- Fuera del lote 1, no se cambiaron recetas, cantidades, insumos, precios ni enlaces, y no se aplicaron migraciones.
 
 **Detalle:**
 - [`21-mapa-pdf-recetas.csv`](21-mapa-pdf-recetas.csv): mapa de fichas ↔ recetas.
@@ -217,3 +218,57 @@ Se leyeron 160 recetas (154 productos y 6 subrecetas), 215 precios de lista por 
 **Reversión:** se restaura el valor previo **solo** en las celdas cuyo valor actual siga siendo el que dejó la ejecución, verificado contra su bitácora. Si hubo ediciones posteriores, se detiene. Nunca se reemplaza la receta completa.
 
 **Antes de implementar el script hace falta tu aprobación** de este diagnóstico, del lote 1 y de la vía de escritura.
+
+## 8. Cierre del lote 1 (2026-10-26)
+
+### Autorizaciones y fuente
+
+- **Aprobación del diagnóstico:** Carlo aprobó el diagnóstico, el lote 1 y la vía de UPDATE dirigido con manifiesto.
+- **Confirmación de la fuente:** antes de aplicar, Carlo confirmó que el PDF «RECETARIO OFICIAL 2026» es el recetario vigente (equivale a P1). Una revisión visual independiente de la p.62 confirmó las tres cantidades.
+- **Código:** script `scripts/conciliacion/recetas-correcciones.ts` (PR #28, merge `6953adc`). Manifiesto aprobado `21-lote-1-recetas.manifiesto.json`.
+
+### Secuencia
+
+| Paso | Resultado |
+|---|---|
+| Respaldo lógico privado (20:26 UTC) | Restaurado en una copia local aislada y comparado con producción: contenido idéntico (72 tablas, 19,597 filas), políticas y funciones sin diferencias |
+| Dry-run remoto con ROLLBACK (20:28 UTC) | 3 cantidades cambiadas, 0 problemas, 3 registros propios en la bitácora, resto sin cambios. Una conexión nueva confirmó que no persistió nada |
+| Revalidación (20:34 UTC) | Versión 29, valores previos 30/55/55, perfil admin activo. La bitácora no había cambiado desde el respaldo, así que el respaldo seguía vigente |
+| **Aplicación (20:35 UTC)** | **COMMIT** confirmado, versión 29 → 32 |
+| Segundo ensayo | 3 «sin cambio», 0 registros en la bitácora, ROLLBACK, y el estado quedó idéntico |
+
+### Resultado (verificado con una conexión nueva)
+
+| Cantidad | Antes | Después |
+|---|---|---|
+| LECHE ENTERA, Chica | 30 ml | **35 ml** |
+| LECHE ENTERA, Grande | 55 ml | **70 ml** |
+| CHOBANI D.CREAMER PUMPKIN SPICE, Grande | 55 ml | **50 ml** |
+
+- **Autoría:** el perfil de Carlo quedó en `updated_by` y en la bitácora. La bitácora sumó exactamente 3 registros (`linea_cantidades`, campo `cantidad`, `carga_masiva`), con la nota de la ejecución.
+- **Costos recalculados** con `v_resumen`, iguales a la simulación de §6:
+
+| Tamaño | Costo | Food cost (Mostrador) | Margen Mostrador / App | Margen Rappi |
+|---|---|---|---|---|
+| Chica | $30.58 → $30.69 | 35.8% → 36.0% | $54.76 → $54.65 | $47.17 → $47.06 |
+| Grande | $35.57 → $34.62 | 37.9% → 36.9% | $58.40 → $59.34 | $41.50 → $42.45 |
+
+**Sin cambios:**
+- precios de venta: $99 y $109; en Rappi, $123 y $122;
+- alertas: 3 antes y 3 después;
+- huellas idénticas: precios de lista, precios manuales, insumos, líneas, los 62 enlaces POS, parámetros, canales, perfiles, las demás recetas y sus cantidades, y las demás cantidades de esta receta;
+- última migración: la 22.
+
+### Reversión (solo con aprobación)
+
+- **Ejecución:** `d9dadc19-ed92-4808-8227-561eedd8993e`.
+- **Qué restaura:** solo estas 3 cantidades. Si la receta tuvo ediciones posteriores, se detiene.
+- **Comando:**
+
+  ```
+  npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --revertir --ejecucion d9dadc19-ed92-4808-8227-561eedd8993e --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+  ```
+
+- **Archivos privados:** los informes de ejecución y el respaldo se guardan fuera del repo. No forman parte de este documento.
+
+La autorización cubrió **solo** estas tres correcciones.
