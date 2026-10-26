@@ -1,6 +1,88 @@
 # 12 · Procedimiento de la fase 5: merge y despliegue
 
-**Estado:** verificaciones previas Q1–Q5 **hechas y correctas** (2026-10-23). **Merge y despliegue pendientes** de la confirmación de Carlo. El flujo MCP completo sigue pendiente como limitación documentada (`13-TAREA-AUTH-SITE-URL.md`).
+**Estado:** ✅ **Fase 5 cerrada (2026-10-24 00:03 UTC).** PR #18 publicado (merge commit `3bf41e7`) y desplegado; verificaciones posteriores correctas, sin regresiones. El flujo MCP completo sigue pendiente como limitación documentada (`13-TAREA-AUTH-SITE-URL.md`).
+
+## Cierre de la fase 5
+
+### Antes del merge
+
+| Comprobación | Resultado |
+|---|---|
+| Commit final autorizado | `2412237` (`OPEN`, `MERGEABLE`/`CLEAN`) |
+| Checks del commit final | Vercel ✅ · Vercel Preview Comments ✅ · Supabase Preview *skipping*. `main` no tiene checks obligatorios ni protección |
+| Migraciones nuevas frente a `main` | Solo `20261023000021_costeo_rls_rendimiento.sql`, ya registrada. **Sin la 22 ni la rama `feat/sku-enlace-pos`** |
+
+### Publicación
+
+| Paso | Resultado |
+|---|---|
+| Merge | `gh pr merge 18 --merge --match-head-commit 2412237…` → merge commit **`3bf41e7`**, 2026-10-24 00:03:29 UTC |
+| Despliegue de producción (Vercel) | `3bf41e7` → **success**, 00:04:36 UTC |
+| Integración Supabase en `main` | Check «Supabase Preview»: *success*, sin cambios en la base |
+
+### Verificación posterior
+
+| # | Criterio | Resultado |
+|---|---|---|
+| 4.1 | Despliegue y rutas públicas | ✅ Producción en `3bf41e7`; `/login` 200; `/oauth/consent` 200; `/mcp` sin token 401 con `WWW-Authenticate` |
+| 4.2 | Supabase no repitió la 21 | ✅ Registro: 21 versiones, la última `20261023000021` con su sentencia original; **ninguna entrada nueva**. Captura idéntica a `fase4/estado-despues-produccion.json`. Huella de `v_resumen` `b51cf7ef…`, 645 filas; 20.4 ms bajo RLS. Tabla de la 22 (`producto_codigo_pos`) **inexistente** |
+| 4.3 | Sucursales en producción, sesión de Carlo, solo lectura | ✅ Ver detalle abajo |
+| 4.4 | Costeo · ficha de Iced Latte | ✅ Chica $15.44 / $70 / Rappi manual $88; Grande $18.28 / $80 / $100; márgenes 44.90, 38.44, 50.69 y 43.79, iguales a `v_resumen`. Receta (7) e Historial (3) cargan |
+| 4.5 | Errores y escrituras | ✅ Consola sin errores. Bitácora sin cambios: 323 filas, la última de las 17:02 UTC del 23-oct, anterior a la publicación |
+
+**Detalle de 4.3:**
+- **Directorio:** el aviso de calidad Rappi aparece con el texto exacto (3 sucursales).
+- **Rubén Darío, «Hoy» (23-oct, 47 pedidos, $8,620.20; suma por productos ✓):**
+  - aviso visible con «Mostrador + App + Rappi» y «Rappi»; oculto con «Mostrador» y «App»;
+  - 35 filas sin nombres repetidos; «Generic (sin identificación del proveedor)» en el #1; «Black Ginger» una vez, marcado «sin código».
+- **Ranking de 28 días (26-sep → 23-oct):**
+  - 77 filas, sin repetidos y con claves únicas;
+  - tamaños solo vasos;
+  - Generic con `nombreProveedor` «Generic»;
+  - conciliación con 2 ¢ de diferencia por el redondeo del proveedor; `rappiSinNumeroOrden` 0.
+- **Pedidos del 23-oct:**
+  - 31893730 → «Pedido POS 31893730 · $568.00» + «Orden Rappi 2482647582» (5 líneas, Generic incluido);
+  - 31905287 → `numeroPedidoRappi` 2482754188;
+  - pedido con tarjeta 31894079 sin Orden Rappi;
+  - JSON sin `refundId` ni UUID; 0 pedidos no Rappi con número.
+
+### Reversión
+
+No fue necesaria. Si se requiere, procede según la sección 5: PR que revierte el código de la app y **conserva el archivo de la migración 21**.
+
+### Pendientes, como trabajos separados
+
+| Trabajo | Documento | Estado |
+|---|---|---|
+| Corrección de Site URL de Auth y prueba real del flujo MCP | `13-TAREA-AUTH-SITE-URL.md` | Registrada, sin ejecutar |
+| Decisiones B1–B7 (precio de lista, nombres, alias, duplicados, tamaños, recetas nuevas, correspondencias) | `08-CIERRE-FASE-2.md` | Pendientes de Carlo |
+| Enlace de SKU: migración 22 + lote 1 (57 códigos) | `15-SKUS-Y-ENLACE.md`, rama local `feat/sku-enlace-pos` (`29bbe55`) | Preparada y probada en local; **sin PR, sin aplicar**. «Deploy to production» la aplicaría al llegar a `main` |
+| Preguntas al proveedor y a Rappi: Generic, tamaños, `netAmout`, `discount`, SKU | `06-PREGUNTAS-PROVEEDOR.md` | Sin enviar |
+| A7 (páginas de 1,000) | `09` | Falta confirmar `max_rows` |
+| Desbordamiento móvil de Pedidos; advertencias restantes del Security Advisor; Black Ginger y otros productos que solo llegan sin código por App | `09`, `10`, `14` | Backlog |
+| Quitar el MCP local `thecoffee-costeo` y el cliente OAuth sin uso | `13` | Opcional |
+
+## Cambios añadidos tras la prueba local (revisión de integridad Rappi, 2026-10-23)
+
+- **Aviso de calidad de fuente** (aprobado por Carlo), con el texto exacto:
+  - visible con «Mostrador + App + Rappi», «Rappi», la pestaña Rappi y el directorio;
+  - **no cambia cifras**.
+  - Detalle en `14-RAPPI-CASO-2-TAMANOS.md`.
+- **Pruebas sintéticas** que distinguen la pérdida en origen de un fallo local (caso 2).
+- **Documentación:** `14` (caso 2), `15` (SKU), `06` (preguntas).
+- **Fuera del PR #18:** la migración 22 y la carga de códigos POS, en la rama local `feat/sku-enlace-pos` (entrega separada).
+  - **No debe llegar a `main` sin su propio procedimiento**: «Deploy to production» la aplicaría automáticamente.
+
+**Verificación sobre el commit final `9ce6e64`:**
+- `tsc` ✅;
+- `vitest`: 354 pasan, 5 omitidas; solo falla paridad, que requiere el Excel;
+- `next build` ✅;
+- checks del PR en verde;
+- `main` = `b7416e1`, contenida en la rama;
+- base idéntica a `fase4/estado-despues-produccion.json`;
+- el PR **no** contiene la migración 22.
+
+La prueba local Q5 sigue valiendo para los casos verificados; el aviso se revisó en el arnés visual y en las pruebas de UI.
 
 ## Resultado de las verificaciones previas
 
