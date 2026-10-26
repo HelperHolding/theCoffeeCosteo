@@ -22,9 +22,9 @@ d05cbf84-407c-4871-af0a-c1009bc20ddb,Double Iced Latte + Banana Cake + Koulign A
 3337fc34-6de8-48a1-b066-663073da7cc9,Double Salted Caramel + Traditional Cookie + Lemon,true,COMBO CON PANADERÍA DULCE,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
 3337fc34-6de8-48a1-b066-663073da7cc9,Double Salted Caramel + Traditional Cookie + Lemon,true,COMBO CON PANADERÍA DULCE,0,Grande,170,,,,,sin ficha en el PDF,sin evidencia; conservar
 6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,true,Fresh Soda,0,Chica,130,44,Maracuyá,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
-6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,true,Fresh Soda,0,Grande,177,44,Maracuyá,130/245 g hielo,245,difiere del PDF,177 → 245 (g del PDF)
+6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,true,Fresh Soda,0,Grande,177,44,Maracuyá,130/245 g hielo,245,difiere del PDF,"PDF 245 g; corrección pendiente de la representación de la unidad (lote 3a)"
 e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,true,Fresh Soda,0,Chica,130,43,Pink Lemonade,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
-e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,true,Fresh Soda,0,Grande,190,43,Pink Lemonade,130/245 g hielo,245,difiere del PDF,190 → 245 (g del PDF)
+e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,true,Fresh Soda,0,Grande,190,43,Pink Lemonade,130/245 g hielo,245,difiere del PDF,"PDF 245 g; corrección pendiente de la representación de la unidad (lote 3a)"
 c665b62b-974b-4a90-b161-c3033645ce50,Gelato Frappé Chocolate,true,Gelato Frappés,0,Único,45,,,,,sin ficha en el PDF,sin evidencia; conservar
 7ae83690-50a0-45f4-8d75-554635d41469,Gelato Frappé Horchai,true,Gelato Frappés,0,Único,45,,,,,sin ficha en el PDF,sin evidencia; conservar
 cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,true,Cold,1,Chica,130,22,Iced Black,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
