@@ -225,7 +225,7 @@ Se tomó una captura previa de 145 políticas, 26 funciones y 34 tablas, con su 
   - RLS activa; grants exactos (anon ninguno; authenticated con SELECT, INSERT, UPDATE y DELETE);
   - columnas y triggers esperados;
 - **objetos previos idénticos** a la captura: 145 políticas, 26 funciones y las ACL y RLS de las 34 tablas;
-- **datos comerciales y de configuración idénticos**, con el mismo conteo y md5: \`recetas\` (160), \`producto_tamanos\`, \`precio_canal_manual\`, \`receta_lineas\`, \`linea_cantidades\`, \`insumos\`, \`canales\`, \`tamanos\`, \`parametros\`, las categorías y \`perfiles\`;
+- **datos comerciales y de configuración idénticos**, con el mismo conteo y md5: `recetas` (160), `producto_tamanos`, `precio_canal_manual`, `receta_lineas`, `linea_cantidades`, `insumos`, `canales`, `tamanos`, `parametros`, las categorías y `perfiles`;
 - **roles**, en una transacción de solo lectura: anon recibe *permission denied*; un perfil admin activo lee la tabla (0 filas).
 
   La escritura de operaciones y admin, y que OAuth no pueda escribir, están probadas en PGlite y en la copia local. No se probaron en producción, para no escribir.
