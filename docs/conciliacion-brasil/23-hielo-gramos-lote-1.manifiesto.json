@@ -115,25 +115,6 @@
    "version": 26
   },
   {
-   "receta_id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
-   "receta": "Cold brew",
-   "linea_id": "b0c55a73-f6cb-4a58-982e-64890bf3f0eb",
-   "pagina": 27,
-   "cantidades": [
-    {
-     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
-     "tamano": "Chica",
-     "cantidad": 130
-    },
-    {
-     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
-     "tamano": "Grande",
-     "cantidad": 245
-    }
-   ],
-   "version": 30
-  },
-  {
    "receta_id": "cb33752f-e335-46ec-b091-a8a2229eb946",
    "receta": "Iced Black",
    "linea_id": "001a1805-f978-4a36-bb3d-2ea71d38653d",
@@ -528,5 +509,5 @@
    "version": 23
   }
  ],
- "aprobacion": "BORRADOR: no aprobado. Requiere aprobación expresa de Carlo (H2, doc 23) antes de registrarse."
+ "aprobacion": "Aprobado por Carlo el 2026-10-26: reasignar las líneas verificadas sin Cold brew, conservando cantidades y costos; costo de compra del hielo sin confirmar."
 }

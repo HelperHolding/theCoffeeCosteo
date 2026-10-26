@@ -11,7 +11,7 @@ import type { Conexion } from './fase4';
  * números ya coinciden con los gramos del recetario pasan de un insumo al otro con los MISMOS números. Las demás líneas
  * de HIELO se quedan como están.
  * Todo en UNA transacción, con las garantías de recetas-correcciones.ts:
- *  1. lote aprobado: manifiesto con huella fijada en LOTES_HIELO_APROBADOS (vacío hasta que se apruebe uno);
+ *  1. lote aprobado: manifiesto con huella fijada en LOTES_HIELO_APROBADOS;
  *  2. perfil obligatorio también en el ensayo (activo, operaciones o admin): updated_by y bitácora;
  *  3. REPEATABLE READ; bloquea el insumo origen, las recetas y las líneas (FOR UPDATE);
  *  4. bloqueo optimista por línea: versión de la receta, insumo origen y cantidades exactas por tamaño. Si la línea ya
@@ -45,8 +45,14 @@ export interface ManifiestoHielo {
   aprobacion: string;
 }
 
-/** Manifiestos aprobados: nombre → ruta y sha256 (LF, sin BOM). Vacío: ningún lote de H2 está aprobado. */
-export const LOTES_HIELO_APROBADOS: Record<string, { manifiesto: string; sha256: string }> = {};
+/** Manifiestos aprobados: nombre → ruta y sha256 (LF, sin BOM). Un lote nuevo entra al revisar este cambio. */
+export const LOTES_HIELO_APROBADOS: Record<string, { manifiesto: string; sha256: string }> = {
+  // Aprobado por Carlo el 2026-10-26: 26 líneas verificadas, sin Cold brew (doc 23).
+  'hielo-gramos-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/23-hielo-gramos-lote-1.manifiesto.json',
+    sha256: 'e025cb9318532820ab9e771cd56a2752bd205405d4eb50b7af2289533b434d1d',
+  },
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const normalizar = (t: string) => t.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');

@@ -135,7 +135,7 @@ describe('selección y manifiesto', () => {
     ]);
   });
 
-  it('el borrador real: 27 líneas del PDF, sin Fresh Sodas, V60 ni recetas sin ficha, y no está aprobado', async () => {
+  it('el lote aprobado: 26 líneas del PDF, sin Cold brew, Fresh Sodas, V60 ni recetas sin ficha', async () => {
     const texto = readFileSync('docs/conciliacion-brasil/23-hielo-gramos-lote-1.manifiesto.json', 'utf8');
     const m = JSON.parse(texto) as ManifiestoHielo;
     expect(() => validarManifiestoHielo(m)).not.toThrow();
@@ -143,14 +143,26 @@ describe('selección y manifiesto', () => {
     expect(m.destino).toMatchObject({ nombre: 'HIELO (g)', unidad: 'gr', costo_paquete: 0, presentacion: 1 });
     expect(m.destino.supuesto).toMatch(/NO confirma que el hielo sea gratuito/);
     expect(m.destino.supuesto).toMatch(/no es una presentación de compra validada/);
-    expect(m.lineas).toHaveLength(27);
-    expect(m.lineas.reduce((s, l) => s + l.cantidades.length, 0)).toBe(53);
+    expect(m.lineas).toHaveLength(26);
+    expect(new Set(m.lineas.map((l) => l.receta_id)).size).toBe(26);
+    expect(m.lineas.reduce((s, l) => s + l.cantidades.length, 0)).toBe(51);
     const nombres = m.lineas.map((l) => l.receta).join('|');
-    for (const fuera of ['Fresh Soda', 'Cold Drip', 'Gelato', 'Nutty', 'Lemon Honey', '+ Banana', 'koulign'])
+    for (const fuera of [
+      'Cold brew',
+      'Fresh Soda',
+      'Cold Drip',
+      'Gelato',
+      'Nutty',
+      'Lemon Honey',
+      '+ Banana',
+      'koulign',
+    ])
       expect(nombres).not.toContain(fuera);
-    expect(m.aprobacion).toMatch(/BORRADOR/);
-    expect(LOTES_HIELO_APROBADOS).toEqual({});
-    await expect(leerLoteHielo('hielo-gramos-lote-1')).rejects.toThrow(/no está aprobado/);
+    expect(m.lineas.some((l) => l.receta_id === '00f47aba-88e6-4ebc-a815-5833f8b29871')).toBe(false);
+    expect(m.aprobacion).toMatch(/sin Cold brew.*costo de compra del hielo sin confirmar/);
+    expect(Object.keys(LOTES_HIELO_APROBADOS)).toEqual(['hielo-gramos-lote-1']);
+    await expect(leerLoteHielo('hielo-gramos-lote-1')).resolves.toEqual(m);
+    await expect(leerLoteHielo('hielo-gramos-lote-2')).rejects.toThrow(/no está aprobado/);
   });
 
   it('manifiestos inválidos se rechazan', async () => {
