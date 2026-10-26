@@ -1,0 +1,36 @@
+{
+ "lote": "lote-2",
+ "archivo": "docs/conciliacion-brasil/20-lote-2.csv",
+ "filas": 5,
+ "sha256": "d9069234964c449bc44078966c34c29f026315f48706cdd3358e30a16c74cf44",
+ "correspondencias": [
+  {
+   "codigo": "1CBWB",
+   "receta_id": "5ce9b244-40e2-4153-92b8-7c5dc38968d4"
+  },
+  {
+   "codigo": "3CBBE",
+   "receta_id": "d22e139c-c4d7-49b7-b8e6-9b13b40a3519"
+  },
+  {
+   "codigo": "3FOOD3",
+   "receta_id": "26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5"
+  },
+  {
+   "codigo": "BR3",
+   "receta_id": "ff0a88ca-d7c0-4d73-84a3-125815f9274e"
+  },
+  {
+   "codigo": "CROSTUAPP",
+   "receta_id": "4ac9187c-fdaf-4678-8e91-7ead2d596c9b"
+  }
+ ],
+ "requiere": [
+  "lote-1"
+ ],
+ "aprobacion": "Carlo, 2026-10-26: autoriza preparar cargador, pruebas y PR para revisión de estos cinco códigos. NO autoriza carga en producción, merge ni despliegue",
+ "notas": [
+  "3CBBE: no hay precio comparable sin descuento en 532; el precio NO está confirmado",
+  "BRICE y los alias D1–D9 quedan fuera (pendientes)"
+ ]
+}
