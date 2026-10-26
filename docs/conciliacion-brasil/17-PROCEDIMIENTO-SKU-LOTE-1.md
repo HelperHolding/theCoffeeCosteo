@@ -1,13 +1,10 @@
 # 17 · Procedimiento: migración 22 y lote 1 de códigos POS (57)
 
-**Estado al 2026-10-26 17:40 UTC:**
-- **La migración 22 está aplicada y registrada en producción.**
-- **El lote 1 (57 enlaces) está cargado** con `carga_id` `8e0854e7-8419-4d2b-a561-9202418097b2`. Detalle y reversión en «Carga del lote 1».
-- Los 6 códigos de B1–B6 no se agregaron.
-- No hubo merge ni despliegue.
-- La rama `feat/sku-enlace-pos` está actualizada con `main` (`ba69a00`) y va en el PR #23, **solo para revisión**.
-- **El merge sigue sin autorizar.** Como la 22 ya está registrada, la integración «Deploy to production» no debería volver a aplicarla. Aun así, el merge se hará solo con aprobación y se verificará después.
-- Cada paso remoto de abajo requiere aprobación expresa de Carlo.
+**Estado: CERRADA (2026-10-26 17:47 UTC).** Detalle en «Cierre de la entrega», al final.
+- La migración 22 está aplicada y registrada en producción.
+- El lote 1 (57 enlaces) está cargado con `carga_id` `8e0854e7-8419-4d2b-a561-9202418097b2`.
+- El PR #23 se mergeó en `6bafd63` y el despliegue terminó correctamente; Supabase no repitió la 22.
+- Siguen como entregas separadas: los 6 códigos de B1–B6, el uso de los enlaces desde Sucursales y los renombres pendientes.
 
 ## Qué incluye y qué no
 
@@ -331,6 +328,52 @@ npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --revertir --carga 8e0854e7-
 **No se agregaron los 6 códigos de B1–B6. No hubo merge ni despliegue.**
 
 **Pendiente, con aprobación aparte:**
-- **Merge del PR #23.** La 22 ya está registrada, así que la integración no debería repetirla; hay que verificar después que el registro no tenga entradas nuevas y que el estado sea idéntico.
+- ~~**Merge del PR #23**~~ **Hecho:** `6bafd63`. La integración no repitió la 22 (ver «Cierre de la entrega»).
 - Lote adicional de los 6 códigos de B1–B6 (BRICE, sujeto a C3).
 - Que Sucursales use los enlaces (otra entrega).
+
+## Cierre de la entrega (2026-10-26)
+
+**Estado: CERRADA.** La migración 22 y el lote 1 están en producción, y el código está en `main`.
+
+### Merge del PR #23
+
+Carlo autorizó el merge fijado al commit revisado `86a41d4`. Antes de hacerlo se confirmó:
+- el head seguía siendo `86a41d4`;
+- los checks seguían aprobados: Vercel y Vercel Preview Comments en success, Supabase Preview omitido (skipped);
+- el diff contra `main` (`ba69a00`) no había cambiado: 36 archivos, +6,596/−150.
+
+**Merge:** `6bafd63`, el 2026-10-26 a las 17:46:43 UTC, con `--match-head-commit 86a41d4`.
+
+### Publicación automática
+
+- Despliegue de Vercel a Production del commit `6bafd63`: **success** (17:47:12 UTC).
+- Check de Supabase en el merge: success.
+
+### Verificación posterior
+
+Se comparó, desde una conexión nueva y en solo lectura, con una captura tomada justo antes del merge.
+
+| Dato | Resultado |
+|---|---|
+| Migraciones | **Sin entradas nuevas**: siguen 22, con la misma lista. El SQL registrado de la 22 es idéntico al archivo mergeado. **Supabase no repitió la migración** |
+| Esquema | Políticas, funciones y ACL/RLS de las tablas idénticos. Los objetos de la 22 están como se esperaba; la única observación son las 57 filas |
+| Enlaces | **57, intactos**: idénticos a la captura (ids, códigos, recetas, nombre observado, evidencia, `carga_id` y autor) y exactos contra el lote |
+| Bitácora | Idéntica: 386 filas, id máximo 449, 57 de enlaces. Sin registros nuevos |
+| Datos comerciales y configuración | Huellas idénticas de las 12 tablas: recetas, `producto_tamanos`, `precio_canal_manual`, `receta_lineas`, `linea_cantidades`, `insumos`, canales, tamaños, parámetros, categorías y perfiles |
+
+**No se volvió a ejecutar la carga y no se agregaron los 6 códigos de B1–B6.**
+
+### Reversión disponible
+
+Requiere aprobación. Está descrita en «Carga del lote 1» y en «Pasos siguientes»:
+1. revertir la carga con `--revertir --carga 8e0854e7-8419-4d2b-a561-9202418097b2`;
+2. revertir el esquema con `migracion-22-aplicar.ts --revertir`, solo con la tabla vacía, y quitar en el mismo cambio el archivo de la 22 de `main`.
+
+El respaldo verificado del 2026-10-26 17:26 UTC sirve como último recurso.
+
+### Entregas separadas, con aprobación propia
+
+- Lote adicional de los 6 códigos de B1–B6 (BRICE, sujeto a C3).
+- Uso de los enlaces desde Sucursales.
+- Renombres y decisiones C–F pendientes.
