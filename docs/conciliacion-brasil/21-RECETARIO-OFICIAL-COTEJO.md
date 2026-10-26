@@ -60,11 +60,13 @@ Se leyeron 160 recetas (154 productos y 6 subrecetas), 215 precios de lista por 
 
 | Identidad | Fichas |
 |---|---|
-| Confirmada (nombre y composición) | 38 |
-| Confirmada solo por composición (traducción, orden de palabras o errata) | 11 |
+| Confirmada (nombre y composición) | 28 |
+| Confirmada por composición o proporción (traducción, orden de palabras, errata, 5 preparados) | 19 |
+| Confirmada con una candidata adicional | 1: Urban Chocolat (Urban Chocolate queda candidata, O1) |
 | Candidata fuerte | 1: Frappé Pumkin Spice |
-| Ambigua | 5: Sándwich de Queso (2 recetas), Sándwich J&Q con tomate (2), Iced Latte Protein Cold Foam (2), AÇAÍ BOWL (Acai Cup / Açaí Bowl), Focaccia de Jamón y Pesto |
-| Sin receta local | 5: Pure Black Single, Aderezo de Chipotle, y fresa, limón y maracuyá, que se registran en línea en cada bebida |
+| Candidata | 6: los 3 V60, Matcha Iced Latte Protein Cold Foam, Fresh Soda Maracuyá y Focaccia de Jamón y Pesto (que en Costeo es una pieza comprada) |
+| Ambigua | 4: Sándwich de Queso (2 recetas), Sándwich J&Q con tomate (2), Iced Latte Protein Cold Foam (2) y AÇAÍ BOWL (Acai Cup / Açaí Bowl) |
+| Sin receta local | 6: Pure Black Single, Aderezo de Chipotle, Cold Brew Concentrado, y fresa, limón y maracuyá, que se registran en línea en cada bebida |
 
 **Subrecetas:** las de matcha, chai, chocolate y Sora coinciden con las **proporciones** del PDF.
 - Su rendimiento se modela como la suma de las masas, sin merma, y el PDF no lo documenta (el chai se cuela dos veces).
