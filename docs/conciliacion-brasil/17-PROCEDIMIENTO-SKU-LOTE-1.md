@@ -1,8 +1,9 @@
 # 17 · Procedimiento: migración 22 y lote 1 de códigos POS (57)
 
-**Estado al 2026-10-26 17:35 UTC:**
-- **La migración 22 está aplicada y registrada en producción**, con la tabla vacía.
-- **Los 57 enlaces no se han cargado.** El ensayo remoto de los 57 terminó en ROLLBACK sin problemas.
+**Estado al 2026-10-26 17:40 UTC:**
+- **La migración 22 está aplicada y registrada en producción.**
+- **El lote 1 (57 enlaces) está cargado** con `carga_id` `8e0854e7-8419-4d2b-a561-9202418097b2`. Detalle y reversión en «Carga del lote 1».
+- Los 6 códigos de B1–B6 no se agregaron.
 - No hubo merge ni despliegue.
 - La rama `feat/sku-enlace-pos` está actualizada con `main` (`ba69a00`) y va en el PR #23, **solo para revisión**.
 - **El merge sigue sin autorizar.** Como la 22 ya está registrada, la integración «Deploy to production» no debería volver a aplicarla. Aun así, el merge se hará solo con aprobación y se verificará después.
@@ -268,10 +269,8 @@ El informe está en `17-informes/2026-10-26T17-35-15-287Z-jpqkmnfjwzniptszjuli-e
 - las huellas de 12 tablas comerciales y de configuración son idénticas (recetas, nombres, precios y costos).
 
 **No se hizo la carga permanente, ni merge ni despliegue.**
-6. **Carga:** `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`. Anotar el `carga_id`.
-7. **Comprobar:**
-   - un segundo ensayo da 57 «sin cambio» y 0 registros en la bitácora;
-   - recetas, precios y costos sin cambios.
+6. ~~**Carga**~~ **Hecha el 2026-10-26 a las 17:40 UTC** (abajo).
+7. ~~**Comprobar**~~ **Hecho:** el segundo ensayo da 57 «sin cambio» y no hay cambios comerciales.
 8. **Merge y despliegue**, solo con autorización, después del paso 4.
 
    La integración verá la 22 registrada y no la repetirá. Después, verificar como en la fase 5: registro sin entradas nuevas y estado idéntico.
@@ -279,3 +278,59 @@ El informe está en `17-informes/2026-10-26T17-35-15-287Z-jpqkmnfjwzniptszjuli-e
 **Reversión:**
 - **De la carga:** `--revertir --carga <carga_id>`, con sus propias verificaciones.
 - **Del esquema:** `migracion-22-aplicar.ts --revertir --confirmo …`, solo con la tabla vacía. Si ya hubo merge, también hay que quitar el archivo de la 22 de `main` en el mismo cambio, para que la integración no la vuelva a aplicar.
+
+## Carga del lote 1 (2026-10-26 17:40 UTC, autorizada por Carlo)
+
+**Desde:** commit `5b9a1ff` del PR #23, idéntico a `origin`. Perfil: Carlos Valencia (admin, activo), validado dentro de la transacción.
+
+**Precondiciones repetidas** (solo lectura, justo antes de cargar), todas iguales a las del ensayo:
+- última migración 22;
+- tabla vacía;
+- los 57 `receta_id` existen, son productos, están activos y conservan el nombre esperado;
+- bitácora con 329 filas (id máximo 335);
+- las huellas de 12 tablas comerciales y de configuración coinciden con las del ensayo.
+
+### Datos para una posible reversión
+
+| Dato | Valor |
+|---|---|
+| **`carga_id`** | **`8e0854e7-8419-4d2b-a561-9202418097b2`** |
+| Informe de la carga | `17-informes/2026-10-26T17-40-02-099Z-jpqkmnfjwzniptszjuli-enlaces-aplicar.json` (lista los 57 ids de enlace y sus ids de bitácora) |
+| Informe del segundo ensayo | `17-informes/2026-10-26T17-40-34-743Z-jpqkmnfjwzniptszjuli-enlaces-ensayo.json` |
+| Respaldo previo verificado | `C:\Users\carlo\Respaldos\thecoffee-supabase\2026-10-26T1726Z\` |
+
+**Reversión**, solo con aprobación. Borra únicamente las filas de esta carga que sigan intactas; si alguna cambió, aborta. Deja su propia bitácora.
+
+```
+npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --revertir --carga 8e0854e7-8419-4d2b-a561-9202418097b2 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+```
+
+### Resultado
+
+| Dato | Resultado |
+|---|---|
+| Altas | **57**; sin cambio 0, problemas 0 |
+| Bitácora propia | 57; ajena 0 |
+| Datos comerciales en la transacción | Sin cambios |
+| Cierre | **COMMIT** confirmado (salida 0) |
+
+**Verificación con una conexión nueva** (solo lectura):
+- **57 filas**, y las 57 coinciden **exactamente** con el lote: código, `receta_id`, nombre observado y evidencia;
+- un solo `carga_id` (el de arriba) y un solo autor (`creado_por` = perfil de Carlo);
+- los 57 `receta_id` siguen existiendo, son productos activos y tienen el nombre esperado;
+- **bitácora:** pasó de 329 a 386 filas, exactamente **+57** (ids 393–449). Los 57 registros de `producto_codigo_pos` son correctos:
+  - uno por enlace, con 57 `registro_id` distintos, todos de las filas actuales;
+  - `carga_masiva`, campo `*`, usuario de Carlo;
+  - `receta_id` null (como está documentado; la receta va en la fila);
+  - con la nota «Lote 1 SKU, carga …»;
+- **nombres, recetas, precios y costos sin cambios:** las huellas de recetas, `producto_tamanos`, `precio_canal_manual`, `receta_lineas`, `linea_cantidades`, `insumos`, canales, tamaños, parámetros, categorías y perfiles son idénticas a las de antes de la carga;
+- la última migración sigue siendo la 22.
+
+**Segundo ensayo** (ROLLBACK): **57 «sin cambio», 0 altas, 0 problemas, 0 registros de bitácora** (propios ni ajenos) y sin cambios comerciales. El estado leído después es idéntico al de justo tras la carga: 57 filas, bitácora 386/449.
+
+**No se agregaron los 6 códigos de B1–B6. No hubo merge ni despliegue.**
+
+**Pendiente, con aprobación aparte:**
+- **Merge del PR #23.** La 22 ya está registrada, así que la integración no debería repetirla; hay que verificar después que el registro no tenga entradas nuevas y que el estado sea idéntico.
+- Lote adicional de los 6 códigos de B1–B6 (BRICE, sujeto a C3).
+- Que Sucursales use los enlaces (otra entrega).
