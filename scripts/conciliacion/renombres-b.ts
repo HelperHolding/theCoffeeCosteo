@@ -8,7 +8,10 @@ import type { Conexion } from './fase4';
  *     partida (o ya el final: sin cambio) y el nombre final no choca con otra receta (ni siquiera en mayúsculas);
  *  2. renombra cada receta en su propio SAVEPOINT y verifica: solo cambió el nombre, la versión subió 1 y la bitácora
  *     tiene exactamente un registro nuevo `recetas.nombre` con origen `carga_masiva`, al que se le pone la nota;
- *  3. COMMIT solo en modo aplicar/revertir sin ningún problema; el ensayo y cualquier problema terminan en ROLLBACK.
+ *  3. aísla la bitácora de esta ejecución de la actividad ajena: los registros de esta transacción son los de
+ *     `fecha = now()` (la hora de inicio de la transacción, que el trigger usa por defecto); deben ser exactamente
+ *     los verificados por receta. Lo que otras sesiones registren mientras tanto solo se informa (bitacoraAjena);
+ *  4. COMMIT solo en modo aplicar/revertir sin ningún problema; el ensayo y cualquier problema terminan en ROLLBACK.
  * `revertir` usa la misma lista en sentido contrario.
  */
 export type ModoRenombre = 'ensayo' | 'aplicar' | 'revertir';
@@ -42,7 +45,10 @@ export interface Informe {
   usuario: string | null;
   recetas: InformeReceta[];
   totales: Record<Resultado, number>;
+  /** Registros de bitácora de esta transacción (deben ser los verificados por receta). */
   bitacoraNueva: number;
+  /** Registros nuevos de otras sesiones durante la ejecución: no se cuentan ni se tocan, solo se informan. */
+  bitacoraAjena: number;
   transaccion: 'commit' | 'rollback';
   error?: string;
 }
@@ -85,6 +91,7 @@ export async function renombrar(
     recetas: [],
     totales: { renombrada: 0, 'sin cambio': 0, problema: 0 },
     bitacoraNueva: 0,
+    bitacoraAjena: 0,
     transaccion: 'rollback',
   };
   if (opciones.solo && elegidas.length !== opciones.solo.length) {
@@ -117,6 +124,8 @@ export async function renombrar(
     const maxBitacora = Number(
       (await cx.query<{ m: string }>(`select coalesce(max(id), 0) as m from bitacora`)).rows[0].m,
     );
+
+    const verificadas: number[] = [];
 
     for (const r of elegidas) {
       const [desde, hacia] =
@@ -185,6 +194,7 @@ export async function renombrar(
       } else {
         const nota = `${r.decision} · ${modo === 'revertir' ? 'reversión del renombre' : 'renombre'} (conciliación Brasil, docs/conciliacion-brasil/16) · código POS ${r.codigo_pos}`;
         await cx.query(`update bitacora set nota = $2 where id = $1`, [fila.id, nota]);
+        verificadas.push(Number(fila.id));
         ir.bitacora = {
           id: Number(fila.id),
           campo: fila.campo,
@@ -195,6 +205,7 @@ export async function renombrar(
         };
       }
       if (ir.problemas.length) {
+        if (ir.bitacora) verificadas.pop();
         await cx.query('rollback to savepoint receta');
       } else {
         await cx.query('release savepoint receta');
@@ -203,15 +214,24 @@ export async function renombrar(
     }
 
     for (const ir of informe.recetas) informe.totales[ir.resultado]++;
-    informe.bitacoraNueva = Number(
-      (await cx.query<{ n: string }>(`select count(*) as n from bitacora where id > $1`, [maxBitacora]))
-        .rows[0].n,
-    );
+    // Desde maxBitacora: lo de esta transacción (fecha = now()) frente a lo de otras sesiones (otra fecha).
+    const nuevas = (
+      await cx.query<{ id: string; propia: boolean }>(
+        `select id, fecha = now() as propia from bitacora where id > $1 order by id`,
+        [maxBitacora],
+      )
+    ).rows;
+    const propias = nuevas.filter((x) => x.propia).map((x) => Number(x.id));
+    informe.bitacoraNueva = propias.length;
+    informe.bitacoraAjena = nuevas.length - propias.length;
     if (informe.totales.problema)
       throw new Error(`${informe.totales.problema} receta(s) con problemas; no se aplica ninguna`);
-    if (informe.bitacoraNueva !== informe.totales.renombrada)
+    if (
+      informe.bitacoraNueva !== informe.totales.renombrada ||
+      propias.some((id) => !verificadas.includes(id))
+    )
       throw new Error(
-        `La bitácora tiene ${informe.bitacoraNueva} registros nuevos y se renombraron ${informe.totales.renombrada}`,
+        `Esta ejecución dejó ${informe.bitacoraNueva} registros de bitácora (${propias.join(', ')}) y se verificaron ${informe.totales.renombrada} (${verificadas.join(', ')})`,
       );
     if (modo === 'ensayo') {
       await cx.query('rollback');

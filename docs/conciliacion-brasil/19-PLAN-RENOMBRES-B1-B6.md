@@ -69,7 +69,11 @@ B4 solo cambia el nombre de «Brownie With Ice Cream». La decisión C3 sobre el
 
   A ese registro le agrega la nota: `B1 · renombre (conciliación Brasil, docs/conciliacion-brasil/16) · código POS 3FOOD3`.
 
-**Al final.** El total de registros nuevos en la bitácora debe ser igual al número de recetas renombradas.
+**Al final: bitácora aislada de la actividad ajena.** Mientras el script corre, otras sesiones (portal, CRM, cargas) pueden registrar cambios en la bitácora. Por eso no cuenta «todo lo nuevo»:
+- **Registros de esta ejecución:** los registros nuevos con `fecha = now()`. Es la hora de inicio de esta transacción, y el trigger la usa por defecto, así que cada transacción tiene la suya.
+- Esos registros deben ser **exactamente** los verificados por receta, ni uno más ni uno menos. Cualquier registro adicional de esta transacción aborta todo.
+- **Registros de otras sesiones:** no se cuentan, no se modifican y no detienen la ejecución. El informe los muestra en `bitacoraAjena`.
+- **Excepción, a favor de la seguridad:** si otra sesión registra un cambio en una de estas 6 recetas durante la ejecución, la verificación de esa receta falla y no se aplica nada. En la práctica las filas bloqueadas y el candado de edición de recetas lo impiden.
 
 **Si algo falla, no se aplica ninguna receta.** El informe lista los problemas de cada una.
 
@@ -77,11 +81,13 @@ B4 solo cambia el nombre de «Brownie With Ice Cream». La decisión C3 sobre el
 
 | Prueba | Resultado |
 |---|---|
-| `tests/db/renombres-b.test.ts` (PGlite, con los ids reales) | 8/8 (detalle abajo) |
-| Pruebas de BD completas | 129/129; `tsc` sin errores |
-| Ensayo sobre la copia restaurada (respaldo del 2026-10-23, `--local`) | 6 renombradas, 0 problemas, 6 registros de bitácora `carga_masiva`, ROLLBACK. Después se comprobó que los 6 nombres originales seguían ahí. Informe: `19-renombres/2026-10-26T15-56-21-497Z-local-ensayo.json` |
+| `tests/db/renombres-b.test.ts` (PGlite, con los ids reales) | 10/10 (detalle abajo) |
+| Pruebas de BD completas | 131/131; `tsc` sin errores |
+| Ensayo sobre la copia restaurada (respaldo del 2026-10-23, `--local`) | 6 renombradas, 0 problemas, 6 registros de bitácora propios `carga_masiva`, 0 ajenos, ROLLBACK. Después se comprobó que los 6 nombres originales seguían ahí. Informes: `19-renombres/2026-10-26T15-56-21-497Z-local-ensayo.json` (versión inicial) y `19-renombres/2026-10-26T16-17-29-497Z-local-ensayo.json` (con el conteo aislado) |
 
-Las 8 pruebas en PGlite cubren:
+Las 10 pruebas en PGlite cubren:
+- actividad ajena en la bitácora durante la ejecución: no se cuenta ni se toca, y se informa;
+- un registro adicional de la propia transacción aborta todo;
 - ensayo sin efectos;
 - ensayo de una sola receta;
 - un choque, un nombre distinto o una receta inactiva abortan todo;
@@ -138,7 +144,7 @@ npx tsx scripts/conciliacion/renombres-b-aplicar.ts --revertir --confirmo jpqkmn
 ## Pasos para aprobar (uno por uno)
 
 1. **Revisión del código:** PR de `feat/renombres-b1-b6`. El merge no ejecuta nada (no hay migraciones) y no autoriza los pasos siguientes.
-2. **Ensayo en producción**, con `--usuario`: una transacción con ROLLBACK, con todas las recetas o con `--solo`. Esperado: 6 renombradas, 0 problemas, 6 registros de bitácora.
+2. **Ensayo en producción**, con `--usuario`: una transacción con ROLLBACK, con todas las recetas o con `--solo`. Esperado: 6 renombradas, 0 problemas, 6 registros de bitácora propios. `bitacoraAjena` puede ser mayor que 0 si hay actividad en el portal; eso no es un problema.
 3. **Aplicar** con `--aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`.
 4. **Verificar:**
    - una segunda corrida en ensayo da 6 «sin cambio» y 0 registros de bitácora;

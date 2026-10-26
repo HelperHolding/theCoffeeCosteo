@@ -20,6 +20,22 @@ const nombres = async () =>
 const bitacora = async () =>
   Number((await db.query<{ n: number }>(`select count(*)::int as n from bitacora`)).rows[0].n);
 
+/** Conexión que, tras cada renombre (hasta `veces`), ejecuta `sql` en la misma sesión y guarda el id que devuelve. */
+const inyectar = (sql: string, veces = Infinity) => {
+  const ids: number[] = [];
+  let n = 0;
+  const conexion: Conexion = {
+    ...cx,
+    query: async (q, p) => {
+      const r = await db.query(q, p);
+      if (q.startsWith('update recetas set nombre') && n++ < veces)
+        ids.push(Number((await db.query<{ id: string }>(sql)).rows[0].id));
+      return r as never;
+    },
+  };
+  return { cx: conexion, ids };
+};
+
 beforeAll(async () => {
   db = await crearDbLocal();
   cx = {
@@ -99,6 +115,31 @@ describe('renombres B1–B6', () => {
     await db.query(`update recetas set nombre = 'Pain Au Chocolat' where id = $1`, [lista[0].receta_id]);
     await db.query(`update recetas set activo = true where id = $1`, [lista[5].receta_id]);
     await db.query(`select set_config('app.origen', '', false)`);
+  });
+
+  it('la actividad ajena en la bitácora durante la ejecución no se cuenta ni se toca', async () => {
+    // Otra sesión registra cambios (otra transacción: otra fecha) mientras se renombra cada receta.
+    const { cx: ajena, ids } = inyectar(
+      `insert into bitacora (tabla, registro_id, campo, origen, fecha)
+         values ('insumos', 'ajeno', 'costo_paquete', 'portal', now() - interval '1 second') returning id`,
+    );
+    const r = await renombrar(ajena, 'ensayo', lista);
+    expect(r.error).toBeUndefined();
+    expect(r).toMatchObject({ totales: { renombrada: 6 }, bitacoraNueva: 6, bitacoraAjena: 6 });
+    expect(ids).toHaveLength(6);
+    expect(r.recetas.some((x) => ids.includes(x.bitacora!.id))).toBe(false);
+  });
+
+  it('un registro de bitácora de esta transacción que no corresponde a un renombre verificado aborta todo', async () => {
+    const antes = { recetas: await nombres(), bitacora: await bitacora() };
+    const { cx: extra } = inyectar(
+      `insert into bitacora (tabla, registro_id, campo, origen) values ('insumos', 'extra', '*', 'carga_masiva') returning id`,
+      1,
+    );
+    const r = await renombrar(extra, 'aplicar', lista, { usuario: admin });
+    expect(r).toMatchObject({ transaccion: 'rollback', totales: { renombrada: 6 }, bitacoraNueva: 7 });
+    expect(r.error).toMatch(/dejó 7 registros/);
+    expect({ recetas: await nombres(), bitacora: await bitacora() }).toEqual(antes);
   });
 
   it('aplicar renombra las 6, deja bitácora con nota y usuario, y solo cambia nombre y versión', async () => {
