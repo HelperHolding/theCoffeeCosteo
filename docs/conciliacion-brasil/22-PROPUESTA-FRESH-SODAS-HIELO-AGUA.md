@@ -51,14 +51,12 @@
 |---|---|---|---|
 | H1: mantener la convención «g = ml» y corregir las 2 cantidades | Fresh Sodas Grande → 245 en el insumo `HIELO` (ml). La convención queda documentada | $0 | Bajo, pero formaliza «g = ml» como regla |
 | H0: no tocar nada | Solo se documenta la convención | $0 | Las Fresh Sodas Grande siguen sin coincidir con su ficha |
-| **H2:** insumo nuevo `HIELO (g)` y migración receta por receta | Insumo nuevo en `gr`, costo $0. En lotes, cada línea pasa de `HIELO` a `HIELO (g)` **sin cambiar el número**. El insumo `HIELO` no se modifica | $0 hoy | **Medio.** Ver la nota de bitácora y la decisión sobre usos sin ficha |
+| **H2:** insumo nuevo `HIELO (g)` y migración receta por receta | Insumo nuevo en `gr`, costo $0. En lotes, cada línea pasa de `HIELO` a `HIELO (g)` **sin cambiar el número**. El insumo `HIELO` no se modifica | $0 hoy | **Medio.** Hace falta un script nuevo (diseñado y probado en local; doc 23, PR aparte) |
 | H3: convertir a ml de volumen (×1.09) | Los 79 números | $0 hoy | **No recomendado:** conversión no demostrada |
 
-**Nota de bitácora (H2).** Cambiar el `insumo_id` de una línea sube la versión de la receta, pero **no deja registro en `bitacora`**, que solo audita `linea_cantidades`. H2 necesitaría una de estas dos cosas:
-- un script nuevo que registre el cambio de forma explícita;
-- dar de baja la línea y crear una nueva, con lo que sí quedan registros de baja y alta.
+**Nota de bitácora (H2), corregida.** Cambiar el `insumo_id` de una línea **sí queda en la bitácora**: el trigger `receta_lineas_bitacora` registra el campo `insumo_id`, con los valores anterior y nuevo, la receta y el autor. También sube la versión de la receta. Una versión anterior de este documento decía lo contrario; se verificó en el esquema y en una copia restaurada. El diseño, el script y las pruebas de H2 van en un PR aparte (doc 23).
 
-En los dos casos hacen falta pruebas nuevas. Además, falta decidir los 20 usos sin ficha o sin tamaño: ¿se asume que también son gramos?
+**Usos sin ficha o sin tamaño (20).** H2 los conserva en `HIELO` hasta verificarlos.
 
 **Cuándo importa la unidad.** Mientras el hielo cueste $0, la unidad no altera ningún costo. Si se empieza a costear porque se compra en bolsa, la unidad pasa a importar. Por cada **$1/kg**:
 
@@ -193,7 +191,7 @@ Mientras no se defina, **no se cambia el ingrediente ni la cantidad**.
 | 3c | Base carbonatada de las Fresh Sodas | **Bloqueado** | Definir qué variante se costea; con agua con gas, también la presentación y el alta de un insumo por ml. Sin eso no se cambia ni el ingrediente ni la cantidad | Por variante, §4.4 |
 | 3d | Fresa Grande y pulpa Grande | **Bloqueado** | Confirmar el rendimiento del preparado de fresa y la densidad de la pulpa | −$0.13 / −$2.40 a −$3.07 |
 | 3e | Limón | **Bloqueado** | Medir el limón, el zumo y la rodaja, y definir la variedad y su precio | Por definir |
-| — | Unidad del hielo (H2) | Opción de catálogo | Script nuevo con bitácora explícita y pruebas | $0 hoy |
+| — | Unidad del hielo (H2) | Opción de catálogo | Aprobación expresa. El diseño, el script y las pruebas locales van en un PR aparte (doc 23) | $0 hoy |
 
 **Ejecutable no significa aprobado.** El script actual puede técnicamente aplicar 3a y 3b, pero eso no los aprueba. Cada lote se prepara solo después de su aprobación expresa, y entonces sigue el mismo procedimiento del lote 2:
 1. Manifiesto con sha256 fijado y pruebas.
@@ -201,7 +199,23 @@ Mientras no se defina, **no se cambia el ingrediente ni la cantidad**.
 3. Aplicación en transacciones separadas.
 4. Verificación desde una conexión nueva y segundo ensayo.
 
+**Orden si se aprueban 3b y H2.** Los dos son lotes independientes, pero Cold brew está en ambos. El orden definido es **3b → H2**: el manifiesto de H2 se regenera contra la versión vigente de Cold brew y se revisa su diff antes de registrarlo. El control de versión no se elimina. Detalle en los docs 23 (H2) y 24 (3b).
+
 **Fuera de alcance:**
 - el AGUA de 10 ml de Iced Chocolate (doc 21, posible duplicación con su subreceta);
 - las personalizaciones con tónica o agua mineral en Cold brew;
 - cualquier cambio global de unidades.
+
+## 6. Preguntas mínimas para Operaciones/Compras (no enviadas)
+
+Carlo decide si se envían y cuándo. Cada pregunta indica qué lote desbloquea.
+
+| # | Para | Pregunta | Desbloquea |
+|---|---|---|---|
+| 1 | Operaciones | En Fresh Sodas, ¿qué base se costea: agua con gas (base del recetario) o tónica? Si varía, ¿qué proporción de ventas lleva cada una? | 3c |
+| 2 | Compras | ¿Qué agua con gas se compra (marca y presentación) y a qué precio? ¿La botella abierta se usa en varias bebidas o va una por bebida? | 3c |
+| 3 | Operaciones | ¿Cuántos gramos de preparado salen de 500 g de fresa congelada (p.7)? | 3d |
+| 4 | Operaciones o Compras | La pulpa de maracuyá, ¿se mide en tienda en g o en ml? Si es en g, ¿cuántos g pesa 1 ml (o cuántos ml rinde el envase de 500 ml)? | 3d |
+| 5 | Operaciones | Para Pink Lemonade: ¿qué limón se usa (siciliano o Eureka)? ¿Cuánto pesa en promedio, cuánto zumo da medio limón y cuánto pesa la rodaja? | 3e |
+| 6 | Operaciones | Combos con panadería, Gelato Frappé, Lemon Honey Coffee, Nutty Iced Latte y V60 Grande: ¿el hielo de esas recetas está en gramos? ¿Los valores actuales son los vigentes? | Los 14 usos de hielo que H2 conserva |
+| 7 | Compras | ¿El hielo se compra? Si es así: presentación (kg) y precio. Hoy cuesta $0 en Costeo, pero eso **no confirma** que sea gratuito | Costo y presentación reales del hielo |
