@@ -1,10 +1,11 @@
 # 21 · Recetario oficial ↔ recetas de Costeo: diagnóstico y primer lote (propuesta)
 
-**Estado al 2026-10-26 20:35 UTC:**
+**Estado al 2026-10-26 22:08 UTC:**
 - **El lote 1 está aplicado en producción**: 3 cantidades del Pumpkin Spice Frappé. Detalle en §8.
+- **El lote 2 del §9 está aplicado en producción**: vainilla de Urban Chocolate Grande y café de Cold brew. Detalle en §9.
 - Carlo confirmó que este PDF es el recetario vigente.
-- **Los lotes 2–4 no se han aplicado:** cada uno requiere su propia aprobación.
-- Fuera del lote 1, no se cambiaron recetas, cantidades, insumos, precios ni enlaces, y no se aplicaron migraciones.
+- **No se ha aplicado nada más:** el agua de Cold brew, el hielo, las Fresh Sodas y los lotes 3–4 del §6 requieren cada uno su propia aprobación.
+- Fuera de esas 6 cantidades, no se cambiaron recetas, cantidades, insumos, precios ni enlaces, y no se aplicaron migraciones.
 
 **Detalle:**
 - [`21-mapa-pdf-recetas.csv`](21-mapa-pdf-recetas.csv): mapa de fichas ↔ recetas.
@@ -266,9 +267,178 @@ Se leyeron 160 recetas (154 productos y 6 subrecetas), 215 precios de lista por 
 - **Comando:**
 
   ```
-  npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --revertir --ejecucion d9dadc19-ed92-4808-8227-561eedd8993e --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+  npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --lote recetario-lote-1 --revertir --ejecucion d9dadc19-ed92-4808-8227-561eedd8993e --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
   ```
+
+  Si se omite, `--lote` toma `recetario-lote-1` por defecto. Para otros lotes, ver §9.
 
 - **Archivos privados:** los informes de ejecución y el respaldo se guardan fuera del repo. No forman parte de este documento.
 
 La autorización cubrió **solo** estas tres correcciones.
+
+## 9. Lote 2 (aplicado el 2026-10-26)
+
+**Autorizaciones, en orden:**
+1. Preparación local: manifiestos, pruebas y simulación.
+2. Respaldo verificado y dry-run remoto con ROLLBACK.
+3. Aplicación de **únicamente** los dos manifiestos revisados en `7763eda`.
+
+El cierre está en [Cierre del lote 2](#cierre-del-lote-2-verificado-con-una-conexión-nueva). Las secciones siguientes conservan el análisis previo; los valores «actual/propuesto» corresponden a antes de aplicar.
+
+### Alcance
+
+| Receta (UUID, versión) | Celda | Actual | Propuesto | Fuente |
+|---|---|---|---|---|
+| Urban Chocolate (`2c8b49a6-7b2f-489e-8932-1d1ff8c7754c`, v20) | JARABE DE VANILLA, Grande | 10 ml | **0 ml** | p.34: la ficha no lleva vainilla en ninguna medida |
+| Cold brew (`00f47aba-88e6-4ebc-a815-5833f8b29871`, v28) | CAFÉ BLACK, Chica | 16.67 g | **20 g** | p.9: 200 g → **1 L** de concentrado (rendimiento oficial); p.27: 100 ml de cold brew por bebida |
+| Cold brew | CAFÉ BLACK, Grande | 16.67 g | **20 g** | Igual: la Grande también lleva 100 ml de concentrado |
+
+**Manifiestos aprobados.** Su huella está fijada en `LOTES_RECETAS_APROBADOS`:
+- `21-lote-2-urban-chocolate.manifiesto.json` (`recetario-lote-2-urban`);
+- `21-lote-2-cold-brew.manifiesto.json` (`recetario-lote-2-coldbrew`).
+
+Cada uno se aplica en su propia transacción.
+
+**Fuera del lote:**
+- Urban Chocolate: no se desactiva ni se fusiona ningún registro (C1 sigue abierta).
+- Las Fresh Sodas.
+- Las líneas de AGUA de Cold brew; ver abajo.
+
+### Cierre del lote 2 (verificado con una conexión nueva)
+
+**Secuencia:**
+
+| Paso | Resultado |
+|---|---|
+| Respaldo lógico privado (21:59 UTC) | Restaurado en una copia local aislada y comparado con producción. Políticas, funciones y `v_resumen` idénticas; solo difieren tablas de sesión de Auth y Vault, por actividad en vivo |
+| Dry-run remoto con ROLLBACK (22:01–22:02 UTC) | Urban: 1 cambio, v20 → 21. Cold brew: 2 cambios, v28 → 30. Una conexión nueva confirmó que no persistió nada |
+| Revalidación (22:06 UTC) | Versiones 20 y 28; valores previos 10 y 16.67/16.67; perfil admin activo. La bitácora no había cambiado desde el respaldo (394 registros, máx. 465), así que el respaldo seguía vigente |
+| **Aplicación Urban Chocolate (22:07 UTC)** | **COMMIT** en su propia transacción. Se verificó antes de seguir |
+| **Aplicación Cold brew (22:08 UTC)** | **COMMIT** en su propia transacción |
+| Segundo ensayo de ambos | Urban: 1 «sin cambio». Cold brew: 2 «sin cambio». 0 registros nuevos en la bitácora, ROLLBACK, y el estado quedó idéntico |
+
+**Resultado:**
+
+| Receta | Versión | Cantidad | Antes | Después | Bitácora |
+|---|---|---|---|---|---|
+| Urban Chocolate | 20 → **21** | JARABE DE VANILLA, Grande | 10 ml | **0 ml** | #469 |
+| Cold brew | 28 → **30** | CAFÉ BLACK, Chica | 16.67 g | **20 g** | #470 |
+| Cold brew | | CAFÉ BLACK, Grande | 16.67 g | **20 g** | #471 |
+
+- **Autoría:** el perfil de Carlo quedó en `updated_by` y en los 3 registros de la bitácora.
+- **Bitácora:** pasó de 394 a 397 registros. Los 3 son de `linea_cantidades`, campo `cantidad`, origen `carga_masiva`, con la nota de su ejecución. No hay registros ajenos.
+- **Ids 466–468:** los consumió la secuencia durante los dry-runs con ROLLBACK, así que no existen registros con esos ids.
+- **Costos recalculados** con `v_resumen`, iguales a la simulación:
+
+| Producto | Tamaño | Costo | Food cost (Mostrador) | Margen Mostrador / App | Margen Rappi |
+|---|---|---|---|---|---|
+| Urban Chocolate | Grande | $16.69 → **$14.39** | 22.0% → 19.0% | $59.17 → $61.47 | $52.20 → $54.50 |
+| Cold brew | Chica | $12.84 → **$14.50** | 19.1% → 21.6% | $54.41 → $52.74 | $48.55 → $46.88 |
+| Cold brew | Grande | $13.04 → **$14.70** | 17.2% → 19.4% | $62.83 → $61.16 | $56.53 → $54.87 |
+
+**Sin cambios:**
+- **Precios de venta.** Urban Chocolate: $78/$88; en Rappi, $97/$110. Cold brew: $78/$88; en Rappi, $99/$111.
+- **Urban Chocolate Chica:** $12.43.
+- **Alertas:** las 6 filas producto × canal siguen iguales. La única alerta es «Markup sobre el tope» de Cold brew en Rappi, que depende del precio y no del costo.
+- **Otras cantidades de Cold brew:** AGUA (100/136 y 183.333/233.333) y HIELO (130/245) siguen igual, y lo mismo el resto de las cantidades de ambas recetas.
+- **Huellas idénticas:** precios de lista, precios manuales, insumos, líneas, los 62 enlaces POS, parámetros, canales, las demás recetas y sus cantidades.
+- **Migraciones:** la última sigue siendo la 22.
+
+### Reversión del lote 2 (solo con aprobación)
+
+**Cada reversión requiere su `--lote` correcto.** El script busca los registros de la ejecución en la receta y la nota del manifiesto indicado. Si se omite `--lote`, toma `recetario-lote-1`. Con un `--lote` equivocado se detiene con «No hay registros de la ejecución…» y no cambia nada.
+
+Cada reversión restaura solo las cantidades de su ejecución. Si la receta tuvo ediciones posteriores, se detiene.
+
+| Receta | `--lote` | Ejecución |
+|---|---|---|
+| Urban Chocolate | `recetario-lote-2-urban` | `fe16fa00-d383-475b-baa6-05b137fbd5b4` |
+| Cold brew | `recetario-lote-2-coldbrew` | `88e8e8b1-602e-47e0-81d5-ff0e587da2cb` |
+
+```
+npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --lote recetario-lote-2-urban --revertir --ejecucion fe16fa00-d383-475b-baa6-05b137fbd5b4 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --lote recetario-lote-2-coldbrew --revertir --ejecucion 88e8e8b1-602e-47e0-81d5-ff0e587da2cb --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+```
+
+- Las reversiones son independientes, porque cada una toca una receta distinta.
+- Se ejecutan desde un checkout que contenga estos manifiestos.
+- Los informes de ejecución, las fotos de verificación y el respaldo se guardan fuera del repo.
+
+### Cold brew: representación actual
+
+| Línea | Chica | Grande | Lectura |
+|---|---|---|---|
+| CAFÉ BLACK | 16.67 g | 16.67 g | Café del concentrado, suponiendo que rinde 1.2 L (200 g en 1,200 g de agua y café). **No está duplicado** |
+| AGUA (orden 6) | 183.333 | 233.333 | Agua del concentrado (83.333, con el mismo supuesto de 1.2 L) + dilución de 100/150 ml (p.27) |
+| **AGUA (orden 0)** | **100** | **136** | Los «100 ml de cold brew» registrados otra vez como agua; 136 = 100 × 600/440, un escalado que el PDF no sostiene. **El concentrado está duplicado** |
+
+- **El AGUA cuesta $0**, así que la duplicación no altera el costo. El único efecto en el costo es el café.
+- **Con el rendimiento oficial de 1 L,** la representación coherente sería:
+  - café 20 g;
+  - agua del concentrado 100 ml más dilución 100/150, es decir AGUA 200/250 en una sola línea;
+  - la línea AGUA de orden 0 en 0 ml.
+- **Propuesta (no incluida en el lote):** corregir AGUA en una aprobación aparte, sin efecto en el costo.
+
+### Impacto (simulación local con el motor de vistas, copia del respaldo de 2026-10-26 20:26 UTC)
+
+| Producto | Tamaño | Costo | Food cost (Mostrador) | Margen Mostrador | Margen Rappi |
+|---|---|---|---|---|---|
+| Urban Chocolate | Grande | $16.69 → **$14.39** | 22.0% → 19.0% | $59.17 → $61.47 | $52.20 → $54.50 |
+| Cold brew | Chica | $12.84 → **$14.50** | 19.1% → 21.6% | $54.41 → $52.74 | $48.55 → $46.88 |
+| Cold brew | Grande | $13.04 → **$14.70** | 17.2% → 19.4% | $62.83 → $61.16 | $56.53 → $54.87 |
+
+- Urban Chocolate Chica no cambia.
+- Los precios de venta no cambian, y las alertas siguen igual: 6 antes y 6 después.
+- Ninguno de los dos productos es subreceta de otro.
+
+### Pruebas y ensayo local
+
+- `tests/db/recetas-correcciones.test.ts`: **11/11**. Se agregaron los manifiestos reales del lote 2 y un caso con un valor que baja a 0 y otro con decimales (16.67): aplicar, repetir y revertir.
+- BD completa: **181/181**. `tsc` sin errores.
+
+**Ensayo local** con la CLI real, sobre la copia aislada:
+
+| Paso | Urban Chocolate | Cold brew |
+|---|---|---|
+| Ensayo (ROLLBACK) | 1 celda, v20 → 21 | 2 celdas, v28 → 30 |
+| Aplicación local | Costos iguales a la simulación | Costos iguales a la simulación |
+| Repetición | «sin cambio» | «sin cambio» |
+| Reversión | Costos de vuelta a los originales | Costos de vuelta a los originales |
+
+Los informes locales están en `21-informes/`.
+
+### Fresh Sodas: lo que se verificó antes de proponer cambios
+
+- **Preparado de fresa (p.7).** Son solo 500 g de fresa congelada (insumo `FRESA NATURAL CONGELADA`), descongelada 30 min y licuada hasta un puré rústico, **sin otros ingredientes**.
+  - La ficha **no documenta el rendimiento**: no dice cuánto puré resulta ni cuánto se pierde en la licuadora o al descongelar.
+  - Por eso «30 g de preparado = 30 g de fresa» es un supuesto de masa sin pérdida, aunque Costeo ya lo use en la Chica, en Ichigo y en el Açaí.
+  - **Hace falta medirlo:** pesar el puré que dan 500 g de fresa.
+- **Hielo.**
+  - El insumo `HIELO` está en **ml** y cuesta $0; lo usan 41 recetas. Las fichas lo dan en **gramos**: 130/245 g, 250/360 g, etc.
+  - Un gramo de hielo equivale a 1 ml de agua derretida, pero **no** a 1 ml de volumen de hielo (~1.09 ml).
+  - La representación correcta sería registrar el hielo **en gramos** (cambiar la unidad del insumo a `gr`, sin cambiar los números). Es una decisión de catálogo que toca 41 recetas, sin efecto en el costo; **queda propuesta y no se aplica**.
+  - Mientras tanto, cambiar 190 → 245 «ml» repetiría la convención sin validarla.
+
+### Agua con gas y tónica (diagnóstico actualizado)
+
+**Qué dicen las fichas:**
+- **Pink Lemonade y Maracuyá (pp.43–44).** La base es **agua con gas**: 170 ml en Regular y 220 ml en Grande. La observación de la ficha dice: «esta bebida se personaliza: el agua de filtro o tónica. Agregar la misma cantidad». O sea, la tónica y el agua de filtro son **personalizaciones** que sustituyen al agua con gas en la misma cantidad; no son la base.
+- **Cold Brew (p.27).** Lo mismo al revés: «Cuando el cliente pida con agua tónica o mineral, sustituir los 100 ml de agua de filtro». La base es agua de filtro y la tónica o mineral son la personalización.
+
+**Qué tiene Costeo:**
+- Las dos Fresh Sodas usan como base `SCHWEPPES AGUA TÓNICA 296 ML`, es decir, **una personalización**, con 170/232 ml.
+- Costeo no tiene un insumo de agua con gas por ml. `AGUA MINERAL TOPO CHICO 355 ML` y `AGUA MINERAL PERRIER 330 ML` existen solo como **pieza**, y Topo Chico no se usa en ninguna receta.
+
+**Para corregirlo hace falta:**
+1. Que Operaciones o Compras digan qué agua con gas se usa (marca y presentación).
+2. Que digan si la botella abierta se reutiliza, para costear por ml, o se usa una por bebida, para costear por pieza.
+3. Un insumo por ml o una conversión documentada.
+
+**Estimación provisional,** si fuera Topo Chico ($20.55 / 355 ml = $0.0579/ml) y la botella se reutilizara:
+
+| Tamaño | Hoy (tónica) | Con agua con gas | Diferencia |
+|---|---|---|---|
+| Chica | 170 ml × $0.0473 = $8.04 | 170 ml = $9.84 | **+$1.80** |
+| Grande | 232 ml = $10.97 | 220 ml = $12.74 | **+$1.76** |
+
+Si fuera una botella por bebida, el aumento sería mucho mayor. **No se propone cambio** hasta tener la respuesta. Esto amplía las preguntas P6 y K6.
