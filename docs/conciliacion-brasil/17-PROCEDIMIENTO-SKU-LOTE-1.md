@@ -141,13 +141,54 @@ Los informes están en `17-informes/`. Esas corridas usaron la versión del scri
 - **Registro de migraciones:** la última sigue siendo `20261023000021`. **La 22 está libre:** no hay registro, tabla ni función.
 - **Políticas:** producción tiene hoy 145, las mismas que PGlite con 01–21.
 
-## Pasos siguientes (cada uno con aprobación expresa; ninguno se ejecutó)
+## Respaldo y ensayo remoto de la 22 (2026-10-26, autorizados por Carlo)
+
+### Respaldo lógico privado
+
+**Ubicación:** `C:\Users\carlo\Respaldos\thecoffee-supabase\2026-10-26T1726Z\`, fuera del repo. Se hizo con `respaldo-logico.ts` (pg_dump 17); el sha256 de `base.dump` es `f0fbcbd7…2417`, igual al manifiesto.
+
+**Restauración verificada**, no solo listada: se restauró en una base aislada del clúster local (`resp1726`, solo localhost) y se comparó con producción mediante `verificar-restauracion.ts`.
+
+| Comprobación | Resultado |
+|---|---|
+| Tablas y filas | 71 tablas, 19,468 filas, md5 del contenido idéntico |
+| Políticas y funciones | 0 diferencias |
+| Secuencias y membresías | Iguales |
+| Huella de `v_resumen` bajo RLS | Idéntica (645 filas) |
+| Registro de migraciones | 21, sin la tabla 22 |
+| Diferencias esperadas | `vault.secrets`: 0 filas en producción, y la extensión no existe en local. Atributos del rol `postgres` local |
+
+El detalle está en la carpeta del respaldo (`verificacion-restauracion.json` y `LEEME.md`).
+
+### Ensayo remoto de la migración 22 (ROLLBACK)
+
+**Comando:** `npx tsx scripts/conciliacion/migracion-22-aplicar.ts`, sin `--aplicar`. El informe está en `17-informes/2026-10-26T17-27-48-105Z-jpqkmnfjwzniptszjuli-migracion22-ensayo.json`.
+
+| Dato | Resultado |
+|---|---|
+| Partida | Última versión `20261023000021`, sin la tabla |
+| Cambio | 214 ms |
+| Lo previo | **0 diferencias** en políticas, funciones y tablas (ACL y RLS) |
+| Políticas | 145 → 152 dentro de la transacción |
+| Objetos nuevos | **Exactamente los esperados**: la huella de las 7 políticas coincide en producción, junto con la función, los grants, las columnas, los triggers y la tabla vacía |
+| Registro dentro de la transacción | `20261024000022` |
+| Cierre | **ROLLBACK** confirmado (salida 0) |
+
+**Verificación con una conexión nueva** (solo lectura):
+- 21 migraciones, la última `20261023000021`;
+- versión 22 sin registrar;
+- `producto_codigo_pos` no existe;
+- `validar_producto_codigo_pos` no existe;
+- 145 políticas;
+- 0 políticas para la tabla nueva.
+
+**No se aplicó la 22, no se cargaron enlaces y no hubo merge.**
+
+## Pasos siguientes (cada uno con aprobación expresa)
 
 1. **Revisión del PR.** No hacer merge.
-2. **Respaldo y captura previa:**
-   - respaldo lógico recuperable nuevo con `respaldo-logico.ts`, verificado con `pg_restore --list`, sha256 y contenido;
-   - captura de esquema, permisos y registro.
-3. **Ensayo remoto de la 22:** `npx tsx scripts/conciliacion/migracion-22-aplicar.ts` (ROLLBACK). Revisar el informe.
+2. ~~**Respaldo y captura previa**~~ **Hecho el 2026-10-26 a las 17:26 UTC** (arriba). Si pasa tiempo antes de aplicar, se repite.
+3. ~~**Ensayo remoto de la 22**~~ **Hecho el 2026-10-26 a las 17:27 UTC, con ROLLBACK** (arriba). Falta que Carlo revise el informe.
 4. **Aplicar la 22:** `… --aplicar --confirmo jpqkmnfjwzniptszjuli`. La versión queda registrada en la misma transacción.
 
    Verificar después en solo lectura:

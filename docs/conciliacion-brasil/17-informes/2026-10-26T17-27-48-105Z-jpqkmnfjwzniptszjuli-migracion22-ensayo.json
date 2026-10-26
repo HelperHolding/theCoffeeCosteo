@@ -1,0 +1,26 @@
+{
+ "fecha": "2026-10-26T17:27:48.105Z",
+ "destino": "jpqkmnfjwzniptszjuli",
+ "modo": "ensayo",
+ "registroAntes": [
+  "20261023000021",
+  "20261022000020"
+ ],
+ "msCambio": 214,
+ "diferenciasEnLoPrevio": {
+  "politicas": 0,
+  "funciones": 0,
+  "detalle": [],
+  "tablas": 0
+ },
+ "politicasTotales": {
+  "antes": 145,
+  "despues": 152
+ },
+ "objetosNuevos": "exactamente los esperados",
+ "registroDespues": [
+  "20261024000022",
+  "20261023000021"
+ ],
+ "transaccion": "rollback"
+}
