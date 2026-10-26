@@ -1,0 +1,35 @@
+﻿codigo,nombre_api,lineas_4_semanas,receta_candidata,motivos,desbloquea
+5IL,Iced Latte,697,Iced Latte,variante en Costeo: Iced Latte Large,C6
+CPUMICAPP,Pumpkin Iced Latte,428,,sin receta local (B3/B6),D1
+CPUMLAAPP,Pumpkin Latte,349,,sin receta local (B3/B6),D2
+3FOOD3,Pain au Chocolat,220,Pain Au Chocolat,forma del nombre (B2),B1
+BR3,Grilled Ham Cheese and Tomato Sandwich,202,Grilled Ham Cheese And Tomato Sandwich,forma del nombre (B2),B2
+CPUMFRAPP,Pumpkin Spice Frap,124,,sin receta local (B3/B6),D3
+SHCO,Gelato Frappé Coffee,112,Gelato Frappé Coffee,tamaño mixto en la API,E4
+4UC,Urban Chocolate,104,Urban Chocolate,variante en Costeo: Urban Chocolat,C1 (y confirmación de Operaciones)
+SALFRAAPP,Salted Caramel Frap,101,,sin receta local (B3/B6),D4
+PANMUEAPP,Pan de Muerto,98,,sin receta local (B3/B6),F1
+CROSTUAPP,Croissant filled with cheese and ham,89,Croissant Filled With Cheese and Ham,forma del nombre (B2),B3
+FRATARAPP,Taro Frap,80,,sin receta local (B3/B6),D5
+MISICEDAPP,Iced Latte +  Ham & Cheese Sandwich,75,Iced Latte + Ham & Cheese Sandwich,"forma del nombre (B2); API con vasos, receta Único",B7 y E5
+COOMATAPP,Cookie Matcha & White Chocolate,68,,sin receta local (B3/B6),F2
+COFFRAAPP,Coffee Frap,59,,sin receta local (B3/B6),D6
+FSOD2,Fresh Soda Pink Lemonade,56,Fresh Soda Pink Lemonade,tamaño mixto en la API,E3
+FRAMATAPP,Matcha Frap,46,,sin receta local (B3/B6),D7
+FRACHAAPP,Chai Frap,42,,sin receta local (B3/B6),D8
+FSOD4,Fresh Soda Passion fruit,34,Fresh Soda Passion fruit,tamaño mixto en la API,E3
+ESPTONAPP,Espresso Tonic,28,,sin receta local (B3/B6),F3
+TRUGOUAPP,True White + Croissant Serrano & Gouda,24,True White + Croissant Serrano & Gouda,"API con vasos, receta Único",E5
+BRICE,Brownie with ice cream,22,Brownie With Ice Cream,forma del nombre (B2),B4 y C3
+1CBWB,White bag 250g,19,White Bag 250g,forma del nombre (B2),B5
+ZOETWIAPP,Zoe Water Twist,18,,sin receta local (B3/B6),D10 (respuesta del proveedor)
+1CDV60,Cold Drip V60,13,Cold Drip V60,"API sin vaso, receta Chica+Grande",E2
+TRUMISAPP,True White + Grilled Ham & Cheese Sandwich,13,True White + Grilled Ham & Cheese Sandwich,"API con vasos, receta Único",E5
+SPOBISAPP,Spooky Biscuits,12,,sin receta local (B3/B6),F4
+1CDV60M,Cold Drip V60 + Milk,10,Cold Drip V60 + Milk,"API sin vaso, receta Chica+Grande",E2
+MATLEMAPP,Matcha Iced Latte + Lemon Cake,9,,sin receta local (B3/B6),F5
+ZOEWATAPP,Zoé Water,8,,sin receta local (B3/B6),"D9 (y precio, A4)"
+COMILTAPP,Iced Latte + Cookie Tradicional,6,Iced Latte + Cookie Tradicional,"API con vasos, receta Único",E5
+3CBBE,Black edition 250g,5,Black Edition 250g,forma del nombre (B2),B6
+TRWCROAPP,True White + Croissant filled with cheese and ham,3,,sin receta local (B3/B6),F6
+TRUPANAPP,True White + Pan de Muerto,3,,sin receta local (B3/B6),F7
