@@ -1,0 +1,80 @@
+﻿receta_id,receta,activa,categoria,codigos_pos,tamano,cantidad_costeo,pagina_pdf,ficha_pdf,hielo_pdf,esperado_g,clasificacion,propuesta
+af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,Black Ginger,true,Cold,1,Chica,130,39,Black Ginger,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,Black Ginger,true,Cold,1,Grande,245,39,Black Ginger,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+a00da002-92a3-4a48-ab47-b62ee9aa6a13,Chai Frappé,true,Frappés,0,Chica,250,53,Frappé Chai,250/312 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+a00da002-92a3-4a48-ab47-b62ee9aa6a13,Chai Frappé,true,Frappés,0,Grande,312,53,Frappé Chai,250/312 g hielo,312,coincide (g registrados como ml),sin cambio de cantidad
+130033f6-dd70-4178-8366-945ea9674199,Chai Iced Latte,true,Cold,1,Chica,130,28,Chai Iced Latte,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+130033f6-dd70-4178-8366-945ea9674199,Chai Iced Latte,true,Cold,1,Grande,245,28,Chai Iced Latte,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+f9d4dfef-ef3c-4e80-ad4e-707f1837a0bd,Chai Iced Latte Protein Cold Foam,true,BEBIDA FRÍA,0,Chica,100,57,Chai Iced Latte Protein Cold Foam,100/140 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+f9d4dfef-ef3c-4e80-ad4e-707f1837a0bd,Chai Iced Latte Protein Cold Foam,true,BEBIDA FRÍA,0,Grande,140,57,Chai Iced Latte Protein Cold Foam,100/140 g hielo,140,coincide (g registrados como ml),sin cambio de cantidad
+ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf,Coffee Frappé,true,Frappés,0,Chica,250,50,Frappé Coffee,250/360 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf,Coffee Frappé,true,Frappés,0,Grande,360,50,Frappé Coffee,250/360 g hielo,360,coincide (g registrados como ml),sin cambio de cantidad
+00f47aba-88e6-4ebc-a815-5833f8b29871,Cold brew,true,Cold,1,Chica,130,27,Cold Brew,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+00f47aba-88e6-4ebc-a815-5833f8b29871,Cold brew,true,Cold,1,Grande,245,27,Cold Brew,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+7799a6fe-bf6f-4247-842c-a071588cd9ac,Cold Drip V60,true,Drip Coffee,0,Chica,230,65,V60 con Hielo (1 porción),100 + 130 g hielo,230,coincide (g registrados como ml),sin cambio de cantidad
+7799a6fe-bf6f-4247-842c-a071588cd9ac,Cold Drip V60,true,Drip Coffee,0,Grande,310,65,V60 con Hielo (1 porción),,,ficha sin este tamaño,sin evidencia para este tamaño; conservar
+49ef4055-997e-4fcc-a52d-16aca66d964b,Cold Drip V60 + Milk,true,Drip Coffee,0,Chica,230,66,V60 con hielo y leche,100 + 130 g hielo,230,coincide (g registrados como ml),sin cambio de cantidad
+49ef4055-997e-4fcc-a52d-16aca66d964b,Cold Drip V60 + Milk,true,Drip Coffee,0,Grande,300,66,V60 con hielo y leche,,,ficha sin este tamaño,sin evidencia para este tamaño; conservar
+d05cbf84-407c-4871-af0a-c1009bc20ddb,Double Iced Latte + Banana Cake + Koulign Amann,true,COMBO CON PANADERÍA DULCE,0,Chica,130,,,,,sin ficha en el PDF,sin evidencia; conservar
+d05cbf84-407c-4871-af0a-c1009bc20ddb,Double Iced Latte + Banana Cake + Koulign Amann,true,COMBO CON PANADERÍA DULCE,0,Grande,245,,,,,sin ficha en el PDF,sin evidencia; conservar
+7ab12793-381b-4d85-bcf1-3cf7914f9859,Double Matcha Iced Latte + Banana Cake + Koulign Am,true,COMBO CON PANADERÍA DULCE,0,Chica,130,,,,,sin ficha en el PDF,sin evidencia; conservar
+7ab12793-381b-4d85-bcf1-3cf7914f9859,Double Matcha Iced Latte + Banana Cake + Koulign Am,true,COMBO CON PANADERÍA DULCE,0,Grande,245,,,,,sin ficha en el PDF,sin evidencia; conservar
+3337fc34-6de8-48a1-b066-663073da7cc9,Double Salted Caramel + Traditional Cookie + Lemon,true,COMBO CON PANADERÍA DULCE,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
+3337fc34-6de8-48a1-b066-663073da7cc9,Double Salted Caramel + Traditional Cookie + Lemon,true,COMBO CON PANADERÍA DULCE,0,Grande,170,,,,,sin ficha en el PDF,sin evidencia; conservar
+6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,true,Fresh Soda,0,Chica,130,44,Maracuyá,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,true,Fresh Soda,0,Grande,177,44,Maracuyá,130/245 g hielo,245,difiere del PDF,"PDF 245 g; corrección pendiente de la representación de la unidad (lote 3a)"
+e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,true,Fresh Soda,0,Chica,130,43,Pink Lemonade,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,true,Fresh Soda,0,Grande,190,43,Pink Lemonade,130/245 g hielo,245,difiere del PDF,"PDF 245 g; corrección pendiente de la representación de la unidad (lote 3a)"
+c665b62b-974b-4a90-b161-c3033645ce50,Gelato Frappé Chocolate,true,Gelato Frappés,0,Único,45,,,,,sin ficha en el PDF,sin evidencia; conservar
+7ae83690-50a0-45f4-8d75-554635d41469,Gelato Frappé Horchai,true,Gelato Frappés,0,Único,45,,,,,sin ficha en el PDF,sin evidencia; conservar
+cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,true,Cold,1,Chica,130,22,Iced Black,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,true,Cold,1,Grande,245,22,Iced Black,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,Iced Blueberry Matcha,true,Seasonal,1,Chica,130,59,Iced Blueberry Matcha,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,Iced Blueberry Matcha,true,Seasonal,1,Grande,245,59,Iced Blueberry Matcha,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+c55e8b1f-300e-42f7-9c4a-f57b038c987e,Iced Chocolate,true,Cold,1,Chica,130,24,Iced Chocolate,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+c55e8b1f-300e-42f7-9c4a-f57b038c987e,Iced Chocolate,true,Cold,1,Grande,245,24,Iced Chocolate,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+fcf0d45d-76b2-48a4-8d96-d8abc228eca8,Iced Latte,true,Cold,0,Chica,130,21,Iced Latte,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+fcf0d45d-76b2-48a4-8d96-d8abc228eca8,Iced Latte,true,Cold,0,Grande,245,21,Iced Latte,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+7b5b57b7-5436-49c4-affc-cc3f00d46c4c,Iced Latte Large,true,Cold,0,Grande,245,21,Iced Latte,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+7679cffd-2651-49de-9481-0cf22626e707,Iced Latte Protein Cold Foam,true,BEBIDA FRÍA,0,Chica,100,56,Iced Latte Protein Cold Foam,100/140 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+7679cffd-2651-49de-9481-0cf22626e707,Iced Latte Protein Cold Foam,true,BEBIDA FRÍA,0,Grande,140,56,Iced Latte Protein Cold Foam,100/140 g hielo,140,coincide (g registrados como ml),sin cambio de cantidad
+33cc9f0a-c972-4ea9-bb91-980a69c03b33,Iced latte white + koulign amann,true,COMBO CON PANADERÍA DULCE,0,Chica,130,,,,,sin ficha en el PDF,sin evidencia; conservar
+33cc9f0a-c972-4ea9-bb91-980a69c03b33,Iced latte white + koulign amann,true,COMBO CON PANADERÍA DULCE,0,Grande,245,,,,,sin ficha en el PDF,sin evidencia; conservar
+15556232-34f4-490e-a9b7-0c01998bc4c1,Iced Vanilla,true,Cold,1,Chica,130,36,Iced Vanilla,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+15556232-34f4-490e-a9b7-0c01998bc4c1,Iced Vanilla,true,Cold,1,Grande,245,36,Iced Vanilla,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+e201b60f-62e1-4c56-80e5-2b4873baf74f,Ichigo Matcha,true,Cold,1,Chica,130,38,Ichigo Matcha,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+e201b60f-62e1-4c56-80e5-2b4873baf74f,Ichigo Matcha,true,Cold,1,Grande,245,38,Ichigo Matcha,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+1a316b88-1212-4403-9dfd-4de2652653ab,Isopure Iced Latte,true,Seasonal,1,Chica,100,56,Iced Latte Protein Cold Foam,100/140 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+1a316b88-1212-4403-9dfd-4de2652653ab,Isopure Iced Latte,true,Seasonal,1,Grande,140,56,Iced Latte Protein Cold Foam,100/140 g hielo,140,coincide (g registrados como ml),sin cambio de cantidad
+be97f8cd-e66b-4dca-a38a-c971bdecd3d3,Isopure Iced Matcha,true,Seasonal,1,Chica,100,58,Matcha Iced Latte Protein Cold Foam,100/140 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+be97f8cd-e66b-4dca-a38a-c971bdecd3d3,Isopure Iced Matcha,true,Seasonal,1,Grande,140,58,Matcha Iced Latte Protein Cold Foam,100/140 g hielo,140,coincide (g registrados como ml),sin cambio de cantidad
+e0247587-5ff1-4f22-b288-af2dc387e90a,Lemon Honey Coffee,true,BEBIDA FRÍA,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
+e0247587-5ff1-4f22-b288-af2dc387e90a,Lemon Honey Coffee,true,BEBIDA FRÍA,0,Grande,130,,,,,sin ficha en el PDF,sin evidencia; conservar
+bb72c7a6-d900-4d47-bf56-4a74654ccf4b,Matcha Frappé,true,Frappés,0,Chica,250,52,Frappé Matcha,250/312 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+bb72c7a6-d900-4d47-bf56-4a74654ccf4b,Matcha Frappé,true,Frappés,0,Grande,312,52,Frappé Matcha,250/312 g hielo,312,coincide (g registrados como ml),sin cambio de cantidad
+9756eec9-1f09-45ee-a45b-21ac8c54bb22,Matcha Iced Latte,true,Cold,1,Chica,130,23,Matcha Iced Latte,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+9756eec9-1f09-45ee-a45b-21ac8c54bb22,Matcha Iced Latte,true,Cold,1,Grande,245,23,Matcha Iced Latte,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+4b651700-0745-42fe-8e78-7b44dbdb66ee,Matcha Iced Mint,true,Cold,1,Chica,130,37,Matcha Iced Mint,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+4b651700-0745-42fe-8e78-7b44dbdb66ee,Matcha Iced Mint,true,Cold,1,Grande,245,37,Matcha Iced Mint,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+d78f7eac-6e0e-44ee-bbfb-3fe2f60bc8f8,Nutty Iced Latte,true,BEBIDA FRÍA,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
+d78f7eac-6e0e-44ee-bbfb-3fe2f60bc8f8,Nutty Iced Latte,true,BEBIDA FRÍA,0,Grande,123,,,,,sin ficha en el PDF,sin evidencia; conservar
+e1dd078b-3700-4531-ae3b-afc653f2f747,Nutty Iced Latte (Authors),true,BEBIDA FRÍA,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
+e1dd078b-3700-4531-ae3b-afc653f2f747,Nutty Iced Latte (Authors),true,BEBIDA FRÍA,0,Grande,123,,,,,sin ficha en el PDF,sin evidencia; conservar
+e66cc6c0-4806-47f8-8cc0-bfc5dea2daf6,Nutty Iced Latte (Signature),true,BEBIDA FRÍA,0,Chica,90,,,,,sin ficha en el PDF,sin evidencia; conservar
+e66cc6c0-4806-47f8-8cc0-bfc5dea2daf6,Nutty Iced Latte (Signature),true,BEBIDA FRÍA,0,Grande,123,,,,,sin ficha en el PDF,sin evidencia; conservar
+7769fb2e-d7ac-46b6-abeb-e23634d40bd5,Pumpkin Spice Frappé,true,Seasonal,0,Chica,250,62,Frappé Pumkin Spice,250/360 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+7769fb2e-d7ac-46b6-abeb-e23634d40bd5,Pumpkin Spice Frappé,true,Seasonal,0,Grande,360,62,Frappé Pumkin Spice,250/360 g hielo,360,coincide (g registrados como ml),sin cambio de cantidad
+38847fe5-2d6f-4050-9fd7-aa94bb3d4024,Pumpkin Spice Iced Latte,true,Seasonal,0,Chica,130,61,Pumkin Spice Iced Latte,130/245 g hielo,130,coincide (g registrados como ml),sin cambio de cantidad
+38847fe5-2d6f-4050-9fd7-aa94bb3d4024,Pumpkin Spice Iced Latte,true,Seasonal,0,Grande,245,61,Pumkin Spice Iced Latte,130/245 g hielo,245,coincide (g registrados como ml),sin cambio de cantidad
+7867787b-4957-485c-822b-3106558d33a1,Salted Caramel,true,Cold,1,Chica,90,41,Salted Caramel,90/170 g hielo,90,coincide (g registrados como ml),sin cambio de cantidad
+7867787b-4957-485c-822b-3106558d33a1,Salted Caramel,true,Cold,1,Grande,170,41,Salted Caramel,90/170 g hielo,170,coincide (g registrados como ml),sin cambio de cantidad
+052a61f6-55ff-4ac8-9459-ab4939789420,Salted Caramel Frappé,true,Frappés,0,Chica,250,51,Frappé Salted Caramel,250/360 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+052a61f6-55ff-4ac8-9459-ab4939789420,Salted Caramel Frappé,true,Frappés,0,Grande,360,51,Frappé Salted Caramel,250/360 g hielo,360,coincide (g registrados como ml),sin cambio de cantidad
+ff2dbf97-34b0-476f-bd87-0e087089bb00,Sora Iced Latte,true,Cold,0,Chica,100,40,Sora Iced Latte,100/200 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+ff2dbf97-34b0-476f-bd87-0e087089bb00,Sora Iced Latte,true,Cold,0,Grande,200,40,Sora Iced Latte,100/200 g hielo,200,coincide (g registrados como ml),sin cambio de cantidad
+41822ed0-ab3c-49c4-925a-11177e7caafe,Sora Iced Latte (Authors),true,Cold,0,Chica,100,40,Sora Iced Latte,100/200 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+41822ed0-ab3c-49c4-925a-11177e7caafe,Sora Iced Latte (Authors),true,Cold,0,Grande,200,40,Sora Iced Latte,100/200 g hielo,200,coincide (g registrados como ml),sin cambio de cantidad
+087d714a-45ca-44da-a3ad-55ce92a2bccb,Sora Iced Latte (Signature),true,Cold,1,Chica,100,40,Sora Iced Latte,100/200 g hielo,100,coincide (g registrados como ml),sin cambio de cantidad
+087d714a-45ca-44da-a3ad-55ce92a2bccb,Sora Iced Latte (Signature),true,Cold,1,Grande,200,40,Sora Iced Latte,100/200 g hielo,200,coincide (g registrados como ml),sin cambio de cantidad
+817fe3be-7d8b-49be-8e1a-6acde12ccb1c,Taro Frappé,true,Frappés,0,Chica,250,54,Frappé Taro,250/312 g hielo,250,coincide (g registrados como ml),sin cambio de cantidad
+817fe3be-7d8b-49be-8e1a-6acde12ccb1c,Taro Frappé,true,Frappés,0,Grande,312,54,Frappé Taro,250/312 g hielo,312,coincide (g registrados como ml),sin cambio de cantidad
