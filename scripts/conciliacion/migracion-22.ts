@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { cerrarTransaccion, unirErrores } from './cierre';
 import { capturar, diferencias, firma, type Conexion, type Estado } from './fase4';
 
 /**
@@ -12,6 +13,7 @@ import { capturar, diferencias, firma, type Conexion, type Estado } from './fase
  *     EXECUTE para anon/authenticated, tabla vacía con RLS, authenticated con SELECT/INSERT/UPDATE/DELETE y anon sin
  *     privilegios);
  *  5. COMMIT solo en aplicar/revertir; el ensayo y cualquier fallo terminan en ROLLBACK.
+ *  6. el cierre se verifica (cierre.ts): si COMMIT o ROLLBACK fallan, se informa `fallida` con el error.
  */
 export type Modo22 = 'ensayo' | 'aplicar' | 'revertir';
 export const VERSION_22 = '20261024000022';
@@ -231,9 +233,11 @@ export async function migracion22(db: Conexion, modo: Modo22, a: Awaited<ReturnT
     if (modo !== 'ensayo') fin = 'commit';
   } catch (e) {
     informe.error = e instanceof Error ? e.message : String(e);
-  } finally {
-    await db.query(fin).catch(() => {});
-    informe.transaccion = fin;
+    fin = 'rollback';
   }
+  const cierre = await cerrarTransaccion(db, fin);
+  informe.transaccion = cierre.transaccion;
+  const error = unirErrores(informe.error as string | undefined, cierre.error);
+  if (error) informe.error = error;
   return informe;
 }

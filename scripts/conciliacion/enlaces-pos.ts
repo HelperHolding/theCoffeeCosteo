@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { cerrarTransaccion, unirErrores, type Cierre } from './cierre';
 import type { Conexion } from './fase4';
 
 /**
@@ -16,7 +17,8 @@ import type { Conexion } from './fase4';
  *     dada de alta o baja; la actividad de otras sesiones solo se informa;
  *  6. verifica que recetas, tamaños/precios, precios manuales, líneas, cantidades e insumos no cambien (huellas);
  *  7. aislamiento REPEATABLE READ: una instantánea para toda la ejecución;
- *  8. COMMIT solo en aplicar/revertir; el ensayo y cualquier problema terminan en ROLLBACK.
+ *  8. el cierre se verifica (cierre.ts): si COMMIT o ROLLBACK fallan, se informa `fallida` con el error;
+ *  9. COMMIT solo en aplicar/revertir; el ensayo y cualquier problema terminan en ROLLBACK.
  * `revertir` borra solo las filas de una carga (carga_id) que sigan exactamente como se cargaron; nunca por código.
  */
 export type ModoEnlaces = 'ensayo' | 'aplicar' | 'revertir';
@@ -119,7 +121,8 @@ export interface InformeEnlaces {
   bitacoraPropia: number;
   bitacoraAjena: number;
   comercialSinCambios?: boolean;
-  transaccion: 'commit' | 'rollback';
+  /** Resultado real del cierre; `fallida` si COMMIT o ROLLBACK no se confirmaron (ver error). */
+  transaccion: Cierre;
   error?: string;
 }
 
@@ -185,6 +188,7 @@ export async function enlazar(
   // REPEATABLE READ: las huellas comerciales y la bitácora se leen en la misma instantánea; un cambio concurrente
   // sobre las filas bloqueadas aborta la carga (error de serialización) en vez de mezclarse con ella.
   await cx.query('begin isolation level repeatable read');
+  let fin: 'commit' | 'rollback' = 'rollback';
   try {
     await cx.query(
       `select set_config('statement_timeout', '15s', true), set_config('lock_timeout', '5s', true),
@@ -355,15 +359,14 @@ export async function enlazar(
       throw new Error(`${informe.totales.problema} código(s) con problemas: no se aplica ninguno`);
     if (!informe.comercialSinCambios)
       throw new Error('Cambiaron datos comerciales (recetas, precios o costos): ROLLBACK');
-    if (modo === 'ensayo') {
-      await cx.query('rollback');
-    } else {
-      await cx.query('commit');
-      informe.transaccion = 'commit';
-    }
+    if (modo !== 'ensayo') fin = 'commit';
   } catch (e) {
-    await cx.query('rollback').catch(() => {});
     informe.error = e instanceof Error ? e.message : String(e);
+    fin = 'rollback';
   }
+  const cierre = await cerrarTransaccion(cx, fin);
+  informe.transaccion = cierre.transaccion;
+  informe.error = unirErrores(informe.error, cierre.error);
+  if (!informe.error) delete informe.error;
   return informe;
 }

@@ -86,6 +86,7 @@ En los cambios registra una fila por campo. Por eso **no hay trazabilidad por la
   - Borra **solo** las filas con ese `carga_id` que sigan exactamente como se cargaron. Si alguna cambió, aborta sin borrar nada.
   - No toca los enlaces de otro origen ni borra por lista de códigos.
   - Deja su bitácora.
+- **Cierre de la transacción (`cierre.ts`), usado por la migración y por los enlaces.** Antes de COMMIT comprueba que la transacción no esté abortada; Postgres respondería ROLLBACK sin error. Si COMMIT o ROLLBACK fallan, el informe dice `transaccion: fallida` con el error y la salida es distinta de cero; nunca afirma éxito. Tras un COMMIT fallido el estado es incierto y se verifica con una conexión nueva.
 - `cargar-enlaces.ts`, la versión anterior que solo funcionaba en local, se retiró; la reemplaza `enlaces-pos`.
 
 ## Pruebas (2026-10-26)
@@ -96,7 +97,8 @@ En los cambios registra una fila por campo. Por eso **no hay trazabilidad por la
 | `tests/db/migracion-22.test.ts` | 8/8: ensayo sin efectos, aplicar, aplicar dos veces, reversión rechazada con filas o con políticas cambiadas (por el script y por el SQL directo), reversión exacta al esquema previo, cambio colateral detectado |
 | `tests/db/enlaces-pos.test.ts` | 14/14 (detalle abajo) |
 | `tests/db/destino.test.ts` | 3/3: URLs aceptadas y rechazadas, incluidos hosts que solo contienen el identificador del proyecto |
-| BD completa | 165/165, sin regresiones en fase 4 ni MCP. `tsc` sin errores. `npm run build` OK |
+| `tests/db/cierre.test.ts` | 5/5: COMMIT que responde ROLLBACK, transacción abortada, fallo de red al confirmar o al deshacer; migración y enlaces con COMMIT o ROLLBACK fallidos → `fallida`, sin filas ni registro. Con el código anterior fallan 3 |
+| BD completa | 170/170, sin regresiones en fase 4 ni MCP. `tsc` sin errores. `npm run build` OK |
 | Suite completa | 398 pasan. `tests/migracion/paridad.test.ts` no corre porque falta el Excel local `datos/Modelo_Costeo_Corregido_2026.xlsx` (ajeno a este cambio) |
 
 Las 14 pruebas de `enlaces-pos` cubren:
