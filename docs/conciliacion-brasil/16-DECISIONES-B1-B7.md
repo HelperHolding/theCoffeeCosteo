@@ -11,6 +11,24 @@
 | Recetario oficial 2026 | Cantidades por tamaño. No trae precios ni códigos |
 | SKU | Verificación de `15` (rama `feat/sku-enlace-pos`) |
 
+## Posición de Carlo (2026-10-26) y estado resultante
+
+| Grupo | Posición | Estado |
+|---|---|---|
+| **A · Precios** | Conservar los valores. Rubén Darío (532) es **referencia de comparación**, no se declara lista oficial vigente solo porque coincide con la muestra | **A1 ajustada** (ver A). A3, A4 y A5: conservar. **Sin cambios de datos** |
+| **B · Nombres** | B1–B6 aprobables si se adoptan las formas observadas en Brasil; B7 se conserva sin el doble espacio. Esto no confirma que sean los nombres vigentes del catálogo | **B1–B6: aprobables** (sin aplicar; la aplicación se pedirá aparte). **B7: conservar** |
+| **C · Duplicados** | Comprobar recetas y dependencias antes de desactivar. Igual costo no demuestra igualdad. Urban queda pendiente de Operaciones | **Comprobación hecha** (ver C). **Ninguna desactivación aprobada todavía.** C1 pendiente de Operaciones |
+| **D · Alias** | Mantenerlos como candidatos; precio y nombre parecido no bastan para aprobar identidad | **D1–D9: candidatos**, no aprobados. D10 pendiente |
+| **E · Tamaños** | Aceptar solo correspondencias verificadas por producto. «Sin vaso» no se convierte en Chica por coincidencia de precio | **E1 acotada a 21 productos verificados.** **E2, E3 y E5 pendientes** (sin mapeo) |
+| **F · Nuevas recetas** | Pedir cantidades y costos a Operaciones/Compras antes de crearlas | **Solicitud preparada**: `18-SOLICITUD-OPERACIONES-COMPRAS.md` |
+| **G · SKU** | Preparar el procedimiento del lote de 57, sin aplicar | **Procedimiento preparado**: `17-PROCEDIMIENTO-SKU-LOTE-1.md` |
+
+**Correcciones a la versión anterior de este documento:**
+1. Desactivar duplicados **sí cambia cifras agregadas**, aunque no cambie precios. El tablero de Costeo, los promedios de margen y las alertas por tipo **solo cuentan recetas activas** (`lib/portal/tablero.ts`). Ver el impacto por par en C.
+2. Los lotes siguientes de SKU **se solapan** (un código puede depender de varias decisiones). Ya no se suman por grupo: se listan **34 códigos únicos** con su motivo y la decisión que lo desbloquea en [`16-codigos-pendientes.csv`](16-codigos-pendientes.csv).
+
+---
+
 **Cómo aprobar:** cada decisión tiene un ID. Puedes aprobar un **grupo completo** («apruebo el grupo C»), decisiones sueltas («apruebo C1, C3 y E2») o cambiar la propuesta («D9: dejarlo sin enlace»).
 
 **Los grupos A–F son independientes entre sí.** El grupo G (correspondencias) crece según lo que se apruebe en los demás.
@@ -31,7 +49,7 @@
 
 | ID | Tema | Valor actual | Evidencia de Brasil | Propuesta | Impacto |
 |---|---|---|---|---|---|
-| **A1** | Qué representa `precio_lista` | Sin definición escrita; de hecho = lista de 532 | 70 pares iguales a 532 y distintos en 612/583; 8 iguales en todas las tiendas | **Declarar `precio_lista` = lista base de referencia (Rubén Darío / 532)** y mostrar en Sucursales los precios observados por tienda como información. **No cambia ningún valor** | Márgenes y alertas siguen iguales; queda explícito qué lista calculan |
+| **A1** *(ajustada por Carlo)* | Qué representa `precio_lista` | Sin definición escrita; coincide con la muestra de 532 | 70 pares iguales a 532 y distintos en 612/583; 8 iguales en todas las tiendas | **Conservar los valores.** Usar Rubén Darío (532) **solo como referencia de comparación** al cotejar con Brasil. **No se declara lista oficial vigente**: la coincidencia con 4 semanas de pedidos no lo demuestra | Ninguno en cifras |
 | A2 | Alternativa a A1 (no recomendada ahora) | — | — | Precio **por tienda**: modelo nuevo (tabla y migración), con márgenes por sucursal | Alto: cambia `v_resumen`, alertas y la calculadora. Solo si el negocio lo necesita |
 | **A3** | 17 pares sin ventas en 532, con precio local distinto de 612/583 (p. ej. Iced Blueberry Matcha 90/100 frente a 110/120 en 612; Mug 374 frente a 449) | Se conserva | Solo hay evidencia de otras tiendas | **Mantener el valor actual**, marcado «sin confirmación de la lista base». No copiar precios de 612/583 | Ninguno |
 | **A4** | 79 tamaños **sin** `precio_lista` (61 productos; p. ej. Muffins, Wraps, Zoé Water) | `null` (alerta «falta precio») | Ninguno de ellos se vendió en la muestra | **Mantener `null`** hasta tener la lista oficial; no inferir de pedidos | La alerta sigue visible |
@@ -61,36 +79,51 @@ Los nombres observados en pedidos no prueban que sean los vigentes del catálogo
 
 ## Grupo C · B4 · Duplicados en Costeo *(independiente; solo C3 depende de B4)*
 
-**Mecanismo propuesto:** conservar una receta y **desactivar** la otra. La desactivada conserva su historia.
+**Mecanismo propuesto:** conservar una receta y **desactivar** la otra. La desactivada conserva su historia. **Ninguna desactivación está aprobada todavía.**
+
+### Comprobación de recetas y dependencias
+
+Lectura de solo lectura en producción, 2026-10-26.
+
+| Par | ¿Recetas idénticas? (componentes y cantidades por tamaño) | Dependencias | Impacto de desactivar la que se propone |
+|---|---|---|---|
+| Urban Chocolat / Urban Chocolate | **No**: «Urban Chocolate» tiene «JARABE DE VANILLA» 10 ml en Grande | «Urban Chocolat»: **1 precio manual Rappi** y sin precio Grande · «Urban Chocolate»: precios completos | Sale 1 producto activo de los conteos, junto con su precio manual Rappi (queda inactivo, no se pierde). **Pendiente de Operaciones** |
+| Muffin Tradicional / Muffin Traditional | **Sí** | Ninguna (sin precio, sin manuales, sin bitácora; no es subreceta) | −1 producto activo y −1 producto con «Falta precio de lista» en alertas |
+| Brownie com sorvete / Brownie With Ice Cream | **Sí** | Ninguna. **Categorías distintas**: PANADERÍA DULCE frente a Desserts | −1 producto activo; −1 con «Falta precio de lista»; −1 en el conteo de PANADERÍA DULCE |
+| Chicken Wrap / Wrap de Pollo | **Sí** | Ninguna | −1 producto activo; −1 con «Falta precio de lista» |
+| Kit Cafés Editions / Kit Coffee Editions | **Sí** | «Kit Coffee Editions» (la que se desactivaría): **1 precio manual Rappi** y 1 entrada de bitácora. Categorías: Coffee Line frente a MERCH | −1 producto activo; −1 con «Falta precio de lista»; su precio manual Rappi queda inactivo. **Decidir antes** si ese precio Rappi se traslada a «Kit Cafés Editions» |
+| Iced Latte Large / Iced Latte | **No**: «Iced Latte Large» no tiene líneas en Chica (costo 0 con precio 70) y en Grande solo «AGUA 36 ml» de diferencia | Ninguna (sin manuales, sin bitácora) | −1 producto activo. Su fila Chica (costo 0, margen ≈ 100 %) **sale de los promedios de margen**, que **bajarán** algo |
+
+Desactivar también cambia las listas de Productos y Resumen (filtro «Activos») y el número de alertas por tipo del tablero. **No cambia precios, costos de otras recetas ni ventas.**
 
 | ID | Par | Evidencia | Propuesta | Impacto |
 |---|---|---|---|---|
 | **C1** | **Urban Chocolat** / **Urban Chocolate** (ambas «Hot») | La API usa **«Urban Chocolate»** (`4UC`), 106 líneas, a $78/$88 en 532 = precios de «Urban Chocolate». «Urban Chocolat» no tiene precio en Grande. **Recetas distintas en Grande:** «Urban Chocolate» lleva **10 ml de jarabe de vainilla** (costo $16.69 frente a $14.39); el recetario p. 34 («Urban Chocolat») no la incluye | Conservar **«Urban Chocolate»** (nombre de la API, precios completos) y desactivar «Urban Chocolat». **Operaciones confirma** si el Grande lleva vainilla: si no, se quita esa línea (cambio de receta aparte) | Costo Grande $16.69, o $14.39 si se quita la vainilla. Habilita el enlace de `4UC` |
-| **C2** | Muffin Tradicional / Muffin Traditional | Idénticas: costo $24.15, sin precio y sin ventas en la muestra | Conservar **«Muffin Traditional»** (coincide con el insumo «MUFFIN TRADITIONAL») y desactivar «Muffin Tradicional» | Ninguno en cifras |
-| **C3** | Brownie com sorvete / Brownie With Ice Cream | La API usa «Brownie with ice cream» (`BRICE`), $89 en 532 = precio de «Brownie With Ice Cream». «com sorvete» no tiene precio | Conservar **«Brownie With Ice Cream»** (con la forma de B4 si se aprueba) y desactivar «Brownie com sorvete» | Ninguno en cifras |
-| **C4** | Chicken Wrap / Wrap de Pollo | Idénticas: costo $38.65, sin precio y sin ventas | Conservar **«Chicken Wrap»** (convención en inglés del catálogo) y desactivar «Wrap de Pollo». Si ya no se vende, desactivar ambas | Ninguno en cifras |
-| **C5** | Kit Cafés Editions / Kit Coffee Editions | La API usa «Kit Cafés Editions» ($999 en 612, 1 línea). Costeo: «Cafés» $899; «Coffee» sin precio de mostrador | Conservar **«Kit Cafés Editions»** y desactivar «Kit Coffee Editions» | Ninguno en cifras |
-| **C6** | **Iced Latte Large** (variante) | Registro incompleto: costo $0 en Chica, sin precio en Grande; solo el Grande tiene cantidades. «Iced Latte» ya cubre Chica y Grande (70/80) | **Desactivar «Iced Latte Large»** | Habilita el enlace de `5IL` (Iced Latte, 714 líneas) |
+| **C2** | Muffin Tradicional / Muffin Traditional | Idénticas: costo $24.15, sin precio y sin ventas en la muestra | Conservar **«Muffin Traditional»** (coincide con el insumo «MUFFIN TRADITIONAL») y desactivar «Muffin Tradicional» | Agregados del tablero (ver la comprobación); no en precios |
+| **C3** | Brownie com sorvete / Brownie With Ice Cream | La API usa «Brownie with ice cream» (`BRICE`), $89 en 532 = precio de «Brownie With Ice Cream». «com sorvete» no tiene precio | Conservar **«Brownie With Ice Cream»** (con la forma de B4 si se aprueba) y desactivar «Brownie com sorvete» | Agregados del tablero (ver la comprobación); no en precios |
+| **C4** | Chicken Wrap / Wrap de Pollo | Idénticas: costo $38.65, sin precio y sin ventas | Conservar **«Chicken Wrap»** (convención en inglés del catálogo) y desactivar «Wrap de Pollo». Si ya no se vende, desactivar ambas | Agregados del tablero (ver la comprobación); no en precios |
+| **C5** | Kit Cafés Editions / Kit Coffee Editions | La API usa «Kit Cafés Editions» ($999 en 612, 1 línea). Costeo: «Cafés» $899; «Coffee» sin precio de mostrador | Conservar **«Kit Cafés Editions»** y desactivar «Kit Coffee Editions» | Agregados del tablero (ver la comprobación); no en precios |
+| **C6** | **Iced Latte Large** (variante) | Registro incompleto: costo $0 en Chica, sin precio en Grande; solo el Grande tiene cantidades. «Iced Latte» ya cubre Chica y Grande (70/80) | **Desactivar «Iced Latte Large»** | Baja los promedios de margen (sale su fila de costo 0); habilita el enlace de `5IL` (Iced Latte, 714 líneas) |
 
 ---
 
 ## Grupo D · B3 · Alias: nombres distintos para el mismo producto *(independiente)*
 
-**Propuesta general:**
-- **ligar el código del POS a la receta existente** (grupo G);
+**Propuesta general (candidatos, no aprobados):**
+- cuando se apruebe la identidad, **ligar el código del POS a la receta existente** (grupo G);
 - **sin renombrar** la receta, salvo que se pida aparte;
 - el precio de 532 es la evidencia principal.
 
 | ID | API (código, líneas) | Costeo | Evidencia de precio en 532 (Regular/Large) | Propuesta |
 |---|---|---|---|---|
-| **D1** | Pumpkin Iced Latte (`CPUMICAPP`, 429) | Pumpkin Spice Iced Latte | API 99/109 · Costeo 99/109 | Alias ✔ |
-| **D2** | Pumpkin Latte (`CPUMLAAPP`, 363) | Pumpkin Spice Latte | API 99/109 · Costeo 99/109 | Alias ✔ |
-| **D3** | Pumpkin Spice Frap (`CPUMFRAPP`, 126) | Pumpkin Spice Frappé | API 99/109 · Costeo 99/109 | Alias ✔ |
-| **D4** | Salted Caramel Frap (`SALFRAAPP`, 104) | Salted Caramel Frappé | API 89/99 · Costeo 89/99 | Alias ✔ |
-| **D5** | Taro Frap (`FRATARAPP`, 83) | Taro Frappé | 89/99 = 89/99 | Alias ✔ |
-| **D6** | Coffee Frap (`COFFRAAPP`, 59) | Coffee Frappé | 89/99 = 89/99 | Alias ✔ |
-| **D7** | Matcha Frap (`FRAMATAPP`, 46) | Matcha Frappé | 89/99 = 89/99 | Alias ✔ |
-| **D8** | Chai Frap (`FRACHAAPP`, 42) | Chai Frappé | API 89 (Regular) · Costeo 89/99 | Alias ✔ |
+| **D1** | Pumpkin Iced Latte (`CPUMICAPP`, 429) | Pumpkin Spice Iced Latte | API 99/109 · Costeo 99/109 | Candidato (no aprobado) |
+| **D2** | Pumpkin Latte (`CPUMLAAPP`, 363) | Pumpkin Spice Latte | API 99/109 · Costeo 99/109 | Candidato (no aprobado) |
+| **D3** | Pumpkin Spice Frap (`CPUMFRAPP`, 126) | Pumpkin Spice Frappé | API 99/109 · Costeo 99/109 | Candidato (no aprobado) |
+| **D4** | Salted Caramel Frap (`SALFRAAPP`, 104) | Salted Caramel Frappé | API 89/99 · Costeo 89/99 | Candidato (no aprobado) |
+| **D5** | Taro Frap (`FRATARAPP`, 83) | Taro Frappé | 89/99 = 89/99 | Candidato (no aprobado) |
+| **D6** | Coffee Frap (`COFFRAAPP`, 59) | Coffee Frappé | 89/99 = 89/99 | Candidato (no aprobado) |
+| **D7** | Matcha Frap (`FRAMATAPP`, 46) | Matcha Frappé | 89/99 = 89/99 | Candidato (no aprobado) |
+| **D8** | Chai Frap (`FRACHAAPP`, 42) | Chai Frappé | API 89 (Regular) · Costeo 89/99 | Candidato (no aprobado) |
 | **D9** | Zoé Water (`ZOEWATAPP`, 8) | Zoé Water Natural | API $45 en 532 · Costeo sin precio | Alias probable. Requiere decidir A4 (precio) |
 | **D10** | Zoe Water Twist (`ZOETWIAPP`, 18) | ¿«Twist Frutos Rojos» o «Twist Limón y Jengibre»? | API $50 en 532; **un código para dos sabores** | **Pendiente**: no se puede ligar a una sola receta. Preguntar al proveedor si hay códigos por sabor |
 
@@ -103,11 +136,11 @@ Los nombres observados en pedidos no prueban que sean los vigentes del catálogo
 
 | ID | Tema | Valor actual | Evidencia | Propuesta | Impacto |
 |---|---|---|---|---|---|
-| **E1** | Mapeo general **Chica ↔ Regular**, **Grande ↔ Large** | Sin mapeo | 75 de 75 pares con precio idéntico en 532. Códigos de vaso uno a uno: `HOTTRAAPP` Regular 240 · `TRADICAPP` Regular 440 · `HOTLARAPP` Large 355 · `LARGEAPP` Large 600 | Aprobar el mapeo **por producto**, solo para los que tienen Chica y Grande en Costeo y vasos en la API. **No como regla global** | Base para cotejar precios y ventas por tamaño |
-| **E2** | Cold Drip V60 y Cold Drip V60 + Milk | Costeo: Chica y Grande (94/104; 107/117) | La API los vende **sin vaso**, a $94 en 532 = precio de Chica | Mapear «sin vaso» ↔ **Chica**; no cambiar la receta | Si en realidad se vende un solo tamaño, el Grande de Costeo sobra (otra decisión) |
-| **E3** | Fresh Soda Pink Lemonade y Passion fruit | Costeo: Chica y Grande (86/96; 81/91) | En 532 llegan sin vaso, a $86 y $81 = Chica. En 612, a veces con vaso | Mapear «sin vaso» ↔ **Chica**; Regular/Large según E1 | Mínimo |
+| **E1** *(acotada por Carlo)* | Correspondencia **Chica ↔ Regular**, **Grande ↔ Large** | Sin mapeo | Códigos de vaso uno a uno: `HOTTRAAPP` Regular 240 · `TRADICAPP` Regular 440 · `HOTLARAPP` Large 355 · `LARGEAPP` Large 600. **Verificada por producto en 21 productos** (precio idéntico en 532 en ambos tamaños): True White, Americano, Salted Caramel, Matcha Iced Latte, Iced Vanilla, Vanilla Latte, Ichigo Matcha, Chai Iced Latte, Isopure Iced Latte, Chai Latte, Flat Caramel, Isopure Iced Matcha, Sora Iced Latte (Signature), Cold brew, Black Ginger, Mad Mocha, Iced Black, Iced Chocolate, Sora Latte (Signature), Matcha Latte, Matcha Vanilla Latte | **Aceptar solo para esos 21.** Matcha Iced Mint (solo Grande verificado) e Iced Blueberry Matcha (sin evidencia en 532) quedan pendientes. **No es regla global** | Base para cotejar ventas por tamaño de esos 21 |
+| **E2** *(pendiente)* | Cold Drip V60 y Cold Drip V60 + Milk | Costeo: Chica y Grande (94/104; 107/117) | La API los vende **sin vaso**; en 532 a $94, igual al precio de Chica | **Sin mapeo.** Por la regla de Carlo, «sin vaso» no se convierte en Chica por coincidir en precio. Preguntar a Operaciones si se vende en un solo tamaño y con qué cantidades | Ninguno |
+| **E3** *(pendiente)* | Fresh Soda Pink Lemonade y Passion fruit | Costeo: Chica y Grande (86/96; 81/91) | En 532 llegan sin vaso, a $86 y $81 (igual que Chica). En 612, a veces con vaso | **Sin mapeo** para «sin vaso». Los casos con vaso se evaluarán por producto cuando haya evidencia de ambos tamaños | Ninguno |
 | **E4** | Gelato Frappé Coffee (y los demás Gelato Frappé) | Costeo: **Único** ($94) | 532: sin vaso $94 y **Large $104**. Recetario pp. 46–48: Regular 440 / Grande 600 | Decidir: **(a)** agregar tamaño Grande a los Gelato Frappé (cambio de catálogo, requiere cantidades), o **(b)** mantener Único = Regular y dejar fuera los Large | (a) mejora el costeo; (b) no cambia nada |
-| **E5** | Combos con vaso (True White + …, Iced Latte + …) | Costeo: **Único** (119, 125, 103…) | 532: True White + Grilled Ham & Cheese **Regular 119 / Large 129**; el Único de Costeo = precio Regular | Mapear Único ↔ **Regular**. Decidir aparte si se agrega Grande (+$10) | Ninguno inmediato |
+| **E5** *(pendiente)* | Combos con vaso (True White + …, Iced Latte + …) | Costeo: **Único** (119, 125, 103…) | 532: True White + Grilled Ham & Cheese **Regular 119 / Large 129**; el Único de Costeo tiene el precio de Regular | **Sin mapeo** hasta que Operaciones confirme qué vaso lleva el combo «Único» y si existe la versión Grande | Ninguno |
 | **E6** | Volumen del vaso grande caliente | Costeo no guarda ml | API «Large - 355ml» · recetario «Grande (360 ml)» | Solo etiqueta: confirmar con Operaciones | Ninguno |
 | — | «Grande 355 ml.» de Rappi en bebidas frías | — | Caso 2 (`14`) | **No es decisión de catálogo:** pregunta al proveedor y a Rappi | — |
 
@@ -139,18 +172,18 @@ Con los alias del grupo D quedan **7 productos** de la API sin receta en Costeo.
 |---|---|---|---|
 | **G1** | Aplicar la **migración 22** en producción | Preparada y probada en local (`15`, rama `feat/sku-enlace-pos`) | Procedimiento propio, igual al de la fase 4: captura, ensayo con ROLLBACK, aplicación, verificación y reversión. Se registra **antes** del merge, porque «Deploy to production» está activo |
 | **G2** | Cargar el **lote 1** (57 códigos verificados) | Dry-run local OK | Cargar tras G1, con el script en dry-run primero |
-| G3 | Lotes siguientes (se habilitan según lo aprobado) | — | **+7** con B (nombres) · **+2** con C1 y C6 (`4UC`, `5IL`) · **+8 o +9** con D1–D9 · **+8** con E2–E5 (Cold Drip, Fresh Soda, Gelato, combos) · **+n** con F (recetas nuevas) |
+| G3 | Códigos pendientes (no se suman por grupo: se solapan) | — | **34 códigos únicos** con su motivo y la decisión que lo desbloquea en [`16-codigos-pendientes.csv`](16-codigos-pendientes.csv). Algunos dependen de **más de una** decisión (p. ej. `MISICEDAPP`: B7 **y** E5; `BRICE`: B4 **y** C3; `ZOEWATAPP`: D9 y precio). Un código entra al lote siguiente solo cuando **todas** sus decisiones estén aprobadas |
 
 ---
 
 ## Resumen para aprobar
 
-| Grupo | Decisiones recomendadas | ¿Cambia cifras? |
+| Grupo | Estado tras la revisión de Carlo | ¿Cambia cifras si se aplica? |
 |---|---|---|
-| **A · Precio de lista** | A1, A3, A4, A5 | No |
-| **B · Nombres** | B1–B6 (adoptar forma de la API), B7 (mantener) | No (solo nombres) |
-| **C · Duplicados** | C1 (+ confirmar la vainilla), C2–C6 | No, salvo el costo Grande de Urban si se quita la vainilla |
-| **D · Alias** | D1–D9 (ligar por código), D10 pendiente | No |
-| **E · Tamaños** | E1, E2, E3, E5, E6. E4: elegir (a) o (b) | No, salvo E4 (a) |
-| **F · Sin receta** | F2, F3 (crear con datos de Operaciones); F1 según interés; F4–F7 no costear | Agrega costeo nuevo |
-| **G · Correspondencias** | G1 y G2 como entrega propia; G3 según lo anterior | No (agrega identidad) |
+| **A · Precio de lista** | Conservar valores; 532 solo como referencia de comparación | No |
+| **B · Nombres** | B1–B6 aprobables (adoptar la forma observada en Brasil, sin afirmar que es la vigente del catálogo); B7 conservar | No: solo nombres visibles y búsqueda |
+| **C · Duplicados** | Dependencias comprobadas; **ninguna desactivación aprobada**; C1 pendiente de Operaciones; C5 decidir antes el precio manual Rappi | **Sí, en agregados**: conteo de productos activos, alertas por tipo y promedios de margen (C6 los baja). No en precios ni costos de otras recetas |
+| **D · Alias** | Candidatos, no aprobados | No |
+| **E · Tamaños** | E1 solo para 21 productos verificados; E2, E3 y E5 pendientes; E4 por decidir; E6 confirmar | No, salvo E4 (a) |
+| **F · Sin receta** | Solicitud a Operaciones/Compras (`18`) antes de crear | Agregaría costeo nuevo |
+| **G · Correspondencias** | Procedimiento del lote 1 preparado (`17`), sin aplicar; 34 códigos pendientes únicos | No (agrega identidad) |
