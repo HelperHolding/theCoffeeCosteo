@@ -1,0 +1,14 @@
+{
+ "fecha": "2026-10-26T17:06:11.348Z",
+ "destino": "local",
+ "modo": "revertir",
+ "registroAntes": [
+  "20261024000022",
+  "20261023000021"
+ ],
+ "objetosAntes": [
+  "la tabla tiene 57 filas"
+ ],
+ "error": "Los objetos de la 22 no están como los dejó la migración. No se revierte.",
+ "transaccion": "rollback"
+}

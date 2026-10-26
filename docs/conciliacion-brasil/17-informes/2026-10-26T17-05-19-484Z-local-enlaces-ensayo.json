@@ -1,0 +1,28 @@
+{
+ "fecha": "2026-10-26T17:05:19.484Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "carga_id": "d6ca1b4f-84b1-4ccb-a886-321df4104ce3",
+ "lote": {
+  "filas": 57,
+  "huella": "7c889bd4620bbd3c09b28526561fe8badf3c14c9e0baf4529631277d8f25c47a"
+ },
+ "antes": {
+  "filasEnTabla": 0,
+  "delLote": 0,
+  "deEstaCarga": 0
+ },
+ "enlaces": [],
+ "totales": {
+  "alta": 0,
+  "sin cambio": 0,
+  "baja": 0,
+  "problema": 0
+ },
+ "idsPropios": [],
+ "bitacoraPropia": 0,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "error": "La tabla producto_codigo_pos no existe (migración 22 no aplicada)"
+}

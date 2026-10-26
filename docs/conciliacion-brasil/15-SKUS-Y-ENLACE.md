@@ -2,6 +2,8 @@
 
 **Origen:** observación del equipo de productos: «algunos productos no traen SKU y por eso no se traen algunos aspectos de las órdenes». Fecha: 2026-10-23.
 
+**Hipótesis pendiente del proveedor:** la ausencia de mapeo o SKU en Rappi/POS explicaría Generic y los tamaños que no llegan, pero **no está confirmada** (preguntas 13–21 de `06`).
+
 **Alcance:** análisis local (muestra de fase 2: 4 semanas, 612/583/532, 5,324 pedidos) + inventario de Costeo. **Nada se escribió en la base.** Lista candidata: [`15-enlace-codigos.csv`](15-enlace-codigos.csv).
 
 ## 1. ¿Faltan SKU en lo que llega?
@@ -79,3 +81,50 @@ Es una corrección funcional nueva: migración en la base de producción más ca
 - El cotejo de precios de `04` pasaría a hacerse por código y no por nombre.
 
 **Lo que este enlace NO resuelve:** los artículos y opciones de Rappi que no llegan (Generic, tamaños perdidos). Eso requiere que el proveedor o Rappi asignen SKU y mapeen esas opciones.
+
+## 4. Verificación de candidatos (aprobada por Carlo el 2026-10-23)
+
+Herramienta: `scripts/conciliacion/verificar-enlaces.ts`, local. Resultado: [`15-enlace-codigos.csv`](15-enlace-codigos.csv), con columnas de verificación y motivo.
+
+Cada código se verifica en cinco dimensiones:
+
+| Dimensión | Criterio |
+|---|---|
+| **Código** | Un solo nombre observado; no es `GENERIC` ni vacío |
+| **Nombre** | Exacto contra la receta (lote 1). Si solo difiere en mayúsculas o espacios, queda pendiente de B2 |
+| **Contexto** | Sucursales y canales donde aparece. El precio de 532 Mostrador frente a `precio_lista` se anota como evidencia, no bloquea |
+| **Variante** | Otra receta con el mismo nombre canónico (duplicados como Urban Chocolat / Urban Chocolate) o con el mismo nombre más un tamaño («Iced Latte Large») → ambiguo |
+| **Tamaño** | Vasos observados fuera de Rappi frente a los tamaños de la receta: con vasos ↔ Chica+Grande; sin vaso ↔ Único. Las diferencias o mezclas quedan pendientes |
+
+| Estado | Códigos | Líneas (4 semanas) |
+|---|---|---|
+| **Lote 1 (verificado)** | **57** | 6,502 |
+| Pendiente | 34 | — |
+
+**Pendientes por motivo:**
+- **Sin receta local (B3/B6), 17:** Pumpkin Iced Latte, Pumpkin Latte, los «… Frap», Pan de Muerto, Espresso Tonic, Zoé Water y combos nuevos.
+- **Forma del nombre (B2), 7:** Pain au Chocolat, Grilled Ham Cheese and Tomato Sandwich, Croissant filled with cheese and ham, Iced Latte +  Ham & Cheese Sandwich, Brownie with ice cream, White bag 250g y Black edition 250g.
+- **Variante en Costeo, 2:**
+  - `5IL` Iced Latte, por la existencia de «Iced Latte Large»;
+  - `4UC` Urban Chocolate, por el duplicado «Urban Chocolat».
+- **Tamaño, 8:**
+  - combos con vaso cuya receta es «Único» (True White + …, Iced Latte + Cookie Tradicional, Iced Latte +  Ham & Cheese Sandwich);
+  - Cold Drip V60 y Cold Drip V60 + Milk, que llegan sin vaso con receta Chica+Grande;
+  - mezcla de con y sin vaso en Gelato Frappé Coffee y en las dos Fresh Soda.
+
+**No se renombraron ni crearon recetas.**
+
+## 5. Migración 22 y carga del lote 1 (sin aplicar)
+
+**Rama:** `feat/sku-enlace-pos`, actualizada con `main` el 2026-10-26.
+
+**El procedimiento vigente está en [`17-PROCEDIMIENTO-SKU-LOTE-1.md`](17-PROCEDIMIENTO-SKU-LOTE-1.md):**
+- el modelo revisado: `carga_id`, autoría fijada por un trigger, bitácora sin `receta_id`;
+- el lote fijado [`17-lote-1.csv`](17-lote-1.csv), con 57 códigos;
+- los scripts de ensayo, aplicación y reversión, con sus pruebas;
+- el ensayo sobre la copia local del 2026-10-26;
+- los pasos remotos, cada uno pendiente de aprobación.
+
+**Historial:** el primer dry-run (respaldo del 2026-10-23, con el script `cargar-enlaces.ts` que solo funcionaba en local, ya retirado) dio 57 altas, 0 problemas e idempotencia.
+
+**Lotes siguientes:** los 6 códigos de B1–B6 son un lote adicional propuesto. Los demás, solo después de las decisiones C–F pendientes.

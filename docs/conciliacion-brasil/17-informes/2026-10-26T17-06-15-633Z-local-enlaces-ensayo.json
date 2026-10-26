@@ -1,0 +1,436 @@
+{
+ "fecha": "2026-10-26T17:06:15.633Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "carga_id": "f11b059b-5d22-4182-b851-197ef950a99e",
+ "lote": {
+  "filas": 57,
+  "huella": "7c889bd4620bbd3c09b28526561fe8badf3c14c9e0baf4529631277d8f25c47a"
+ },
+ "antes": {
+  "filasEnTabla": 57,
+  "delLote": 57,
+  "deEstaCarga": 0
+ },
+ "enlaces": [
+  {
+   "codigo": "1COLDB",
+   "receta_id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "27e1c1bc-5487-4c96-977d-f7402627ce4b"
+  },
+  {
+   "codigo": "1FC",
+   "receta_id": "f33b95a8-a338-4009-8c03-42edfd81bb6a",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "48a94f06-5bc6-45cb-9f66-c38f01c9c505"
+  },
+  {
+   "codigo": "1HDV60",
+   "receta_id": "e0b13ec8-1c24-4ed8-9be2-5198d63a5485",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "59fe5b29-7607-48a1-a5b0-b7a2bbb304b0"
+  },
+  {
+   "codigo": "1IC",
+   "receta_id": "15556232-34f4-490e-a9b7-0c01998bc4c1",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "ca757762-6efd-48e3-9af2-e25583e02893"
+  },
+  {
+   "codigo": "1ICHAI",
+   "receta_id": "130033f6-dd70-4178-8366-945ea9674199",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "4c422ab0-6e75-4723-ac7e-172dc6e4984f"
+  },
+  {
+   "codigo": "1PB",
+   "receta_id": "89e80a88-123d-4b13-b166-f4e56c506525",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "0e2c7e68-015f-4894-a647-0c91ea3666d8"
+  },
+  {
+   "codigo": "1TB",
+   "receta_id": "96e85958-1f5a-44cf-98d7-acd7c7d8102c",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "29a9dc46-51ea-4d0b-a758-72b8243578d8"
+  },
+  {
+   "codigo": "2AM",
+   "receta_id": "500360bd-fd76-4e22-bf01-9bd3ed6e2ae7",
+   "resultado": "problema",
+   "problemas": [
+    "la receta se llama «Americano (renombrada)», no «Americano»"
+   ],
+   "id": "6202913c-b824-4a41-b9d4-dc759818a9e2"
+  },
+  {
+   "codigo": "2CBKE",
+   "receta_id": "8359cad0-fe26-402b-9389-70775647164c",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "6b1f26e5-6998-45ab-9303-a96a1d37d271"
+  },
+  {
+   "codigo": "2FOOD2",
+   "receta_id": "0720b789-f345-43d3-a742-de49e369e3f3",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "fb10a174-138f-4951-9c2b-d032ec566371"
+  },
+  {
+   "codigo": "2SC",
+   "receta_id": "7867787b-4957-485c-822b-3106558d33a1",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "0f222e4e-0566-4fe0-8d9b-da0fcad94b60"
+  },
+  {
+   "codigo": "2VLT",
+   "receta_id": "1183a781-40b8-4654-9f49-92d317873907",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "5794394f-31f1-42c7-80cb-ce19c035c318"
+  },
+  {
+   "codigo": "3BG",
+   "receta_id": "af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "50352145-f691-4914-b253-814a0456ec36"
+  },
+  {
+   "codigo": "3MC",
+   "receta_id": "da45b5bd-3eca-452e-a18e-5a558e4dc517",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "e182ef06-fe13-43f9-aaa8-53f2f9f5203b"
+  },
+  {
+   "codigo": "3TBB",
+   "receta_id": "5d918d0f-3cbc-4c86-a0fb-f965df7ba976",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "e46244f5-ce75-478e-abd9-dd3ee78aae04"
+  },
+  {
+   "codigo": "4MIL",
+   "receta_id": "9756eec9-1f09-45ee-a45b-21ac8c54bb22",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "0adb916a-a20f-4f6e-bf6f-95ab17393579"
+  },
+  {
+   "codigo": "4TBS",
+   "receta_id": "7962a115-d69b-4b9d-afa8-8eb753b077ab",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "9695dc0e-67cb-4b03-b393-39e398ebb089"
+  },
+  {
+   "codigo": "4TW",
+   "receta_id": "a96339d6-80e7-440b-a33b-bca51440d8e6",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "e6bb252c-fd17-4c94-821f-9c56f8faf604"
+  },
+  {
+   "codigo": "5CR",
+   "receta_id": "9de55f8e-f159-461f-b60e-22d70dfbd6b7",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "9d2787f5-5962-4d1e-959b-ce66f1c7921c"
+  },
+  {
+   "codigo": "5MC",
+   "receta_id": "c7ca994c-897c-45d7-a62f-a7ba2f66bbce",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "66d4c9b2-2cd3-4632-bebe-581b621f65bc"
+  },
+  {
+   "codigo": "5MUG",
+   "receta_id": "cef677b4-0976-4640-8bc7-2ce82337466f",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "187f7ced-3ad7-4529-b442-b877f8a08537"
+  },
+  {
+   "codigo": "6CM",
+   "receta_id": "5153b158-4329-4ffd-9e79-9cc9d4f06a2a",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "bc43f44f-a866-4153-8ff5-976c1bf3ef06"
+  },
+  {
+   "codigo": "6ICB",
+   "receta_id": "cb33752f-e335-46ec-b091-a8a2229eb946",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "5cfe72ef-5fb5-4846-8881-d2f208937534"
+  },
+  {
+   "codigo": "7IC",
+   "receta_id": "4b651700-0745-42fe-8e78-7b44dbdb66ee",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "2dbcfeec-b491-413f-8f77-333f0e24183d"
+  },
+  {
+   "codigo": "7MVT",
+   "receta_id": "3f7f8456-b0a4-49fd-be25-32c1f4b0e17c",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "4d15b10d-333d-4ed8-b3dc-5acc4efda8b4"
+  },
+  {
+   "codigo": "9IMT",
+   "receta_id": "e201b60f-62e1-4c56-80e5-2b4873baf74f",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "7bb98651-a8ca-49a3-98d2-c5af1d7952df"
+  },
+  {
+   "codigo": "ACABOWAPP",
+   "receta_id": "07360c9c-6930-46ef-b462-af625645b850",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "6e019760-457e-42c0-b992-8155088c28ca"
+  },
+  {
+   "codigo": "ALMCROAPP",
+   "receta_id": "d587f0e8-286f-4479-84da-3778a025a3ff",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "c1eeef81-86af-45da-81c1-d62dccb44d99"
+  },
+  {
+   "codigo": "BRO13",
+   "receta_id": "be20a271-b39f-43bb-96d3-2ab7be6db227",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "09aa9559-8840-4018-a23c-af134d88c7f2"
+  },
+  {
+   "codigo": "CAKBANAPP",
+   "receta_id": "dfc7c79e-a484-4e61-8306-063acc0fe9c8",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "38876747-46f3-4bac-abc2-1cb7c18761a2"
+  },
+  {
+   "codigo": "CAKLEMAPP",
+   "receta_id": "6312fc43-adad-4eca-a8a9-7427bb099ea0",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "ebea9ff1-3ed9-431e-b969-37737d962fef"
+  },
+  {
+   "codigo": "CHECROAPP",
+   "receta_id": "49a02218-0eb3-4a49-8742-c4b6c6c0da9c",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "1b899161-1c3c-447f-97eb-294bee9afbc7"
+  },
+  {
+   "codigo": "COOCHOAPP",
+   "receta_id": "c797afe9-e8be-4971-98f3-64396b651661",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "2d178c44-b246-46b6-868f-17efad8f8778"
+  },
+  {
+   "codigo": "COOTRAAPP",
+   "receta_id": "808d4a61-7086-468b-9879-9ce4cf9c9ae7",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "627f6555-7927-4ff0-9614-c2e8a0e8a64e"
+  },
+  {
+   "codigo": "CROGOUAPP",
+   "receta_id": "5e096086-8d78-4ea5-a570-b86d9f5a255d",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "a0ff1005-6782-4dd8-88b1-3e1006800f35"
+  },
+  {
+   "codigo": "CROMATAPP",
+   "receta_id": "af32e295-9551-4f15-9071-520cb616cf57",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "197b21a5-c7bc-4742-b859-791ab52bf593"
+  },
+  {
+   "codigo": "EVIPETAPP",
+   "receta_id": "b1b77782-47b2-4e05-820a-c1b75aa438d1",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "53b62495-8b01-4b4f-aa93-13ed6baa8338"
+  },
+  {
+   "codigo": "FELSCHAPP",
+   "receta_id": "fb4ffbc7-8a31-4261-8534-c9885f51fc58",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "f77f79cf-2221-4567-8ba1-f5cbbfa414d9"
+  },
+  {
+   "codigo": "HALCRCAPP",
+   "receta_id": "19be1f5f-d141-4033-91e9-d6c22cb51878",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "e931d5a8-107a-4e1c-8116-dab43b8e4159"
+  },
+  {
+   "codigo": "ICEBLMAPP",
+   "receta_id": "4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "c87b2361-c907-4614-95a4-e263439bed4f"
+  },
+  {
+   "codigo": "ICECHOAPP",
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "881e92eb-88e7-4bc1-a43d-fe070a97bd10"
+  },
+  {
+   "codigo": "KITEDIAPP",
+   "receta_id": "e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "ee289564-5491-44e6-8c56-83b5fc22cfc9"
+  },
+  {
+   "codigo": "KITWHIAPP",
+   "receta_id": "bae9c18a-4715-4efe-9517-f63871f3149f",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "f9515630-a249-44e6-8578-5cc9171aa5be"
+  },
+  {
+   "codigo": "KOAMAVAPP",
+   "receta_id": "8034ac0e-065e-49a8-98a4-26b0f98c9fb0",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "2834ebd2-ffb5-4fcf-b5df-66954b4050eb"
+  },
+  {
+   "codigo": "KOAMDLAPP",
+   "receta_id": "3f620d3f-01fe-4316-9050-78635a627841",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "aceae9a3-6045-4ea7-b576-119439f82135"
+  },
+  {
+   "codigo": "MACCHIAPP",
+   "receta_id": "4255bb6b-1a50-42a4-896d-d3f424b6ceab",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "8f3619af-5eba-415f-883f-4ef143861e0f"
+  },
+  {
+   "codigo": "MQ1",
+   "receta_id": "ae3742b2-0188-4fc3-88c4-533a8ecb40c9",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "a7bb91e7-0ed6-4add-abe4-f762545b67ca"
+  },
+  {
+   "codigo": "PCFICEAPP",
+   "receta_id": "1a316b88-1212-4403-9dfd-4de2652653ab",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "68aabda1-2c70-4133-acc7-85ab62db24e7"
+  },
+  {
+   "codigo": "PCFMATAPP",
+   "receta_id": "be97f8cd-e66b-4dca-a38a-c971bdecd3d3",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "7c67d5dc-a48b-416c-ad5a-062befefb2e3"
+  },
+  {
+   "codigo": "QQ2",
+   "receta_id": "9c5f7529-8809-464a-a61a-911d507e2d03",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "e672fbd9-3ad9-427e-ab9a-1801ad59d055"
+  },
+  {
+   "codigo": "ROUHAZAPP",
+   "receta_id": "99ec3251-4296-4cd2-9b66-b5fcb1f75ba4",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "3a0326dc-cc6a-4bc3-a62d-69d15ca4e13b"
+  },
+  {
+   "codigo": "SHCI",
+   "receta_id": "0252e4e5-3d19-49c1-9f01-2b0f72c1e21b",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "17b5520b-af5e-4267-aa0e-e48c64740176"
+  },
+  {
+   "codigo": "SHMA",
+   "receta_id": "22e7e73c-3f8e-471d-b86a-63a35fcfcb64",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "99bbafdd-cbd5-4af6-a2ec-d9e0c094fb45"
+  },
+  {
+   "codigo": "SOICAUAPP",
+   "receta_id": "087d714a-45ca-44da-a3ad-55ce92a2bccb",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "5e8f35fa-04a6-450f-88d1-2e8652b48666"
+  },
+  {
+   "codigo": "SOLAAUAPP",
+   "receta_id": "2cc57a88-1966-4f7d-9604-461978c7c252",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "1dbb60ec-28ac-4000-ad9f-a8f7d0c8ead7"
+  },
+  {
+   "codigo": "UMBRE",
+   "receta_id": "74e9cffe-f459-42a5-ac57-4e58277ad8f7",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "d235e9c9-4553-499d-8f31-0bb43d4f1fb2"
+  },
+  {
+   "codigo": "WATPERAPP",
+   "receta_id": "a801c379-90ea-446f-a303-d58d579de592",
+   "resultado": "sin cambio",
+   "problemas": [],
+   "id": "02eceb2e-d2c6-46c5-9348-93ea58c2eea4"
+  }
+ ],
+ "totales": {
+  "alta": 0,
+  "sin cambio": 56,
+  "baja": 0,
+  "problema": 1
+ },
+ "idsPropios": [],
+ "bitacoraPropia": 0,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "despues": {
+  "filasEnTabla": 57,
+  "delLote": 57,
+  "deEstaCarga": 0
+ },
+ "comercialSinCambios": true,
+ "error": "1 código(s) con problemas: no se aplica ninguno"
+}
