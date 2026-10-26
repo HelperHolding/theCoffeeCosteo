@@ -1,8 +1,11 @@
 # 17 · Procedimiento: migración 22 y lote 1 de códigos POS (57)
 
-**Estado al 2026-10-26:** preparado y probado en local; **nada se aplicó ni se cargó en producción.**
-- La rama `feat/sku-enlace-pos` está actualizada con `main` (`ba69a00`) y va en un PR **solo para revisión**.
-- **NO HACER MERGE del PR antes de aplicar y registrar la 22:** con «Deploy to production» activo, el merge aplicaría la migración sola.
+**Estado al 2026-10-26 17:31 UTC:**
+- **La migración 22 está aplicada y registrada en producción**, con la tabla vacía.
+- **Los 57 enlaces no se han cargado.**
+- No hubo merge ni despliegue.
+- La rama `feat/sku-enlace-pos` está actualizada con `main` (`ba69a00`) y va en el PR #23, **solo para revisión**.
+- **El merge sigue sin autorizar.** Como la 22 ya está registrada, la integración «Deploy to production» no debería volver a aplicarla. Aun así, el merge se hará solo con aprobación y se verificará después.
 - Cada paso remoto de abajo requiere aprobación expresa de Carlo.
 
 ## Qué incluye y qué no
@@ -189,12 +192,43 @@ El detalle está en la carpeta del respaldo (`verificacion-restauracion.json` y 
 1. **Revisión del PR.** No hacer merge.
 2. ~~**Respaldo y captura previa**~~ **Hecho el 2026-10-26 a las 17:26 UTC** (arriba). Si pasa tiempo antes de aplicar, se repite.
 3. ~~**Ensayo remoto de la 22**~~ **Hecho el 2026-10-26 a las 17:27 UTC, con ROLLBACK** (arriba). Falta que Carlo revise el informe.
-4. **Aplicar la 22:** `… --aplicar --confirmo jpqkmnfjwzniptszjuli`. La versión queda registrada en la misma transacción.
+4. ~~**Aplicar la 22**~~ **Hecho el 2026-10-26 a las 17:31 UTC** (detalle abajo).
 
-   Verificar después en solo lectura:
-   - tabla vacía, 7 políticas con su huella;
-   - anon sin acceso, lectura de un perfil activo, OAuth sin escritura;
-   - las 145 políticas previas, idénticas.
+## Aplicación de la migración 22 (2026-10-26 17:31 UTC, autorizada por Carlo)
+
+**Origen:** commit revisado del PR #23, `dec1916`. El checkout era idéntico al de `origin` y al head del PR.
+
+**Precondiciones**, comprobadas antes en solo lectura y de nuevo dentro de la transacción:
+- última versión `20261023000021`, 21 en total, sin la 22;
+- la tabla y la función nuevas no existían;
+- 145 políticas, igual que en el ensayo.
+
+Se tomó una captura previa de 145 políticas, 26 funciones y 34 tablas, con su ACL y RLS, más la huella de 12 tablas comerciales y de configuración.
+
+**Aplicación:** `migracion-22-aplicar.ts --aplicar --confirmo jpqkmnfjwzniptszjuli`. El informe está en `17-informes/2026-10-26T17-31-03-112Z-jpqkmnfjwzniptszjuli-migracion22-aplicar.json`.
+
+| Dato | Resultado |
+|---|---|
+| Cambio | 167 ms |
+| Lo previo | 0 diferencias |
+| Objetos nuevos | Exactamente los esperados |
+| Políticas | 145 → 152 |
+| Registro | `20261024000022` |
+| Cierre | **COMMIT** confirmado (salida 0) |
+
+**Verificación con una conexión nueva** (solo lectura):
+- versión **22 registrada**, la última, 22 en total;
+- la tabla existe y está **vacía**;
+- objetos de la 22 **sin observaciones**:
+  - 7 políticas con la huella esperada;
+  - función sin EXECUTE para anon ni authenticated, con su search_path;
+  - RLS activa; grants exactos (anon ninguno; authenticated con SELECT, INSERT, UPDATE y DELETE);
+  - columnas y triggers esperados;
+- **objetos previos idénticos** a la captura: 145 políticas, 26 funciones y las ACL y RLS de las 34 tablas;
+- **datos comerciales y de configuración idénticos**, con el mismo conteo y md5: \`recetas\` (160), \`producto_tamanos\`, \`precio_canal_manual\`, \`receta_lineas\`, \`linea_cantidades\`, \`insumos\`, \`canales\`, \`tamanos\`, \`parametros\`, las categorías y \`perfiles\`;
+- **roles**, en una transacción de solo lectura: anon recibe *permission denied*; un perfil admin activo lee la tabla (0 filas).
+
+  La escritura de operaciones y admin, y que OAuth no pueda escribir, están probadas en PGlite y en la copia local. No se probaron en producción, para no escribir.
 5. **Ensayo remoto de los 57:** `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --usuario <uuid>` (ROLLBACK). Esperado: 57 altas, 0 problemas, 57 registros propios en la bitácora y sin cambios comerciales.
 6. **Carga:** `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>`. Anotar el `carga_id`.
 7. **Comprobar:**
