@@ -251,3 +251,45 @@ Se revalidó contra Costeo actual sin cargar ni modificar correspondencias: `pro
 | 3CBBE | Sí | Sí | sin vaso → Único | Sin ventas sin descuento en 532; Costeo 550 | Nombre y tamaño correctos; el precio no se puede contrastar |
 
 **No se modificó ninguna correspondencia.** Pasar estos códigos al lote verificado, de forma inmediata o en un lote 2, es una decisión aparte de Carlo. Entraría en la rama `feat/sku-enlace-pos` como cambio revisado. Si se agregan al lote 1 actual, este pasaría de 57 a 62 códigos sin BRICE, o a 63 con él.
+
+## Cierre de la entrega (2026-10-26)
+
+**Estado: CERRADA.** Los renombres B1–B6 están aplicados, verificados y documentados. El script no se volvió a ejecutar después de la aplicación y del segundo ensayo.
+
+### Merge del PR #21
+
+Carlo autorizó el merge con dos condiciones: que los checks del commit final `7290490` estuvieran aprobados y que el diff no incluyera migraciones ni renombres automáticos. Ambas se cumplieron:
+
+- **Checks de `7290490`:**
+  - Vercel: success;
+  - Vercel Preview Comments: success;
+  - Supabase Preview: skipped, porque no hay migraciones;
+  - estado del PR: mergeable y clean.
+- **Diff contra `main`:** 10 archivos nuevos:
+  - 7 de documentación (plan, CSV e informes JSON);
+  - `scripts/conciliacion/renombres-b.ts` y `renombres-b-aplicar.ts`;
+  - `tests/db/renombres-b.test.ts`.
+
+  No hay nada en `supabase/`, `app/`, `package.json`, configuración de Next, Vercel ni CI. Ningún archivo importa ni invoca el script: solo corre a mano.
+- **Merge:** `98a67cc`, el 2026-10-26 a las 16:29:23 UTC. Se fijó al head `7290490` con `--match-head-commit`.
+
+### Publicación automática
+
+- Despliegue de Vercel a Production del commit `98a67cc`: success (16:29:48 UTC).
+- Check de Supabase en el merge: success.
+- **Registro de migraciones sin cambios**, comprobado en solo lectura después del despliegue:
+  - última migración `20261023000021`, 21 en total;
+  - la tabla `producto_codigo_pos` no existe.
+- **Sin re-ejecución:**
+  - las 6 recetas conservan los nombres finales y las versiones 10/21/16/11/6/6;
+  - la bitácora sigue en 329 filas, con 335 como id máximo;
+  - no hay registros de renombre posteriores a la aplicación.
+
+### Pendiente, con aprobación independiente
+
+- **Migración 22** (`producto_codigo_pos`): `17`, rama `feat/sku-enlace-pos`.
+- **Promoción de códigos SKU:**
+  - los 5 candidatos revalidados (3FOOD3, BR3, CROSTUAPP, 1CBWB, 3CBBE);
+  - BRICE, sujeto a C3;
+  - los demás pendientes de `16-codigos-pendientes.csv`.
+- **C3:** Brownie com sorvete / Brownie with ice cream. Sigue sin autorizarse desactivar ni fusionar productos.
