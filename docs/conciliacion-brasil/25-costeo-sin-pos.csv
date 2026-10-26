@@ -1,0 +1,72 @@
+﻿receta_id,nombre_costeo,categoria,tamanos_y_precios,observacion
+ea7b36dd-a3c9-4f05-a2bb-24a8cfa709e8,Acai Cup,Sandwiches,Único=null,sin venta en la muestra de 4 semanas
+f654525d-c7d3-48e8-8c1e-5fa05792f72c,Affogato Coffee,BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+06e34841-72b8-4a18-acd2-16c1c59f05d4,Americano + Croissant Traditional,COMBO CON SANDWICH,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+7a2c037a-11e4-4339-9a77-5fb8f9a33156,Americano + Gingerbread,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+d21cefd9-3720-446d-a632-87cd518d5e8d,Americano + Grilled Ham & Cheese Sandwich,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+6de546fd-4fdf-40be-91f6-988d2f169585,Americano + Pain Au Chocolat,COMBO CON PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+fdeb5609-9f9d-4cb8-ad5e-f22bfb090fc3,Americano Affirin,BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+84d48573-0d61-4795-884d-cd57a029e649,Apple and Cinnamon Muffin,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+3b6d5ae9-3da0-4659-8bf8-ac1b017c3564,Black Forest Ham & Gouda Cheese Roll,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+220a1d8f-1556-407f-b04e-5581ed4644e0,Blueberry Muffin,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+ffc27925-601b-4a4f-b931-cb536d873072,Brownie com sorvete,PANADERÍA DULCE,Único=null,duplicado o variante pendiente del grupo C de 16
+fc3cdc79-7397-4fd8-bdc7-159cdd3f88b5,Carrot Cake,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+f9d4dfef-ef3c-4e80-ad4e-707f1837a0bd,Chai Iced Latte Protein Cold Foam,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+99548df1-0d40-4697-9101-d77fd98f2230,Chicken Wrap,Sandwiches,Único=null,sin venta en la muestra de 4 semanas
+3ce94df9-0731-4112-9a69-bfb3efbbcf2f,Choco Selva,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+9d99ee56-5699-45df-bcdb-116f6d55556c,Chocolate Muffin,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+7f0c20cf-a0a1-4e60-a2e4-b785e795cc48,Chocolate Muffin with Chocolate Chips,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+b96e19c8-6d29-4b59-a5c8-df551f2dddf1,Christmas Gingerbread,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+95c66c8f-c54a-4387-aa43-b3feb46c8e4b,Coffee Bag 250g + Tumbler 240ml,Coffee Line,Único=550,sin venta en la muestra de 4 semanas
+ebf94772-1bd1-4676-9202-b195b95da198,Cool Break,BEBIDA FRÍA,Único=null,sin venta en la muestra de 4 semanas
+ea3012a1-414e-49bf-ab9a-734564ba4967,Croissant filled with ricotta and honey,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+d05cbf84-407c-4871-af0a-c1009bc20ddb,Double Iced Latte + Banana Cake + Koulign Amann,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+7ab12793-381b-4d85-bcf1-3cf7914f9859,Double Matcha Iced Latte + Banana Cake + Koulign Am,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+3337fc34-6de8-48a1-b066-663073da7cc9,Double Salted Caramel + Traditional Cookie + Lemon,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+f440f5bc-2536-413b-991d-7b55ee8525a3,Dripper,Casual Line,Único=623,sin venta en la muestra de 4 semanas
+ad128eb6-8168-49b3-8393-bd97ac63fa8c,Felix Natural Water,Other Beverages,Único=50,sin venta en la muestra de 4 semanas
+3a89083e-caeb-4abe-8288-c70b0dfe005e,Focaccia Ham,Sandwiches,Único=156,sin venta en la muestra de 4 semanas
+59bc706c-56cb-47c0-89df-855259f855f8,Focaccia Serrano Ham,Sandwiches,Único=161,sin venta en la muestra de 4 semanas
+c665b62b-974b-4a90-b161-c3033645ce50,Gelato Frappé Chocolate,Gelato Frappés,Único=null,sin venta en la muestra de 4 semanas
+7ae83690-50a0-45f4-8d75-554635d41469,Gelato Frappé Horchai,Gelato Frappés,Único=118,sin venta en la muestra de 4 semanas
+96edf86d-025d-44e8-99a4-341bd819c8f3,Gelato Frappé Mocha,Gelato Frappés,Único=90,sin venta en la muestra de 4 semanas
+e1d91f2c-729c-4a7e-b058-b23029f2ac90,Iced Latte + Gingerbread,COMBO CON PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+7b5b57b7-5436-49c4-affc-cc3f00d46c4c,Iced Latte Large,Cold,Chica=70 Grande=null,duplicado o variante pendiente del grupo C de 16
+7679cffd-2651-49de-9481-0cf22626e707,Iced Latte Protein Cold Foam,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+33cc9f0a-c972-4ea9-bb91-980a69c03b33,Iced latte white + koulign amann,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+52ca3526-121b-4b47-b833-fe8b6aec473a,Iced Mocha,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+e79d1848-2fdb-4304-b6a5-2f45a31f27d5,King’s Cake,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+7b8d9e55-1e3a-40d2-9025-d868354b934d,Kit Coffee Editions,MERCH,Único=null,duplicado o variante pendiente del grupo C de 16
+b7a17e60-7307-4011-8ad0-e58da8900730,Kit White Bag 1kg,MERCH,Único=null,sin venta en la muestra de 4 semanas
+2a7ef247-045e-454c-b060-63d191c78dfa,Kouign Amann,Bakery,Único=55,sin venta en la muestra de 4 semanas
+e0247587-5ff1-4f22-b288-af2dc387e90a,Lemon Honey Coffee,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+d1d3282c-7810-4ef3-8bb5-60d0cdbc1aaa,Lungo (Pure Black),BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+7766397b-0414-4d25-a5d7-2dc089be4fab,Misto + Tomate Cereja,Sandwiches,Único=null,sin venta en la muestra de 4 semanas
+b0bac077-ef73-41e1-ad70-440d010363d4,Muffin Tradicional,PANADERÍA DULCE,Único=null,duplicado o variante pendiente del grupo C de 16
+ac7cac6c-1bbb-442f-a3ee-cd4e8215b4b0,Muffin Traditional,PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+d78f7eac-6e0e-44ee-bbfb-3fe2f60bc8f8,Nutty Iced Latte,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+e1dd078b-3700-4531-ae3b-afc653f2f747,Nutty Iced Latte (Authors),BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+e66cc6c0-4806-47f8-8cc0-bfc5dea2daf6,Nutty Iced Latte (Signature),BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+268f3e26-6922-4213-a4d4-c1f0ec48150c,Nutty Latte,BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+200eeebf-279f-4933-af69-b9faf46c4bb9,Nutty Latte (Authors),BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+28d68f0b-1896-491a-9350-02ca52d7d1bd,Nutty Latte (Signature),BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+bc55aaa9-ab9d-405b-8482-eeb32afa1b9a,Nutty Latte + Gingerbread,COMBO CON PANADERÍA DULCE,Único=null,sin venta en la muestra de 4 semanas
+f2d31173-75a0-4bdc-80a7-25f0637b6302,Paper filter,Casual Line,Único=250,sin venta en la muestra de 4 semanas
+b02705f1-c62d-45fe-a296-26e2a47fbf51,Pink Iced Latte,BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+c8fc5c76-ebb4-4a0d-a524-288948b4fa8d,Pink Iced Latte (Authors),BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+10a5231c-885a-4ef8-9e57-4125c8f3e061,Pink Iced Latte (Signature),BEBIDA FRÍA,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+d58d7455-e6a7-4d9f-88ad-f6d36e641947,Queijo Quente,Sandwiches,Único=null,sin venta en la muestra de 4 semanas
+f7e60a35-7421-4fa2-b788-076614a37a32,Ristretto (Pure Black),BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+ff2dbf97-34b0-476f-bd87-0e087089bb00,Sora Iced Latte,Cold,Chica=68 Grande=null,sin venta en la muestra de 4 semanas
+41822ed0-ab3c-49c4-925a-11177e7caafe,Sora Iced Latte (Authors),Cold,Chica=68 Grande=null,sin venta en la muestra de 4 semanas
+6d8ab183-81b0-4470-b061-da09b8b6f70a,Sora Latte,Hot,Chica=63 Grande=null,sin venta en la muestra de 4 semanas
+1ce9c30c-2f97-45be-9222-81b408d35f76,Sora Latte (Authors),Hot,Chica=63 Grande=null,sin venta en la muestra de 4 semanas
+84dcc6d7-83ae-48f2-96b3-8c3f15dc6eec,Still Evian Water 330ml,Other Beverages,Único=80,sin venta en la muestra de 4 semanas
+9af64455-e38c-497f-94f3-6b5cff7dd8e4,True white + Croissant Traditional,COMBO CON SANDWICH,Único=null,sin venta en la muestra de 4 semanas
+2f5faac6-539d-4d9f-9e61-5df1cef8d427,True white + koulign amann,COMBO CON PANADERÍA DULCE,Chica=null Grande=null,sin venta en la muestra de 4 semanas
+370a151c-2cc8-4d54-bea6-0b81310637e7,True White + Pain Au Chocolat,Combos,Único=94,sin venta en la muestra de 4 semanas
+77aed410-00a8-4b70-b04e-fdf15ddb1761,Urban Chocolat,Hot,Chica=78 Grande=null,duplicado o variante pendiente del grupo C de 16
+b156c17e-e21d-413a-af4d-caf52a592732,V60 Dripper + Coffee 250g,BEBIDAS CALIENTES,Único=null,sin venta en la muestra de 4 semanas
+d3351706-cedd-480e-8507-0c7a1b9c37e4,Wrap de Pollo,Sandwiches,Único=null,duplicado o variante pendiente del grupo C de 16
+c5e0a637-3b68-47fc-b804-7675f0c48d30,Zoé Water Twist Frutos Rojos,BEBIDA CERRADA,Único=null,D10: el POS vende ambos sabores con un solo código (ZOETWIAPP)
+069aa82f-2256-414e-8dc3-c1110a7bcb82,Zoé Water Twist Limón y Jengibre,BEBIDA CERRADA,Único=null,D10: el POS vende ambos sabores con un solo código (ZOETWIAPP)
