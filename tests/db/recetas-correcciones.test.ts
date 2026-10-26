@@ -438,20 +438,19 @@ describe('lote 2 (Urban Chocolate y Cold brew)', () => {
   });
 });
 
-describe('lote 3b (agua de Cold brew, borrador)', () => {
+describe('lote 3b (agua de Cold brew)', () => {
   const ruta = 'docs/conciliacion-brasil/24-lote-3b-cold-brew-agua.manifiesto.json';
   const texto = () =>
     readFileSync(ruta, 'utf8')
       .replace(/^\uFEFF/, '')
       .replace(/\r\n/g, '\n');
 
-  it('borrador: Cold brew v30, solo AGUA (concentrado 100/100, dilución 100/150) y no está aprobado', async () => {
-    expect(Object.keys(LOTES_RECETAS_APROBADOS)).not.toContain('recetario-lote-3b-coldbrew-agua');
-    await expect(leerLoteRecetas('recetario-lote-3b-coldbrew-agua')).rejects.toThrow(/no está aprobado/);
-    const sha256 = createHash('sha256').update(texto()).digest('hex');
-    const m = await leerLoteRecetas('recetario-lote-3b-coldbrew-agua', '.', {
-      'recetario-lote-3b-coldbrew-agua': { manifiesto: ruta, sha256 },
+  it('aprobado: Cold brew v30, solo AGUA (concentrado 100/100, dilución 100/150), huella fijada', async () => {
+    expect(LOTES_RECETAS_APROBADOS['recetario-lote-3b-coldbrew-agua']).toEqual({
+      manifiesto: ruta,
+      sha256: createHash('sha256').update(texto()).digest('hex'),
     });
+    const m = await leerLoteRecetas('recetario-lote-3b-coldbrew-agua');
     expect(m.receta).toEqual({
       id: '00f47aba-88e6-4ebc-a815-5833f8b29871',
       nombre: 'Cold brew',
@@ -463,7 +462,10 @@ describe('lote 3b (agua de Cold brew, borrador)', () => {
       'AGUA Grande 233.333→150',
     ]);
     expect(new Set(m.celdas.map((c) => c.insumo_id)).size).toBe(1);
-    expect(m.aprobacion).toMatch(/BORRADOR/);
+    expect(m.celdas.every((c) => c.insumo === 'AGUA')).toBe(true);
+    expect(m.aprobacion).toMatch(
+      /únicamente estas tres cantidades de AGUA.*sin modificar café, hielo ni precios/,
+    );
   });
 
   it('con la forma de Cold brew: el agua queda 200/250, el café, el hielo y el costo no cambian, y se revierte exacto', async () => {
