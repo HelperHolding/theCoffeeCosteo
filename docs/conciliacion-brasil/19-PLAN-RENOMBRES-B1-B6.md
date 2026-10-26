@@ -175,3 +175,79 @@ El informe está en `19-renombres/2026-10-26T16-20-44-425Z-jpqkmnfjwzniptszjuli-
 **Nota sobre la autoría:** hoy `updated_by` es null en las 6 recetas. Al aplicar quedará Carlo como autor, en `recetas.updated_by` y en la bitácora.
 
 **Siguiente paso:** la aplicación persistente, con `--aplicar --confirmo jpqkmnfjwzniptszjuli --usuario …`. **Sigue pendiente de aprobación.**
+
+## Aplicación en producción (2026-10-26 16:23 UTC)
+
+Autorizada por Carlo, solo para B1–B6. Comando ejecutado:
+
+```
+--aplicar --confirmo jpqkmnfjwzniptszjuli --usuario 63e994a6-5cbc-4605-b0d0-78bde4264890
+```
+
+Carlo aceptó quedar registrado como último editor y como autor de los cambios.
+
+### Antes de aplicar
+
+**Respaldo lógico nuevo:** `C:\Users\carlo\Respaldos\thecoffee-supabase\2026-10-26T1622Z\`, fuera del repo. Se hizo con `respaldo-logico.ts`, que usa pg_dump 17.
+
+| Comprobación del respaldo | Resultado |
+|---|---|
+| `pg_restore --list` | Sin errores; 71 tablas con datos |
+| sha256 de `base.dump` | `fe3e6a3e…40ff`, igual al manifiesto |
+| Contenido | Las 6 recetas con el nombre, la versión y el autor previos; la bitácora con 323 filas; 21 migraciones |
+
+**Precondiciones (solo lectura):** las 6 recetas estaban idénticas al estado verificado en el ensayo. Se compararon el nombre, la versión, el autor, `updated_at` y el estado activo. Además:
+- las 6 son productos;
+- 0 choques de nombre;
+- perfil admin activo;
+- 154 productos activos;
+- migraciones en 21;
+- la tabla 22 no existe.
+
+### Resultado
+
+El informe está en `19-renombres/2026-10-26T16-23-57-526Z-jpqkmnfjwzniptszjuli-aplicar.json`. La transacción terminó en **COMMIT**, con 6 renombradas, 0 problemas, 6 registros propios en la bitácora y 0 ajenos.
+
+| Decisión | Nombre final (exacto) | Versión | Autor | Bitácora |
+|---|---|---|---|---|
+| B1 | Pain au Chocolat | 9 → 10 | Carlo | 330 |
+| B2 | Grilled Ham Cheese and Tomato Sandwich | 20 → 21 | Carlo | 331 |
+| B3 | Croissant filled with cheese and ham | 15 → 16 | Carlo | 332 |
+| B4 | Brownie with ice cream | 10 → 11 | Carlo | 333 |
+| B5 | White bag 250g | 5 → 6 | Carlo | 334 |
+| B6 | Black edition 250g | 5 → 6 | Carlo | 335 |
+
+**Verificación posterior (solo lectura):**
+- **Bitácora:** pasó de 323 a 329 filas, exactamente 6 nuevas. Son los ids 330–335, `recetas.nombre`, con origen `carga_masiva`, autor Carlo y nota. Los ids 324–329 se consumieron en el ensayo (salto aceptado).
+- **Recetas:** las 6 siguen activas y siguen siendo 154 productos activos.
+- **Migraciones:** siguen en 21. La tabla 22 no existe.
+- **Precios y recetas sin cambios:** no hubo otros registros en la bitácora y el script exige que solo cambien el nombre y la versión.
+
+**Segundo ensayo:** `19-renombres/2026-10-26T16-24-28-650Z-jpqkmnfjwzniptszjuli-ensayo.json`. Dio 6 «sin cambio», 0 renombradas, 0 problemas, 0 registros nuevos en la bitácora y ROLLBACK. El estado quedó idéntico.
+
+**Reversión disponible:**
+
+```
+--revertir --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
+```
+
+El respaldo del 2026-10-26 sirve como respaldo de último recurso.
+
+## Revalidación SKU (solo lectura, 2026-10-26)
+
+Se revalidó contra Costeo actual sin cargar ni modificar correspondencias: `producto_codigo_pos` sigue sin existir y la migración 22 no se aplicó. La evidencia de la API es la de `15`, del periodo 2026-09-21 al 2026-10-18; no se volvió a consultar.
+
+**Lote 1:** los 57 códigos «lote 1 (verificado)» de la rama `feat/sku-enlace-pos` tienen **0 problemas**. Cada receta existe, es producto, está activa y conserva el nombre verificado. Ninguno dependía de B1–B6.
+
+**Los seis candidatos de B1–B6:**
+
+| Código | Nombre en la API = nombre en Costeo | Producto activo | Tamaño (API → Costeo) | Precio en 532 | Situación |
+|---|---|---|---|---|---|
+| 3FOOD3 | Sí | Sí | sin vaso → Único | 42 = 42 | Cumple los criterios |
+| BR3 | Sí | Sí | sin vaso → Único | 104 = 104 | Cumple los criterios |
+| CROSTUAPP | Sí | Sí | sin vaso → Único | 73 = 73 | Cumple los criterios |
+| BRICE | Sí | Sí | sin vaso → Único | 89 = 89 | Cumple los criterios, pero **sigue pendiente de C3**: qué brownie es el vigente |
+| 1CBWB | Sí | Sí | sin vaso → Único | 220 = 220 | Cumple los criterios |
+| 3CBBE | Sí | Sí | sin vaso → Único | Sin ventas sin descuento en 532; Costeo 550 | Nombre y tamaño correctos; el precio no se puede contrastar |
+
+**No se modificó ninguna correspondencia.** Pasar estos códigos al lote verificado, de forma inmediata o en un lote 2, es una decisión aparte de Carlo. Entraría en la rama `feat/sku-enlace-pos` como cambio revisado. Si se agregan al lote 1 actual, este pasaría de 57 a 62 códigos sin BRICE, o a 63 con él.

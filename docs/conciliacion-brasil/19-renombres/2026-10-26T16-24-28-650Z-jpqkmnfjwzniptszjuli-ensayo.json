@@ -1,0 +1,64 @@
+{
+ "fecha": "2026-10-26T16:24:28.650Z",
+ "destino": "jpqkmnfjwzniptszjuli",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "recetas": [
+  {
+   "decision": "B1",
+   "receta_id": "26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5",
+   "desde": "Pain Au Chocolat",
+   "hacia": "Pain au Chocolat",
+   "resultado": "sin cambio",
+   "problemas": []
+  },
+  {
+   "decision": "B2",
+   "receta_id": "ff0a88ca-d7c0-4d73-84a3-125815f9274e",
+   "desde": "Grilled Ham Cheese And Tomato Sandwich",
+   "hacia": "Grilled Ham Cheese and Tomato Sandwich",
+   "resultado": "sin cambio",
+   "problemas": []
+  },
+  {
+   "decision": "B3",
+   "receta_id": "4ac9187c-fdaf-4678-8e91-7ead2d596c9b",
+   "desde": "Croissant Filled With Cheese and Ham",
+   "hacia": "Croissant filled with cheese and ham",
+   "resultado": "sin cambio",
+   "problemas": []
+  },
+  {
+   "decision": "B4",
+   "receta_id": "2c8f400b-525f-4c30-8d64-f18be8b9334c",
+   "desde": "Brownie With Ice Cream",
+   "hacia": "Brownie with ice cream",
+   "resultado": "sin cambio",
+   "problemas": []
+  },
+  {
+   "decision": "B5",
+   "receta_id": "5ce9b244-40e2-4153-92b8-7c5dc38968d4",
+   "desde": "White Bag 250g",
+   "hacia": "White bag 250g",
+   "resultado": "sin cambio",
+   "problemas": []
+  },
+  {
+   "decision": "B6",
+   "receta_id": "d22e139c-c4d7-49b7-b8e6-9b13b40a3519",
+   "desde": "Black Edition 250g",
+   "hacia": "Black edition 250g",
+   "resultado": "sin cambio",
+   "problemas": []
+  }
+ ],
+ "totales": {
+  "renombrada": 0,
+  "sin cambio": 6,
+  "problema": 0
+ },
+ "bitacoraNueva": 0,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback"
+}
