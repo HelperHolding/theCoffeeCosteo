@@ -1,6 +1,6 @@
 # 28 · Lote 4 de códigos POS: Iced Latte y Urban Chocolate (preparado, sin cargar)
 
-**Estado (2026-10-27): preparado y ensayado en una copia local. No se cargó nada en producción.**
+**Estado (2026-10-27): preparado, ensayado en local y con dry-run remoto (ROLLBACK) verificado. No se cargó nada en producción.**
 - **Al cargar:** pasaría de **70 a 72 enlaces**, sin cambiar recetas, nombres, precios ni costos.
 - **Duplicados:** no se desactiva ninguno.
 - **Aprobación:** Carlo aprobó preparar el lote (doc 27, K2 para `5IL` y `4UC`). Cargarlo requiere otra autorización.
@@ -76,3 +76,14 @@
 6. Reversión, solo con aprobación: `--lote lote-4 --revertir --carga <carga_id>`.
 
 **Cobertura esperada:** de 84.1% a **91.9%** de la venta identificable sin GENERIC, o de 82.6% a 90.2% de la venta total (doc 27 §2.1).
+
+## Dry-run remoto (2026-10-27, 02:54 UTC; autorizado por Carlo, sin carga)
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2026-10-27T0250Z`** | El sha256 de `base.dump` coincide con el manifiesto. Restaurado en una copia local aislada y comparado con producción: 19,669 filas idénticas; solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS idénticas |
+| **Revalidación** (solo lectura) | Los **70 enlaces son idénticos** a los del cierre del lote 3. `5IL` y `4UC` no estaban cargados, y sus recetas (Iced Latte v26, Urban Chocolate v21) estaban activas y sin enlace. Recetas y costos sin cambios; perfil admin activo; bitácora 443 (máx. 563); migración 22 |
+| **Dry-run con ROLLBACK** (`3517a33`) | 2 altas, 0 problemas. Dentro de la transacción: 70 → **72**, solo con `4UC` → Urban Chocolate (`2c8b49a6…`) y `5IL` → Iced Latte (`fcf0d45d…`). Lotes 1 (57/57), 2 (5/5) y 3 (8/8) intactos antes y después. 2 registros propios en la bitácora (#564–565: autoría, origen y nota verificados por el cargador) y 0 ajenos. Sin cambios comerciales |
+| **Verificación** (conexión nueva) | La foto completa es **idéntica** a la previa: siguen los **70 enlaces originales**, sin `5IL` ni `4UC`. **No persistió bitácora** (443 registros, máx. 563; los ids 564–565 los consumió la secuencia durante el ROLLBACK). Recetas, costos, alertas, precios, líneas, cantidades e insumos sin cambios. **Última migración: la 22** |
+
+No se desactivó ningún duplicado ni se hizo merge.
