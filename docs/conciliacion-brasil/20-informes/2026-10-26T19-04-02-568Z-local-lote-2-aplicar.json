@@ -2,7 +2,7 @@
  "fecha": "2026-10-26T19:04:02.568Z",
  "destino": "local",
  "modo": "aplicar",
- "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "usuario": "<uuid-perfil>",
  "carga_id": "f3479afb-1cc8-479d-8aae-ecc8e8f157b2",
  "lote": {
   "nombre": "lote-2",

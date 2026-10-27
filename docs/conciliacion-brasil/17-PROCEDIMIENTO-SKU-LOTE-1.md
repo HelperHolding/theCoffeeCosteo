@@ -239,7 +239,7 @@ Se tomó una captura previa de 145 políticas, 26 funciones y 34 tablas, con su 
 **Comando:**
 
 ```
-npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --usuario 63e994a6-5cbc-4605-b0d0-78bde4264890
+npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --usuario <uuid-perfil>
 ```
 
 Modo ensayo: sin `--aplicar`. El perfil de Carlo se validó dentro de la transacción: admin, activo.

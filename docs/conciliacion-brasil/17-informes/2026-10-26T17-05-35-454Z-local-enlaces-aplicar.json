@@ -2,7 +2,7 @@
  "fecha": "2026-10-26T17:05:35.454Z",
  "destino": "local",
  "modo": "aplicar",
- "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "usuario": "<uuid-perfil>",
  "carga_id": "8427d6c3-21f1-482a-992e-20cb799063c5",
  "lote": {
   "filas": 57,
