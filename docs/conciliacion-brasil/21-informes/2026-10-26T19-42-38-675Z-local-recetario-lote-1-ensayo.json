@@ -1,0 +1,57 @@
+{
+ "fecha": "2026-10-26T19:42:38.675Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "lote": "recetario-lote-1",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "ejecucion": "052645eb-e160-49ee-bc76-2be11125f608",
+ "receta": {
+  "id": "7769fb2e-d7ac-46b6-abeb-e23634d40bd5",
+  "nombre": "Pumpkin Spice Frappé",
+  "versionEsperada": 29,
+  "versionAntes": 32,
+  "versionDespues": 32
+ },
+ "celdas": [
+  {
+   "insumo": "LECHE ENTERA",
+   "tamano": "Chica",
+   "previo": 30,
+   "nuevo": 35,
+   "antes": 35,
+   "resultado": "sin cambio",
+   "problemas": [],
+   "despues": 35
+  },
+  {
+   "insumo": "LECHE ENTERA",
+   "tamano": "Grande",
+   "previo": 55,
+   "nuevo": 70,
+   "antes": 70,
+   "resultado": "sin cambio",
+   "problemas": [],
+   "despues": 70
+  },
+  {
+   "insumo": "CHOBANI D.CREAMER PUMPKIN SPICE",
+   "tamano": "Grande",
+   "previo": 55,
+   "nuevo": 50,
+   "antes": 50,
+   "resultado": "sin cambio",
+   "problemas": [],
+   "despues": 50
+  }
+ ],
+ "totales": {
+  "cambiada": 0,
+  "sin cambio": 3,
+  "revertida": 0,
+  "problema": 0
+ },
+ "bitacoraPropia": 0,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "restoSinCambios": true
+}

@@ -1,0 +1,513 @@
+{
+ "lote": "hielo-gramos-lote-1",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3"
+ },
+ "origen": {
+  "id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+  "nombre": "HIELO",
+  "unidad": "ml",
+  "costo_paquete": 0,
+  "presentacion": 1
+ },
+ "destino": {
+  "nombre": "HIELO (g)",
+  "unidad": "gr",
+  "costo_paquete": 0,
+  "presentacion": 1,
+  "supuesto": "Valores técnicos provisionales, no validados: el costo $0 replica el costo actual de HIELO para que ningún costo cambie y NO confirma que el hielo sea gratuito; la presentación de 1 g no es una presentación de compra validada (no se copia la presentación en ml del origen). Pendiente de Compras (doc 22, pregunta 7)."
+ },
+ "lineas": [
+  {
+   "receta_id": "af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95",
+   "receta": "Black Ginger",
+   "linea_id": "15513c83-cf09-4af4-9eaf-5e67a51f9618",
+   "pagina": 39,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 28
+  },
+  {
+   "receta_id": "a00da002-92a3-4a48-ab47-b62ee9aa6a13",
+   "receta": "Chai Frappé",
+   "linea_id": "63111524-f126-4b5c-8933-34d2ce69a1dd",
+   "pagina": 53,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 312
+    }
+   ],
+   "version": 23
+  },
+  {
+   "receta_id": "130033f6-dd70-4178-8366-945ea9674199",
+   "receta": "Chai Iced Latte",
+   "linea_id": "d8fddadd-90bb-45c5-9b98-d85097a3fe79",
+   "pagina": 28,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 26
+  },
+  {
+   "receta_id": "f9d4dfef-ef3c-4e80-ad4e-707f1837a0bd",
+   "receta": "Chai Iced Latte Protein Cold Foam",
+   "linea_id": "4544f752-d730-4dd7-87df-349c0628e584",
+   "pagina": 57,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 140
+    }
+   ],
+   "version": 25
+  },
+  {
+   "receta_id": "ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf",
+   "receta": "Coffee Frappé",
+   "linea_id": "cf367b3a-d828-48fc-80b3-c807ef71a370",
+   "pagina": 50,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 360
+    }
+   ],
+   "version": 26
+  },
+  {
+   "receta_id": "cb33752f-e335-46ec-b091-a8a2229eb946",
+   "receta": "Iced Black",
+   "linea_id": "001a1805-f978-4a36-bb3d-2ea71d38653d",
+   "pagina": 22,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 25
+  },
+  {
+   "receta_id": "4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9",
+   "receta": "Iced Blueberry Matcha",
+   "linea_id": "5082aae9-158a-48ed-a9eb-f1a1582b4957",
+   "pagina": 59,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 29
+  },
+  {
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "receta": "Iced Chocolate",
+   "linea_id": "85b1937b-f075-494e-b690-52e398944403",
+   "pagina": 24,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 31
+  },
+  {
+   "receta_id": "fcf0d45d-76b2-48a4-8d96-d8abc228eca8",
+   "receta": "Iced Latte",
+   "linea_id": "83f259d3-5283-4bfd-9d5f-a66c017caac4",
+   "pagina": 21,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 25
+  },
+  {
+   "receta_id": "7b5b57b7-5436-49c4-affc-cc3f00d46c4c",
+   "receta": "Iced Latte Large",
+   "linea_id": "08af3cd8-b4ae-4db7-a6af-92b279103c34",
+   "pagina": 21,
+   "cantidades": [
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 17
+  },
+  {
+   "receta_id": "7679cffd-2651-49de-9481-0cf22626e707",
+   "receta": "Iced Latte Protein Cold Foam",
+   "linea_id": "46b12cfc-644d-4f1b-a2dc-bfaf18cd001f",
+   "pagina": 56,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 140
+    }
+   ],
+   "version": 25
+  },
+  {
+   "receta_id": "15556232-34f4-490e-a9b7-0c01998bc4c1",
+   "receta": "Iced Vanilla",
+   "linea_id": "feaa9469-6c85-48a7-aac2-78f3f3288d6f",
+   "pagina": 36,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 31
+  },
+  {
+   "receta_id": "e201b60f-62e1-4c56-80e5-2b4873baf74f",
+   "receta": "Ichigo Matcha",
+   "linea_id": "cef52f24-643f-49b6-8a2e-4b0d304d92d1",
+   "pagina": 38,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 34
+  },
+  {
+   "receta_id": "1a316b88-1212-4403-9dfd-4de2652653ab",
+   "receta": "Isopure Iced Latte",
+   "linea_id": "e751c585-31e5-4199-8b8a-8fcfd677d19d",
+   "pagina": 56,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 140
+    }
+   ],
+   "version": 31
+  },
+  {
+   "receta_id": "be97f8cd-e66b-4dca-a38a-c971bdecd3d3",
+   "receta": "Isopure Iced Matcha",
+   "linea_id": "5648f546-9a36-405e-9d24-7a042a1f0184",
+   "pagina": 58,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 140
+    }
+   ],
+   "version": 28
+  },
+  {
+   "receta_id": "bb72c7a6-d900-4d47-bf56-4a74654ccf4b",
+   "receta": "Matcha Frappé",
+   "linea_id": "40a235cf-637c-406a-bf3c-65efc0ab8fd4",
+   "pagina": 52,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 312
+    }
+   ],
+   "version": 29
+  },
+  {
+   "receta_id": "9756eec9-1f09-45ee-a45b-21ac8c54bb22",
+   "receta": "Matcha Iced Latte",
+   "linea_id": "eca67b87-4d50-4f27-9bbb-1c6e8ed95fa0",
+   "pagina": 23,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 25
+  },
+  {
+   "receta_id": "4b651700-0745-42fe-8e78-7b44dbdb66ee",
+   "receta": "Matcha Iced Mint",
+   "linea_id": "7a019d87-07d1-4a43-aa24-129b2bd77858",
+   "pagina": 37,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 28
+  },
+  {
+   "receta_id": "7769fb2e-d7ac-46b6-abeb-e23634d40bd5",
+   "receta": "Pumpkin Spice Frappé",
+   "linea_id": "438fb2dc-2f05-4ba0-bd8e-1fd0df68cb0b",
+   "pagina": 62,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 360
+    }
+   ],
+   "version": 32
+  },
+  {
+   "receta_id": "38847fe5-2d6f-4050-9fd7-aa94bb3d4024",
+   "receta": "Pumpkin Spice Iced Latte",
+   "linea_id": "f7d16179-7a64-4b0f-b645-6bd327d4f258",
+   "pagina": 61,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "version": 26
+  },
+  {
+   "receta_id": "7867787b-4957-485c-822b-3106558d33a1",
+   "receta": "Salted Caramel",
+   "linea_id": "bf809e20-a53d-4483-8e21-2c469a4e0668",
+   "pagina": 41,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 90
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 170
+    }
+   ],
+   "version": 31
+  },
+  {
+   "receta_id": "052a61f6-55ff-4ac8-9459-ab4939789420",
+   "receta": "Salted Caramel Frappé",
+   "linea_id": "2809e2f1-e229-4286-87e1-865f64fdf0de",
+   "pagina": 51,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 360
+    }
+   ],
+   "version": 32
+  },
+  {
+   "receta_id": "ff2dbf97-34b0-476f-bd87-0e087089bb00",
+   "receta": "Sora Iced Latte",
+   "linea_id": "981dd008-781a-4903-9458-789cfa5d371a",
+   "pagina": 40,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 200
+    }
+   ],
+   "version": 33
+  },
+  {
+   "receta_id": "41822ed0-ab3c-49c4-925a-11177e7caafe",
+   "receta": "Sora Iced Latte (Authors)",
+   "linea_id": "81f2d4b4-777a-4022-94a5-4906ac4bef8a",
+   "pagina": 40,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 200
+    }
+   ],
+   "version": 31
+  },
+  {
+   "receta_id": "087d714a-45ca-44da-a3ad-55ce92a2bccb",
+   "receta": "Sora Iced Latte (Signature)",
+   "linea_id": "53871c9a-059b-47bc-b8d4-c088179060c8",
+   "pagina": 40,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 100
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 200
+    }
+   ],
+   "version": 32
+  },
+  {
+   "receta_id": "817fe3be-7d8b-49be-8e1a-6acde12ccb1c",
+   "receta": "Taro Frappé",
+   "linea_id": "3bed7d6c-b5fe-472d-884d-6a0fa7a88b22",
+   "pagina": 54,
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 250
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 312
+    }
+   ],
+   "version": 23
+  }
+ ],
+ "aprobacion": "Aprobado por Carlo el 2026-10-26: reasignar las líneas verificadas sin Cold brew, conservando cantidades y costos; costo de compra del hielo sin confirmar."
+}

@@ -1,0 +1,92 @@
+﻿codigo,nombre_pos,lineas,receta_id,nombre_costeo,nombre_nuevo,tamanos_costeo,tamano_pos,precio_532,enlace,clase,motivo
+4TW,True White,820,a96339d6-80e7-440b-a33b-bca51440d8e6,True White,,Chica=68 Grande=78,Large+Regular,Chica 68=68 · Grande 78=78,sí,ya alineado,enlazado (4TW)
+2AM,Americano,421,500360bd-fd76-4e22-bf01-9bd3ed6e2ae7,Americano,,Chica=52 Grande=62,Large+Regular,Chica 52=52 · Grande 62=62,sí,ya alineado,enlazado (2AM)
+2SC,Salted Caramel,349,7867787b-4957-485c-822b-3106558d33a1,Salted Caramel,,Chica=94 Grande=104,Large+Regular,Chica 94=94 · Grande 104=104,sí,ya alineado,enlazado (2SC)
+4MIL,Matcha Iced Latte,317,9756eec9-1f09-45ee-a45b-21ac8c54bb22,Matcha Iced Latte,,Chica=67 Grande=77,Large+Regular,Chica 67=67 · Grande 77=77,sí,ya alineado,enlazado (4MIL)
+1IC,Iced Vanilla,270,15556232-34f4-490e-a9b7-0c01998bc4c1,Iced Vanilla,,Chica=99 Grande=109,Large+Regular,Chica 99=99 · Grande 109=109,sí,ya alineado,enlazado (1IC)
+MQ1,Grilled Ham & Cheese Sandwich,247,ae3742b2-0188-4fc3-88c4-533a8ecb40c9,Grilled Ham & Cheese Sandwich,,Único=89,sin vaso,Único 89=89,sí,ya alineado,enlazado (MQ1)
+2VLT,Vanilla Latte,230,1183a781-40b8-4654-9f49-92d317873907,Vanilla Latte,,Chica=78 Grande=88,Large+Regular,Chica 78=78 · Grande 88=88,sí,ya alineado,enlazado (2VLT)
+9IMT,Ichigo Matcha,218,e201b60f-62e1-4c56-80e5-2b4873baf74f,Ichigo Matcha,,Chica=87 Grande=97,Large+Regular,Chica 87=87 · Grande 97=97,sí,ya alineado,enlazado (9IMT)
+1ICHAI,Chai Iced Latte,196,130033f6-dd70-4178-8366-945ea9674199,Chai Iced Latte,,Chica=70 Grande=80,Large+Regular,Chica 70=70 · Grande 80=80,sí,ya alineado,enlazado (1ICHAI)
+PCFICEAPP,Isopure Iced Latte,195,1a316b88-1212-4403-9dfd-4de2652653ab,Isopure Iced Latte,,Chica=109 Grande=119,Large+Regular,Chica 109=109 · Grande 119=119,sí,ya alineado,enlazado (PCFICEAPP)
+CAKBANAPP,Banana Cake,173,dfc7c79e-a484-4e61-8306-063acc0fe9c8,Banana Cake,,Único=52,sin vaso,Único 52=52,sí,ya alineado,enlazado (CAKBANAPP)
+KOAMAVAPP,Hazelnut Kouign Amann,149,8034ac0e-065e-49a8-98a4-26b0f98c9fb0,Hazelnut Kouign Amann,,Único=52,sin vaso,Único 52=52,sí,ya alineado,enlazado (KOAMAVAPP)
+5CR,Cinnamon Roll,148,9de55f8e-f159-461f-b60e-22d70dfbd6b7,Cinnamon Roll,,Único=50,sin vaso,Único 50=50,sí,ya alineado,enlazado (5CR)
+6CM,Chai Latte,148,5153b158-4329-4ffd-9e79-9cc9d4f06a2a,Chai Latte,,Chica=68 Grande=78,Large+Regular,Chica 68=68 · Grande 78=78,sí,ya alineado,enlazado (6CM)
+1FC,Flat Caramel,141,f33b95a8-a338-4009-8c03-42edfd81bb6a,Flat Caramel,,Chica=77 Grande=87,Large+Regular,Chica 77=77 · Grande 87=87,sí,ya alineado,enlazado (1FC)
+COOTRAAPP,Cookie Traditional,131,808d4a61-7086-468b-9879-9ce4cf9c9ae7,Cookie Traditional,,Único=52,sin vaso,Único 52=52,sí,ya alineado,enlazado (COOTRAAPP)
+PCFMATAPP,Isopure Iced Matcha,130,be97f8cd-e66b-4dca-a38a-c971bdecd3d3,Isopure Iced Matcha,,Chica=109 Grande=119,Large+Regular,Chica 109=109 · Grande 119=119,sí,ya alineado,enlazado (PCFMATAPP)
+CAKLEMAPP,Lemon Cake,129,6312fc43-adad-4eca-a8a9-7427bb099ea0,Lemon Cake,,Único=45,sin vaso,Único 45=45,sí,ya alineado,enlazado (CAKLEMAPP)
+SOICAUAPP,Sora Iced Latte (Signature),121,087d714a-45ca-44da-a3ad-55ce92a2bccb,Sora Iced Latte (Signature),,Chica=68 Grande=78,Large+Regular,Chica 68=68 · Grande 78=78,sí,ya alineado,enlazado (SOICAUAPP)
+1COLDB,Cold brew,116,00f47aba-88e6-4ebc-a815-5833f8b29871,Cold brew,,Chica=78 Grande=88,Large+Regular,Chica 78=78 · Grande 88=88,sí,ya alineado,enlazado (1COLDB)
+3BG,Black Ginger,112,af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95,Black Ginger,,Chica=94 Grande=104,Large+Regular,Chica 94=94 · Grande 104=104,sí,ya alineado,enlazado (3BG)
+BRO13,Brownie,111,be20a271-b39f-43bb-96d3-2ab7be6db227,Brownie,,Único=63,sin vaso,Único 63=63,sí,ya alineado,enlazado (BRO13)
+ROUHAZAPP,Roulette Hazelnut,101,99ec3251-4296-4cd2-9b66-b5fcb1f75ba4,Roulette Hazelnut,,Único=63,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (ROUHAZAPP)
+3MC,Mad Mocha,100,da45b5bd-3eca-452e-a18e-5a558e4dc517,Mad Mocha,,Chica=84 Grande=94,Large+Regular,Chica 84=84 · Grande 94=94,sí,ya alineado,enlazado (3MC)
+6ICB,Iced Black,100,cb33752f-e335-46ec-b091-a8a2229eb946,Iced Black,,Chica=52 Grande=62,Large+Regular,Chica 52=52 · Grande 62=62,sí,ya alineado,enlazado (6ICB)
+ICEBLMAPP,Iced Blueberry Matcha,95,4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9,Iced Blueberry Matcha,,Chica=90 Grande=100,Large+Regular,sin ventas sin descuento en 532,sí,ya alineado,enlazado (ICEBLMAPP)
+2FOOD2,Croissant Traditional,93,0720b789-f345-43d3-a742-de49e369e3f3,Croissant Traditional,,Único=47,sin vaso,Único 47=47,sí,ya alineado,enlazado (2FOOD2)
+SHMA,Gelato Frappé Matcha,93,22e7e73c-3f8e-471d-b86a-63a35fcfcb64,Gelato Frappé Matcha,,Único=90,sin vaso,Único 90=90,sí,ya alineado,enlazado (SHMA)
+1PB,Pure Black (Double Shot),93,89e80a88-123d-4b13-b166-f4e56c506525,Pure Black (Double Shot),,Único=58,sin vaso,Único 58=58,sí,ya alineado,enlazado (1PB)
+MACCHIAPP,Macchiato,91,4255bb6b-1a50-42a4-896d-d3f424b6ceab,Macchiato,,Único=59,sin vaso,Único 59=59,sí,ya alineado,enlazado (MACCHIAPP)
+CROGOUAPP,Croissant Serrano & Gouda,88,5e096086-8d78-4ea5-a570-b86d9f5a255d,Croissant Serrano & Gouda,,Único=94,sin vaso,Único 94=94,sí,ya alineado,enlazado (CROGOUAPP)
+ICECHOAPP,Iced Chocolate,79,c55e8b1f-300e-42f7-9c4a-f57b038c987e,Iced Chocolate,,Chica=99 Grande=109,Large+Regular,Chica 99=99 · Grande 109=109,sí,ya alineado,enlazado (ICECHOAPP)
+SOLAAUAPP,Sora Latte (Signature),72,2cc57a88-1966-4f7d-9604-461978c7c252,Sora Latte (Signature),,Chica=63 Grande=73,Large+Regular,Chica 63=63 · Grande 73=73,sí,ya alineado,enlazado (SOLAAUAPP)
+5MC,Matcha Latte,68,c7ca994c-897c-45d7-a62f-a7ba2f66bbce,Matcha Latte,,Chica=68 Grande=78,Large+Regular,Chica 68=68 · Grande 78=78,sí,ya alineado,enlazado (5MC)
+ACABOWAPP,Açaí Bowl,61,07360c9c-6930-46ef-b462-af625645b850,Açaí Bowl,,Único=149,sin vaso,Único 149=149,sí,ya alineado,enlazado (ACABOWAPP)
+COOCHOAPP,Cookie Triple Chocolate,60,c797afe9-e8be-4971-98f3-64396b651661,Cookie Triple Chocolate,,Único=58,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (COOCHOAPP)
+7IC,Matcha Iced Mint,55,4b651700-0745-42fe-8e78-7b44dbdb66ee,Matcha Iced Mint,,Chica=87 Grande=97,Large+Regular,Grande 97=97,sí,ya alineado,enlazado (7IC)
+EVIPETAPP,Still Evian Water 500ml,55,b1b77782-47b2-4e05-820a-c1b75aa438d1,Still Evian Water 500ml,,Único=63,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (EVIPETAPP)
+QQ2,Grilled Cheese Sandwich,54,9c5f7529-8809-464a-a61a-911d507e2d03,Grilled Cheese Sandwich,,Único=78,sin vaso,Único 78=78,sí,ya alineado,enlazado (QQ2)
+SHCI,Gelato Frappé Chai,54,0252e4e5-3d19-49c1-9f01-2b0f72c1e21b,Gelato Frappé Chai,,Único=118,sin vaso,Único 118=118,sí,ya alineado,enlazado (SHCI)
+7MVT,Matcha Vanilla Latte,40,3f7f8456-b0a4-49fd-be25-32c1f4b0e17c,Matcha Vanilla Latte,,Chica=77 Grande=87,Large+Regular,Chica 77=77 · Grande 87=87,sí,ya alineado,enlazado (7MVT)
+WATPERAPP,Mineral Water Perrier,32,a801c379-90ea-446f-a303-d58d579de592,Mineral Water Perrier,,Único=52,sin vaso,Único 52=52,sí,ya alineado,enlazado (WATPERAPP)
+FELSCHAPP,Félix Schorle,25,fb4ffbc7-8a31-4261-8534-c9885f51fc58,Félix Schorle,,Único=63,sin vaso,Único 63=63,sí,ya alineado,enlazado (FELSCHAPP)
+1HDV60,Hot Drip V60,23,e0b13ec8-1c24-4ed8-9be2-5198d63a5485,Hot Drip V60,,Único=94,sin vaso,Único 94=94,sí,ya alineado,enlazado (1HDV60)
+CROMATAPP,Croissant with matcha cream,21,af32e295-9551-4f15-9071-520cb616cf57,Croissant with matcha cream,,Único=95,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (CROMATAPP)
+KOAMDLAPP,Kouign Amann Dulce de Leche,19,3f620d3f-01fe-4316-9050-78635a627841,Kouign Amann Dulce de Leche,,Único=52,sin vaso,Único 52=52,sí,ya alineado,enlazado (KOAMDLAPP)
+HALCRCAPP,Hazelnut Cream Croissant,17,19be1f5f-d141-4033-91e9-d6c22cb51878,Hazelnut Cream Croissant,,Único=58,sin vaso,Único 58=58,sí,ya alineado,enlazado (HALCRCAPP)
+ALMCROAPP,Almond Croissant,10,d587f0e8-286f-4479-84da-3778a025a3ff,Almond Croissant,,Único=52,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (ALMCROAPP)
+2CBKE,Kraft edition 250g,8,8359cad0-fe26-402b-9389-70775647164c,Kraft edition 250g,,Único=300,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (2CBKE)
+5MUG,Mug,5,cef677b4-0976-4640-8bc7-2ce82337466f,Mug,,Único=374,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (5MUG)
+4TBS,Tumbler (240ml),4,7962a115-d69b-4b9d-afa8-8eb753b077ab,Tumbler (240ml),,Único=426,sin vaso,Único 426=426,sí,ya alineado,enlazado (4TBS)
+KITWHIAPP,Kit Café White 1kg,4,bae9c18a-4715-4efe-9517-f63871f3149f,Kit Café White 1kg,,Único=699,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (KITWHIAPP)
+UMBRE,Umbrella,3,74e9cffe-f459-42a5-ac57-4e58277ad8f7,Umbrella,,Único=622,sin vaso,Único 622=622,sí,ya alineado,enlazado (UMBRE)
+3TBB,Tumbler (360ml),3,5d918d0f-3cbc-4c86-a0fb-f965df7ba976,Tumbler (360ml),,Único=468,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (3TBB)
+CHECROAPP,Croissant filled with cheese,2,49a02218-0eb3-4a49-8742-c4b6c6c0da9c,Croissant filled with cheese,,Único=70,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (CHECROAPP)
+1TB,Totebags,1,96e85958-1f5a-44cf-98d7-acd7c7d8102c,Totebags,,Único=280,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (1TB)
+KITEDIAPP,Kit Cafés Editions,1,e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138,Kit Cafés Editions,,Único=899,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (KITEDIAPP)
+5IL,Iced Latte,697,fcf0d45d-76b2-48a4-8d96-d8abc228eca8,Iced Latte,,Chica=70 Grande=80,Large+Regular,Chica 70=70 · Grande 80=80,no,ya alineado,nombre idéntico; código aún sin enlace
+CPUMICAPP,Pumpkin Iced Latte,428,38847fe5-2d6f-4050-9fd7-aa94bb3d4024,Pumpkin Spice Iced Latte,Pumpkin Iced Latte,Chica=99 Grande=109,Large+Regular,Chica 99=99 · Grande 109=109,no,listo para renombrar,R1: candidato único; Large+Regular → Chica+Grande; 532 Chica 99=99 · Grande 109=109
+CPUMLAAPP,Pumpkin Latte,349,170be377-ff76-4bbc-b6d5-85cd9708b21c,Pumpkin Spice Latte,Pumpkin Latte,Chica=99 Grande=109,Large+Regular,Chica 99=99 · Grande 109=109,no,listo para renombrar,R2: candidato único; Large+Regular → Chica+Grande; 532 Chica 99=99 · Grande 109=109
+3FOOD3,Pain au Chocolat,220,26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5,Pain au Chocolat,,Único=42,sin vaso,Único 42=42,sí,ya alineado,enlazado (3FOOD3)
+BR3,Grilled Ham Cheese and Tomato Sandwich,202,ff0a88ca-d7c0-4d73-84a3-125815f9274e,Grilled Ham Cheese and Tomato Sandwich,,Único=104,sin vaso,Único 104=104,sí,ya alineado,enlazado (BR3)
+CPUMFRAPP,Pumpkin Spice Frap,124,7769fb2e-d7ac-46b6-abeb-e23634d40bd5,Pumpkin Spice Frappé,Pumpkin Spice Frap,Chica=99 Grande=109,Large+Regular,Chica 99=99 · Grande 109=109,no,listo para renombrar,R3: candidato único; Large+Regular → Chica+Grande; 532 Chica 99=99 · Grande 109=109
+SHCO,Gelato Frappé Coffee,112,adfc682f-380c-41a9-a83d-63f94e0d3042,Gelato Frappé Coffee,,Único=94,mixto (95/109 sin vaso),Único 94=94,no,ya alineado,nombre idéntico; código aún sin enlace
+4UC,Urban Chocolate,104,2c8b49a6-7b2f-489e-8932-1d1ff8c7754c,Urban Chocolate,,Chica=78 Grande=88,Large+Regular,Chica 78=78 · Grande 88=88,no,ya alineado,nombre idéntico; código aún sin enlace
+SALFRAAPP,Salted Caramel Frap,101,052a61f6-55ff-4ac8-9459-ab4939789420,Salted Caramel Frappé,Salted Caramel Frap,Chica=89 Grande=99,Large+Regular,Chica 89=89 · Grande 99=99,no,listo para renombrar,R4: candidato único; Large+Regular → Chica+Grande; 532 Chica 89=89 · Grande 99=99
+PANMUEAPP,Pan de Muerto,98,,,,,sin vaso,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+CROSTUAPP,Croissant filled with cheese and ham,89,4ac9187c-fdaf-4678-8e91-7ead2d596c9b,Croissant filled with cheese and ham,,Único=73,sin vaso,Único 73=73,sí,ya alineado,enlazado (CROSTUAPP)
+FRATARAPP,Taro Frap,80,817fe3be-7d8b-49be-8e1a-6acde12ccb1c,Taro Frappé,Taro Frap,Chica=89 Grande=99,Large+Regular,Chica 89=89 · Grande 99=99,no,listo para renombrar,R5: candidato único; Large+Regular → Chica+Grande; 532 Chica 89=89 · Grande 99=99
+MISICEDAPP,Iced Latte +  Ham & Cheese Sandwich,75,e95e45e9-b5fc-4d10-ab5c-170e13cedf15,Iced Latte + Ham & Cheese Sandwich,,Único=119,Large+Regular,sin ventas sin descuento en 532,no,excepción aprobada,B7: el POS trae doble espacio; Costeo conserva un espacio (decisión de Carlo)
+COOMATAPP,Cookie Matcha & White Chocolate,68,,,,,sin vaso,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+COFFRAAPP,Coffee Frap,59,ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf,Coffee Frappé,Coffee Frap,Chica=89 Grande=99,Large+Regular,Chica 89=89 · Grande 99=99,no,listo para renombrar,R6: candidato único; Large+Regular → Chica+Grande; 532 Chica 89=89 · Grande 99=99
+FSOD2,Fresh Soda Pink Lemonade,56,e5b9dc6b-e750-4a91-8120-065cd719582c,Fresh Soda Pink Lemonade,,Chica=86 Grande=96,mixto (45/52 sin vaso),sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+FRAMATAPP,Matcha Frap,46,bb72c7a6-d900-4d47-bf56-4a74654ccf4b,Matcha Frappé,Matcha Frap,Chica=89 Grande=99,Large+Regular,Chica 89=89 · Grande 99=99,no,listo para renombrar,R7: candidato único; Large+Regular → Chica+Grande; 532 Chica 89=89 · Grande 99=99
+FRACHAAPP,Chai Frap,42,a00da002-92a3-4a48-ab47-b62ee9aa6a13,Chai Frappé,Chai Frap,Chica=89 Grande=99,Large+Regular,Chica 89=89,no,listo para renombrar,R8: candidato único; Large+Regular → Chica+Grande; 532 Chica 89=89
+FSOD4,Fresh Soda Passion fruit,34,6465a09a-6612-4542-8298-67108c507e12,Fresh Soda Passion fruit,,Chica=81 Grande=91,mixto (29/34 sin vaso),sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+ESPTONAPP,Espresso Tonic,28,,,,,sin vaso,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+TRUGOUAPP,True White + Croissant Serrano & Gouda,24,14c61cda-2564-402a-b70f-82ebafc8d7b4,True White + Croissant Serrano & Gouda,,Único=125,Large+Regular,sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+BRICE,Brownie with ice cream,22,2c8f400b-525f-4c30-8d64-f18be8b9334c,Brownie with ice cream,,Único=89,sin vaso,Único 89=89,no,ya alineado,nombre idéntico; código aún sin enlace
+1CBWB,White bag 250g,19,5ce9b244-40e2-4153-92b8-7c5dc38968d4,White bag 250g,,Único=220,sin vaso,Único 220=220,sí,ya alineado,enlazado (1CBWB)
+ZOETWIAPP,Zoe Water Twist,18,,,,,sin vaso,sin ventas sin descuento en 532,no,requiere decisión,D10: un código para dos sabores (Twist Frutos Rojos / Limón y Jengibre)
+1CDV60,Cold Drip V60,13,7799a6fe-bf6f-4247-842c-a071588cd9ac,Cold Drip V60,,Chica=94 Grande=104,sin vaso,sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+TRUMISAPP,True White + Grilled Ham & Cheese Sandwich,13,d950794b-23cf-4f1c-a775-ee71f5001eff,True White + Grilled Ham & Cheese Sandwich,,Único=119,Large+Regular,sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+SPOBISAPP,Spooky Biscuits,12,,,,,sin vaso,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+1CDV60M,Cold Drip V60 + Milk,10,49ef4055-997e-4fcc-a52d-16aca66d964b,Cold Drip V60 + Milk,,Chica=107 Grande=117,sin vaso,sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+MATLEMAPP,Matcha Iced Latte + Lemon Cake,9,,,,,Large,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+ZOEWATAPP,Zoé Water,8,3db3fdab-3bbe-4ea9-a200-7cdd89c12b0e,Zoé Water Natural,,Único=null,sin vaso,Único sin precio ≠ 45,no,requiere decisión,D9: único Zoé sin «Twist»; sin precio local para contrastar (POS $45)
+COMILTAPP,Iced Latte + Cookie Tradicional,6,480a3080-d543-4540-adfc-d4e64ba06248,Iced Latte + Cookie Tradicional,,Único=103,Large+Regular,sin ventas sin descuento en 532,no,ya alineado,nombre idéntico; código aún sin enlace
+3CBBE,Black edition 250g,5,d22e139c-c4d7-49b7-b8e6-9b13b40a3519,Black edition 250g,,Único=550,sin vaso,sin ventas sin descuento en 532,sí,ya alineado,enlazado (3CBBE)
+TRWCROAPP,True White + Croissant filled with cheese and ham,3,,,,,solo Rappi,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
+TRUPANAPP,True White + Pan de Muerto,3,,,,,solo Rappi,sin ventas sin descuento en 532,no,sin receta en Costeo,producto del POS sin receta local (grupo F de 16)
