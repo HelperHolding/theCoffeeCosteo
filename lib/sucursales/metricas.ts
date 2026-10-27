@@ -326,6 +326,8 @@ export function insightsVivo(a: {
   baseFecha: string;
   corte: number;
   completos: boolean;
+  /** Pedidos del día hasta el corte sin filtrar por origen: evidencia de identidad (ver identificador). */
+  evidencia?: PedidoNormal[];
 }): Insight[] {
   const out: Insight[] = [];
   const h = resumen(a.hoy);
@@ -372,7 +374,7 @@ export function insightsVivo(a: {
         tono: 'neutro',
       });
   }
-  const top = productos(a.hoy)[0];
+  const top = productos(a.hoy, a.evidencia ?? a.hoy)[0];
   if (top?.participacion)
     out.push({
       id: 'top',

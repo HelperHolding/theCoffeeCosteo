@@ -371,6 +371,52 @@ describe('métricas', () => {
     expect(p.reduce((s, x) => s + (x.participacion ?? 0), 0)).toBeCloseTo(1);
   });
 
+  it('insight «top»: la identidad se aprende del día sin filtrar; un nombre con dos códigos queda sin asignar', () => {
+    const linea = (defaultCode: string | null, productName: string, amount: number) => ({
+      defaultCode,
+      productName,
+      amount,
+      discount: 0,
+      itemsCustom: [],
+    });
+    const app = (hora: string, ...items: ReturnType<typeof linea>[]) =>
+      pedido('2026-10-21', hora, {
+        fromSmartphone: true,
+        paymentMethod: 'VIRTUAL_WALLET',
+        items,
+        grossAmount: items.reduce((s, i) => s + i.amount, 0),
+      });
+    const dia = norm([
+      pedido('2026-10-21', '08:00:00', { items: [linea('X2', 'Latte', 90)], grossAmount: 90 }),
+      app('09:00:00', linea('X1', 'Latte', 100)),
+      app('09:10:00', linea(null, 'Latte', 60)),
+      app('09:20:00', linea(null, 'Brownie', 75)),
+      app('09:30:00', linea(null, 'Brownie', 75)),
+    ]).pedidos;
+    const soloApp = filtrarOrigen(dia, 'app');
+    const top = (evidencia?: PedidoNormal[]) =>
+      insightsVivo({
+        hoy: soloApp,
+        base: [],
+        baseFecha: '2026-10-14',
+        corte: 86_399,
+        completos: false,
+        evidencia,
+      }).find((i) => i.id === 'top')?.texto;
+    // Solo con la App, «Latte» sin código se unía a X1 ($160) aunque el día tenga otro código (X2) para ese nombre.
+    expect(top()).toBe('Latte aporta el 52% de la venta de hoy.');
+    // Con el día completo, «Latte» es ambiguo: X1 ($100) y la línea sin código ($60) quedan aparte, como en Productos.
+    expect(top(dia)).toBe('Brownie aporta el 48% de la venta de hoy.');
+    const lista = productos(soloApp, dia);
+    expect(lista.map((p) => [p.clave, p.importeCent, !!p.sinCodigo])).toEqual([
+      ['nombre:Brownie', 15000, true],
+      ['codigo:X1', 10000, false],
+      ['nombre:Latte', 6000, true],
+    ]);
+    // Mismo total y mismo denominador: solo cambia la identidad de las líneas.
+    expect(lista.reduce((s, p) => s + p.importeCent, 0)).toBe(resumen(soloApp).ventaCent);
+  });
+
   it('insights: sin comparativos si alguna lectura está incompleta; silencio solo con base suficiente', () => {
     const hoy = ps();
     const base = norm(

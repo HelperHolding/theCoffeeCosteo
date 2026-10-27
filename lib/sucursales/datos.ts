@@ -206,6 +206,8 @@ export async function construirVivo(
   const corte = ahora.segundo;
   const todosHoy = filtrarOrigen(lh.pedidos, origen);
   const hoy = hastaCorte(todosHoy, corte);
+  // Identidad de las líneas sin código: todo el día hasta el corte, antes de filtrar por origen (como en Productos).
+  const evidencia = hastaCorte(lh.pedidos, corte);
   const base = filtrarOrigen(lb.pedidos, origen);
   const completos = lh.estado === 'completa' && lb.estado === 'completa';
   const kpis = resumen(hoy);
@@ -243,10 +245,11 @@ export async function construirVivo(
     ritmo: { ultimos15: enVentana(hoy, corte, 900), ultimos60: enVentana(hoy, corte, 3600) },
     ultimoPedido: ultimo ? { hora: ultimo.hora, haceSeg: corte - ultimo.segundo } : null,
     posterioresAlCorte: todosHoy.length - hoy.length,
-    productosTop: productos(hoy).slice(0, 5),
+    productosTop: productos(hoy, evidencia).slice(0, 5),
     ultimosPedidos: hoy.slice(0, 10).map(vistaPedido),
     pagos: pagos(hoy),
-    insights: lh.estado === 'error' ? [] : insightsVivo({ hoy, base, baseFecha, corte, completos }),
+    insights:
+      lh.estado === 'error' ? [] : insightsVivo({ hoy, base, baseFecha, corte, completos, evidencia }),
     conciliacion: conciliar(hoy),
   };
 }

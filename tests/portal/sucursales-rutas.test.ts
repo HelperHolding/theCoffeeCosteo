@@ -212,6 +212,53 @@ describe('En vivo', () => {
     expect(d.comparativo.venta).toBeNull();
   });
 
+  it('top 5 e insight con filtro App: la línea sin código se une al código único del día; totales iguales', async () => {
+    const app = pedido('2026-10-22', '10:30:00', {
+      fromSmartphone: true,
+      paymentMethod: 'VIRTUAL_WALLET',
+      refundId: null,
+      grossAmount: 150,
+      netAmout: 150,
+      items: [
+        { defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] },
+        { defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] },
+      ],
+    });
+    fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [pedido('2026-10-22', '08:00:00'), app] }).fetch);
+    const leer = async (o: string) => (await llamar(vivo, '612', `?origen=${o}`)).json();
+    const [soloApp, todos, mostrador, rappi] = [
+      await leer('app'),
+      await leer('todos'),
+      await leer('mostrador'),
+      await leer('rappi'),
+    ];
+    const top = (d: {
+      productosTop: { clave: string; nombre: string; importeCent: number; sinCodigo?: boolean }[];
+    }) => d.productosTop.map((p) => [p.clave, p.nombre, p.importeCent, !!p.sinCodigo]);
+    expect(top(soloApp)).toEqual([['codigo:BRO13', 'Brownie', 15000, false]]);
+    expect(soloApp.kpis.ventaCent).toBe(15000);
+    expect(soloApp.insights.find((i: { id: string }) => i.id === 'top').texto).toBe(
+      'Brownie aporta el 100% de la venta de hoy.',
+    );
+    expect(top(todos)).toEqual([
+      ['codigo:BRO13', 'Brownie', 22500, false],
+      ['codigo:4MIL', 'Matcha Iced Latte', 9000, false],
+    ]);
+    expect(top(rappi)).toEqual([]);
+    // Los filtros se suman: App + Mostrador + Rappi = Todos, por producto y en la venta.
+    const suma = new Map<string, number>();
+    for (const d of [soloApp, mostrador, rappi])
+      for (const p of d.productosTop) suma.set(p.clave, (suma.get(p.clave) ?? 0) + p.importeCent);
+    expect(Object.fromEntries(suma)).toEqual(
+      Object.fromEntries(
+        todos.productosTop.map((p: { clave: string; importeCent: number }) => [p.clave, p.importeCent]),
+      ),
+    );
+    expect(soloApp.kpis.ventaCent + mostrador.kpis.ventaCent + rappi.kpis.ventaCent).toBe(
+      todos.kpis.ventaCent,
+    );
+  });
+
   it('caché compartida tras autorizar: dos usuarios, una sola lectura al proveedor', async () => {
     await llamar(vivo, '612');
     const n = fetchSpy.mock.calls.length;
