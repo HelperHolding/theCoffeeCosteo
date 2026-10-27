@@ -5,6 +5,8 @@ import type { PedidoVista, RespuestaPedidos } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { diasEntre, enZona, fechaValida, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { ConInfo } from '@/components/portal/con-info';
+import { infoPedidos } from './info-tableros';
 import { claseCampo } from '@/lib/crm/formato';
 import { DetallePedido } from './detalle-pedido';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
@@ -118,96 +120,98 @@ export function Pedidos({
           {error && <ErrorCarga error={error} alReintentar={recargar} />}
           <AvisosLectura lecturas={[{ nombre: 'Periodo', info: datos.lectura }]} />
           {datos.lectura.estado !== 'error' && (
-            <Tarjeta
-              titulo="Pedidos"
-              descripcion={`${numero(datos.total)} pedidos del periodo (${datos.lectura.estado === 'completa' ? 'lectura completa' : 'lectura parcial'}). Toca uno para ver el detalle.`}
-              cuerpo={false}
-            >
-              {datos.pedidos.length === 0 ? (
-                <Vacio titulo="Sin pedidos con estos filtros" />
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="tabla w-full">
-                      <thead>
-                        <tr>
-                          <th scope="col">{variosDias ? 'Fecha y hora' : 'Hora'}</th>
-                          <th scope="col" className="numero">
-                            Venta
-                          </th>
-                          <th scope="col" className="numero">
-                            Descuento
-                          </th>
-                          <th scope="col">Pago</th>
-                          <th scope="col">Origen</th>
-                          <th scope="col" className="numero">
-                            Productos
-                          </th>
-                          <th scope="col">
-                            <span className="sr-only">Detalle</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {datos.pedidos.map((p) => (
-                          <tr key={p.id}>
-                            <td className="tabular whitespace-nowrap">
-                              {variosDias ? `${fechaCorta(p.fecha)} ` : ''}
-                              {p.hora}
-                            </td>
-                            <td className="numero">{dinero(p.ventaCent, m)}</td>
-                            <td className="numero">{p.descuentoCent ? dinero(p.descuentoCent, m) : '—'}</td>
-                            <td>
-                              <Etiqueta color={colorPago(p.metodo)}>{p.pago}</Etiqueta>
-                            </td>
-                            <td>
-                              <Etiqueta color={COLOR_ORIGEN[p.origen]}>{etiquetaOrigen[p.origen]}</Etiqueta>
-                            </td>
-                            <td className="numero">{numero(p.lineas.length)}</td>
-                            <td>
-                              <button
-                                type="button"
-                                onClick={() => setPedido(p)}
-                                className="text-sm font-semibold underline"
-                              >
-                                Ver<span className="sr-only"> pedido {p.id}</span>
-                              </button>
-                            </td>
+            <ConInfo info={infoPedidos(datos)}>
+              <Tarjeta
+                titulo="Pedidos"
+                descripcion={`${numero(datos.total)} pedidos del periodo (${datos.lectura.estado === 'completa' ? 'lectura completa' : 'lectura parcial'}). Toca uno para ver el detalle.`}
+                cuerpo={false}
+              >
+                {datos.pedidos.length === 0 ? (
+                  <Vacio titulo="Sin pedidos con estos filtros" />
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="tabla w-full">
+                        <thead>
+                          <tr>
+                            <th scope="col">{variosDias ? 'Fecha y hora' : 'Hora'}</th>
+                            <th scope="col" className="numero">
+                              Venta
+                            </th>
+                            <th scope="col" className="numero">
+                              Descuento
+                            </th>
+                            <th scope="col">Pago</th>
+                            <th scope="col">Origen</th>
+                            <th scope="col" className="numero">
+                              Productos
+                            </th>
+                            <th scope="col">
+                              <span className="sr-only">Detalle</span>
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <nav
-                    aria-label="Paginación"
-                    className="flex items-center justify-between gap-3 px-5 py-4 text-sm text-muted-foreground"
-                  >
-                    <span>
-                      {(datos.pagina - 1) * datos.porPagina + 1}–
-                      {Math.min(datos.pagina * datos.porPagina, datos.total)} de {numero(datos.total)}
-                    </span>
-                    <span className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled={datos.pagina <= 1}
-                        onClick={() => setPagina(datos.pagina - 1)}
-                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-line-strong bg-surface px-3 disabled:opacity-50"
-                      >
-                        <ChevronLeft size={15} aria-hidden="true" /> Anterior
-                      </button>
-                      <button
-                        type="button"
-                        disabled={datos.pagina >= datos.paginas}
-                        onClick={() => setPagina(datos.pagina + 1)}
-                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-line-strong bg-surface px-3 disabled:opacity-50"
-                      >
-                        Siguiente <ChevronRight size={15} aria-hidden="true" />
-                      </button>
-                    </span>
-                  </nav>
-                </>
-              )}
-            </Tarjeta>
+                        </thead>
+                        <tbody>
+                          {datos.pedidos.map((p) => (
+                            <tr key={p.id}>
+                              <td className="tabular whitespace-nowrap">
+                                {variosDias ? `${fechaCorta(p.fecha)} ` : ''}
+                                {p.hora}
+                              </td>
+                              <td className="numero">{dinero(p.ventaCent, m)}</td>
+                              <td className="numero">{p.descuentoCent ? dinero(p.descuentoCent, m) : '—'}</td>
+                              <td>
+                                <Etiqueta color={colorPago(p.metodo)}>{p.pago}</Etiqueta>
+                              </td>
+                              <td>
+                                <Etiqueta color={COLOR_ORIGEN[p.origen]}>{etiquetaOrigen[p.origen]}</Etiqueta>
+                              </td>
+                              <td className="numero">{numero(p.lineas.length)}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  onClick={() => setPedido(p)}
+                                  className="text-sm font-semibold underline"
+                                >
+                                  Ver<span className="sr-only"> pedido {p.id}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <nav
+                      aria-label="Paginación"
+                      className="flex items-center justify-between gap-3 px-5 py-4 text-sm text-muted-foreground"
+                    >
+                      <span>
+                        {(datos.pagina - 1) * datos.porPagina + 1}–
+                        {Math.min(datos.pagina * datos.porPagina, datos.total)} de {numero(datos.total)}
+                      </span>
+                      <span className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={datos.pagina <= 1}
+                          onClick={() => setPagina(datos.pagina - 1)}
+                          className="inline-flex h-9 items-center gap-1 rounded-lg border border-line-strong bg-surface px-3 disabled:opacity-50"
+                        >
+                          <ChevronLeft size={15} aria-hidden="true" /> Anterior
+                        </button>
+                        <button
+                          type="button"
+                          disabled={datos.pagina >= datos.paginas}
+                          onClick={() => setPagina(datos.pagina + 1)}
+                          className="inline-flex h-9 items-center gap-1 rounded-lg border border-line-strong bg-surface px-3 disabled:opacity-50"
+                        >
+                          Siguiente <ChevronRight size={15} aria-hidden="true" />
+                        </button>
+                      </span>
+                    </nav>
+                  </>
+                )}
+              </Tarjeta>
+            </ConInfo>
           )}
         </>
       )}

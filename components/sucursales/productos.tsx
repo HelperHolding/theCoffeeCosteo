@@ -5,6 +5,7 @@ import type { RespuestaProductos } from '@/lib/sucursales/contratos';
 import { CODIGO_GENERICO, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { enZona, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { ConInfo } from '@/components/portal/con-info';
 import { claseCampo } from '@/lib/crm/formato';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { NOTA_LINEAS } from './en-vivo';
@@ -12,6 +13,7 @@ import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './for
 import { useLectura } from './use-lectura';
 import { BarraCelda, Etiqueta, TIPOS, tipoPersonalizacion } from './colores';
 import { CeldaCosteo, TarjetaCosteo } from './costeo';
+import { infoProductos } from './info-tableros';
 
 const PERIODOS = [
   { id: 'hoy', nombre: 'Hoy', dias: 0, fin: 0 },
@@ -123,186 +125,190 @@ export function Productos({
                 {textoConciliacion(datos.conciliacion, m)}
               </p>
               {datos.costeo && <TarjetaCosteo c={datos.costeo} moneda={m} />}
-              <Tarjeta
-                titulo="Productos"
-                descripcion="Importe atribuible = producto + sus personalizaciones, una sola vez."
-                cuerpo={false}
-              >
-                {lista.length === 0 ? (
-                  <Vacio titulo={buscar ? 'Ningún producto coincide' : 'Sin ventas en el periodo'} />
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="tabla w-full">
-                      <thead>
-                        <tr>
-                          <th scope="col">Producto</th>
-                          <th scope="col" className="numero">
-                            Importe
-                          </th>
-                          <th scope="col" className="numero">
-                            % venta
-                          </th>
-                          <th scope="col" className="numero">
-                            Pedidos
-                          </th>
-                          <th scope="col" className="numero">
-                            <abbr title={NOTA_LINEAS}>Líneas*</abbr>
-                          </th>
-                          <th scope="col" className="numero">
-                            Extra personalización
-                          </th>
-                          {datos.costeo && <th scope="col">Costeo (costo actual)</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lista.map((x) => {
-                          const exp = abierto === x.clave;
-                          return (
-                            <Fragment key={x.clave}>
-                              <tr>
-                                <td>
-                                  <button
-                                    type="button"
-                                    aria-expanded={exp}
-                                    onClick={() => setAbierto(exp ? null : x.clave)}
-                                    className="flex items-center gap-1.5 text-left font-medium"
-                                  >
-                                    {exp ? (
-                                      <ChevronDown size={14} aria-hidden="true" className="shrink-0" />
-                                    ) : (
-                                      <ChevronRight size={14} aria-hidden="true" className="shrink-0" />
-                                    )}
-                                    {x.nombre}
-                                    {x.sinCodigo && (
-                                      <span className="text-xs font-normal text-muted-foreground">
-                                        sin código
+              <ConInfo info={infoProductos(datos).productos}>
+                <Tarjeta
+                  titulo="Productos"
+                  descripcion="Importe atribuible = producto + sus personalizaciones, una sola vez."
+                  cuerpo={false}
+                >
+                  {lista.length === 0 ? (
+                    <Vacio titulo={buscar ? 'Ningún producto coincide' : 'Sin ventas en el periodo'} />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="tabla w-full">
+                        <thead>
+                          <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col" className="numero">
+                              Importe
+                            </th>
+                            <th scope="col" className="numero">
+                              % venta
+                            </th>
+                            <th scope="col" className="numero">
+                              Pedidos
+                            </th>
+                            <th scope="col" className="numero">
+                              <abbr title={NOTA_LINEAS}>Líneas*</abbr>
+                            </th>
+                            <th scope="col" className="numero">
+                              Extra personalización
+                            </th>
+                            {datos.costeo && <th scope="col">Costeo (costo actual)</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lista.map((x) => {
+                            const exp = abierto === x.clave;
+                            return (
+                              <Fragment key={x.clave}>
+                                <tr>
+                                  <td>
+                                    <button
+                                      type="button"
+                                      aria-expanded={exp}
+                                      onClick={() => setAbierto(exp ? null : x.clave)}
+                                      className="flex items-center gap-1.5 text-left font-medium"
+                                    >
+                                      {exp ? (
+                                        <ChevronDown size={14} aria-hidden="true" className="shrink-0" />
+                                      ) : (
+                                        <ChevronRight size={14} aria-hidden="true" className="shrink-0" />
+                                      )}
+                                      {x.nombre}
+                                      {x.sinCodigo && (
+                                        <span className="text-xs font-normal text-muted-foreground">
+                                          sin código
+                                        </span>
+                                      )}
+                                    </button>
+                                  </td>
+                                  <td className="numero">{dinero(x.importeCent, m)}</td>
+                                  <td className="numero">
+                                    <span className="flex items-center justify-end gap-2">
+                                      <span className="w-20">
+                                        <BarraCelda valor={x.importeCent} max={maxImporte} />
                                       </span>
-                                    )}
-                                  </button>
+                                      <span className="w-12">{porcentaje(x.participacion)}</span>
+                                    </span>
+                                  </td>
+                                  <td className="numero">{numero(x.pedidos)}</td>
+                                  <td className="numero">{numero(x.lineas)}</td>
+                                  <td className="numero">{dinero(x.extraCustomsCent, m)}</td>
+                                  {datos.costeo && (
+                                    <td>
+                                      <CeldaCosteo
+                                        c={x.costeo}
+                                        moneda={m}
+                                        generico={x.codigo === CODIGO_GENERICO && !x.sinCodigo}
+                                      />
+                                    </td>
+                                  )}
+                                </tr>
+                                {exp && (
+                                  <tr>
+                                    <td colSpan={datos.costeo ? 7 : 6} className="bg-surface-2/50">
+                                      <div className="grid gap-4 py-2 text-sm sm:grid-cols-2">
+                                        <div>
+                                          <p className="mb-1 font-semibold">Tamaños</p>
+                                          {x.tamanos.length ? (
+                                            <ul className="flex flex-wrap gap-1.5">
+                                              {x.tamanos.map((t) => (
+                                                <li key={t.nombre}>
+                                                  <Etiqueta color={TIPOS.tamano.color}>
+                                                    {t.nombre} · {numero(t.lineas)}
+                                                  </Etiqueta>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          ) : (
+                                            <p className="text-muted-foreground">Sin tamaño registrado.</p>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <p className="mb-1 font-semibold">Personalizaciones más pedidas</p>
+                                          {x.customs.length ? (
+                                            <ul className="flex flex-wrap gap-1.5">
+                                              {x.customs.map((c) => (
+                                                <li key={c.nombre}>
+                                                  <Etiqueta
+                                                    color={TIPOS[tipoPersonalizacion(c.nombre)].color}
+                                                    titulo={TIPOS[tipoPersonalizacion(c.nombre)].nombre}
+                                                  >
+                                                    {c.nombre} · {numero(c.veces)}
+                                                    {c.importeCent > 0 && ` · ${dinero(c.importeCent, m)}`}
+                                                  </Etiqueta>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          ) : (
+                                            <p className="text-muted-foreground">Sin personalizaciones.</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </Fragment>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      <p className="px-5 pb-4 pt-2 text-xs text-muted-foreground">* {NOTA_LINEAS}</p>
+                    </div>
+                  )}
+                </Tarjeta>
+              </ConInfo>
+              <ConInfo info={infoProductos(datos).personalizaciones}>
+                <Tarjeta
+                  titulo="Personalizaciones del periodo"
+                  descripcion="Frecuencia e importe adicional cobrado (sin tamaños)."
+                  cuerpo={false}
+                >
+                  {datos.personalizaciones.length === 0 ? (
+                    <Vacio titulo="Sin personalizaciones en el periodo" />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="tabla w-full">
+                        <thead>
+                          <tr>
+                            <th scope="col">Personalización</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" className="numero">
+                              Veces
+                            </th>
+                            <th scope="col" className="numero">
+                              Importe adicional
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {datos.personalizaciones.map((c) => {
+                            const tipo = TIPOS[tipoPersonalizacion(c.nombre)];
+                            return (
+                              <tr key={c.nombre}>
+                                <td className="font-medium">{c.nombre}</td>
+                                <td>
+                                  <Etiqueta color={tipo.color}>{tipo.nombre}</Etiqueta>
                                 </td>
-                                <td className="numero">{dinero(x.importeCent, m)}</td>
                                 <td className="numero">
                                   <span className="flex items-center justify-end gap-2">
                                     <span className="w-20">
-                                      <BarraCelda valor={x.importeCent} max={maxImporte} />
+                                      <BarraCelda valor={c.veces} max={maxVeces} color={tipo.color} />
                                     </span>
-                                    <span className="w-12">{porcentaje(x.participacion)}</span>
+                                    <span className="w-10">{numero(c.veces)}</span>
                                   </span>
                                 </td>
-                                <td className="numero">{numero(x.pedidos)}</td>
-                                <td className="numero">{numero(x.lineas)}</td>
-                                <td className="numero">{dinero(x.extraCustomsCent, m)}</td>
-                                {datos.costeo && (
-                                  <td>
-                                    <CeldaCosteo
-                                      c={x.costeo}
-                                      moneda={m}
-                                      generico={x.codigo === CODIGO_GENERICO && !x.sinCodigo}
-                                    />
-                                  </td>
-                                )}
+                                <td className="numero">{dinero(c.importeCent, m)}</td>
                               </tr>
-                              {exp && (
-                                <tr>
-                                  <td colSpan={datos.costeo ? 7 : 6} className="bg-surface-2/50">
-                                    <div className="grid gap-4 py-2 text-sm sm:grid-cols-2">
-                                      <div>
-                                        <p className="mb-1 font-semibold">Tamaños</p>
-                                        {x.tamanos.length ? (
-                                          <ul className="flex flex-wrap gap-1.5">
-                                            {x.tamanos.map((t) => (
-                                              <li key={t.nombre}>
-                                                <Etiqueta color={TIPOS.tamano.color}>
-                                                  {t.nombre} · {numero(t.lineas)}
-                                                </Etiqueta>
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        ) : (
-                                          <p className="text-muted-foreground">Sin tamaño registrado.</p>
-                                        )}
-                                      </div>
-                                      <div>
-                                        <p className="mb-1 font-semibold">Personalizaciones más pedidas</p>
-                                        {x.customs.length ? (
-                                          <ul className="flex flex-wrap gap-1.5">
-                                            {x.customs.map((c) => (
-                                              <li key={c.nombre}>
-                                                <Etiqueta
-                                                  color={TIPOS[tipoPersonalizacion(c.nombre)].color}
-                                                  titulo={TIPOS[tipoPersonalizacion(c.nombre)].nombre}
-                                                >
-                                                  {c.nombre} · {numero(c.veces)}
-                                                  {c.importeCent > 0 && ` · ${dinero(c.importeCent, m)}`}
-                                                </Etiqueta>
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        ) : (
-                                          <p className="text-muted-foreground">Sin personalizaciones.</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    <p className="px-5 pb-4 pt-2 text-xs text-muted-foreground">* {NOTA_LINEAS}</p>
-                  </div>
-                )}
-              </Tarjeta>
-              <Tarjeta
-                titulo="Personalizaciones del periodo"
-                descripcion="Frecuencia e importe adicional cobrado (sin tamaños)."
-                cuerpo={false}
-              >
-                {datos.personalizaciones.length === 0 ? (
-                  <Vacio titulo="Sin personalizaciones en el periodo" />
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="tabla w-full">
-                      <thead>
-                        <tr>
-                          <th scope="col">Personalización</th>
-                          <th scope="col">Tipo</th>
-                          <th scope="col" className="numero">
-                            Veces
-                          </th>
-                          <th scope="col" className="numero">
-                            Importe adicional
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {datos.personalizaciones.map((c) => {
-                          const tipo = TIPOS[tipoPersonalizacion(c.nombre)];
-                          return (
-                            <tr key={c.nombre}>
-                              <td className="font-medium">{c.nombre}</td>
-                              <td>
-                                <Etiqueta color={tipo.color}>{tipo.nombre}</Etiqueta>
-                              </td>
-                              <td className="numero">
-                                <span className="flex items-center justify-end gap-2">
-                                  <span className="w-20">
-                                    <BarraCelda valor={c.veces} max={maxVeces} color={tipo.color} />
-                                  </span>
-                                  <span className="w-10">{numero(c.veces)}</span>
-                                </span>
-                              </td>
-                              <td className="numero">{dinero(c.importeCent, m)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </Tarjeta>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Tarjeta>
+              </ConInfo>
             </>
           )}
         </>
