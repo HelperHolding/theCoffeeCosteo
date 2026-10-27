@@ -78,8 +78,31 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.notas?.join(' ')).toMatch(/3CBBE.*NO está confirmado/);
   });
 
+  it('lote 3: exactamente los 8 códigos de Pumpkin y Frap renombrados, requiere los lotes 1 y 2 completos (62)', async () => {
+    const l = await leerLoteAprobado('lote-3');
+    expect(l.lote.map((f) => `${f.codigo}→${f.receta_nombre}`)).toEqual([
+      'COFFRAAPP→Coffee Frap',
+      'CPUMFRAPP→Pumpkin Spice Frap',
+      'CPUMICAPP→Pumpkin Iced Latte',
+      'CPUMLAAPP→Pumpkin Latte',
+      'FRACHAAPP→Chai Frap',
+      'FRAMATAPP→Matcha Frap',
+      'FRATARAPP→Taro Frap',
+      'SALFRAAPP→Salted Caramel Frap',
+    ]);
+    // El nombre observado en el POS es el nombre vigente de la receta (renombre del PR #34).
+    expect(l.lote.every((f) => f.nombre_observado === f.receta_nombre)).toBe(true);
+    expect(Object.keys(l.previos).sort()).toEqual(['lote-1', 'lote-2']);
+    expect(l.previos['lote-1'].length + l.previos['lote-2'].length).toBe(62);
+    for (const excluido of ['BRICE', 'ZOEWATAPP', 'ZOETWIAPP', '4UC', '5IL'])
+      expect(l.lote.some((f) => f.codigo === excluido)).toBe(false);
+    const chai = l.lote.find((f) => f.codigo === 'FRACHAAPP')!;
+    expect(chai.evidencia).toMatch(/Grande sin venta comparable en 532; no confirmado/);
+    expect(l.manifiesto.aprobacion).toMatch(/NO autoriza carga en producción ni merge/);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
-    await expect(leerLoteAprobado('lote-3')).rejects.toThrow(/no está aprobado/);
+    await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));
     mkdirSync(join(raiz, 'docs/conciliacion-brasil'), { recursive: true });
     const ruta = LOTES_APROBADOS['lote-2'].manifiesto;
