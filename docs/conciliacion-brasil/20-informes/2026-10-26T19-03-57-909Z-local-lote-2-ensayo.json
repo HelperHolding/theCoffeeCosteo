@@ -1,0 +1,88 @@
+{
+ "fecha": "2026-10-26T19:03:57.909Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "carga_id": "cd6ac692-82ce-4233-9a65-75c82f131c40",
+ "lote": {
+  "nombre": "lote-2",
+  "filas": 5,
+  "huella": "b804e6122545ee78937c1b7a966914a06e270e4b309a39a4d30fe8edd5ca0f6d"
+ },
+ "previos": {
+  "lote-1": {
+   "esperadas": 57,
+   "intactasAntes": 57,
+   "intactasDespues": 57
+  }
+ },
+ "antes": {
+  "filasEnTabla": 57,
+  "delLote": 0,
+  "deEstaCarga": 0
+ },
+ "enlaces": [
+  {
+   "codigo": "1CBWB",
+   "receta_id": "5ce9b244-40e2-4153-92b8-7c5dc38968d4",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "d2b48fa3-1e52-4fa2-838d-30914d702fa3",
+   "bitacora": 393
+  },
+  {
+   "codigo": "3CBBE",
+   "receta_id": "d22e139c-c4d7-49b7-b8e6-9b13b40a3519",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "d45e91b7-4e17-4efc-9d19-aa7e470f4168",
+   "bitacora": 394
+  },
+  {
+   "codigo": "3FOOD3",
+   "receta_id": "26a2fa5e-d96e-4d4d-afa4-2249bcc0eee5",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "0c0c15fb-6daa-40a6-abed-43494ecceaa7",
+   "bitacora": 395
+  },
+  {
+   "codigo": "BR3",
+   "receta_id": "ff0a88ca-d7c0-4d73-84a3-125815f9274e",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "7f56ab4c-1b5f-4ab9-918b-7cf952de0c1a",
+   "bitacora": 396
+  },
+  {
+   "codigo": "CROSTUAPP",
+   "receta_id": "4ac9187c-fdaf-4678-8e91-7ead2d596c9b",
+   "resultado": "alta",
+   "problemas": [],
+   "id": "4b821164-ae38-42ff-af4d-a1a8d71ce4ff",
+   "bitacora": 397
+  }
+ ],
+ "totales": {
+  "alta": 5,
+  "sin cambio": 0,
+  "baja": 0,
+  "problema": 0
+ },
+ "idsPropios": [
+  "d2b48fa3-1e52-4fa2-838d-30914d702fa3",
+  "d45e91b7-4e17-4efc-9d19-aa7e470f4168",
+  "0c0c15fb-6daa-40a6-abed-43494ecceaa7",
+  "7f56ab4c-1b5f-4ab9-918b-7cf952de0c1a",
+  "4b821164-ae38-42ff-af4d-a1a8d71ce4ff"
+ ],
+ "bitacoraPropia": 5,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "despues": {
+  "filasEnTabla": 62,
+  "delLote": 5,
+  "deEstaCarga": 5
+ },
+ "comercialSinCambios": true
+}

@@ -1,0 +1,239 @@
+{
+ "lote": "lote-1",
+ "archivo": "docs/conciliacion-brasil/17-lote-1.csv",
+ "filas": 57,
+ "sha256": "5c36c6ce7b9a4a24b5542e663703e637b0b583316e064ed50752c3e29486f357",
+ "correspondencias": [
+  {
+   "codigo": "1COLDB",
+   "receta_id": "00f47aba-88e6-4ebc-a815-5833f8b29871"
+  },
+  {
+   "codigo": "1FC",
+   "receta_id": "f33b95a8-a338-4009-8c03-42edfd81bb6a"
+  },
+  {
+   "codigo": "1HDV60",
+   "receta_id": "e0b13ec8-1c24-4ed8-9be2-5198d63a5485"
+  },
+  {
+   "codigo": "1IC",
+   "receta_id": "15556232-34f4-490e-a9b7-0c01998bc4c1"
+  },
+  {
+   "codigo": "1ICHAI",
+   "receta_id": "130033f6-dd70-4178-8366-945ea9674199"
+  },
+  {
+   "codigo": "1PB",
+   "receta_id": "89e80a88-123d-4b13-b166-f4e56c506525"
+  },
+  {
+   "codigo": "1TB",
+   "receta_id": "96e85958-1f5a-44cf-98d7-acd7c7d8102c"
+  },
+  {
+   "codigo": "2AM",
+   "receta_id": "500360bd-fd76-4e22-bf01-9bd3ed6e2ae7"
+  },
+  {
+   "codigo": "2CBKE",
+   "receta_id": "8359cad0-fe26-402b-9389-70775647164c"
+  },
+  {
+   "codigo": "2FOOD2",
+   "receta_id": "0720b789-f345-43d3-a742-de49e369e3f3"
+  },
+  {
+   "codigo": "2SC",
+   "receta_id": "7867787b-4957-485c-822b-3106558d33a1"
+  },
+  {
+   "codigo": "2VLT",
+   "receta_id": "1183a781-40b8-4654-9f49-92d317873907"
+  },
+  {
+   "codigo": "3BG",
+   "receta_id": "af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95"
+  },
+  {
+   "codigo": "3MC",
+   "receta_id": "da45b5bd-3eca-452e-a18e-5a558e4dc517"
+  },
+  {
+   "codigo": "3TBB",
+   "receta_id": "5d918d0f-3cbc-4c86-a0fb-f965df7ba976"
+  },
+  {
+   "codigo": "4MIL",
+   "receta_id": "9756eec9-1f09-45ee-a45b-21ac8c54bb22"
+  },
+  {
+   "codigo": "4TBS",
+   "receta_id": "7962a115-d69b-4b9d-afa8-8eb753b077ab"
+  },
+  {
+   "codigo": "4TW",
+   "receta_id": "a96339d6-80e7-440b-a33b-bca51440d8e6"
+  },
+  {
+   "codigo": "5CR",
+   "receta_id": "9de55f8e-f159-461f-b60e-22d70dfbd6b7"
+  },
+  {
+   "codigo": "5MC",
+   "receta_id": "c7ca994c-897c-45d7-a62f-a7ba2f66bbce"
+  },
+  {
+   "codigo": "5MUG",
+   "receta_id": "cef677b4-0976-4640-8bc7-2ce82337466f"
+  },
+  {
+   "codigo": "6CM",
+   "receta_id": "5153b158-4329-4ffd-9e79-9cc9d4f06a2a"
+  },
+  {
+   "codigo": "6ICB",
+   "receta_id": "cb33752f-e335-46ec-b091-a8a2229eb946"
+  },
+  {
+   "codigo": "7IC",
+   "receta_id": "4b651700-0745-42fe-8e78-7b44dbdb66ee"
+  },
+  {
+   "codigo": "7MVT",
+   "receta_id": "3f7f8456-b0a4-49fd-be25-32c1f4b0e17c"
+  },
+  {
+   "codigo": "9IMT",
+   "receta_id": "e201b60f-62e1-4c56-80e5-2b4873baf74f"
+  },
+  {
+   "codigo": "ACABOWAPP",
+   "receta_id": "07360c9c-6930-46ef-b462-af625645b850"
+  },
+  {
+   "codigo": "ALMCROAPP",
+   "receta_id": "d587f0e8-286f-4479-84da-3778a025a3ff"
+  },
+  {
+   "codigo": "BRO13",
+   "receta_id": "be20a271-b39f-43bb-96d3-2ab7be6db227"
+  },
+  {
+   "codigo": "CAKBANAPP",
+   "receta_id": "dfc7c79e-a484-4e61-8306-063acc0fe9c8"
+  },
+  {
+   "codigo": "CAKLEMAPP",
+   "receta_id": "6312fc43-adad-4eca-a8a9-7427bb099ea0"
+  },
+  {
+   "codigo": "CHECROAPP",
+   "receta_id": "49a02218-0eb3-4a49-8742-c4b6c6c0da9c"
+  },
+  {
+   "codigo": "COOCHOAPP",
+   "receta_id": "c797afe9-e8be-4971-98f3-64396b651661"
+  },
+  {
+   "codigo": "COOTRAAPP",
+   "receta_id": "808d4a61-7086-468b-9879-9ce4cf9c9ae7"
+  },
+  {
+   "codigo": "CROGOUAPP",
+   "receta_id": "5e096086-8d78-4ea5-a570-b86d9f5a255d"
+  },
+  {
+   "codigo": "CROMATAPP",
+   "receta_id": "af32e295-9551-4f15-9071-520cb616cf57"
+  },
+  {
+   "codigo": "EVIPETAPP",
+   "receta_id": "b1b77782-47b2-4e05-820a-c1b75aa438d1"
+  },
+  {
+   "codigo": "FELSCHAPP",
+   "receta_id": "fb4ffbc7-8a31-4261-8534-c9885f51fc58"
+  },
+  {
+   "codigo": "HALCRCAPP",
+   "receta_id": "19be1f5f-d141-4033-91e9-d6c22cb51878"
+  },
+  {
+   "codigo": "ICEBLMAPP",
+   "receta_id": "4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9"
+  },
+  {
+   "codigo": "ICECHOAPP",
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e"
+  },
+  {
+   "codigo": "KITEDIAPP",
+   "receta_id": "e2d09d4d-2bb7-4ae9-a8cc-1d9ecaa52138"
+  },
+  {
+   "codigo": "KITWHIAPP",
+   "receta_id": "bae9c18a-4715-4efe-9517-f63871f3149f"
+  },
+  {
+   "codigo": "KOAMAVAPP",
+   "receta_id": "8034ac0e-065e-49a8-98a4-26b0f98c9fb0"
+  },
+  {
+   "codigo": "KOAMDLAPP",
+   "receta_id": "3f620d3f-01fe-4316-9050-78635a627841"
+  },
+  {
+   "codigo": "MACCHIAPP",
+   "receta_id": "4255bb6b-1a50-42a4-896d-d3f424b6ceab"
+  },
+  {
+   "codigo": "MQ1",
+   "receta_id": "ae3742b2-0188-4fc3-88c4-533a8ecb40c9"
+  },
+  {
+   "codigo": "PCFICEAPP",
+   "receta_id": "1a316b88-1212-4403-9dfd-4de2652653ab"
+  },
+  {
+   "codigo": "PCFMATAPP",
+   "receta_id": "be97f8cd-e66b-4dca-a38a-c971bdecd3d3"
+  },
+  {
+   "codigo": "QQ2",
+   "receta_id": "9c5f7529-8809-464a-a61a-911d507e2d03"
+  },
+  {
+   "codigo": "ROUHAZAPP",
+   "receta_id": "99ec3251-4296-4cd2-9b66-b5fcb1f75ba4"
+  },
+  {
+   "codigo": "SHCI",
+   "receta_id": "0252e4e5-3d19-49c1-9f01-2b0f72c1e21b"
+  },
+  {
+   "codigo": "SHMA",
+   "receta_id": "22e7e73c-3f8e-471d-b86a-63a35fcfcb64"
+  },
+  {
+   "codigo": "SOICAUAPP",
+   "receta_id": "087d714a-45ca-44da-a3ad-55ce92a2bccb"
+  },
+  {
+   "codigo": "SOLAAUAPP",
+   "receta_id": "2cc57a88-1966-4f7d-9604-461978c7c252"
+  },
+  {
+   "codigo": "UMBRE",
+   "receta_id": "74e9cffe-f459-42a5-ac57-4e58277ad8f7"
+  },
+  {
+   "codigo": "WATPERAPP",
+   "receta_id": "a801c379-90ea-446f-a303-d58d579de592"
+  }
+ ],
+ "requiere": [],
+ "aprobacion": "Carlo, 2026-10-26: lote revisado (PR #23); cargado en producción con carga_id 8e0854e7-8419-4d2b-a561-9202418097b2",
+ "notas": []
+}

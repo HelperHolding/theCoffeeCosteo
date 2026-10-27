@@ -1,0 +1,35 @@
+{
+ "fecha": "2026-10-26T19:03:49.063Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "carga_id": "313ab7d8-d532-41bc-b742-122126131321",
+ "lote": {
+  "nombre": "lote-2",
+  "filas": 5,
+  "huella": "b804e6122545ee78937c1b7a966914a06e270e4b309a39a4d30fe8edd5ca0f6d"
+ },
+ "previos": {
+  "lote-1": {
+   "esperadas": 57,
+   "intactasAntes": 0
+  }
+ },
+ "antes": {
+  "filasEnTabla": 0,
+  "delLote": 0,
+  "deEstaCarga": 0
+ },
+ "enlaces": [],
+ "totales": {
+  "alta": 0,
+  "sin cambio": 0,
+  "baja": 0,
+  "problema": 0
+ },
+ "idsPropios": [],
+ "bitacoraPropia": 0,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "error": "El lote-1 no está intacto: 0 de 57 enlaces idénticos. No se carga nada."
+}
