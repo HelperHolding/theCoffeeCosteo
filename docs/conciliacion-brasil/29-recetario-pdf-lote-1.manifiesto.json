@@ -1,0 +1,168 @@
+{
+ "lote": "recetario-pdf-lote-1",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3"
+ },
+ "insumos": [
+  {
+   "id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "nombre": "HIELO",
+   "unidad": "ml",
+   "costo_paquete": 0,
+   "presentacion": 1
+  },
+  {
+   "id": "54029891-0a24-41ec-8a61-6ba2643302f9",
+   "nombre": "HIELO (g)",
+   "unidad": "gr",
+   "costo_paquete": 0,
+   "presentacion": 1
+  },
+  {
+   "id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "nombre": "AGUA",
+   "unidad": "ml",
+   "costo_paquete": 0,
+   "presentacion": 1
+  }
+ ],
+ "recetas": [
+  {
+   "id": "e5b9dc6b-e750-4a91-8120-065cd719582c",
+   "nombre": "Fresh Soda Pink Lemonade",
+   "version": 28,
+   "pagina": 43
+  },
+  {
+   "id": "6465a09a-6612-4542-8298-67108c507e12",
+   "nombre": "Fresh Soda Passion fruit",
+   "version": 25,
+   "pagina": 44
+  },
+  {
+   "id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+   "nombre": "Cold brew",
+   "version": 33,
+   "pagina": 27
+  },
+  {
+   "id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "nombre": "Iced Chocolate",
+   "version": 32,
+   "pagina": 24
+  }
+ ],
+ "celdas": [
+  {
+   "receta_id": "e5b9dc6b-e750-4a91-8120-065cd719582c",
+   "linea_id": "c5e4742e-dfb0-42a2-9a69-13d1db00b56e",
+   "insumo_id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "insumo": "HIELO",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 190,
+   "nuevo": 245,
+   "fuente": "p.43, Grande (600 ml): «245 gr de hielo»; la Chica (130 g) ya coincide"
+  },
+  {
+   "receta_id": "6465a09a-6612-4542-8298-67108c507e12",
+   "linea_id": "25a35530-b2be-45b2-aa5b-d63ca1145a14",
+   "insumo_id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "insumo": "HIELO",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 177,
+   "nuevo": 245,
+   "fuente": "p.44, Grande (600 ml): «245 g de hielo en cubos»; la Chica (130 g) ya coincide"
+  },
+  {
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "linea_id": "e3ea9975-d762-4a80-b7ad-5079016fffe4",
+   "insumo_id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "insumo": "AGUA",
+   "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+   "tamano": "Chica",
+   "previo": 10,
+   "nuevo": 0,
+   "fuente": "p.24: la salsa de chocolate (36 g) y los 10 ml de agua caliente ya están en las 46.002 unidades de la subreceta «Mix … (2)» (v7, rinde 1000: cocoa 200.64345 + azúcar 180.64432 + agua 618.71223; el preparado de la p.5 usa 401.2869 de esa agua y sobran 217.42533 = 10/36 del preparado). La línea AGUA de 10 ml los cuenta dos veces; Urban Chocolate (p.34, 36 + 10) usa la misma subreceta sin línea AGUA aparte"
+  },
+  {
+   "receta_id": "c55e8b1f-300e-42f7-9c4a-f57b038c987e",
+   "linea_id": "e3ea9975-d762-4a80-b7ad-5079016fffe4",
+   "insumo_id": "3fa7b2fc-51af-40be-a420-874dce2accb3",
+   "insumo": "AGUA",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 10,
+   "nuevo": 0,
+   "fuente": "p.24: la salsa de chocolate (36 g) y los 10 ml de agua caliente ya están en las 46.002 unidades de la subreceta «Mix … (2)» (v7, rinde 1000: cocoa 200.64345 + azúcar 180.64432 + agua 618.71223; el preparado de la p.5 usa 401.2869 de esa agua y sobran 217.42533 = 10/36 del preparado). La línea AGUA de 10 ml los cuenta dos veces; Urban Chocolate (p.34, 36 + 10) usa la misma subreceta sin línea AGUA aparte"
+  }
+ ],
+ "cambiosInsumo": [
+  {
+   "receta_id": "e5b9dc6b-e750-4a91-8120-065cd719582c",
+   "linea_id": "c5e4742e-dfb0-42a2-9a69-13d1db00b56e",
+   "desde_id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "desde": "HIELO",
+   "hacia_id": "54029891-0a24-41ec-8a61-6ba2643302f9",
+   "hacia": "HIELO (g)",
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "fuente": "p.43: 130 g / 245 g de hielo (gramos del recetario; mismos números, sin conversión)"
+  },
+  {
+   "receta_id": "6465a09a-6612-4542-8298-67108c507e12",
+   "linea_id": "25a35530-b2be-45b2-aa5b-d63ca1145a14",
+   "desde_id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "desde": "HIELO",
+   "hacia_id": "54029891-0a24-41ec-8a61-6ba2643302f9",
+   "hacia": "HIELO (g)",
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "fuente": "p.44: 130 g / 245 g de hielo en cubos (gramos del recetario; mismos números, sin conversión)"
+  },
+  {
+   "receta_id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+   "linea_id": "b0c55a73-f6cb-4a58-982e-64890bf3f0eb",
+   "desde_id": "933d0ceb-28e5-4142-8bad-7dfab9589d33",
+   "desde": "HIELO",
+   "hacia_id": "54029891-0a24-41ec-8a61-6ba2643302f9",
+   "hacia": "HIELO (g)",
+   "cantidades": [
+    {
+     "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+     "tamano": "Chica",
+     "cantidad": 130
+    },
+    {
+     "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+     "tamano": "Grande",
+     "cantidad": 245
+    }
+   ],
+   "fuente": "p.27: «130 gr de hielo» / «245 gr de hielo» (mismos números, sin conversión); fuera de H2 lote 1 para no bloquear la reversión de 3b"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-27: autoriza preparar un único lote con el hielo Grande de las dos Fresh Sodas (245 g en HIELO (g)), el hielo de Cold brew en HIELO (g) conservando 130/245 e Iced Chocolate AGUA 10 → 0 ml tras revalidar la subreceta; manifiesto, pruebas, ensayo local y PR. NO autoriza ensayo remoto, aplicar en producción ni merge; sin cambiar otros ingredientes, precios ni costos de compra."
+}
