@@ -1,6 +1,6 @@
 # 26 · Lote 3 de códigos POS: Pumpkin y Frap (preparado, sin cargar)
 
-**Estado (2026-10-27): preparado y ensayado en una copia local.**
+**Estado (2026-10-27): preparado, ensayado en local y con dry-run remoto (ROLLBACK) verificado; sin carga.**
 - **Producción:** no se cargó nada.
 - **Al cargar:** pasaría de **62 a 70 enlaces** sin cambiar recetas, nombres, precios ni costos.
 - **Integración:** se apila sobre el PR #26, que tiene el cargador por manifiesto con el que se cargó el lote 2. El diff muestra solo el lote 3.
@@ -94,3 +94,19 @@ Se reutiliza `enlaces-pos.ts` con manifiesto fijado:
 6. Reversión, solo con aprobación: `--lote lote-3 --revertir --carga <carga_id>`.
 
 **Antes de integrar:** este PR depende del #26. Se integra después de él, cambiando su base a `main`.
+
+## Dry-run remoto (2026-10-27, 00:24 UTC; autorizado por Carlo, sin carga)
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2026-10-27T0022Z`** | Restaurado en una copia local aislada y comparado con producción: 19,652 filas idénticas; solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS idénticas |
+| **Revalidación** (solo lectura) | Las 8 recetas activas, con el UUID y el nombre del lote. Ninguno de los 8 códigos estaba cargado y ninguna de esas recetas tenía enlace. Los 62 enlaces, idénticos a los del cierre del renombre. Perfil admin activo; bitácora 435 (máx. 547); migración 22 |
+| **Dry-run con ROLLBACK** (rama `1d71e2d`) | 8 altas, 0 problemas. Dentro de la transacción: 62 → **70** enlaces; lote 1 57/57 y lote 2 5/5 intactos antes y después; 8 registros propios en la bitácora (ids 548–555) y 0 ajenos; sin cambios comerciales |
+| **Verificación** (conexión nueva) | Siguen **exactamente los 62 enlaces originales** (huella idéntica), sin ninguno de los 8 códigos. **No persistió bitácora**: 435 registros, máx. 547; los ids 548–555 los consumió la secuencia durante el ROLLBACK. Sin cambios en recetas, costos, márgenes, alertas, precios, líneas, cantidades ni insumos. **Última migración: la 22** |
+
+**Dependencia entre PRs.** Este PR (#35) se apila sobre el #26, que tiene el cargador por manifiesto con el que se cargó el lote 2, y depende de él. La carga del lote 3 se ejecutaría desde esta rama, como se hizo con el lote 2. Para integrar:
+1. Merge del #26.
+2. Cambiar la base del #35 a `main` y revisar que su diff solo contenga el lote 3.
+3. Merge del #35.
+
+Ninguno de los dos contiene migraciones.
