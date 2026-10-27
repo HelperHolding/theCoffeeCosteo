@@ -232,7 +232,7 @@ Se revalidaron las páginas del PDF (sha256 `6a81e1a8…`) y las subrecetas en p
 2. **K1:** enlazar por identidad los 9 de tamaño pendiente, en el mismo lote 4 o en uno aparte.
 3. **N1** (Zoé Water) y preguntar al proveedor por N2.
 4. **Desactivaciones C1–C6**, en un lote con dependencias comprobadas (doc 16).
-5. **Recetas del §3.1** con el PDF: 3a, Cold brew en `HIELO (g)` e Iced Chocolate.
+5. **Recetas del §3.1** con el PDF: 3a, Cold brew en `HIELO (g)` e Iced Chocolate. Preparadas como un único lote en el doc 29 (sin aplicar).
 6. **Sucursales:** el PR de código del §2.
 7. **Operaciones/Compras:** enviar las preguntas del §3.2, cuando Carlo lo decida.
 8. **PR #24:** actualizarlo e integrarlo con el UUID retirado.
