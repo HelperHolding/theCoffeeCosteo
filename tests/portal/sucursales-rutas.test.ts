@@ -94,7 +94,7 @@ import { GET as productosGet } from '../../app/api/sucursales/[companyId]/produc
 import { GET as pedidosGet } from '../../app/api/sucursales/[companyId]/pedidos/route';
 import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
 import { sesionSucursales } from '../../lib/supabase/sesion';
-import { apiFalsa, pedido } from './sucursales-fixtures';
+import { apiFalsa, envelope, pedido } from './sucursales-fixtures';
 
 // 2026-10-22 12:00:00 en Ciudad Juárez (UTC−6).
 const AHORA = Date.UTC(2026, 9, 22, 18, 0, 0);
@@ -210,6 +210,127 @@ describe('En vivo', () => {
     expect(d.curva.hoy[11]).toBe(16500);
     expect(d.kpisBase.pedidos).toBe(0);
     expect(d.comparativo.venta).toBeNull();
+  });
+
+  it('top 5 e insight con filtro App: la línea sin código se une al código único del día; totales iguales', async () => {
+    const app = pedido('2026-10-22', '10:30:00', {
+      fromSmartphone: true,
+      paymentMethod: 'VIRTUAL_WALLET',
+      refundId: null,
+      grossAmount: 150,
+      netAmout: 150,
+      items: [
+        { defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] },
+        { defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] },
+      ],
+    });
+    fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [pedido('2026-10-22', '08:00:00'), app] }).fetch);
+    const leer = async (o: string) => (await llamar(vivo, '612', `?origen=${o}`)).json();
+    const [soloApp, todos, mostrador, rappi] = [
+      await leer('app'),
+      await leer('todos'),
+      await leer('mostrador'),
+      await leer('rappi'),
+    ];
+    const top = (d: {
+      productosTop: { clave: string; nombre: string; importeCent: number; sinCodigo?: boolean }[];
+    }) => d.productosTop.map((p) => [p.clave, p.nombre, p.importeCent, !!p.sinCodigo]);
+    expect(top(soloApp)).toEqual([['codigo:BRO13', 'Brownie', 15000, false]]);
+    expect(soloApp.kpis.ventaCent).toBe(15000);
+    expect(soloApp.insights.find((i: { id: string }) => i.id === 'top').texto).toBe(
+      'Brownie aporta el 100% de la venta de hoy.',
+    );
+    expect(top(todos)).toEqual([
+      ['codigo:BRO13', 'Brownie', 22500, false],
+      ['codigo:4MIL', 'Matcha Iced Latte', 9000, false],
+    ]);
+    expect(top(rappi)).toEqual([]);
+    // Los filtros se suman: App + Mostrador + Rappi = Todos, por producto y en la venta.
+    const suma = new Map<string, number>();
+    for (const d of [soloApp, mostrador, rappi])
+      for (const p of d.productosTop) suma.set(p.clave, (suma.get(p.clave) ?? 0) + p.importeCent);
+    expect(Object.fromEntries(suma)).toEqual(
+      Object.fromEntries(
+        todos.productosTop.map((p: { clave: string; importeCent: number }) => [p.clave, p.importeCent]),
+      ),
+    );
+    expect(soloApp.kpis.ventaCent + mostrador.kpis.ventaCent + rappi.kpis.ventaCent).toBe(
+      todos.kpis.ventaCent,
+    );
+  });
+
+  describe('la evidencia de identidad no cruza periodo ni sucursal', () => {
+    const appSinCodigo = (fecha: string, hora: string) =>
+      pedido(fecha, hora, {
+        fromSmartphone: true,
+        paymentMethod: 'VIRTUAL_WALLET',
+        refundId: null,
+        grossAmount: 75,
+        netAmout: 75,
+        items: [{ defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+      });
+    const conCodigo = (fecha: string, hora: string) =>
+      pedido(fecha, hora, {
+        items: [{ defaultCode: 'BRO13', productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+        grossAmount: 75,
+        netAmout: 75,
+      });
+    const topApp = async () =>
+      (await (await llamar(vivo, '612', '?origen=app')).json()).productosTop.map(
+        (p: { clave: string; importeCent: number; sinCodigo?: boolean }) => [
+          p.clave,
+          p.importeCent,
+          !!p.sinCodigo,
+        ],
+      );
+
+    it('En vivo: el código de otro día (ayer o la base de la semana pasada) no se usa hoy', async () => {
+      fetchSpy.mockImplementation(
+        apiFalsa({
+          '2026-10-21': [conCodigo('2026-10-21', '09:00:00')],
+          '2026-10-15': [conCodigo('2026-10-15', '09:00:00')],
+          '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00')],
+        }).fetch,
+      );
+      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+    });
+
+    it('En vivo: un pedido posterior al corte no sirve de evidencia', async () => {
+      // 12:00:05 es posterior al corte (reloj del POS adelantado): no cuenta en el periodo mostrado.
+      fetchSpy.mockImplementation(
+        apiFalsa({
+          '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00'), conCodigo('2026-10-22', '12:00:05')],
+        }).fetch,
+      );
+      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+    });
+
+    it('En vivo: el código de otra sucursal no se usa (ni siquiera se lee)', async () => {
+      const propia = apiFalsa({ '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00')] });
+      fetchSpy.mockImplementation(async (u, init) =>
+        new URL(String(u)).pathname === '/order/company/583'
+          ? Response.json(envelope([conCodigo('2026-10-22', '09:00:00')], 1, 100, 1))
+          : propia.fetch(u, init),
+      );
+      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+      expect(fetchSpy.mock.calls.some(([u]) => String(u).includes('/order/company/583'))).toBe(false);
+    });
+
+    it('Productos: el código de un día fuera del periodo consultado no se usa', async () => {
+      fetchSpy.mockImplementation(
+        apiFalsa({
+          '2026-10-20': [conCodigo('2026-10-20', '09:00:00')],
+          '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00')],
+        }).fetch,
+      );
+      const leer = async (desde: string) =>
+        (
+          await (await llamar(productosGet, '612', `?desde=${desde}&hasta=2026-10-22&origen=app`)).json()
+        ).productos.map((p: { clave: string; sinCodigo?: boolean }) => [p.clave, !!p.sinCodigo]);
+      expect(await leer('2026-10-22')).toEqual([['nombre:Brownie', true]]);
+      // Si el periodo incluye el día con el código, sí se usa.
+      expect(await leer('2026-10-20')).toEqual([['codigo:BRO13', false]]);
+    });
   });
 
   it('caché compartida tras autorizar: dos usuarios, una sola lectura al proveedor', async () => {
