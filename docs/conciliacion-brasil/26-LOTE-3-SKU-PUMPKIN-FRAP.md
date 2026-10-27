@@ -1,6 +1,6 @@
 # 26 · Lote 3 de códigos POS: Pumpkin y Frap (preparado, sin cargar)
 
-**Estado (2026-10-27): preparado, ensayado en local y con dry-run remoto (ROLLBACK) verificado; sin carga.**
+**Estado (2026-10-27): lote 3 cargado en producción y verificado (70 enlaces). Cierre al final.**
 - **Producción:** no se cargó nada.
 - **Al cargar:** pasaría de **62 a 70 enlaces** sin cambiar recetas, nombres, precios ni costos.
 - **Integración:** se apila sobre el PR #26, que tiene el cargador por manifiesto con el que se cargó el lote 2. El diff muestra solo el lote 3.
@@ -110,3 +110,16 @@ Se reutiliza `enlaces-pos.ts` con manifiesto fijado:
 3. Merge del #35.
 
 Ninguno de los dos contiene migraciones.
+
+## Cierre de la carga (2026-10-27, 00:26 UTC; autorizada por Carlo)
+
+| Paso | Resultado |
+|---|---|
+| **Revalidación** | Código y lote sin cambios desde el dry-run (`1d71e2d` → `0e86b73`, solo documentación). Estado de producción idéntico al verificado tras el dry-run: 62 enlaces, ninguno de los 8 cargado, recetas con su nombre, perfil activo, bitácora 435, migración 22 |
+| **Carga** | **COMMIT**, `carga_id` `ae0f740b-1f62-41f2-af2c-e9fbc91d228c`. 8 altas, 0 problemas, 0 registros ajenos; lote 1 57/57 y lote 2 5/5 intactos antes y después; sin cambios comerciales |
+| **Verificación** (conexión nueva) | **70 enlaces a 70 recetas.** Las 8 filas tienen exactamente el código, la receta, el nombre observado y la evidencia del lote, con esta carga y la autoría de Carlo. Los **62 anteriores son idénticos** (huella `62:e72e1ba6…aff4b`, igual que antes). **8 registros propios** en la bitácora (#556–563: `producto_codigo_pos`, `carga_masiva`, autor, nota de la carga). Sin cambios en nombres, recetas, costos, márgenes, alertas, precios, líneas, cantidades ni insumos; migración 22 |
+| **Segundo dry-run** | 8 «sin cambio», 0 inserciones, 0 registros de bitácora, ROLLBACK; foto idéntica |
+
+**Reversión** (solo con aprobación): `--lote lote-3 --revertir --carga ae0f740b-1f62-41f2-af2c-e9fbc91d228c`. Los informes y el respaldo se guardan fuera del repo.
+
+**Pendiente:** integrar #26 y después #35 (ver la dependencia arriba). Siguen fuera Zoé, `BRICE` y los demás duplicados.
