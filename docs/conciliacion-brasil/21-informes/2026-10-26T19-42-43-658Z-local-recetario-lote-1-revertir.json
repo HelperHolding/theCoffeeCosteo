@@ -3,7 +3,7 @@
  "destino": "local",
  "modo": "revertir",
  "lote": "recetario-lote-1",
- "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "usuario": "<uuid-perfil>",
  "ejecucion": "e9b59b4c-af5d-4351-8a26-84bee1a5edbb",
  "receta": {
   "id": "7769fb2e-d7ac-46b6-abeb-e23634d40bd5",

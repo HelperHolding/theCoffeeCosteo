@@ -155,7 +155,7 @@ npx tsx scripts/conciliacion/renombres-b-aplicar.ts --revertir --confirmo jpqkmn
 
 ## Resultado del ensayo en producción (2026-10-26 16:20 UTC)
 
-Autorizado por Carlo. Se ejecutó sin `--aplicar` ni `--revertir`, en `jpqkmnfjwzniptszjuli`, con `--usuario 63e994a6-5cbc-4605-b0d0-78bde4264890` (Carlos Valencia, admin, activo).
+Autorizado por Carlo. Se ejecutó sin `--aplicar` ni `--revertir`, en `jpqkmnfjwzniptszjuli`, con `--usuario <uuid-perfil>` (Carlos Valencia, admin, activo).
 
 El informe está en `19-renombres/2026-10-26T16-20-44-425Z-jpqkmnfjwzniptszjuli-ensayo.json`.
 
@@ -181,7 +181,7 @@ El informe está en `19-renombres/2026-10-26T16-20-44-425Z-jpqkmnfjwzniptszjuli-
 Autorizada por Carlo, solo para B1–B6. Comando ejecutado:
 
 ```
---aplicar --confirmo jpqkmnfjwzniptszjuli --usuario 63e994a6-5cbc-4605-b0d0-78bde4264890
+--aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
 ```
 
 Carlo aceptó quedar registrado como último editor y como autor de los cambios.

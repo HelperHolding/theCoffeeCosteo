@@ -2,7 +2,7 @@
  "fecha": "2026-10-26T16:23:57.526Z",
  "destino": "jpqkmnfjwzniptszjuli",
  "modo": "aplicar",
- "usuario": "63e994a6-5cbc-4605-b0d0-78bde4264890",
+ "usuario": "<uuid-perfil>",
  "recetas": [
   {
    "decision": "B1",
@@ -21,7 +21,7 @@
     "valor_anterior": "Pain Au Chocolat",
     "valor_nuevo": "Pain au Chocolat",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   },
   {
@@ -41,7 +41,7 @@
     "valor_anterior": "Grilled Ham Cheese And Tomato Sandwich",
     "valor_nuevo": "Grilled Ham Cheese and Tomato Sandwich",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   },
   {
@@ -61,7 +61,7 @@
     "valor_anterior": "Croissant Filled With Cheese and Ham",
     "valor_nuevo": "Croissant filled with cheese and ham",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   },
   {
@@ -81,7 +81,7 @@
     "valor_anterior": "Brownie With Ice Cream",
     "valor_nuevo": "Brownie with ice cream",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   },
   {
@@ -101,7 +101,7 @@
     "valor_anterior": "White Bag 250g",
     "valor_nuevo": "White bag 250g",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   },
   {
@@ -121,7 +121,7 @@
     "valor_anterior": "Black Edition 250g",
     "valor_nuevo": "Black edition 250g",
     "origen": "carga_masiva",
-    "usuario_id": "63e994a6-5cbc-4605-b0d0-78bde4264890"
+    "usuario_id": "<uuid-perfil>"
    }
   }
  ],
