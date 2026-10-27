@@ -10,6 +10,7 @@ import {
   construirVivo,
   sucursalInfo,
 } from '../../../lib/sucursales/datos';
+import { claveCosto, type DatosCosteo } from '../../../lib/sucursales/costeo';
 import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
@@ -20,6 +21,45 @@ import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
  */
 const cfg = configDe(612)!;
 const estado = new URLSearchParams(window.location.search).get('estado');
+
+// Costeo SINTÉTICO (costos inventados). Tres recetas con tamaño verificado, una Único y una sin verificar;
+// GHC queda sin enlace. ?costeo=0 simula un usuario sin permiso de costos (la respuesta no trae costeo).
+const ID = {
+  tw: 'a96339d6-80e7-440b-a33b-bca51440d8e6',
+  il: 'fcf0d45d-76b2-48a4-8d96-d8abc228eca8',
+  mil: '9756eec9-1f09-45ee-a45b-21ac8c54bb22',
+  bro: 'b0000000-0000-4000-8000-000000000001',
+  pum: 'b0000000-0000-4000-8000-000000000002',
+};
+const costeo: DatosCosteo | null =
+  new URLSearchParams(window.location.search).get('costeo') === '0'
+    ? null
+    : {
+        leidoEn: new Date().toISOString(),
+        iva: 0.16,
+        enlaces: new Map([
+          ['TW', { recetaId: ID.tw, receta: 'True White' }],
+          ['5IL', { recetaId: ID.il, receta: 'Iced Latte' }],
+          ['4MIL', { recetaId: ID.mil, receta: 'Matcha Iced Latte' }],
+          ['BRO13', { recetaId: ID.bro, receta: 'Brownie' }],
+          ['PUMPL', { recetaId: ID.pum, receta: 'Pumpkin Latte' }],
+        ]),
+        costos: new Map(
+          (
+            [
+              [ID.tw, 'Chica', 2100],
+              [ID.tw, 'Grande', 2500],
+              [ID.il, 'Chica', 1500],
+              [ID.il, 'Grande', 1800],
+              [ID.mil, 'Chica', 2600],
+              [ID.mil, 'Grande', 3100],
+              [ID.bro, 'Único', 2900],
+              [ID.pum, 'Chica', 3000],
+            ] as const
+          ).map(([r, t, c]) => [claveCosto(r, t), { costoCent: c, usaInactivo: false }]),
+        ),
+        unicas: new Set([ID.bro]),
+      };
 
 const PRODUCTOS = [
   ['PUMPL', 'Pumpkin Latte', 129],
@@ -140,7 +180,7 @@ window.fetch = async (entrada, init) => {
       : m[2] === 'tendencias'
         ? await construirTendencias(cfg, Number(q.get('semanas') ?? 4) as 4 | 8 | 12, origen)
         : m[2] === 'productos'
-          ? await construirProductos(cfg, desde, hasta, origen)
+          ? await construirProductos(cfg, desde, hasta, origen, costeo)
           : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1));
   return Response.json(cuerpo);
 };

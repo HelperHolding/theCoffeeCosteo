@@ -31,6 +31,7 @@ import {
   variacion,
   type FiltroOrigen,
 } from './metricas';
+import { costear, type DatosCosteo } from './costeo';
 import { normalizar, type PedidoNormal } from './normalizar';
 import {
   dependenciasReales,
@@ -255,17 +256,29 @@ export async function construirProductos(
   desde: string,
   hasta: string,
   origen: FiltroOrigen,
+  /** Solo si el usuario puede ver costos (null/undefined: la respuesta no lleva costeo). */
+  datosCosteo?: DatosCosteo | null,
 ): Promise<RespuestaProductos> {
   const l = await leerVentana(cfg, desde, hasta);
   const ps = filtrarOrigen(l.pedidos, origen);
-  return {
+  const lista = productos(ps);
+  const base = {
     sucursal: sucursalInfo(cfg),
     origen,
     lectura: info(l, ps.length),
     totales: resumen(ps),
-    productos: productos(ps),
     personalizaciones: personalizaciones(ps).slice(0, 30),
     conciliacion: conciliar(ps),
+  };
+  if (!datosCosteo) return { ...base, productos: lista };
+  const c = costear(ps, datosCosteo);
+  return {
+    ...base,
+    productos: lista.map((x) => {
+      const costeo = c.porClave.get(x.clave);
+      return costeo ? { ...x, costeo } : x;
+    }),
+    costeo: c.resumen,
   };
 }
 
