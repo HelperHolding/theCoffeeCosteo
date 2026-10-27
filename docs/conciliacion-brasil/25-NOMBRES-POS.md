@@ -84,6 +84,23 @@ Son las 8 recetas con su UUID, el nombre actual y el nombre nuevo, que es el lit
 | **N2** | `ZOETWIAPP` «Zoe Water Twist»: un código para **dos** recetas (Frutos Rojos y Limón y Jengibre) | El POS no distingue el sabor | No renombrar ni ligar. Queda pendiente del proveedor (D10) | Ninguna por ahora |
 | **N3** | Manifiestos ya aplicados que fijan el nombre: lote 1 del recetario (R3, Pumpkin Spice Frappé) y H2 (7 de estas recetas: R1, R3–R8) | En la copia local, tras el renombre, el ensayo de esos manifiestos se detiene («la receta se llama «Chai Frap»…»). La reversión de H2 ya se negaba por la regla de registros posteriores, y ahora también por esto | **(a) Aceptarlo.** Esos lotes están aplicados y verificados; sus manifiestos e informes no se reescriben. Si alguna vez hubiera que deshacerlos, se prepara un lote de corrección nuevo con los nombres vigentes. (b) La alternativa: antes de aplicar este lote, adaptar las precondiciones de esos scripts para que acepten un nombre registrado por un lote de renombres aprobado. Es un cambio de código aparte, con su diff revisado | «N3 a» o «N3 b» |
 
+### 4.1 Respuestas de Carlo (2026-10-26)
+
+- **N1:** Zoé queda **fuera de este lote** y pendiente; no bloquea los 8 renombres.
+- **N2:** sigue pendiente del proveedor.
+- **N3: opción a.** Los manifiestos e informes ya ejecutados se conservan **intactos**. Una corrección futura de esas recetas requiere un **lote nuevo**, revisado contra los nombres, las versiones y las cantidades vigentes.
+
+**Manifiestos que dejan de ser reutilizables cuando se aplique este lote.** Sus ensayos, repeticiones y reversiones se detienen por nombre o por registros posteriores. Quedan como evidencia histórica de lo aplicado:
+
+| Manifiesto | Lote | Recetas afectadas | Uso que deja de funcionar |
+|---|---|---|---|
+| `21-lote-1-recetas.manifiesto.json` | `recetario-lote-1` (ejecución `d9dadc19…`) | Pumpkin Spice Frappé → Pumpkin Spice Frap | Ensayo, repetición y reversión (ya se negaba por los registros posteriores de H2) |
+| `23-hielo-gramos-lote-1.manifiesto.json` | `hielo-gramos-lote-1` (ejecución `c9d715df…`) | Pumpkin Spice Iced Latte, Pumpkin Spice Frappé, Salted Caramel, Taro, Coffee, Matcha y Chai Frappé (7 de 26 líneas) | Ensayo, repetición y reversión del lote completo: la transacción es única, así que una sola receta renombrada lo detiene. `HIELO (g)` y las 26 líneas no cambian |
+
+**Siguen reutilizables:**
+- `21-lote-2-urban-chocolate`, `21-lote-2-cold-brew` y `24-lote-3b-cold-brew-agua`: Urban Chocolate y Cold brew no se renombran.
+- Los manifiestos de enlaces POS (lotes 1 y 2): sus 62 recetas no se renombran.
+
 ## 5. Script y garantías (`scripts/conciliacion/renombres-lote.ts` y `-aplicar.ts`)
 
 **Por qué un módulo nuevo.** `renombres-b.ts` (B1–B6) lee un CSV sin huella, permite el ensayo sin perfil, no fija versión y revierte la lista completa. Por eso se conserva solo como registro de B1–B6, y este lote usa un módulo nuevo con el patrón de `recetas-correcciones.ts`:
@@ -163,4 +180,4 @@ BD completa: **208/208**. `tsc` sin errores.
    - segundo ensayo con 8 «sin cambio» y 0 registros.
 6. **Reversión**, solo con aprobación: `--lote nombres-pos-lote-1 --revertir --ejecucion <uuid>`.
 
-Antes del paso 3 hay que decidir **N3**.
+N3 decidida (opción a, §4.1). El ensayo remoto quedó autorizado; la aplicación sigue pendiente.
