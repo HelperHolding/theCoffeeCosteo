@@ -51,7 +51,16 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/20-lote-2.manifiesto.json',
     sha256: '516e9e7748ddb1e2679c823b262a57d0998a2dd7be74a645111887c854011f91',
   },
+  'lote-3': {
+    manifiesto: 'docs/conciliacion-brasil/26-lote-3.manifiesto.json',
+    sha256: '0ffe56406d1d4759e7a7e726c090d2082abd9c8d672c688c4d024abae69837d2',
+  },
 };
+/** Documento de cada lote aprobado (informes y nota de bitácora). */
+export const DOC_LOTE: Record<string, string> = { 'lote-1': '17', 'lote-2': '20', 'lote-3': '26' };
+/** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
+const referenciaLote = (nombre: string) =>
+  DOC_LOTE[nombre] ? `docs/conciliacion-brasil/${DOC_LOTE[nombre]}` : `lote ${nombre}`;
 export interface Manifiesto {
   lote: string;
   archivo: string;
@@ -451,7 +460,7 @@ export async function enlazar(
       ir.bitacora = Number(b[0].id);
       await cx.query(`update bitacora set nota = $2 where id = $1`, [
         b[0].id,
-        `${modo === 'revertir' ? 'Reversión de la carga' : `${etiqueta} SKU, carga`} ${carga} (docs/conciliacion-brasil/${informe.lote.nombre === 'lote-1' ? '17' : '20'})`,
+        `${modo === 'revertir' ? 'Reversión de la carga' : `${etiqueta} SKU, carga`} ${carga} (${referenciaLote(informe.lote.nombre)})`,
       ]);
     }
     if (propias.length !== esperadas.length || propias.some((b) => !esperadas.includes(b.registro_id)))

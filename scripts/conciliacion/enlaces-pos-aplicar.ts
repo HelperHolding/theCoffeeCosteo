@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import pg from 'pg';
 import { PROYECTO } from './db-lectura';
 import { nombreDestino, resolverDestino } from './destino';
-import { enlazar, leerLoteAprobado, type ModoEnlaces } from './enlaces-pos';
+import { DOC_LOTE, enlazar, leerLoteAprobado, type ModoEnlaces } from './enlaces-pos';
 
 /**
  * Lotes de códigos POS · CLI (lógica y verificaciones en enlaces-pos.ts). --usuario es obligatorio en todos los modos.
@@ -15,7 +15,9 @@ import { enlazar, leerLoteAprobado, type ModoEnlaces } from './enlaces-pos';
  *     npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --revertir --carga <carga_id> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
  *   --local <url>: copia en localhost (respaldo restaurado). No equivale a autorización remota.
  * DATABASE_URL se lee con el cargador existente, se valida con el parser contra el proyecto y nunca se imprime.
- * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/17-informes/ (lote 1) o 20-informes/ (lote 2).
+ * Aplicar y revertir exigen --lote explícito (sin lote por omisión al escribir).
+ * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/<doc>-informes/ según DOC_LOTE
+ * (17 lote 1, 20 lote 2, 26 lote 3).
  */
 const args = process.argv.slice(2);
 const valor = (f: string) => (args.includes(f) ? args[args.indexOf(f) + 1] : undefined);
@@ -32,7 +34,11 @@ const destino = await resolverDestino(valor('--local'));
 if (destino.tipo === 'remoto' && modo !== 'ensayo' && valor('--confirmo') !== PROYECTO)
   throw new Error(`Para escribir hay que pasar --confirmo ${PROYECTO}`);
 
+if (modo !== 'ensayo' && !valor('--lote'))
+  throw new Error('Aplicar o revertir exige --lote <nombre> explícito');
 const aprobado = await leerLoteAprobado(valor('--lote') ?? 'lote-1');
+if (!DOC_LOTE[aprobado.nombre])
+  throw new Error(`El lote «${aprobado.nombre}» no tiene documento en DOC_LOTE`);
 const c = new pg.Client({ connectionString: destino.url, application_name: `enlaces-pos-${modo}` });
 await c.connect();
 try {
@@ -43,7 +49,7 @@ try {
     { usuario, carga: valor('--carga'), lote: aprobado.nombre, previos: aprobado.previos },
   );
   const registro = { fecha: new Date().toISOString(), destino: nombreDestino(destino), ...informe };
-  const carpeta = `docs/conciliacion-brasil/${aprobado.nombre === 'lote-1' ? '17' : '20'}-informes`;
+  const carpeta = `docs/conciliacion-brasil/${DOC_LOTE[aprobado.nombre]}-informes`;
   await mkdir(carpeta, { recursive: true });
   const archivo = `${carpeta}/${registro.fecha.replace(/[:.]/g, '-')}-${registro.destino}-${aprobado.nombre}-${modo}.json`;
   await writeFile(archivo, JSON.stringify(registro, null, 1) + '\n');
