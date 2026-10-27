@@ -298,6 +298,41 @@ describe('Productos y Pedidos', () => {
     }
   });
 
+  it('filtro App: las líneas sin código se unen al código del periodo; los cuatro filtros suman Todos', async () => {
+    const app = pedido('2026-10-22', '10:30:00', {
+      fromSmartphone: true,
+      paymentMethod: 'VIRTUAL_WALLET',
+      refundId: null,
+      grossAmount: 75,
+      netAmout: 75,
+      items: [{ defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+    });
+    fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [pedido('2026-10-22', '09:00:00'), app] }).fetch);
+    const leer = async (o: string) =>
+      (await llamar(productosGet, '612', `?desde=2026-10-22&hasta=2026-10-22&origen=${o}`)).json();
+    const soloApp = await leer('app');
+    expect(
+      soloApp.productos.map((x: { nombre: string; clave: string; importeCent: number }) => [
+        x.clave,
+        x.nombre,
+        x.importeCent,
+      ]),
+    ).toEqual([['codigo:BRO13', 'Brownie', 7500]]);
+    expect(soloApp.costeo.cobertura).toMatchObject({
+      totalCent: 7500,
+      sinCodigoCent: 0,
+      conRecetaCent: 7500,
+    });
+    expect(soloApp.costeo.completo).toMatchObject({ lineas: 1, costoCent: 2900 });
+    expect(soloApp.totales.ventaCent).toBe(7500);
+    const [todos, mostrador, rappi] = [await leer('todos'), await leer('mostrador'), await leer('rappi')];
+    for (const k of ['totalCent', 'genericoCent', 'sinCodigoCent', 'sinEnlaceCent', 'conRecetaCent'])
+      expect(soloApp.costeo.cobertura[k] + mostrador.costeo.cobertura[k] + rappi.costeo.cobertura[k]).toBe(
+        todos.costeo.cobertura[k],
+      );
+    expect(todos.costeo.cobertura.sinCodigoCent).toBe(0);
+  });
+
   it('pedidos paginados de 25 sobre el conjunto completo, con filtro de pago', async () => {
     const muchos = Array.from({ length: 30 }, (_, i) =>
       pedido('2026-10-20', `09:${String(i).padStart(2, '0')}:00`, i % 3 ? {} : { paymentMethod: 'DINHEIRO' }),

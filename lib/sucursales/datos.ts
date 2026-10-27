@@ -261,7 +261,8 @@ export async function construirProductos(
 ): Promise<RespuestaProductos> {
   const l = await leerVentana(cfg, desde, hasta);
   const ps = filtrarOrigen(l.pedidos, origen);
-  const lista = productos(ps);
+  // La identidad de las líneas sin código se aprende de todo el periodo, no solo del origen filtrado.
+  const lista = productos(ps, l.pedidos);
   const base = {
     sucursal: sucursalInfo(cfg),
     origen,
@@ -271,7 +272,7 @@ export async function construirProductos(
     conciliacion: conciliar(ps),
   };
   if (!datosCosteo) return { ...base, productos: lista };
-  const c = costear(ps, datosCosteo);
+  const c = costear(ps, datosCosteo, l.pedidos);
   return {
     ...base,
     productos: lista.map((x) => {

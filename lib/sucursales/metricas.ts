@@ -121,10 +121,13 @@ export interface ProductoResumen {
  * Una línea sin defaultCode se une al código del mismo nombre exacto solo si ese nombre tiene UN código en el
  * periodo; con varios es ambigua y queda aparte, marcada sin código (no se elige uno). Las claves de código y de
  * nombre van en espacios separados para que un nombre igual al código de otro producto no se mezcle con él.
+ * `evidencia` son TODOS los pedidos del periodo y la sucursal, antes de filtrar por origen: la App manda líneas sin
+ * código y su código solo aparece en Mostrador o Rappi. Con un filtro, la regla es la misma (un único código para el
+ * nombre en el periodo); solo no se pierde la evidencia.
  */
-export function identificador(ps: PedidoNormal[]) {
+export function identificador(evidencia: PedidoNormal[]) {
   const codigosDe = new Map<string, Set<string>>();
-  for (const p of ps)
+  for (const p of evidencia)
     for (const l of p.lineas)
       if (!l.sinCodigo) codigosDe.set(l.nombre, (codigosDe.get(l.nombre) ?? new Set<string>()).add(l.codigo));
   return (l: LineaNormal) => {
@@ -138,7 +141,8 @@ export function identificador(ps: PedidoNormal[]) {
   };
 }
 
-export function productos(ps: PedidoNormal[]): ProductoResumen[] {
+/** `evidencia`: pedidos del periodo sin filtrar por origen (ver identificador); por omisión, los mismos `ps`. */
+export function productos(ps: PedidoNormal[], evidencia: PedidoNormal[] = ps): ProductoResumen[] {
   const m = new Map<
     string,
     {
@@ -156,7 +160,7 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
     }
   >();
   // `ps` es siempre de una sola sucursal: los códigos aprendidos aquí no se aplican a otra.
-  const identidad = identificador(ps);
+  const identidad = identificador(evidencia);
   let total = 0;
   for (const p of ps)
     for (const l of p.lineas) {
