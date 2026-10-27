@@ -39,7 +39,7 @@ export function TarjetaCosteo({ c, moneda }: { c: CosteoResumen; moneda: string 
   const motivos = (Object.keys(MOTIVOS) as MotivoParcial[]).filter((k) => c.parcial.motivos[k] > 0);
   return (
     <Tarjeta
-      titulo="Costeo con el costo actual de Costeo"
+      titulo="Costeo · calculado con el costo actual de Costeo"
       descripcion={`Costos leídos el ${leido(c.leidoEn)}. Son los costos de hoy aplicados al periodo: no es el margen histórico real.`}
     >
       <div className="space-y-5 text-sm">
@@ -103,8 +103,9 @@ export function TarjetaCosteo({ c, moneda }: { c: CosteoResumen; moneda: string 
           </li>
           <li>
             Margen bruto teórico = importe cobrado ÷ {(1 + c.iva).toFixed(2)} (sin IVA) − costo de la receta,
-            antes de comisiones. <strong>Provisional</strong>: falta confirmar si los costos de insumos se
-            capturan con o sin IVA.
+            antes de comisiones. <strong>Provisional</strong>: Compras aún debe confirmar si los costos de
+            insumos se capturan con o sin IVA; si incluyen IVA, el costo está sobrestimado y el margen
+            subestimado.
           </li>
           <li>Los nombres e importes de la API se muestran sin cambios; el costeo va aparte.</li>
         </ul>
@@ -114,8 +115,17 @@ export function TarjetaCosteo({ c, moneda }: { c: CosteoResumen; moneda: string 
 }
 
 /** Celda de la tabla de productos: receta de Costeo y estado del costeo de sus líneas. */
-export function CeldaCosteo({ c, moneda }: { c?: CosteoProducto; moneda: string }) {
-  if (!c) return <span className="text-xs text-muted-foreground">sin receta</span>;
+export function CeldaCosteo({
+  c,
+  moneda,
+  generico = false,
+}: {
+  c?: CosteoProducto;
+  moneda: string;
+  generico?: boolean;
+}) {
+  if (generico) return <span className="text-xs text-muted-foreground">excluido (Generic, fuera de B)</span>;
+  if (!c) return <span className="text-xs text-muted-foreground">sin enlace a receta</span>;
   const total = c.completo.lineas + c.parcial.lineas;
   return (
     <span className="block text-xs">

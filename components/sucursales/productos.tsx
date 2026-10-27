@@ -2,7 +2,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { RespuestaProductos } from '@/lib/sucursales/contratos';
-import type { FiltroOrigen } from '@/lib/sucursales/metricas';
+import { CODIGO_GENERICO, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { enZona, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
@@ -194,7 +194,11 @@ export function Productos({
                                 <td className="numero">{dinero(x.extraCustomsCent, m)}</td>
                                 {datos.costeo && (
                                   <td>
-                                    <CeldaCosteo c={x.costeo} moneda={m} />
+                                    <CeldaCosteo
+                                      c={x.costeo}
+                                      moneda={m}
+                                      generico={x.codigo === CODIGO_GENERICO && !x.sinCodigo}
+                                    />
                                   </td>
                                 )}
                               </tr>
