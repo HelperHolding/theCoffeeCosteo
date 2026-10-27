@@ -1,0 +1,37 @@
+{
+ "lote": "recetario-lote-2-coldbrew",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3",
+  "ficha": "Cold Brew Concentrado (p.9) y Cold Brew (p.27)",
+  "pagina": 27
+ },
+ "receta": {
+  "id": "00f47aba-88e6-4ebc-a815-5833f8b29871",
+  "nombre": "Cold brew",
+  "version": 28
+ },
+ "celdas": [
+  {
+   "linea_id": "5aa67123-fbb9-45f9-92e0-61bd2d9b13d0",
+   "insumo_id": "a44cbf18-2bfc-4934-9332-b51ff0184227",
+   "insumo": "CAFÉ TOSTADO EN GRANO BLACK 1.5 KG",
+   "tamano_id": "bdccdd50-1582-4c95-8bd4-f92a75b138d5",
+   "tamano": "Chica",
+   "previo": 16.67,
+   "nuevo": 20,
+   "fuente": "p.9: 200 g de café → 1 L de concentrado (rendimiento oficial); p.27 Regular (440 ml): 100 ml de cold brew → 200 g × 100/1000 = 20 g"
+  },
+  {
+   "linea_id": "5aa67123-fbb9-45f9-92e0-61bd2d9b13d0",
+   "insumo_id": "a44cbf18-2bfc-4934-9332-b51ff0184227",
+   "insumo": "CAFÉ TOSTADO EN GRANO BLACK 1.5 KG",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 16.67,
+   "nuevo": 20,
+   "fuente": "p.9: 200 g de café → 1 L de concentrado (rendimiento oficial); p.27 Grande (600 ml): 100 ml de cold brew → 20 g"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-26: autoriza preparar manifiesto, pruebas y simulación local del lote 2 (Cold Brew café 16.67 → 20 g con el rendimiento oficial de 1 L). NO autoriza aplicar en producción. Las líneas de AGUA (duplicación del concentrado, costo $0) quedan fuera y se reportan aparte."
+}

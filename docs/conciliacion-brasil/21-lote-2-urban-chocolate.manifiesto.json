@@ -1,0 +1,27 @@
+{
+ "lote": "recetario-lote-2-urban",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026.pdf",
+  "sha256": "6a81e1a852cbc8e4ec661e82f573ac6d269d130122d4e3581142771650cc7da3",
+  "ficha": "Urban Chocolat",
+  "pagina": 34
+ },
+ "receta": {
+  "id": "2c8b49a6-7b2f-489e-8932-1d1ff8c7754c",
+  "nombre": "Urban Chocolate",
+  "version": 20
+ },
+ "celdas": [
+  {
+   "linea_id": "c5306902-5f70-4ec6-a80d-a6c048c01dfd",
+   "insumo_id": "005edf9e-5acb-4cd6-a092-28bafc58b6f4",
+   "insumo": "JARABE DE VANILLA 1 LT (3 PZAS)",
+   "tamano_id": "145acb16-96bc-49fe-8f98-922498328d95",
+   "tamano": "Grande",
+   "previo": 10,
+   "nuevo": 0,
+   "fuente": "p.34 Grande (360 ml): 36 g de preparado de chocolate, 10 ml de agua caliente y 250 ml de leche; la ficha no lleva jarabe de vainilla en ninguna medida"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-26: autoriza preparar manifiesto, pruebas y simulación local del lote 2 (Urban Chocolate Grande sin vainilla, sin desactivar ni fusionar registros). NO autoriza aplicar en producción."
+}

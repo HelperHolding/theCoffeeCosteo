@@ -1,0 +1,38 @@
+{
+ "fecha": "2026-10-26T21:51:10.755Z",
+ "destino": "local",
+ "modo": "ensayo",
+ "lote": "recetario-lote-2-urban",
+ "usuario": "(perfil admin activo; uuid omitido en el repositorio público)",
+ "ejecucion": "ca4e35d9-3b0f-45e2-b671-6989cabeb286",
+ "receta": {
+  "id": "2c8b49a6-7b2f-489e-8932-1d1ff8c7754c",
+  "nombre": "Urban Chocolate",
+  "versionEsperada": 20,
+  "versionAntes": 20,
+  "versionDespues": 21
+ },
+ "celdas": [
+  {
+   "insumo": "JARABE DE VANILLA 1 LT (3 PZAS)",
+   "tamano": "Grande",
+   "previo": 10,
+   "nuevo": 0,
+   "antes": 10,
+   "resultado": "cambiada",
+   "problemas": [],
+   "despues": 0,
+   "bitacora": 460
+  }
+ ],
+ "totales": {
+  "cambiada": 1,
+  "sin cambio": 0,
+  "revertida": 0,
+  "problema": 0
+ },
+ "bitacoraPropia": 1,
+ "bitacoraAjena": 0,
+ "transaccion": "rollback",
+ "restoSinCambios": true
+}
