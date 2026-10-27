@@ -1,6 +1,6 @@
 # 29 · Lote del PDF: hielo de Fresh Sodas y Cold brew, agua de Iced Chocolate
 
-**Estado:** preparado el 2026-10-27, con manifiesto, pruebas y ensayo local. **Sin ensayo remoto, sin aplicar y sin merge.** Cada uno requiere aprobación expresa de Carlo.
+**Estado:** ✅ **aplicado el 2026-10-27 (04:48 UTC) y verificado.** Ejecución `52b1a39b-128b-403e-89cd-79e3f4c1c26b`, bitácora **#575–581**; segundo ensayo con 0 cambios. Ver el §8. La aplicación y el ensayo remoto contaron con la aprobación expresa de Carlo.
 
 **Alcance aprobado (Carlo, 2026-10-27):** un único lote con estos cambios:
 
@@ -131,7 +131,7 @@ Sigue el mismo patrón de `recetas-correcciones.ts` y `hielo-unidad.ts`, sin mod
 | Revertir con un id que no cambió nada | Se niega: «nada que revertir» |
 | Revertir con el id de la aplicación | 7 revertidas; líneas, cantidades, insumos y costos con md5 **idéntico** al respaldo |
 
-Los informes del ensayo contienen el UUID del perfil. Se guardan fuera del repo, en `Respaldos/thecoffee-supabase/informes-recetario-pdf-lote-1/`.
+Los informes del ensayo contienen el UUID del perfil, así que se guardan fuera del repo.
 
 ## 6. Procedimiento remoto (cada paso requiere aprobación)
 
@@ -184,3 +184,60 @@ Carlo decide si se envían y cuándo.
 - **Doc 21:** K5 (creamer duplicado) y K6.
 - **Doc 22:** preguntas 3–6.
 - **Doc 18:** R1–R3 (Rappi).
+
+## 8. Cierre: aplicado el 2026-10-27 (04:48 UTC) y verificado
+
+Se ejecutó solo `recetario-pdf-lote-1`, desde el código de este PR en `d26b2ae` y con el manifiesto `67f024c1…`. Cada paso tuvo la aprobación expresa de Carlo. Hubo un solo COMMIT, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `0438Z`** | Restaurado en una copia local aislada y comparado con producción: 19,678 filas idénticas. Solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS (645 filas), idénticas |
+| **Revalidación** (solo lectura) | Versiones v28 / v25 / v33 / v32. Valores previos 190, 177 y 10/10, con las 3 líneas en `HIELO`. `HIELO`, `HIELO (g)` y `AGUA` a $0/1. Perfil admin activo. 72 enlaces, migración 22 y bitácora con 445 filas (id máx. 567) |
+| **Ensayo remoto** (ROLLBACK) | 7 cambiadas, 7 registros propios y 0 ajenos; costos y resto sin cambios. Una conexión nueva confirmó que no persistió nada (15 huellas idénticas). La secuencia de la bitácora avanzó a 574 por la transacción deshecha, como es normal en Postgres |
+| **Vigencia del respaldo** | Justo antes de aplicar, las huellas eran idénticas a las tomadas tras el respaldo: no hubo escrituras intermedias |
+| **Aplicación** | **COMMIT**, ejecución `52b1a39b-128b-403e-89cd-79e3f4c1c26b` |
+| **Verificación** (conexión nueva) | Ver la tabla siguiente |
+| **Segundo ensayo** | 7 «sin cambio», **0 registros nuevos**, ROLLBACK. Desde una conexión nueva, sin ninguna diferencia (bitácora y secuencia en 581) |
+
+### Los 7 cambios aplicados
+
+| Bitácora | Receta | Cambio |
+|---|---|---|
+| #575 | Fresh Soda Pink Lemonade | `HIELO` Grande 190 → **245** (`linea_cantidades.cantidad`) |
+| #576 | Fresh Soda Passion fruit | `HIELO` Grande 177 → **245** (`linea_cantidades.cantidad`) |
+| #577 | Iced Chocolate | `AGUA` Chica 10 → **0** (`linea_cantidades.cantidad`) |
+| #578 | Iced Chocolate | `AGUA` Grande 10 → **0** (`linea_cantidades.cantidad`) |
+| #579 | Fresh Soda Pink Lemonade | `HIELO` → **`HIELO (g)`**, 130/245 (`receta_lineas.insumo_id`) |
+| #580 | Fresh Soda Passion fruit | `HIELO` → **`HIELO (g)`**, 130/245 (`receta_lineas.insumo_id`) |
+| #581 | Cold brew | `HIELO` → **`HIELO (g)`**, 130/245 (`receta_lineas.insumo_id`) |
+
+- **Bitácora:** los 7 registros son `carga_masiva`, con autor Carlo y la nota `recetario-pdf-lote-1, ejecución 52b1a39b-… (docs/conciliacion-brasil/29)`. Queda en 452 filas (id máx. 581).
+- **Versiones:** Pink v28 → **v30**, Passion v25 → **v27**, Cold brew v33 → **v34** e Iced Chocolate v32 → **v34**. Las cuatro quedan con `updated_by` de Carlo.
+- **Estado final de las líneas:**
+  - Pink, Passion y Cold brew en `HIELO (g)` con 130/245;
+  - Iced Chocolate con `AGUA` 0/0.
+
+### Lo que quedó intacto (verificado desde una conexión nueva)
+
+- Costos: `v_costo_producto` (215 filas) y `v_costo_subreceta` (6 filas). Por ejemplo, Pink $17.4225/$22.2480, Passion $24.5405/$32.0730, Cold brew $14.50/$14.70 e Iced Chocolate $13.852/$16.692.
+- Márgenes en `v_resumen` (645 filas).
+- Precios de lista (`producto_tamanos`) y precios manuales (`precio_canal_manual`).
+- Insumos (165): ningún costo de compra cambió.
+- Los **72 enlaces POS** (`producto_codigo_pos`).
+- El resto de recetas, líneas y cantidades: las 12 líneas que siguen en `HIELO` no cambiaron.
+- La **migración 22** (`20261024000022`), con 22 migraciones registradas.
+
+### Reversión (solo con aprobación expresa)
+
+Se revierte por ejecución con el mismo manifiesto:
+
+```
+npx tsx scripts/conciliacion/recetas-pdf-aplicar.ts --lote recetario-pdf-lote-1 --revertir --ejecucion 52b1a39b-128b-403e-89cd-79e3f4c1c26b --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+```
+
+- Devuelve primero las 3 líneas a `HIELO` y después las 4 celdas a sus valores previos.
+- Se niega si alguna de las 4 recetas tiene registros posteriores al #581.
+- Conviene ensayarla antes en una copia local restaurada (`--local`).
+- Después de revertir, volver a aplicar exige regenerar el manifiesto.
+
+Los informes de cada ejecución, las huellas y el procedimiento detallado se guardan **fuera del repo**, porque contienen el UUID del perfil, junto con el respaldo `0438Z`.
