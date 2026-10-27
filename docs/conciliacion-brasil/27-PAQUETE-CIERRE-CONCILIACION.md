@@ -91,34 +91,112 @@ Las desactivaciones C1–C6 son decisiones aparte: cambian agregados del tablero
 
 **Del lado de Costeo**, 71 productos activos no aparecieron en la muestra (doc 25, `25-costeo-sin-pos.csv`). Que no se vendieran en 4 semanas no prueba nada sobre su nombre: no se tocan.
 
-## 2. Propuesta: cómo usará Sucursales los 70 enlaces
+## 2. Propuesta: cómo usará Sucursales los enlaces (revisada 2026-10-27)
 
-**Principio.** Lo que llega de la API **no se modifica**: `productName`, `defaultCode` e importes se muestran como llegan. Costeo se agrega como **columnas aparte**, leídas en el servidor y bajo RLS.
+**Principio.** Lo que llega de la API **no se modifica**: `productName`, `defaultCode` e importes se muestran como llegan. Costeo se agrega como **columnas aparte**, calculadas en el servidor.
+
+### 2.1 Cobertura: dos porcentajes con denominador explícito
+
+Cifras de la muestra auditada: 532, 583 y 612, del 2026-09-21 al 2026-10-18.
+
+| Concepto | Importe | Nota |
+|---|---|---|
+| **A · Venta total** (Σ líneas + personalizaciones) | **$980,577** | Lo que cobró la tienda |
+| GENERIC | $18,020 (1.8% de A) | Línea genérica de Rappi en 532: sin producto identificable; nunca se asigna |
+| **B · Venta identificable** (A − GENERIC) | **$962,557** | Denominador de la cobertura «identificable» |
+| Líneas sin `defaultCode` (App desde 2026-10-02) | $19,463 (2.0% de A) | Siguen en B. Solo se identifican si su nombre tiene un único código en el periodo |
+
+| Enlaces | Importe con receta | % de A (toda la venta) | % de B (identificable) |
+|---|---|---|---|
+| Hoy (70) | $809,678 | **82.6%** | **84.1%** |
+| Con el lote 4 (72: + `5IL`, + `4UC`) | $884,814 | **90.2%** | **91.9%** |
+
+**Lo que queda fuera de la cobertura de B con el lote 4** (8.1%):
+- 9 códigos de tamaño pendiente: 3.9%;
+- líneas sin código: 2.0%;
+- 7 productos sin receta: 1.8%;
+- `BRICE`: 0.2%;
+- Zoé: 0.1%.
+
+Sucursales muestra **los dos porcentajes** (A y B) y, al lado, cuánto quedó fuera y por qué: GENERIC, sin código, sin enlace.
+
+### 2.2 Costo: por unidades y tamaño verificado, no por receta enlazada
+
+- **Unidades.** Se cuentan como líneas: la API da una línea por unidad (doc `sucursales/03`; falta confirmar con el proveedor que no existe una cantidad mayor que 1).
+- **Tamaño.** Una línea solo se costea si su tamaño está **verificado para ese producto**:
+  - el vaso Regular/Large de la línea corresponde a Chica/Grande en un producto con mapeo aprobado: los 21 de E1, los 8 del lote 3 (excepto Chai Frap Grande) y los 2 del lote 4;
+  - o es un producto Único que llega sin vaso.
+
+  Sin eso, la línea queda «tamaño sin verificar». Nunca se infiere por precio.
+- **Personalizaciones.** Costeo no tiene recetas de personalizaciones. En la muestra, sobre la venta enlazada con el lote 4:
+
+  | Personalizaciones de la línea | % de la venta enlazada |
+  |---|---|
+  | Ninguna (o solo el tamaño) | 17.5% |
+  | Solo gratuitas (Double shot, temperatura, nivel de miel…) | 31.8% |
+  | Alguna de pago (Lactose free, Oatmilk, Almond Milk, Extra shot…) | 50.7% |
+
+  Las de pago tienen costo seguro. Las gratuitas pueden tenerlo (un shot doble) o restarlo («Without Honey»).
+- **Propuesta:** un **catálogo de personalizaciones** con su efecto (neutra, extra con costo, sustitución o reducción), aprobado por Operaciones.
+  - Mientras no exista, toda línea con una personalización de efecto desconocido es **costeo parcial**.
+  - Hoy, solo las líneas sin personalizaciones y con tamaño verificado serían de costeo completo: **15.7% de B** en la muestra.
+- **Tener receta enlazada no significa poder costear toda la venta.** Sucursales lo muestra como dos cifras: «con receta» y «costeable».
+
+### 2.3 Margen: mismo tratamiento de IVA y sin mezclar costeo parcial
+
+- **Importes de la API.** Lo que cobra la tienda, con IVA incluido (precio al público).
+- **Convención de Costeo.** `precio_lista` lleva IVA, y el margen se calcula sobre la **venta sin IVA** (`venta_neta = precio / (1 + iva)`, con `iva` = 0.16 de `parametros`).
+- **Propuesta.** El margen teórico de Sucursales sigue la misma convención:
+  - importe cobrado ÷ 1.16, menos el costo de Costeo;
+  - antes de comisiones: la API no da la comisión de Rappi, y `netAmout` no es comisión.
+
+  Se rotula «margen bruto teórico, sin IVA».
+- **Pendiente de confirmar:** ningún documento dice si los costos de insumos se capturan **con o sin IVA**. Hasta que Compras lo confirme, el margen se muestra como **provisional** con esa nota (pregunta nueva **K5**).
+- **Agregados:** en el margen agregado solo entran las líneas de **costeo completo**. Las de costeo parcial (tamaño sin verificar o personalización de efecto desconocido) se excluyen y se informan aparte con su importe.
+
+### 2.4 Historia: costo actual, no margen histórico
+
+Los costos son los **actuales** de Costeo, con las recetas, cantidades y precios de compra de hoy, aplicados a ventas pasadas. Toda cifra de costo o margen se rotula «calculado con el costo actual de Costeo (fecha)». **No es el margen histórico real**: Costeo no guarda la historia de costos por fecha.
+
+### 2.5 Permisos: decide el servidor
+
+- **Dónde se calcula.** En la ruta del servidor (`app/api/sucursales/...`), después de `autorizar()`. Antes de leer enlaces o costos se comprueba que el usuario tenga un **perfil de Costeo activo**, con la sesión del usuario y bajo RLS: `rol_actual()` exige perfil para `producto_codigo_pos`, `recetas` y las vistas de costo.
+- **Sin perfil:** la respuesta **no incluye** receta, costo ni margen. No basta con ocultarlos en el navegador: el JSON no los lleva.
+- **Caché:** como hoy, privado y `no-store`; la caché por usuario o permiso no mezcla respuestas con y sin costos.
+- **Credenciales:** sin service role.
+
+### 2.6 Lo demás
 
 | Pieza | Propuesta |
 |---|---|
-| **Unión** | En `lib/sucursales`, después de agregar por producto (`productos()`), se une por `codigo` con `producto_codigo_pos` → `receta_id` → `recetas.nombre`, en una sola consulta al cargar. Cada `ProductoResumen` gana `costeo?: { recetaId, receta }`. `nombre`, `nombreProveedor`, `importeCent` y `lineas` no cambian |
-| **Líneas sin código** (App desde 2026-10-02) | Se mantiene la regla actual: solo se unen al código de su mismo nombre exacto si ese nombre tiene **un único** código en el periodo. Si no, quedan como «sin código» y **sin receta**: no se adivina |
-| **GENERIC** | Nunca se asigna: se muestra como hoy («sin identificación del proveedor») y queda fuera de la cobertura |
-| **Cobertura** | Un indicador por periodo y sucursal: % del importe con receta de Costeo, sobre el total sin GENERIC. Al lado, la lista de códigos sin enlace con su importe, para priorizar los pendientes del §1 |
-| **Tamaño** | Mapeo explícito por producto, nunca por regla global: Regular/Large → Chica/Grande solo en los 21 productos verificados (E1) y en los 8 del lote 3, que tienen evidencia de ambos tamaños, salvo Chai Frap Grande. El resto muestra «tamaño sin mapear». «Sin vaso» no se convierte en Chica |
-| **Costo y margen teóricos** | Solo con receta **y** tamaño mapeado: costo de `v_costo_producto` × líneas, y margen frente al importe **cobrado** de la API. Se rotulan como «teóricos (receta de Costeo)». No sustituyen ni corrigen importes. Sin mapeo de tamaño, no se calculan |
-| **Precio de lista** | Se puede mostrar `precio_lista` al lado del precio observado, como **referencia**, sin declarar diferencia ni corregir nada (A1) |
-| **Acceso** | Las columnas de Costeo solo aparecen para usuarios con perfil de Costeo: la RLS de `producto_codigo_pos` y `recetas` exige `rol_actual()`. Sin perfil, Sucursales funciona como hoy. Sin service role |
-| **Datos** | Sigue la decisión E4: bajo demanda, sin persistir pedidos. Los enlaces se leen con caché corto, como el resto |
+| **Unión** | Por `codigo` con `producto_codigo_pos` → `receta_id`, después de agregar por producto. `nombre`, `nombreProveedor`, `importeCent` y `lineas` no cambian |
+| **Líneas sin código** | Regla actual: se unen solo si su nombre tiene un único código en el periodo. Si no, quedan sin receta |
+| **GENERIC** | Nunca se asigna |
+| **Precio de lista** | Referencia al lado del precio observado, sin declarar diferencias (A1) |
+| **Datos** | Decisión E4: bajo demanda, sin persistir pedidos ni migraciones |
 
-**Entrega sugerida:** un PR de código con pruebas que comparen contra los 70 enlaces actuales y casos de GENERIC, líneas sin código, código sin enlace y tamaño sin mapear. Sin migraciones, porque la tabla ya existe.
+**Entrega sugerida:** un PR de código con pruebas para:
+- los 70 o 72 enlaces;
+- GENERIC, líneas sin código, códigos sin enlace y tamaño sin verificar;
+- personalizaciones de pago y gratuitas;
+- usuario sin perfil de Costeo, cuya respuesta no debe llevar costos;
+- margen sin IVA y exclusión del costeo parcial.
 
 ## 3. Recetas pendientes
 
-### 3.1 Corregibles con el PDF vigente (solo falta la aprobación de Carlo)
+### 3.1 Corregibles con el PDF vigente (revalidadas el 2026-10-27; falta la aprobación de Carlo)
 
-| Receta | Cambio | Evidencia | Herramienta |
-|---|---|---|---|
-| Fresh Soda Pink Lemonade y Passion fruit, Grande | Hielo 190/177 → **245 g** (3a) | pp.43–44 | Corrección de cantidad y luego H2 lote 2 (ya existe `HIELO (g)`) |
-| Cold brew | Hielo 130/245 a `HIELO (g)`, mismos números | p.27 (verificado) | H2 lote 2. Ya no choca con 3b, que está aplicado |
-| Iced Chocolate | AGUA 10 → 0 ml: duplica el agua incluida en la subreceta (2) | p.24 y proporciones de la subreceta en Costeo | Corrección de cantidad; costo $0 |
-| Gelato Frappé (Grande) | Las cantidades de Grande están en el PDF (pp.46–48) | Requiere agregar el tamaño Grande (E4): **decisión de catálogo** | Después de E4 |
+Se revalidaron las páginas del PDF (sha256 `6a81e1a8…`) y las subrecetas en producción, en solo lectura. **Que un ingrediente cueste $0 no prueba que su cantidad sea correcta**: cada cambio se apoya en el PDF.
+
+| Receta | Cambio | Evidencia revalidada |
+|---|---|---|
+| Fresh Soda Pink Lemonade y Passion fruit, Grande | Hielo 190/177 → **245 g** | pp.43–44: «245 gr de hielo» / «245 g de hielo en cubos» en Grande; la Chica (130 g) ya coincide |
+| Cold brew | Hielo 130/245 a `HIELO (g)`, mismos números | p.27: «130 gr de hielo» / «245 gr de hielo» |
+| Iced Chocolate | AGUA (línea aparte) 10 → **0 ml** | **p.24:** 36 g de salsa + 10 ml de agua caliente. **p.5:** preparado de 90 g de azúcar, 100 g de cocoa y 200 ml de agua. **Subreceta «Mix … (2)»** (rinde 1,000 ml): 200.64 de cocoa y 180.64 de azúcar (proporción p.5) + 618.71 de agua; quitando la del preparado (401.29) quedan **217.43**, que es **10/36** del preparado (0.2779). Así, 46.002 de «(2)» = 36 g de salsa **+ 10 ml de agua**, y la línea AGUA de 10 ml **los cuenta dos veces**. Urban Chocolate (p.34: 36 + 10) usa la misma «(2)» sin línea AGUA aparte: coherente |
+
+**Fuera de este lote:**
+- Gelato Grande (decisión de catálogo E4);
+- todo lo que espera a Operaciones o Compras (§3.2).
 
 **Sin cambio de costo, solo para registrar:** Ristretto (22 frente a 27 ml), preparado de chai (400 ml) y Chai Iced Latte (leche frente a «agua»). Costeo ya usa la lectura coherente.
 
@@ -136,6 +214,7 @@ Las desactivaciones C1–C6 son decisiones aparte: cambian agregados del tablero
 | V60 Grande y combos con vaso | Cantidades y vaso | E2 y E5 |
 | Sin ficha | Brownies, Pan de muerto, Sablé, Cookie Matcha, Espresso Tonic, Gelato Chocolate/Horchai/Mocha, Focaccia de pesto y aderezo de chipotle | Grupo F y lote 4 del doc 21 |
 | Costos de insumos | K1–K4 | Compras |
+| IVA de los costos | **K5:** ¿los costos de insumos se capturan con o sin IVA? (necesario para el margen de Sucursales, §2.3) | Compras |
 
 ## 4. UUID del perfil
 
@@ -149,7 +228,7 @@ Las desactivaciones C1–C6 son decisiones aparte: cambian agregados del tablero
 
 ## 5. Para cerrar la conciliación, en orden
 
-1. **K2:** enlazar `5IL` y `4UC` y decidir `BRICE`. Sería el lote 4 de enlaces.
+1. **Lote 4 de enlaces** (`5IL` y `4UC`): preparado en el doc 28. `BRICE` sigue pendiente de K2.
 2. **K1:** enlazar por identidad los 9 de tamaño pendiente, en el mismo lote 4 o en uno aparte.
 3. **N1** (Zoé Water) y preguntar al proveedor por N2.
 4. **Desactivaciones C1–C6**, en un lote con dependencias comprobadas (doc 16).

@@ -1,0 +1,25 @@
+{
+ "lote": "lote-4",
+ "archivo": "docs/conciliacion-brasil/28-lote-4.csv",
+ "filas": 2,
+ "sha256": "eef84b36dbe4773d905503fd1b24cfacb1cbe27b251924b48016defb6088252e",
+ "correspondencias": [
+  {
+   "codigo": "4UC",
+   "receta_id": "2c8b49a6-7b2f-489e-8932-1d1ff8c7754c"
+  },
+  {
+   "codigo": "5IL",
+   "receta_id": "fcf0d45d-76b2-48a4-8d96-d8abc228eca8"
+  }
+ ],
+ "requiere": [
+  "lote-3"
+ ],
+ "aprobacion": "Carlo, 2026-10-27: aprueba preparar el lote 4 con 5IL → Iced Latte y 4UC → Urban Chocolate (cargador existente, manifiesto, pruebas, ensayo local y PR). NO autoriza carga en producción ni desactivar duplicados",
+ "notas": [
+  "Requiere el lote 3 (y por él los lotes 2 y 1): los 70 enlaces actuales deben seguir intactos antes y después",
+  "El verificador marca «variante ambigua» por los duplicados Iced Latte Large y Urban Chocolat; se resuelve con nombre exacto y precio de ambos tamaños, y los duplicados no se tocan (C1 y C6 aparte)",
+  "Fuera: BRICE (K2), Zoé (N1/N2) y los 9 de tamaño pendiente (K1)"
+ ]
+}
