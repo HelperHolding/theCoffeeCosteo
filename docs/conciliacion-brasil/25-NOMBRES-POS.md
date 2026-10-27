@@ -1,6 +1,6 @@
 # 25 · Nombres de Costeo conforme al POS: cotejo y lote 1
 
-**Estado (2026-10-26): lote preparado y ensayado en una copia local.**
+**Estado (2026-10-27): lote 1 aplicado en producción y verificado (§8).**
 - **Producción:** no se escribió nada; solo hubo lecturas con SELECT acotados.
 - **Pendiente:** el ensayo remoto y la aplicación, cada uno con su autorización.
 - **API de Brasil:** su respuesta, sus códigos y sus nombres no se modifican. Solo cambia `recetas.nombre` de Costeo.
@@ -181,3 +181,26 @@ BD completa: **208/208**. `tsc` sin errores.
 6. **Reversión**, solo con aprobación: `--lote nombres-pos-lote-1 --revertir --ejecucion <uuid>`.
 
 N3 decidida (opción a, §4.1). El ensayo remoto quedó autorizado; la aplicación sigue pendiente.
+
+## 8. Cierre: aplicado el 2026-10-27 (00:06 UTC) y verificado
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `0000Z`** | Restaurado en una copia local aislada y comparado con producción: 19,643 filas idénticas; solo difiere `vault.secrets` (0 filas). Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS idénticas |
+| **Revalidación** (solo lectura) | Las 8 recetas con el nombre y la versión del manifiesto, activas; 0 choques; perfil admin activo; 62 enlaces; bitácora sin cambios desde el cierre anterior (427 registros, máx. 531) |
+| **Ensayo remoto** (ROLLBACK) | 8 renombradas, 8 registros propios y 0 ajenos; costos y resto iguales. Una conexión nueva confirmó que la foto completa quedó idéntica |
+| **Aplicación** | **COMMIT**, ejecución `5fadf46e-973a-4cfe-b172-707052fb55a2`. Bitácora **#540–547** (`recetas.nombre`, `carga_masiva`, autor Carlo, nota con la ejecución) |
+| **Verificación** (conexión nueva) | Los 8 nombres son el literal del POS; cada versión subió +1 y la autoría es de Carlo; 8 registros propios. Huellas iguales de ingredientes, cantidades, insumos, precios, precios manuales, costos y márgenes (`v_resumen`, `v_costo_producto`), alertas y los 62 enlaces con sus recetas |
+| **Segundo ensayo** | 8 «sin cambio», 0 registros nuevos, ROLLBACK; foto idéntica |
+
+**Nombres vigentes:**
+- Pumpkin Iced Latte (v28) y Pumpkin Latte (v22);
+- Pumpkin Spice Frap (v34) y Salted Caramel Frap (v34);
+- Taro Frap (v25), Coffee Frap (v28), Matcha Frap (v31) y Chai Frap (v25).
+
+**Reversión** (solo con aprobación): `--lote nombres-pos-lote-1 --revertir --ejecucion 5fadf46e-973a-4cfe-b172-707052fb55a2`. Los informes y el respaldo se guardan fuera del repo.
+
+**Fuera de este lote:**
+- Zoé: N1 y N2, pendientes;
+- los duplicados del grupo C;
+- los enlaces SKU de estos 8 códigos, que serán el siguiente lote.
