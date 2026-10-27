@@ -1,6 +1,6 @@
 # 28 · Lote 4 de códigos POS: Iced Latte y Urban Chocolate (preparado, sin cargar)
 
-**Estado (2026-10-27): preparado, ensayado en local y con dry-run remoto (ROLLBACK) verificado. No se cargó nada en producción.**
+**Estado (2026-10-27): lote 4 cargado en producción y verificado (72 enlaces). Cierre al final.**
 - **Al cargar:** pasaría de **70 a 72 enlaces**, sin cambiar recetas, nombres, precios ni costos.
 - **Duplicados:** no se desactiva ninguno.
 - **Aprobación:** Carlo aprobó preparar el lote (doc 27, K2 para `5IL` y `4UC`). Cargarlo requiere otra autorización.
@@ -87,3 +87,16 @@
 | **Verificación** (conexión nueva) | La foto completa es **idéntica** a la previa: siguen los **70 enlaces originales**, sin `5IL` ni `4UC`. **No persistió bitácora** (443 registros, máx. 563; los ids 564–565 los consumió la secuencia durante el ROLLBACK). Recetas, costos, alertas, precios, líneas, cantidades e insumos sin cambios. **Última migración: la 22** |
 
 No se desactivó ningún duplicado ni se hizo merge.
+
+## Cierre de la carga (2026-10-27, 03:07 UTC; autorizada por Carlo)
+
+| Paso | Resultado |
+|---|---|
+| **Revalidación** | Código y lote sin cambios desde el dry-run (`3517a33`). Producción idéntica al estado verificado tras el dry-run: 70 enlaces, sin `5IL` ni `4UC`, recetas activas y sin enlace, perfil activo, bitácora 443, migración 22 |
+| **Carga** | **COMMIT**, `carga_id` `f5eefcb1-a220-4d94-924a-c37fa82a7667`. 2 altas, 0 problemas, 0 registros ajenos. Lotes 1 (57/57), 2 (5/5) y 3 (8/8) intactos antes y después; sin cambios comerciales |
+| **Verificación** (conexión nueva) | **72 enlaces a 72 recetas.** `4UC` → Urban Chocolate y `5IL` → Iced Latte, con el código, la receta, el nombre observado y la evidencia del lote, esta carga y la autoría de Carlo. **Los 70 anteriores son idénticos** (huella `70:ee135d3a…`, igual que antes). **Exactamente 2 registros nuevos** en la bitácora (#566–567: `producto_codigo_pos`, `carga_masiva`, autor, nota de la carga). Sin cambios en recetas, nombres, cantidades, precios, costos ni alertas. **Migración 22** |
+| **Segundo dry-run** | 2 «sin cambio», 0 inserciones, 0 registros de bitácora, ROLLBACK; foto idéntica |
+
+**Reversión** (solo con aprobación): `--lote lote-4 --revertir --carga f5eefcb1-a220-4d94-924a-c37fa82a7667`. Los informes y el respaldo se guardan fuera del repo.
+
+**Pendiente:** el merge del PR #37. Los duplicados (C1, C6) siguen activos; su desactivación es una decisión aparte. Cobertura con la muestra auditada: 91.9% de la venta identificable sin GENERIC, 90.2% de la venta total (doc 27 §2.1).
