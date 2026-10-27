@@ -116,6 +116,28 @@ export interface ProductoResumen {
   customs: { nombre: string; veces: number; importeCent: number }[];
 }
 
+/**
+ * Identidad de cada línea en un periodo de UNA sucursal (la usan Productos y el costeo, para que coincidan).
+ * Una línea sin defaultCode se une al código del mismo nombre exacto solo si ese nombre tiene UN código en el
+ * periodo; con varios es ambigua y queda aparte, marcada sin código (no se elige uno). Las claves de código y de
+ * nombre van en espacios separados para que un nombre igual al código de otro producto no se mezcle con él.
+ */
+export function identificador(ps: PedidoNormal[]) {
+  const codigosDe = new Map<string, Set<string>>();
+  for (const p of ps)
+    for (const l of p.lineas)
+      if (!l.sinCodigo) codigosDe.set(l.nombre, (codigosDe.get(l.nombre) ?? new Set<string>()).add(l.codigo));
+  return (l: LineaNormal) => {
+    const unico =
+      l.sinCodigo && codigosDe.get(l.nombre)?.size === 1 ? [...codigosDe.get(l.nombre)!][0] : null;
+    if (!l.sinCodigo || unico !== null) {
+      const codigo = unico ?? l.codigo;
+      return { clave: `codigo:${codigo}`, codigo, sinCodigo: false };
+    }
+    return { clave: `nombre:${l.nombre}`, codigo: l.codigo, sinCodigo: true };
+  };
+}
+
 export function productos(ps: PedidoNormal[]): ProductoResumen[] {
   const m = new Map<
     string,
@@ -134,22 +156,7 @@ export function productos(ps: PedidoNormal[]): ProductoResumen[] {
     }
   >();
   // `ps` es siempre de una sola sucursal: los códigos aprendidos aquí no se aplican a otra.
-  // Una línea sin defaultCode se une al código del mismo nombre exacto solo si ese nombre tiene UN código en el
-  // periodo; con varios es ambigua y queda aparte, marcada sin código (no se elige uno). Las claves de código y de
-  // nombre van en espacios separados para que un nombre igual al código de otro producto no se mezcle con él.
-  const codigosDe = new Map<string, Set<string>>();
-  for (const p of ps)
-    for (const l of p.lineas)
-      if (!l.sinCodigo) codigosDe.set(l.nombre, (codigosDe.get(l.nombre) ?? new Set<string>()).add(l.codigo));
-  const identidad = (l: LineaNormal) => {
-    const unico =
-      l.sinCodigo && codigosDe.get(l.nombre)?.size === 1 ? [...codigosDe.get(l.nombre)!][0] : null;
-    if (!l.sinCodigo || unico !== null) {
-      const codigo = unico ?? l.codigo;
-      return { clave: `codigo:${codigo}`, codigo, sinCodigo: false };
-    }
-    return { clave: `nombre:${l.nombre}`, codigo: l.codigo, sinCodigo: true };
-  };
+  const identidad = identificador(ps);
   let total = 0;
   for (const p of ps)
     for (const l of p.lineas) {

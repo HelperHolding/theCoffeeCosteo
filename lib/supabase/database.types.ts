@@ -65,6 +65,17 @@ export interface ProductoTamano {
   tamano_id: string;
   precio_lista: number | null;
 }
+/** Enlace código POS → receta (migración 22). */
+export interface ProductoCodigoPos {
+  id: string;
+  codigo: string;
+  receta_id: string;
+  nombre_observado: string;
+  evidencia: string;
+  carga_id: string | null;
+  creado_en: string;
+  creado_por: string | null;
+}
 export interface Canal {
   id: string;
   nombre: string;
@@ -177,6 +188,7 @@ export interface Database {
       receta_lineas: Tabla<Linea>;
       linea_cantidades: Tabla<Cantidad>;
       producto_tamanos: Tabla<ProductoTamano>;
+      producto_codigo_pos: Tabla<ProductoCodigoPos>;
       precio_canal_manual: Tabla<Manual>;
       bitacora: Tabla<Bitacora>;
       crm_etapas: Tabla<Crm.Etapa>;

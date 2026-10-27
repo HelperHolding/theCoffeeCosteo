@@ -1,3 +1,4 @@
+import type { CosteoProducto, CosteoResumen } from './costeo';
 import type { FiltroOrigen, Insight, ProductoResumen, Resumen } from './metricas';
 import type { Origen } from './normalizar';
 
@@ -96,9 +97,12 @@ export interface RespuestaProductos {
   origen: FiltroOrigen;
   lectura: LecturaInfo;
   totales: Resumen;
-  productos: ProductoResumen[];
+  /** `costeo` solo viene si el usuario puede ver costos (se decide en el servidor). */
+  productos: (ProductoResumen & { costeo?: CosteoProducto })[];
   personalizaciones: { nombre: string; veces: number; importeCent: number }[];
   conciliacion: Conciliacion;
+  /** Cobertura y costeo con el costo ACTUAL de Costeo; ausente para usuarios sin permiso de costos. */
+  costeo?: CosteoResumen;
 }
 
 export interface RespuestaPedidos {

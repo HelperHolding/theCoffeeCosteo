@@ -16,14 +16,21 @@ const error = (status: number, mensaje: string) => json<RespuestaError>({ error:
  * Autoriza ANTES de tocar caché o proveedor: sesión (401), perfil activo y módulo (403),
  * sucursal asignada y configurada (404 genérico, sin revelar si existe).
  */
-export async function autorizar(
-  params: Promise<{ companyId: string }>,
-): Promise<{ ok: true; cfg: ConfigSucursal } | { ok: false; respuesta: Response }> {
+export async function autorizar(params: Promise<{ companyId: string }>): Promise<
+  | {
+      ok: true;
+      cfg: ConfigSucursal;
+      /** Sesión y perfil del usuario: para lecturas adicionales bajo su RLS (p. ej. costos de Costeo). */
+      db: Extract<Awaited<ReturnType<typeof accesoSucursales>>, { ok: true }>['db'];
+      perfil: { rol: string };
+    }
+  | { ok: false; respuesta: Response }
+> {
   const a = await accesoSucursales();
   if (!a.ok) return { ok: false, respuesta: error(a.status, a.mensaje) };
   const cfg = resolverSucursal((await params).companyId, a.companias);
   if (!cfg) return { ok: false, respuesta: error(404, 'Sucursal no disponible.') };
-  return { ok: true, cfg };
+  return { ok: true, cfg, db: a.db, perfil: a.perfil };
 }
 
 export const invalido = (mensaje: string) => error(400, mensaje);

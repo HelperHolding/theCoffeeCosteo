@@ -6,7 +6,39 @@ const sesion = vi.hoisted(() => ({
   modulos: [{ modulo: 'sucursales', nivel: 'lectura' }] as { modulo: string; nivel: string }[],
   companias: [612] as number[],
   errorCompanias: false,
+  rol: 'admin',
+  errorCosteo: false,
 }));
+// Tablas de Costeo (sintéticas) que la ruta de productos lee con la sesión del usuario.
+const COSTEO = vi.hoisted(() => {
+  const MIL = '9756eec9-1f09-45ee-a45b-21ac8c54bb22'; // Matcha Iced Latte: tamaño verificado
+  const BRO = 'r-bro';
+  return {
+    producto_codigo_pos: [
+      { codigo: '4MIL', receta_id: MIL },
+      { codigo: 'BRO13', receta_id: BRO },
+    ],
+    tamanos: [
+      { id: 't1', nombre: 'Chica' },
+      { id: 't2', nombre: 'Grande' },
+      { id: 't3', nombre: 'Único' },
+    ],
+    parametros: [{ iva: 0.16 }],
+    recetas: [
+      { id: MIL, nombre: 'Matcha Iced Latte' },
+      { id: BRO, nombre: 'Brownie' },
+    ],
+    v_costo_producto: [
+      { producto_id: MIL, tamano_id: 't1', costo: 26, usa_inactivo: false },
+      { producto_id: BRO, tamano_id: 't3', costo: 29, usa_inactivo: false },
+    ],
+    producto_tamanos: [
+      { producto_id: MIL, tamano_id: 't1' },
+      { producto_id: MIL, tamano_id: 't2' },
+      { producto_id: BRO, tamano_id: 't3' },
+    ],
+  } as Record<string, unknown[]>;
+});
 vi.mock('server-only', () => ({}));
 vi.mock('next/navigation', () => ({
   redirect: (p: string) => {
@@ -21,25 +53,39 @@ vi.mock('../../lib/supabase/servidor', () => ({
           ? { data: { user: { id: sesion.usuario } }, error: null }
           : { data: { user: null }, error: null },
     },
-    from: (tabla: string) => ({
-      select: () => ({
-        eq: (_c: string, id: string) => {
-          if (tabla === 'perfil_modulos') return Promise.resolve({ data: sesion.modulos, error: null });
-          if (tabla === 'perfil_sucursales')
-            return Promise.resolve(
-              sesion.errorCompanias
-                ? { data: null, error: { message: 'sin tabla' } }
-                : { data: sesion.companias.map((company_id) => ({ company_id })), error: null },
-            );
-          return {
-            maybeSingle: async () => ({
-              data: { user_id: id, nombre: 'Carla', rol: 'admin', activo: sesion.activo },
-              error: null,
-            }),
-          };
-        },
-      }),
-    }),
+    from: (tabla: string) => {
+      const r = () =>
+        sesion.errorCosteo
+          ? { data: null, error: { message: 'rls' } }
+          : { data: COSTEO[tabla] ?? [], error: null };
+      const q = {
+        in: async () => r(),
+        limit: () => q,
+        maybeSingle: async () => ({ ...r(), data: r().data?.[0] ?? null }),
+        then: (ok: (x: ReturnType<typeof r>) => unknown, ko?: (e: unknown) => unknown) =>
+          Promise.resolve(r()).then(ok, ko),
+      };
+      return {
+        select: () => ({
+          ...q,
+          eq: (_c: string, id: string) => {
+            if (tabla === 'perfil_modulos') return Promise.resolve({ data: sesion.modulos, error: null });
+            if (tabla === 'perfil_sucursales')
+              return Promise.resolve(
+                sesion.errorCompanias
+                  ? { data: null, error: { message: 'sin tabla' } }
+                  : { data: sesion.companias.map((company_id) => ({ company_id })), error: null },
+              );
+            return {
+              maybeSingle: async () => ({
+                data: { user_id: id, nombre: 'Carla', rol: sesion.rol, activo: sesion.activo },
+                error: null,
+              }),
+            };
+          },
+        }),
+      };
+    },
   }),
 }));
 
@@ -67,6 +113,8 @@ beforeEach(() => {
     modulos: [{ modulo: 'sucursales', nivel: 'lectura' }],
     companias: [612],
     errorCompanias: false,
+    rol: 'admin',
+    errorCosteo: false,
   });
   api = apiFalsa({
     '2026-10-22': [
@@ -211,6 +259,43 @@ describe('Productos y Pedidos', () => {
     expect(d.totales.pedidos).toBe(4);
     expect(d.conciliacion.diferenciaCent).toBe(0);
     expect(d.productos[0].codigo).toBe('4MIL');
+  });
+
+  it('costeo: solo con permiso, decidido en el servidor; el POS no cambia', async () => {
+    const q = '?desde=2026-10-21&hasta=2026-10-22';
+    const con = await (await llamar(productosGet, '612', q)).json();
+    // 4 pedidos: 4MIL lleva Oatmilk (parcial) y BRO13 es Único sin personalización (completo).
+    expect(con.costeo.cobertura).toMatchObject({ genericoCent: 0, sinEnlaceCent: 0, sinCodigoCent: 0 });
+    expect(con.costeo.cobertura.totalCent).toBe(con.totales.ventaCent);
+    expect(con.costeo.completo).toMatchObject({ lineas: 4, importeCent: 4 * 7500, costoCent: 4 * 2900 });
+    expect(con.costeo.parcial).toMatchObject({
+      lineas: 4,
+      motivos: { personalizacion: 4, tamano: 0, costo: 0 },
+    });
+    expect(con.productos.find((p: { codigo: string }) => p.codigo === 'BRO13').costeo.receta).toBe('Brownie');
+
+    const sinCosteo = (d: Record<string, unknown>) => {
+      const { costeo: _c, productos, ...resto } = d;
+      void _c;
+      return {
+        ...resto,
+        productos: (productos as Record<string, unknown>[]).map(({ costeo: _x, ...p }) => (void _x, p)),
+      };
+    };
+    for (const negar of [() => (sesion.rol = 'sin-rol'), () => (sesion.errorCosteo = true)]) {
+      Object.assign(sesion, { rol: 'admin', errorCosteo: false });
+      negar();
+      const texto = await (await llamar(productosGet, '612', q)).text();
+      // Ni la clave costeo, ni recetas, ni costos o márgenes en el JSON.
+      expect(texto).not.toMatch(/costeo|costo|margen|receta|ventaSinIva|iva"/i);
+      const sin = JSON.parse(texto);
+      expect(sin.costeo).toBeUndefined();
+      // Nombres, importes y totales del POS idénticos con y sin costeo (salvo el instante de lectura).
+      expect({ ...sin, lectura: { ...sin.lectura, leidoEn: 0 } }).toEqual({
+        ...sinCosteo(con),
+        lectura: { ...con.lectura, leidoEn: 0 },
+      });
+    }
   });
 
   it('pedidos paginados de 25 sobre el conjunto completo, con filtro de pago', async () => {

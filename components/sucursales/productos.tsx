@@ -2,7 +2,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { RespuestaProductos } from '@/lib/sucursales/contratos';
-import type { FiltroOrigen } from '@/lib/sucursales/metricas';
+import { CODIGO_GENERICO, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { enZona, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
@@ -11,6 +11,7 @@ import { NOTA_LINEAS } from './en-vivo';
 import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { BarraCelda, Etiqueta, TIPOS, tipoPersonalizacion } from './colores';
+import { CeldaCosteo, TarjetaCosteo } from './costeo';
 
 const PERIODOS = [
   { id: 'hoy', nombre: 'Hoy', dias: 0, fin: 0 },
@@ -121,6 +122,7 @@ export function Productos({
                 {dinero(datos.conciliacion.productosCent, m)}
                 {textoConciliacion(datos.conciliacion, m)}
               </p>
+              {datos.costeo && <TarjetaCosteo c={datos.costeo} moneda={m} />}
               <Tarjeta
                 titulo="Productos"
                 descripcion="Importe atribuible = producto + sus personalizaciones, una sola vez."
@@ -149,6 +151,7 @@ export function Productos({
                           <th scope="col" className="numero">
                             Extra personalización
                           </th>
+                          {datos.costeo && <th scope="col">Costeo (costo actual)</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -189,10 +192,19 @@ export function Productos({
                                 <td className="numero">{numero(x.pedidos)}</td>
                                 <td className="numero">{numero(x.lineas)}</td>
                                 <td className="numero">{dinero(x.extraCustomsCent, m)}</td>
+                                {datos.costeo && (
+                                  <td>
+                                    <CeldaCosteo
+                                      c={x.costeo}
+                                      moneda={m}
+                                      generico={x.codigo === CODIGO_GENERICO && !x.sinCodigo}
+                                    />
+                                  </td>
+                                )}
                               </tr>
                               {exp && (
                                 <tr>
-                                  <td colSpan={6} className="bg-surface-2/50">
+                                  <td colSpan={datos.costeo ? 7 : 6} className="bg-surface-2/50">
                                     <div className="grid gap-4 py-2 text-sm sm:grid-cols-2">
                                       <div>
                                         <p className="mb-1 font-semibold">Tamaños</p>
