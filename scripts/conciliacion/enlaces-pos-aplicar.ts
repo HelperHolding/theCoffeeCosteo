@@ -17,7 +17,7 @@ import { DOC_LOTE, enlazar, leerLoteAprobado, type ModoEnlaces } from './enlaces
  * DATABASE_URL se lee con el cargador existente, se valida con el parser contra el proyecto y nunca se imprime.
  * Aplicar y revertir exigen --lote explícito (sin lote por omisión al escribir).
  * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/<doc>-informes/ según DOC_LOTE
- * (17 lote 1, 20 lote 2, 26 lote 3).
+ * (17 lote 1, 20 lote 2, 26 lote 3, 28 lote 4).
  */
 const args = process.argv.slice(2);
 const valor = (f: string) => (args.includes(f) ? args[args.indexOf(f) + 1] : undefined);

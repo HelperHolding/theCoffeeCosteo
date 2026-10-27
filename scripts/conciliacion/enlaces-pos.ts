@@ -55,9 +55,18 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/26-lote-3.manifiesto.json',
     sha256: '0ffe56406d1d4759e7a7e726c090d2082abd9c8d672c688c4d024abae69837d2',
   },
+  'lote-4': {
+    manifiesto: 'docs/conciliacion-brasil/28-lote-4.manifiesto.json',
+    sha256: '9df970ac772a09f6066ee0886d6b72b7e0b8528e22afeceb96b1ab59c02ccbd4',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
-export const DOC_LOTE: Record<string, string> = { 'lote-1': '17', 'lote-2': '20', 'lote-3': '26' };
+export const DOC_LOTE: Record<string, string> = {
+  'lote-1': '17',
+  'lote-2': '20',
+  'lote-3': '26',
+  'lote-4': '28',
+};
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>
   DOC_LOTE[nombre] ? `docs/conciliacion-brasil/${DOC_LOTE[nombre]}` : `lote ${nombre}`;

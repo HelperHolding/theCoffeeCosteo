@@ -101,6 +101,24 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.aprobacion).toMatch(/NO autoriza carga en producción ni merge/);
   });
 
+  it('lote 4: solo 5IL → Iced Latte y 4UC → Urban Chocolate, requiere los lotes 1–3 completos (70)', async () => {
+    const l = await leerLoteAprobado('lote-4');
+    expect(l.lote.map((f) => `${f.codigo}→${f.receta_id}`)).toEqual([
+      '4UC→2c8b49a6-7b2f-489e-8932-1d1ff8c7754c',
+      '5IL→fcf0d45d-76b2-48a4-8d96-d8abc228eca8',
+    ]);
+    expect(l.lote.every((f) => f.nombre_observado === f.receta_nombre)).toBe(true);
+    expect(Object.keys(l.previos).sort()).toEqual(['lote-1', 'lote-2', 'lote-3']);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(70);
+    // Los duplicados no se enlazan ni se desactivan en este lote.
+    const ids = l.lote.map((f) => f.receta_id);
+    expect(ids).not.toContain('7b5b57b7-5436-49c4-affc-cc3f00d46c4c');
+    expect(ids).not.toContain('77aed410-00a8-4b70-b04e-fdf15ddb1761');
+    for (const excluido of ['BRICE', 'ZOEWATAPP', 'ZOETWIAPP', 'SHCO', 'MISICEDAPP'])
+      expect(l.lote.some((f) => f.codigo === excluido)).toBe(false);
+    expect(l.manifiesto.aprobacion).toMatch(/NO autoriza carga en producción ni desactivar duplicados/);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
     await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));
