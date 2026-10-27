@@ -3,7 +3,8 @@ vi.mock('server-only', () => ({}));
 
 import { claveCosto, costear, tamanoVerificado, type DatosCosteo } from '../../lib/sucursales/costeo';
 import { leerDatosCosteo, puedeVerCostos } from '../../lib/sucursales/costeo-servidor';
-import type { LineaNormal, PedidoNormal } from '../../lib/sucursales/normalizar';
+import { filtrarOrigen, productos } from '../../lib/sucursales/metricas';
+import type { LineaNormal, Origen, PedidoNormal } from '../../lib/sucursales/normalizar';
 import { TAMANOS_VERIFICADOS } from '../../lib/sucursales/tamanos-verificados';
 
 // Recetas reales de la lista verificada: Iced Latte (Regular y Large) y Chai Frap (solo Regular).
@@ -170,6 +171,84 @@ describe('costear', () => {
     );
     expect(resumen.cobertura.sinCodigoCent).toBe(0);
     expect(porClave.get('codigo:BRO')!.completo.lineas).toBe(2);
+  });
+});
+
+describe('filtro de origen: la identidad se aprende de todo el periodo', () => {
+  const de = (origen: Origen, ...lineas: LineaNormal[]): PedidoNormal => ({ ...pedido(...lineas), origen });
+  // Como en 532: la App manda «Brownie» sin código; el código BRO solo llega en Mostrador y Rappi.
+  const periodo = [
+    de('mostrador', linea('BRO', 'Brownie', 11600)),
+    de('rappi', linea('BRO', 'Brownie', 13000), linea('GENERIC', 'Generic', 19900)),
+    de('app', linea('', 'Brownie', 11600, [], true)),
+    de('app', linea('', 'Croissant', 5000, [], true)), // ningún código en el periodo: sigue sin código
+  ];
+  const app = filtrarOrigen(periodo, 'app');
+
+  it('antes: filtrar perdía la evidencia y la línea de la App quedaba «sin código»', () => {
+    expect(costear(app, datos()).resumen.cobertura).toMatchObject({ sinCodigoCent: 16600, conRecetaCent: 0 });
+  });
+
+  it('después: la línea de la App se une al único código del periodo; el denominador y el POS no cambian', () => {
+    const { resumen } = costear(app, datos(), periodo);
+    expect(resumen.cobertura).toMatchObject({
+      totalCent: 16600, // solo la venta de la App: el denominador es el mismo
+      genericoCent: 0,
+      sinCodigoCent: 5000, // «Croissant» no tiene código en ningún origen
+      sinEnlaceCent: 0,
+      conRecetaCent: 11600,
+    });
+    expect(resumen.completo).toMatchObject({ lineas: 1, importeCent: 11600, costoCent: 3000 });
+    const antes = productos(app);
+    const despues = productos(app, periodo);
+    expect(despues.map((x) => [x.clave, x.nombre, x.importeCent, x.lineas, !!x.sinCodigo])).toEqual([
+      ['codigo:BRO', 'Brownie', 11600, 1, false],
+      ['nombre:Croissant', 'Croissant', 5000, 1, true],
+    ]);
+    // Mismos nombres, importes y líneas que antes; solo cambia la identidad de la línea sin código.
+    const sinId = (l: typeof antes) => l.map((x) => [x.nombre, x.importeCent, x.lineas, x.pedidos]).sort();
+    expect(sinId(despues)).toEqual(sinId(antes));
+  });
+
+  it('no amplía coincidencias: un nombre con dos códigos en el periodo queda sin código aunque el filtro vea uno', () => {
+    const ambiguo = [
+      de('mostrador', linea('X2', 'Latte', 9000)),
+      de('app', linea('X1', 'Latte', 9000)),
+      de('app', linea('', 'Latte', 9000, [], true)),
+    ];
+    const soloApp = filtrarOrigen(ambiguo, 'app');
+    expect(productos(soloApp, ambiguo).find((x) => x.sinCodigo)).toMatchObject({
+      nombre: 'Latte',
+      importeCent: 9000,
+    });
+  });
+
+  it('Todos no cambia y los cuatro filtros son consistentes: App + Mostrador + Rappi = Todos', () => {
+    expect(costear(periodo, datos(), periodo)).toEqual(costear(periodo, datos()));
+    const todos = costear(periodo, datos(), periodo).resumen.cobertura;
+    const suma = (['app', 'mostrador', 'rappi'] as const)
+      .map((o) => costear(filtrarOrigen(periodo, o), datos(), periodo).resumen.cobertura)
+      .map(({ totalCent, genericoCent, sinCodigoCent, sinEnlaceCent, conRecetaCent }) => ({
+        totalCent,
+        genericoCent,
+        sinCodigoCent,
+        sinEnlaceCent,
+        conRecetaCent,
+      }))
+      .reduce((a, c) => ({
+        totalCent: a.totalCent + c.totalCent,
+        genericoCent: a.genericoCent + c.genericoCent,
+        sinCodigoCent: a.sinCodigoCent + c.sinCodigoCent,
+        sinEnlaceCent: a.sinEnlaceCent + c.sinEnlaceCent,
+        conRecetaCent: a.conRecetaCent + c.conRecetaCent,
+      }));
+    expect(suma).toMatchObject({
+      totalCent: todos.totalCent,
+      genericoCent: todos.genericoCent,
+      sinCodigoCent: todos.sinCodigoCent,
+      sinEnlaceCent: todos.sinEnlaceCent,
+      conRecetaCent: todos.conRecetaCent,
+    });
   });
 });
 

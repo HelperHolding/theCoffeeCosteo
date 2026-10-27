@@ -92,8 +92,9 @@ export function tamanoVerificado(l: LineaNormal, recetaId: string, datos: DatosC
   return TAMANOS_VERIFICADOS[recetaId]?.[vaso] ?? null;
 }
 
-export function costear(ps: PedidoNormal[], datos: DatosCosteo) {
-  const identidad = identificador(ps);
+/** `evidencia`: pedidos del periodo sin filtrar por origen, la misma que usa `productos` (ver identificador). */
+export function costear(ps: PedidoNormal[], datos: DatosCosteo, evidencia: PedidoNormal[] = ps) {
+  const identidad = identificador(evidencia);
   const porClave = new Map<string, CosteoProducto>();
   const cob = { totalCent: 0, genericoCent: 0, sinCodigoCent: 0, sinEnlaceCent: 0, conRecetaCent: 0 };
   const completo = vacioCompleto();
