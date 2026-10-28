@@ -151,6 +151,51 @@ export interface PerfilSucursal {
   company_id: number;
   creado_en: string;
 }
+/** Analytics (migración 23): tiendas de México incluidas y agregados diarios. Solo lectura desde el portal. */
+export interface AnalyticsTienda {
+  company_id: number;
+  store_id: number;
+  nombre: string;
+  relaciones: string[];
+  verificado_en: string;
+}
+export interface AnalyticsLectura {
+  fuente: string;
+  company_id: number;
+  fecha: string;
+  leido_en: string;
+  provisional: boolean;
+  version_calculo: string;
+  criterio_fecha: string;
+  origen: string;
+  carga_id: string;
+  cargado_en: string;
+}
+export interface AnalyticsVentaDiaria {
+  fuente: string;
+  company_id: number;
+  fecha: string;
+  canal: string;
+  venta_cent: number;
+  tickets: number;
+  unidades: number;
+}
+export interface AnalyticsVentaKpi {
+  company_id: number;
+  store_id: number;
+  tienda: string;
+  fecha: string;
+  provisional: boolean;
+  leido_en: string;
+  venta_cent: number;
+  tickets: number;
+  unidades: number;
+  mostrador_cent: number;
+  app_cent: number;
+  rappi_pos_tickets: number;
+  rappi_pos_cent: number;
+  sin_origen_tickets: number;
+}
 export interface Bitacora {
   id: number;
   tabla: string;
@@ -177,6 +222,9 @@ export interface Database {
       perfiles: Tabla<Perfil>;
       perfil_modulos: Tabla<PerfilModulo>;
       perfil_sucursales: Tabla<PerfilSucursal>;
+      analytics_tiendas: Tabla<AnalyticsTienda>;
+      analytics_lecturas: Tabla<AnalyticsLectura>;
+      analytics_ventas_diarias: Tabla<AnalyticsVentaDiaria>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -206,6 +254,7 @@ export interface Database {
       crm_historial: Tabla<Crm.Historial>;
     };
     Views: {
+      analytics_ventas_kpi: { Row: Registro<AnalyticsVentaKpi>; Relationships: [] };
       v_resumen: { Row: Registro<Resumen>; Relationships: [] };
       v_alerta_producto_canal: { Row: Registro<Alerta>; Relationships: [] };
       v_costo_producto: {

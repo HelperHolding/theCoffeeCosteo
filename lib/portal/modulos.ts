@@ -1,7 +1,7 @@
 import type { NivelModulo } from '../supabase/database.types';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
-export type IdModulo = 'costeo' | 'crm' | 'sucursales';
+export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'analytics';
 /** Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita. */
 export type Accesos = Partial<Record<'crm' | 'sucursales', NivelModulo>>;
 
@@ -10,7 +10,8 @@ export interface Modulo {
   nombre: string;
   descripcion: string;
   href: string;
-  acceso: (accesos: Accesos) => boolean;
+  /** rol = perfiles.rol del usuario activo (Analytics lo exige; el resto usa perfil_modulos). */
+  acceso: (accesos: Accesos, rol?: string) => boolean;
 }
 
 export const modulos: Modulo[] = [
@@ -37,10 +38,18 @@ export const modulos: Modulo[] = [
     // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales).
     acceso: (a) => a.sucursales !== undefined,
   },
+  {
+    id: 'analytics',
+    nombre: 'Analytics',
+    descripcion: 'Ventas corporativas de la red (POS): venta con IVA, tickets, ticket promedio y unidades.',
+    href: '/analytics',
+    // D4 (etapa 1): toda la red, solo admin activo. La base lo vuelve a exigir con RLS.
+    acceso: (_a, rol) => rol === 'admin',
+  },
 ];
 
-export const modulosVisibles = (accesos: Accesos): IdModulo[] =>
-  modulos.filter((m) => m.acceso(accesos)).map((m) => m.id);
+export const modulosVisibles = (accesos: Accesos, rol?: string): IdModulo[] =>
+  modulos.filter((m) => m.acceso(accesos, rol)).map((m) => m.id);
 
 export const puedeEditarCrm = (accesos: Accesos) =>
   accesos.crm === 'desarrollador' || accesos.crm === 'edicion';

@@ -17,7 +17,7 @@ export default async function SucursalesLayout({ children }: { children: React.R
       key={perfil.user_id}
       perfil={{ nombre: perfil.nombre, rol: perfil.rol }}
       seccion="sucursales"
-      visibles={modulosVisibles(await accesos(db, perfil.user_id))}
+      visibles={modulosVisibles(await accesos(db, perfil.user_id), perfil.rol)}
       busqueda={busqueda}
     >
       {children}

@@ -17,6 +17,7 @@ import {
   Contact,
   CalendarCheck,
   Activity,
+  ChartColumn,
   type LucideIcon,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
@@ -29,6 +30,7 @@ const entradaModulo: Record<IdModulo, Enlace> = {
   costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
   crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
   sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
+  analytics: { href: '/analytics', nombre: 'Analytics', icono: ChartColumn },
 };
 
 export const grupos: Grupo[] = [
@@ -86,11 +88,19 @@ const gruposSucursales: Grupo[] = [
   },
 ];
 
+const gruposAnalytics: Grupo[] = [
+  {
+    titulo: 'Analytics',
+    enlaces: [{ href: '/analytics', nombre: 'Ventas de la red', icono: LayoutDashboard, exacto: true }],
+  },
+];
+
 const gruposPorSeccion: Record<Seccion, Grupo[]> = {
   inicio: [],
   costeo: grupos,
   crm: gruposCrm,
   sucursales: gruposSucursales,
+  analytics: gruposAnalytics,
 };
 
 /**

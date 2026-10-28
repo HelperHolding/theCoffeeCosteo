@@ -46,6 +46,11 @@ const textos: Record<Seccion, { marca: [string, string]; buscar: string; registr
     buscar: 'Buscar sucursal o pantalla…',
     registros: 'Sucursales',
   },
+  analytics: {
+    marca: ['Analytics', 'ventas de la red'],
+    buscar: 'Buscar pantalla…',
+    registros: 'Registros',
+  },
 };
 
 export function Marco({

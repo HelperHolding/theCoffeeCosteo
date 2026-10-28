@@ -100,3 +100,16 @@ export async function sesionSucursales(redirigir = true) {
   }
   return a;
 }
+
+/**
+ * Sesión de Analytics (D4, etapa 1): perfil activo con rol admin; ve toda la red. Sin permisos por
+ * sucursal ni franquiciatario todavía. La RLS de las tablas analytics_* exige lo mismo en la base.
+ */
+export async function sesionAnalytics(redirigir = true) {
+  const s = await sesion(undefined, redirigir);
+  if (s.perfil.rol !== 'admin') {
+    if (redirigir) redirect('/');
+    throw new Error('Analytics es solo para administradores.');
+  }
+  return s;
+}

@@ -616,3 +616,13 @@ html[data-luz='noche'] .barra-muro img {
   filter: invert(1);
   mix-blend-mode: screen;
 }
+
+/* Analytics: texturas que acompañan al color (dataviz: identidad nunca solo por color). */
+@layer components {
+  .textura-provisional {
+    background: repeating-linear-gradient(45deg, var(--color-ink-2) 0 2px, var(--color-surface) 2px 5px);
+  }
+  .textura-sin-lectura {
+    background: repeating-linear-gradient(45deg, var(--color-bad) 0 1.5px, var(--color-bad-soft) 1.5px 4px);
+  }
+}

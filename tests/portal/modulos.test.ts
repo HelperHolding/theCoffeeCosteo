@@ -19,7 +19,7 @@ vi.mock('../../lib/supabase/servidor', () => ({
   }),
 }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
-import { sesionCrm } from '../../lib/supabase/sesion';
+import { sesionAnalytics, sesionCrm } from '../../lib/supabase/sesion';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -53,4 +53,21 @@ it('con acceso devuelve el nivel del CRM', async () => {
   const s = await sesionCrm();
   expect(s.nivel).toBe('desarrollador');
   expect(s.perfil.nombre).toBe('Carlos');
+});
+
+it('Analytics solo aparece para rol admin (D4, etapa 1), sin depender de perfil_modulos', () => {
+  expect(modulosVisibles({}, 'admin')).toEqual(['costeo', 'analytics']);
+  for (const rol of ['finanzas', 'operaciones', 'compras', undefined])
+    expect(modulosVisibles({ crm: 'desarrollador', sucursales: 'lectura' }, rol)).not.toContain('analytics');
+});
+
+it('sesionAnalytics: admin activo entra; otro rol, inactivo o sin sesión no (también en acceso directo)', async () => {
+  await expect(sesionAnalytics()).resolves.toMatchObject({ perfil: { rol: 'admin' } });
+  mocks.perfil.mockResolvedValue({ data: { user_id: 'u', nombre: 'F', rol: 'finanzas', activo: true }, error: null });
+  await expect(sesionAnalytics()).rejects.toThrow('REDIRECT:/');
+  await expect(sesionAnalytics(false)).rejects.toThrow('solo para administradores');
+  mocks.perfil.mockResolvedValue({ data: { user_id: 'u', nombre: 'A', rol: 'admin', activo: false }, error: null });
+  await expect(sesionAnalytics()).rejects.toThrow('REDIRECT:/login?aviso=perfil');
+  mocks.user.mockResolvedValue({ data: { user: null }, error: null });
+  await expect(sesionAnalytics()).rejects.toThrow('REDIRECT:/login');
 });

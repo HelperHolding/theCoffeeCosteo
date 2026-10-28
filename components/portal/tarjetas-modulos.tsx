@@ -1,9 +1,14 @@
 import Link from 'next/link';
-import { Activity, ArrowUpRight, Calculator, Store, type LucideIcon } from 'lucide-react';
+import { Activity, ArrowUpRight, Calculator, ChartColumn, Store, type LucideIcon } from 'lucide-react';
 import type { IdModulo, Modulo } from '@/lib/portal/modulos';
 import { Vacio } from './piezas';
 
-const iconos: Record<IdModulo, LucideIcon> = { costeo: Calculator, crm: Store, sucursales: Activity };
+const iconos: Record<IdModulo, LucideIcon> = {
+  costeo: Calculator,
+  crm: Store,
+  sucursales: Activity,
+  analytics: ChartColumn,
+};
 
 export function TarjetasModulos({
   modulos,

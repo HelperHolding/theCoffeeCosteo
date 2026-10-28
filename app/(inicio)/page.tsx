@@ -13,7 +13,7 @@ export default async function Inicio() {
         titulo="Módulos"
         descripcion="Elige el área en la que vas a trabajar."
       />
-      <TarjetasModulos modulos={modulos.filter((m) => m.acceso(a))} />
+      <TarjetasModulos modulos={modulos.filter((m) => m.acceso(a, perfil.rol))} />
     </>
   );
 }
