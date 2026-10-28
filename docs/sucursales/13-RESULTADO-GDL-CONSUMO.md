@@ -263,3 +263,25 @@ select '<uuid-perfil>', c from unnest(array[384, 457, 459, 477, 515, 514, 532, 5
 - Prettier sobre los archivos propios.
 - Scripts de medición (solo GET y solo lectura): `medir-62.ts`, `comparar-dias.ts`, `medir-directorio.ts` y
   `medir-consumo.ts`.
+
+## Cierre (2026-10-28, main 656fe3d)
+
+Encargo terminado: #48, #51 y #55 en main, migraciones 24, 25 y 27 aplicadas, y repo y base con las mismas 27
+migraciones. Verificación final sobre un checkout limpio de main:
+
+- `tsc --noEmit` sin errores. `vitest`: 550 pasan y 5 se omiten. Solo falla `paridad`, que necesita el Excel.
+- Deploy: Vercel y «Supabase Preview» en verde sobre 656fe3d.
+- **Producción con el código de main.** Se corrieron los lectores reales (`leerDatosConsumo`, `leerDatosCosteo`,
+  `puedeCostear`) contra las RPC, como cada usuario, en una transacción de solo lectura con ROLLBACK:
+  - **Dione y Claudia:** rol `sucursales`. En las 11 de GDL tienen Consumo con ajustes, Costeo y permiso de Costeo.
+    En la 612 y la 583, Consumo `null`, Costeo «sin permiso» y sin permiso de Costeo.
+  - **532, 21–27 oct, como Carlos:** Consumo 135 unidades dentro (21 con ajuste; fuera 51 por tamaño y 269 por
+    personalización). Costeo completo, también 135, con los mismos motivos. La deslactosada suma 2,830 ml. Coincide
+    con la medición del PR #51.
+- **Directorio con las 13 sucursales hoy:** 5.1 s y 27 lecturas en frío; 0 en caliente; 3.3 s y 13 lecturas al
+  vencer «hoy». Sin errores. Sigue sin hacer falta persistir pedidos (E4).
+- **Lo que no se verificó:** una sesión real de Dione o Claudia en el navegador de producción, porque no se entra con
+  sus cuentas. Sus permisos se comprobaron en la base con su identidad y en las pruebas de rutas.
+
+**Siguiente paso (fuera de este encargo):** la etapa 2 de personalizaciones (shots, leches vegetales y miel,
+`docs/conciliacion-brasil/33`). Sube la cobertura de Consumo y de Costeo por igual, porque comparten la regla.
