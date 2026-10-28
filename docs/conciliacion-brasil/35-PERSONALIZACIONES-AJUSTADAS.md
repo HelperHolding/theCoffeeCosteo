@@ -1,6 +1,6 @@
 # 35 · Personalizaciones con ajuste calculado en el costeo de Sucursales (etapa 1b)
 
-**Estado:** código y migración 26 preparados el 2026-10-28, con pruebas y ensayo local. **La migración 26 no está aplicada en producción y el PR no está mergeado.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** código y migración 26 preparados el 2026-10-28, con pruebas, ensayo local, respaldo de la función y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **La migración 26 no está aplicada en producción y el PR no está mergeado.** Aplicar y mergear requieren aprobación expresa de Carlo.
 
 Sigue al doc 33 (etapa 1, personalizaciones neutras). Esta etapa calcula las personalizaciones que **sí cambian la receta**, pero cuyo efecto se conoce sin pedir datos a Operaciones ni a Compras.
 
@@ -61,10 +61,22 @@ El margen bruto teórico de las líneas completas pasa de 59.2 % a 63.4 %. No es
 
   La copia se borró.
 
+## Respaldo y ensayo remoto (2026-10-28, 20:47 UTC, autorizados por Carlo)
+
+Desde el código de este PR en `cefad9c`. **No se aplicó nada.**
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo** | Definición y ACL de `sucursales_datos_costeo` guardadas fuera del repo. md5 de la definición: `c6a33df3…`, idéntico al de la migración 25 aplicada en la copia local. ACL: `postgres`, `authenticated` y `service_role` con EXECUTE. 25 migraciones registradas |
+| **Ensayo** (una transacción, ROLLBACK) | La RPC, llamada como Carlo en la 532 y en la 612, antes y después de la 26 dentro de la transacción: `iva`, `enlaces`, `costos`, `unicas` y `lineas` (529) con el **mismo md5**. Se agrega `sustitutos` con los 12 insumos y su costo actual (leche entera y deslactosada $0.022/ml; avena, almendra y coco $0.032; Califia $0.042–0.0564; granos BLACK $0.50/g, WHITE $0.40, KRAFT $0.4267; miel $0.098/ml). ACL igual |
+| **Conexión nueva después** | Definición igual al respaldo, ACL igual y 25 migraciones: no persistió nada |
+
+Para revertir después de aplicar, basta ejecutar el respaldo: es el `create or replace` de la versión de la migración 25.
+
 ## Para llevarlo a producción (cada paso requiere aprobación)
 
-1. Respaldo de la definición actual de `sucursales_datos_costeo` (la de la migración 25).
-2. Ensayo remoto de la migración 26 con ROLLBACK: claves anteriores idénticas, 12 sustitutos y permisos sin cambio.
+1. ~~Respaldo de la definición actual~~ hecho (arriba).
+2. ~~Ensayo remoto con ROLLBACK~~ hecho (arriba).
 3. Aplicar la migración 26 y registrarla en `supabase_migrations`.
 4. Merge del PR y verificación del despliegue.
 
