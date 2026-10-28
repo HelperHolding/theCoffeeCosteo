@@ -223,4 +223,33 @@ describe('sucursales_recetas_consumo', () => {
     expect(de('Chica', jarabe)).toBeCloseTo(10, 6); // 20 ml × 250 g / 500 ml
     expect(de('Grande', jarabe)).toBeCloseTo(15, 6);
   });
+
+  it('migración 27: líneas directas y sustitutos para los ajustes, sin costos', async () => {
+    // Los sustitutos LECHE DESLACTOSADAS y GRANO KRAFT los dio de alta la prueba de la migración 26 (mismo archivo).
+    const d = (await rpc<{
+      lineas: { receta_id: string; tamano: string; insumo: string; cantidad: number }[];
+      sustitutos: { insumo_id: string; insumo: string; unidad: string; categoria: string }[];
+    }>(gdl, 'sucursales_recetas_consumo', 384))!;
+    expect(JSON.stringify(d)).not.toMatch(/costo|activo/);
+    // Solo las líneas directas: la sub-receta (jarabe) no aparece.
+    expect(
+      d.lineas
+        .filter((l) => l.receta_id === latte && l.tamano === 'Chica')
+        .map((l) => [l.insumo, num(l.cantidad)])
+        .sort(),
+    ).toEqual([
+      ['CAFE PRUEBA 23', 18],
+      ['LECHE PRUEBA 23', 200],
+    ]);
+    expect(d.sustitutos.map((s) => s.insumo)).toEqual([
+      'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG',
+      'LECHE DESLACTOSADAS',
+    ]);
+    expect(d.sustitutos.find((s) => s.insumo === 'LECHE DESLACTOSADAS')).toMatchObject({
+      unidad: 'ml',
+      categoria: 'CATEGORIA PRUEBA',
+    });
+    // Mismo permiso: sin la sucursal, nada.
+    expect(await rpc(gdl, 'sucursales_recetas_consumo', 612)).toBeNull();
+  });
 });

@@ -121,9 +121,47 @@ export function tamanoVerificado(
 }
 
 /**
- * Diferencia de costo (centavos) que causan las personalizaciones de una línea, o por qué no se puede calcular.
- * Las neutras no cuentan. Las demás necesitan un ajuste verificado para la receta y las líneas de la receta en ese
- * tamaño; el costo del insumo nuevo sale de la receta o de los sustitutos. Un insumo inactivo que se agrega → 'costo'.
+ * Cambio de cantidades (por nombre de insumo de Costeo) que causan las personalizaciones de una línea sobre las líneas
+ * DIRECTAS de su receta y tamaño, o null si no se puede calcular. Las neutras no cuentan. Las demás necesitan un
+ * ajuste verificado para la receta y las líneas de la receta en ese tamaño. Es la regla común de Costeo (que lo
+ * multiplica por el costo) y de Consumo (que lo suma a la receta expandida).
+ */
+export function cambiosPersonalizaciones(
+  recetaId: string,
+  nombres: string[],
+  lineas: readonly { insumo: string; cantidad: number }[] | undefined,
+): Map<string, number> | null {
+  const ajustes = [...new Set(nombres)]
+    .filter((n) => !personalizacionNeutra(recetaId, n))
+    .map((n) => ajusteVerificado(recetaId, n));
+  if (!ajustes.length) return new Map();
+  if (ajustes.some((a) => !a) || !lineas) return null;
+  const antes = new Map<string, number>();
+  for (const l of lineas) antes.set(l.insumo, (antes.get(l.insumo) ?? 0) + l.cantidad);
+  const despues = new Map(antes);
+  for (const a of ajustes) {
+    if ('cambia' in a!) {
+      const q = despues.get(a.cambia.de);
+      if (!q) return null;
+      despues.set(a.cambia.de, 0);
+      despues.set(a.cambia.a, (despues.get(a.cambia.a) ?? 0) + q);
+    } else {
+      if (!despues.get(a!.cantidad.insumo)) return null;
+      despues.set(a!.cantidad.insumo, a!.cantidad.valor);
+    }
+  }
+  const cambios = new Map<string, number>();
+  for (const [insumo, q] of despues) {
+    const dq = q - (antes.get(insumo) ?? 0);
+    if (dq) cambios.set(insumo, dq);
+  }
+  return cambios;
+}
+
+/**
+ * Diferencia de costo (centavos) que causan las personalizaciones de una línea, o por qué no se puede calcular
+ * (ver cambiosPersonalizaciones). El costo del insumo nuevo sale de la receta o de los sustitutos. Un insumo
+ * inactivo que se agrega → 'costo'.
  */
 export function ajustePersonalizaciones(
   recetaId: string,
@@ -131,34 +169,13 @@ export function ajustePersonalizaciones(
   nombres: string[],
   datos: Pick<DatosCosteo, 'lineas' | 'sustitutos'>,
 ): { deltaCent: number } | { motivo: MotivoParcial } {
-  const ajustes = [...new Set(nombres)]
-    .filter((n) => !personalizacionNeutra(recetaId, n))
-    .map((n) => ajusteVerificado(recetaId, n));
-  if (!ajustes.length) return { deltaCent: 0 };
   const lineas = datos.lineas?.get(clave(recetaId, tamano));
-  if (ajustes.some((a) => !a) || !lineas) return { motivo: 'personalizacion' };
-  const antes = new Map<string, number>();
+  const cambios = cambiosPersonalizaciones(recetaId, nombres, lineas);
+  if (!cambios) return { motivo: 'personalizacion' };
   const costo = new Map<string, { costoUnitario: number; activo: boolean }>();
-  for (const l of lineas) {
-    antes.set(l.insumo, (antes.get(l.insumo) ?? 0) + l.cantidad);
-    costo.set(l.insumo, l);
-  }
-  const despues = new Map(antes);
-  for (const a of ajustes) {
-    if ('cambia' in a!) {
-      const q = despues.get(a.cambia.de);
-      if (!q) return { motivo: 'personalizacion' };
-      despues.set(a.cambia.de, 0);
-      despues.set(a.cambia.a, (despues.get(a.cambia.a) ?? 0) + q);
-    } else {
-      if (!despues.get(a!.cantidad.insumo)) return { motivo: 'personalizacion' };
-      despues.set(a!.cantidad.insumo, a!.cantidad.valor);
-    }
-  }
+  for (const l of lineas ?? []) costo.set(l.insumo, l);
   let delta = 0;
-  for (const [insumo, q] of despues) {
-    const dq = q - (antes.get(insumo) ?? 0);
-    if (!dq) continue;
+  for (const [insumo, dq] of cambios) {
     const c = costo.get(insumo) ?? datos.sustitutos?.get(insumo);
     if (!c) return { motivo: 'personalizacion' };
     if (dq > 0 && !c.activo) return { motivo: 'costo' };

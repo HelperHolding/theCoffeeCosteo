@@ -1,16 +1,16 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import type { PedidoNormal } from './normalizar';
-import { tamanoVerificado } from './costeo';
-import { personalizacionNeutra } from './personalizaciones-verificadas';
+import { cambiosPersonalizaciones, tamanoVerificado } from './costeo';
 
 /**
  * Consumo TEÓRICO según receta de las ventas de Sucursales (docs/sucursales/13). Puro: no lee la base.
  * - No es inventario ni merma: es lo que las recetas de Costeo dicen que lleva cada unidad vendida.
  * - Solo cantidades, nunca dinero. Cobertura en LÍNEAS (unidades): A = todas y B = A − GENERIC.
  * - Mismo criterio que el costeo completo: una línea entra al consumo si su código está enlazado, su tamaño está
- *   verificado para esa receta y todas sus personalizaciones son neutras para esa receta (personalizaciones-
- *   verificadas.ts; un cambio de leche o un shot extra aún no se modela). Además, la receta debe tener cantidades
- *   para ese tamaño.
+ *   verificado para esa receta y cada personalización es neutra o tiene un ajuste verificado (personalizaciones-
+ *   verificadas.ts). El ajuste mueve las MISMAS cantidades que Costeo sobre las líneas directas de la receta
+ *   (cambiosPersonalizaciones), p. ej. «Lactose free» descuenta deslactosada en lugar de entera. Además, la receta
+ *   debe tener cantidades para ese tamaño. Diferencia con Costeo: un insumo inactivo no saca la línea (no hay costo).
  * - Misma identidad de líneas que Productos y Costeo (`identificador` con la evidencia de todo el periodo).
  */
 export interface InsumoReceta {
@@ -27,6 +27,32 @@ export interface DatosConsumo {
   unicas: Set<string>;
   /** `${recetaId}:${tamaño}` → insumos por unidad. */
   recetas: Map<string, InsumoReceta[]>;
+  /** Líneas DIRECTAS (nombre de insumo y cantidad) por receta y tamaño, para los ajustes. Desde la migración 27. */
+  lineas?: Map<string, { insumo: string; cantidad: number }[]>;
+  /** Insumo nuevo de un ajuste cuando la receta no lo lleva (lista cerrada de sustitutos). Desde la migración 27. */
+  sustitutos?: Map<string, Omit<InsumoReceta, 'cantidad'>>;
+}
+
+/** Receta expandida de una unidad con los cambios de sus personalizaciones; null si falta el insumo nuevo. */
+function conCambios(
+  receta: InsumoReceta[],
+  cambios: Map<string, number>,
+  sustitutos: DatosConsumo['sustitutos'],
+): InsumoReceta[] | null {
+  if (!cambios.size) return receta;
+  const r = receta.map((x) => ({ ...x }));
+  for (const [insumo, dq] of cambios) {
+    const x = r.find((y) => y.insumo === insumo);
+    if (x) x.cantidad += dq;
+    else {
+      const s = sustitutos?.get(insumo);
+      if (!s || dq < 0) return null;
+      r.push({ ...s, cantidad: dq });
+    }
+  }
+  // Un cambio nunca deja cantidades negativas: la receta expandida incluye las líneas directas que se mueven.
+  if (r.some((x) => x.cantidad < -1e-9)) return null;
+  return r.filter((x) => x.cantidad > 1e-9);
 }
 
 export const CATEGORIA_LECHE = 'LECHE';
@@ -62,6 +88,8 @@ export interface CoberturaConsumo {
   excluidas: Record<MotivoExcluido, number>;
   /** Líneas que sí entran al consumo. */
   incluidas: number;
+  /** De las incluidas, cuántas con una personalización que cambió la receta (ajuste verificado). */
+  ajustadas: number;
   /** incluidas ÷ A e incluidas ÷ B (null si el denominador es 0). */
   sobreTotal: number | null;
   sobreIdentificable: number | null;
@@ -89,7 +117,15 @@ export function consumir(
   fechas: string[] = [],
 ): ResultadoConsumo {
   const identidad = identificador(evidencia, catalogo);
-  const cob = { lineas: 0, generico: 0, sinCodigo: 0, sinEnlace: 0, conReceta: 0, incluidas: 0 };
+  const cob = {
+    lineas: 0,
+    generico: 0,
+    sinCodigo: 0,
+    sinEnlace: 0,
+    conReceta: 0,
+    incluidas: 0,
+    ajustadas: 0,
+  };
   const excluidas = motivosVacios();
   const insumos = new Map<string, CantidadInsumo & { productos: Set<string> }>();
   const productos = new Map<
@@ -140,22 +176,31 @@ export function consumir(
         productos.set(id.clave, x);
       }
       const tamano = tamanoVerificado(l, enlace.recetaId, datos);
-      const receta = tamano ? datos.recetas.get(claveReceta(enlace.recetaId, tamano)) : undefined;
+      const base = tamano ? datos.recetas.get(claveReceta(enlace.recetaId, tamano)) : undefined;
+      const cambios = tamano
+        ? cambiosPersonalizaciones(
+            enlace.recetaId,
+            l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
+            datos.lineas?.get(claveReceta(enlace.recetaId, tamano)),
+          )
+        : null;
+      const receta = base?.length && cambios ? conCambios(base, cambios, datos.sustitutos) : null;
       const motivo: MotivoExcluido | null = !tamano
         ? 'tamano'
-        : l.customs.some(
-              (c) => !ES_TAMANO.test(c.nombre) && !personalizacionNeutra(enlace.recetaId, c.nombre),
-            )
+        : !cambios
           ? 'personalizacion'
-          : !receta?.length
+          : !base?.length
             ? 'receta'
-            : null;
+            : !receta
+              ? 'personalizacion'
+              : null;
       if (motivo) {
         excluidas[motivo]++;
         x.excluidas[motivo]++;
         continue;
       }
       cob.incluidas++;
+      if (cambios!.size) cob.ajustadas++;
       dia.incluidas++;
       x.lineas++;
       x.tamanos.set(tamano!, (x.tamanos.get(tamano!) ?? 0) + 1);
