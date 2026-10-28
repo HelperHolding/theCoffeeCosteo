@@ -10,7 +10,7 @@ const leido = (iso: string) =>
 
 const MOTIVOS: Record<MotivoParcial, string> = {
   tamano: 'tamaño sin verificar',
-  personalizacion: 'con personalización (sin catálogo de costos)',
+  personalizacion: 'con personalización que puede cambiar la receta',
   costo: 'sin costo disponible o con insumo inactivo',
 };
 
@@ -102,7 +102,9 @@ export function TarjetaCosteo({ c, moneda }: { c: CosteoResumen; moneda: string 
           <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
             <li>
               Una línea del POS es una unidad. Solo es de costeo completo si su tamaño está verificado para
-              ese producto y no lleva personalizaciones.
+              ese producto y sus personalizaciones no cambian la receta (lista revisada: temperatura, «sin
+              miel», la leche o el sabor de la receta, entre otras). Leches, shots, miel y jarabes aún no se
+              calculan.
             </li>
             <li>
               Margen bruto teórico = importe cobrado ÷ {(1 + c.iva).toFixed(2)} (sin IVA) − costo de la
