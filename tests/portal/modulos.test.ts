@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { modulosVisibles, puedeEditarCrm } from '../../lib/portal/modulos';
 
 const mocks = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ vi.mock('../../lib/supabase/servidor', () => ({
   }),
 }));
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }));
-import { sesionCrm } from '../../lib/supabase/sesion';
+import { sesion, sesionCrm } from '../../lib/supabase/sesion';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -31,9 +31,9 @@ beforeEach(() => {
   mocks.modulos.mockResolvedValue({ data: [], error: null });
 });
 
-it('Costeo es visible para todo perfil activo; el CRM solo con acceso explícito', () => {
-  expect(modulosVisibles({})).toEqual(['costeo']);
-  expect(modulosVisibles({ crm: 'lectura' })).toEqual(['costeo', 'crm']);
+it('Costeo es visible para todo perfil con rol de Costeo; el CRM solo con acceso explícito', () => {
+  expect(modulosVisibles({}, 'compras')).toEqual(['costeo']);
+  expect(modulosVisibles({ crm: 'lectura' }, 'admin')).toEqual(['costeo', 'crm']);
   expect(puedeEditarCrm({ crm: 'lectura' })).toBe(false);
   expect(puedeEditarCrm({ crm: 'desarrollador' })).toBe(true);
 });
@@ -53,4 +53,31 @@ it('con acceso devuelve el nivel del CRM', async () => {
   const s = await sesionCrm();
   expect(s.nivel).toBe('desarrollador');
   expect(s.perfil.nombre).toBe('Carlos');
+});
+
+describe('rol sucursales (migración 24): sin Costeo', () => {
+  beforeEach(() => {
+    mocks.perfil.mockResolvedValue({
+      data: { user_id: 'u', nombre: 'Dione', rol: 'sucursales', activo: true },
+      error: null,
+    });
+  });
+
+  it('solo ve Sucursales en el tablero, aunque tenga Costeo en lectura dentro de Sucursales', () => {
+    expect(modulosVisibles({ sucursales: 'lectura', sucursales_costeo: 'lectura' }, 'sucursales')).toEqual([
+      'sucursales',
+    ]);
+  });
+
+  it('las páginas de Costeo la mandan a /sucursales y las acciones fallan', async () => {
+    await expect(sesion()).rejects.toThrow('REDIRECT:/sucursales');
+    await expect(sesion('insumos', false)).rejects.toThrow('Tu perfil no tiene acceso a Costeo.');
+  });
+
+  it('Inicio la deja pasar; el CRM la manda a Inicio por no tener el módulo', async () => {
+    await expect(sesion(undefined, true, { sinCosteo: true })).resolves.toMatchObject({
+      perfil: { rol: 'sucursales' },
+    });
+    await expect(sesionCrm()).rejects.toThrow('REDIRECT:/');
+  });
 });

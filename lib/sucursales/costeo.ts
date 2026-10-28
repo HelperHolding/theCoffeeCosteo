@@ -26,6 +26,22 @@ export interface DatosCosteo {
   costos: Map<string, { costoCent: number; usaInactivo: boolean }>;
   /** Recetas que solo se venden en tamaño Único. */
   unicas: Set<string>;
+  /**
+   * Líneas DIRECTAS de insumo (sin sub-recetas) por `claveCosto(receta, tamaño)`, con el costo unitario actual (pesos
+   * por unidad del insumo). Vienen de la RPC desde la migración 25; ausentes con la lectura anterior bajo RLS.
+   * Para ajustar personalizaciones que cambian un insumo (etapa 1b, docs/conciliacion-brasil/33).
+   */
+  lineas?: Map<string, LineaInsumo[]>;
+}
+
+export interface LineaInsumo {
+  lineaId: string;
+  insumoId: string;
+  insumo: string;
+  unidad: string;
+  cantidad: number;
+  costoUnitario: number;
+  activo: boolean;
 }
 
 export type MotivoParcial = 'tamano' | 'personalizacion' | 'costo';
@@ -86,7 +102,11 @@ const clave = (recetaId: string, tamano: string) => `${recetaId}:${tamano}`;
 export const claveCosto = clave;
 
 /** Tamaño de Costeo de una línea, o null si no está verificado para esa receta. */
-export function tamanoVerificado(l: LineaNormal, recetaId: string, datos: DatosCosteo): string | null {
+export function tamanoVerificado(
+  l: LineaNormal,
+  recetaId: string,
+  datos: Pick<DatosCosteo, 'unicas'>,
+): string | null {
   const vasos = l.customs.filter((c) => ES_TAMANO.test(c.nombre));
   if (vasos.length === 0) return datos.unicas.has(recetaId) ? 'Único' : null;
   if (vasos.length > 1) return null;

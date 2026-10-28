@@ -41,6 +41,9 @@ export function leerOrigen(q: URLSearchParams): FiltroOrigen | null {
 }
 
 /** Periodo cerrado o abierto hasta hoy (local de la sucursal), con máximo de días. */
+/** Productos, Costeo y Consumo: hasta 62 días (docs/sucursales/13). Pedidos sigue en 7. */
+export const DIAS_PERIODO_LARGO = 62;
+
 export function leerPeriodo(
   q: URLSearchParams,
   cfg: ConfigSucursal,

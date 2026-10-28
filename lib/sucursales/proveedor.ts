@@ -16,7 +16,7 @@ export const LIMITES = {
   presupuestoMs: 25_000,
   timeoutMs: 10_000,
   reintentos: 2,
-  diasMaximos: 31,
+  diasMaximos: 62,
 };
 
 export type CodigoError =

@@ -1,28 +1,26 @@
-import Link from 'next/link';
 import { sesionSucursales } from '@/lib/supabase/sesion';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { Encabezado, Vacio } from '@/components/portal/piezas';
 import { TarjetaHoy } from '@/components/sucursales/tarjeta-hoy';
 import { AvisoCalidadRappi } from '@/components/sucursales/estados';
 
-/** Máximo de sucursales con lectura de "hoy" en el directorio (el resto se abre bajo demanda). */
-const MAX_HOY = 12;
-
 /**
- * Directorio: solo sucursales asignadas Y configuradas. Cada tarjeta lee "hoy" de su propia sucursal
- * (máx. 12); nunca se leen pedidos de sucursales no asignadas.
+ * Directorio: solo sucursales asignadas Y configuradas, agrupadas por ciudad. Cada tarjeta lee "hoy" de su propia
+ * sucursal cuando entra en pantalla; nunca se leen pedidos de sucursales no asignadas.
  */
 export default async function Directorio() {
   // El layout no se vuelve a ejecutar al navegar: cada página valida su propia sesión.
   const { companias } = await sesionSucursales();
   const lista = sucursalesAccesibles(companias).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es-MX'));
   const sinConfigurar = companias.length - lista.length;
+  const ciudades = [...new Set(lista.map((s) => s.ciudad))].sort((a, b) => a.localeCompare(b, 'es-MX'));
+  const conRappi = lista.filter((s) => s.rappi);
   return (
     <>
       <Encabezado
         area="Sucursales"
         titulo="Directorio"
-        descripcion="Sucursales habilitadas para ti, con su venta de hoy (mostrador, app y Rappi) (API The Coffee, se actualiza cada minuto)."
+        descripcion="Sucursales habilitadas para ti, con su venta de hoy (API The Coffee, se actualiza cada minuto)."
       />
       {lista.length === 0 ? (
         <div className="rounded-2xl border border-line bg-surface shadow-card">
@@ -32,38 +30,40 @@ export default async function Directorio() {
         </div>
       ) : (
         <>
-          {/* La venta de hoy de cada tarjeta incluye Rappi. */}
-          <AvisoCalidadRappi />
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {lista.map((s, i) => (
-              <li key={s.companyId}>
-                {i < MAX_HOY ? (
-                  <TarjetaHoy
-                    companyId={s.companyId}
-                    nombre={s.nombre}
-                    ciudad={s.ciudad}
-                    tienda={s.lookerStoreId}
-                  />
-                ) : (
-                  <Link
-                    href={`/sucursales/${s.companyId}`}
-                    className="flex h-full flex-col gap-1 rounded-2xl border border-line bg-surface p-5 shadow-card hover:border-ink/30"
-                  >
-                    <span className="font-display text-lg font-bold">{s.nombre}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {s.ciudad} · Tienda {s.lookerStoreId} · ID API {s.companyId}
-                    </span>
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
+          {/* La venta de hoy de las sucursales con Rappi en la API lo incluye. */}
+          {conRappi.length > 0 && <AvisoCalidadRappi />}
+          {conRappi.length > 0 && conRappi.length < lista.length && (
+            <p className="placa px-3 py-2 text-xs text-muted-foreground">
+              Rappi llega por la API solo en {conRappi.map((s) => s.nombre).join(', ')}. En las demás, la
+              venta de hoy es Mostrador + App.
+            </p>
+          )}
+          {ciudades.map((ciudad) => {
+            const deCiudad = lista.filter((s) => s.ciudad === ciudad);
+            return (
+              <section key={ciudad} aria-labelledby={`ciudad-${ciudad}`} className="space-y-3">
+                <h2 id={`ciudad-${ciudad}`} className="placa inline-flex items-baseline gap-2 px-3 py-1.5">
+                  <span className="font-display text-lg font-bold">{ciudad}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {deCiudad.length} {deCiudad.length === 1 ? 'sucursal' : 'sucursales'}
+                  </span>
+                </h2>
+                <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {deCiudad.map((s) => (
+                    <li key={s.companyId}>
+                      <TarjetaHoy
+                        companyId={s.companyId}
+                        nombre={s.nombre}
+                        ciudad={s.ubicacion ?? s.ciudad}
+                        tienda={s.lookerStoreId}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
         </>
-      )}
-      {lista.length > MAX_HOY && (
-        <p className="placa px-3 py-2 text-xs text-muted-foreground">
-          La venta de hoy se muestra en las primeras {MAX_HOY} sucursales; las demás la muestran al abrirlas.
-        </p>
       )}
       {sinConfigurar > 0 && (
         <p className="placa px-3 py-2 text-xs text-muted-foreground">

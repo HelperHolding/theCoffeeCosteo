@@ -4,6 +4,8 @@ import { VERSION_DATOS, type ConfigSucursal } from './config';
 import type {
   LecturaInfo,
   PedidoVista,
+  RespuestaConsumo,
+  RespuestaCosteo,
   RespuestaPedidos,
   RespuestaProductos,
   RespuestaTendencias,
@@ -33,6 +35,7 @@ import {
   type FiltroOrigen,
 } from './metricas';
 import { costear, type DatosCosteo } from './costeo';
+import { consumir, type DatosConsumo } from './consumo';
 import { normalizar, type PedidoNormal } from './normalizar';
 import {
   dependenciasReales,
@@ -62,7 +65,8 @@ export interface LecturaNormal {
 }
 
 let deps: Dependencias = dependenciasReales;
-const lecturas = new CacheTtl<LecturaNormal>(60);
+// Un día por entrada: 13 sucursales × 62 días caben (Productos, Costeo y Consumo leen por días; docs/sucursales/13).
+const lecturas = new CacheTtl<LecturaNormal>(1_000);
 const catalogo = new CacheTtl<{ ok: true; sucursales: SucursalApi[] } | { ok: false; error: CodigoError }>(1);
 
 /** Solo para pruebas: dependencias falsas y cachés vacías. */
@@ -137,6 +141,35 @@ export async function leerVentana(
   );
 }
 
+/**
+ * Periodo largo (hasta 62 días) leído DÍA POR DÍA: cada día cerrado queda en caché con su TTL largo y solo hoy se
+ * relee a los 45 s. En 532, 62 días: 16 s en una sola lectura frente a 6.8 s por días (4 en paralelo, el semáforo del
+ * proveedor). Mismos pedidos que una lectura única; si falla algún día, el periodo es parcial (nunca venta cero).
+ */
+export async function leerDias(cfg: ConfigSucursal, desde: string, hasta: string): Promise<LecturaNormal> {
+  const n = diasEntre(desde, hasta) + 1;
+  const fechas = Array.from({ length: n }, (_, i) => sumarDias(hasta, -i));
+  const dias = await Promise.all(fechas.map((f) => leerVentana(cfg, f, f)));
+  if (dias.every((d) => d.estado === 'error'))
+    return { ...fallo(desde, hasta, dias[0].error!), avisos: dias[0].avisos };
+  const incompletos = dias.filter((d) => d.estado !== 'completa').length;
+  const avisos = [...new Set(dias.flatMap((d) => d.avisos))];
+  if (incompletos) avisos.unshift(`${incompletos} de ${n} días con lectura incompleta.`);
+  return {
+    desde,
+    hasta,
+    leidoEn: Math.min(...dias.map((d) => d.leidoEn)),
+    estado: incompletos ? 'parcial' : 'completa',
+    error: null,
+    avisos,
+    totalDeclarado: dias.some((d) => d.totalDeclarado === null)
+      ? null
+      : dias.reduce((a, d) => a + d.totalDeclarado!, 0),
+    // Cada día ya viene del más reciente al más antiguo y los días van de `hasta` hacia atrás.
+    pedidos: dias.flatMap((d) => d.pedidos),
+  };
+}
+
 function fallo(desde: string, hasta: string, codigo: CodigoError): LecturaNormal {
   if (codigo === 'credenciales-proveedor' || codigo === 'sin-configuracion')
     console.error('[sucursales] integración con la API The Coffee no disponible:', codigo);
@@ -170,6 +203,7 @@ export const sucursalInfo = (cfg: ConfigSucursal): SucursalInfo => ({
   moneda: cfg.moneda,
   zona: cfg.zona,
   alcance: cfg.alcance,
+  rappi: cfg.rappi,
   sonidoVenta: cfg.sonidoVenta ?? null,
 });
 
@@ -258,37 +292,78 @@ export async function construirVivo(
   };
 }
 
+/** Ventas · Productos. El costeo ya no viaja aquí: tiene su sección y su API (exige permiso de Costeo). */
 export async function construirProductos(
   cfg: ConfigSucursal,
   desde: string,
   hasta: string,
   origen: FiltroOrigen,
-  /** Solo si el usuario puede ver costos (null/undefined: la respuesta no lleva costeo). */
-  datosCosteo?: DatosCosteo | null,
   /** Nombres del POS de nuestros enlaces (ver identificador); null/undefined: solo la evidencia del periodo. */
   catalogo?: CatalogoNombres | null,
 ): Promise<RespuestaProductos> {
-  const l = await leerVentana(cfg, desde, hasta);
+  const l = await leerDias(cfg, desde, hasta);
   const ps = filtrarOrigen(l.pedidos, origen);
-  // La identidad de las líneas sin código se aprende de todo el periodo, no solo del origen filtrado.
-  const lista = productos(ps, l.pedidos, catalogo ?? undefined);
-  const base = {
+  return {
     sucursal: sucursalInfo(cfg),
     origen,
     lectura: info(l, ps.length),
     totales: resumen(ps),
+    // La identidad de las líneas sin código se aprende de todo el periodo, no solo del origen filtrado.
+    productos: productos(ps, l.pedidos, catalogo ?? undefined),
     personalizaciones: personalizaciones(ps).slice(0, 30),
     conciliacion: conciliar(ps),
   };
-  if (!datosCosteo) return { ...base, productos: lista };
-  const c = costear(ps, datosCosteo, l.pedidos, catalogo ?? undefined);
+}
+
+/** Costeo: las mismas ventas y la misma identidad que Productos, con el costo ACTUAL de Costeo. */
+export async function construirCosteo(
+  cfg: ConfigSucursal,
+  desde: string,
+  hasta: string,
+  origen: FiltroOrigen,
+  datos: DatosCosteo,
+  catalogo?: CatalogoNombres | null,
+): Promise<RespuestaCosteo> {
+  const l = await leerDias(cfg, desde, hasta);
+  const ps = filtrarOrigen(l.pedidos, origen);
+  const c = costear(ps, datos, l.pedidos, catalogo ?? undefined);
   return {
-    ...base,
-    productos: lista.map((x) => {
-      const costeo = c.porClave.get(x.clave);
-      return costeo ? { ...x, costeo } : x;
-    }),
+    sucursal: sucursalInfo(cfg),
+    origen,
+    lectura: info(l, ps.length),
+    totales: resumen(ps),
     costeo: c.resumen,
+    productos: productos(ps, l.pedidos, catalogo ?? undefined).map((x) => ({
+      clave: x.clave,
+      codigo: x.codigo,
+      nombre: x.nombre,
+      sinCodigo: x.sinCodigo,
+      importeCent: x.importeCent,
+      lineas: x.lineas,
+      participacion: x.participacion,
+      costeo: c.porClave.get(x.clave) ?? null,
+    })),
+  };
+}
+
+/** Consumo teórico según receta (solo cantidades), con la misma identidad de líneas que Productos y Costeo. */
+export async function construirConsumo(
+  cfg: ConfigSucursal,
+  desde: string,
+  hasta: string,
+  origen: FiltroOrigen,
+  datos: DatosConsumo,
+  catalogo?: CatalogoNombres | null,
+): Promise<RespuestaConsumo> {
+  const l = await leerDias(cfg, desde, hasta);
+  const ps = filtrarOrigen(l.pedidos, origen);
+  const fechas = Array.from({ length: diasEntre(desde, hasta) + 1 }, (_, i) => sumarDias(desde, i));
+  return {
+    sucursal: sucursalInfo(cfg),
+    origen,
+    lectura: info(l, ps.length),
+    recetasLeidasEn: datos.leidoEn,
+    ...consumir(ps, datos, l.pedidos, catalogo ?? undefined, fechas),
   };
 }
 

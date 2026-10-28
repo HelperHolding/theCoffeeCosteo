@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Activity, ArrowUpRight } from 'lucide-react';
 import type { RespuestaVivo } from '@/lib/sucursales/contratos';
@@ -11,6 +12,8 @@ import { infoHoy } from './info-tableros';
 /**
  * Tarjeta del directorio con "hoy": reutiliza la ruta de En vivo de ESA sucursal (misma autorización y
  * caché de 45 s). Solo se monta para sucursales asignadas al usuario; un error se muestra como tal.
+ * Lectura diferida: con 13 sucursales el directorio en frío pedía 27 lecturas a la API (5.4 s la más lenta;
+ * docs/sucursales/13), así que cada tarjeta lee hasta que entra en pantalla y desde ahí refresca cada minuto.
  */
 export function TarjetaHoy({
   companyId,
@@ -23,12 +26,31 @@ export function TarjetaHoy({
   ciudad: string;
   tienda: number;
 }) {
-  const { datos, error } = useLectura<RespuestaVivo>(`/api/sucursales/${companyId}/vivo?origen=todos`, {
+  const ref = useRef<HTMLAnchorElement>(null);
+  // Sin IntersectionObserver (navegadores viejos, pruebas) se lee de inmediato.
+  const [visible, setVisible] = useState(() => typeof IntersectionObserver === 'undefined');
+  useEffect(() => {
+    const el = ref.current;
+    if (visible || !el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        setVisible(true);
+        io.disconnect();
+      },
+      { rootMargin: '200px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+  const url = visible ? `/api/sucursales/${companyId}/vivo?origen=todos` : null;
+  const { datos, error } = useLectura<RespuestaVivo>(url, {
     intervaloMs: 60_000,
   });
   const errorHoy = datos?.lecturas.hoy.estado === 'error';
   const tarjeta = (
     <Link
+      ref={ref}
       href={`/sucursales/${companyId}`}
       className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-colors hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
     >

@@ -2,45 +2,39 @@
 import { Fragment, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { RespuestaProductos } from '@/lib/sucursales/contratos';
-import { CODIGO_GENERICO, type FiltroOrigen } from '@/lib/sucursales/metricas';
-import { enZona, sumarDias } from '@/lib/sucursales/tiempo';
+import type { FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { ConInfo } from '@/components/portal/con-info';
 import { claseCampo } from '@/lib/crm/formato';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { NOTA_LINEAS } from './en-vivo';
-import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
+import { dinero, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { BarraCelda, Etiqueta, TIPOS, tipoPersonalizacion } from './colores';
-import { CeldaCosteo, CeldaGanancia, TarjetaCosteo } from './costeo';
+import { rango, SelectorPeriodo, type Periodo } from './periodo';
 import { infoProductos } from './info-tableros';
 
-const PERIODOS = [
-  { id: 'hoy', nombre: 'Hoy', dias: 0, fin: 0 },
-  { id: 'ayer', nombre: 'Ayer', dias: 0, fin: -1 },
-  { id: '7d', nombre: 'Últimos 7 días', dias: 6, fin: 0 },
-  { id: '28d', nombre: 'Últimos 28 días', dias: 27, fin: 0 },
-] as const;
-type Orden = 'importe' | 'pedidos' | 'lineas' | 'ganancia' | 'nombre';
+type Orden = 'importe' | 'pedidos' | 'lineas' | 'nombre';
+
+/** Ventas · Productos. El costeo de estos productos vive en la sección Costeo (con su permiso). */
 
 export function Productos({
   companyId,
   origen,
   zona,
+  periodo,
+  alCambiarPeriodo,
 }: {
   companyId: number;
   origen: FiltroOrigen;
   zona: string;
+  periodo: Periodo;
+  alCambiarPeriodo: (p: Periodo) => void;
 }) {
-  const [periodo, setPeriodo] = useState<(typeof PERIODOS)[number]['id']>('hoy');
   const [buscar, setBuscar] = useState('');
   const [orden, setOrden] = useState<Orden>('importe');
   const [abierto, setAbierto] = useState<string | null>(null);
-  // "Hoy" de la sucursal (no del navegador); se recalcula al elegir periodo.
-  const hoy = enZona(new Date(), zona).fecha;
-  const p = PERIODOS.find((x) => x.id === periodo)!;
-  const hasta = sumarDias(hoy, p.fin);
-  const desde = sumarDias(hasta, -p.dias);
+  const { desde, hasta } = rango(periodo, zona);
   const { datos, error, cargando, recargar } = useLectura<RespuestaProductos>(
     `/api/sucursales/${companyId}/productos?desde=${desde}&hasta=${hasta}&origen=${origen}`,
   );
@@ -54,11 +48,6 @@ export function Productos({
       importe: (a, b) => b.importeCent - a.importeCent,
       pedidos: (a, b) => b.pedidos - a.pedidos,
       lineas: (a, b) => b.lineas - a.lineas,
-      // Sin líneas de costeo completo no hay ganancia: van al final.
-      ganancia: (a, b) =>
-        (b.costeo?.completo.lineas ? b.costeo.completo.margenCent : -Infinity) -
-          (a.costeo?.completo.lineas ? a.costeo.completo.margenCent : -Infinity) ||
-        b.importeCent - a.importeCent,
       nombre: (a, b) => a.nombre.localeCompare(b.nombre, 'es-MX'),
     };
     return [...f].sort(comp[orden]);
@@ -70,20 +59,7 @@ export function Productos({
   return (
     <div className="space-y-6" aria-busy={cargando}>
       <div className="placa flex flex-wrap items-end gap-3 p-3">
-        <label className="text-sm">
-          <span className="mb-1 block font-medium text-ink-2">Periodo</span>
-          <select
-            value={periodo}
-            onChange={(e) => setPeriodo(e.target.value as typeof periodo)}
-            className={`${claseCampo} w-48`}
-          >
-            {PERIODOS.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectorPeriodo periodo={periodo} zona={zona} alCambiar={alCambiarPeriodo} />
         <label className="min-w-48 flex-1 text-sm sm:max-w-xs">
           <span className="mb-1 block font-medium text-ink-2">Buscar producto</span>
           <input
@@ -103,13 +79,9 @@ export function Productos({
             <option value="importe">Importe</option>
             <option value="pedidos">Pedidos</option>
             <option value="lineas">Líneas</option>
-            {datos?.costeo && <option value="ganancia">Ganancia teórica</option>}
             <option value="nombre">Nombre</option>
           </select>
         </label>
-        <p className="pb-2 text-xs text-muted-foreground">
-          {desde === hasta ? fechaCorta(desde) : `${fechaCorta(desde)} – ${fechaCorta(hasta)}`}
-        </p>
       </div>
 
       {!datos ? (
@@ -130,7 +102,6 @@ export function Productos({
                 {dinero(datos.conciliacion.productosCent, m)}
                 {textoConciliacion(datos.conciliacion, m)}
               </p>
-              {datos.costeo && <TarjetaCosteo c={datos.costeo} moneda={m} />}
               <ConInfo info={infoProductos(datos).productos}>
                 <Tarjeta
                   titulo="Productos"
@@ -160,14 +131,6 @@ export function Productos({
                             <th scope="col" className="numero">
                               Extra personalización
                             </th>
-                            {datos.costeo && <th scope="col">Costeo (costo actual)</th>}
-                            {datos.costeo && (
-                              <th scope="col" className="numero">
-                                <abbr title="Venta sin IVA − costo actual de la receta, solo de las líneas de costeo completo; antes de comisiones">
-                                  Ganancia teórica
-                                </abbr>
-                              </th>
-                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -208,24 +171,10 @@ export function Productos({
                                   <td className="numero">{numero(x.pedidos)}</td>
                                   <td className="numero">{numero(x.lineas)}</td>
                                   <td className="numero">{dinero(x.extraCustomsCent, m)}</td>
-                                  {datos.costeo && (
-                                    <td>
-                                      <CeldaCosteo
-                                        c={x.costeo}
-                                        moneda={m}
-                                        generico={x.codigo === CODIGO_GENERICO && !x.sinCodigo}
-                                      />
-                                    </td>
-                                  )}
-                                  {datos.costeo && (
-                                    <td className="numero">
-                                      <CeldaGanancia c={x.costeo} moneda={m} />
-                                    </td>
-                                  )}
                                 </tr>
                                 {exp && (
                                   <tr>
-                                    <td colSpan={datos.costeo ? 8 : 6} className="bg-surface-2/50">
+                                    <td colSpan={6} className="bg-surface-2/50">
                                       <div className="grid gap-4 py-2 text-sm sm:grid-cols-2">
                                         <div>
                                           <p className="mb-1 font-semibold">Tamaños</p>

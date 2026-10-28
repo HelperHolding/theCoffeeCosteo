@@ -2,15 +2,18 @@ import type { NivelModulo } from '../supabase/database.types';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
 export type IdModulo = 'costeo' | 'crm' | 'sucursales';
-/** Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita. */
-export type Accesos = Partial<Record<'crm' | 'sucursales', NivelModulo>>;
+/**
+ * Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita (sale de perfiles.rol).
+ * 'sucursales_costeo': ver el Costeo de sus sucursales dentro de Sucursales, sin entrar al módulo Costeo.
+ */
+export type Accesos = Partial<Record<'crm' | 'sucursales' | 'sucursales_costeo', NivelModulo>>;
 
 export interface Modulo {
   id: IdModulo;
   nombre: string;
   descripcion: string;
   href: string;
-  acceso: (accesos: Accesos) => boolean;
+  acceso: (accesos: Accesos, rol: string) => boolean;
 }
 
 export const modulos: Modulo[] = [
@@ -19,8 +22,8 @@ export const modulos: Modulo[] = [
     nombre: 'Costeo',
     descripcion: 'Recetas, insumos, márgenes y precios por canal.',
     href: '/costeo',
-    // Cualquier perfil activo entra, como hasta ahora; sus permisos siguen saliendo de perfiles.rol.
-    acceso: () => true,
+    // Cualquier perfil activo con rol de Costeo; el rol 'sucursales' (migración 24) no entra.
+    acceso: (_, rol) => rol !== 'sucursales',
   },
   {
     id: 'crm',
@@ -39,8 +42,8 @@ export const modulos: Modulo[] = [
   },
 ];
 
-export const modulosVisibles = (accesos: Accesos): IdModulo[] =>
-  modulos.filter((m) => m.acceso(accesos)).map((m) => m.id);
+export const modulosVisibles = (accesos: Accesos, rol: string): IdModulo[] =>
+  modulos.filter((m) => m.acceso(accesos, rol)).map((m) => m.id);
 
 export const puedeEditarCrm = (accesos: Accesos) =>
   accesos.crm === 'desarrollador' || accesos.crm === 'edicion';

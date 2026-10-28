@@ -1,6 +1,6 @@
 // Contrato basado en las migraciones locales. numeric llega como número vía PostgREST.
 import type * as Crm from '../crm/tipos';
-export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin';
+export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales';
 export type Unidad = 'gr' | 'ml' | 'pza';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
 export interface Catalogo {
@@ -17,7 +17,7 @@ export interface Perfil {
 export type NivelModulo = 'desarrollador' | 'edicion' | 'lectura';
 export interface PerfilModulo {
   user_id: string;
-  modulo: 'crm' | 'sucursales';
+  modulo: 'crm' | 'sucursales' | 'sucursales_costeo';
   nivel: NivelModulo;
   creado_en: string;
 }
@@ -226,6 +226,10 @@ export interface Database {
         Returns: Crm.Tienda;
       };
       crm_renumerar_etapa: { Args: { p_etapa: string }; Returns: number };
+      sucursales_puede_costeo: { Args: { p_company: number }; Returns: boolean };
+      sucursales_datos_costeo: { Args: { p_company: number }; Returns: Json };
+      sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };
+      sucursales_catalogo_pos: { Args: { p_company: number }; Returns: Json };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;

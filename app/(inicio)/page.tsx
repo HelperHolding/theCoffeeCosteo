@@ -4,7 +4,7 @@ import { Encabezado } from '@/components/portal/piezas';
 import { TarjetasModulos } from '@/components/portal/tarjetas-modulos';
 
 export default async function Inicio() {
-  const { db, perfil } = await sesion();
+  const { db, perfil } = await sesion(undefined, true, { sinCosteo: true });
   const a = await accesos(db, perfil.user_id);
   return (
     <>
@@ -13,7 +13,7 @@ export default async function Inicio() {
         titulo="Módulos"
         descripcion="Elige el área en la que vas a trabajar."
       />
-      <TarjetasModulos modulos={modulos.filter((m) => m.acceso(a))} />
+      <TarjetasModulos modulos={modulos.filter((m) => m.acceso(a, perfil.rol))} />
     </>
   );
 }
