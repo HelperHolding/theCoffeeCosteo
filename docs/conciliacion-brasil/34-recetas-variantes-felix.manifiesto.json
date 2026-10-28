@@ -1,0 +1,27 @@
+{
+ "lote": "recetas-variantes-felix",
+ "fuente": {
+  "archivo": "docs/conciliacion-brasil/33-PERSONALIZACIONES-NEUTRAS.md",
+  "sha256": "da6e08a97c96958da7af798fc571a96e03ea4c2e8018b206a7b9fc94a36a495a",
+  "ficha": "«Excluidos a propósito» — Félix Schorle: la receta suma las dos botellas (frambuesa y maracuyá)",
+  "pagina": 1
+ },
+ "receta": {
+  "id": "fb4ffbc7-8a31-4261-8534-c9885f51fc58",
+  "nombre": "Félix Schorle",
+  "version": 7
+ },
+ "celdas": [
+  {
+   "linea_id": "191d42fe-d87f-4683-8ec8-8987ff0be5ae",
+   "insumo_id": "3b6e13ae-abc5-4b15-a9cf-a2e74f529f34",
+   "insumo": "FELIX SCHORLE MARACUYA",
+   "tamano_id": "26663c74-9834-4dbe-bc15-951f848cfc0a",
+   "tamano": "Único",
+   "previo": 1,
+   "nuevo": 0,
+   "fuente": "Se vende una botella (opción «Raspberry Jalisco» o «Veracruz Passion Fruit»), no las dos. Queda FELIX SCHORLE FRAMBUESA (1); las dos cuestan $35. Costo $70 → $35."
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-28: «Sí, prepáralo» (corregir las recetas de Mug y Félix Schorle a una taza y una botella). Autoriza manifiesto, pruebas y ensayo local; NO autoriza aplicar en producción."
+}

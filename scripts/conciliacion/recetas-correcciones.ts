@@ -58,6 +58,16 @@ export const LOTES_RECETAS_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/24-lote-3b-cold-brew-agua.manifiesto.json',
     sha256: '1995cf248495e3da7ba2e5668ec975638de5ad72584ba9746051db7501101b5d',
   },
+  // Preparados el 2026-10-28 (doc 34): Mug y Félix Schorle sumaban las dos variantes; quedan con una. Aplicar exige
+  // aprobación aparte.
+  'recetas-variantes-mug': {
+    manifiesto: 'docs/conciliacion-brasil/34-recetas-variantes-mug.manifiesto.json',
+    sha256: '5cb8a71d86c14c3f83aa45c766aed9573b6ec320c849bf0007efed6ec193b3a6',
+  },
+  'recetas-variantes-felix': {
+    manifiesto: 'docs/conciliacion-brasil/34-recetas-variantes-felix.manifiesto.json',
+    sha256: '9d0b01758a9db153b162df68de2e30fe76253041943e20abf234b5ab3cca2a03',
+  },
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
