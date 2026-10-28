@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { claveCosto, costear, type DatosCosteo } from '../../lib/sucursales/costeo';
 import type { LineaNormal, PedidoNormal } from '../../lib/sucursales/normalizar';
 import {
+  PERSONALIZACIONES_AJUSTADAS,
   PERSONALIZACIONES_NEUTRAS,
   TEMPERATURAS,
   personalizacionNeutra,
@@ -137,5 +138,119 @@ describe('integridad de la lista', () => {
   it('Mug no tiene opciones neutras: su receta suma las dos tazas', () => {
     expect(personalizacionNeutra(MUG, 'Mug Black')).toBe(false);
     expect(PERSONALIZACIONES_NEUTRAS[MUG]).toBeUndefined();
+  });
+});
+
+describe('ajustes calculados (etapa 1b)', () => {
+  const ICED_VANILLA = '15556232-34f4-490e-a9b7-0c01998bc4c1';
+  const AMERICANO = '500360bd-fd76-4e22-bf01-9bd3ed6e2ae7';
+  const l = (insumo: string, cantidad: number, costoUnitario: number, activo = true) => ({
+    lineaId: insumo,
+    insumoId: insumo,
+    insumo,
+    unidad: 'ml',
+    cantidad,
+    costoUnitario,
+    activo,
+  });
+  const conLineas = (o: Partial<DatosCosteo> = {}): DatosCosteo => ({
+    ...datos(),
+    enlaces: new Map([
+      ['5IL', { recetaId: ICED_LATTE, receta: 'Iced Latte' }],
+      ['1IC', { recetaId: ICED_VANILLA, receta: 'Iced Vanilla' }],
+      ['2AM', { recetaId: AMERICANO, receta: 'Americano' }],
+    ]),
+    costos: new Map([
+      [claveCosto(ICED_LATTE, 'Chica'), { costoCent: 1544, usaInactivo: false }],
+      [claveCosto(ICED_VANILLA, 'Chica'), { costoCent: 1900, usaInactivo: false }],
+      [claveCosto(AMERICANO, 'Chica'), { costoCent: 1100, usaInactivo: false }],
+    ]),
+    lineas: new Map([
+      [
+        claveCosto(ICED_LATTE, 'Chica'),
+        [l('LECHE ENTERA', 170, 0.022), l('CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 18, 0.4)],
+      ],
+      [
+        claveCosto(ICED_VANILLA, 'Chica'),
+        [
+          l('LECHE ENTERA', 170, 0.022),
+          l('JARABE DE VANILLA 1 LT (3 PZAS)', 15, 0.23),
+          l('CHIP DE SABOR CHOCOLATE 1 KG', 4, 0.18),
+        ],
+      ],
+      [claveCosto(AMERICANO, 'Chica'), [l('CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 18, 0.4)]],
+    ]),
+    sustitutos: new Map([['LECHE DESLACTOSADAS', { costoUnitario: 0.03, activo: true }]]),
+    ...o,
+  });
+  const vaso = (codigo: string, nombre: string, ...extras: string[]) =>
+    linea(codigo, nombre, 7000, [c('Regular - 440ml'), ...extras.map((n) => c(n))]);
+  const costeo = (d: DatosCosteo, ...ls: LineaNormal[]) => costear([pedido(...ls)], d).resumen;
+
+  it('deslactosada: cambia la leche entera, misma cantidad; suma la diferencia de costo', () => {
+    const r = costeo(conLineas(), vaso('5IL', 'Iced Latte', 'Lactose free', 'Without Honey'));
+    expect(r.completo.lineas).toBe(1);
+    expect(r.completo.costoCent).toBe(1544 + Math.round(170 * (0.03 - 0.022) * 100));
+  });
+
+  it('cantidad total con ml en el nombre y «sin chispas»: con los costos de la receta', () => {
+    const r = costeo(
+      conLineas(),
+      vaso('1IC', 'Iced Vanilla', 'More Vanilla (20ml)'),
+      vaso('1IC', 'Iced Vanilla', 'Without Sprinkles'),
+      vaso('1IC', 'Iced Vanilla', 'Average Vanilla (10ml)', 'Lactose free'),
+    );
+    expect(r.completo.lineas).toBe(3);
+    expect(r.completo.costoCent).toBe(
+      3 * 1900 +
+        Math.round(5 * 0.23 * 100) -
+        Math.round(4 * 0.18 * 100) +
+        Math.round((-5 * 0.23 + 170 * 0.008) * 100),
+    );
+  });
+
+  it('sin datos para calcular queda parcial: sin sustitutos (migración 26), sin líneas (25) o sin ajuste en esa receta', () => {
+    expect(
+      costeo(conLineas({ sustitutos: undefined }), vaso('5IL', 'Iced Latte', 'Lactose free')).parcial.motivos
+        .personalizacion,
+    ).toBe(1);
+    expect(
+      costeo(conLineas({ lineas: undefined }), vaso('5IL', 'Iced Latte', 'Lactose free')).parcial.motivos
+        .personalizacion,
+    ).toBe(1);
+    // Americano no lleva leche: «Lactose free» la agrega y no está en la lista.
+    expect(
+      costeo(conLineas(), vaso('2AM', 'Americano', 'Lactose free')).parcial.motivos.personalizacion,
+    ).toBe(1);
+    // Un ajuste verificado junto a una personalización que pide datos sigue parcial.
+    expect(
+      costeo(conLineas(), vaso('5IL', 'Iced Latte', 'Lactose free', 'Double shot (36ml)')).parcial.lineas,
+    ).toBe(1);
+  });
+
+  it('el sustituto inactivo vuelve la línea parcial por costo', () => {
+    const d = conLineas({
+      sustitutos: new Map([['LECHE DESLACTOSADAS', { costoUnitario: 0.03, activo: false }]]),
+    });
+    expect(costeo(d, vaso('5IL', 'Iced Latte', 'Lactose free')).parcial.motivos.costo).toBe(1);
+  });
+
+  it('integridad: ajustes solo en recetas reales, sin repetir neutras, y nunca deslactosada en Americano o Cold brew', () => {
+    const neutras = new Set(
+      Object.entries(PERSONALIZACIONES_NEUTRAS).flatMap(([r, ns]) => ns.map((n) => `${r}:${n}`)),
+    );
+    for (const [receta, ajustes] of Object.entries(PERSONALIZACIONES_AJUSTADAS)) {
+      expect(receta).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      for (const n of Object.keys(ajustes)) expect(neutras.has(`${receta}:${n}`), n).toBe(false);
+    }
+    expect(PERSONALIZACIONES_AJUSTADAS[AMERICANO]).toBeUndefined();
+    expect(
+      PERSONALIZACIONES_AJUSTADAS['00f47aba-88e6-4ebc-a815-5833f8b29871']?.['Lactose free'],
+    ).toBeUndefined();
+    for (const n of ['Double shot (36ml)', 'Single Shot (18ml)', 'Average Honey', 'Oatmilk', 'Chipotle Mayo'])
+      expect(
+        Object.values(PERSONALIZACIONES_AJUSTADAS).some((a) => n in a),
+        n,
+      ).toBe(false);
   });
 });

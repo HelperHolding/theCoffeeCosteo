@@ -1,6 +1,6 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import { importeLinea, type LineaNormal, type PedidoNormal } from './normalizar';
-import { personalizacionNeutra } from './personalizaciones-verificadas';
+import { ajusteVerificado, personalizacionNeutra } from './personalizaciones-verificadas';
 import { TAMANOS_VERIFICADOS } from './tamanos-verificados';
 
 /**
@@ -8,9 +8,10 @@ import { TAMANOS_VERIFICADOS } from './tamanos-verificados';
  * - Lo de la API no se toca: nombres, códigos e importes se muestran como llegan; el costeo va aparte.
  * - Cobertura con dos denominadores: A = toda la venta y B = A − GENERIC (identificable).
  * - Una línea es una UNIDAD (la API repite la línea por unidad; sucursales/03). Solo es de costeo COMPLETO si su
- *   código está enlazado, su tamaño está verificado para esa receta y todas sus personalizaciones son neutras para
- *   esa receta (lista explícita en personalizaciones-verificadas.ts). Cualquier otra la vuelve PARCIAL: Costeo aún
- *   no calcula lo que cambia una personalización.
+ *   código está enlazado, su tamaño está verificado para esa receta y cada personalización es neutra o tiene un
+ *   ajuste verificado para esa receta (listas explícitas en personalizaciones-verificadas.ts). El ajuste suma al costo
+ *   la diferencia calculada con las líneas directas de la receta y el costo actual de los insumos. Cualquier otra
+ *   personalización, o un ajuste sin datos para calcularlo, vuelve PARCIAL la línea.
  * - Margen bruto teórico = importe cobrado ÷ (1 + IVA) − costo, la convención de `v_resumen` (precio con IVA, margen
  *   sobre la venta sin IVA). Antes de comisiones. Provisional hasta confirmar si los costos de insumos llevan IVA (K5).
  * - Solo las líneas de costeo completo entran al costo y al margen agregados; las parciales se informan aparte.
@@ -32,6 +33,11 @@ export interface DatosCosteo {
    * Para ajustar personalizaciones que cambian un insumo (etapa 1b, docs/conciliacion-brasil/33).
    */
   lineas?: Map<string, LineaInsumo[]>;
+  /**
+   * Costo actual de la lista cerrada de insumos sustitutos (leches, granos, miel), por nombre. Viene de la RPC desde la
+   * migración 26: es el costo del insumo nuevo cuando una personalización cambia uno de la receta por otro.
+   */
+  sustitutos?: Map<string, { costoUnitario: number; activo: boolean }>;
 }
 
 export interface LineaInsumo {
@@ -114,6 +120,53 @@ export function tamanoVerificado(
   return TAMANOS_VERIFICADOS[recetaId]?.[vaso] ?? null;
 }
 
+/**
+ * Diferencia de costo (centavos) que causan las personalizaciones de una línea, o por qué no se puede calcular.
+ * Las neutras no cuentan. Las demás necesitan un ajuste verificado para la receta y las líneas de la receta en ese
+ * tamaño; el costo del insumo nuevo sale de la receta o de los sustitutos. Un insumo inactivo que se agrega → 'costo'.
+ */
+export function ajustePersonalizaciones(
+  recetaId: string,
+  tamano: string,
+  nombres: string[],
+  datos: Pick<DatosCosteo, 'lineas' | 'sustitutos'>,
+): { deltaCent: number } | { motivo: MotivoParcial } {
+  const ajustes = [...new Set(nombres)]
+    .filter((n) => !personalizacionNeutra(recetaId, n))
+    .map((n) => ajusteVerificado(recetaId, n));
+  if (!ajustes.length) return { deltaCent: 0 };
+  const lineas = datos.lineas?.get(clave(recetaId, tamano));
+  if (ajustes.some((a) => !a) || !lineas) return { motivo: 'personalizacion' };
+  const antes = new Map<string, number>();
+  const costo = new Map<string, { costoUnitario: number; activo: boolean }>();
+  for (const l of lineas) {
+    antes.set(l.insumo, (antes.get(l.insumo) ?? 0) + l.cantidad);
+    costo.set(l.insumo, l);
+  }
+  const despues = new Map(antes);
+  for (const a of ajustes) {
+    if ('cambia' in a!) {
+      const q = despues.get(a.cambia.de);
+      if (!q) return { motivo: 'personalizacion' };
+      despues.set(a.cambia.de, 0);
+      despues.set(a.cambia.a, (despues.get(a.cambia.a) ?? 0) + q);
+    } else {
+      if (!despues.get(a!.cantidad.insumo)) return { motivo: 'personalizacion' };
+      despues.set(a!.cantidad.insumo, a!.cantidad.valor);
+    }
+  }
+  let delta = 0;
+  for (const [insumo, q] of despues) {
+    const dq = q - (antes.get(insumo) ?? 0);
+    if (!dq) continue;
+    const c = costo.get(insumo) ?? datos.sustitutos?.get(insumo);
+    if (!c) return { motivo: 'personalizacion' };
+    if (dq > 0 && !c.activo) return { motivo: 'costo' };
+    delta += dq * c.costoUnitario;
+  }
+  return { deltaCent: Math.round(delta * 100) };
+}
+
 /** `evidencia`: pedidos del periodo sin filtrar por origen, la misma que usa `productos` (ver identificador). */
 export function costear(
   ps: PedidoNormal[],
@@ -152,12 +205,18 @@ export function costear(
       }
       const tamano = tamanoVerificado(l, enlace.recetaId, datos);
       const costo = tamano ? datos.costos.get(clave(enlace.recetaId, tamano)) : undefined;
+      const ajuste = tamano
+        ? ajustePersonalizaciones(
+            enlace.recetaId,
+            tamano,
+            l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
+            datos,
+          )
+        : null;
       const motivo: MotivoParcial | null = !tamano
         ? 'tamano'
-        : l.customs.some(
-              (c) => !ES_TAMANO.test(c.nombre) && !personalizacionNeutra(enlace.recetaId, c.nombre),
-            )
-          ? 'personalizacion'
+        : ajuste && 'motivo' in ajuste
+          ? ajuste.motivo
           : !costo || costo.usaInactivo
             ? 'costo'
             : null;
@@ -170,12 +229,13 @@ export function costear(
         continue;
       }
       const ventaSinIvaCent = Math.round(imp / (1 + datos.iva));
+      const costoCent = costo!.costoCent + (ajuste && 'deltaCent' in ajuste ? ajuste.deltaCent : 0);
       for (const t of [x.completo, completo]) {
         t.lineas++;
         t.importeCent += imp;
         t.ventaSinIvaCent += ventaSinIvaCent;
-        t.costoCent += costo!.costoCent;
-        t.margenCent += ventaSinIvaCent - costo!.costoCent;
+        t.costoCent += costoCent;
+        t.margenCent += ventaSinIvaCent - costoCent;
       }
     }
   const identificableCent = cob.totalCent - cob.genericoCent;

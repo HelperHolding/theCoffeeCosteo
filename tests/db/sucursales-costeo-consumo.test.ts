@@ -139,6 +139,34 @@ describe('sucursales_datos_costeo', () => {
     expect(await rpc(gdl, 'sucursales_datos_costeo', 384)).toBeNull();
   });
 
+  it('migración 26: costo de la lista cerrada de sustitutos, y nada más de la lista de compras', async () => {
+    await crearInsumo(db, {
+      nombre: 'LECHE DESLACTOSADAS',
+      costoPaquete: 44,
+      presentacion: 2000,
+      unidad: 'ml',
+    });
+    await crearInsumo(db, {
+      nombre: 'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG',
+      costoPaquete: 640,
+      presentacion: 1500,
+    });
+    await crearInsumo(db, { nombre: 'INSUMO FUERA DE LA LISTA 26', costoPaquete: 99, presentacion: 1 });
+    const d = (await rpc<{
+      sustitutos: { insumo: string; unidad: string; costo_unitario: number; activo: boolean }[];
+    }>(gdlCosteo, 'sucursales_datos_costeo', 384))!;
+    expect(d.sustitutos.map((s) => s.insumo)).toEqual([
+      'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG',
+      'LECHE DESLACTOSADAS',
+    ]);
+    const leche = d.sustitutos.find((s) => s.insumo === 'LECHE DESLACTOSADAS')!;
+    expect(num(leche.costo_unitario)).toBeCloseTo(0.022, 6);
+    expect(leche).toMatchObject({ unidad: 'ml', activo: true });
+    // Mismo permiso que antes: sin Costeo de la sucursal, nada.
+    expect(await rpc(gdl, 'sucursales_datos_costeo', 384)).toBeNull();
+    expect(await rpc(gdlCosteo, 'sucursales_datos_costeo', 612)).toBeNull();
+  });
+
   it('devuelve enlaces, costos por tamaño, recetas Únicas e IVA', async () => {
     const d = (await rpc<{
       iva: number;
