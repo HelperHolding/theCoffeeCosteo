@@ -29,6 +29,7 @@ import {
   resumen,
   semanasCerradas,
   variacion,
+  type CatalogoNombres,
   type FiltroOrigen,
 } from './metricas';
 import { costear, type DatosCosteo } from './costeo';
@@ -195,7 +196,7 @@ export const vistaPedido = (p: PedidoNormal): PedidoVista => ({
 export async function construirVivo(
   cfg: ConfigSucursal,
   origen: FiltroOrigen,
-  opciones: { forzar?: boolean } = {},
+  opciones: { forzar?: boolean; catalogo?: CatalogoNombres | null } = {},
 ): Promise<RespuestaVivo> {
   const ahora = hoyLocal(cfg);
   const baseFecha = sumarDias(ahora.fecha, -7);
@@ -208,6 +209,7 @@ export async function construirVivo(
   const hoy = hastaCorte(todosHoy, corte);
   // Identidad de las líneas sin código: todo el día hasta el corte, antes de filtrar por origen (como en Productos).
   const evidencia = hastaCorte(lh.pedidos, corte);
+  const catalogo = opciones.catalogo ?? undefined;
   const base = filtrarOrigen(lb.pedidos, origen);
   const completos = lh.estado === 'completa' && lb.estado === 'completa';
   const kpis = resumen(hoy);
@@ -245,11 +247,13 @@ export async function construirVivo(
     ritmo: { ultimos15: enVentana(hoy, corte, 900), ultimos60: enVentana(hoy, corte, 3600) },
     ultimoPedido: ultimo ? { hora: ultimo.hora, haceSeg: corte - ultimo.segundo } : null,
     posterioresAlCorte: todosHoy.length - hoy.length,
-    productosTop: productos(hoy, evidencia).slice(0, 5),
+    productosTop: productos(hoy, evidencia, catalogo).slice(0, 5),
     ultimosPedidos: hoy.slice(0, 10).map(vistaPedido),
     pagos: pagos(hoy),
     insights:
-      lh.estado === 'error' ? [] : insightsVivo({ hoy, base, baseFecha, corte, completos, evidencia }),
+      lh.estado === 'error'
+        ? []
+        : insightsVivo({ hoy, base, baseFecha, corte, completos, evidencia, catalogo }),
     conciliacion: conciliar(hoy),
   };
 }
@@ -261,11 +265,13 @@ export async function construirProductos(
   origen: FiltroOrigen,
   /** Solo si el usuario puede ver costos (null/undefined: la respuesta no lleva costeo). */
   datosCosteo?: DatosCosteo | null,
+  /** Nombres del POS de nuestros enlaces (ver identificador); null/undefined: solo la evidencia del periodo. */
+  catalogo?: CatalogoNombres | null,
 ): Promise<RespuestaProductos> {
   const l = await leerVentana(cfg, desde, hasta);
   const ps = filtrarOrigen(l.pedidos, origen);
   // La identidad de las líneas sin código se aprende de todo el periodo, no solo del origen filtrado.
-  const lista = productos(ps, l.pedidos);
+  const lista = productos(ps, l.pedidos, catalogo ?? undefined);
   const base = {
     sucursal: sucursalInfo(cfg),
     origen,
@@ -275,7 +281,7 @@ export async function construirProductos(
     conciliacion: conciliar(ps),
   };
   if (!datosCosteo) return { ...base, productos: lista };
-  const c = costear(ps, datosCosteo, l.pedidos);
+  const c = costear(ps, datosCosteo, l.pedidos, catalogo ?? undefined);
   return {
     ...base,
     productos: lista.map((x) => {

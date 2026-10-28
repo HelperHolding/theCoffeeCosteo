@@ -124,15 +124,24 @@ export interface ProductoResumen {
  * `evidencia` son TODOS los pedidos del periodo y la sucursal, antes de filtrar por origen: la App manda líneas sin
  * código y su código solo aparece en Mostrador o Rappi. Con un filtro, la regla es la misma (un único código para el
  * nombre en el periodo); solo no se pierde la evidencia.
+ * `catalogo`: nombre del POS de nuestros enlaces (producto_codigo_pos.nombre_observado) → código, solo nombres con UN
+ * código. Se usa únicamente si el periodo no trae NINGÚN código para ese nombre; si trae varios, sigue siendo ambigua.
  */
-export function identificador(evidencia: PedidoNormal[]) {
+export type CatalogoNombres = ReadonlyMap<string, string>;
+export function identificador(evidencia: PedidoNormal[], catalogo?: CatalogoNombres) {
   const codigosDe = new Map<string, Set<string>>();
   for (const p of evidencia)
     for (const l of p.lineas)
       if (!l.sinCodigo) codigosDe.set(l.nombre, (codigosDe.get(l.nombre) ?? new Set<string>()).add(l.codigo));
   return (l: LineaNormal) => {
-    const unico =
-      l.sinCodigo && codigosDe.get(l.nombre)?.size === 1 ? [...codigosDe.get(l.nombre)!][0] : null;
+    const vistos = l.sinCodigo ? codigosDe.get(l.nombre) : undefined;
+    const unico = !l.sinCodigo
+      ? null
+      : vistos
+        ? vistos.size === 1
+          ? [...vistos][0]
+          : null
+        : (catalogo?.get(l.nombre) ?? null);
     if (!l.sinCodigo || unico !== null) {
       const codigo = unico ?? l.codigo;
       return { clave: `codigo:${codigo}`, codigo, sinCodigo: false };
@@ -141,8 +150,12 @@ export function identificador(evidencia: PedidoNormal[]) {
   };
 }
 
-/** `evidencia`: pedidos del periodo sin filtrar por origen (ver identificador); por omisión, los mismos `ps`. */
-export function productos(ps: PedidoNormal[], evidencia: PedidoNormal[] = ps): ProductoResumen[] {
+/** `evidencia` y `catalogo`: ver identificador. Por omisión, la evidencia son los mismos `ps` y no hay catálogo. */
+export function productos(
+  ps: PedidoNormal[],
+  evidencia: PedidoNormal[] = ps,
+  catalogo?: CatalogoNombres,
+): ProductoResumen[] {
   const m = new Map<
     string,
     {
@@ -160,7 +173,7 @@ export function productos(ps: PedidoNormal[], evidencia: PedidoNormal[] = ps): P
     }
   >();
   // `ps` es siempre de una sola sucursal: los códigos aprendidos aquí no se aplican a otra.
-  const identidad = identificador(evidencia);
+  const identidad = identificador(evidencia, catalogo);
   let total = 0;
   for (const p of ps)
     for (const l of p.lineas) {
@@ -328,6 +341,7 @@ export function insightsVivo(a: {
   completos: boolean;
   /** Pedidos del día hasta el corte sin filtrar por origen: evidencia de identidad (ver identificador). */
   evidencia?: PedidoNormal[];
+  catalogo?: CatalogoNombres;
 }): Insight[] {
   const out: Insight[] = [];
   const h = resumen(a.hoy);
@@ -374,7 +388,7 @@ export function insightsVivo(a: {
         tono: 'neutro',
       });
   }
-  const top = productos(a.hoy, a.evidencia ?? a.hoy)[0];
+  const top = productos(a.hoy, a.evidencia ?? a.hoy, a.catalogo)[0];
   if (top?.participacion)
     out.push({
       id: 'top',

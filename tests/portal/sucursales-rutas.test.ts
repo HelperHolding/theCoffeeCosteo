@@ -15,8 +15,8 @@ const COSTEO = vi.hoisted(() => {
   const BRO = 'r-bro';
   return {
     producto_codigo_pos: [
-      { codigo: '4MIL', receta_id: MIL },
-      { codigo: 'BRO13', receta_id: BRO },
+      { codigo: '4MIL', receta_id: MIL, nombre_observado: 'Matcha Iced Latte' },
+      { codigo: 'BRO13', receta_id: BRO, nombre_observado: 'Brownie' },
     ],
     tamanos: [
       { id: 't1', nombre: 'Chica' },
@@ -259,7 +259,7 @@ describe('En vivo', () => {
     );
   });
 
-  describe('la evidencia de identidad no cruza periodo ni sucursal', () => {
+  describe('la evidencia de identidad no cruza periodo ni sucursal (producto fuera del catálogo de enlaces)', () => {
     const appSinCodigo = (fecha: string, hora: string) =>
       pedido(fecha, hora, {
         fromSmartphone: true,
@@ -267,11 +267,21 @@ describe('En vivo', () => {
         refundId: null,
         grossAmount: 75,
         netAmout: 75,
-        items: [{ defaultCode: null, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+        items: [
+          { defaultCode: null, productName: 'Cookie Traditional', amount: 75, discount: 0, itemsCustom: [] },
+        ],
       });
     const conCodigo = (fecha: string, hora: string) =>
       pedido(fecha, hora, {
-        items: [{ defaultCode: 'BRO13', productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+        items: [
+          {
+            defaultCode: 'COO1',
+            productName: 'Cookie Traditional',
+            amount: 75,
+            discount: 0,
+            itemsCustom: [],
+          },
+        ],
         grossAmount: 75,
         netAmout: 75,
       });
@@ -292,7 +302,7 @@ describe('En vivo', () => {
           '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00')],
         }).fetch,
       );
-      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+      expect(await topApp()).toEqual([['nombre:Cookie Traditional', 7500, true]]);
     });
 
     it('En vivo: un pedido posterior al corte no sirve de evidencia', async () => {
@@ -302,7 +312,7 @@ describe('En vivo', () => {
           '2026-10-22': [appSinCodigo('2026-10-22', '10:00:00'), conCodigo('2026-10-22', '12:00:05')],
         }).fetch,
       );
-      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+      expect(await topApp()).toEqual([['nombre:Cookie Traditional', 7500, true]]);
     });
 
     it('En vivo: el código de otra sucursal no se usa (ni siquiera se lee)', async () => {
@@ -312,7 +322,7 @@ describe('En vivo', () => {
           ? Response.json(envelope([conCodigo('2026-10-22', '09:00:00')], 1, 100, 1))
           : propia.fetch(u, init),
       );
-      expect(await topApp()).toEqual([['nombre:Brownie', 7500, true]]);
+      expect(await topApp()).toEqual([['nombre:Cookie Traditional', 7500, true]]);
       expect(fetchSpy.mock.calls.some(([u]) => String(u).includes('/order/company/583'))).toBe(false);
     });
 
@@ -327,9 +337,66 @@ describe('En vivo', () => {
         (
           await (await llamar(productosGet, '612', `?desde=${desde}&hasta=2026-10-22&origen=app`)).json()
         ).productos.map((p: { clave: string; sinCodigo?: boolean }) => [p.clave, !!p.sinCodigo]);
-      expect(await leer('2026-10-22')).toEqual([['nombre:Brownie', true]]);
+      expect(await leer('2026-10-22')).toEqual([['nombre:Cookie Traditional', true]]);
       // Si el periodo incluye el día con el código, sí se usa.
-      expect(await leer('2026-10-20')).toEqual([['codigo:BRO13', false]]);
+      expect(await leer('2026-10-20')).toEqual([['codigo:COO1', false]]);
+    });
+  });
+
+  describe('catálogo de enlaces: nombre del POS registrado en producto_codigo_pos', () => {
+    const appSin = (hora: string, productName = 'Brownie') =>
+      pedido('2026-10-22', hora, {
+        fromSmartphone: true,
+        paymentMethod: 'VIRTUAL_WALLET',
+        refundId: null,
+        grossAmount: 75,
+        netAmout: 75,
+        items: [{ defaultCode: null, productName, amount: 75, discount: 0, itemsCustom: [] }],
+      });
+    const top = async (o = 'app') =>
+      (await (await llamar(vivo, '612', `?origen=${o}`)).json()).productosTop.map(
+        (p: { clave: string; importeCent: number; sinCodigo?: boolean }) => [
+          p.clave,
+          p.importeCent,
+          !!p.sinCodigo,
+        ],
+      );
+
+    it('sin ventas con código en el periodo, la línea se une por el nombre exacto de un enlace', async () => {
+      fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [appSin('10:00:00')] }).fetch);
+      expect(await top()).toEqual([['codigo:BRO13', 7500, false]]);
+      // Productos y costeo usan la misma identidad: la línea entra a la cobertura con su receta.
+      const d = await (
+        await llamar(productosGet, '612', '?desde=2026-10-22&hasta=2026-10-22&origen=app')
+      ).json();
+      expect(d.productos.map((p: { clave: string }) => p.clave)).toEqual(['codigo:BRO13']);
+      expect(d.costeo.cobertura).toMatchObject({ sinCodigoCent: 0, conRecetaCent: 7500 });
+    });
+
+    it('un nombre que no está en el catálogo sigue sin código', async () => {
+      fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [appSin('10:00:00', 'Pan de Muerto')] }).fetch);
+      expect(await top()).toEqual([['nombre:Pan de Muerto', 7500, true]]);
+    });
+
+    it('si el periodo es ambiguo (dos códigos para el nombre), el catálogo no decide', async () => {
+      const conCodigo = (hora: string, defaultCode: string) =>
+        pedido('2026-10-22', hora, {
+          items: [{ defaultCode, productName: 'Brownie', amount: 75, discount: 0, itemsCustom: [] }],
+          grossAmount: 75,
+          netAmout: 75,
+        });
+      fetchSpy.mockImplementation(
+        apiFalsa({
+          '2026-10-22': [conCodigo('08:00:00', 'BRO13'), conCodigo('09:00:00', 'BRO99'), appSin('10:00:00')],
+        }).fetch,
+      );
+      expect(await top()).toEqual([['nombre:Brownie', 7500, true]]);
+    });
+
+    it('si el catálogo no se puede leer (RLS o error), la identidad usa solo el periodo', async () => {
+      sesion.errorCosteo = true; // el mock devuelve error en las tablas de Costeo, también producto_codigo_pos
+      fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [appSin('10:00:00')] }).fetch);
+      expect(await top()).toEqual([['nombre:Brownie', 7500, true]]);
     });
   });
 

@@ -1,4 +1,4 @@
-import { CODIGO_GENERICO, ES_TAMANO, identificador } from './metricas';
+import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import { importeLinea, type LineaNormal, type PedidoNormal } from './normalizar';
 import { TAMANOS_VERIFICADOS } from './tamanos-verificados';
 
@@ -93,8 +93,13 @@ export function tamanoVerificado(l: LineaNormal, recetaId: string, datos: DatosC
 }
 
 /** `evidencia`: pedidos del periodo sin filtrar por origen, la misma que usa `productos` (ver identificador). */
-export function costear(ps: PedidoNormal[], datos: DatosCosteo, evidencia: PedidoNormal[] = ps) {
-  const identidad = identificador(evidencia);
+export function costear(
+  ps: PedidoNormal[],
+  datos: DatosCosteo,
+  evidencia: PedidoNormal[] = ps,
+  catalogo?: CatalogoNombres,
+) {
+  const identidad = identificador(evidencia, catalogo);
   const porClave = new Map<string, CosteoProducto>();
   const cob = { totalCent: 0, genericoCent: 0, sinCodigoCent: 0, sinEnlaceCent: 0, conRecetaCent: 0 };
   const completo = vacioCompleto();
