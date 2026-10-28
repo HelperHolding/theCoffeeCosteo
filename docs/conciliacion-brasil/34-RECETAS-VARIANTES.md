@@ -1,6 +1,6 @@
 # 34 · Mug y Félix Schorle: una taza y una botella
 
-**Estado:** preparado el 2026-10-28, con manifiestos, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **Sin aplicar.** Aplicar requiere aprobación expresa de Carlo.
+**Estado:** ✅ **aplicado el 2026-10-28 (20:2x UTC) y verificado.** Mug: ejecución `e7e497c7-d4b7-4725-a8ec-5cf60001993b`, bitácora **#1130**, $254 → $127. Félix Schorle: ejecución `9628a5da-2904-423c-a67a-fd570cfd2338`, bitácora **#1131**, $70 → $35. El segundo ensayo dio «sin cambio». Ver «Cierre». El ensayo remoto y la aplicación contaron con la aprobación expresa de Carlo.
 
 **Problema** (encontrado en el doc 33): dos recetas suman las dos variantes que el cliente elige, cuando se vende una.
 
@@ -82,3 +82,27 @@ Los informes y el respaldo contienen el UUID del perfil y datos personales; se g
 5. Verificar con una conexión nueva y repetir el ensayo, que debe dar «sin cambio».
 6. Revertir, solo con aprobación:
    `… --revertir --ejecucion <uuid> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+
+## Cierre: aplicado el 2026-10-28 y verificado
+
+Carlo autorizó aplicar únicamente `recetas-variantes-mug` y `recetas-variantes-felix`, ensayados con el código de este PR (`9b6fe2c`; después solo cambió este documento). Hubo un COMMIT por lote, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Vigencia del respaldo** | Justo antes de aplicar, producción coincidía con el respaldo `2026-10-28T2001Z`: bitácora 763 (id máx. 1127) y las mismas huellas de cantidades y versiones de recetas |
+| **Aplicar Mug** | **COMMIT**, ejecución `e7e497c7-d4b7-4725-a8ec-5cf60001993b`: COFFEE MUG 300 ML BLACK 1 → 0, bitácora #1130, v6 → v7 |
+| **Aplicar Félix Schorle** | **COMMIT**, ejecución `9628a5da-2904-423c-a67a-fd570cfd2338`: FELIX SCHORLE MARACUYA 1 → 0, bitácora #1131, v7 → v8 |
+| **Verificación** (conexión nueva) | Mug: WHITE 1, BLACK 0, **$127**. Félix: FRAMBUESA 1, MARACUYA 0, **$35** |
+| **Segundo ensayo** | Los dos «sin cambio», 0 registros nuevos, ROLLBACK. Cantidades y versiones idénticas después |
+
+- **Bitácora:** los 2 registros son `carga_masiva`, con autor Carlo, campo `cantidad` 1 → 0. Queda en 765 filas (id máx. 1131). La nota dice `… (docs/conciliacion-brasil/21)` porque el cargador fija ese doc en la nota; la ejecución identifica el lote.
+- **Intacto** (huellas antes y después): costos de las otras 231 combinaciones de producto y tamaño, insumos, precios de lista, precios manuales y los 72 enlaces POS.
+
+### Reversión (solo con aprobación expresa)
+
+```
+npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --lote recetas-variantes-mug --revertir --ejecucion e7e497c7-d4b7-4725-a8ec-5cf60001993b --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+npx tsx scripts/conciliacion/recetas-correcciones-aplicar.ts --lote recetas-variantes-felix --revertir --ejecucion 9628a5da-2904-423c-a67a-fd570cfd2338 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+```
+
+Se niega si la receta tiene registros posteriores en la bitácora. Los informes, las huellas y el respaldo se guardan **fuera del repo**, porque contienen el UUID del perfil y datos personales.
