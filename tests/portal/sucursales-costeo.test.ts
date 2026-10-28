@@ -347,6 +347,19 @@ describe('permisos y lectura en el servidor', () => {
         { receta_id: BROWNIE, tamano: 'Único', costo: 30, usa_inactivo: false },
       ],
       unicas: [BROWNIE],
+      lineas: [
+        {
+          receta_id: ICED_LATTE,
+          tamano: 'Chica',
+          linea_id: 'l1',
+          insumo_id: 'le',
+          insumo: 'LECHE ENTERA',
+          unidad: 'ml',
+          cantidad: '180',
+          costo_unitario: '0.0285',
+          activo: true,
+        },
+      ],
     });
     const l = await leerDatosCosteo(
       db as never,
@@ -360,6 +373,18 @@ describe('permisos y lectura en el servidor', () => {
     expect(d!.iva).toBe(0.16);
     expect(d!.costos.get(claveCosto(ICED_LATTE, 'Chica'))).toEqual({ costoCent: 1544, usaInactivo: false });
     expect([...d!.unicas]).toEqual([BROWNIE]);
+    // Migración 25: líneas directas de insumo por receta y tamaño (para la etapa 1b de personalizaciones).
+    expect(d!.lineas?.get(claveCosto(ICED_LATTE, 'Chica'))).toEqual([
+      {
+        lineaId: 'l1',
+        insumoId: 'le',
+        insumo: 'LECHE ENTERA',
+        unidad: 'ml',
+        cantidad: 180,
+        costoUnitario: 0.0285,
+        activo: true,
+      },
+    ]);
   });
 
   it('con la migración 24: null = sin permiso (aunque el rol sea de Costeo); otro error = error', async () => {

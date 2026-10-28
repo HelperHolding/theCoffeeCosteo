@@ -2,7 +2,7 @@ import 'server-only';
 import type { servidor } from '../supabase/servidor';
 import type { Rol } from '../supabase/database.types';
 import { centavos } from './normalizar';
-import { claveCosto, type DatosCosteo } from './costeo';
+import { claveCosto, type DatosCosteo, type LineaInsumo } from './costeo';
 
 type Db = Awaited<ReturnType<typeof servidor>>;
 
@@ -26,6 +26,38 @@ interface CosteoRpc {
   enlaces: { codigo: string; receta_id: string; receta: string }[];
   costos: { receta_id: string; tamano: string; costo: number | string; usa_inactivo: boolean }[];
   unicas: string[];
+  /** Desde la migración 25. */
+  lineas?: {
+    receta_id: string;
+    tamano: string;
+    linea_id: string;
+    insumo_id: string;
+    insumo: string;
+    unidad: string;
+    cantidad: number | string;
+    costo_unitario: number | string;
+    activo: boolean;
+  }[];
+}
+
+/** Líneas directas de insumo agrupadas por receta y tamaño. */
+function agruparLineas(filas: NonNullable<CosteoRpc['lineas']>): Map<string, LineaInsumo[]> {
+  const m = new Map<string, LineaInsumo[]>();
+  for (const l of filas) {
+    const k = claveCosto(l.receta_id, l.tamano);
+    const lista = m.get(k) ?? [];
+    lista.push({
+      lineaId: l.linea_id,
+      insumoId: l.insumo_id,
+      insumo: l.insumo,
+      unidad: l.unidad,
+      cantidad: Number(l.cantidad),
+      costoUnitario: Number(l.costo_unitario),
+      activo: !!l.activo,
+    });
+    m.set(k, lista);
+  }
+  return m;
 }
 
 /** ¿Puede ver el Costeo de esta sucursal? Para mostrar u ocultar la sección (la API lo vuelve a exigir). */
@@ -62,6 +94,7 @@ export async function leerDatosCosteo(
           ]),
         ),
         unicas: new Set(d.unicas),
+        ...(d.lineas ? { lineas: agruparLineas(d.lineas) } : {}),
       };
       return Number.isFinite(datos.iva) ? { estado: 'ok', datos } : { estado: 'error' };
     }

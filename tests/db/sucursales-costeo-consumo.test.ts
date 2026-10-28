@@ -114,6 +114,31 @@ describe('sucursales_datos_costeo', () => {
     expect(await rpc(compras, 'sucursales_datos_costeo', 532)).toBeNull(); // ni con rol de Costeo sin fila
   });
 
+  it('migración 25: líneas directas de insumo por receta y tamaño, con costo unitario y activo', async () => {
+    const d = (await rpc<{
+      lineas: {
+        receta_id: string;
+        tamano: string;
+        insumo_id: string;
+        insumo: string;
+        cantidad: number;
+        costo_unitario: number;
+        activo: boolean;
+      }[];
+    }>(gdlCosteo, 'sucursales_datos_costeo', 384))!;
+    const delLatte = d.lineas.filter((l) => l.receta_id === latte && l.tamano === 'Chica');
+    // Solo insumos directos: la sub-receta (jarabe) no aparece como línea.
+    expect(delLatte.map((l) => [l.insumo, num(l.cantidad)]).sort()).toEqual([
+      ['CAFE PRUEBA 23', 18],
+      ['LECHE PRUEBA 23', 200],
+    ]);
+    const lecheLinea = delLatte.find((l) => l.insumo_id === leche)!;
+    expect(num(lecheLinea.costo_unitario)).toBeCloseTo(0.03, 6);
+    expect(lecheLinea.activo).toBe(true);
+    // Mismo permiso: sin Costeo de la sucursal no hay líneas.
+    expect(await rpc(gdl, 'sucursales_datos_costeo', 384)).toBeNull();
+  });
+
   it('devuelve enlaces, costos por tamaño, recetas Únicas e IVA', async () => {
     const d = (await rpc<{
       iva: number;

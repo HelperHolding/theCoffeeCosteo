@@ -26,6 +26,22 @@ export interface DatosCosteo {
   costos: Map<string, { costoCent: number; usaInactivo: boolean }>;
   /** Recetas que solo se venden en tamaño Único. */
   unicas: Set<string>;
+  /**
+   * Líneas DIRECTAS de insumo (sin sub-recetas) por `claveCosto(receta, tamaño)`, con el costo unitario actual (pesos
+   * por unidad del insumo). Vienen de la RPC desde la migración 25; ausentes con la lectura anterior bajo RLS.
+   * Para ajustar personalizaciones que cambian un insumo (etapa 1b, docs/conciliacion-brasil/33).
+   */
+  lineas?: Map<string, LineaInsumo[]>;
+}
+
+export interface LineaInsumo {
+  lineaId: string;
+  insumoId: string;
+  insumo: string;
+  unidad: string;
+  cantidad: number;
+  costoUnitario: number;
+  activo: boolean;
 }
 
 export type MotivoParcial = 'tamano' | 'personalizacion' | 'costo';

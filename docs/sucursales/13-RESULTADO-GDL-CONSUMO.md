@@ -12,6 +12,7 @@ Encargo del 2026-10-28. Rama `feat/sucursales-gdl-consumo` (desde `origin/main` 
 | Directorio por ciudad con lectura diferida | Hecho |
 | Migración 24 (rol `sucursales`, Costeo restringido, RPC) | **Aplicada en producción** el 2026-10-28 con OK de Carlo, registrada en `supabase_migrations` |
 | Acceso de Dione y Claudia | **Hecho** el 2026-10-28 y verificado como cada una (§6) |
+| Migración 25 (líneas directas de insumo en la RPC de costeo) | **Ensayada en producción con ROLLBACK**, sin aplicar (§F3b) |
 | Merge del PR | **Lo hace Carlo** |
 
 La migración se numeró 24 porque la 23 de producción es la de Analytics (`20261027000023_analytics_ventas_diarias`,
@@ -94,6 +95,23 @@ permisos sin regresión): un perfil `sucursales` lee 0 filas de las 17 tablas y 
 
 El portal (`lib/supabase/sesion.ts`, `lib/portal/modulos.ts`): con rol `sucursales`, Costeo no aparece en el
 tablero, sus páginas mandan a `/sucursales` y sus acciones fallan; Inicio sí entra; el CRM lo manda a Inicio.
+
+## F3b · Migración 25 (para la etapa 1b de personalizaciones)
+
+`supabase/migrations/20261028000025_sucursales_costeo_lineas.sql` hace `create or replace` de
+`sucursales_datos_costeo` con la misma firma, el mismo permiso y las mismas claves de antes. Solo agrega `lineas`:
+por cada receta enlazada y tamaño, sus líneas **directas** de insumo (sin sub-recetas). Cada línea trae
+`linea_id`, `insumo_id`, nombre, unidad, cantidad, `costo_unitario` y `activo`. En TypeScript llega como
+`DatosCosteo.lineas` (opcional), agrupada por `claveCosto(receta, tamaño)`. Ningún cálculo la usa todavía.
+
+**Respaldo verificado y ensayo en producción el 2026-10-28, con ROLLBACK:**
+- El respaldo guarda la definición y los permisos de la función, fuera de git, en
+  `%TEMP%\thecoffee-respaldos\2026-10-28T20-22-17-457Z-sucursales_datos_costeo-antes-25.sql`. Se verificó al leerlo
+  de vuelta, y restaurarlo dentro de la transacción deja la función idéntica.
+- El ensayo dio 529 líneas en 72 recetas, sin insumos inactivos. Ejemplo: leche entera, Único, 100 ml a $0.022 por
+  ml.
+- Las claves previas quedaron idénticas, los permisos sin cambio, Dione ve las líneas en 384 y en 612 recibe `null`.
+- Después del ROLLBACK, producción quedó sin cambios.
 
 ## F4 · Consumo teórico según receta
 
