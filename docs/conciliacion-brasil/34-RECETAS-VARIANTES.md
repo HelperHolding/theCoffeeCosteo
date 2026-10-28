@@ -1,6 +1,6 @@
 # 34 · Mug y Félix Schorle: una taza y una botella
 
-**Estado:** preparado el 2026-10-28, con manifiestos, pruebas y ensayo local. **Sin ensayo remoto y sin aplicar.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** preparado el 2026-10-28, con manifiestos, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **Sin aplicar.** Aplicar requiere aprobación expresa de Carlo.
 
 **Problema** (encontrado en el doc 33): dos recetas suman las dos variantes que el cliente elige, cuando se vende una.
 
@@ -54,6 +54,21 @@ Las huellas están fijadas en `LOTES_RECETAS_APROBADOS`.
 | Revertir | 1 revertida; $254 | 1 revertida; $70 |
 
 Tras revertir, todas las cantidades tienen la misma huella md5 que el respaldo. Los informes contienen el UUID del perfil y se guardan fuera del repo.
+
+## Respaldo y ensayo remoto (2026-10-28, autorizados por Carlo)
+
+Se ejecutó solo el ensayo, desde el código de este PR en `9b6fe2c`. **No se aplicó nada.**
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2026-10-28T2001Z`** | Restaurado en una copia local aislada y comparado con producción: 21,467 filas. Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS, idénticas. `vault.secrets` no se restaura (0 filas en producción). En `analytics_ventas_diarias` y `perfil_modulos` el md5 de texto difiere, pero las filas son idénticas al compararlas completas: es el formato de fechas por zona horaria y el orden del texto |
+| **Vigencia del respaldo** | Justo antes del ensayo, producción y la copia coincidían: bitácora 763 filas (id máx. 1127), y las mismas huellas de cantidades (1,323) y de versiones de recetas (171) |
+| **Revalidación** (solo lectura) | Mug v6, BLACK 1 + WHITE 1, $254; Félix Schorle v7, FRAMBUESA 1 + MARACUYA 1, $70. Perfil admin activo |
+| **Ensayo `recetas-variantes-mug`** | 1 cambiada (BLACK 1 → 0), 1 registro propio y 0 ajenos, resto sin cambios, v6 → v7 dentro de la transacción; **ROLLBACK** |
+| **Ensayo `recetas-variantes-felix`** | 1 cambiada (MARACUYA 1 → 0), 1 registro propio y 0 ajenos, resto sin cambios, v7 → v8 dentro de la transacción; **ROLLBACK** |
+| **Conexión nueva después** | Recetas, cantidades, costos y bitácora idénticos a antes: Mug sigue en v6 y $254, Félix en v7 y $70. La secuencia de la bitácora avanzó por las transacciones deshechas, como es normal en Postgres |
+
+Los informes y el respaldo contienen el UUID del perfil y datos personales; se guardan fuera del repo.
 
 ## Procedimiento remoto (cada paso requiere aprobación)
 
