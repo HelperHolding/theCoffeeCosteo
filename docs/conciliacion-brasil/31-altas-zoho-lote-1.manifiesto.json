@@ -1,0 +1,820 @@
+{
+ "lote": "altas-zoho-lote-1",
+ "fuente": {
+  "archivo": "Recetario_The_Coffee_Marzo_2026.csv (Zoho Analytics, exportado el 2026-10-27; propuesta en entregables/Altas_11_productos_propuesta.xlsx)",
+  "sha256": "d3b43340fd95eaf5f901992a4b2e9b9215809c6af1d524a25220648a37c9c25f"
+ },
+ "productos": [
+  {
+   "nombre": "Chai Iced Ginger",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "Mix CHAI 1 KG",
+     "tipo": "subreceta",
+     "cantidades": {
+      "Chica": 36,
+      "Grande": 45
+     },
+     "origen": "Zoho: CHAI 1 KG 4/5 + AGUA 32/40 = 36/45 de la subreceta (igual que Chai Iced Latte)"
+    },
+    {
+     "componente": "JARABE DE JENGIBRE 1 LT (3 PZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 10,
+      "Grande": 10
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 290
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 245
+     },
+     "origen": "SUPUESTO: Zoho trae el hielo dos veces (130/177 y 130/170); se usa 130/245 como nuestras bebidas frías"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 15.74,
+    "Grande": 19.88
+   },
+   "nota": "Confirmar el hielo Grande"
+  },
+  {
+   "nombre": "Ichigo Chocolate",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "Mix AZUCAR MASCABADO USO BARRA + COCOA POWDER - EXTRA BRUTE 1 KG",
+     "tipo": "subreceta",
+     "cantidades": {
+      "Chica": 50,
+      "Grande": 90
+     },
+     "origen": "Zoho: cocoa 12.82/23, azúcar 11.54/21, agua 25.64/46 = 50/90 del preparado (proporción p.5)"
+    },
+    {
+     "componente": "FRESA NATURAL CONGELADA 2 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 30,
+      "Grande": 30
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "CHIP DE SABOR CHOCOLATE 1 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 4,
+      "Grande": 4
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 235
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 200
+     },
+     "origen": "Zoho (en gramos)"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 19.7955,
+    "Grande": 26.8539
+   }
+  },
+  {
+   "nombre": "Chocold Mint",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "Mix AZUCAR MASCABADO USO BARRA + COCOA POWDER - EXTRA BRUTE 1 KG (2)",
+     "tipo": "subreceta",
+     "cantidades": {
+      "Chica": 46.002,
+      "Grande": 60
+     },
+     "origen": "Zoho: cocoa 9.23/12, azúcar 8.31/10, agua 28.46/37 = 46/60 del preparado «(2)», como Iced Chocolate (Grande redondeado: Q G es entero en Zoho)"
+    },
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 18,
+      "Grande": 18
+     },
+     "origen": "Zoho (sin el agua del espresso, convención de nuestra base)"
+    },
+    {
+     "componente": "JARABE DE MENTA 1 LT (3 PZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 10,
+      "Grande": 10
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "CHIP DE SABOR CHOCOLATE 1 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 4,
+      "Grande": 4
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 290
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 200
+     },
+     "origen": "Zoho (en gramos)"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 23.35205,
+    "Grande": 27.680657
+   }
+  },
+  {
+   "nombre": "Fresh Soda Sicilian Lemon",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 230
+     },
+     "origen": "Zoho (base tónica, como las otras Fresh Sodas; variante 3c pendiente)"
+    },
+    {
+     "componente": "LIMON EUREKA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 30,
+      "Grande": 40
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 200
+     },
+     "origen": "Zoho (en gramos; las otras Fresh Sodas usan 245 en Grande según el PDF)"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 14.100541,
+    "Grande": 17.658378
+   },
+   "nota": "Confirmar el hielo Grande"
+  },
+  {
+   "nombre": "Fresh Soda Strawberry",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 232
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "FRESA NATURAL CONGELADA 2 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 60,
+      "Grande": 82
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "CANELA ENTERA 250 GRS",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 180
+     },
+     "origen": "Zoho (en gramos)"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 21.460541,
+    "Grande": 27.562973
+   },
+   "nota": "Confirmar el hielo Grande"
+  },
+  {
+   "nombre": "Pure Black (Single Shot)",
+   "categoria": "Hot",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO BLACK 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 18
+     },
+     "origen": "Zoho dice 18 g, igual que el Double Shot: CONFIRMAR (un shot sencillo sería ~9 g)"
+    },
+    {
+     "componente": "VASO ESPRESSO PAPEL KRAFT 4 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 9.56
+   },
+   "nota": "Confirmar gramos de café"
+  },
+  {
+   "nombre": "Sora Tonic",
+   "categoria": "Other Beverages",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "SORA TONIC",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Zoho (bebida embotellada)"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 52
+   }
+  },
+  {
+   "nombre": "Matcha Tonic",
+   "categoria": "Other Beverages",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "MATCHA TONIC",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Zoho (bebida embotellada; Zoho la clasifica como bebida caliente)"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 55
+   },
+   "nota": "Confirmar categoría"
+  },
+  {
+   "nombre": "Matcha Iced Latte + Lemon Cake",
+   "categoria": "COMBO CON PANADERÍA DULCE",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 245
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 290
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "Mix MATCHA GOURMET ORGÁNICO 1 KG",
+     "tipo": "subreceta",
+     "cantidades": {
+      "Chica": 36.046693,
+      "Grande": 45.011673
+     },
+     "origen": "nuestra receta «Matcha Iced Latte»"
+    },
+    {
+     "componente": "PANQUÉ DE LIMÓN",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 44.2084,
+    "Grande": 48.2964
+   },
+   "nota": "Bebida = nuestra Matcha Iced Latte; el pan va en ambos tamaños (Zoho solo lo pone en Chica). Se vende en el POS: MATLEMAPP"
+  },
+  {
+   "nombre": "Iced Black + Cookie Tradicional",
+   "categoria": "COMBO CON PANADERÍA DULCE",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "AGUA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 290
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 18,
+      "Grande": 18
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 245
+     },
+     "origen": "nuestra receta «Iced Black»"
+    },
+    {
+     "componente": "COOKIE TRADICIONAL",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Zoho"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "como nuestros combos con pan"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "como nuestros combos con pan"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 36.3404,
+    "Grande": 36.5404
+   },
+   "nota": "Bebida = nuestro Iced Black (corregido con el PDF); Zoho trae el Iced Black anterior"
+  },
+  {
+   "nombre": "True White + Croissant filled with cheese and ham",
+   "categoria": "Combos",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 18
+     },
+     "origen": "nuestra receta «True White»"
+    },
+    {
+     "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «True White»"
+    },
+    {
+     "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «True White»"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 170
+     },
+     "origen": "nuestra receta «True White»"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    },
+    {
+     "componente": "CROISSANT TRADICIONAL",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    },
+    {
+     "componente": "PECHUGA DE PAVO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 40
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    },
+    {
+     "componente": "QUESO CREMA PHILADELPHIA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 10
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    },
+    {
+     "componente": "QUESO MOZARELLA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 20
+     },
+     "origen": "nuestra receta «Croissant filled with cheese and ham»"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 49.523996
+   },
+   "nota": "Zoho trae brioche, pavo y quesos (el relleno del sándwich), no croissant. Propuesta: nuestro True White Chica + nuestro Croissant filled with cheese and ham. Se vende en el POS: TRWCROAPP"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-27: aprueba la propuesta de alta de los 11 productos tal como está en el Excel (combos con nuestras recetas; supuestos marcados). Autoriza preparar lote, pruebas, ensayo local y PR. NO autoriza ensayo remoto ni aplicar en producción."
+}
