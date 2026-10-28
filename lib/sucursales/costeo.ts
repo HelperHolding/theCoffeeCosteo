@@ -1,5 +1,6 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import { importeLinea, type LineaNormal, type PedidoNormal } from './normalizar';
+import { personalizacionNeutra } from './personalizaciones-verificadas';
 import { TAMANOS_VERIFICADOS } from './tamanos-verificados';
 
 /**
@@ -7,8 +8,9 @@ import { TAMANOS_VERIFICADOS } from './tamanos-verificados';
  * - Lo de la API no se toca: nombres, códigos e importes se muestran como llegan; el costeo va aparte.
  * - Cobertura con dos denominadores: A = toda la venta y B = A − GENERIC (identificable).
  * - Una línea es una UNIDAD (la API repite la línea por unidad; sucursales/03). Solo es de costeo COMPLETO si su
- *   código está enlazado, su tamaño está verificado para esa receta y no lleva personalizaciones (Costeo no tiene
- *   recetas de personalizaciones; hasta tener un catálogo aprobado, cualquiera la vuelve PARCIAL).
+ *   código está enlazado, su tamaño está verificado para esa receta y todas sus personalizaciones son neutras para
+ *   esa receta (lista explícita en personalizaciones-verificadas.ts). Cualquier otra la vuelve PARCIAL: Costeo aún
+ *   no calcula lo que cambia una personalización.
  * - Margen bruto teórico = importe cobrado ÷ (1 + IVA) − costo, la convención de `v_resumen` (precio con IVA, margen
  *   sobre la venta sin IVA). Antes de comisiones. Provisional hasta confirmar si los costos de insumos llevan IVA (K5).
  * - Solo las líneas de costeo completo entran al costo y al margen agregados; las parciales se informan aparte.
@@ -132,7 +134,9 @@ export function costear(
       const costo = tamano ? datos.costos.get(clave(enlace.recetaId, tamano)) : undefined;
       const motivo: MotivoParcial | null = !tamano
         ? 'tamano'
-        : l.customs.some((c) => !ES_TAMANO.test(c.nombre))
+        : l.customs.some(
+              (c) => !ES_TAMANO.test(c.nombre) && !personalizacionNeutra(enlace.recetaId, c.nombre),
+            )
           ? 'personalizacion'
           : !costo || costo.usaInactivo
             ? 'costo'
