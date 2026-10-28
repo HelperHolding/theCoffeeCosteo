@@ -1,6 +1,6 @@
 # 34 · Mug y Félix Schorle: una taza y una botella
 
-**Estado:** ✅ **aplicado el 2026-10-28 (20:2x UTC) y verificado.** Mug: ejecución `e7e497c7-d4b7-4725-a8ec-5cf60001993b`, bitácora **#1130**, $254 → $127. Félix Schorle: ejecución `9628a5da-2904-423c-a67a-fd570cfd2338`, bitácora **#1131**, $70 → $35. El segundo ensayo dio «sin cambio». Ver «Cierre». El ensayo remoto y la aplicación contaron con la aprobación expresa de Carlo.
+**Estado:** ✅ **aplicado el 2026-10-28 (20:07 UTC) y verificado.** Mug: ejecución `e7e497c7-d4b7-4725-a8ec-5cf60001993b`, bitácora **#1130**, $254 → $127. Félix Schorle: ejecución `9628a5da-2904-423c-a67a-fd570cfd2338`, bitácora **#1131**, $70 → $35. El segundo ensayo dio «sin cambio». Ver «Cierre». El ensayo remoto y la aplicación contaron con la aprobación expresa de Carlo.
 
 **Problema** (encontrado en el doc 33): dos recetas suman las dos variantes que el cliente elige, cuando se vende una.
 
@@ -83,7 +83,7 @@ Los informes y el respaldo contienen el UUID del perfil y datos personales; se g
 6. Revertir, solo con aprobación:
    `… --revertir --ejecucion <uuid> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
 
-## Cierre: aplicado el 2026-10-28 y verificado
+## Cierre: aplicado el 2026-10-28 (20:07 UTC) y verificado
 
 Carlo autorizó aplicar únicamente `recetas-variantes-mug` y `recetas-variantes-felix`, ensayados con el código de este PR (`9b6fe2c`; después solo cambió este documento). Hubo un COMMIT por lote, sin reintentos.
 
