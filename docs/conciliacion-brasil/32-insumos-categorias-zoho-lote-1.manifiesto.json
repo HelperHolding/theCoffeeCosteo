@@ -1,0 +1,52 @@
+{
+ "lote": "insumos-categorias-zoho-lote-1",
+ "fuente": {
+  "archivo": "Lista de Precios Materia Prima Marzo 2026 (Zoho Analytics, exportada el 2026-10-27)",
+  "sha256": "7acc920bd441c337a316947d4295a2a077619b28115769f0b247e107a68d5800"
+ },
+ "cambios": [
+  {
+   "insumo": "BASE NEUTRA PARA FRAPPÉ 1 KG",
+   "campo": "categoria",
+   "previo": "INSUMOS",
+   "nuevo": "INGREDIENTES",
+   "motivo": "CATEGORIA de «Lista de Precios Materia Prima Marzo 2026» (Zoho Analytics): INGREDIENTES (en Zoho se llama «BASE NEUTRA»)"
+  },
+  {
+   "insumo": "BASE CHAI PARA FRAPPÉ 1 KG",
+   "campo": "categoria",
+   "previo": "INSUMOS",
+   "nuevo": "INGREDIENTES",
+   "motivo": "CATEGORIA de «Lista de Precios Materia Prima Marzo 2026» (Zoho Analytics): INGREDIENTES (en Zoho se llama «BASE CHAI»)"
+  },
+  {
+   "insumo": "BASE MATCHA LATTE PARA FRAPPÉ 1 KG",
+   "campo": "categoria",
+   "previo": "INSUMOS",
+   "nuevo": "INGREDIENTES",
+   "motivo": "CATEGORIA de «Lista de Precios Materia Prima Marzo 2026» (Zoho Analytics): INGREDIENTES (en Zoho se llama «BASE MATCHA»)"
+  },
+  {
+   "insumo": "BASE TARO/COCO PARA FRAPPÉ 1 KG",
+   "campo": "categoria",
+   "previo": "INSUMOS",
+   "nuevo": "INGREDIENTES",
+   "motivo": "CATEGORIA de «Lista de Precios Materia Prima Marzo 2026» (Zoho Analytics): INGREDIENTES (en Zoho se llama «BASE TARO»)"
+  },
+  {
+   "insumo": "Chobani D.Creamer Pumpkin S pice",
+   "campo": "categoria",
+   "previo": "POR ASIGNAR",
+   "nuevo": "INSUMOS",
+   "motivo": "Duplicado sin uso de «CHOBANI D.CREAMER PUMPKIN SPICE» (mismo costo y presentación); se le asigna lo mismo que a su gemelo. No está en la lista de Zoho"
+  },
+  {
+   "insumo": "Chobani D.Creamer Pumpkin S pice",
+   "campo": "proveedor",
+   "previo": "POR ASIGNAR",
+   "nuevo": "CEDIS",
+   "motivo": "Igual que su gemelo «CHOBANI D.CREAMER PUMPKIN SPICE»"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-27: pide dejar en la base las categorías de insumo de la lista de materia prima de Zoho (las 4 bases de frappé) y asignar el creamer duplicado como su gemelo, por lote y sin corrección manual. Autoriza preparar el lote y el ensayo (incluido el remoto con ROLLBACK). NO autoriza aplicar en producción."
+}
