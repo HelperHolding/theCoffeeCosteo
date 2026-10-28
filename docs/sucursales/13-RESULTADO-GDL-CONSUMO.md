@@ -12,8 +12,15 @@ Encargo del 2026-10-28. Rama `feat/sucursales-gdl-consumo` (desde `origin/main` 
 | Directorio por ciudad con lectura diferida | Hecho |
 | Migración 24 (rol `sucursales`, Costeo restringido, RPC) | **Aplicada en producción** el 2026-10-28 con OK de Carlo, registrada en `supabase_migrations` |
 | Acceso de Dione y Claudia | **Hecho** el 2026-10-28 y verificado como cada una (§6) |
-| Migración 25 (líneas directas de insumo en la RPC de costeo) | **Ensayada en producción con ROLLBACK**, sin aplicar (§F3b) |
-| Merge del PR | **Lo hace Carlo** |
+| Migración 25 (líneas directas de insumo en la RPC de costeo) | **Aplicada en producción** el 2026-10-28 con OK de Carlo, tras el merge de #48 (§F3b) |
+| Migración 27 (Consumo con los ajustes de la etapa 1b) | **Aplicada en producción** el 2026-10-28 con OK de Carlo, tras el merge de #51 (§F4b) |
+| Merge del PR | Hecho por Carlo: #48 (0425371) y #51 (3b50d39) |
+
+Las migraciones 24, 25 y 27 se aplicaron a mano (una transacción, verificación como Carlos y como Dione y registro en
+`supabase_migrations`) porque la integración de Supabase no corría. El repo y la base quedaron con las mismas 27
+migraciones y la integración se reconectó en el #54. Desde entonces el merge aplica las migraciones: ver
+`docs/portal/MIGRACIONES-Y-DESPLIEGUE.md`. Los respaldos de las funciones están fuera de git, en
+`Respaldos/thecoffee-supabase/funciones`.
 
 La migración se numeró 24 porque la 23 de producción es la de Analytics (`20261027000023_analytics_ventas_diarias`,
 de otro trabajo). Antes de aplicarla se revisó producción: las políticas de Costeo seguían iguales, no había
@@ -102,16 +109,19 @@ tablero, sus páginas mandan a `/sucursales` y sus acciones fallan; Inicio sí e
 `sucursales_datos_costeo` con la misma firma, el mismo permiso y las mismas claves de antes. Solo agrega `lineas`:
 por cada receta enlazada y tamaño, sus líneas **directas** de insumo (sin sub-recetas). Cada línea trae
 `linea_id`, `insumo_id`, nombre, unidad, cantidad, `costo_unitario` y `activo`. En TypeScript llega como
-`DatosCosteo.lineas` (opcional), agrupada por `claveCosto(receta, tamaño)`. Ningún cálculo la usa todavía.
+`DatosCosteo.lineas` (opcional), agrupada por `claveCosto(receta, tamaño)`. La usa la etapa 1b de Costeo (#50).
 
 **Respaldo verificado y ensayo en producción el 2026-10-28, con ROLLBACK:**
 - El respaldo guarda la definición y los permisos de la función, fuera de git, en
-  `%TEMP%\thecoffee-respaldos\2026-10-28T20-22-17-457Z-sucursales_datos_costeo-antes-25.sql`. Se verificó al leerlo
+  `Respaldos/thecoffee-supabase/funciones/2026-10-28T20-22-17-457Z-sucursales_datos_costeo-antes-25.sql`. Se verificó al leerlo
   de vuelta, y restaurarlo dentro de la transacción deja la función idéntica.
 - El ensayo dio 529 líneas en 72 recetas, sin insumos inactivos. Ejemplo: leche entera, Único, 100 ml a $0.022 por
   ml.
 - Las claves previas quedaron idénticas, los permisos sin cambio, Dione ve las líneas en 384 y en 612 recibe `null`.
 - Después del ROLLBACK, producción quedó sin cambios.
+
+**Aplicada el 2026-10-28** con OK de Carlo, tras el merge de #48: una transacción, misma verificación que el ensayo y
+registro en `supabase_migrations`.
 
 ## F4 · Consumo teórico según receta
 
@@ -180,13 +190,19 @@ secciones ya no cubrían las mismas unidades. Ahora comparten la regla:
   por personalización sin calcular). La deslactosada suma 2,830 ml. Fuera siguen shots, miel y leches vegetales.
 - **Respaldo y ensayo en producción con ROLLBACK:**
   - El respaldo de la función está en
-    `%TEMP%\thecoffee-respaldos\2026-10-28T21-07-41-322Z-sucursales_recetas_consumo-antes-27.sql`. Se verificó, y
+    `Respaldos/thecoffee-supabase/funciones/2026-10-28T21-07-41-322Z-sucursales_recetas_consumo-antes-27.sql`. Se verificó, y
     restaurarlo la deja idéntica.
   - Lo que la función ya devolvía queda idéntico y sus permisos sin cambio: 529 líneas en 72 recetas y 12
     sustitutos, sin costos.
   - Dione la ve en la 631 y en la 612 recibe `null`.
   - Tras el ROLLBACK, producción quedó sin cambios.
-  - **La 27 no está aplicada:** la integración de Supabase ya no corre, así que va aparte y con OK de Carlo.
+- **Aplicada el 2026-10-28** con OK de Carlo, tras el merge de #51 (main 3b50d39), antes de reconectar la
+  integración de Supabase:
+  - Respaldo nuevo antes de aplicar:
+    `Respaldos/thecoffee-supabase/funciones/2026-10-28T22-15-27-936Z-sucursales_recetas_consumo-antes-27.sql`.
+  - Aplicación, registro en `supabase_migrations` y verificación en una sola transacción, con el mismo resultado
+    que el ensayo: 529 líneas en 72 recetas, 12 sustitutos sin costos, permisos sin cambio, Dione ve la 631 y en
+    la 612 recibe `null`.
 
 ## F5 · Diseño
 
