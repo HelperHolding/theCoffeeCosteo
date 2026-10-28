@@ -536,3 +536,86 @@ describe('lote 3b (agua de Cold brew)', () => {
     expect({ c: await cantidades(receta), costo: await costos() }).toEqual(original);
   });
 });
+
+describe('variantes (doc 34: Mug y Félix Schorle)', () => {
+  const ruta = (lote: string) => LOTES_RECETAS_APROBADOS[lote].manifiesto;
+  const texto = (lote: string) => readFileSync(ruta(lote), 'utf8').replace(/^﻿/, '').replace(/\r\n/g, '\n');
+
+  it('aprobados: una sola celda por receta, de 1 a 0, en la variante que sobra; huellas fijadas', async () => {
+    const esperado = {
+      'recetas-variantes-mug': {
+        receta: { id: 'cef677b4-0976-4640-8bc7-2ce82337466f', nombre: 'Mug', version: 6 },
+        celda: 'COFFEE MUG 300 ML BLACK Único 1→0',
+      },
+      'recetas-variantes-felix': {
+        receta: { id: 'fb4ffbc7-8a31-4261-8534-c9885f51fc58', nombre: 'Félix Schorle', version: 7 },
+        celda: 'FELIX SCHORLE MARACUYA Único 1→0',
+      },
+    };
+    for (const [lote, e] of Object.entries(esperado)) {
+      expect(LOTES_RECETAS_APROBADOS[lote].sha256).toBe(
+        createHash('sha256').update(texto(lote)).digest('hex'),
+      );
+      const m = await leerLoteRecetas(lote);
+      expect(m.receta).toEqual(e.receta);
+      expect(m.celdas.map((c) => `${c.insumo} ${c.tamano} ${c.previo}→${c.nuevo}`)).toEqual([e.celda]);
+      expect(m.aprobacion).toMatch(/NO autoriza aplicar en producción/);
+    }
+  });
+
+  it('con la forma de Mug: el costo baja de dos tazas a una, repetir no cambia nada y se revierte exacto', async () => {
+    const negra = await crearInsumo(db, {
+      nombre: 'MUG NEGRA 34',
+      costoPaquete: 127,
+      presentacion: 1,
+      unidad: 'pza',
+    });
+    const blanca = await crearInsumo(db, {
+      nombre: 'MUG BLANCA 34',
+      costoPaquete: 127,
+      presentacion: 1,
+      unidad: 'pza',
+    });
+    const receta = await crearProducto(db, { nombre: 'Mug 34', precios: { Único: 350 } });
+    const lNegra = await agregarLinea(db, receta, { insumoId: negra, cantidades: { Único: 1 } });
+    await agregarLinea(db, receta, { insumoId: blanca, cantidades: { Único: 1 } });
+    const real = await leerLoteRecetas('recetas-variantes-mug');
+    const m: ManifiestoRecetas = {
+      ...real,
+      receta: { id: receta, nombre: 'Mug 34', version: await version(receta) },
+      celdas: [
+        {
+          ...real.celdas[0],
+          linea_id: lNegra,
+          insumo_id: negra,
+          insumo: 'MUG NEGRA 34',
+          tamano_id: await idTamano(db, 'Único'),
+        },
+      ],
+    };
+    const costo = async () =>
+      Number(
+        (
+          await db.query<{ c: string }>(`select costo::text c from v_costo_producto where producto_id = $1`, [
+            receta,
+          ])
+        ).rows[0].c,
+      );
+    const original = { c: await cantidades(receta), costo: await costo() };
+    expect(original.costo).toBe(254);
+    const ap = await corregir(cx, 'aplicar', m, { usuario: admin });
+    expect(ap.error).toBeUndefined();
+    expect(ap).toMatchObject({
+      transaccion: 'commit',
+      totales: { cambiada: 1 },
+      bitacoraPropia: 1,
+      restoSinCambios: true,
+    });
+    expect(await cantidades(receta)).toEqual(['MUG BLANCA 34 Único=1', 'MUG NEGRA 34 Único=0']);
+    expect(await costo()).toBe(127);
+    expect((await corregir(cx, 'aplicar', m, { usuario: admin })).totales['sin cambio']).toBe(1);
+    const rv = await corregir(cx, 'revertir', m, { usuario: admin, ejecucion: ap.ejecucion });
+    expect(rv).toMatchObject({ transaccion: 'commit', totales: { revertida: 1 } });
+    expect({ c: await cantidades(receta), costo: await costo() }).toEqual(original);
+  });
+});
