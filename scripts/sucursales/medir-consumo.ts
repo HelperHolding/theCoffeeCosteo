@@ -5,6 +5,7 @@ import { leerDias } from '../../lib/sucursales/datos';
 import { claveConsumo, consumir, type DatosConsumo, type InsumoReceta } from '../../lib/sucursales/consumo';
 import { sumarDias } from '../../lib/sucursales/tiempo';
 import { ES_TAMANO } from '../../lib/sucursales/metricas';
+import { personalizacionNeutra } from '../../lib/sucursales/personalizaciones-verificadas';
 
 /**
  * Consumo teórico con datos reales (solo lectura): ejecuta en la base la MISMA expansión de recetas que la RPC
@@ -99,7 +100,11 @@ for (const p of l.pedidos)
   for (const x of p.lineas)
     if (datos.enlaces.has(x.codigo))
       for (const c of x.customs)
-        if (!ES_TAMANO.test(c.nombre)) fuera.set(c.nombre, (fuera.get(c.nombre) ?? 0) + 1);
+        if (
+          !ES_TAMANO.test(c.nombre) &&
+          !personalizacionNeutra(datos.enlaces.get(x.codigo)!.recetaId, c.nombre)
+        )
+          fuera.set(c.nombre, (fuera.get(c.nombre) ?? 0) + 1);
 console.log(
   JSON.stringify(
     {

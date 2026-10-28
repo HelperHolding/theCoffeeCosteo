@@ -22,7 +22,7 @@ import { useLectura } from './use-lectura';
 const COBERTURA = {
   incluidas: { color: AZUL.fuerte, nombre: 'Entran al consumo' },
   tamano: { color: '#eda100', nombre: 'Tamaño sin verificar' },
-  personalizacion: { color: '#e87ba4', nombre: 'Con personalización (no modelada)' },
+  personalizacion: { color: '#e87ba4', nombre: 'Con personalización que cambia la receta' },
   receta: { color: '#6250d6', nombre: 'Receta sin cantidades para ese tamaño' },
   sinEnlace: { color: '#a39e94', nombre: 'Código sin receta enlazada' },
   sinCodigo: { color: '#c9c4ba', nombre: 'Sin código (nombre ambiguo)' },
@@ -234,8 +234,9 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
         <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
           <li>
             Una línea del POS es una unidad. Entra si su código tiene receta enlazada, su tamaño está
-            verificado para esa receta y no lleva personalizaciones: no hay recetas de personalizaciones, así
-            que un cambio de leche o un shot extra no se modela y esa unidad queda fuera completa.
+            verificado para esa receta y sus personalizaciones no cambian la receta (la misma lista revisada
+            que usa Costeo: temperatura, «sin miel», la leche de la receta, entre otras). Un cambio de leche o
+            un shot extra aún no se calcula: esa unidad queda fuera completa.
           </li>
           <li>
             Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni

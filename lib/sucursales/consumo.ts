@@ -1,14 +1,16 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import type { PedidoNormal } from './normalizar';
 import { tamanoVerificado } from './costeo';
+import { personalizacionNeutra } from './personalizaciones-verificadas';
 
 /**
  * Consumo TEÓRICO según receta de las ventas de Sucursales (docs/sucursales/13). Puro: no lee la base.
  * - No es inventario ni merma: es lo que las recetas de Costeo dicen que lleva cada unidad vendida.
  * - Solo cantidades, nunca dinero. Cobertura en LÍNEAS (unidades): A = todas y B = A − GENERIC.
  * - Mismo criterio que el costeo completo: una línea entra al consumo si su código está enlazado, su tamaño está
- *   verificado para esa receta y no lleva personalizaciones (no hay recetas de personalizaciones: un cambio de leche
- *   o un shot extra no se modela). Además, la receta debe tener cantidades para ese tamaño.
+ *   verificado para esa receta y todas sus personalizaciones son neutras para esa receta (personalizaciones-
+ *   verificadas.ts; un cambio de leche o un shot extra aún no se modela). Además, la receta debe tener cantidades
+ *   para ese tamaño.
  * - Misma identidad de líneas que Productos y Costeo (`identificador` con la evidencia de todo el periodo).
  */
 export interface InsumoReceta {
@@ -141,7 +143,9 @@ export function consumir(
       const receta = tamano ? datos.recetas.get(claveReceta(enlace.recetaId, tamano)) : undefined;
       const motivo: MotivoExcluido | null = !tamano
         ? 'tamano'
-        : l.customs.some((c) => !ES_TAMANO.test(c.nombre))
+        : l.customs.some(
+              (c) => !ES_TAMANO.test(c.nombre) && !personalizacionNeutra(enlace.recetaId, c.nombre),
+            )
           ? 'personalizacion'
           : !receta?.length
             ? 'receta'
