@@ -132,10 +132,29 @@ export function CeldaCosteo({
       <span className="font-medium">{c.receta}</span>
       <span className="block text-muted-foreground">
         {c.parcial.lineas === 0
-          ? `completo · margen ${dinero(c.completo.margenCent, moneda)}`
+          ? 'costeo completo'
           : c.completo.lineas === 0
             ? 'costeo parcial'
-            : `completo ${numero(c.completo.lineas)} de ${numero(total)} · margen ${dinero(c.completo.margenCent, moneda)}`}
+            : `completo ${numero(c.completo.lineas)} de ${numero(total)} líneas`}
+      </span>
+    </span>
+  );
+}
+
+/** Ganancia teórica del producto: solo sus líneas de costeo completo (venta sin IVA − costo actual). */
+export function CeldaGanancia({ c, moneda }: { c?: CosteoProducto; moneda: string }) {
+  if (!c?.completo.lineas)
+    return (
+      <span className="text-xs text-muted-foreground" title="Sin líneas de costeo completo en el periodo">
+        —
+      </span>
+    );
+  const pct = c.completo.ventaSinIvaCent ? c.completo.margenCent / c.completo.ventaSinIvaCent : null;
+  return (
+    <span className="block">
+      <span className="font-medium">{dinero(c.completo.margenCent, moneda)}</span>
+      <span className="block text-xs text-muted-foreground">
+        {porcentaje(pct)} · {numero(c.completo.lineas)} lín.
       </span>
     </span>
   );

@@ -11,7 +11,7 @@ import { NOTA_LINEAS } from './en-vivo';
 import { dinero, fechaCorta, numero, porcentaje, textoConciliacion } from './formato';
 import { useLectura } from './use-lectura';
 import { BarraCelda, Etiqueta, TIPOS, tipoPersonalizacion } from './colores';
-import { CeldaCosteo, TarjetaCosteo } from './costeo';
+import { CeldaCosteo, CeldaGanancia, TarjetaCosteo } from './costeo';
 
 const PERIODOS = [
   { id: 'hoy', nombre: 'Hoy', dias: 0, fin: 0 },
@@ -19,7 +19,7 @@ const PERIODOS = [
   { id: '7d', nombre: 'Últimos 7 días', dias: 6, fin: 0 },
   { id: '28d', nombre: 'Últimos 28 días', dias: 27, fin: 0 },
 ] as const;
-type Orden = 'importe' | 'pedidos' | 'lineas' | 'nombre';
+type Orden = 'importe' | 'pedidos' | 'lineas' | 'ganancia' | 'nombre';
 
 export function Productos({
   companyId,
@@ -52,6 +52,11 @@ export function Productos({
       importe: (a, b) => b.importeCent - a.importeCent,
       pedidos: (a, b) => b.pedidos - a.pedidos,
       lineas: (a, b) => b.lineas - a.lineas,
+      // Sin líneas de costeo completo no hay ganancia: van al final.
+      ganancia: (a, b) =>
+        (b.costeo?.completo.lineas ? b.costeo.completo.margenCent : -Infinity) -
+          (a.costeo?.completo.lineas ? a.costeo.completo.margenCent : -Infinity) ||
+        b.importeCent - a.importeCent,
       nombre: (a, b) => a.nombre.localeCompare(b.nombre, 'es-MX'),
     };
     return [...f].sort(comp[orden]);
@@ -96,6 +101,7 @@ export function Productos({
             <option value="importe">Importe</option>
             <option value="pedidos">Pedidos</option>
             <option value="lineas">Líneas</option>
+            {datos?.costeo && <option value="ganancia">Ganancia teórica</option>}
             <option value="nombre">Nombre</option>
           </select>
         </label>
@@ -152,6 +158,13 @@ export function Productos({
                             Extra personalización
                           </th>
                           {datos.costeo && <th scope="col">Costeo (costo actual)</th>}
+                          {datos.costeo && (
+                            <th scope="col" className="numero">
+                              <abbr title="Venta sin IVA − costo actual de la receta, solo de las líneas de costeo completo; antes de comisiones">
+                                Ganancia teórica
+                              </abbr>
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -201,10 +214,15 @@ export function Productos({
                                     />
                                   </td>
                                 )}
+                                {datos.costeo && (
+                                  <td className="numero">
+                                    <CeldaGanancia c={x.costeo} moneda={m} />
+                                  </td>
+                                )}
                               </tr>
                               {exp && (
                                 <tr>
-                                  <td colSpan={datos.costeo ? 7 : 6} className="bg-surface-2/50">
+                                  <td colSpan={datos.costeo ? 8 : 6} className="bg-surface-2/50">
                                     <div className="grid gap-4 py-2 text-sm sm:grid-cols-2">
                                       <div>
                                         <p className="mb-1 font-semibold">Tamaños</p>

@@ -1,3 +1,4 @@
+import { leerCatalogoPos } from '@/lib/sucursales/catalogo-pos';
 import { construirVivo } from '@/lib/sucursales/datos';
 import { autorizar, invalido, json, leerOrigen } from '@/lib/sucursales/rutas';
 
@@ -9,5 +10,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
   const q = new URL(req.url).searchParams;
   const origen = leerOrigen(q);
   if (!origen) return invalido('Origen inválido.');
-  return json(await construirVivo(a.cfg, origen, { forzar: q.get('fresco') === '1' }));
+  const catalogo = await leerCatalogoPos(a.db);
+  return json(await construirVivo(a.cfg, origen, { forzar: q.get('fresco') === '1', catalogo }));
 }
