@@ -1,6 +1,6 @@
 # 31 · Alta de 11 productos del recetario de Zoho
 
-**Estado:** preparado el 2026-10-27, con manifiesto, pruebas y ensayo local. **Sin ensayo remoto y sin aplicar.** Cada paso requiere aprobación expresa de Carlo.
+**Estado:** ✅ **aplicado el 2026-10-28 (00:59 UTC) y verificado.** Ejecución `b0cc45a6-3d01-440c-9042-4eaa9abc99ea`, bitácora **#871–1099** (229 registros); segundo ensayo con 11 «sin cambio». Ver el §5. El ensayo remoto y la aplicación contaron con la aprobación expresa de Carlo.
 
 **Contexto:** en el cotejo del «Recetario The Coffee Marzo 2026» de Zoho Analytics, 11 productos no existían en nuestra base. Carlo aprobó la propuesta de alta (`entregables/Altas_11_productos_propuesta.xlsx`). Se siguen las convenciones de nuestra base:
 - hielo en gramos (`HIELO (g)`);
@@ -84,3 +84,51 @@ Los informes contienen el UUID del perfil y se guardan fuera del repo.
 5. Verificación con una conexión nueva y un segundo ensayo, que debe dar 11 «sin cambio».
 6. Reversión, solo con aprobación:
    `… --revertir --ejecucion <uuid> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+
+## 5. Cierre: aplicado el 2026-10-28 (00:59 UTC) y verificado
+
+Se ejecutó solo `altas-zoho-lote-1`, desde el código de este PR en `f67a021` y con el manifiesto `f132a72b…`. El ensayo remoto y la aplicación tuvieron la aprobación expresa de Carlo. Hubo un solo COMMIT, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo `0040Z`** | El mismo del doc 32. Entre el respaldo y este lote solo se aplicaron los 6 cambios de categoría de insumo del doc 32, que no tocan costos |
+| **Ensayo remoto** (00:42 UTC, ROLLBACK) | 11 creados con el costo esperado, 229 registros propios y 0 ajenos; resto sin cambios |
+| **Aplicación** | **COMMIT**, ejecución `b0cc45a6-3d01-440c-9042-4eaa9abc99ea`, confirmado desde una conexión nueva |
+| **Segundo ensayo** | 11 «sin cambio», **0 registros nuevos**, ROLLBACK |
+
+### Resultado
+
+- **11 productos creados**, cada uno con el costo esperado del §1 en cada tamaño.
+- **Bitácora #871–1099:** 229 registros `carga_masiva`, con autor Carlo y la nota `altas-zoho-lote-1, ejecución b0cc45a6-… (docs/conciliacion-brasil/31)`:
+  - 11 recetas;
+  - 18 tamaños;
+  - 76 líneas;
+  - 124 cantidades.
+- La bitácora queda en 735 filas (id máx. 1099).
+- **Conteos:** recetas 160 → 171, tamaños 215 → 233, líneas 890 → 966, cantidades 1,199 → 1,323 y `v_costo_producto` 215 → 233 filas.
+
+### Lo que quedó intacto (huellas antes y después)
+
+- Los 165 insumos y sus costos de compra, y `v_costo_subreceta` (6 filas).
+- Precios manuales (83), los **72 enlaces POS**, categorías, proveedores y las 23 migraciones.
+- Las recetas, tamaños, líneas y costos que ya existían.
+
+### Fuera de este lote
+
+- **Precio de lista:** los 11 quedan sin precio; si hace falta, se captura en el portal.
+- **Enlaces POS** de `MATLEMAPP` y `TRWCROAPP`: van en un lote de enlaces aparte (el portal no tiene pantalla para enlaces).
+- **Por confirmar:**
+  - el hielo Grande de Chai Iced Ginger y de las dos Fresh Sodas nuevas;
+  - los gramos de café del Single Shot;
+  - la categoría de Matcha Tonic.
+
+### Reversión (solo con aprobación expresa)
+
+```
+npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-zoho-lote-1 --revertir --ejecucion b0cc45a6-3d01-440c-9042-4eaa9abc99ea --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+```
+
+- Borra solo los 11 productos.
+- Se niega si alguno tiene registros posteriores en la bitácora, un enlace POS o precios manuales.
+
+Los informes de cada ejecución y las huellas se guardan **fuera del repo**, porque contienen el UUID del perfil, junto con el respaldo `0040Z`.
