@@ -387,6 +387,23 @@ describe('permisos y lectura en el servidor', () => {
     ]);
   });
 
+  it('con la migración 26: costo de los sustitutos por nombre; sin la clave, no hay sustitutos', async () => {
+    const base = { iva: 0.16, enlaces: [], costos: [], unicas: [] };
+    const con = await leerDatosCosteo(
+      rpcFalsa({
+        ...base,
+        sustitutos: [{ insumo: 'LECHE DESLACTOSADAS', costo_unitario: '0.022', activo: true }],
+      }) as never,
+      { rol: 'admin' },
+      532,
+    );
+    expect(con.estado === 'ok' && [...con.datos.sustitutos!]).toEqual([
+      ['LECHE DESLACTOSADAS', { costoUnitario: 0.022, activo: true }],
+    ]);
+    const sin = await leerDatosCosteo(rpcFalsa(base) as never, { rol: 'admin' }, 532);
+    expect(sin.estado === 'ok' && sin.datos.sustitutos).toBeUndefined();
+  });
+
   it('con la migración 24: null = sin permiso (aunque el rol sea de Costeo); otro error = error', async () => {
     expect(await leerDatosCosteo(rpcFalsa(null) as never, { rol: 'admin' }, 532)).toEqual({
       estado: 'sin-permiso',

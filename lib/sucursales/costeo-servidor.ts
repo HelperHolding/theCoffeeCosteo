@@ -38,6 +38,8 @@ interface CosteoRpc {
     costo_unitario: number | string;
     activo: boolean;
   }[];
+  /** Desde la migración 26: lista cerrada de insumos sustitutos. */
+  sustitutos?: { insumo: string; costo_unitario: number | string; activo: boolean }[];
 }
 
 /** Líneas directas de insumo agrupadas por receta y tamaño. */
@@ -95,6 +97,16 @@ export async function leerDatosCosteo(
         ),
         unicas: new Set(d.unicas),
         ...(d.lineas ? { lineas: agruparLineas(d.lineas) } : {}),
+        ...(d.sustitutos
+          ? {
+              sustitutos: new Map(
+                d.sustitutos.map((s) => [
+                  s.insumo,
+                  { costoUnitario: Number(s.costo_unitario), activo: !!s.activo },
+                ]),
+              ),
+            }
+          : {}),
       };
       return Number.isFinite(datos.iva) ? { estado: 'ok', datos } : { estado: 'error' };
     }

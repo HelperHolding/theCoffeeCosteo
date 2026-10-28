@@ -3,8 +3,9 @@
  * personalizaciones solo es de costeo completo si TODAS están aquí para su receta (o son de temperatura).
  * Lista explícita por receta, NUNCA una regla global: «lo que cuesta $0 no cambia la receta» sería falso (el shot
  * sencillo cuesta $0 y lleva menos café). Cada par se verificó contra la receta vigente el 2026-10-28.
- * Quedan fuera las que cambian cantidades o insumos (leches, shots, miel, jarabes, granos): requieren calcular la
- * diferencia con las cantidades de la receta y el costo de los insumos. Cambiar esta lista exige evidencia, como un lote.
+ * Las que cambian un insumo o su cantidad van aparte, en PERSONALIZACIONES_AJUSTADAS (etapa 1b, doc 35): el costeo
+ * calcula la diferencia con las líneas de la receta y el costo de los insumos. Cambiar estas listas exige evidencia,
+ * como un lote.
  */
 
 /** Temperatura de servicio: no cambia ningún insumo, en ninguna receta. El POS usa «º» y «°». */
@@ -190,3 +191,180 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
 
 export const personalizacionNeutra = (recetaId: string, nombre: string) =>
   TEMPERATURAS.has(nombre) || (PERSONALIZACIONES_NEUTRAS[recetaId]?.includes(nombre) ?? false);
+
+/**
+ * Cómo cambia la receta una personalización: un insumo por otro con la misma cantidad (`cambia`), o la cantidad final
+ * de un insumo de la receta (`cantidad`; 0 = sin él). Los nombres son los de Costeo.
+ */
+export type Ajuste = { cambia: { de: string; a: string } } | { cantidad: { insumo: string; valor: number } };
+
+const LECHE = 'LECHE ENTERA';
+const DESLACTOSADA = 'LECHE DESLACTOSADAS';
+const VAINILLA = 'JARABE DE VANILLA 1 LT (3 PZAS)';
+const CHIPS = 'CHIP DE SABOR CHOCOLATE 1 KG';
+const JENGIBRE = 'JARABE DE JENGIBRE 1 LT (3 PZAS)';
+const GRANO_BLACK = 'CAFÉ TOSTADO EN GRANO BLACK 1.5 KG';
+const GRANO_WHITE = 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG';
+const GRANO_KRAFT = 'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG';
+const DESLACTOSADA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: DESLACTOSADA } };
+
+/**
+ * Personalizaciones que cambian la receta y cuyo efecto se conoce sin pedir datos (etapa 1b, doc 35), por receta de
+ * Costeo. Solo donde se vendieron (28-sep a 25-oct) y donde el insumo que tocan está directo en la receta, en todos sus
+ * tamaños. La vainilla con ml en el nombre es la cantidad total (Average = la de la receta). Fuera, a propósito:
+ * «Lactose free» en Americano y Cold brew (no llevan leche: la agrega) y todo lo que pide datos a Operaciones/Compras
+ * (shots, miel, leches vegetales, More/Less de jarabes sin ml, Chipotle Mayo).
+ */
+export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string, Ajuste>>> = {
+  // Black Ginger
+  'af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95': {
+    'No ginger': { cantidad: { insumo: JENGIBRE, valor: 0 } },
+  },
+  // Chai Frap
+  'a00da002-92a3-4a48-ab47-b62ee9aa6a13': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Chai Iced Latte
+  '130033f6-dd70-4178-8366-945ea9674199': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Chai Latte
+  '5153b158-4329-4ffd-9e79-9cc9d4f06a2a': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Coffee Frap
+  'ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Cold brew
+  '00f47aba-88e6-4ebc-a815-5833f8b29871': {
+    'Cold brew - Kraft': { cambia: { de: GRANO_BLACK, a: GRANO_KRAFT } },
+    'Cold brew - White': { cambia: { de: GRANO_BLACK, a: GRANO_WHITE } },
+  },
+  // Flat Caramel
+  'f33b95a8-a338-4009-8c03-42edfd81bb6a': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Gelato Frappé Chai
+  '0252e4e5-3d19-49c1-9f01-2b0f72c1e21b': {
+    'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+  },
+  // Gelato Frappé Matcha
+  '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': {
+    'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+  },
+  // Hot Drip V60
+  'e0b13ec8-1c24-4ed8-9be2-5198d63a5485': {
+    'Hot Drip Kraft': { cambia: { de: GRANO_BLACK, a: GRANO_KRAFT } },
+    'Hot Drip White': { cambia: { de: GRANO_BLACK, a: GRANO_WHITE } },
+  },
+  // Iced Chocolate
+  'c55e8b1f-300e-42f7-9c4a-f57b038c987e': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    'Without Sprinkles': { cantidad: { insumo: CHIPS, valor: 0 } },
+  },
+  // Iced Latte
+  'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Iced Vanilla
+  '15556232-34f4-490e-a9b7-0c01998bc4c1': {
+    'Average Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    'Less Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
+    'More Vanilla (20ml)': { cantidad: { insumo: VAINILLA, valor: 20 } },
+    'Without Sprinkles': { cantidad: { insumo: CHIPS, valor: 0 } },
+  },
+  // Ichigo Matcha
+  'e201b60f-62e1-4c56-80e5-2b4873baf74f': {
+    'Average Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    'Less Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
+    'More Vanilla (20ml)': { cantidad: { insumo: VAINILLA, valor: 20 } },
+  },
+  // Isopure Iced Latte
+  '1a316b88-1212-4403-9dfd-4de2652653ab': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Isopure Iced Matcha
+  'be97f8cd-e66b-4dca-a38a-c971bdecd3d3': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Macchiato
+  '4255bb6b-1a50-42a4-896d-d3f424b6ceab': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Mad Mocha
+  'da45b5bd-3eca-452e-a18e-5a558e4dc517': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Matcha Frap
+  'bb72c7a6-d900-4d47-bf56-4a74654ccf4b': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Matcha Iced Latte
+  '9756eec9-1f09-45ee-a45b-21ac8c54bb22': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Matcha Latte
+  'c7ca994c-897c-45d7-a62f-a7ba2f66bbce': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Matcha Vanilla Latte
+  '3f7f8456-b0a4-49fd-be25-32c1f4b0e17c': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
+    'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
+  },
+  // Pumpkin Iced Latte
+  '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Pumpkin Latte
+  '170be377-ff76-4bbc-b6d5-85cd9708b21c': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Pumpkin Spice Frap
+  '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Salted Caramel
+  '7867787b-4957-485c-822b-3106558d33a1': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Salted Caramel Frap
+  '052a61f6-55ff-4ac8-9459-ab4939789420': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Sora Iced Latte (Signature)
+  '087d714a-45ca-44da-a3ad-55ce92a2bccb': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Sora Latte (Signature)
+  '2cc57a88-1966-4f7d-9604-461978c7c252': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Taro Frap
+  '817fe3be-7d8b-49be-8e1a-6acde12ccb1c': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // True White
+  'a96339d6-80e7-440b-a33b-bca51440d8e6': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Urban Chocolate
+  '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Vanilla Latte
+  '1183a781-40b8-4654-9f49-92d317873907': {
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
+    'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
+  },
+};
+
+export const ajusteVerificado = (recetaId: string, nombre: string): Ajuste | undefined =>
+  PERSONALIZACIONES_AJUSTADAS[recetaId]?.[nombre];
