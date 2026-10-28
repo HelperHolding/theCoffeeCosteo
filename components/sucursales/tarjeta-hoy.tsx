@@ -5,6 +5,8 @@ import type { RespuestaVivo } from '@/lib/sucursales/contratos';
 import { Delta } from './colores';
 import { dinero, hace, numero } from './formato';
 import { useLectura } from './use-lectura';
+import { ConInfo } from '@/components/portal/con-info';
+import { infoHoy } from './info-tableros';
 
 /**
  * Tarjeta del directorio con "hoy": reutiliza la ruta de En vivo de ESA sucursal (misma autorización y
@@ -25,7 +27,7 @@ export function TarjetaHoy({
     intervaloMs: 60_000,
   });
   const errorHoy = datos?.lecturas.hoy.estado === 'error';
-  return (
+  const tarjeta = (
     <Link
       href={`/sucursales/${companyId}`}
       className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-colors hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
@@ -78,4 +80,5 @@ export function TarjetaHoy({
       </span>
     </Link>
   );
+  return datos && !errorHoy ? <ConInfo info={infoHoy(datos)}>{tarjeta}</ConInfo> : tarjeta;
 }
