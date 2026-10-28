@@ -1,6 +1,6 @@
 # 35 · Personalizaciones con ajuste calculado en el costeo de Sucursales (etapa 1b)
 
-**Estado:** código y migración 26 preparados el 2026-10-28, con pruebas, ensayo local, respaldo de la función y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **La migración 26 no está aplicada en producción y el PR no está mergeado.** Aplicar y mergear requieren aprobación expresa de Carlo.
+**Estado:** ✅ **migración 26 aplicada el 2026-10-28 y verificada** (ver «Aplicación de la migración 26»). El PR (código de la etapa 1b) **no está mergeado**: el merge requiere aprobación expresa de Carlo. Hasta el merge, producción tiene la migración pero no usa los sustitutos.
 
 Sigue al doc 33 (etapa 1, personalizaciones neutras). Esta etapa calcula las personalizaciones que **sí cambian la receta**, pero cuyo efecto se conoce sin pedir datos a Operaciones ni a Compras.
 
@@ -77,7 +77,21 @@ Para revertir después de aplicar, basta ejecutar el respaldo: es el `create or 
 
 1. ~~Respaldo de la definición actual~~ hecho (arriba).
 2. ~~Ensayo remoto con ROLLBACK~~ hecho (arriba).
-3. Aplicar la migración 26 y registrarla en `supabase_migrations`.
+3. ~~Aplicar la migración 26~~ hecho (abajo).
 4. Merge del PR y verificación del despliegue.
 
 El código funciona antes y después de la migración, así que el orden 3 → 4 o 4 → 3 no rompe nada.
+
+## Aplicación de la migración 26 (2026-10-28, autorizada por Carlo)
+
+Carlo autorizó aplicar únicamente la migración 26, ensayada con el código de este PR en `cefad9c`. Una sola transacción, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Vigencia** | Justo antes: función = versión de la 25 (md5 `c6a33df3…`), 25 migraciones registradas, sin la 26 |
+| **Aplicar** | `create or replace` del archivo del commit (LF) y registro en `supabase_migrations.schema_migrations` (`20261028000026`, `sucursales_costeo_sustitutos`) en la misma transacción |
+| **Verificación dentro** | La RPC como Carlo en la 532 y en la 612: claves anteriores con el mismo md5, 529 líneas y 12 sustitutos; ACL igual → **COMMIT** |
+| **Conexión nueva** | Definición nueva (md5 `d9911a19…`), ACL igual (`postgres`, `authenticated`, `service_role`), 26 migraciones con la 26 registrada; la RPC devuelve 529 líneas y 12 sustitutos |
+
+- La migración 25 quedó registrada con saltos de línea CRLF y la 26 con LF (el contenido del commit). Solo cambia el texto guardado, no la versión ni el efecto.
+- **Reversión** (solo con aprobación): ejecutar el respaldo de la función (fuera del repo, `funciones/…-sucursales_datos_costeo-antes-26.sql`), que es la versión de la 25, y borrar el registro `20261028000026`. El código funciona sin `sustitutos`: esas líneas vuelven a parcial.
