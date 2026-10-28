@@ -55,7 +55,7 @@ it('con acceso devuelve el nivel del CRM', async () => {
   expect(s.perfil.nombre).toBe('Carlos');
 });
 
-describe('rol sucursales (migración 23): sin Costeo', () => {
+describe('rol sucursales (migración 24): sin Costeo', () => {
   beforeEach(() => {
     mocks.perfil.mockResolvedValue({
       data: { user_id: 'u', nombre: 'Dione', rol: 'sucursales', activo: true },

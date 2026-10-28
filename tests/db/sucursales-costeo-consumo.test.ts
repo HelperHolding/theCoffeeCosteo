@@ -4,7 +4,7 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 import { agregarLinea, crearInsumo, crearProducto, crearSubreceta } from './fabricas';
 import { comoUsuario, crearUsuario, num } from './utilidades';
 
-// Migración 23: rol 'sucursales', Costeo solo para roles de Costeo y RPC de costeo/consumo por sucursal.
+// Migración 24: rol 'sucursales', Costeo solo para roles de Costeo y RPC de costeo/consumo por sucursal.
 let db: PGlite;
 let admin: string, compras: string, gdl: string, gdlCosteo: string, sinModulo: string;
 let latte: string, leche: string, cafe: string, jarabe: string;

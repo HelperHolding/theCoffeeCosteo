@@ -10,11 +10,11 @@ Encargo del 2026-10-28. Rama `feat/sucursales-gdl-consumo` (desde `origin/main` 
 | Secciones Ventas · Costeo · Consumo | Hecho; pruebas y revisión visual |
 | Rango de 62 días (Productos, Costeo, Consumo) | Hecho; Pedidos sigue en 7 |
 | Directorio por ciudad con lectura diferida | Hecho |
-| Migración 23 (rol `sucursales`, Costeo restringido, RPC) | **Lista, no aplicada. Requiere OK de Carlo** |
-| Acceso de Dione y Claudia | **Bloqueado por la migración 23** (sus usuarios ya existen en Auth, sin perfil) |
+| Migración 24 (rol `sucursales`, Costeo restringido, RPC) | **Lista, no aplicada. Requiere OK de Carlo** |
+| Acceso de Dione y Claudia | **Bloqueado por la migración 24** (sus usuarios ya existen en Auth, sin perfil) |
 | Merge del PR | **Lo hace Carlo**, después de aplicar la migración |
 
-Orden recomendado: 1) OK y aplicación de la migración 23 en producción, 2) perfiles y accesos de Dione y Claudia
+Orden recomendado: 1) OK y aplicación de la migración 24 en producción, 2) perfiles y accesos de Dione y Claudia
 (§6), 3) merge del PR. El código funciona también sin la migración (usa la lectura anterior bajo RLS para Costeo y
 el catálogo), pero Consumo responde «no disponible» hasta que la migración esté aplicada.
 
@@ -62,9 +62,9 @@ es el número Jestor del CRM y el nombre coincide. Validación con `scripts/sucu
   (clave, importe, líneas, pedidos) **idénticos**.
 - Límites (`lib/sucursales/rutas.ts`): Productos, Costeo y Consumo 62 días (63 → 400); Pedidos 7 (8 → 400).
 
-## F3 · Migración 23 (lista, sin aplicar)
+## F3 · Migración 24 (lista, sin aplicar)
 
-`supabase/migrations/20261028000023_sucursales_costeo_consumo.sql`:
+`supabase/migrations/20261028000024_sucursales_costeo_consumo.sql`:
 
 1. `perfiles.rol` acepta `'sucursales'`: perfil del portal sin Costeo.
 2. Lectura de las tablas de Costeo (incluidas bitácora, `precio_canal_manual` y `producto_codigo_pos`) solo con rol
@@ -162,13 +162,13 @@ la regla.
   - `/costeo` las manda a `/sucursales`.
   - `/crm` las manda a Inicio.
 
-## §6 · Acceso de Dione y Claudia (SQL listo; aplicar después de la migración 23)
+## §6 · Acceso de Dione y Claudia (SQL listo; aplicar después de la migración 24)
 
 Estado al 2026-10-28:
 
 - `dacuna@mx.thecoffee.jp` y `clarios@mx.thecoffee.jp` existen en Auth, con el correo confirmado.
 - **No tienen perfil.**
-- El rol `sucursales` existe solo tras la migración 23.
+- El rol `sucursales` existe solo tras la migración 24.
 
 ```sql
 -- Por cada una (<uuid-perfil> = auth.users.id de su correo). Sin rol de Costeo, sin admin, sin CRM.

@@ -22,7 +22,7 @@ export const modulos: Modulo[] = [
     nombre: 'Costeo',
     descripcion: 'Recetas, insumos, márgenes y precios por canal.',
     href: '/costeo',
-    // Cualquier perfil activo con rol de Costeo; el rol 'sucursales' (migración 23) no entra.
+    // Cualquier perfil activo con rol de Costeo; el rol 'sucursales' (migración 24) no entra.
     acceso: (_, rol) => rol !== 'sucursales',
   },
   {

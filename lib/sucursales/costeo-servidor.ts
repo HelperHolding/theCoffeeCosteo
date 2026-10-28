@@ -8,14 +8,14 @@ type Db = Awaited<ReturnType<typeof servidor>>;
 
 /**
  * Quién ve el Costeo de una sucursal (docs/sucursales/13): quien ve la sucursal Y tiene rol de Costeo o el módulo
- * `sucursales_costeo` (lectura). Lo decide la base (RPC security definer de la migración 23); el portal solo lo
+ * `sucursales_costeo` (lectura). Lo decide la base (RPC security definer de la migración 24); el portal solo lo
  * pide con la sesión del usuario. Si no puede, la respuesta no lleva receta, costo ni margen.
  */
 const ROLES_COSTEO: readonly Rol[] = ['compras', 'operaciones', 'finanzas', 'admin'];
 export const puedeVerCostos = (perfil: { rol: string } | null | undefined) =>
   !!perfil && (ROLES_COSTEO as readonly string[]).includes(perfil.rol);
 
-/** La RPC aún no existe (migración 23 sin aplicar): se usa la lectura anterior bajo RLS. */
+/** La RPC aún no existe (migración 24 sin aplicar): se usa la lectura anterior bajo RLS. */
 export const rpcAusente = (e: { code?: string } | null) => e?.code === 'PGRST202' || e?.code === '42883';
 
 export type LecturaCosteo =
@@ -74,7 +74,7 @@ export async function leerDatosCosteo(
   return datos ? { estado: 'ok', datos } : { estado: 'error' };
 }
 
-/** Lectura anterior (bajo RLS con rol de Costeo): solo mientras la migración 23 no esté aplicada. */
+/** Lectura anterior (bajo RLS con rol de Costeo): solo mientras la migración 24 no esté aplicada. */
 async function leerDatosCosteoRls(db: Db, ahora: () => Date): Promise<DatosCosteo | null> {
   try {
     const [enlaces, tamanos, parametros] = await Promise.all([

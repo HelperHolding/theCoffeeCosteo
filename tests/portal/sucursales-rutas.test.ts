@@ -8,7 +8,7 @@ const sesion = vi.hoisted(() => ({
   errorCompanias: false,
   rol: 'admin',
   errorCosteo: false,
-  /** Migración 23 aplicada: las RPC existen. Sin ella responden PGRST202 y se usa la lectura anterior bajo RLS. */
+  /** Migración 24 aplicada: las RPC existen. Sin ella responden PGRST202 y se usa la lectura anterior bajo RLS. */
   migrada: false,
   /** Con la migración: rol de Costeo o módulo sucursales_costeo (lo decide la base). */
   puedeCostear: true,
@@ -59,7 +59,7 @@ vi.mock('../../lib/supabase/servidor', () => ({
     },
     rpc: async (fn: string, args: { p_company: number }) => {
       if (!sesion.migrada) return { data: null, error: { code: 'PGRST202', message: 'no existe' } };
-      // La base exige perfil activo, módulo Sucursales y la sucursal asignada (migración 23).
+      // La base exige perfil activo, módulo Sucursales y la sucursal asignada (migración 24).
       const ve = sesion.activo && sesion.companias.includes(args.p_company);
       const costeo = ve && sesion.puedeCostear;
       const MIL = COSTEO.recetas[0] as { id: string };
@@ -549,7 +549,7 @@ describe('Productos y Pedidos', () => {
     expect(texto).not.toMatch(/costeo|costo|margen|receta|ventaSinIva|iva"/i);
   });
 
-  it('costeo (sin migración 23): rol de Costeo → 200 con las cifras de antes; sin rol → 403; error → 503', async () => {
+  it('costeo (sin migración 24): rol de Costeo → 200 con las cifras de antes; sin rol → 403; error → 503', async () => {
     const q = '?desde=2026-10-21&hasta=2026-10-22';
     const con = await (await llamar(costeoGet, '612', q)).json();
     const productos = await (await llamar(productosGet, '612', q)).json();
@@ -579,7 +579,7 @@ describe('Productos y Pedidos', () => {
     expect((await llamar(costeoGet, '612', q)).status).toBe(503);
   });
 
-  it('costeo (con migración 23): la base decide por sucursal; el rol sucursales con sucursales_costeo ve lo mismo', async () => {
+  it('costeo (con migración 24): la base decide por sucursal; el rol sucursales con sucursales_costeo ve lo mismo', async () => {
     sesion.migrada = true;
     const q = '?desde=2026-10-21&hasta=2026-10-22';
     const admin = await (await llamar(costeoGet, '612', q)).json();

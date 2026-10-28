@@ -265,7 +265,7 @@ describe('permisos y lectura en el servidor', () => {
 
   /** Base falsa con la forma mínima del cliente de Supabase. */
   const baseFalsa = (filas: Record<string, unknown[]>, conError: string[] = []) => ({
-    rpc: async () => ({ data: null, error: { code: 'PGRST202', message: 'sin migración 23' } }),
+    rpc: async () => ({ data: null, error: { code: 'PGRST202', message: 'sin migración 24' } }),
     from: (t: string) => {
       const r = {
         data: conError.includes(t) ? null : filas[t],
@@ -307,7 +307,7 @@ describe('permisos y lectura en el servidor', () => {
     ],
   };
 
-  it('sin la migración 23: lee enlaces, costos (en centavos) y Únicas bajo RLS, como antes', async () => {
+  it('sin la migración 24: lee enlaces, costos (en centavos) y Únicas bajo RLS, como antes', async () => {
     const l = await leerDatosCosteo(
       baseFalsa(filas) as never,
       { rol: 'admin' },
@@ -335,7 +335,7 @@ describe('permisos y lectura en el servidor', () => {
     from: vi.fn(),
   });
 
-  it('con la migración 23: la RPC de la sucursal decide el permiso y trae los mismos datos', async () => {
+  it('con la migración 24: la RPC de la sucursal decide el permiso y trae los mismos datos', async () => {
     const db = rpcFalsa({
       iva: '0.16',
       enlaces: [
@@ -362,7 +362,7 @@ describe('permisos y lectura en el servidor', () => {
     expect([...d!.unicas]).toEqual([BROWNIE]);
   });
 
-  it('con la migración 23: null = sin permiso (aunque el rol sea de Costeo); otro error = error', async () => {
+  it('con la migración 24: null = sin permiso (aunque el rol sea de Costeo); otro error = error', async () => {
     expect(await leerDatosCosteo(rpcFalsa(null) as never, { rol: 'admin' }, 532)).toEqual({
       estado: 'sin-permiso',
     });

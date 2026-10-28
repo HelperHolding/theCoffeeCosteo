@@ -9,7 +9,7 @@ import { personalizacionNeutra } from '../../lib/sucursales/personalizaciones-ve
 
 /**
  * Consumo teórico con datos reales (solo lectura): ejecuta en la base la MISMA expansión de recetas que la RPC
- * sucursales_recetas_consumo (migración 23) y la cruza con las ventas de la API. Imprime cobertura y totales.
+ * sucursales_recetas_consumo (migración 24) y la cruza con las ventas de la API. Imprime cobertura y totales.
  *
  *   npx tsx --conditions=react-server scripts/sucursales/medir-consumo.ts 532 --hasta 2026-10-27 --dias 7
  */

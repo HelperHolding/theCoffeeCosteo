@@ -3,7 +3,7 @@ vi.mock('server-only', () => ({}));
 
 import { leerCatalogoPos } from '../../lib/sucursales/catalogo-pos';
 
-// Sin la RPC de la migración 23 (PGRST202) se lee la tabla bajo RLS, como antes.
+// Sin la RPC de la migración 24 (PGRST202) se lee la tabla bajo RLS, como antes.
 const SIN_RPC = { data: null, error: { code: 'PGRST202', message: 'no existe' } };
 const db = (data: unknown, error: unknown = null) =>
   ({ rpc: async () => SIN_RPC, from: () => ({ select: async () => ({ data, error }) }) }) as never;
@@ -32,7 +32,7 @@ describe('catálogo de nombres del POS (producto_codigo_pos)', () => {
     expect(Object.fromEntries(c!)).toEqual({ Brownie: 'BRO13' });
   });
 
-  it('con la migración 23 lee por la RPC de la sucursal (igual con o sin rol de Costeo)', async () => {
+  it('con la migración 24 lee por la RPC de la sucursal (igual con o sin rol de Costeo)', async () => {
     const c = await leerCatalogoPos(conRpc([{ codigo: 'BRO13', nombre_observado: 'Brownie' }]), 532);
     expect(Object.fromEntries(c!)).toEqual({ Brownie: 'BRO13' });
     expect(await leerCatalogoPos(conRpc(null), 532)).toBeNull(); // sin acceso a la sucursal

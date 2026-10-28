@@ -29,7 +29,7 @@ const contexto = cache(async () => {
 });
 
 /**
- * Sesión del portal. El rol 'sucursales' (perfil sin Costeo, migración 23) solo pasa donde se permite
+ * Sesión del portal. El rol 'sucursales' (perfil sin Costeo, migración 24) solo pasa donde se permite
  * explícitamente (Inicio y CRM): en Costeo va a /sucursales o la acción falla. La RLS de Costeo también lo niega.
  */
 export async function sesion(

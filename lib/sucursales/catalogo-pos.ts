@@ -6,7 +6,7 @@ import { rpcAusente } from './costeo-servidor';
 type Db = Awaited<ReturnType<typeof servidor>>;
 
 /**
- * Nombres del POS de nuestros enlaces (producto_codigo_pos.nombre_observado) → código. Por la RPC de la migración 23
+ * Nombres del POS de nuestros enlaces (producto_codigo_pos.nombre_observado) → código. Por la RPC de la migración 24
  * (igual para todo perfil que ve la sucursal, con o sin rol de Costeo); si aún no existe, bajo RLS como antes.
  * Solo entran los nombres con UN código: un nombre repetido no sirve de evidencia. Ante cualquier error devuelve null y
  * la identidad usa solo las ventas del periodo (comportamiento anterior).

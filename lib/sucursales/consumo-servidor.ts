@@ -19,7 +19,7 @@ interface ConsumoRpc {
 }
 
 /**
- * Recetas (solo cantidades) para el consumo teórico de una sucursal, por la RPC de la migración 23: la base exige que
+ * Recetas (solo cantidades) para el consumo teórico de una sucursal, por la RPC de la migración 24: la base exige que
  * el usuario vea esa sucursal. Sin la RPC, sin permiso o ante cualquier error: null (la sección dice «no disponible»).
  */
 export async function leerDatosConsumo(
