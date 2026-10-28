@@ -1,0 +1,27 @@
+{
+ "lote": "recetas-variantes-mug",
+ "fuente": {
+  "archivo": "docs/conciliacion-brasil/33-PERSONALIZACIONES-NEUTRAS.md",
+  "sha256": "da6e08a97c96958da7af798fc571a96e03ea4c2e8018b206a7b9fc94a36a495a",
+  "ficha": "«Excluidos a propósito» — Mug: la receta suma las dos tazas (negra y blanca)",
+  "pagina": 1
+ },
+ "receta": {
+  "id": "cef677b4-0976-4640-8bc7-2ce82337466f",
+  "nombre": "Mug",
+  "version": 6
+ },
+ "celdas": [
+  {
+   "linea_id": "cb3a1137-8871-44f6-9209-b8d953d914d0",
+   "insumo_id": "c3f22150-2ce4-4af6-b8f4-fe62554d05e5",
+   "insumo": "COFFEE MUG 300 ML BLACK",
+   "tamano_id": "26663c74-9834-4dbe-bc15-951f848cfc0a",
+   "tamano": "Único",
+   "previo": 1,
+   "nuevo": 0,
+   "fuente": "Se vende una taza (opción «Mug Black» o «Mug White»), no las dos. Queda COFFEE MUG 300 ML WHITE (1); las dos cuestan $127. Costo $254 → $127."
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-28: «Sí, prepáralo» (corregir las recetas de Mug y Félix Schorle a una taza y una botella). Autoriza manifiesto, pruebas y ensayo local; NO autoriza aplicar en producción."
+}
