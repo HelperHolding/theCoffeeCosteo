@@ -10,13 +10,20 @@ Encargo del 2026-10-28. Rama `feat/sucursales-gdl-consumo` (desde `origin/main` 
 | Secciones Ventas · Costeo · Consumo | Hecho; pruebas y revisión visual |
 | Rango de 62 días (Productos, Costeo, Consumo) | Hecho; Pedidos sigue en 7 |
 | Directorio por ciudad con lectura diferida | Hecho |
-| Migración 24 (rol `sucursales`, Costeo restringido, RPC) | **Lista, no aplicada. Requiere OK de Carlo** |
-| Acceso de Dione y Claudia | **Bloqueado por la migración 24** (sus usuarios ya existen en Auth, sin perfil) |
-| Merge del PR | **Lo hace Carlo**, después de aplicar la migración |
+| Migración 24 (rol `sucursales`, Costeo restringido, RPC) | **Aplicada en producción** el 2026-10-28 con OK de Carlo, registrada en `supabase_migrations` |
+| Acceso de Dione y Claudia | **Hecho** el 2026-10-28 y verificado como cada una (§6) |
+| Merge del PR | **Lo hace Carlo** |
 
-Orden recomendado: 1) OK y aplicación de la migración 24 en producción, 2) perfiles y accesos de Dione y Claudia
-(§6), 3) merge del PR. El código funciona también sin la migración (usa la lectura anterior bajo RLS para Costeo y
-el catálogo), pero Consumo responde «no disponible» hasta que la migración esté aplicada.
+La migración se numeró 24 porque la 23 de producción es la de Analytics (`20261027000023_analytics_ventas_diarias`,
+de otro trabajo). Antes de aplicarla se revisó producción: las políticas de Costeo seguían iguales, no había
+funciones `sucursales_*` y los 5 perfiles eran admin. La migración se verificó dentro de la misma transacción, como
+admin con la 532: 171 recetas, 165 insumos, 72 enlaces y `v_resumen` visibles; RPC de costeo, consumo y catálogo
+con datos; sucursal ajena en `null`.
+
+**Hasta el merge**, el portal en producción corre el código anterior:
+- Dione y Claudia ven la tarjeta de Costeo, pero sus páginas salen vacías porque la base no les deja leer nada.
+- De sus 11 sucursales solo ven Rubén Darío; las otras 10 aparecen como «aún no habilitadas».
+- Con el merge todo eso queda resuelto.
 
 ## F1 · Sucursales de Guadalajara
 
@@ -62,7 +69,7 @@ es el número Jestor del CRM y el nombre coincide. Validación con `scripts/sucu
   (clave, importe, líneas, pedidos) **idénticos**.
 - Límites (`lib/sucursales/rutas.ts`): Productos, Costeo y Consumo 62 días (63 → 400); Pedidos 7 (8 → 400).
 
-## F3 · Migración 24 (lista, sin aplicar)
+## F3 · Migración 24 (aplicada en producción el 2026-10-28)
 
 `supabase/migrations/20261028000024_sucursales_costeo_consumo.sql`:
 
@@ -162,13 +169,16 @@ la regla.
   - `/costeo` las manda a `/sucursales`.
   - `/crm` las manda a Inicio.
 
-## §6 · Acceso de Dione y Claudia (SQL listo; aplicar después de la migración 24)
+## §6 · Acceso de Dione y Claudia (aplicado el 2026-10-28)
 
-Estado al 2026-10-28:
+Se aplicó con el SQL de abajo, en una transacción, después de la migración 24. Verificación hecha como cada una
+(`dacuna@` y `clarios@`):
 
-- `dacuna@mx.thecoffee.jp` y `clarios@mx.thecoffee.jp` existen en Auth, con el correo confirmado.
-- **No tienen perfil.**
-- El rol `sucursales` existe solo tras la migración 24.
+- rol `sucursales`, perfil activo;
+- ve solo su perfil, 0 recetas y 0 enlaces;
+- módulos `sucursales:lectura` y `sucursales_costeo:lectura`;
+- 11 sucursales y sin CRM;
+- Costeo de 384 sí y de 612 no; consumo de 631 sí.
 
 ```sql
 -- Por cada una (<uuid-perfil> = auth.users.id de su correo). Sin rol de Costeo, sin admin, sin CRM.
