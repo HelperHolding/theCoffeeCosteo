@@ -1,6 +1,6 @@
 # 32 · Categorías de insumo desde la lista de materia prima de Zoho
 
-**Estado:** preparado y ensayado el 2026-10-28, en local y en remoto con ROLLBACK. **Sin aplicar.** Aplicar requiere aprobación expresa de Carlo. No se cargó nada en Zoho.
+**Estado:** ✅ **aplicado el 2026-10-28 (00:57 UTC) y verificado.** Ejecución `34eea212-ef54-4360-83e7-1b1e98f72180`, bitácora **#865–870**; segundo ensayo con 6 «sin cambio». Ver el §5. El ensayo remoto y la aplicación contaron con la aprobación expresa de Carlo. No se cargó nada en Zoho.
 
 **Contexto:** Carlo pidió que la categoría de cada insumo de la «Lista de Precios Materia Prima Marzo 2026» de Zoho quede en nuestra base, por lote y sin corrección manual.
 
@@ -76,3 +76,46 @@ npx tsx scripts/conciliacion/insumos-catalogo-aplicar.ts --lote insumos-categori
 Después: verificar con una conexión nueva y repetir el ensayo, que debe dar 6 «sin cambio».
 
 La reversión es por id de ejecución: `--revertir --ejecucion <uuid>`.
+
+## 5. Cierre: aplicado el 2026-10-28 (00:57 UTC) y verificado
+
+Se ejecutó solo `insumos-categorias-zoho-lote-1`, desde el código de este PR en `a114e8a` y con el manifiesto `f047577a…`. Carlo aprobó expresamente aplicarlo. Hubo un solo COMMIT, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo `0040Z`** | Justo antes de aplicar seguía vigente: insumos, recetas y bitácora idénticos a producción |
+| **Ensayo remoto** (00:54 UTC, ROLLBACK) | 6 cambios, 6 registros propios y 0 ajenos; costos y resto sin cambios (§3) |
+| **Aplicación** | **COMMIT**, ejecución `34eea212-ef54-4360-83e7-1b1e98f72180`, confirmado desde una conexión nueva |
+| **Segundo ensayo** | 6 «sin cambio», **0 registros nuevos**, ROLLBACK |
+
+### Los 6 cambios aplicados
+
+| Bitácora | Insumo | Cambio |
+|---|---|---|
+| #865 | BASE NEUTRA PARA FRAPPÉ 1 KG | categoría INSUMOS → **INGREDIENTES** |
+| #866 | BASE CHAI PARA FRAPPÉ 1 KG | categoría INSUMOS → **INGREDIENTES** |
+| #867 | BASE MATCHA LATTE PARA FRAPPÉ 1 KG | categoría INSUMOS → **INGREDIENTES** |
+| #868 | BASE TARO/COCO PARA FRAPPÉ 1 KG | categoría INSUMOS → **INGREDIENTES** |
+| #869 | Chobani D.Creamer Pumpkin S pice | categoría POR ASIGNAR → **INSUMOS** |
+| #870 | Chobani D.Creamer Pumpkin S pice | proveedor POR ASIGNAR → **CEDIS** |
+
+- **Bitácora:** los 6 registros son `carga_masiva`, con autor Carlo y la nota `insumos-categorias-zoho-lote-1, ejecución 34eea212-… (docs/conciliacion-brasil/32)`. Queda en 506 filas (id máx. 870).
+
+### Lo que quedó intacto (huellas antes y después)
+
+- Costos: `v_costo_producto` (215 filas) y `v_costo_subreceta` (6 filas).
+- Recetas (160), líneas (890), cantidades (1,199), tamaños (215) y precios manuales (83).
+- Los **72 enlaces POS**, las 15 categorías, los 12 proveedores y las 23 migraciones.
+- De los 165 insumos solo cambiaron esos 6 campos; ningún costo, presentación, unidad ni nombre.
+
+Justo después se aplicó `altas-zoho-lote-1` (doc 31), que no toca insumos.
+
+### Reversión (solo con aprobación expresa)
+
+```
+npx tsx scripts/conciliacion/insumos-catalogo-aplicar.ts --lote insumos-categorias-zoho-lote-1 --revertir --ejecucion 34eea212-ef54-4360-83e7-1b1e98f72180 --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+```
+
+Se niega si esos insumos tienen registros posteriores al #870.
+
+Los informes de cada ejecución y las huellas se guardan **fuera del repo**, porque contienen el UUID del perfil, junto con el respaldo `0040Z`.
