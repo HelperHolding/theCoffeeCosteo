@@ -8,6 +8,10 @@ const sesion = vi.hoisted(() => ({
   errorCompanias: false,
   rol: 'admin',
   errorCosteo: false,
+  /** Migración 23 aplicada: las RPC existen. Sin ella responden PGRST202 y se usa la lectura anterior bajo RLS. */
+  migrada: false,
+  /** Con la migración: rol de Costeo o módulo sucursales_costeo (lo decide la base). */
+  puedeCostear: true,
 }));
 // Tablas de Costeo (sintéticas) que la ruta de productos lee con la sesión del usuario.
 const COSTEO = vi.hoisted(() => {
@@ -53,6 +57,75 @@ vi.mock('../../lib/supabase/servidor', () => ({
           ? { data: { user: { id: sesion.usuario } }, error: null }
           : { data: { user: null }, error: null },
     },
+    rpc: async (fn: string, args: { p_company: number }) => {
+      if (!sesion.migrada) return { data: null, error: { code: 'PGRST202', message: 'no existe' } };
+      // La base exige perfil activo, módulo Sucursales y la sucursal asignada (migración 23).
+      const ve = sesion.activo && sesion.companias.includes(args.p_company);
+      const costeo = ve && sesion.puedeCostear;
+      const MIL = COSTEO.recetas[0] as { id: string };
+      const BRO = COSTEO.recetas[1] as { id: string };
+      const datos: Record<string, unknown> = {
+        sucursales_puede_costeo: costeo,
+        sucursales_catalogo_pos: ve
+          ? (COSTEO.producto_codigo_pos as { codigo: string; nombre_observado: string }[]).map(
+              ({ codigo, nombre_observado }) => ({ codigo, nombre_observado }),
+            )
+          : null,
+        sucursales_datos_costeo: costeo
+          ? {
+              iva: '0.16',
+              enlaces: [
+                { codigo: '4MIL', receta_id: MIL.id, receta: 'Matcha Iced Latte' },
+                { codigo: 'BRO13', receta_id: BRO.id, receta: 'Brownie' },
+              ],
+              costos: [
+                { receta_id: MIL.id, tamano: 'Chica', costo: '26', usa_inactivo: false },
+                { receta_id: BRO.id, tamano: 'Único', costo: 29, usa_inactivo: false },
+              ],
+              unicas: [BRO.id],
+            }
+          : null,
+        sucursales_recetas_consumo: ve
+          ? {
+              enlaces: [
+                { codigo: '4MIL', receta_id: MIL.id, receta: 'Matcha Iced Latte' },
+                { codigo: 'BRO13', receta_id: BRO.id, receta: 'Brownie' },
+              ],
+              unicas: [BRO.id],
+              insumos: [
+                {
+                  receta_id: MIL.id,
+                  tamano: 'Chica',
+                  insumo_id: 'le',
+                  insumo: 'LECHE ENTERA',
+                  unidad: 'ml',
+                  categoria: 'LECHE',
+                  cantidad: '200',
+                },
+                {
+                  receta_id: BRO.id,
+                  tamano: 'Único',
+                  insumo_id: 'br',
+                  insumo: 'BROWNIE',
+                  unidad: 'pza',
+                  categoria: 'PANADERIA',
+                  cantidad: 1,
+                },
+                {
+                  receta_id: BRO.id,
+                  tamano: 'Único',
+                  insumo_id: 'pa',
+                  insumo: 'PAPEL',
+                  unidad: 'pza',
+                  categoria: 'DESECHABLE',
+                  cantidad: 0.5,
+                },
+              ],
+            }
+          : null,
+      };
+      return { data: datos[fn] ?? null, error: null };
+    },
     from: (tabla: string) => {
       const r = () =>
         sesion.errorCosteo
@@ -92,6 +165,8 @@ vi.mock('../../lib/supabase/servidor', () => ({
 import { GET as vivo } from '../../app/api/sucursales/[companyId]/vivo/route';
 import { GET as productosGet } from '../../app/api/sucursales/[companyId]/productos/route';
 import { GET as pedidosGet } from '../../app/api/sucursales/[companyId]/pedidos/route';
+import { GET as costeoGet } from '../../app/api/sucursales/[companyId]/costeo/route';
+import { GET as consumoGet } from '../../app/api/sucursales/[companyId]/consumo/route';
 import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
 import { sesionSucursales } from '../../lib/supabase/sesion';
 import { apiFalsa, envelope, pedido } from './sucursales-fixtures';
@@ -115,6 +190,8 @@ beforeEach(() => {
     errorCompanias: false,
     rol: 'admin',
     errorCosteo: false,
+    migrada: false,
+    puedeCostear: true,
   });
   api = apiFalsa({
     '2026-10-22': [
@@ -149,7 +226,7 @@ describe('denegaciones antes de caché y proveedor', () => {
       403,
     ],
     ['company ajena', () => (sesion.companias = [612]), '477', 404],
-    ['company asignada pero no configurada', () => (sesion.companias = [612, 384]), '384', 404],
+    ['company asignada pero no configurada', () => (sesion.companias = [612, 999]), '999', 404],
     ['company manipulada', () => {}, '612abc', 404],
     ['company con ceros', () => {}, '0612', 404],
     ['asignaciones ilegibles = ninguna', () => (sesion.errorCompanias = true), '612', 404],
@@ -159,7 +236,7 @@ describe('denegaciones antes de caché y proveedor', () => {
     expect((await llamar(vivo, '612')).status).toBe(200);
     fetchSpy.mockClear();
     preparar();
-    for (const h of [vivo, productosGet, pedidosGet]) {
+    for (const h of [vivo, productosGet, pedidosGet, costeoGet, consumoGet]) {
       const r = await llamar(h, id);
       expect(r.status).toBe(status);
       const cuerpo = await r.json();
@@ -366,11 +443,11 @@ describe('En vivo', () => {
       fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [appSin('10:00:00')] }).fetch);
       expect(await top()).toEqual([['codigo:BRO13', 7500, false]]);
       // Productos y costeo usan la misma identidad: la línea entra a la cobertura con su receta.
-      const d = await (
-        await llamar(productosGet, '612', '?desde=2026-10-22&hasta=2026-10-22&origen=app')
-      ).json();
+      const q = '?desde=2026-10-22&hasta=2026-10-22&origen=app';
+      const d = await (await llamar(productosGet, '612', q)).json();
       expect(d.productos.map((p: { clave: string }) => p.clave)).toEqual(['codigo:BRO13']);
-      expect(d.costeo.cobertura).toMatchObject({ sinCodigoCent: 0, conRecetaCent: 7500 });
+      const c = await (await llamar(costeoGet, '612', q)).json();
+      expect(c.costeo.cobertura).toMatchObject({ sinCodigoCent: 0, conRecetaCent: 7500 });
     });
 
     it('un nombre que no está en el catálogo sigue sin código', async () => {
@@ -431,11 +508,12 @@ describe('En vivo', () => {
 
 describe('Productos y Pedidos', () => {
   it('valida periodo, origen, pago y página', async () => {
-    expect((await llamar(productosGet, '612', '?desde=2026-09-01&hasta=2026-10-22')).status).toBe(400);
+    for (const h of [productosGet, costeoGet, consumoGet])
+      expect((await llamar(h, '612', '?desde=2026-08-21&hasta=2026-10-22')).status).toBe(400); // 63 días
     expect((await llamar(productosGet, '612', '?desde=2026-10-23')).status).toBe(400);
     expect((await llamar(productosGet, '612', '?desde=2026-10-22&hasta=2026-10-21')).status).toBe(400);
     expect((await llamar(productosGet, '612', '?origen=uber')).status).toBe(400);
-    expect((await llamar(pedidosGet, '612', '?desde=2026-10-10&hasta=2026-10-22')).status).toBe(400);
+    expect((await llamar(pedidosGet, '612', '?desde=2026-10-15&hasta=2026-10-22')).status).toBe(400); // 8 días
     expect((await llamar(pedidosGet, '612', '?pago=x;drop')).status).toBe(400);
     expect((await llamar(pedidosGet, '612', '?pagina=0')).status).toBe(400);
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -449,41 +527,97 @@ describe('Productos y Pedidos', () => {
     expect(d.productos[0].codigo).toBe('4MIL');
   });
 
-  it('costeo: solo con permiso, decidido en el servidor; el POS no cambia', async () => {
+  it('62 días: Productos, Costeo y Consumo aceptan el periodo, leído día por día; Pedidos acepta 7', async () => {
+    sesion.migrada = true;
+    const q = '?desde=2026-08-22&hasta=2026-10-22'; // 62 días
+    for (const h of [productosGet, costeoGet, consumoGet])
+      expect((await llamar(h, '612', q)).status).toBe(200);
+    const fechas = new Set(
+      fetchSpy.mock.calls
+        .map(([u]) => new URL(String(u)))
+        .filter((u) => u.pathname.startsWith('/order/'))
+        .map((u) => `${u.searchParams.get('dateStart')}|${u.searchParams.get('dateEnd')}`),
+    );
+    // Un día por lectura, y cada día una sola vez aunque lo pidan tres rutas (caché compartida).
+    expect(fechas.size).toBe(62);
+    expect([...fechas].every((f) => f.split('|')[0] === f.split('|')[1])).toBe(true);
+    expect((await llamar(pedidosGet, '612', '?desde=2026-10-16&hasta=2026-10-22')).status).toBe(200);
+  });
+
+  it('Productos ya no lleva costeo, con o sin permiso', async () => {
+    const texto = await (await llamar(productosGet, '612', '?desde=2026-10-21&hasta=2026-10-22')).text();
+    expect(texto).not.toMatch(/costeo|costo|margen|receta|ventaSinIva|iva"/i);
+  });
+
+  it('costeo (sin migración 23): rol de Costeo → 200 con las cifras de antes; sin rol → 403; error → 503', async () => {
     const q = '?desde=2026-10-21&hasta=2026-10-22';
-    const con = await (await llamar(productosGet, '612', q)).json();
+    const con = await (await llamar(costeoGet, '612', q)).json();
+    const productos = await (await llamar(productosGet, '612', q)).json();
     // 4 pedidos: 4MIL lleva Oatmilk (parcial) y BRO13 es Único sin personalización (completo).
     expect(con.costeo.cobertura).toMatchObject({ genericoCent: 0, sinEnlaceCent: 0, sinCodigoCent: 0 });
-    expect(con.costeo.cobertura.totalCent).toBe(con.totales.ventaCent);
+    expect(con.costeo.cobertura.totalCent).toBe(productos.totales.ventaCent);
     expect(con.costeo.completo).toMatchObject({ lineas: 4, importeCent: 4 * 7500, costoCent: 4 * 2900 });
     expect(con.costeo.parcial).toMatchObject({
       lineas: 4,
       motivos: { personalizacion: 4, tamano: 0, costo: 0 },
     });
     expect(con.productos.find((p: { codigo: string }) => p.codigo === 'BRO13').costeo.receta).toBe('Brownie');
+    // Mismas ventas e identidad que Productos.
+    expect(con.totales).toEqual(productos.totales);
+    expect(
+      con.productos.map((p: { clave: string; importeCent: number }) => [p.clave, p.importeCent]),
+    ).toEqual(
+      productos.productos.map((p: { clave: string; importeCent: number }) => [p.clave, p.importeCent]),
+    );
+    fetchSpy.mockClear();
+    sesion.rol = 'sin-rol';
+    const r = await llamar(costeoGet, '612', q);
+    expect(r.status).toBe(403);
+    expect(await r.text()).not.toMatch(/costo"|margen|receta"|Brownie/i);
+    expect(fetchSpy).not.toHaveBeenCalled(); // 403 antes de leer la API del POS
+    Object.assign(sesion, { rol: 'admin', errorCosteo: true });
+    expect((await llamar(costeoGet, '612', q)).status).toBe(503);
+  });
 
-    const sinCosteo = (d: Record<string, unknown>) => {
-      const { costeo: _c, productos, ...resto } = d;
-      void _c;
-      return {
-        ...resto,
-        productos: (productos as Record<string, unknown>[]).map(({ costeo: _x, ...p }) => (void _x, p)),
-      };
-    };
-    for (const negar of [() => (sesion.rol = 'sin-rol'), () => (sesion.errorCosteo = true)]) {
-      Object.assign(sesion, { rol: 'admin', errorCosteo: false });
-      negar();
-      const texto = await (await llamar(productosGet, '612', q)).text();
-      // Ni la clave costeo, ni recetas, ni costos o márgenes en el JSON.
-      expect(texto).not.toMatch(/costeo|costo|margen|receta|ventaSinIva|iva"/i);
-      const sin = JSON.parse(texto);
-      expect(sin.costeo).toBeUndefined();
-      // Nombres, importes y totales del POS idénticos con y sin costeo (salvo el instante de lectura).
-      expect({ ...sin, lectura: { ...sin.lectura, leidoEn: 0 } }).toEqual({
-        ...sinCosteo(con),
-        lectura: { ...con.lectura, leidoEn: 0 },
-      });
-    }
+  it('costeo (con migración 23): la base decide por sucursal; el rol sucursales con sucursales_costeo ve lo mismo', async () => {
+    sesion.migrada = true;
+    const q = '?desde=2026-10-21&hasta=2026-10-22';
+    const admin = await (await llamar(costeoGet, '612', q)).json();
+    sesion.rol = 'sucursales'; // perfil sin Costeo, con el módulo sucursales_costeo (puedeCostear)
+    const gdl = await (await llamar(costeoGet, '612', q)).json();
+    expect({ ...gdl, lectura: 0, costeo: { ...gdl.costeo, leidoEn: 0 } }).toEqual({
+      ...admin,
+      lectura: 0,
+      costeo: { ...admin.costeo, leidoEn: 0 },
+    });
+    // Sin el permiso de Costeo de la base: 403 aunque el rol fuera de Costeo.
+    Object.assign(sesion, { rol: 'admin', puedeCostear: false });
+    expect((await llamar(costeoGet, '612', q)).status).toBe(403);
+  });
+
+  it('consumo: cantidades por insumo para quien ve la sucursal, sin dinero, con su cobertura', async () => {
+    sesion.migrada = true;
+    sesion.rol = 'sucursales';
+    sesion.puedeCostear = false;
+    const r = await llamar(consumoGet, '612', '?desde=2026-10-21&hasta=2026-10-22');
+    expect(r.status).toBe(200);
+    const texto = await r.text();
+    expect(texto).not.toMatch(/Cent"|costo|margen|iva"/i);
+    const d = JSON.parse(texto);
+    // 4 pedidos × (4MIL con Oatmilk → fuera por personalización + BRO13 Único → entra).
+    expect(d.cobertura).toMatchObject({ lineas: 8, incluidas: 4, conReceta: 8, generico: 0 });
+    expect(d.cobertura.excluidas).toEqual({ tamano: 0, personalizacion: 4, receta: 0 });
+    expect(d.insumos.map((i: { insumo: string; cantidad: number }) => [i.insumo, i.cantidad])).toEqual([
+      ['PAPEL', 2],
+      ['BROWNIE', 4],
+    ]);
+    expect(d.diario.map((x: { fecha: string; incluidas: number }) => [x.fecha, x.incluidas])).toEqual([
+      ['2026-10-21', 1],
+      ['2026-10-22', 3],
+    ]);
+    // Sin la migración no hay recetas que leer: 503, nunca consumo cero.
+    sesion.migrada = false;
+    expect((await llamar(consumoGet, '612', '?desde=2026-10-21&hasta=2026-10-22')).status).toBe(503);
   });
 
   it('filtro App: las líneas sin código se unen al código del periodo; los cuatro filtros suman Todos', async () => {
@@ -497,7 +631,7 @@ describe('Productos y Pedidos', () => {
     });
     fetchSpy.mockImplementation(apiFalsa({ '2026-10-22': [pedido('2026-10-22', '09:00:00'), app] }).fetch);
     const leer = async (o: string) =>
-      (await llamar(productosGet, '612', `?desde=2026-10-22&hasta=2026-10-22&origen=${o}`)).json();
+      (await llamar(costeoGet, '612', `?desde=2026-10-22&hasta=2026-10-22&origen=${o}`)).json();
     const soloApp = await leer('app');
     expect(
       soloApp.productos.map((x: { nombre: string; clave: string; importeCent: number }) => [

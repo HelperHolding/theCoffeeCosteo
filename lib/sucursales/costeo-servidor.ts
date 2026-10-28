@@ -7,24 +7,75 @@ import { claveCosto, type DatosCosteo } from './costeo';
 type Db = Awaited<ReturnType<typeof servidor>>;
 
 /**
- * Quién ve costos de Costeo dentro de Sucursales. Hoy, cualquier perfil activo con rol de Costeo (el mismo criterio
- * con que entra a Costeo y con que la RLS deja leer recetas, enlaces y costos). Se decide en el SERVIDOR: si no
- * puede, la respuesta no lleva receta, costo ni margen (no basta con ocultarlo en el navegador).
+ * Quién ve el Costeo de una sucursal (docs/sucursales/13): quien ve la sucursal Y tiene rol de Costeo o el módulo
+ * `sucursales_costeo` (lectura). Lo decide la base (RPC security definer de la migración 23); el portal solo lo
+ * pide con la sesión del usuario. Si no puede, la respuesta no lleva receta, costo ni margen.
  */
 const ROLES_COSTEO: readonly Rol[] = ['compras', 'operaciones', 'finanzas', 'admin'];
 export const puedeVerCostos = (perfil: { rol: string } | null | undefined) =>
   !!perfil && (ROLES_COSTEO as readonly string[]).includes(perfil.rol);
 
-/**
- * Enlaces, costos actuales y tamaños de Costeo con la sesión del usuario (bajo RLS, sin service role). Falla cerrado:
- * sin permiso o ante cualquier error de lectura devuelve null y la respuesta sale sin costeo.
- */
+/** La RPC aún no existe (migración 23 sin aplicar): se usa la lectura anterior bajo RLS. */
+export const rpcAusente = (e: { code?: string } | null) => e?.code === 'PGRST202' || e?.code === '42883';
+
+export type LecturaCosteo =
+  { estado: 'ok'; datos: DatosCosteo } | { estado: 'sin-permiso' } | { estado: 'error' };
+
+interface CosteoRpc {
+  iva: number | string;
+  enlaces: { codigo: string; receta_id: string; receta: string }[];
+  costos: { receta_id: string; tamano: string; costo: number | string; usa_inactivo: boolean }[];
+  unicas: string[];
+}
+
+/** ¿Puede ver el Costeo de esta sucursal? Para mostrar u ocultar la sección (la API lo vuelve a exigir). */
+export async function puedeCostear(db: Db, companyId: number, perfil: { rol: string }): Promise<boolean> {
+  try {
+    const r = await db.rpc('sucursales_puede_costeo', { p_company: companyId });
+    if (!r.error) return r.data === true;
+    return rpcAusente(r.error) && puedeVerCostos(perfil);
+  } catch {
+    return false;
+  }
+}
+
+/** Enlaces, costos actuales y tamaños de Costeo de una sucursal. Falla cerrado. */
 export async function leerDatosCosteo(
   db: Db,
   perfil: { rol: string } | null | undefined,
+  companyId: number,
   ahora = () => new Date(),
-): Promise<DatosCosteo | null> {
-  if (!puedeVerCostos(perfil)) return null;
+): Promise<LecturaCosteo> {
+  try {
+    const r = await db.rpc('sucursales_datos_costeo', { p_company: companyId });
+    if (!r.error) {
+      if (!r.data) return { estado: 'sin-permiso' };
+      const d = r.data as unknown as CosteoRpc;
+      const datos: DatosCosteo = {
+        leidoEn: ahora().toISOString(),
+        iva: Number(d.iva),
+        enlaces: new Map(d.enlaces.map((e) => [e.codigo, { recetaId: e.receta_id, receta: e.receta }])),
+        costos: new Map(
+          d.costos.map((c) => [
+            claveCosto(c.receta_id, c.tamano),
+            { costoCent: centavos(Number(c.costo)), usaInactivo: !!c.usa_inactivo },
+          ]),
+        ),
+        unicas: new Set(d.unicas),
+      };
+      return Number.isFinite(datos.iva) ? { estado: 'ok', datos } : { estado: 'error' };
+    }
+    if (!rpcAusente(r.error)) return { estado: 'error' };
+  } catch {
+    return { estado: 'error' };
+  }
+  if (!puedeVerCostos(perfil)) return { estado: 'sin-permiso' };
+  const datos = await leerDatosCosteoRls(db, ahora);
+  return datos ? { estado: 'ok', datos } : { estado: 'error' };
+}
+
+/** Lectura anterior (bajo RLS con rol de Costeo): solo mientras la migración 23 no esté aplicada. */
+async function leerDatosCosteoRls(db: Db, ahora: () => Date): Promise<DatosCosteo | null> {
   try {
     const [enlaces, tamanos, parametros] = await Promise.all([
       db.from('producto_codigo_pos').select('codigo, receta_id'),

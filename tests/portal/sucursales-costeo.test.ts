@@ -258,13 +258,14 @@ describe('permisos y lectura en el servidor', () => {
     expect(puedeVerCostos({ rol: 'compras' })).toBe(true);
     expect(puedeVerCostos({ rol: 'visitante' })).toBe(false);
     expect(puedeVerCostos(null)).toBe(false);
-    const db = { from: vi.fn() };
-    expect(await leerDatosCosteo(db as never, null)).toBeNull();
+    const db = { from: vi.fn(), rpc: async () => ({ data: null, error: { code: 'PGRST202' } }) };
+    expect(await leerDatosCosteo(db as never, null, 612)).toEqual({ estado: 'sin-permiso' });
     expect(db.from).not.toHaveBeenCalled();
   });
 
   /** Base falsa con la forma mínima del cliente de Supabase. */
   const baseFalsa = (filas: Record<string, unknown[]>, conError: string[] = []) => ({
+    rpc: async () => ({ data: null, error: { code: 'PGRST202', message: 'sin migración 23' } }),
     from: (t: string) => {
       const r = {
         data: conError.includes(t) ? null : filas[t],
@@ -306,13 +307,15 @@ describe('permisos y lectura en el servidor', () => {
     ],
   };
 
-  it('lee enlaces, costos actuales (en centavos) y recetas Únicas con la sesión del usuario', async () => {
-    const d = await leerDatosCosteo(
+  it('sin la migración 23: lee enlaces, costos (en centavos) y Únicas bajo RLS, como antes', async () => {
+    const l = await leerDatosCosteo(
       baseFalsa(filas) as never,
       { rol: 'admin' },
+      612,
       () => new Date('2026-10-27T03:00:00Z'),
     );
-    expect(d).not.toBeNull();
+    expect(l.estado).toBe('ok');
+    const d = l.estado === 'ok' ? l.datos : null;
     expect(d!.iva).toBe(0.16);
     expect(d!.enlaces.get('5IL')).toEqual({ recetaId: ICED_LATTE, receta: 'Iced Latte' });
     expect(d!.costos.get(claveCosto(ICED_LATTE, 'Chica'))).toEqual({ costoCent: 1544, usaInactivo: false });
@@ -322,6 +325,53 @@ describe('permisos y lectura en el servidor', () => {
 
   it('falla cerrado: cualquier error de lectura (p. ej. RLS) → sin costeo', async () => {
     for (const t of ['producto_codigo_pos', 'v_costo_producto', 'parametros', 'recetas'])
-      expect(await leerDatosCosteo(baseFalsa(filas, [t]) as never, { rol: 'admin' })).toBeNull();
+      expect(await leerDatosCosteo(baseFalsa(filas, [t]) as never, { rol: 'admin' }, 612)).toEqual({
+        estado: 'error',
+      });
+  });
+
+  const rpcFalsa = (data: unknown, error: unknown = null) => ({
+    rpc: vi.fn(async () => ({ data, error })),
+    from: vi.fn(),
+  });
+
+  it('con la migración 23: la RPC de la sucursal decide el permiso y trae los mismos datos', async () => {
+    const db = rpcFalsa({
+      iva: '0.16',
+      enlaces: [
+        { codigo: '5IL', receta_id: ICED_LATTE, receta: 'Iced Latte' },
+        { codigo: 'BRO', receta_id: BROWNIE, receta: 'Brownie' },
+      ],
+      costos: [
+        { receta_id: ICED_LATTE, tamano: 'Chica', costo: '15.44', usa_inactivo: false },
+        { receta_id: BROWNIE, tamano: 'Único', costo: 30, usa_inactivo: false },
+      ],
+      unicas: [BROWNIE],
+    });
+    const l = await leerDatosCosteo(
+      db as never,
+      { rol: 'sucursales' },
+      532,
+      () => new Date('2026-10-27T03:00:00Z'),
+    );
+    expect(db.rpc).toHaveBeenCalledWith('sucursales_datos_costeo', { p_company: 532 });
+    expect(db.from).not.toHaveBeenCalled();
+    const d = l.estado === 'ok' ? l.datos : null;
+    expect(d!.iva).toBe(0.16);
+    expect(d!.costos.get(claveCosto(ICED_LATTE, 'Chica'))).toEqual({ costoCent: 1544, usaInactivo: false });
+    expect([...d!.unicas]).toEqual([BROWNIE]);
+  });
+
+  it('con la migración 23: null = sin permiso (aunque el rol sea de Costeo); otro error = error', async () => {
+    expect(await leerDatosCosteo(rpcFalsa(null) as never, { rol: 'admin' }, 532)).toEqual({
+      estado: 'sin-permiso',
+    });
+    expect(
+      await leerDatosCosteo(
+        rpcFalsa(null, { code: '57014', message: 'timeout' }) as never,
+        { rol: 'admin' },
+        532,
+      ),
+    ).toEqual({ estado: 'error' });
   });
 });

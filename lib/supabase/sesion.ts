@@ -28,7 +28,15 @@ const contexto = cache(async () => {
   return { db, usuario: data.user, perfil, accesos } as const;
 });
 
-export async function sesion(area?: Area, redirigir = true) {
+/**
+ * Sesión del portal. El rol 'sucursales' (perfil sin Costeo, migración 23) solo pasa donde se permite
+ * explícitamente (Inicio y CRM): en Costeo va a /sucursales o la acción falla. La RLS de Costeo también lo niega.
+ */
+export async function sesion(
+  area?: Area,
+  redirigir = true,
+  { sinCosteo = false }: { sinCosteo?: boolean } = {},
+) {
   const c = await contexto();
   if (!c.usuario) {
     if (redirigir) redirect('/login');
@@ -39,6 +47,10 @@ export async function sesion(area?: Area, redirigir = true) {
   if (!r.data?.activo) {
     if (redirigir) redirect('/login?aviso=perfil');
     throw new Error('Tu cuenta necesita un perfil activo.');
+  }
+  if (r.data.rol === 'sucursales' && !sinCosteo) {
+    if (redirigir) redirect('/sucursales');
+    throw new Error('Tu perfil no tiene acceso a Costeo.');
   }
   if (area && !puede(r.data.rol, area)) throw new Error('No tienes permiso para esta acción');
   return { db: c.db, perfil: r.data };
@@ -52,7 +64,7 @@ export async function accesos(db: Db, userId: string): Promise<Accesos> {
 
 /** Sesión del CRM: exige acceso al módulo en cada página y acción (la RLS lo vuelve a exigir en la base). */
 export async function sesionCrm(redirigir = true) {
-  const s = await sesion(undefined, redirigir);
+  const s = await sesion(undefined, redirigir, { sinCosteo: true });
   const a = await accesos(s.db, s.perfil.user_id);
   if (!a.crm) {
     if (redirigir) redirect('/');

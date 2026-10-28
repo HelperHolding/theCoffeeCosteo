@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { Navegacion } from '../../components/portal/navegacion';
-import { VentasPos } from '../../components/sucursales/ventas-pos';
+import { SeccionesSucursal } from '../../components/sucursales/secciones';
 import { EnVivo } from '../../components/sucursales/en-vivo';
 import { Pedidos } from '../../components/sucursales/pedidos';
 import { DetallePedido } from '../../components/sucursales/detalle-pedido';
@@ -32,6 +32,17 @@ import type { PedidoVista, RespuestaPedidos, RespuestaVivo } from '../../lib/suc
 import { apiFalsa, pedido } from './sucursales-fixtures';
 
 const cfg = configDe(612)!;
+/** Sección Ventas de la sucursal (sin permiso de Costeo), como la monta la página. */
+const SucursalVentas = () => (
+  <SeccionesSucursal
+    sucursal={sucursalInfo(cfg)}
+    puedeCostear={false}
+    seccionInicial="ventas"
+    tabInicial="vivo"
+    origenInicial="todos"
+    periodoInicial={{ id: 'hoy' }}
+  />
+);
 const AHORA = Date.UTC(2026, 9, 22, 18, 0, 0);
 let vivoTodos: RespuestaVivo;
 let vivoApp: RespuestaVivo;
@@ -87,9 +98,9 @@ it('la navegación de Sucursales muestra su directorio y el regreso a los otros 
 
 describe('En vivo', () => {
   it('muestra KPIs, comparativo, rótulos de alcance y la nota de unidades estimadas', async () => {
-    render(<VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />);
+    render(<SucursalVentas />);
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText('Ventas · API The Coffee · MXN')).toBeInTheDocument();
+    expect(screen.getByText('API The Coffee · MXN')).toBeInTheDocument();
     expect(screen.getByText('Incluye Rappi')).toBeInTheDocument();
     await responder(0, vivoTodos);
     expect(screen.getByText('Venta cobrada hoy')).toBeInTheDocument();
@@ -101,7 +112,7 @@ describe('En vivo', () => {
   });
 
   it('cambiar el origen descarta los datos anteriores y una respuesta tardía no los repone', async () => {
-    render(<VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />);
+    render(<SucursalVentas />);
     fireEvent.click(screen.getByRole('radio', { name: 'App The Coffee' }));
     // La petición de "todos" quedó sin responder; la de "app" sale con su propia clave.
     expect(pendientes.map((p) => p.url)).toEqual([
@@ -118,7 +129,7 @@ describe('En vivo', () => {
 
   it('aviso de calidad Rappi: visible siempre que las métricas incluyan Rappi, sin tocar cifras', async () => {
     const aviso = () => screen.queryAllByRole('note').find((n) => n.textContent === AVISO_CALIDAD_RAPPI);
-    render(<VentasPos sucursal={sucursalInfo(cfg)} tabInicial="vivo" origenInicial="todos" />);
+    render(<SucursalVentas />);
     expect(aviso()).toBeDefined();
     expect(AVISO_CALIDAD_RAPPI).toBe(
       'Datos reportados por el POS de Brasil. Detectamos pedidos Rappi con artículos o cargos de tamaño no desglosados; estos importes pueden diferir de Rappi y no representan una liquidación.',

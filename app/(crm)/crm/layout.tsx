@@ -41,7 +41,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
       key={perfil.user_id}
       perfil={{ nombre: perfil.nombre, rol: perfil.rol }}
       seccion="crm"
-      visibles={modulosVisibles(accesos)}
+      visibles={modulosVisibles(accesos, perfil.rol)}
       busqueda={busqueda}
     >
       {children}

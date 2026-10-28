@@ -20,7 +20,7 @@ export default async function PortalLayout({ children }: { children: React.React
       key={perfil.user_id}
       perfil={{ nombre: perfil.nombre, rol: perfil.rol }}
       seccion="costeo"
-      visibles={modulosVisibles(a)}
+      visibles={modulosVisibles(a, perfil.rol)}
       busqueda={recetas}
     >
       {children}

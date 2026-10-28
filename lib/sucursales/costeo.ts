@@ -86,7 +86,11 @@ const clave = (recetaId: string, tamano: string) => `${recetaId}:${tamano}`;
 export const claveCosto = clave;
 
 /** Tamaño de Costeo de una línea, o null si no está verificado para esa receta. */
-export function tamanoVerificado(l: LineaNormal, recetaId: string, datos: DatosCosteo): string | null {
+export function tamanoVerificado(
+  l: LineaNormal,
+  recetaId: string,
+  datos: Pick<DatosCosteo, 'unicas'>,
+): string | null {
   const vasos = l.customs.filter((c) => ES_TAMANO.test(c.nombre));
   if (vasos.length === 0) return datos.unicas.has(recetaId) ? 'Único' : null;
   if (vasos.length > 1) return null;

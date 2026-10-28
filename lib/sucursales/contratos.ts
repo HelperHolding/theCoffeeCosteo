@@ -1,4 +1,5 @@
 import type { CosteoProducto, CosteoResumen } from './costeo';
+import type { ResultadoConsumo } from './consumo';
 import type { FiltroOrigen, Insight, ProductoResumen, Resumen } from './metricas';
 import type { Origen } from './normalizar';
 
@@ -10,6 +11,7 @@ export interface SucursalInfo {
   moneda: string;
   zona: string;
   alcance: string;
+  rappi: boolean;
   sonidoVenta: string | null;
 }
 
@@ -97,12 +99,32 @@ export interface RespuestaProductos {
   origen: FiltroOrigen;
   lectura: LecturaInfo;
   totales: Resumen;
-  /** `costeo` solo viene si el usuario puede ver costos (se decide en el servidor). */
-  productos: (ProductoResumen & { costeo?: CosteoProducto })[];
+  productos: ProductoResumen[];
   personalizaciones: { nombre: string; veces: number; importeCent: number }[];
   conciliacion: Conciliacion;
-  /** Cobertura y costeo con el costo ACTUAL de Costeo; ausente para usuarios sin permiso de costos. */
-  costeo?: CosteoResumen;
+}
+
+/** Sección Costeo: solo para quien puede ver costos (la API responde 403 a los demás). */
+export interface RespuestaCosteo {
+  sucursal: SucursalInfo;
+  origen: FiltroOrigen;
+  lectura: LecturaInfo;
+  totales: Resumen;
+  /** Cobertura y costeo con el costo ACTUAL de Costeo. */
+  costeo: CosteoResumen;
+  productos: (Pick<
+    ProductoResumen,
+    'clave' | 'codigo' | 'nombre' | 'sinCodigo' | 'importeCent' | 'lineas' | 'participacion'
+  > & { costeo: CosteoProducto | null })[];
+}
+
+/** Sección Consumo: consumo teórico según receta, solo cantidades. */
+export interface RespuestaConsumo extends ResultadoConsumo {
+  sucursal: SucursalInfo;
+  origen: FiltroOrigen;
+  lectura: LecturaInfo;
+  /** Cuándo se leyeron las recetas (ISO). */
+  recetasLeidasEn: string;
 }
 
 export interface RespuestaPedidos {

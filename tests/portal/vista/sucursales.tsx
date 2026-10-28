@@ -1,9 +1,11 @@
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
-import { VentasPos } from '../../../components/sucursales/ventas-pos';
+import { SeccionesSucursal, type IdSeccion } from '../../../components/sucursales/secciones';
 import { configDe } from '../../../lib/sucursales/config';
 import {
   __reiniciarParaPruebas,
+  construirConsumo,
+  construirCosteo,
   construirPedidos,
   construirTendencias,
   construirProductos,
@@ -11,16 +13,23 @@ import {
   sucursalInfo,
 } from '../../../lib/sucursales/datos';
 import { claveCosto, type DatosCosteo } from '../../../lib/sucursales/costeo';
+import { claveConsumo, type DatosConsumo, type InsumoReceta } from '../../../lib/sucursales/consumo';
+import { periodoDeUrl } from '../../../lib/sucursales/periodo';
 import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
 
 /**
  * Ventas POS con DATOS SINTÉTICOS: el mismo pipeline del servidor corre en el navegador sobre un
- * fetch falso (sin red, sin token, sin Auth). ?sucursales[&estado=error|parcial|vacio]
+ * fetch falso (sin red, sin token, sin Auth). ?sucursales[&estado=error|parcial|vacio][&gdl=1][&seccion=…]
+ * &gdl=1: una sucursal de Guadalajara SIN Rappi en la API (mismo fixture, sin pedidos Rappi).
  */
-const cfg = configDe(612)!;
-const estado = new URLSearchParams(window.location.search).get('estado');
+const parametros = new URLSearchParams(window.location.search);
+const gdl = parametros.get('gdl') === '1';
+const cfg = gdl
+  ? { ...configDe(384)!, companyId: 612, lookerStoreId: 477, nombre: 'Ventura (sintética)' }
+  : configDe(612)!;
+const estado = parametros.get('estado');
 
 // Costeo SINTÉTICO (costos inventados). Tres recetas con tamaño verificado, una Único y una sin verificar;
 // GHC queda sin enlace. ?costeo=0 simula un usuario sin permiso de costos (la respuesta no trae costeo).
@@ -61,6 +70,53 @@ const costeo: DatosCosteo | null =
         unicas: new Set([ID.bro]),
       };
 
+// Recetas SINTÉTICAS (cantidades inventadas) para el consumo teórico. Pumpkin Latte sin tamaño verificado.
+const ins = (
+  insumoId: string,
+  insumo: string,
+  unidad: string,
+  categoria: string,
+  cantidad: number,
+): InsumoReceta => ({
+  insumoId,
+  insumo,
+  unidad,
+  categoria,
+  cantidad,
+});
+const LECHE = (n: number) => ins('le', 'LECHE ENTERA', 'ml', 'LECHE', n);
+const ALMENDRA = (n: number) => ins('la', 'LECHE ALMENDRA', 'ml', 'LECHE', n);
+const DESLAC = (n: number) => ins('ld', 'LECHE DESLACTOSADAS', 'ml', 'LECHE', n);
+const CAFE = (n: number) => ins('cf', 'CAFÉ ESPRESSO', 'gr', 'CAFÉ', n);
+const HIELO = (n: number) => ins('hi', 'HIELO', 'gr', 'HIELO', n);
+const VASO = ins('va', 'VASO FRÍO', 'pza', 'DESECHABLE', 1);
+const consumo: DatosConsumo = {
+  leidoEn: new Date().toISOString(),
+  enlaces: costeo?.enlaces ?? new Map(),
+  unicas: new Set([ID.bro]),
+  recetas: new Map([
+    [
+      claveConsumo(ID.tw, 'Chica'),
+      [DESLAC(220), CAFE(9), ins('ch', 'CHOCOLATE BLANCO', 'gr', 'INGREDIENTES', 20), VASO],
+    ],
+    [
+      claveConsumo(ID.tw, 'Grande'),
+      [DESLAC(300), CAFE(18), ins('ch', 'CHOCOLATE BLANCO', 'gr', 'INGREDIENTES', 28), VASO],
+    ],
+    [claveConsumo(ID.il, 'Chica'), [LECHE(180), CAFE(18), HIELO(150), VASO]],
+    [claveConsumo(ID.il, 'Grande'), [LECHE(260), CAFE(18), HIELO(200), VASO]],
+    [
+      claveConsumo(ID.mil, 'Chica'),
+      [ALMENDRA(180), ins('ma', 'MATCHA', 'gr', 'POLVOS', 4), HIELO(150), VASO],
+    ],
+    [
+      claveConsumo(ID.mil, 'Grande'),
+      [ALMENDRA(250), ins('ma', 'MATCHA', 'gr', 'POLVOS', 6), HIELO(200), VASO],
+    ],
+    [claveConsumo(ID.bro, 'Único'), [ins('br', 'BROWNIE', 'pza', 'PANADERIA', 1)]],
+  ]),
+};
+
 const PRODUCTOS = [
   ['PUMPL', 'Pumpkin Latte', 129],
   ['TW', 'True White', 78],
@@ -87,7 +143,7 @@ function dia(fecha: string, hastaSegundo: number, semilla: number): PedidoApi[] 
       const conAvena = azar() < 0.3;
       const conShot = azar() < 0.4;
       const app = azar() < 0.07;
-      const rappi = !app && azar() < 0.3;
+      const rappi = !gdl && !app && azar() < 0.3;
       const efectivo = !app && !rappi && azar() < 0.12;
       // Como en la API real: la App manda a veces defaultCode null (desde 2026-10-02, conciliacion-brasil/05).
       const sinCodigo = app && azar() < 0.6;
@@ -167,20 +223,26 @@ __reiniciarParaPruebas({
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
-  const m = /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos)$/.exec(url.pathname);
+  const m = /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo)$/.exec(
+    url.pathname,
+  );
   if (!m) return fetchNavegador(entrada, init);
   await new Promise((r) => setTimeout(r, 250));
   const q = url.searchParams;
   const origen = (q.get('origen') ?? 'todos') as FiltroOrigen;
   const desde = q.get('desde') ?? hoy;
   const hasta = q.get('hasta') ?? desde;
+  if (m[2] === 'costeo' && !costeo)
+    return Response.json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, { status: 403 });
+  if (m[2] === 'costeo') return Response.json(await construirCosteo(cfg, desde, hasta, origen, costeo!));
+  if (m[2] === 'consumo') return Response.json(await construirConsumo(cfg, desde, hasta, origen, consumo));
   const cuerpo =
     m[2] === 'vivo'
       ? await construirVivo(cfg, origen, { forzar: q.get('fresco') === '1' })
       : m[2] === 'tendencias'
         ? await construirTendencias(cfg, Number(q.get('semanas') ?? 4) as 4 | 8 | 12, origen)
         : m[2] === 'productos'
-          ? await construirProductos(cfg, desde, hasta, origen, costeo)
+          ? await construirProductos(cfg, desde, hasta, origen)
           : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1));
   return Response.json(cuerpo);
 };
@@ -196,12 +258,15 @@ export function VistaSucursales() {
       <Encabezado
         titulo={cfg.nombre}
         migas={[{ href: '/sucursales', nombre: 'Sucursales' }]}
-        descripcion={`Ventas · ${cfg.ciudad} · tienda ${cfg.lookerStoreId} · ID API ${cfg.companyId}`}
+        descripcion={`${cfg.ubicacion ? `${cfg.ubicacion}, ` : ''}${cfg.ciudad} · tienda ${cfg.lookerStoreId} · ID API ${cfg.companyId}`}
       />
-      <VentasPos
+      <SeccionesSucursal
         sucursal={sucursalInfo(cfg)}
-        tabInicial={new URLSearchParams(window.location.search).get('tab') ?? 'vivo'}
+        puedeCostear={!!costeo}
+        seccionInicial={(parametros.get('seccion') ?? 'ventas') as IdSeccion}
+        tabInicial={parametros.get('tab') ?? 'vivo'}
         origenInicial="todos"
+        periodoInicial={periodoDeUrl(parametros, 'hoy')}
       />
     </Marco>
   );

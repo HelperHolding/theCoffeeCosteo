@@ -193,7 +193,7 @@ describe('errores del proveedor', () => {
   it('rechaza ventanas inválidas antes de llamar', async () => {
     const f = vi.fn<typeof fetch>();
     await expect(leerPedidos(612, '2026-10-22', '2026-10-21', deps(f))).rejects.toThrow();
-    await expect(leerPedidos(612, '2026-09-01', '2026-10-21', deps(f))).rejects.toThrow('31');
+    await expect(leerPedidos(612, '2026-08-20', '2026-10-21', deps(f))).rejects.toThrow('62');
     await expect(leerPedidos(-1, '2026-10-21', '2026-10-21', deps(f))).rejects.toThrow();
     expect(f).not.toHaveBeenCalled();
   });
