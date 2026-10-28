@@ -157,6 +157,37 @@ Para quien ve la sucursal (sin permiso de Costeo). Solo cantidades.
 (etapa 2 de `docs/conciliacion-brasil/33`) subiría la cobertura de Consumo y de Costeo por igual, porque comparten
 la regla.
 
+## F4b · Consumo con los ajustes de la etapa 1b (migración 27, 2026-10-28)
+
+Desde el PR #50, Costeo calcula algunas personalizaciones que cambian la receta (doc 35): «Lactose free»,
+vainilla con ml, sin chispas o jengibre, y grano White/Kraft. Consumo las seguía dejando fuera, así que las dos
+secciones ya no cubrían las mismas unidades. Ahora comparten la regla:
+
+- `cambiosPersonalizaciones` (`lib/sucursales/costeo.ts`) devuelve qué cantidad cambia de cada insumo sobre las
+  líneas **directas** de la receta.
+  - Costeo (`ajustePersonalizaciones`) lo multiplica por el costo; el comportamiento es idéntico al de #50 y sus
+    pruebas pasan sin cambios.
+  - Consumo lo suma a la receta expandida.
+  - Si el insumo nuevo no está en la receta, sus datos salen de la lista cerrada de sustitutos.
+- **Migración 27** (`20261028000027_sucursales_consumo_ajustes.sql`): `create or replace` de
+  `sucursales_recetas_consumo` con la misma firma y el mismo permiso. Agrega `lineas` (líneas directas: insumo y
+  cantidad) y `sustitutos` (id, nombre, unidad y categoría de la misma lista de 12 de la migración 26).
+  **Sin costos.** Sin la 27, Consumo funciona como antes.
+- **Diferencia que queda, a propósito:** si el insumo que entra está inactivo, Costeo deja la unidad como parcial
+  (motivo «costo»). Consumo no depende del costo y la cuenta igual.
+- **Datos reales (532, 21–27 oct):** Consumo pasa de 114 a **135** unidades dentro (25.1 % de A y 26.7 % de B),
+  21 de ellas con ajuste. **Costeo completo da las mismas 135** y los mismos motivos fuera (51 por tamaño y 269
+  por personalización sin calcular). La deslactosada suma 2,830 ml. Fuera siguen shots, miel y leches vegetales.
+- **Respaldo y ensayo en producción con ROLLBACK:**
+  - El respaldo de la función está en
+    `%TEMP%\thecoffee-respaldos\2026-10-28T21-07-41-322Z-sucursales_recetas_consumo-antes-27.sql`. Se verificó, y
+    restaurarlo la deja idéntica.
+  - Lo que la función ya devolvía queda idéntico y sus permisos sin cambio: 529 líneas en 72 recetas y 12
+    sustitutos, sin costos.
+  - Dione la ve en la 631 y en la 612 recibe `null`.
+  - Tras el ROLLBACK, producción quedó sin cambios.
+  - **La 27 no está aplicada:** la integración de Supabase ya no corre, así que va aparte y con OK de Carlo.
+
 ## F5 · Diseño
 
 - **Secciones:** barra negra (como el menú) con la sección activa en crema, icono y descripción. En móvil es una

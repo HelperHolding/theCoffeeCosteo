@@ -22,7 +22,7 @@ import { useLectura } from './use-lectura';
 const COBERTURA = {
   incluidas: { color: AZUL.fuerte, nombre: 'Entran al consumo' },
   tamano: { color: '#eda100', nombre: 'Tamaño sin verificar' },
-  personalizacion: { color: '#e87ba4', nombre: 'Con personalización que cambia la receta' },
+  personalizacion: { color: '#e87ba4', nombre: 'Con personalización aún sin calcular' },
   receta: { color: '#6250d6', nombre: 'Receta sin cantidades para ese tamaño' },
   sinEnlace: { color: '#a39e94', nombre: 'Código sin receta enlazada' },
   sinCodigo: { color: '#c9c4ba', nombre: 'Sin código (nombre ambiguo)' },
@@ -68,7 +68,7 @@ export function cantidad(x: number, unidad: string) {
 
 const MOTIVOS: Record<MotivoExcluido, string> = {
   tamano: 'tamaño sin verificar',
-  personalizacion: 'con personalización',
+  personalizacion: 'con personalización sin calcular',
   receta: 'sin cantidades para el tamaño',
 };
 
@@ -174,6 +174,8 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
             <strong className="text-ink">{porcentaje(c.sobreTotal)}</strong> de todas (A) y{' '}
             <strong className="text-ink">{porcentaje(c.sobreIdentificable)}</strong> de las identificables (B
             = A − Generic).
+            {c.ajustadas > 0 &&
+              ` ${numero(c.ajustadas)} de ellas con una personalización que cambia la receta, ya calculada (p. ej. deslactosada en lugar de entera).`}
           </span>
         </p>
         <div
@@ -234,9 +236,10 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
         <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
           <li>
             Una línea del POS es una unidad. Entra si su código tiene receta enlazada, su tamaño está
-            verificado para esa receta y sus personalizaciones no cambian la receta (la misma lista revisada
-            que usa Costeo: temperatura, «sin miel», la leche de la receta, entre otras). Un cambio de leche o
-            un shot extra aún no se calcula: esa unidad queda fuera completa.
+            verificado para esa receta y cada personalización es neutra o tiene su ajuste calculado: las
+            mismas listas revisadas que usa Costeo. Ejemplos: «Lactose free» descuenta deslactosada en lugar
+            de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Shots,
+            miel, leches vegetales y lo demás aún no se calculan: esa unidad queda fuera completa.
           </li>
           <li>
             Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni
@@ -256,7 +259,7 @@ function Leches({ leches }: { leches: RespuestaConsumo['insumos'] }) {
   return (
     <Tarjeta
       titulo="Leche por tipo"
-      descripcion="La leche que piden las recetas base. Los cambios de leche pedidos como personalización no están aquí (esas unidades quedan fuera)."
+      descripcion="La leche que piden las recetas, con «Lactose free» ya como deslactosada. Las leches vegetales pedidas como personalización aún no se calculan (esas unidades quedan fuera)."
     >
       {orden.length === 0 ? (
         <p className="text-sm text-muted-foreground">

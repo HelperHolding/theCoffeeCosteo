@@ -11,6 +11,7 @@ vi.mock('next/link', () => ({
 }));
 
 import { consumir, claveConsumo, type DatosConsumo } from '../../lib/sucursales/consumo';
+import { claveCosto, costear, type DatosCosteo } from '../../lib/sucursales/costeo';
 import { normalizar } from '../../lib/sucursales/normalizar';
 import { configDe } from '../../lib/sucursales/config';
 import { periodoDeUrl, rango } from '../../lib/sucursales/periodo';
@@ -113,6 +114,98 @@ describe('consumo teórico según receta', () => {
     expect(cantidad(360, 'ml')).toBe('360 ml');
     expect(cantidad(2500, 'gr')).toBe('2.5 kg');
     expect(cantidad(4.5, 'pza')).toBe('4.5 pza');
+  });
+});
+
+describe('ajustes de personalizaciones (etapa 1b, migración 27)', () => {
+  const DESLAC = { insumoId: 'ld', insumo: 'LECHE DESLACTOSADAS', unidad: 'ml', categoria: 'LECHE' };
+  const conAjustes: DatosConsumo = {
+    ...datos,
+    lineas: new Map([
+      [
+        claveConsumo(IL, 'Chica'),
+        [
+          { insumo: 'LECHE ENTERA', cantidad: 180 },
+          { insumo: 'CAFÉ', cantidad: 18 },
+        ],
+      ],
+    ]),
+    sustitutos: new Map([['LECHE DESLACTOSADAS', DESLAC]]),
+  };
+  const lactosa = () => ps([linea('5IL', 'Iced Latte', ['Regular - 440ml', 'Lactose free'])]);
+
+  it('«Lactose free» descuenta deslactosada en lugar de entera, con la misma cantidad', () => {
+    const p = lactosa();
+    const r = consumir(p, conAjustes, p);
+    expect(r.cobertura).toMatchObject({ incluidas: 1, ajustadas: 1 });
+    expect(r.insumos.map((i) => [i.insumo, i.cantidad])).toEqual([
+      ['CAFÉ', 18],
+      ['LECHE DESLACTOSADAS', 180],
+    ]);
+  });
+
+  it('sin la migración 27 (sin líneas directas) la unidad sigue fuera, como antes', () => {
+    const p = lactosa();
+    expect(consumir(p, datos, p).cobertura).toMatchObject({
+      incluidas: 0,
+      excluidas: { personalizacion: 1 },
+    });
+  });
+
+  it('sin ajuste verificado (Oatmilk) queda fuera; sin datos del insumo nuevo, también', () => {
+    const oat = ps([linea('5IL', 'Iced Latte', ['Regular - 440ml', 'Oatmilk'])]);
+    expect(consumir(oat, conAjustes, oat).cobertura.excluidas.personalizacion).toBe(1);
+    const p = lactosa();
+    const sinSustituto = { ...conAjustes, sustitutos: new Map() };
+    expect(consumir(p, sinSustituto, p).cobertura.excluidas.personalizacion).toBe(1);
+  });
+
+  it('Costeo y Consumo dejan dentro las mismas unidades (misma regla)', () => {
+    const p = [
+      ...lactosa(),
+      ...ps([
+        linea('5IL', 'Iced Latte', ['Regular - 440ml']),
+        linea('5IL', 'Iced Latte', ['Regular - 440ml', 'Oatmilk']),
+        linea('5IL', 'Iced Latte', ['Large - 600ml', 'Lactose free']),
+      ]),
+    ];
+    const costeo: DatosCosteo = {
+      leidoEn: datos.leidoEn,
+      iva: 0.16,
+      enlaces: datos.enlaces,
+      unicas: datos.unicas,
+      costos: new Map([[claveCosto(IL, 'Chica'), { costoCent: 1500, usaInactivo: false }]]),
+      lineas: new Map([
+        [
+          claveCosto(IL, 'Chica'),
+          [
+            {
+              lineaId: 'l1',
+              insumoId: 'le',
+              insumo: 'LECHE ENTERA',
+              unidad: 'ml',
+              cantidad: 180,
+              costoUnitario: 0.02,
+              activo: true,
+            },
+            {
+              lineaId: 'l2',
+              insumoId: 'cf',
+              insumo: 'CAFÉ',
+              unidad: 'gr',
+              cantidad: 18,
+              costoUnitario: 0.4,
+              activo: true,
+            },
+          ],
+        ],
+      ]),
+      sustitutos: new Map([['LECHE DESLACTOSADAS', { costoUnitario: 0.03, activo: true }]]),
+    };
+    const c = costear(p, costeo, p).resumen;
+    const r = consumir(p, conAjustes, p).cobertura;
+    expect(r.incluidas).toBe(c.completo.lineas);
+    expect(r.incluidas).toBe(2);
   });
 });
 
