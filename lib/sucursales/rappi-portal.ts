@@ -133,8 +133,11 @@ export function construirRappiPortal(r: RpcRappiPortal, desde: string, hasta: st
     }
     if (p.clase !== 'terminado') continue;
     for (const x of p.productos) {
+      // La tienda normal y la Turbo escriben distinto el mismo producto («Crea tu» / «Crea Tu»): se agrupa sin
+      // distinguir mayúsculas y se muestra el primer nombre visto.
       const nombre = nombreRappi(x.nombre);
-      const e = productos.get(nombre) ?? {
+      const clave = nombre.toLocaleLowerCase('es-MX');
+      const e = productos.get(clave) ?? {
         nombre,
         unidades: 0,
         ventaCent: 0,
@@ -148,12 +151,12 @@ export function construirRappiPortal(r: RpcRappiPortal, desde: string, hasta: st
       for (const o of x.opciones) {
         const categoria = nombreRappi(o.categoria).replace(/\.$/, '');
         const descripcion = nombreRappi(o.descripcion);
-        const k = `${categoria}\u0000${descripcion}`;
+        const k = `${categoria}\u0000${descripcion}`.toLocaleLowerCase('es-MX');
         const op = e._opc.get(k) ?? { categoria, descripcion, veces: 0 };
         op.veces += x.unidades * Math.max(1, o.unidades);
         e._opc.set(k, op);
       }
-      productos.set(nombre, e);
+      productos.set(clave, e);
     }
   }
   const faltantes = r.conteos
