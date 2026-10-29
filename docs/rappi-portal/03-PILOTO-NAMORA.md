@@ -79,6 +79,20 @@ tiendas). Cada sucursal tiene su tienda normal y su tienda Turbo. Las marcas y s
 - **Sin probar todavía con el portal real:** el login automático y la lectura dentro del contenedor. Se prueban en el
   paso 3 del README, en el servidor.
 
+## Ensayo de la migración 28 en producción (2026-10-29, con ROLLBACK)
+
+Archivo exacto del commit, en una transacción revertida. No hace falta respaldo: la migración solo crea objetos y no modifica ninguno.
+
+| Comprobación                               | Resultado                                                                                                                       |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Antes                                      | 0 tablas `rappi_*`, 0 funciones, 27 migraciones (última `20261028000027`)                                                       |
+| Dentro                                     | 6 tablas, 3 funciones; tiendas de Namóra `MX1930270777` (normal) y `MX1930301156` (Turbo)                                       |
+| `rappi_importar` como `service_role`       | Un pedido sintético: `nuevos 1`                                                                                                 |
+| Lectura como Carlos y como Dione (con 513) | 2 tiendas, 1 pedido, 1 conteo                                                                                                   |
+| Lectura como Areli (sin 513)               | `null`                                                                                                                          |
+| Privilegios                                | anon: nada. authenticated: sin tablas ni `rappi_importar`; sí `sucursales_rappi_portal`. service_role: tablas y ambas funciones |
+| Conexión nueva después                     | 0 tablas, 0 funciones, 27 migraciones: no persistió nada                                                                        |
+
 ## Pendiente (cada uno con OK de Carlo)
 
 1. Crear el usuario del lector en Rappi y ponerlo en el `.env` del servidor.
