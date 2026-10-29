@@ -70,10 +70,18 @@ describe('acompañamientos de Rappi → personalizaciones del POS', () => {
     expect(opcionPos('Vainilla', 'Medio', '1IC')).toBe('Average Vanilla (15ml)');
   });
 
-  it('sin equivalencia conserva el texto de Rappi (no calculado); los descriptivos se omiten', () => {
+  it('creamer de Pumpkin (solo Rappi): cantidad total, como la vainilla con ml', () => {
     expect(opcionPos('Ajusta tu creamer', 'Medio - 30 ml de creamer', 'CPUMLAAPP')).toBe(
-      'Ajusta tu creamer: Medio - 30 ml de creamer',
+      'Average Creamer (30ml)',
     );
+    expect(opcionPos('Ajusta tu creamer', 'Mas - 40 ml de creamer', 'CPUMLAAPP')).toBe('More Creamer (40ml)');
+    expect(opcionPos('Ajusta tu creamer', 'Menos - 20 ml de creamer', 'CPUMLAAPP')).toBe(
+      'Less Creamer (20ml)',
+    );
+  });
+
+  it('sin equivalencia conserva el texto de Rappi (no calculado); los descriptivos se omiten', () => {
+    expect(opcionPos('Coco Vainilla', 'Promedio', 'SOLAAUAPP')).toBe('Coco Vainilla: Promedio');
     expect(opcionPos('Vainilla', 'Medio', 'CPUMLAAPP')).toBe('Vainilla: Medio');
     expect(opcionPos('Personaliza tu Iced Latte', 'Iced Latte', 'MISICEDAPP')).toBeNull();
   });
@@ -94,13 +102,29 @@ describe('líneas de un producto de Rappi', () => {
     );
     expect(ls).toHaveLength(3);
     expect(ls.every((l) => l.codigo === '2VLT' && l.nombre === 'Vainilla Latte')).toBe(true);
-    expect(nombres(ls[0].customs)).toEqual(['Oatmilk', 'Average Vanilla (10ml)']);
+    expect(nombres(ls[0].customs)).toEqual(['Oatmilk', 'Average Vanilla (10ml)', 'Large - 355ml']);
     const total = ls.reduce(
       (s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0),
       0,
     );
     expect(total).toBe(24801);
     expect(ls.map((l) => l.customs[0].importeCent)).toEqual([566, 566, 568]);
+  });
+
+  it('las bebidas que Rappi vende sin tamaño son las grandes, con el vaso Large del POS', () => {
+    expect(nombres(lineasDe(producto('Americano', 69, [['Leche', 'Sin Leche']]))[0].customs)).toEqual([
+      'No Milk (Americano)',
+      'Large - 355ml',
+    ]);
+    expect(nombres(lineasDe(producto('Taro Frappé', 122, [['Leche.', 'Entera']]))[0].customs)).toEqual([
+      'Milk',
+      'Large - 600ml',
+    ]);
+    // Si Rappi sí manda el tamaño, manda Rappi; un producto fuera de la lista no recibe vaso.
+    expect(
+      nombres(lineasDe(producto('Americano', 69, [['Elige el tamaño', 'Tradicional 240 ml']]))[0].customs),
+    ).toEqual(['Regular - 240ml']);
+    expect(lineasDe(producto('Cold Drip V60', 75))[0].customs).toEqual([]);
   });
 
   it('un producto sin equivalencia queda con un código que nunca es del POS', () => {
@@ -280,5 +304,69 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     const avena = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
     expect(costear(avena, costeo).resumen.parcial.motivos.personalizacion).toBe(1);
     expect(consumir(avena, consumo).cobertura.excluidas.personalizacion).toBe(1);
+  });
+});
+
+describe('Pumpkin Latte de Rappi (grande, con creamer)', () => {
+  const PL = '170be377-ff76-4bbc-b6d5-85cd9708b21c'; // Pumpkin Latte: 30 ml de creamer en Chica y Grande
+  const PIL = '38847fe5-2d6f-4050-9fd7-aa94bb3d4024'; // Pumpkin Iced Latte: 40 ml (Rappi dice Medio = 30 ml)
+  const linea = (insumo: string, cantidad: number, costoUnitario: number) => ({
+    lineaId: insumo,
+    insumoId: insumo,
+    insumo,
+    unidad: 'ml',
+    cantidad,
+    costoUnitario,
+    activo: true,
+  });
+  const datos: DatosCosteo = {
+    leidoEn: '2026-10-29T00:00:00.000Z',
+    iva: 0.16,
+    enlaces: new Map([
+      ['CPUMLAAPP', { recetaId: PL, receta: 'Pumpkin Latte' }],
+      ['CPUMICAPP', { recetaId: PIL, receta: 'Pumpkin Iced Latte' }],
+    ]),
+    costos: new Map([
+      [claveCosto(PL, 'Grande'), { costoCent: 2368, usaInactivo: false }],
+      [claveCosto(PIL, 'Grande'), { costoCent: 2759, usaInactivo: false }],
+    ]),
+    unicas: new Set(),
+    lineas: new Map([
+      [
+        claveCosto(PL, 'Grande'),
+        [linea('CHOBANI D.CREAMER PUMPKIN SPICE', 30, 0.25), linea('LECHE ENTERA', 220, 0.022)],
+      ],
+      [
+        claveCosto(PIL, 'Grande'),
+        [linea('CHOBANI D.CREAMER PUMPKIN SPICE', 40, 0.25), linea('LECHE ENTERA', 250, 0.022)],
+      ],
+    ]),
+  };
+  const pumpkin = (creamer: string, nombre = 'Pumpkin Latte', tamano: [string, string][] = []) =>
+    costear(
+      [
+        pedidoRappiAPos(
+          pedido('1', 'finished', [
+            producto(nombre, 122, [['Leche.', 'Entera'], ['Ajusta tu creamer', creamer], ...tamano]),
+          ]),
+        )!,
+      ],
+      datos,
+    ).resumen;
+
+  it('sin tamaño en Rappi es Grande; leche entera y creamer Medio son la receta', () => {
+    expect(pumpkin('Medio - 30 ml de creamer').completo).toMatchObject({ lineas: 1, costoCent: 2368 });
+  });
+
+  it('Más y Menos creamer cambian la cantidad total sobre la receta', () => {
+    expect(pumpkin('Mas - 40 ml de creamer').completo.costoCent).toBe(2368 + 250);
+    expect(pumpkin('Menos - 20 ml de creamer').completo.costoCent).toBe(2368 - 250);
+  });
+
+  it('Pumpkin Iced Latte: el creamer queda pendiente (la receta lleva 40 ml, Rappi dice Medio = 30 ml)', () => {
+    const r = pumpkin('Medio - 30 ml de creamer', 'Pumpkin Iced Latte', [
+      ['Elige el tamaño', 'Grande 590 ml'],
+    ]);
+    expect(r.parcial.motivos.personalizacion).toBe(1);
   });
 });

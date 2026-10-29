@@ -2,7 +2,9 @@
  * Personalizaciones del POS que NO cambian el costo de la receta de Costeo (docs/conciliacion-brasil/33). Una línea con
  * personalizaciones solo es de costeo completo si TODAS están aquí para su receta (o son de temperatura).
  * Lista explícita por receta, NUNCA una regla global: «lo que cuesta $0 no cambia la receta» sería falso (el shot
- * sencillo cuesta $0 y lleva menos café). Cada par se verificó contra la receta vigente el 2026-10-28.
+ * sencillo cuesta $0 y lleva menos café). Cada par se verificó contra la receta vigente el 2026-10-28; los «Milk» de
+ * los pedidos de Rappi (que siempre mandan la leche, también la entera), el 2026-10-29: leche entera directa en todos
+ * los tamaños de la receta (docs/rappi-portal/04).
  * Las que cambian un insumo o su cantidad van aparte, en PERSONALIZACIONES_AJUSTADAS (etapa 1b, doc 35): el costeo
  * calcula la diferencia con las líneas de la receta y el costo de los insumos. Cambiar estas listas exige evidencia,
  * como un lote.
@@ -32,6 +34,10 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
     'Ground (V60)', // grano o molido, misma bolsa
     'In Grains', // grano o molido, misma bolsa
   ],
+  // Chai Frap
+  'a00da002-92a3-4a48-ab47-b62ee9aa6a13': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Chai Iced Latte
   '130033f6-dd70-4178-8366-945ea9674199': [
     'Milk', // leche entera, la de la receta
@@ -40,7 +46,12 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Chai Latte
   '5153b158-4329-4ffd-9e79-9cc9d4f06a2a': [
+    'Milk', // leche entera, la de la receta
     'Without Honey', // la receta no lleva miel
+  ],
+  // Coffee Frap
+  'ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf': [
+    'Milk', // leche entera, la de la receta
   ],
   // Cold brew
   '00f47aba-88e6-4ebc-a815-5833f8b29871': [
@@ -54,6 +65,10 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Croissant filled with cheese and ham
   '4ac9187c-fdaf-4678-8e91-7ead2d596c9b': [
     'Without Chipotle Mayo', // la receta no lleva mayonesa
+  ],
+  // Flat Caramel
+  'f33b95a8-a338-4009-8c03-42edfd81bb6a': [
+    'Milk', // leche entera, la de la receta
   ],
   // Gelato Frappé Chai
   '0252e4e5-3d19-49c1-9f01-2b0f72c1e21b': [
@@ -83,6 +98,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Iced Chocolate
   'c55e8b1f-300e-42f7-9c4a-f57b038c987e': [
+    'Milk', // leche entera, la de la receta
     'With Sprinkles', // la receta ya lleva 4 g de chips de chocolate
     'Without Coffee', // la receta no lleva café
   ],
@@ -90,6 +106,10 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': [
     'Milk', // leche entera, la de la receta
     'Without Honey', // la receta no lleva miel
+  ],
+  // Iced Latte + Ham & Cheese Sandwich
+  'e95e45e9-b5fc-4d10-ab5c-170e13cedf15': [
+    'Milk', // leche entera, la de la receta
   ],
   // Iced Vanilla
   '15556232-34f4-490e-a9b7-0c01998bc4c1': [
@@ -120,22 +140,49 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   '4255bb6b-1a50-42a4-896d-d3f424b6ceab': [
     'Without Honey', // la receta no lleva miel
   ],
+  // Mad Mocha
+  'da45b5bd-3eca-452e-a18e-5a558e4dc517': [
+    'Milk', // leche entera, la de la receta
+  ],
+  // Matcha Frap
+  'bb72c7a6-d900-4d47-bf56-4a74654ccf4b': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Matcha Iced Latte
   '9756eec9-1f09-45ee-a45b-21ac8c54bb22': [
     'Milk', // leche entera, la de la receta
     'Without Honey', // la receta no lleva miel
     'Without White Sprinkles', // la receta no lleva chispas blancas
   ],
+  // Matcha Iced Latte + Lemon Cake
+  'a1455ee0-cb6d-4195-bd11-01660fc56cb3': [
+    'Milk', // leche entera, la de la receta
+  ],
+  // Matcha Iced Mint
+  '4b651700-0745-42fe-8e78-7b44dbdb66ee': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Matcha Latte
   'c7ca994c-897c-45d7-a62f-a7ba2f66bbce': [
+    'Milk', // leche entera, la de la receta
     'Without Honey', // la receta no lleva miel
   ],
   // Matcha Vanilla Latte
   '3f7f8456-b0a4-49fd-be25-32c1f4b0e17c': [
     'Average Vanilla (10ml)', // la receta lleva 10 ml de vainilla
+    'Milk', // leche entera, la de la receta
   ],
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': [
+    'Milk', // leche entera, la de la receta
+  ],
+  // Pumpkin Latte
+  '170be377-ff76-4bbc-b6d5-85cd9708b21c': [
+    'Average Creamer (30ml)', // solo Rappi: la receta lleva 30 ml de creamer (Medio, Carlo 2026-10-29)
+    'Milk', // leche entera, la de la receta
+  ],
+  // Pumpkin Spice Frap
+  '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': [
     'Milk', // leche entera, la de la receta
   ],
   // Pure Black (Double Shot)
@@ -147,13 +194,23 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   '7867787b-4957-485c-822b-3106558d33a1': [
     'Milk', // leche entera, la de la receta
   ],
+  // Salted Caramel Frap
+  '052a61f6-55ff-4ac8-9459-ab4939789420': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Sora Iced Latte (Signature)
   '087d714a-45ca-44da-a3ad-55ce92a2bccb': [
+    'Milk', // leche entera, la de la receta
     'Original Coco Vanilla Flavor (15ml)', // sabor de la receta
   ],
   // Sora Latte (Signature)
   '2cc57a88-1966-4f7d-9604-461978c7c252': [
+    'Milk', // leche entera, la de la receta
     'Original Coco Vanilla Flavor (10ml)', // sabor de la receta
+  ],
+  // Taro Frap
+  '817fe3be-7d8b-49be-8e1a-6acde12ccb1c': [
+    'Milk', // leche entera, la de la receta
   ],
   // Totebags
   '96e85958-1f5a-44cf-98d7-acd7c7d8102c': [
@@ -163,6 +220,10 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   'a96339d6-80e7-440b-a33b-bca51440d8e6': [
     'Milk', // leche entera, la de la receta
     'Without Honey', // la receta no lleva miel
+  ],
+  // True White + Croissant filled with cheese and ham
+  'fd4c5628-6681-47dd-ab01-2d0de8ae6d28': [
+    'Milk', // leche entera, la de la receta
   ],
   // Tumbler (240ml)
   '7962a115-d69b-4b9d-afa8-8eb753b077ab': [
@@ -178,9 +239,14 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   '74e9cffe-f459-42a5-ac57-4e58277ad8f7': [
     'Transparent Umbrella', // color; un solo insumo
   ],
+  // Urban Chocolate
+  '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Vanilla Latte
   '1183a781-40b8-4654-9f49-92d317873907': [
     'Average Vanilla (10ml)', // la receta lleva 10 ml de vainilla
+    'Milk', // leche entera, la de la receta
   ],
   // White bag 250g
   '5ce9b244-40e2-4153-92b8-7c5dc38968d4': [
@@ -206,6 +272,7 @@ const JENGIBRE = 'JARABE DE JENGIBRE 1 LT (3 PZAS)';
 const GRANO_BLACK = 'CAFÉ TOSTADO EN GRANO BLACK 1.5 KG';
 const GRANO_WHITE = 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG';
 const GRANO_KRAFT = 'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG';
+const CREAMER_PUMPKIN = 'CHOBANI D.CREAMER PUMPKIN SPICE';
 const DESLACTOSADA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: DESLACTOSADA } };
 
 /**
@@ -325,6 +392,9 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Pumpkin Latte
   '170be377-ff76-4bbc-b6d5-85cd9708b21c': {
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    // Solo Rappi («Ajusta tu creamer», rappi-pos.ts): la receta lleva 30 ml en Chica y Grande (= Medio, Carlo).
+    'Less Creamer (20ml)': { cantidad: { insumo: CREAMER_PUMPKIN, valor: 20 } },
+    'More Creamer (40ml)': { cantidad: { insumo: CREAMER_PUMPKIN, valor: 40 } },
   },
   // Pumpkin Spice Frap
   '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': {

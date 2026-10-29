@@ -1,3 +1,4 @@
+import { ES_TAMANO } from './metricas';
 import type { CustomNormal, LineaNormal, PedidoNormal } from './normalizar';
 import type { PedidoRappi, ProductoRappi } from './rappi-portal';
 
@@ -120,6 +121,29 @@ const VASOS: Readonly<Record<string, string>> = {
   'grande 590 ml': 'Large - 600ml',
   'grande 355 ml': 'Large - 355ml',
 };
+/**
+ * Bebidas que Rappi vende sin opción de tamaño: son las grandes (Carlo, 2026-10-29). El vaso es el Large que usa el POS
+ * de Namóra para ese producto (1 al 28 de octubre): 355 ml en las calientes y 600 ml en los frappés. Cold Drip V60 no
+ * está: en el POS no lleva vaso.
+ */
+export const VASO_UNICO_RAPPI: Readonly<Record<string, string>> = {
+  americano: 'Large - 355ml',
+  'chai latte': 'Large - 355ml',
+  'flat caramel': 'Large - 355ml',
+  'mad mocha': 'Large - 355ml',
+  'matcha latte': 'Large - 355ml',
+  'matcha vanilla latte': 'Large - 355ml',
+  'pumpkin latte': 'Large - 355ml',
+  'sora latte': 'Large - 355ml',
+  'urban chocolat': 'Large - 355ml',
+  'vainilla latte': 'Large - 355ml',
+  'chai frappé': 'Large - 600ml',
+  'coffee frappé': 'Large - 600ml',
+  'matcha frappé': 'Large - 600ml',
+  'pumpkin spice frap': 'Large - 600ml',
+  'salted caramel frappé': 'Large - 600ml',
+  'taro frappé': 'Large - 600ml',
+};
 const LECHES: Readonly<Record<string, string>> = {
   entera: 'Milk',
   deslactosada: 'Lactose free',
@@ -168,6 +192,13 @@ const CATEGORIAS: Readonly<Record<string, (d: string, codigo: string) => string 
   'con mayonesa de chipotle': (d) =>
     ({ 'con mayonesa chipotle': 'Chipotle Mayo', 'sin mayonesa chipotle': 'Without Chipotle Mayo' })[d],
   agua: (d) => ({ 'con tónica tradicional': 'Traditional Tonic' })[d],
+  // Solo existe en Rappi (Pumpkin): cantidad total de creamer, como la vainilla con ml del POS.
+  'ajusta tu creamer': (d) =>
+    ({
+      'medio - 30 ml de creamer': 'Average Creamer (30ml)',
+      'mas - 40 ml de creamer': 'More Creamer (40ml)',
+      'menos - 20 ml de creamer': 'Less Creamer (20ml)',
+    })[d],
   // Combo del POS «Iced Latte + Ham & Cheese Sandwich»: solo nombran sus partes fijas.
   'personaliza tu iced latte': () => null,
   'personaliza tu sandwich': () => null,
@@ -238,7 +269,12 @@ export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea
         customs: customs(x.opciones, codigoParte, parte.personaliza).map((c) => ({ ...c, importeCent: 0 })),
       };
     });
-  } else lineaCustoms = customs(x.opciones, codigo);
+  } else {
+    lineaCustoms = customs(x.opciones, codigo);
+    const vaso = VASO_UNICO_RAPPI[clave];
+    if (vaso && !lineaCustoms.some((c) => ES_TAMANO.test(c.nombre)))
+      lineaCustoms.push({ codigo: 'RAPPI', nombre: vaso, importeCent: 0, descuentoPct: 0 });
+  }
   // Una línea por unidad; la última absorbe el redondeo, así que Σ líneas = precio del renglón.
   const n = Math.max(1, x.unidades);
   const repartir = (total: number) =>

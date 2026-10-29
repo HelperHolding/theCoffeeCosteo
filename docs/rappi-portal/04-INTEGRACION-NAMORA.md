@@ -10,6 +10,10 @@ las demás sucursales de Guadalajara. Decisiones de Carlo:
   de cada parte.
 - **Tamaños:** Grande 590 ml = Large 600 ml. Tradicional y Mediano 440 ml = Regular 440 ml. Tradicional 240 ml = Regular
   240 ml. Grande 355 ml = Large 355 ml.
+- **Bebidas que Rappi vende sin opción de tamaño:** son las grandes. El vaso es el Large que usa el POS de Namóra para
+  ese producto: 355 ml en las calientes y 600 ml en los frappés.
+- **Creamer de Pumpkin:** la receta lleva el «Medio».
+- **Pan de Muerto, Cookie Matcha, Spooky Biscuits y Triple Frap:** no tienen receta. Quedan «sin enlace».
 
 No hay migración. Todo se lee de lo que el cron ya guarda (`sucursales_rappi_portal`, migración 28).
 
@@ -95,7 +99,40 @@ Los tres combos del POS (`MISICEDAPP`, `TRWCROAPP`, `MATLEMAPP`) son los mismos 
 | Caramelo salado                         | Medio / Más / Menos → `Average` / `More` / `Less Salted Caramel (cold)`                                                                                        |
 | Caramelo · Jengibre · Menta             | `Average Caramelo (hot)` · `Average Gengibre (Black Ginger)` · `Average` / `Less` / `More Mint`                                                                |
 | Chispitas · Mayonesa · Agua             | `With` / `Without Sprinkles` · `Chipotle Mayo` / `Without Chipotle Mayo` · `Traditional Tonic`                                                                 |
+| Ajusta tu creamer (solo Rappi)          | Medio 30 ml → `Average Creamer (30ml)`; Más 40 ml → `More Creamer (40ml)`; Menos 20 ml → `Less Creamer (20ml)`                                                 |
 | Personaliza tu Iced Latte / tu Sandwich | Se omite: solo nombra las partes fijas del combo del POS                                                                                                       |
+
+### Bebidas sin opción de tamaño en Rappi
+
+Son las grandes, según Carlo. Rappi no manda vaso, así que se agrega el Large que usa el POS de Namóra para ese producto.
+Evidencia: los vasos del POS del 1 al 28 de octubre. Cada producto usa un solo Large.
+
+- **`Large - 355ml`:** Americano, Chai Latte, Flat Caramel, Mad Mocha, Matcha Latte, Matcha Vanilla Latte, Pumpkin
+  Latte, Sora Latte, Urban Chocolat y Vainilla Latte.
+- **`Large - 600ml`:** Chai Frappé, Coffee Frappé, Matcha Frappé, Pumpkin Spice Frap, Salted Caramel Frappé y Taro
+  Frappé.
+
+Si un pedido sí trae tamaño, manda el de Rappi. Cold Drip V60 no está en la lista porque en el POS no lleva vaso. El
+Grande del Chai Frap sigue sin verificar (doc 26), igual que en el POS.
+
+### Reglas de personalización que agregó Rappi
+
+Viven en `lib/sucursales/personalizaciones-verificadas.ts`. Se verificaron contra las líneas vigentes de cada receta el
+2026-10-29.
+
+- **`Milk` es neutra** en 21 recetas más. Rappi siempre manda la leche, también la entera; el POS casi nunca la
+  escribe. Solo se agregó donde la receta lleva leche entera directa en todos sus tamaños:
+  - frappés: Chai Frap, Coffee Frap, Matcha Frap, Pumpkin Spice Frap, Salted Caramel Frap y Taro Frap;
+  - calientes: Chai Latte, Flat Caramel, Mad Mocha, Matcha Latte, Matcha Vanilla Latte, Pumpkin Latte, Sora Latte,
+    Urban Chocolate y Vanilla Latte;
+  - fríos: Iced Chocolate, Matcha Iced Mint y Sora Iced Latte;
+  - combos: Iced Latte + Ham & Cheese, Matcha Iced Latte + Lemon Cake y True White + Croissant.
+
+  En el Americano, «Leche: Entera» agrega leche, así que no es neutra.
+
+- **Creamer en Pumpkin Latte:** la receta lleva 30 ml de `CHOBANI D.CREAMER PUMPKIN SPICE` en Chica y Grande.
+  - Medio (30 ml) es neutra.
+  - Más y Menos dejan 40 y 20 ml en total.
 
 ## Cobertura medida: 1 al 28 de octubre
 
@@ -109,41 +146,40 @@ completas» son las unidades que suman a Costeo completo y a Consumo; las dos us
 | Unidades                               | 2,515    | 1,131    | 3,646    |
 | Con receta                             | 2,377    | 1,095    | 3,472    |
 | Sin enlace                             | 134      | 36       | 170      |
-| Fuera por tamaño sin verificar         | 93       | 310      | 403      |
-| Fuera por personalización no calculada | 1,622    | 618      | 2,240    |
-| **Entran completas**                   | **662**  | **167**  | **829**  |
-| Venta de lo que entra completo         | $50,629  | $14,794  | $65,423  |
+| Fuera por tamaño sin verificar         | 93       | 70       | 163      |
+| Fuera por personalización no calculada | 1,622    | 790      | 2,412    |
+| **Entran completas**                   | **662**  | **235**  | **897**  |
+| Venta de lo que entra completo         | $50,629  | $23,403  | $74,032  |
+| Costo de lo que entra completo         | $16,166  | $5,922   | $22,088  |
 
 - Los 680 pedidos de Rappi **cuadran**: la suma de sus unidades es igual a la venta del portal.
+- **Antes y después de las respuestas de Carlo:**
+  - fuera por tamaño en Rappi: bajó de 310 a 70;
+  - unidades de Rappi que entran completas: subieron de 167 a 235.
+
+  Lo que queda fuera por tamaño en Rappi es lo mismo que en el POS:
+  - Matcha Iced Mint (24) no tiene tamaño verificado (E1);
+  - los combos del POS (41) tampoco;
+  - Chai Frap Grande (3), Cold Drip V60 (1) y un «Crea tu The Coffee».
+
+- Ahora lo que más deja fuera es el **shot** («Double» o «Single»). Rappi lo manda siempre, y el POS lo escribe en 120 de
+  160 Iced Latte. Le siguen la miel y la mayonesa de chipotle. Es la etapa 2 de personalizaciones, pendiente.
 - Los 131 «Crea tu The Coffee» tienen todas sus partes enlazadas: 116 Iced Latte y 15 True White, con 94 croissants y
-  37 sándwiches de tres quesos. Ninguno entra completo. 130 quedan fuera por el shot, la miel o la mayonesa de
-  chipotle, y uno por el tamaño. Son las mismas personalizaciones que dejan fuera al Iced Latte del POS: el POS escribe
-  igual el shot y la miel (120 de 160 Iced Latte llevan «Double shot (36ml)»). Es la etapa 2 de personalizaciones,
-  pendiente.
+  37 sándwiches de tres quesos. Ninguno entra completo: casi todos quedan fuera por el shot, la miel o la mayonesa de
+  chipotle, y uno por el tamaño.
 
-## Pendiente: preguntas para Carlo
+## Pendiente
 
-1. **Tamaño de las bebidas que en Rappi no tienen opción de tamaño (245 de las 310 unidades fuera por tamaño).** Rappi
-   vende un solo tamaño de:
-   - Pumpkin Latte (66), Americano (54), Vainilla Latte (25);
-   - Coffee Frappé (17), Salted Caramel Frappé (17), Taro Frappé (12), Pumpkin Spice Frap (11), Matcha Frappé (7),
-     Chai Frappé (3);
-   - Urban Chocolat (9), Chai Latte (5), Matcha Latte (4), Flat Caramel (4), Mad Mocha (3), Matcha Vanilla Latte (3),
-     Sora Latte (3), Cold Drip V60 (1) y un «Crea tu The Coffee».
-
-   Sin evidencia no se asume un vaso. ¿De qué vaso salen en Namóra? Con la respuesta se agrega su vaso fijo a la lista.
-   Las otras 65 quedan fuera igual que en el POS: Matcha Iced Mint (24) no tiene tamaño verificado (E1), y los combos
-   del POS (41) tampoco.
-
-2. **Creamer de Pumpkin** («Ajusta tu creamer»: Medio 30 ml, Más 40 ml y Menos 20 ml; 163 unidades). No existe en el
-   POS. ¿Cuánto creamer lleva la receta? Con eso se vuelve un ajuste verificado.
-3. **Productos sin receta (36 unidades):**
+1. **Creamer del Pumpkin Iced Latte (114 unidades).** La receta lleva 40 ml en Chica y Grande, pero el «Medio» de Rappi
+   dice 30 ml. En el Pumpkin Latte sí coinciden (30 ml). Falta confirmar si Medio es la receta (40 ml) o si la receta
+   del Iced debe bajar a 30 ml. Mientras tanto, sus tres opciones de creamer quedan fuera por personalización.
+2. **Productos sin receta (36 unidades), por decisión de Carlo:**
    - Pan de Muerto Tradicional (17) y Pan de Muerto con Glaseado de Naranja (13);
    - Cookie Matcha & White Chocolate (3), Spooky Biscuits (2) y Triple Frap (1).
 
-   El combo «Pan de Muerto + True White» depende de la receta del Pan de Muerto.
+   Quedan «sin enlace». El combo «Pan de Muerto + True White» también, porque no tiene receta para el pan.
 
-4. **Otros acompañamientos sin equivalencia:**
+3. **Otros acompañamientos sin equivalencia:**
    - «Café: Sin Café / Con Café» y «Café & Chai» (Chai);
    - «Coco Vainilla» (Medio, Más y Menos);
    - molido o grano y color del tumbler;
@@ -169,5 +205,7 @@ Rubén Darío ya tiene Rappi por la API del POS. Pasarla al portal es otra decis
   - una línea por unidad, con la suma igual al renglón;
   - los combos con partes y los cancelados fuera;
   - que `conRappi` suma, no repite y ordena;
-  - que Costeo y Consumo de un combo son la suma de sus partes.
-- `tsc` sin errores. La suite completa pasa (582 pruebas); solo falla `paridad`, como siempre.
+  - que Costeo y Consumo de un combo son la suma de sus partes;
+  - el vaso Large de las bebidas sin tamaño en Rappi;
+  - el creamer del Pumpkin Latte, y que el del Pumpkin Iced Latte sigue pendiente.
+- `tsc` sin errores. La suite completa pasa; solo falla `paridad`, como siempre.
