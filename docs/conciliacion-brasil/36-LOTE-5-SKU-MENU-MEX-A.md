@@ -1,6 +1,8 @@
 # 36 · Lote 5 de códigos POS: 23 SKU del menú «MEX - A» del portal del POS
 
-**Estado:** preparado el 2026-10-29, con manifiesto, pruebas y ensayo local. **Sin ensayo remoto y sin carga.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** preparado el 2026-10-29, con manifiesto, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **Sin carga.** Cargar requiere aprobación expresa de Carlo.
+
+**Otros menús del portal:** MEX - B (17), MEX - C (18) y NORTE (462) tienen exactamente los mismos 136 productos que MEX - A, con los mismos códigos, nombres y categorías (huella idéntica del listado). Solo cambian los precios; por ejemplo, el Americano cuesta $52 en A, $60 en B y NORTE, y $70 en C. No aportan SKU nuevos.
 
 ## Fuente
 
@@ -63,10 +65,21 @@ Mismo cargador de los lotes 1 a 4 (`enlaces-pos.ts`), sin cambios de lógica. So
 
 Los informes contienen el UUID del perfil y se guardan fuera del repo.
 
+## Respaldo y ensayo remoto (2026-10-29)
+
+Con el código de este PR en `0f34a1e`. **No se cargó nada.**
+
+| Paso | Resultado |
+|---|---|
+| **Respaldo lógico `2026-10-29T1558Z`** | Restaurado en una copia local aislada y comparado con producción: 21,566 filas. Políticas, funciones, membresías, secuencias y `v_resumen` bajo RLS, idénticas. `analytics_ventas_diarias` y `perfil_modulos` difieren solo en el md5 de texto: fila por fila en UTC son idénticas. `vault.secrets` no se restaura |
+| **Vigencia** | Justo antes del ensayo, producción coincidía con el respaldo: 72 enlaces, bitácora 805 filas (id máx. 1211) y ninguno de los 23 códigos cargado |
+| **Ensayo remoto** (ROLLBACK) | 23 altas, 23 registros propios y 0 ajenos, 0 problemas. Lotes 1–4 intactos antes y después (57/5/8/2) |
+| **Conexión nueva después** | 72 enlaces, bitácora 805/1211 y ninguno de los 23 códigos: no persistió nada |
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Respaldo lógico verificado por restauración.
-2. Ensayo remoto, que termina en ROLLBACK:
+1. ~~Respaldo lógico verificado~~ hecho (arriba).
+2. ~~Ensayo remoto con ROLLBACK~~ hecho (arriba):
    `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-5 --usuario <uuid-perfil>`
 3. Carga:
    `… --lote lote-5 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
