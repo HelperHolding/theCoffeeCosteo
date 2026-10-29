@@ -5,7 +5,11 @@
 - ejecución `ef6515ba…`;
 - bitácora #1415–1450.
 
-Falta el lote de enlaces (POS y Rappi), que requiere aprobación aparte.
+El **lote 7 de enlaces** (POS y Rappi) quedó **CARGADO a las 23:51 UTC**, también con aprobación de Carlo:
+
+- carga `9878fd97…`;
+- 98 → 101 enlaces;
+- bitácora #1454–1456.
 
 Fecha: 2026-10-29. Carlo pidió dejar con receta todos los productos que se venden, uno por uno, empezando por el Pan de
 Muerto. Lo que no tenía receta en las 13 sucursales configuradas, del 15 al 29 de octubre:
@@ -146,8 +150,7 @@ requiere aprobación.
 
 ## Lote 7 de enlaces: POS y Rappi
 
-**Estado:** preparado y ensayado en local. **Sin cargar**: el ensayo remoto y la carga requieren aprobación de Carlo
-(«Si prepáralo» autoriza solo prepararlo).
+**Estado:** **CARGADO en producción el 2026-10-29 a las 23:51 UTC.** Carlo aprobó el ensayo remoto y la carga («Si»).
 
 `39-lote-7.csv` y `39-lote-7.manifiesto.json` (sha256 `66630760…`), con el cargador de enlaces del doc 17. Requiere el
 lote 6, y por él los lotes 1 a 5: los 98 enlaces actuales deben seguir intactos.
@@ -185,8 +188,21 @@ errores, todos de `vault`. Las 13 tablas de Costeo son idénticas a producción.
 
 ### Procedimiento remoto (cada paso requiere aprobación)
 
-1. Ensayo remoto con ROLLBACK:
+1. ~~Ensayo remoto con ROLLBACK~~ (hecho a las 23:51 UTC, limpio). Antes se comprobó que producción no había cambiado
+   desde el respaldo `2340`: 98 enlaces, 177 recetas y la bitácora hasta #1450.
    `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-7 --usuario <uuid-perfil>`
-2. Cargar: `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
-3. Verificar con una conexión nueva y repetir el ensayo («sin cambio»).
+2. ~~Cargar~~ (hecho):
+   `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+3. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
 4. Merge del PR: el traductor de Rappi empieza a usar los dos códigos.
+
+| Paso           | Resultado                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Ensayo remoto  | 3 altas y 0 problemas; los 98 previos intactos; 3 registros propios y 0 ajenos; ROLLBACK        |
+| Carga          | Lo mismo, con COMMIT                                                                            |
+| Conexión nueva | 101 enlaces. Los 3 nuevos tienen la receta y el nombre observado del lote y la misma `carga_id` |
+| Bitácora       | #1454–1456: 3 filas, exactamente las de la carga                                                |
+| Repetir        | 3 «sin cambio» y 0 registros; ROLLBACK                                                          |
+
+La `carga_id` completa y el comando de reversión están en el respaldo privado (`informes-sku-lote-7/REVERSION.md`).
+Revertir el alta del doc 39 exige revertir antes este lote.
