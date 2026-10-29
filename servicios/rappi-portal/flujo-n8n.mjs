@@ -181,6 +181,17 @@ const connections = {
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
 };
+// Credenciales ya creadas en n8n (opcional): CRED_LECTOR, CRED_SUPABASE y CRED_WEBHOOK, cada una como '{"id":…,"name":…}'.
+for (const [nodoCred, variable] of [
+  ['Leer portal', 'CRED_LECTOR'],
+  ['Guardar en Supabase', 'CRED_SUPABASE'],
+  ['Reponer (webhook)', 'CRED_WEBHOOK'],
+]) {
+  if (process.env[variable])
+    nodes.find((n) => n.name === nodoCred).credentials = {
+      httpHeaderAuth: JSON.parse(process.env[variable]),
+    };
+}
 const flujo = {
   name: NOMBRE,
   nodes,
