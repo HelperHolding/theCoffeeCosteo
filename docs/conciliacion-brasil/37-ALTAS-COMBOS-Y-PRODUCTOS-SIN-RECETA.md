@@ -1,6 +1,6 @@
 # 37 · Productos del POS sin receta: qué se da de alta y qué no (alta de 3 combos)
 
-**Estado:** lote de 3 combos preparado el 2026-10-29, con manifiesto, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK limpio**. **Sin aplicar.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** **APLICADO en producción el 2026-10-29 16:51 UTC** con aprobación de Carlo: ejecución `97a03a92…`, bitácora #1300–1341. Falta el lote de enlaces de sus códigos POS, que requiere aprobación aparte.
 
 ## Los 41 productos del menú sin receta en Costeo
 
@@ -81,12 +81,25 @@ Carlo pidió armar los combos del menú que salen de recetas que ya tenemos, aun
 
 El informe se guardó fuera del repo, en el respaldo privado.
 
+## Aplicación en producción (2026-10-29 16:51 UTC, aprobada por Carlo)
+
+Antes de aplicar se volvió a comprobar que producción no había cambiado desde el ensayo: 165 productos, bitácora hasta #1257 y ninguno de los 3 combos.
+
+| Paso | Resultado |
+|---|---|
+| Aplicar | 3 creados con el costo esperado y 0 problemas; 42 registros propios y 0 ajenos; resto sin cambios; COMMIT |
+| Conexión nueva | 165 → 168 productos. Los 3 en tamaño Único, sin precio de lista, activos y con su categoría; 8, 8 y 2 líneas |
+| Bitácora | #1300–1341: 42 filas, exactamente las del lote. El salto desde #1257 son números de secuencia que consumieron los ensayos con ROLLBACK |
+| Repetir ensayo | 3 «sin cambio», 0 registros, ROLLBACK |
+
+La ejecución completa y el comando de reversión están en el respaldo privado (`informes-altas-combos-lote-1/REVERSION.md`). La reversión solo borra si no hubo ediciones posteriores y requiere aprobación.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
 1. ~~Respaldo lógico verificado~~ (hecho: `2026-10-29T1638Z`).
 2. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-combos-lote-1 --usuario <uuid-perfil>`
-3. Aplicar:
+3. ~~Aplicar~~ (hecho, 16:51 UTC):
    `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
-4. Verificar con una conexión nueva y repetir el ensayo, que debe dar «sin cambio».
+4. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
 5. Lote de enlaces para CHALEMAPP, 2VLT3FOOD3 y BAGMUGAPP.
