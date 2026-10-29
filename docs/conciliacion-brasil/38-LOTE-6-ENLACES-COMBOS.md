@@ -1,6 +1,6 @@
 # 38 · Lote 6: códigos POS de los 3 combos nuevos
 
-**Estado:** preparado el 2026-10-29, con manifiesto, prueba, respaldo verificado y ensayo local. **Sin ensayo remoto y sin cargar.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** preparado el 2026-10-29, con manifiesto, prueba, respaldo verificado, ensayo local y **ensayo remoto con ROLLBACK limpio**. **Sin cargar.** Cada paso remoto requiere aprobación expresa de Carlo.
 
 ## Qué enlaza
 
@@ -42,9 +42,26 @@ Los 3 combos creados en producción el 2026-10-29 con `altas-combos-lote-1` (doc
 
 Los informes se guardaron fuera del repo, en el respaldo privado.
 
+## Ensayo remoto (2026-10-29 17:04 UTC, aprobado por Carlo)
+
+**Antes de correrlo:**
+- Producción no había cambiado desde el respaldo `1659`: 95 enlaces, 168 productos y bitácora hasta #1341.
+- La conexión directa a Supabase funciona.
+- Las migraciones aplicadas en producción son las mismas 27 del repo (hasta `20261028000027`).
+
+| Resultado | Valor |
+|---|---|
+| Altas | 3, con 0 problemas |
+| Lotes 1–5 | 95 enlaces intactos antes y después |
+| Bitácora | 3 registros propios, 0 ajenos |
+| Datos comerciales | sin cambios |
+| Transacción | ROLLBACK; con una conexión nueva siguen 95 enlaces y bitácora #1341 |
+
+El informe se guardó fuera del repo, en el respaldo privado.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Ensayo remoto con ROLLBACK:
+1. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-6 --usuario <uuid-perfil>`
 2. Cargar:
    `… --lote lote-6 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
