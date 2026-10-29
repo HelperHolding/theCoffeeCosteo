@@ -104,19 +104,68 @@ async function esperarSesion(pagina, ms = 60_000) {
   return false;
 }
 
+/**
+ * Deja la página en el formulario de login: 'formulario', 'sesion' si al recargar el portal recuperó la sesión, o null.
+ * Al vencer el token, el portal a veces se queda en su spinner más de lo que espera esperarSesion (2026-10-29 21:48
+ * UTC: no apareció el selector de país en 30 s y la corrida siguiente entró sin problema): se recarga /login una vez.
+ */
+async function abrirFormulario(pagina) {
+  const usuario = pagina.locator('#login-username');
+  for (let intento = 0; intento < 2; intento++) {
+    if (intento) await pagina.goto(`${PORTAL}/login`, { waitUntil: 'domcontentloaded' });
+    const fin = Date.now() + 45_000;
+    while (Date.now() < fin) {
+      if (await usuario.isVisible().catch(() => false)) return 'formulario';
+      if (new URL(pagina.url()).host === 'partners.rappi.com' && (await tokenVigente(pagina)))
+        return 'sesion';
+      await pagina.waitForTimeout(1000);
+    }
+  }
+  return null;
+}
+
+/** { fallo: texto o null, entro: si hubo login con usuario y contraseña }. */
 async function iniciarSesion(pagina) {
-  if (!RAPPI_USUARIO || !RAPPI_CLAVE) return 'Rappi cerró la sesión y no hay usuario del lector configurado.';
+  if (!RAPPI_USUARIO || !RAPPI_CLAVE)
+    return { fallo: 'Rappi cerró la sesión y no hay usuario del lector configurado.', entro: false };
   const bloqueo = leerJson(BLOQUEO, null);
   if (bloqueo && Date.now() - bloqueo.t < 6 * 3600_000)
-    return 'El último inicio de sesión automático falló; no se reintenta hasta 6 h después. Revisa el usuario del lector.';
-  await pagina.locator('#login-country-trigger').click();
+    return {
+      fallo:
+        'El último inicio de sesión automático falló; no se reintenta hasta 6 h después. Revisa el usuario del lector.',
+      entro: false,
+    };
+  const pantalla = await abrirFormulario(pagina);
+  if (pantalla === 'sesion') return { fallo: null, entro: false };
+  if (!pantalla)
+    return {
+      fallo: `El portal no mostró el formulario de inicio de sesión (${new URL(pagina.url()).pathname}). La siguiente corrida lo vuelve a intentar.`,
+      entro: false,
+    };
+  // Sin el selector de país, el formulario cambió: no se manda la contraseña (ni cuenta como login fallido).
+  const pais = pagina.locator('#login-country-trigger');
+  if (
+    !(await pais.waitFor({ state: 'visible', timeout: 15_000 }).then(
+      () => true,
+      () => false,
+    ))
+  )
+    return {
+      fallo: 'El formulario de inicio de sesión de Rappi cambió (no aparece el selector de país).',
+      entro: false,
+    };
+  await pais.click();
   await pagina.getByRole('option', { name: /México/ }).click();
   await pagina.locator('#login-username').fill(RAPPI_USUARIO);
   await pagina.locator('#login-password').fill(RAPPI_CLAVE);
   await pagina.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
-  if (await esperarSesion(pagina, 90_000)) return null;
+  if (await esperarSesion(pagina, 90_000)) return { fallo: null, entro: true };
   escribir(BLOQUEO, { t: Date.now() });
-  return 'El inicio de sesión automático no entró al portal (usuario, contraseña o un paso nuevo de Rappi).';
+  return {
+    fallo:
+      'El inicio de sesión automático no entró al portal (usuario, contraseña o un paso nuevo de Rappi).',
+    entro: false,
+  };
 }
 
 /** Llama al API del portal desde la página, con el token y los encabezados que usa la propia página. Solo LECTURAS. */
@@ -177,14 +226,14 @@ async function sincronizar({ tipo, desde, hasta }) {
     await pagina.goto(`${PORTAL}/home`, { waitUntil: 'domcontentloaded' });
     let relogin = false;
     if (!(await esperarSesion(pagina))) {
-      const fallo = await iniciarSesion(pagina);
+      const { fallo, entro } = await iniciarSesion(pagina);
       if (fallo)
         return {
           ...base,
           estado: 'sesion_expirada',
           mensaje: `${fallo}${bloqueadas.length ? ` Bloqueadas por SOLO LECTURA: ${bloqueadas.join(', ')}.` : ''}`,
         };
-      relogin = true;
+      relogin = entro;
     }
 
     const cache = leerJson(CACHE, {});
