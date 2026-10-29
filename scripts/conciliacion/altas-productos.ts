@@ -52,7 +52,16 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
     manifiesto: 'docs/conciliacion-brasil/31-altas-zoho-lote-1.manifiesto.json',
     sha256: 'f132a72b05f4098ea92e0aa5672b8c848da28b0e6f64ff41a0766b5cd3b4ef5f',
   },
+  // Carlo, 2026-10-29 (doc 37): 3 combos del menú del POS armados con nuestras recetas. Aplicar exige aprobación aparte.
+  'altas-combos-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/37-altas-combos-lote-1.manifiesto.json',
+    sha256: '28b8eee7d461e7ac13635ec821b66eef4f2fadd0d644f4b4b558d4451878614f',
+  },
 };
+
+/** Documento de cada lote, para la nota de la bitácora y la carpeta de informes (por omisión, el 31). */
+export const DOC_ALTAS: Record<string, string> = { 'altas-zoho-lote-1': '31', 'altas-combos-lote-1': '37' };
+export const docAltas = (lote: string) => DOC_ALTAS[lote] ?? '31';
 
 const TOL = 1e-4;
 const normalizar = (t: string) => t.replace(/^﻿/, '').replace(/\r\n/g, '\n');
@@ -187,7 +196,7 @@ export async function aplicarAltas(
     informe.error = e instanceof Error ? e.message : String(e);
     return informe;
   }
-  const nota = `${m.lote}, ejecución ${ejecucion} (docs/conciliacion-brasil/31)`;
+  const nota = `${m.lote}, ejecución ${ejecucion} (docs/conciliacion-brasil/${docAltas(m.lote)})`;
   const huellas = async (ids: string[]) => {
     const h: Record<string, string> = {};
     for (const [nombre, sql] of HUELLAS)
@@ -484,7 +493,7 @@ export async function aplicarAltas(
       await cx.query(`update bitacora set nota = $2 where id = any ($1::bigint[])`, [
         mias.map((b) => b.id),
         modo === 'revertir'
-          ? `${m.lote}, reversión de la ejecución ${ejecucion} (docs/conciliacion-brasil/31)`
+          ? `${m.lote}, reversión de la ejecución ${ejecucion} (docs/conciliacion-brasil/${docAltas(m.lote)})`
           : nota,
       ]);
     for (const x of informe.productos) {
