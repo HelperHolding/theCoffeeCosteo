@@ -59,6 +59,12 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/28-lote-4.manifiesto.json',
     sha256: '9df970ac772a09f6066ee0886d6b72b7e0b8528e22afeceb96b1ab59c02ccbd4',
   },
+  // Preparado el 2026-10-29 (doc 36): los 23 códigos del menú MEX - A del portal del POS cuya receta ya existe con el
+  // mismo nombre. Cargar exige aprobación aparte.
+  'lote-5': {
+    manifiesto: 'docs/conciliacion-brasil/36-lote-5.manifiesto.json',
+    sha256: 'a42fb8a7a97e3c85a15a5a2f18260bb1b34bd41fee7ae6c15404ebda6071e2d8',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -66,6 +72,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-2': '20',
   'lote-3': '26',
   'lote-4': '28',
+  'lote-5': '36',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>
