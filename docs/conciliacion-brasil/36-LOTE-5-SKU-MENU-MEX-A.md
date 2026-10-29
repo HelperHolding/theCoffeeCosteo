@@ -67,7 +67,7 @@ Los informes contienen el UUID del perfil y se guardan fuera del repo.
 
 ## Respaldo y ensayo remoto (2026-10-29)
 
-Con el código de este PR en `0f34a1e`. **No se cargó nada.**
+Con el código de este PR en `349090c`. **No se cargó nada.**
 
 | Paso | Resultado |
 |---|---|
