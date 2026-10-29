@@ -68,9 +68,10 @@ export function VentasPos({
   return (
     <div className="space-y-6">
       {/* Las métricas incluyen Rappi en la pestaña Rappi y con el filtro «Mostrador + App + Rappi» o «Rappi». */}
-      {sucursal.rappi && (activa === 'rappi' || origen === 'todos' || origen === 'rappi') && (
-        <AvisoCalidadRappi />
-      )}
+      {/* Aviso del Rappi del POS (Generic, cargos sin desglose); el del portal llega completo. */}
+      {sucursal.rappi &&
+        !sucursal.rappiPortal &&
+        (activa === 'rappi' || origen === 'todos' || origen === 'rappi') && <AvisoCalidadRappi />}
       <Pestanas
         inicial={activa}
         alCambiar={alCambiarTab}

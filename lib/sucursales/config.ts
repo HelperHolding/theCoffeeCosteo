@@ -24,8 +24,8 @@ export interface ConfigSucursal {
   /** ¿Rappi llega por la API (forma de pago RAPPI)? Hoy solo 532. Sin Rappi no hay pestaña ni filtro de Rappi. */
   rappi: boolean;
   /**
-   * Rappi leído del portal de Partners por el cron de n8n (docs/rappi-portal): pestaña Rappi con sus pedidos y desglose.
-   * No se suma a las ventas del POS. Las tiendas de Rappi de la sucursal viven en la tabla rappi_tiendas.
+   * Rappi leído del portal de Partners por el cron de n8n (docs/rappi-portal): se suma a Ventas, Costeo y Consumo con
+   * las mismas reglas que el POS (lib/sucursales/rappi-pos.ts). Sus tiendas de Rappi viven en la tabla rappi_tiendas.
    */
   rappiPortal?: boolean;
   /** Texto del alcance de canales para esta sucursal. */
@@ -42,9 +42,9 @@ const ALCANCE_RAPPI =
 const ALCANCE_POS =
   'Ventas del POS: Mostrador y App. Rappi de esta sucursal no llega por la API, así que no se incluye ni se estima.';
 
-/** Rappi no llega por la API, pero se lee del portal de Rappi y se ve aparte, en la pestaña Rappi. */
+/** Rappi no llega por la API del POS: se lee del portal de Rappi (docs/rappi-portal) y se suma a las ventas. */
 const ALCANCE_POS_RAPPI_PORTAL =
-  'Ventas del POS: Mostrador y App. Rappi de esta sucursal no llega por la API: sus pedidos se leen del portal de Rappi y se ven aparte, en la pestaña Rappi.';
+  'Incluye Rappi, leído del portal de Rappi (tienda normal y Turbo) cada 10 minutos. Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e

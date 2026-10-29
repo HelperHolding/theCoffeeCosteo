@@ -8,6 +8,7 @@ import {
   leerOrigen,
   leerPeriodo,
 } from '@/lib/sucursales/rutas';
+import { fuenteRappi } from '@/lib/sucursales/rappi-pos-servidor';
 
 export const runtime = 'nodejs';
 
@@ -20,5 +21,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
   const periodo = leerPeriodo(q, a.cfg, DIAS_PERIODO_LARGO);
   if (typeof periodo === 'string') return invalido(periodo);
   const catalogo = await leerCatalogoPos(a.db, a.cfg.companyId);
-  return json(await construirProductos(a.cfg, periodo.desde, periodo.hasta, origen, catalogo));
+  return json(
+    await construirProductos(a.cfg, periodo.desde, periodo.hasta, origen, catalogo, fuenteRappi(a.db, a.cfg)),
+  );
 }

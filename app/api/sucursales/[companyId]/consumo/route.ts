@@ -9,6 +9,7 @@ import {
   leerOrigen,
   leerPeriodo,
 } from '@/lib/sucursales/rutas';
+import { fuenteRappi } from '@/lib/sucursales/rappi-pos-servidor';
 
 export const runtime = 'nodejs';
 
@@ -26,5 +27,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
     leerCatalogoPos(a.db, a.cfg.companyId),
   ]);
   if (!recetas) return json({ error: 'No se pudieron leer las recetas para el consumo.' }, 503);
-  return json(await construirConsumo(a.cfg, periodo.desde, periodo.hasta, origen, recetas, catalogo));
+  return json(
+    await construirConsumo(
+      a.cfg,
+      periodo.desde,
+      periodo.hasta,
+      origen,
+      recetas,
+      catalogo,
+      fuenteRappi(a.db, a.cfg),
+    ),
+  );
 }

@@ -246,6 +246,13 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
             dinero.
           </li>
           {!d.sucursal.rappi && <li>Rappi de esta sucursal no llega por la API: su consumo no está aquí.</li>}
+          {d.sucursal.rappiPortal && (
+            <li>
+              Rappi se lee del portal de Rappi (tienda normal y Turbo, cada 10 minutos) con las mismas reglas
+              que el POS. Los combos que solo existen en Rappi se arman con sus partes (bebida y pan
+              elegidos).
+            </li>
+          )}
         </ul>
       </div>
     </Tarjeta>

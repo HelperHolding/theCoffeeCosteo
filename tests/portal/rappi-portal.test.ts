@@ -123,9 +123,10 @@ describe('construirRappiPortal', () => {
 });
 
 describe('pestaña Rappi', () => {
-  it('Namóra la tiene por el portal; una sucursal sin Rappi en la API ni portal no', () => {
+  it('Namóra la tiene por el portal (con filtro de Rappi: se suma); una sucursal sin Rappi en la API ni portal no', () => {
     const namora = sucursalInfo(configDe(513)!);
-    expect(namora).toMatchObject({ rappi: false, rappiPortal: true });
+    expect(configDe(513)!.rappi).toBe(false);
+    expect(namora).toMatchObject({ rappi: true, rappiPortal: true });
     expect(pestanasDe(namora).map((p) => p.id)).toContain('rappi');
     expect(pestanasDe(sucursalInfo(configDe(384)!)).map((p) => p.id)).not.toContain('rappi');
     expect(pestanasDe(sucursalInfo(configDe(532)!)).map((p) => p.id)).toContain('rappi');

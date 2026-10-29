@@ -109,7 +109,7 @@ export const claveCosto = clave;
 
 /** Tamaño de Costeo de una línea, o null si no está verificado para esa receta. */
 export function tamanoVerificado(
-  l: LineaNormal,
+  l: Pick<LineaNormal, 'customs'>,
   recetaId: string,
   datos: Pick<DatosCosteo, 'unicas'>,
 ): string | null {
@@ -184,6 +184,29 @@ export function ajustePersonalizaciones(
   return { deltaCent: Math.round(delta * 100) };
 }
 
+/**
+ * Costo actual de una línea (o de una parte de un combo de Rappi) con su receta: tamaño verificado, costo de Costeo y
+ * personalizaciones. Mismo orden de motivos de siempre: tamaño → personalización → costo.
+ */
+function costoDe(
+  l: Pick<LineaNormal, 'customs'>,
+  recetaId: string,
+  datos: DatosCosteo,
+): { motivo: MotivoParcial } | { costoCent: number } {
+  const tamano = tamanoVerificado(l, recetaId, datos);
+  if (!tamano) return { motivo: 'tamano' };
+  const costo = datos.costos.get(clave(recetaId, tamano));
+  const ajuste = ajustePersonalizaciones(
+    recetaId,
+    tamano,
+    l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
+    datos,
+  );
+  if ('motivo' in ajuste) return ajuste;
+  if (!costo || costo.usaInactivo) return { motivo: 'costo' };
+  return { costoCent: costo.costoCent + ajuste.deltaCent };
+}
+
 /** `evidencia`: pedidos del periodo sin filtrar por origen, la misma que usa `productos` (ver identificador). */
 export function costear(
   ps: PedidoNormal[],
@@ -209,34 +232,28 @@ export function costear(
         cob.genericoCent += imp;
         continue;
       }
-      const enlace = datos.enlaces.get(id.codigo);
-      if (!enlace) {
+      // Combo de Rappi armado con partes: necesita receta en TODAS sus partes; su costo es la suma de las partes.
+      const partes = l.partes?.map((pt) => ({ pt, enlace: datos.enlaces.get(pt.codigo) }));
+      const enlace = partes ? undefined : datos.enlaces.get(id.codigo);
+      if (partes ? partes.some((x) => !x.enlace) : !enlace) {
         cob.sinEnlaceCent += imp;
         continue;
       }
       cob.conRecetaCent += imp;
       let x = porClave.get(id.clave);
       if (!x) {
-        x = { ...enlace, completo: vacioCompleto(), parcial: vacioParcial() };
+        x = {
+          ...(enlace ?? { recetaId: id.codigo, receta: l.nombre }),
+          completo: vacioCompleto(),
+          parcial: vacioParcial(),
+        };
         porClave.set(id.clave, x);
       }
-      const tamano = tamanoVerificado(l, enlace.recetaId, datos);
-      const costo = tamano ? datos.costos.get(clave(enlace.recetaId, tamano)) : undefined;
-      const ajuste = tamano
-        ? ajustePersonalizaciones(
-            enlace.recetaId,
-            tamano,
-            l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
-            datos,
-          )
-        : null;
-      const motivo: MotivoParcial | null = !tamano
-        ? 'tamano'
-        : ajuste && 'motivo' in ajuste
-          ? ajuste.motivo
-          : !costo || costo.usaInactivo
-            ? 'costo'
-            : null;
+      const costos = partes
+        ? partes.map(({ pt, enlace: e }) => costoDe(pt, e!.recetaId, datos))
+        : [costoDe(l, enlace!.recetaId, datos)];
+      const fallo = costos.find((c) => 'motivo' in c);
+      const motivo: MotivoParcial | null = fallo && 'motivo' in fallo ? fallo.motivo : null;
       if (motivo) {
         for (const t of [x.parcial, parcial]) {
           t.lineas++;
@@ -246,7 +263,7 @@ export function costear(
         continue;
       }
       const ventaSinIvaCent = Math.round(imp / (1 + datos.iva));
-      const costoCent = costo!.costoCent + (ajuste && 'deltaCent' in ajuste ? ajuste.deltaCent : 0);
+      const costoCent = costos.reduce((s, c) => s + ('costoCent' in c ? c.costoCent : 0), 0);
       for (const t of [x.completo, completo]) {
         t.lineas++;
         t.importeCent += imp;

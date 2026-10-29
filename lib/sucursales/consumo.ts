@@ -1,5 +1,5 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
-import type { PedidoNormal } from './normalizar';
+import type { LineaNormal, PedidoNormal } from './normalizar';
 import { cambiosPersonalizaciones, tamanoVerificado } from './costeo';
 
 /**
@@ -108,6 +108,30 @@ export const claveConsumo = claveReceta;
 const motivosVacios = (): Record<MotivoExcluido, number> => ({ tamano: 0, personalizacion: 0, receta: 0 });
 const redondear = (x: number) => Math.round(x * 1000) / 1000;
 
+/**
+ * Insumos de una línea (o de una parte de un combo de Rappi) según su receta, tamaño verificado y personalizaciones, o
+ * por qué queda fuera. Mismo orden de motivos de siempre: tamaño → personalización → receta → personalización.
+ */
+function recetaDe(
+  l: Pick<LineaNormal, 'customs'>,
+  recetaId: string,
+  datos: DatosConsumo,
+): { motivo: MotivoExcluido } | { tamano: string; receta: InsumoReceta[]; ajustada: boolean } {
+  const tamano = tamanoVerificado(l, recetaId, datos);
+  if (!tamano) return { motivo: 'tamano' };
+  const base = datos.recetas.get(claveReceta(recetaId, tamano));
+  const cambios = cambiosPersonalizaciones(
+    recetaId,
+    l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
+    datos.lineas?.get(claveReceta(recetaId, tamano)),
+  );
+  if (!cambios) return { motivo: 'personalizacion' };
+  if (!base?.length) return { motivo: 'receta' };
+  const receta = conCambios(base, cambios, datos.sustitutos);
+  if (!receta) return { motivo: 'personalizacion' };
+  return { tamano, receta, ajustada: cambios.size > 0 };
+}
+
 /** `ps`: pedidos ya filtrados por origen; `evidencia`: todos los del periodo (ver identificador). */
 export function consumir(
   ps: PedidoNormal[],
@@ -157,8 +181,10 @@ export function consumir(
         cob.generico++;
         continue;
       }
-      const enlace = datos.enlaces.get(id.codigo);
-      if (!enlace) {
+      // Combo de Rappi armado con partes: necesita receta en TODAS sus partes; consume la suma de sus partes.
+      const partes = l.partes?.map((pt) => ({ pt, enlace: datos.enlaces.get(pt.codigo) }));
+      const enlace = partes ? undefined : datos.enlaces.get(id.codigo);
+      if (partes ? partes.some((x) => !x.enlace) : !enlace) {
         cob.sinEnlace++;
         continue;
       }
@@ -167,7 +193,7 @@ export function consumir(
       if (!x) {
         x = {
           clave: id.clave,
-          ...enlace,
+          ...(enlace ?? { recetaId: id.codigo, receta: l.nombre }),
           lineas: 0,
           excluidas: motivosVacios(),
           tamanos: new Map(),
@@ -175,37 +201,25 @@ export function consumir(
         };
         productos.set(id.clave, x);
       }
-      const tamano = tamanoVerificado(l, enlace.recetaId, datos);
-      const base = tamano ? datos.recetas.get(claveReceta(enlace.recetaId, tamano)) : undefined;
-      const cambios = tamano
-        ? cambiosPersonalizaciones(
-            enlace.recetaId,
-            l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
-            datos.lineas?.get(claveReceta(enlace.recetaId, tamano)),
-          )
-        : null;
-      const receta = base?.length && cambios ? conCambios(base, cambios, datos.sustitutos) : null;
-      const motivo: MotivoExcluido | null = !tamano
-        ? 'tamano'
-        : !cambios
-          ? 'personalizacion'
-          : !base?.length
-            ? 'receta'
-            : !receta
-              ? 'personalizacion'
-              : null;
-      if (motivo) {
-        excluidas[motivo]++;
-        x.excluidas[motivo]++;
+      const recetas = partes
+        ? partes.map(({ pt, enlace: e }) => recetaDe(pt, e!.recetaId, datos))
+        : [recetaDe(l, enlace!.recetaId, datos)];
+      const fallo = recetas.find((r) => 'motivo' in r);
+      if (fallo && 'motivo' in fallo) {
+        excluidas[fallo.motivo]++;
+        x.excluidas[fallo.motivo]++;
         continue;
       }
+      const ok = recetas as Exclude<(typeof recetas)[number], { motivo: MotivoExcluido }>[];
       cob.incluidas++;
-      if (cambios!.size) cob.ajustadas++;
+      if (ok.some((r) => r.ajustada)) cob.ajustadas++;
       dia.incluidas++;
       x.lineas++;
-      x.tamanos.set(tamano!, (x.tamanos.get(tamano!) ?? 0) + 1);
-      tamanos.set(tamano!, (tamanos.get(tamano!) ?? 0) + 1);
-      for (const r of receta!) {
+      for (const { tamano } of ok) {
+        x.tamanos.set(tamano, (x.tamanos.get(tamano) ?? 0) + 1);
+        tamanos.set(tamano, (tamanos.get(tamano) ?? 0) + 1);
+      }
+      for (const r of ok.flatMap((o) => o.receta)) {
         const t = insumos.get(r.insumoId) ?? { ...r, cantidad: 0, productos: new Set<string>() };
         t.cantidad += r.cantidad;
         t.productos.add(id.clave);

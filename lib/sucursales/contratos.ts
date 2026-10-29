@@ -11,8 +11,9 @@ export interface SucursalInfo {
   moneda: string;
   zona: string;
   alcance: string;
+  /** Rappi se suma a las ventas: llega por la API del POS (forma de pago RAPPI) o se lee del portal de Rappi. */
   rappi: boolean;
-  /** Pedidos de Rappi leídos del portal de Partners (pestaña Rappi), aparte de las ventas del POS. */
+  /** Rappi se lee del portal de Partners (docs/rappi-portal): pedidos completos, se suman a Ventas, Costeo y Consumo. */
   rappiPortal: boolean;
   sonidoVenta: string | null;
 }

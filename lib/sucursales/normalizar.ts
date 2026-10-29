@@ -49,6 +49,11 @@ export interface CustomNormal {
 }
 export interface LineaNormal extends CustomNormal {
   customs: CustomNormal[];
+  /**
+   * Solo combos de Rappi que no existen en el POS (lib/sucursales/rappi-pos.ts): la línea se vende a su precio y se
+   * arma con estas partes (Costeo suma su costo; Consumo, sus insumos). Cada parte con su código POS y personalizaciones.
+   */
+  partes?: { codigo: string; nombre: string; customs: CustomNormal[] }[];
 }
 export interface PedidoNormal {
   id: number;

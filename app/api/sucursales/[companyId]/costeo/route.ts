@@ -9,6 +9,7 @@ import {
   leerOrigen,
   leerPeriodo,
 } from '@/lib/sucursales/rutas';
+import { fuenteRappi } from '@/lib/sucursales/rappi-pos-servidor';
 
 export const runtime = 'nodejs';
 
@@ -28,5 +29,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
   if (costeo.estado === 'sin-permiso')
     return json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, 403);
   if (costeo.estado === 'error') return json({ error: 'No se pudieron leer los costos de Costeo.' }, 503);
-  return json(await construirCosteo(a.cfg, periodo.desde, periodo.hasta, origen, costeo.datos, catalogo));
+  return json(
+    await construirCosteo(
+      a.cfg,
+      periodo.desde,
+      periodo.hasta,
+      origen,
+      costeo.datos,
+      catalogo,
+      fuenteRappi(a.db, a.cfg),
+    ),
+  );
 }
