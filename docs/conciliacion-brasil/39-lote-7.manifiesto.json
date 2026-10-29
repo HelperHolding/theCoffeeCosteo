@@ -1,0 +1,30 @@
+{
+ "lote": "lote-7",
+ "archivo": "docs/conciliacion-brasil/39-lote-7.csv",
+ "filas": 3,
+ "sha256": "1925c873d53f2262bc0756bd9db37b5131a5e89a3cd7d2c8abba756b83f1de3a",
+ "correspondencias": [
+  {
+   "codigo": "PANMUEAPP",
+   "receta_id": "e029de61-eb68-45b1-8d2e-dfe4a1b3a4c8"
+  },
+  {
+   "codigo": "RAPPIPANMUENAR",
+   "receta_id": "5f582078-3e3f-4c26-9a85-28103f4e18ce"
+  },
+  {
+   "codigo": "TRUPANAPP",
+   "receta_id": "e500b148-2921-4139-bdf0-184dcb567900"
+  }
+ ],
+ "requiere": [
+  "lote-6"
+ ],
+ "aprobacion": "Carlo, 2026-10-29: «Si prepáralo» (enlaces del Pan de Muerto: PANMUEAPP al Tradicional, TRUPANAPP al combo y un código propio de Rappi para el de Naranja). Autoriza preparar el lote con el cargador existente; cada paso remoto (ensayo y carga) requiere aprobación expresa.",
+ "notas": [
+  "Requiere el lote 6 (y por él los lotes 1–5): los 98 enlaces actuales deben seguir intactos antes y después",
+  "Las 3 recetas se crearon el 2026-10-29 con pan-de-muerto-lote-1 (doc 39, ejecución ef6515ba)",
+  "El POS cobra los dos panes con PANMUEAPP: el de Naranja vendido en mostrador queda costeado como Tradicional",
+  "RAPPIPANMUENAR no es un código del POS: solo lo produce el traductor de Rappi (rappi-pos.ts) para «Pan de Muerto con Glaseado de Naranja.»"
+ ]
+}

@@ -19,7 +19,9 @@ export const normalizarRappi = (s: string) =>
 /**
  * Producto de Rappi → código POS (producto_codigo_pos). Evidencia: mismo producto en el menú del POS
  * (docs/conciliacion-brasil/36) con el nombre en español o ligeramente distinto; los tres combos del POS (MISICEDAPP,
- * TRWCROAPP, MATLEMAPP) son los mismos combos de Rappi. Lista para revisión de Carlo en docs/rappi-portal/04.
+ * TRWCROAPP, MATLEMAPP) son los mismos combos de Rappi. Lista para revisión de Carlo en docs/rappi-portal/04. Pan de
+ * Muerto (docs/conciliacion-brasil/39): el Tradicional es PANMUEAPP; el de Naranja no tiene código en el POS y usa el
+ * código propio RAPPIPANMUENAR (lote 7 de enlaces).
  */
 export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   americano: '2AM',
@@ -63,6 +65,8 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   'matcha vanilla latte': '7MVT',
   'mineral water perrier': 'WATPERAPP',
   'pain au chocolat': '3FOOD3',
+  'pan de muerto con glaseado de naranja': 'RAPPIPANMUENAR',
+  'pan de muerto tradicional': 'PANMUEAPP',
   'pumpkin iced latte': 'CPUMICAPP',
   'pumpkin latte': 'CPUMLAAPP',
   'pumpkin spice frap': 'CPUMFRAPP',

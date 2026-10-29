@@ -144,14 +144,49 @@ La ejecución completa y el comando de reversión están en el respaldo privado
 (`informes-pan-de-muerto-lote-1/REVERSION.md`). La reversión solo borra si no hubo ediciones posteriores ni enlaces, y
 requiere aprobación.
 
-## Siguiente paso: enlaces POS y Rappi (lote aparte)
+## Lote 7 de enlaces: POS y Rappi
 
-Se prepara después de aplicar, porque necesita los ids de las recetas nuevas:
+**Estado:** preparado y ensayado en local. **Sin cargar**: el ensayo remoto y la carga requieren aprobación de Carlo
+(«Si prepáralo» autoriza solo prepararlo).
 
-- **`PANMUEAPP` → Pan de Muerto Tradicional.** Es el pan base de la red. El de Naranja cobrado en mostrador quedará
-  costeado como Tradicional, $8.59 menos por pieza, hasta que el POS tenga un producto aparte para él.
-- **`TRUPANAPP` → True White + Pan de Muerto.**
-- **Rappi** sí separa los dos panes:
-  - «Pan de Muerto Tradicional» → `PANMUEAPP`, incluida la parte del combo con True White;
-  - «Pan de Muerto con glaseado de naranja» → la receta de Naranja, con un código propio de Rappi, porque no tiene código
-    en el POS.
+`39-lote-7.csv` y `39-lote-7.manifiesto.json` (sha256 `66630760…`), con el cargador de enlaces del doc 17. Requiere el
+lote 6, y por él los lotes 1 a 5: los 98 enlaces actuales deben seguir intactos.
+
+| Código           | Receta                     | Nombre observado                       | Por qué                                                                |
+| ---------------- | -------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| `PANMUEAPP`      | Pan de Muerto Tradicional  | Pan de Muerto                          | El POS cobra los dos panes con este producto: se enlaza al pan base    |
+| `RAPPIPANMUENAR` | Pan de Muerto de Naranja   | Pan de Muerto con Glaseado de Naranja. | Rappi sí lo separa y no tiene código en el POS: código propio de Rappi |
+| `TRUPANAPP`      | True White + Pan de Muerto | True White + Pan de Muerto             | El combo del POS (Rubén Darío)                                         |
+
+- El de Naranja vendido en mostrador queda costeado como Tradicional, $8.59 por debajo de su costo, hasta que el POS
+  tenga un producto aparte para él.
+- `RAPPIPANMUENAR` no lo usa el POS. Solo lo produce el traductor de Rappi (`lib/sucursales/rappi-pos.ts`), que ahora
+  manda «Pan de Muerto Tradicional» a `PANMUEAPP` y «Pan de Muerto con Glaseado de Naranja» a `RAPPIPANMUENAR`. La
+  parte del combo «Pan de Muerto Tradicional + True White» también queda enlazada: el combo se arma con True White y el
+  Tradicional, como los demás combos de Rappi (doc 04).
+
+**Pruebas:**
+
+- `tests/db/lotes-aprobados.test.ts`: los 3 códigos, sus nombres observados y los 98 enlaces previos;
+- `tests/portal/rappi-pos.test.ts`: la traducción de Rappi.
+
+**Respaldo `2026-10-29T2340Z`**, tomado después de aplicar `pan-de-muerto-lote-1`. Restaurado en `resp2340`, con 8
+errores, todos de `vault`. Las 13 tablas de Costeo son idénticas a producción.
+
+**Ensayo sobre una copia del respaldo**, borrada al terminar. Los informes están en el respaldo privado
+(`informes-sku-lote-7/ensayo-local`).
+
+| Paso     | Resultado                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------- |
+| Ensayo   | 3 altas y 0 problemas; los 98 previos intactos; 3 registros propios en la bitácora y 0 ajenos; ROLLBACK |
+| Cargar   | Lo mismo, con COMMIT: 98 → 101 enlaces                                                                  |
+| Repetir  | 3 «sin cambio» y 0 registros                                                                            |
+| Revertir | 3 bajas: la tabla de enlaces queda idéntica al respaldo (mismo md5)                                     |
+
+### Procedimiento remoto (cada paso requiere aprobación)
+
+1. Ensayo remoto con ROLLBACK:
+   `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-7 --usuario <uuid-perfil>`
+2. Cargar: `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+3. Verificar con una conexión nueva y repetir el ensayo («sin cambio»).
+4. Merge del PR: el traductor de Rappi empieza a usar los dos códigos.
