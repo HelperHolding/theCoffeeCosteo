@@ -4,8 +4,9 @@
 //   GET /salud
 // SOLO LECTURA (pedido expreso de Carlo, 2026-10-29). El lector usa una cuenta real del portal, así que nunca debe
 // cambiar nada en Rappi (pedidos, menú, tienda, horarios, promociones, usuarios, datos bancarios). Dos candados:
-//   1. Navegador: toda petición que no sea GET/HEAD/OPTIONS se bloquea, salvo el inicio de sesión de Auth0
-//      (login.partners.rappi.com) y la consulta del historial (by-stores, un POST que solo busca). Ver SALIDAS.
+//   1. Navegador: toda petición que no sea GET/HEAD/OPTIONS se bloquea, salvo la autenticación (Auth0 en
+//      login.partners.rappi.com y el login del portal en rs-platform-security) y la consulta del historial (by-stores,
+//      un POST que solo busca). Ver SALIDAS.
 //   2. Código: pedirApi solo acepta las dos lecturas de LECTURAS (historial y detalle de un pedido).
 // Fuera del formulario de login, el lector no hace clic en nada. Sin datos personales en la respuesta.
 //
@@ -47,6 +48,9 @@ const MAX_DETALLES = 80;
 /** Candado 1: lo único que puede salir del navegador fuera de GET/HEAD/OPTIONS. */
 const SALIDAS = [
   /^https:\/\/login\.partners\.rappi\.com\//,
+  // El formulario manda usuario y contraseña aquí (visto el 2026-10-29 en la primera corrida real), no a Auth0.
+  // Solo autenticación (login y renovación del token): no toca datos de la tienda.
+  /^https:\/\/services\.mxgrability\.rappi\.com\/api\/rs-platform-gateway\/rs-platform-security\//,
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/rests-stores-config\/orders\/by-stores\?country=MX$/,
 ];
 /** Candado 2: las ÚNICAS llamadas al API de Rappi que hace el lector, ambas de lectura. */

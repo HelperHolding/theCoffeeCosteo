@@ -64,7 +64,8 @@ const rpc: RpcRappiPortal = {
       ]),
     ]),
     pedido('2', 'MX2', 'finished', 212, [
-      producto('Crea tu The Coffee', 212, [
+      // La tienda Turbo lo escribe «Crea Tu» (visto el 2026-10-29): debe agruparse con el de la normal.
+      producto('Crea Tu The Coffee', 212, [
         ['Elige tu Bebida', 'Iced Latte'],
         ['Leche.', 'Deslactosada', 13],
       ]),
