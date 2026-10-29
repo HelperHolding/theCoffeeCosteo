@@ -56,7 +56,8 @@ tiendas). Cada sucursal tiene su tienda normal y su tienda Turbo. Las marcas y s
   falta ninguna llave nueva en Vercel.
 - **Detalle de cada pedido:** solo se lee para traer descuentos, y se guarda en caché por huella. Son 80 detalles
   nuevos como máximo por corrida.
-- **Rappi del portal no se suma a las ventas del POS:** se ve aparte, en la pestaña Rappi.
+- **Rappi del portal no se sumaba a las ventas del POS:** se veía aparte, en la pestaña Rappi. Desde el doc 04 se suma
+  a Ventas, Costeo y Consumo de Namóra.
 - **En Namóra la pestaña Rappi muestra:**
   - el periodo y el filtro Normal / Turbo;
   - pedidos terminados, venta con precio Rappi antes de descuentos, cancelados y reclamos;

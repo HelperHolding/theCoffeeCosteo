@@ -45,12 +45,15 @@ export function Rappi({
           {vista === 'portal' ? (
             <span>
               <strong className="font-semibold">Pedidos del portal de Rappi</strong> (tienda normal y Turbo),
-              con precio Rappi y el desglose de cada producto. No se suman a las ventas del POS.
+              con precio Rappi y el desglose de cada producto.
             </span>
           ) : (
             <span>
-              <strong className="font-semibold">Solo pedidos de Rappi</strong> (forma de pago RAPPI en la
-              API), con precio Rappi. También se suman en las demás pestañas con el filtro "Mostrador + App +
+              <strong className="font-semibold">Solo pedidos de Rappi</strong> (
+              {sucursal.rappiPortal
+                ? 'leídos del portal de Rappi cada 10 minutos'
+                : 'forma de pago RAPPI en la API'}
+              ), con precio Rappi. También se suman en las demás pestañas con el filtro "Mostrador + App +
               Rappi".
             </span>
           )}

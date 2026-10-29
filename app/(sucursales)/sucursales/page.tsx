@@ -15,6 +15,7 @@ export default async function Directorio() {
   const sinConfigurar = companias.length - lista.length;
   const ciudades = [...new Set(lista.map((s) => s.ciudad))].sort((a, b) => a.localeCompare(b, 'es-MX'));
   const conRappi = lista.filter((s) => s.rappi);
+  const conPortal = lista.filter((s) => s.rappiPortal);
   return (
     <>
       <Encabezado
@@ -32,10 +33,18 @@ export default async function Directorio() {
         <>
           {/* La venta de hoy de las sucursales con Rappi en la API lo incluye. */}
           {conRappi.length > 0 && <AvisoCalidadRappi />}
-          {conRappi.length > 0 && conRappi.length < lista.length && (
+          {conRappi.length + conPortal.length > 0 && conRappi.length + conPortal.length < lista.length && (
             <p className="placa px-3 py-2 text-xs text-muted-foreground">
-              Rappi llega por la API solo en {conRappi.map((s) => s.nombre).join(', ')}. En las demás, la
-              venta de hoy es Mostrador + App.
+              {conRappi.length > 0 && (
+                <>Rappi llega por la API en {conRappi.map((s) => s.nombre).join(', ')}. </>
+              )}
+              {conPortal.length > 0 && (
+                <>
+                  Rappi se lee del portal de Rappi (cada 10 min) en{' '}
+                  {conPortal.map((s) => s.nombre).join(', ')}.{' '}
+                </>
+              )}
+              En las demás, la venta de hoy es Mostrador + App.
             </p>
           )}
           {ciudades.map((ciudad) => {

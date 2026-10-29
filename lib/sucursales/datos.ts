@@ -203,7 +203,8 @@ export const sucursalInfo = (cfg: ConfigSucursal): SucursalInfo => ({
   moneda: cfg.moneda,
   zona: cfg.zona,
   alcance: cfg.alcance,
-  rappi: cfg.rappi,
+  // Rappi se suma a las ventas si llega por la API del POS o se lee del portal de Rappi.
+  rappi: cfg.rappi || !!cfg.rappiPortal,
   rappiPortal: cfg.rappiPortal ?? false,
   sonidoVenta: cfg.sonidoVenta ?? null,
 });
@@ -227,17 +228,51 @@ export const vistaPedido = (p: PedidoNormal): PedidoVista => ({
   })),
 });
 
+/**
+ * Pedidos de Rappi leídos del portal de Partners (docs/rappi-portal), ya en la forma del POS (rappi-pos.ts). Solo para
+ * sucursales con `rappiPortal`; null si no se pudieron leer.
+ */
+export type FuenteRappi = (desde: string, hasta: string) => Promise<PedidoNormal[] | null>;
+
+/**
+ * Suma a una lectura del POS los pedidos de Rappi del portal del mismo periodo (origen «rappi»). Un pedido que ya llegó
+ * por el POS (refundId = ID de Rappi) no se cuenta dos veces. Si Rappi no se pudo leer, la lectura queda parcial.
+ */
+export async function conRappi(l: LecturaNormal, rappi?: FuenteRappi): Promise<LecturaNormal> {
+  if (!rappi || l.estado === 'error') return l;
+  const extra = await rappi(l.desde, l.hasta);
+  if (!extra)
+    return {
+      ...l,
+      estado: 'parcial',
+      avisos: ['No se pudieron leer los pedidos de Rappi del portal.', ...l.avisos],
+    };
+  const enPos = new Set(l.pedidos.map((p) => p.numeroPedidoRappi).filter(Boolean));
+  const nuevos = extra.filter(
+    (p) => p.fecha >= l.desde && p.fecha <= l.hasta && !enPos.has(p.numeroPedidoRappi),
+  );
+  if (!nuevos.length) return l;
+  return {
+    ...l,
+    // Del más reciente al más antiguo, como el POS.
+    pedidos: [...l.pedidos, ...nuevos].sort(
+      (a, b) => b.fecha.localeCompare(a.fecha) || b.segundo - a.segundo,
+    ),
+    totalDeclarado: l.totalDeclarado === null ? null : l.totalDeclarado + nuevos.length,
+  };
+}
+
 /** "En vivo": hoy hasta el corte vs el mismo día de la semana anterior hasta el mismo corte. */
 export async function construirVivo(
   cfg: ConfigSucursal,
   origen: FiltroOrigen,
-  opciones: { forzar?: boolean; catalogo?: CatalogoNombres | null } = {},
+  opciones: { forzar?: boolean; catalogo?: CatalogoNombres | null; rappi?: FuenteRappi } = {},
 ): Promise<RespuestaVivo> {
   const ahora = hoyLocal(cfg);
   const baseFecha = sumarDias(ahora.fecha, -7);
   const [lh, lb] = await Promise.all([
-    leerVentana(cfg, ahora.fecha, ahora.fecha, opciones),
-    leerVentana(cfg, baseFecha, baseFecha),
+    leerVentana(cfg, ahora.fecha, ahora.fecha, opciones).then((l) => conRappi(l, opciones.rappi)),
+    leerVentana(cfg, baseFecha, baseFecha).then((l) => conRappi(l, opciones.rappi)),
   ]);
   const corte = ahora.segundo;
   const todosHoy = filtrarOrigen(lh.pedidos, origen);
@@ -301,8 +336,9 @@ export async function construirProductos(
   origen: FiltroOrigen,
   /** Nombres del POS de nuestros enlaces (ver identificador); null/undefined: solo la evidencia del periodo. */
   catalogo?: CatalogoNombres | null,
+  rappi?: FuenteRappi,
 ): Promise<RespuestaProductos> {
-  const l = await leerDias(cfg, desde, hasta);
+  const l = await conRappi(await leerDias(cfg, desde, hasta), rappi);
   const ps = filtrarOrigen(l.pedidos, origen);
   return {
     sucursal: sucursalInfo(cfg),
@@ -324,8 +360,9 @@ export async function construirCosteo(
   origen: FiltroOrigen,
   datos: DatosCosteo,
   catalogo?: CatalogoNombres | null,
+  rappi?: FuenteRappi,
 ): Promise<RespuestaCosteo> {
-  const l = await leerDias(cfg, desde, hasta);
+  const l = await conRappi(await leerDias(cfg, desde, hasta), rappi);
   const ps = filtrarOrigen(l.pedidos, origen);
   const c = costear(ps, datos, l.pedidos, catalogo ?? undefined);
   return {
@@ -355,8 +392,9 @@ export async function construirConsumo(
   origen: FiltroOrigen,
   datos: DatosConsumo,
   catalogo?: CatalogoNombres | null,
+  rappi?: FuenteRappi,
 ): Promise<RespuestaConsumo> {
-  const l = await leerDias(cfg, desde, hasta);
+  const l = await conRappi(await leerDias(cfg, desde, hasta), rappi);
   const ps = filtrarOrigen(l.pedidos, origen);
   const fechas = Array.from({ length: diasEntre(desde, hasta) + 1 }, (_, i) => sumarDias(desde, i));
   return {
@@ -377,8 +415,9 @@ export async function construirPedidos(
   origen: FiltroOrigen,
   pago: string | null,
   pagina: number,
+  rappi?: FuenteRappi,
 ): Promise<RespuestaPedidos> {
-  const l = await leerVentana(cfg, desde, hasta);
+  const l = await conRappi(await leerVentana(cfg, desde, hasta), rappi);
   const porOrigen = filtrarOrigen(l.pedidos, origen);
   const ps = pago ? porOrigen.filter((p) => p.metodo === pago) : porOrigen;
   const paginas = Math.max(1, Math.ceil(ps.length / POR_PAGINA_PEDIDOS));
@@ -407,9 +446,12 @@ export async function construirTendencias(
   cfg: ConfigSucursal,
   n: (typeof SEMANAS_PERMITIDAS)[number],
   origen: FiltroOrigen,
+  rappi?: FuenteRappi,
 ): Promise<RespuestaTendencias> {
   const ventanas = semanasCerradas(hoyLocal(cfg).fecha, n);
-  const lecturas = await Promise.all(ventanas.map((v) => leerVentana(cfg, v.desde, v.hasta)));
+  const lecturas = await Promise.all(
+    ventanas.map((v) => leerVentana(cfg, v.desde, v.hasta).then((l) => conRappi(l, rappi))),
+  );
   const completas: PedidoNormal[] = [];
   let semanasCompletas = 0;
   const semanas: SemanaTendencia[] = lecturas.map((l, i) => {
