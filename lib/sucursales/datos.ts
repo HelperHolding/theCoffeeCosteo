@@ -204,6 +204,7 @@ export const sucursalInfo = (cfg: ConfigSucursal): SucursalInfo => ({
   zona: cfg.zona,
   alcance: cfg.alcance,
   rappi: cfg.rappi,
+  rappiPortal: cfg.rappiPortal ?? false,
   sonidoVenta: cfg.sonidoVenta ?? null,
 });
 

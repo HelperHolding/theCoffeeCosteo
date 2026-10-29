@@ -18,9 +18,9 @@ export const PESTANAS = [
   { id: 'rappi', nombre: 'Rappi' },
 ] as const;
 
-/** Pestañas de Ventas de una sucursal: la de Rappi solo si Rappi llega por la API. */
-export const pestanasDe = (s: Pick<SucursalInfo, 'rappi'>) =>
-  PESTANAS.filter((p) => p.id !== 'rappi' || s.rappi);
+/** Pestañas de Ventas de una sucursal: la de Rappi si Rappi llega por la API o se lee del portal de Rappi. */
+export const pestanasDe = (s: Pick<SucursalInfo, 'rappi' | 'rappiPortal'>) =>
+  PESTANAS.filter((p) => p.id !== 'rappi' || s.rappi || s.rappiPortal);
 
 /**
  * Sección Ventas de una sucursal. El filtro de origen y el periodo son de la sucursal (los comparten Ventas, Costeo y
@@ -60,7 +60,8 @@ export function VentasPos({
           alCambiarPeriodo={alCambiarPeriodo}
         />
       );
-    if (id === 'rappi') return <Rappi companyId={sucursal.companyId} />;
+    if (id === 'rappi')
+      return <Rappi sucursal={sucursal} periodo={periodo} alCambiarPeriodo={alCambiarPeriodo} />;
     return <Pedidos key={clave} companyId={sucursal.companyId} origen={origen} zona={sucursal.zona} />;
   };
 

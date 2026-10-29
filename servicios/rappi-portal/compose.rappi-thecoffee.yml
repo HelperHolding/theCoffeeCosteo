@@ -1,0 +1,25 @@
+# En el servidor de n8n va como /opt/n8n/docker-compose.override.yml: Docker Compose lo junta solo con
+# docker-compose.yml, sin editar ese archivo. n8n llama al lector en http://rappi-thecoffee:3101/sincronizar; no se
+# publica ningún puerto hacia afuera. Mismos límites que el lector de Dodo (servidor de 2 GB).
+# En /opt/n8n/.env (valores nunca en el repo ni en el chat):
+#   RAPPI_THECOFFEE_KEY      clave aleatoria; la misma de la credencial del nodo «Leer portal» en n8n
+#   RAPPI_THECOFFEE_USUARIO  cuenta del portal de Rappi que usa el lector (la pone Carlo)
+#   RAPPI_THECOFFEE_CLAVE    su contraseña (la pone Carlo)
+services:
+  rappi-thecoffee:
+    build:
+      context: ./rappi-thecoffee
+    restart: always
+    environment:
+      EXTRACTOR_KEY: ${RAPPI_THECOFFEE_KEY}
+      RAPPI_USUARIO: ${RAPPI_THECOFFEE_USUARIO:-}
+      RAPPI_CLAVE: ${RAPPI_THECOFFEE_CLAVE:-}
+      # Namóra: tienda normal y Turbo (docs/rappi-portal/03). Otra sucursal = sus dos IDs aquí y en rappi_tiendas.
+      RAPPI_TIENDAS: MX1930270777,MX1930301156
+    volumes:
+      - rappi_thecoffee:/datos
+    shm_size: '512m'
+    mem_limit: 900m
+
+volumes:
+  rappi_thecoffee:
