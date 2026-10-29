@@ -65,6 +65,12 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/36-lote-5.manifiesto.json',
     sha256: 'a42fb8a7a97e3c85a15a5a2f18260bb1b34bd41fee7ae6c15404ebda6071e2d8',
   },
+  // Preparado el 2026-10-29 (doc 38): los códigos POS de los 3 combos creados con altas-combos-lote-1 (doc 37).
+  // Cargar exige aprobación aparte.
+  'lote-6': {
+    manifiesto: 'docs/conciliacion-brasil/38-lote-6.manifiesto.json',
+    sha256: 'c98468ab0bff3786cda4e16fb17118214d30c6d27e21853a8f8b5b4ff4c96c4d',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -73,6 +79,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-3': '26',
   'lote-4': '28',
   'lote-5': '36',
+  'lote-6': '38',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>

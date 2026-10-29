@@ -139,6 +139,22 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
   });
 
+  it('lote 6: los 3 combos creados con altas-combos-lote-1, con el nombre exacto del POS; requiere los lotes 1–5 (95)', async () => {
+    const l = await leerLoteAprobado('lote-6');
+    expect(l.lote.map((f) => [f.codigo, f.receta_nombre])).toEqual([
+      ['2VLT3FOOD3', 'Vanilla Latte + Pain au Chocolat'],
+      ['BAGMUGAPP', 'Coffee bag 250g + Mug'],
+      ['CHALEMAPP', 'Chai Latte + Lemon Cake'],
+    ]);
+    expect(Object.keys(l.previos).sort()).toEqual(['lote-1', 'lote-2', 'lote-3', 'lote-4', 'lote-5']);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(95);
+    for (const f of l.lote) {
+      expect(f.nombre_observado, f.codigo).toBe(f.receta_nombre);
+      expect(f.evidencia).toMatch(/Portal POS \(menú MEX - A.*altas-combos-lote-1 \(doc 37\)/);
+    }
+    expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
     await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));
