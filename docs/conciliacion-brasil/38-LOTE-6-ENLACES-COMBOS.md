@@ -1,6 +1,6 @@
 # 38 · Lote 6: códigos POS de los 3 combos nuevos
 
-**Estado:** preparado el 2026-10-29, con manifiesto, prueba, respaldo verificado, ensayo local y **ensayo remoto con ROLLBACK limpio**. **Sin cargar.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** **CARGADO en producción el 2026-10-29** con aprobación de Carlo: carga `17dea819…`, 95 → 98 enlaces, bitácora #1345–1347. Verificado.
 
 ## Qué enlaza
 
@@ -59,10 +59,22 @@ Los informes se guardaron fuera del repo, en el respaldo privado.
 
 El informe se guardó fuera del repo, en el respaldo privado.
 
+## Carga en producción (2026-10-29, aprobada por Carlo)
+
+Antes de cargar se volvió a comprobar que producción no había cambiado desde el ensayo: 95 enlaces, 168 productos y bitácora hasta #1341.
+
+| Paso | Resultado |
+|---|---|
+| Cargar | 3 altas, 0 problemas; 95 previos intactos; 3 registros propios en la bitácora (#1345–1347) y 0 ajenos; datos comerciales sin cambios; COMMIT |
+| Conexión nueva | 98 enlaces; los 3 códigos apuntan a su combo y son de esta carga |
+| Repetir ensayo | 3 «sin cambio», 0 registros, ROLLBACK |
+
+El `carga_id` completo y el comando de reversión están en el respaldo privado (`informes-sku-lote-6/REVERSION.md`). La reversión solo borra filas intactas de esta carga y requiere aprobación.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
 1. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-6 --usuario <uuid-perfil>`
-2. Cargar:
+2. ~~Cargar~~ (hecho):
    `… --lote lote-6 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
-3. Verificar con una conexión nueva y repetir el ensayo, que debe dar «sin cambio».
+3. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
