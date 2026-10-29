@@ -1,7 +1,11 @@
 # 39 · Pan de Muerto: alta por lote con el brief a franquiciatarios
 
-**Estado:** respaldo y ensayo remoto hechos, los dos limpios, con aprobación de Carlo. **Sin aplicar en producción**:
-aplicar requiere aprobación aparte.
+**Estado:** **APLICADO en producción el 2026-10-29 a las 23:29 UTC**, con aprobación de Carlo:
+
+- ejecución `ef6515ba…`;
+- bitácora #1415–1450.
+
+Falta el lote de enlaces (POS y Rappi), que requiere aprobación aparte.
 
 Fecha: 2026-10-29. Carlo pidió dejar con receta todos los productos que se venden, uno por uno, empezando por el Pan de
 Muerto. Lo que no tenía receta en las 13 sucursales configuradas, del 15 al 29 de octubre:
@@ -99,8 +103,9 @@ Sobre una copia del respaldo `2026-10-29T1659Z`, borrada al terminar. Los inform
 1. ~~Respaldo lógico verificado~~ (hecho, aprobado por Carlo: «dale con el respaldo y el ensayo»).
 2. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote pan-de-muerto-lote-1 --usuario <uuid-perfil>`
-3. Aplicar: `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
-4. Verificar con una conexión nueva y repetir el ensayo («sin cambio»).
+3. ~~Aplicar~~ (hecho a las 23:29 UTC, aprobado por Carlo: «Sí, aplícalo»):
+   `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+4. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
 
 **Respaldo `2026-10-29T2325Z`**, restaurado en local (`resp2325`):
 
@@ -122,6 +127,22 @@ Sobre una copia del respaldo `2026-10-29T1659Z`, borrada al terminar. Los inform
 | Transacción      | ROLLBACK. Con una conexión nueva siguen 174 recetas y 165 insumos, ninguno de Pan de Muerto, y la bitácora hasta #1378 |
 
 El informe se guardó fuera del repo, en el respaldo privado.
+
+## Aplicación en producción (2026-10-29 23:29 UTC, aprobada por Carlo)
+
+Antes de aplicar se comprobó que producción seguía igual que en el ensayo: 174 recetas, 165 insumos, ninguno de Pan de
+Muerto y la bitácora hasta #1378.
+
+| Paso              | Resultado                                                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Aplicar           | 2 insumos y 3 productos creados con el costo esperado y 0 problemas; 36 registros propios y 0 ajenos; resto sin cambios; COMMIT                                                                                          |
+| Conexión nueva    | 174 → 177 recetas y 165 → 167 insumos. Los panes quedan en Bakery, con 3 líneas y $65 de lista; el combo, en Combos, con 7 líneas y sin lista. Todos activos. Insumos: POR ASIGNAR, PANADERIA, $15.86 y $24.45 por pieza |
+| Bitácora          | #1415–1450: 36 filas, exactamente las del lote                                                                                                                                                                           |
+| Repetir el ensayo | 2 insumos y 3 productos «sin cambio», 0 registros, ROLLBACK                                                                                                                                                              |
+
+La ejecución completa y el comando de reversión están en el respaldo privado
+(`informes-pan-de-muerto-lote-1/REVERSION.md`). La reversión solo borra si no hubo ediciones posteriores ni enlaces, y
+requiere aprobación.
 
 ## Siguiente paso: enlaces POS y Rappi (lote aparte)
 
