@@ -1,6 +1,6 @@
 # 36 · Lote 5 de códigos POS: 23 SKU del menú «MEX - A» del portal del POS
 
-**Estado:** preparado el 2026-10-29, con manifiesto, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK** (ver «Respaldo y ensayo remoto»). **Sin carga.** Cargar requiere aprobación expresa de Carlo.
+**Estado:** ✅ **cargado el 2026-10-29 (16:05 UTC) y verificado.** carga_id `5ac1e738-4de7-4832-93b5-db4ef066fa0d`, 23 altas (72 → **95** enlaces), bitácora **#1235–1257**; segundo ensayo con 23 «sin cambio». Ver «Cierre». El ensayo remoto y la carga contaron con la aprobación expresa de Carlo.
 
 **Otros menús del portal:** MEX - B (17), MEX - C (18) y NORTE (462) tienen exactamente los mismos 136 productos que MEX - A, con los mismos códigos, nombres y categorías (huella idéntica del listado). Solo cambian los precios; por ejemplo, el Americano cuesta $52 en A, $60 en B y NORTE, y $70 en C. No aportan SKU nuevos.
 
@@ -81,8 +81,30 @@ Con el código de este PR en `349090c`. **No se cargó nada.**
 1. ~~Respaldo lógico verificado~~ hecho (arriba).
 2. ~~Ensayo remoto con ROLLBACK~~ hecho (arriba):
    `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-5 --usuario <uuid-perfil>`
-3. Carga:
+3. ~~Carga~~ hecha (abajo):
    `… --lote lote-5 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
 4. Verificar con una conexión nueva y repetir el ensayo, que debe dar 23 «sin cambio».
 5. Revertir, solo con aprobación:
    `… --lote lote-5 --revertir --carga <carga_id> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+
+## Cierre: cargado el 2026-10-29 (16:05 UTC) y verificado
+
+Carlo autorizó cargar únicamente el `lote-5`, ensayado con el código de este PR en `349090c` (después solo cambió este documento). Hubo un solo COMMIT, sin reintentos.
+
+| Paso | Resultado |
+|---|---|
+| **Vigencia** | Justo antes: 72 enlaces, bitácora 805/1211 y ninguno de los 23 códigos, igual que en el ensayo y el respaldo `2026-10-29T1558Z` |
+| **Carga** | **COMMIT**, carga_id `5ac1e738-4de7-4832-93b5-db4ef066fa0d`: 23 altas, 23 registros propios y 0 ajenos, 0 problemas; lotes 1–4 intactos antes y después (57/5/8/2); datos comerciales sin cambios |
+| **Conexión nueva** | **95 enlaces**; los 23 con su receta, nombre observado y carga exactos al manifiesto |
+| **Segundo ensayo** | 23 «sin cambio», 0 registros, ROLLBACK; sigue en 95 |
+
+- **Bitácora:** #1235–1257, 23 registros `carga_masiva` con autor Carlo y la nota «Lote 5 SKU, carga 5ac1e738… (docs/conciliacion-brasil/36)». Queda en 828 filas (id máx. 1257).
+- **Efecto esperado:** del 28-sep al 25-oct estos códigos sumaron $49,549. Con el enlace, la venta con receta enlazada sube de ~90.8 % a ~95.8 %. Los de tamaño sin verificar siguen en costeo parcial.
+
+### Reversión (solo con aprobación expresa)
+
+```
+npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-5 --revertir --carga 5ac1e738-4de7-4832-93b5-db4ef066fa0d --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>
+```
+
+Borra solo las filas de esa carga que sigan como se cargaron. Los informes se guardan **fuera del repo**, porque contienen el UUID del perfil.
