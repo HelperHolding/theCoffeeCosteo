@@ -1,5 +1,7 @@
 # 02 · Diseño del cron de n8n para Rappi (piloto Namóra)
 
+> **Aprobado por Carlo el 2026-10-29.** Cada sucursal se lee en sus dos tiendas, normal y Turbo. Lo construido y sus cambios respecto de este diseño están en el doc 03.
+
 Fecha: 2026-10-29. **Solo diseño**: no se construyó ningún flujo, tabla ni migración. La evidencia está en el doc 01.
 
 ## Decisión de arquitectura

@@ -15,6 +15,7 @@ import {
 import { claveCosto, type DatosCosteo } from '../../../lib/sucursales/costeo';
 import { claveConsumo, type DatosConsumo, type InsumoReceta } from '../../../lib/sucursales/consumo';
 import { periodoDeUrl } from '../../../lib/sucursales/periodo';
+import { construirRappiPortal, type RpcRappiPortal } from '../../../lib/sucursales/rappi-portal';
 import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
@@ -23,12 +24,155 @@ import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
  * Ventas POS con DATOS SINTÉTICOS: el mismo pipeline del servidor corre en el navegador sobre un
  * fetch falso (sin red, sin token, sin Auth). ?sucursales[&estado=error|parcial|vacio][&gdl=1][&seccion=…]
  * &gdl=1: una sucursal de Guadalajara SIN Rappi en la API (mismo fixture, sin pedidos Rappi).
+ * &portal=1 (con gdl=1): además, Rappi leído del portal de Partners (pestaña Rappi, pedidos sintéticos).
  */
 const parametros = new URLSearchParams(window.location.search);
 const gdl = parametros.get('gdl') === '1';
+const portal = gdl && parametros.get('portal') === '1';
 const cfg = gdl
-  ? { ...configDe(384)!, companyId: 612, lookerStoreId: 477, nombre: 'Ventura (sintética)' }
+  ? {
+      ...configDe(384)!,
+      companyId: 612,
+      lookerStoreId: 477,
+      nombre: portal ? 'Namóra (sintética)' : 'Ventura (sintética)',
+      rappiPortal: portal,
+    }
   : configDe(612)!;
+
+// Pedidos de Rappi SINTÉTICOS del portal (nombres del menú de Rappi; precios y cantidades inventados).
+const MENU_RAPPI: [string, number, [string, string, number?][][]][] = [
+  [
+    'Pumpkin Iced Latte',
+    122,
+    [
+      [['Elige el Tamaño ', 'Grande 590 ml.', 13]],
+      [['Café', 'Double Shot (36ml)']],
+      [
+        ['Leche.', 'Deslactosada', 13],
+        ['Leche.', 'Entera'],
+      ],
+    ],
+  ],
+  [
+    'Iced latte',
+    88,
+    [
+      [
+        ['Elige el Tamaño ', 'Mediano 440  ml'],
+        ['Elige el Tamaño ', 'Grande 590 ml.', 13],
+      ],
+      [
+        ['Café', 'Double Shot (36ml)'],
+        ['Café', 'Single Shot (18ml)'],
+      ],
+      [
+        ['Leche.', 'Entera'],
+        ['Leche.', 'Avena', 13],
+      ],
+      [
+        ['Miel', 'Poco'],
+        ['Miel', 'Sin'],
+      ],
+    ],
+  ],
+  [
+    'Crea tu The Coffee ',
+    199,
+    [
+      [['Elige Tu Sandwich', ' Croissant relleno de queso y jamón ']],
+      [
+        ['Elige tu Bebida ', 'True White', 10],
+        ['Elige tu Bebida ', 'Iced Latte'],
+      ],
+      [
+        ['Leche.', 'Entera'],
+        ['Leche.', 'Deslactosada', 13],
+      ],
+    ],
+  ],
+  [
+    'Matcha Iced Latte',
+    110,
+    [
+      [
+        ['Leche.', 'Avena', 13],
+        ['Leche.', 'Entera'],
+      ],
+    ],
+  ],
+  ['Kouign Amann Hazelnut', 75, []],
+];
+function rappiPortalSintetico(desde: string, hasta: string): RpcRappiPortal {
+  let s = 7;
+  const azar = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const pedidos: RpcRappiPortal['pedidos'] = [];
+  const conteos: RpcRappiPortal['conteos'] = [];
+  for (let d = desde; d <= hasta; d = sumarDias(d, 1)) {
+    for (const [tienda, n] of [
+      ['MXN', 6],
+      ['MXT', 8],
+    ] as const) {
+      const total = Math.floor(n + azar() * 6);
+      const devueltos = total - (azar() < 0.25 ? 1 : 0);
+      conteos.push({ tienda, fecha: d, total_rows: total, devueltos });
+      for (let i = 0; i < devueltos; i++) {
+        const productos = MENU_RAPPI.filter(() => azar() < 0.35)
+          .slice(0, 2)
+          .map(([nombre, base, grupos]) => {
+            const opciones = grupos.map((g) => g[Math.floor(azar() * g.length)]);
+            const precio = base + opciones.reduce((a, o) => a + (o[2] ?? 0), 0);
+            return {
+              nombre,
+              unidades: 1,
+              precio,
+              opciones: opciones.map(([categoria, descripcion, p]) => ({
+                categoria,
+                descripcion,
+                precio: p ?? 0,
+                unidades: 1,
+              })),
+            };
+          });
+        if (!productos.length) continue;
+        const h = 7 + Math.floor(azar() * 13);
+        const estadoP = azar() < 0.06 ? 'canceled' : azar() < 0.5 ? 'pending_review' : 'finished';
+        pedidos.push({
+          id: String(2_483_700_000 + pedidos.length * 977),
+          tienda,
+          creado: `${d}T${String(h).padStart(2, '0')}:${String(Math.floor(azar() * 60)).padStart(2, '0')}:00`,
+          fecha: d,
+          estado: estadoP,
+          estado_nombre: estadoP === 'canceled' ? 'Cancelada' : 'Terminada',
+          en_disputa: azar() < 0.04,
+          estado_disputa: null,
+          metodo_pago: azar() < 0.6 ? 'Tarjeta de Crédito' : 'Efectivo contraentrega',
+          bruto: productos.reduce((a, x) => a + x.precio, 0),
+          descuento_aliado: azar() < 0.3 ? 20 : null,
+          estado_anterior: null,
+          revisar: false,
+          cambios: 0,
+          productos,
+        });
+      }
+    }
+  }
+  pedidos.sort((a, b) => b.creado.localeCompare(a.creado));
+  return {
+    tiendas: [
+      { id: 'MXN', nombre: 'The Coffee Namóra (sintética)', canal: 'normal' },
+      { id: 'MXT', nombre: 'The Coffee Namóra - Turbo (sintética)', canal: 'turbo' },
+    ],
+    ultima_corrida: {
+      inicio: new Date(Date.now() - 4 * 60_000).toISOString(),
+      tipo: 'vivo',
+      estado: 'ok',
+      mensaje: null,
+    },
+    ultima_ok: new Date(Date.now() - 4 * 60_000).toISOString(),
+    conteos,
+    pedidos,
+  };
+}
 const estado = parametros.get('estado');
 
 // Costeo SINTÉTICO (costos inventados). Tres recetas con tamaño verificado, una Único y una sin verificar;
@@ -223,15 +367,18 @@ __reiniciarParaPruebas({
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
-  const m = /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo)$/.exec(
-    url.pathname,
-  );
+  const m =
+    /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo|rappi-portal)$/.exec(
+      url.pathname,
+    );
   if (!m) return fetchNavegador(entrada, init);
   await new Promise((r) => setTimeout(r, 250));
   const q = url.searchParams;
   const origen = (q.get('origen') ?? 'todos') as FiltroOrigen;
   const desde = q.get('desde') ?? hoy;
   const hasta = q.get('hasta') ?? desde;
+  if (m[2] === 'rappi-portal')
+    return Response.json(construirRappiPortal(rappiPortalSintetico(desde, hasta), desde, hasta));
   if (m[2] === 'costeo' && !costeo)
     return Response.json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, { status: 403 });
   if (m[2] === 'costeo') return Response.json(await construirCosteo(cfg, desde, hasta, origen, costeo!));

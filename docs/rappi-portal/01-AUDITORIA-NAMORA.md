@@ -1,5 +1,7 @@
 # 01 · Auditoría del portal de Rappi Partners (piloto Namóra)
 
+> **Corrección (2026-10-29, tarde):** la cuenta tiene también la marca «The Coffee - Turbo». Los pedidos de Rubén Darío que faltaban están en su tienda Turbo, y Namóra tiene la suya (`MX1930301156`). Ver doc 03.
+
 Fecha: 2026-10-29. Rama `docs/rappi-portal-auditoria`. Solo lectura: no se aceptó, rechazó ni cambió nada en el portal, no
 se descargó ningún archivo y no se tocó ningún flujo de n8n.
 

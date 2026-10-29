@@ -1,0 +1,22 @@
+# Agregar este servicio al docker-compose donde corre n8n (misma red que n8n y que el lector de Dodo).
+# n8n lo llama en http://rappi-thecoffee:3101/sincronizar; no se publica ningún puerto hacia afuera.
+# En el .env del compose (los pone Carlo; nunca van al repo):
+#   RAPPI_THECOFFEE_KEY=<clave larga aleatoria, la misma de la credencial «Lector Rappi The Coffee» en n8n>
+#   RAPPI_THECOFFEE_USUARIO=<usuario del lector creado en Rappi → Usuarios>
+#   RAPPI_THECOFFEE_CLAVE=<su contraseña>
+services:
+  rappi-thecoffee:
+    build:
+      context: ./rappi-thecoffee
+    restart: unless-stopped
+    environment:
+      EXTRACTOR_KEY: ${RAPPI_THECOFFEE_KEY}
+      RAPPI_USUARIO: ${RAPPI_THECOFFEE_USUARIO}
+      RAPPI_CLAVE: ${RAPPI_THECOFFEE_CLAVE}
+      # Namóra: tienda normal y Turbo (docs/rappi-portal/01). Otra sucursal = sus dos IDs aquí y en rappi_tiendas.
+      RAPPI_TIENDAS: MX1930270777,MX1930301156
+    volumes:
+      - rappi_thecoffee:/datos
+    shm_size: '1gb'
+volumes:
+  rappi_thecoffee:

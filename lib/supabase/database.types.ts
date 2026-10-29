@@ -230,6 +230,7 @@ export interface Database {
       sucursales_datos_costeo: { Args: { p_company: number }; Returns: Json };
       sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };
       sucursales_catalogo_pos: { Args: { p_company: number }; Returns: Json };
+      sucursales_rappi_portal: { Args: { p_company: number; p_desde: string; p_hasta: string }; Returns: Json };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;

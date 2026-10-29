@@ -12,6 +12,8 @@ export interface SucursalInfo {
   zona: string;
   alcance: string;
   rappi: boolean;
+  /** Pedidos de Rappi leídos del portal de Partners (pestaña Rappi), aparte de las ventas del POS. */
+  rappiPortal: boolean;
   sonidoVenta: string | null;
 }
 
