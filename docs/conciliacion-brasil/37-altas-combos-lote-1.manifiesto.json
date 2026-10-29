@@ -1,0 +1,193 @@
+{
+ "lote": "altas-combos-lote-1",
+ "fuente": {
+  "archivo": "Portal del POS, menú «MEX - A» (id 16), leído el 2026-10-29; recetas de Costeo leídas el 2026-10-29",
+  "sha256": "3fa9a020185468051e533916ba1f3224ac36b7b50ca77163c014b6a5b4466c57"
+ },
+ "productos": [
+  {
+   "nombre": "Chai Latte + Lemon Cake",
+   "categoria": "COMBO CON PANADERÍA DULCE",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Chai Latte» (Chica)"
+    },
+    {
+     "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Chai Latte» (Chica)"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 170
+     },
+     "origen": "nuestra receta «Chai Latte» (Chica)"
+    },
+    {
+     "componente": "AGUA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 42
+     },
+     "origen": "nuestra receta «Chai Latte» (Chica)"
+    },
+    {
+     "componente": "CHAI 1 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 4
+     },
+     "origen": "nuestra receta «Chai Latte» (Chica)"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Lemon Cake»"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Lemon Cake»"
+    },
+    {
+     "componente": "PANQUÉ DE LIMÓN",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Lemon Cake»"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 43.6904
+   },
+   "nota": "Combo del menú del POS (CHALEMAPP). Nuestra Chai Latte Chica + nuestro Lemon Cake, como Matcha Iced Latte + Lemon Cake y True White + Pain au Chocolat (bebida caliente en tamaño Único con vaso chico)."
+  },
+  {
+   "nombre": "Vanilla Latte + Pain au Chocolat",
+   "categoria": "Combos",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 18
+     },
+     "origen": "nuestra receta «Vanilla Latte» (Chica)"
+    },
+    {
+     "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Vanilla Latte» (Chica)"
+    },
+    {
+     "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Vanilla Latte» (Chica)"
+    },
+    {
+     "componente": "JARABE DE VANILLA 1 LT (3 PZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 10
+     },
+     "origen": "nuestra receta «Vanilla Latte» (Chica)"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 170
+     },
+     "origen": "nuestra receta «Vanilla Latte» (Chica)"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Pain au Chocolat»"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Pain au Chocolat»"
+    },
+    {
+     "componente": "PAIN AU CHOCOLAT",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Pain au Chocolat»"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 38.7304
+   },
+   "nota": "Combo del menú del POS (2VLT3FOOD3). Nuestra Vanilla Latte Chica + nuestro Pain au Chocolat, como True White + Pain au Chocolat."
+  },
+  {
+   "nombre": "Coffee bag 250g + Mug",
+   "categoria": "Coffee Line",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "CAFE TOSTADO EN GRANO WHITE MERCH 250 GRAMOS",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «White bag 250g»"
+    },
+    {
+     "componente": "COFFEE MUG 300 ML WHITE",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "nuestra receta «Mug»"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 242
+   },
+   "nota": "Combo del menú del POS (BAGMUGAPP). Bolsa White 250 g + una taza (la receta de Mug quedó con una sola taza en el doc 34), como Coffee Bag 250g + Tumbler 240ml."
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-29: «Sí, ármalos» y «Armarlos ya» (combos del menú del POS con nuestras recetas, aunque hoy no tengan venta en ninguna de las 119 sucursales). Autoriza preparar el lote, pruebas, ensayo local y PR; cada paso remoto requiere aprobación expresa."
+}

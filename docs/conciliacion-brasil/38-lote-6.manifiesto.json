@@ -1,0 +1,29 @@
+{
+ "lote": "lote-6",
+ "archivo": "docs/conciliacion-brasil/38-lote-6.csv",
+ "filas": 3,
+ "sha256": "3d542c3afcf339d884d3f20f0b1fe285f55ed6ab8509606c4c70b582463a4ddc",
+ "correspondencias": [
+  {
+   "codigo": "2VLT3FOOD3",
+   "receta_id": "2f38f651-98ba-4937-b541-b060854f45a7"
+  },
+  {
+   "codigo": "BAGMUGAPP",
+   "receta_id": "a19da1ce-b1c9-4a7c-b9e1-39f21a7eec89"
+  },
+  {
+   "codigo": "CHALEMAPP",
+   "receta_id": "07382fb6-ea6e-4c4e-bd98-a112daf1d62f"
+  }
+ ],
+ "requiere": [
+  "lote-5"
+ ],
+ "aprobacion": "Carlo, 2026-10-29: «Prepara enlaces» (los códigos POS de los 3 combos creados con altas-combos-lote-1, doc 37). Autoriza preparar el lote con el cargador existente; cada paso remoto (respaldo, ensayo y carga) requiere aprobación expresa.",
+ "notas": [
+  "Requiere el lote 5 (y por él los lotes 1–4): los 95 enlaces actuales deben seguir intactos antes y después",
+  "Fuente: catálogo del portal del POS (portal-new.thecoffee.jp, menú «MEX - A», id 16) leído en solo lectura el 2026-10-29; el default code del portal es el defaultCode de la API",
+  "Las 3 recetas se crearon el 2026-10-29 (altas-combos-lote-1, doc 37) con el nombre exacto del POS y tamaño Único; hoy no tienen venta en ninguna de las 119 sucursales"
+ ]
+}

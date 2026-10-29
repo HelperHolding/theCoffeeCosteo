@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import pg from 'pg';
 import { PROYECTO } from './db-lectura';
 import { nombreDestino, resolverDestino } from './destino';
-import { aplicarAltas, leerLoteAltas, type ModoAlta } from './altas-productos';
+import { aplicarAltas, docAltas, leerLoteAltas, type ModoAlta } from './altas-productos';
 
 /**
  * Alta de productos con receta (doc 31) · CLI (lógica y verificaciones en altas-productos.ts). --usuario y --lote son obligatorios.
@@ -14,7 +14,7 @@ import { aplicarAltas, leerLoteAltas, type ModoAlta } from './altas-productos';
  *     npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote <lote> --revertir --ejecucion <uuid> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
  *   --local <url>: copia en localhost (respaldo restaurado). No equivale a autorización remota.
  * DATABASE_URL se lee con el cargador existente, se valida con el parser contra el proyecto y nunca se imprime.
- * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/31-informes/.
+ * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/<doc del lote>-informes/ (31 o 37).
  */
 const args = process.argv.slice(2);
 const valor = (f: string) => (args.includes(f) ? args[args.indexOf(f) + 1] : undefined);
@@ -44,7 +44,7 @@ try {
     { usuario, ejecucion: valor('--ejecucion') },
   );
   const registro = { fecha: new Date().toISOString(), destino: nombreDestino(destino), ...informe };
-  const carpeta = 'docs/conciliacion-brasil/31-informes';
+  const carpeta = `docs/conciliacion-brasil/${docAltas(manifiesto.lote)}-informes`;
   await mkdir(carpeta, { recursive: true });
   const archivo = `${carpeta}/${registro.fecha.replace(/[:.]/g, '-')}-${registro.destino}-${manifiesto.lote}-${modo}.json`;
   await writeFile(archivo, JSON.stringify(registro, null, 1) + '\n');

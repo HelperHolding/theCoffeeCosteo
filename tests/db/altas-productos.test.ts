@@ -129,7 +129,31 @@ describe('manifiesto', () => {
         .lineas.filter((l) => l.componente.startsWith('HIELO')),
     ).toHaveLength(1);
     expect(m.aprobacion).toMatch(/NO autoriza ensayo remoto ni aplicar en producción/);
-    expect(Object.keys(LOTES_ALTAS_APROBADOS)).toEqual(['altas-zoho-lote-1']);
+    expect(Object.keys(LOTES_ALTAS_APROBADOS)).toEqual(['altas-zoho-lote-1', 'altas-combos-lote-1']);
+  });
+
+  it('lote de combos (doc 37): 3 combos del menú del POS con nuestras recetas, tamaño Único y costo esperado', async () => {
+    const m = await leerLoteAltas('altas-combos-lote-1');
+    expect(
+      m.productos.map((p) => [p.nombre, p.categoria, p.tamanos.join('/'), p.costoEsperado['Único']]),
+    ).toEqual([
+      ['Chai Latte + Lemon Cake', 'COMBO CON PANADERÍA DULCE', 'Único', 43.6904],
+      ['Vanilla Latte + Pain au Chocolat', 'Combos', 'Único', 38.7304],
+      ['Coffee bag 250g + Mug', 'Coffee Line', 'Único', 242],
+    ]);
+    const lineas = (n: string) => m.productos.find((p) => p.nombre === n)!.lineas.map((l) => l.componente);
+    expect(lineas('Chai Latte + Lemon Cake')).toEqual(
+      expect.arrayContaining(['CHAI 1 KG', 'PANQUÉ DE LIMÓN']),
+    );
+    expect(lineas('Vanilla Latte + Pain au Chocolat')).toEqual(
+      expect.arrayContaining(['JARABE DE VANILLA 1 LT (3 PZAS)', 'PAIN AU CHOCOLAT']),
+    );
+    // Una sola taza (doc 34), no las dos.
+    expect(lineas('Coffee bag 250g + Mug')).toEqual([
+      'CAFE TOSTADO EN GRANO WHITE MERCH 250 GRAMOS',
+      'COFFEE MUG 300 ML WHITE',
+    ]);
+    expect(m.aprobacion).toMatch(/cada paso remoto requiere aprobación expresa/);
   });
 
   it('se rechazan manifiestos incoherentes', () => {
