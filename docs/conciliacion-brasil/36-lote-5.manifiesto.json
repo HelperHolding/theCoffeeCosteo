@@ -1,0 +1,110 @@
+{
+ "lote": "lote-5",
+ "archivo": "docs/conciliacion-brasil/36-lote-5.csv",
+ "filas": 23,
+ "sha256": "dd888fe86fbcb38cd406d92abd28c30b2042e60683a048050cca2c6825b6b646",
+ "correspondencias": [
+  {
+   "codigo": "1CDV60",
+   "receta_id": "7799a6fe-bf6f-4247-842c-a071588cd9ac"
+  },
+  {
+   "codigo": "1CDV60M",
+   "receta_id": "49ef4055-997e-4fcc-a52d-16aca66d964b"
+  },
+  {
+   "codigo": "1DRR",
+   "receta_id": "f440f5bc-2536-413b-991d-7b55ee8525a3"
+  },
+  {
+   "codigo": "2PF",
+   "receta_id": "f2d31173-75a0-4bdc-80a7-25f0637b6302"
+  },
+  {
+   "codigo": "4TW2FOOD2",
+   "receta_id": "370a151c-2cc8-4d54-bea6-0b81310637e7"
+  },
+  {
+   "codigo": "BRICE",
+   "receta_id": "2c8f400b-525f-4c30-8d64-f18be8b9334c"
+  },
+  {
+   "codigo": "COFTUPAPP",
+   "receta_id": "95c66c8f-c54a-4387-aa43-b3feb46c8e4b"
+  },
+  {
+   "codigo": "COMILTAPP",
+   "receta_id": "480a3080-d543-4540-adfc-d4e64ba06248"
+  },
+  {
+   "codigo": "EVIGLAAPP",
+   "receta_id": "84dcc6d7-83ae-48f2-96b3-8c3f15dc6eec"
+  },
+  {
+   "codigo": "FEMIWAAPP",
+   "receta_id": "ad128eb6-8168-49b3-8393-bd97ac63fa8c"
+  },
+  {
+   "codigo": "FOCJAMAPP",
+   "receta_id": "3a89083e-caeb-4abe-8288-c70b0dfe005e"
+  },
+  {
+   "codigo": "FOCJASAPP",
+   "receta_id": "59bc706c-56cb-47c0-89df-855259f855f8"
+  },
+  {
+   "codigo": "FSOD2",
+   "receta_id": "e5b9dc6b-e750-4a91-8120-065cd719582c"
+  },
+  {
+   "codigo": "FSOD4",
+   "receta_id": "6465a09a-6612-4542-8298-67108c507e12"
+  },
+  {
+   "codigo": "KOAMANAPP",
+   "receta_id": "2a7ef247-045e-454c-b060-63d191c78dfa"
+  },
+  {
+   "codigo": "LATNUTAPP",
+   "receta_id": "28d68f0b-1896-491a-9350-02ca52d7d1bd"
+  },
+  {
+   "codigo": "MATLEMAPP",
+   "receta_id": "a1455ee0-cb6d-4195-bd11-01660fc56cb3"
+  },
+  {
+   "codigo": "MISICEDAPP",
+   "receta_id": "e95e45e9-b5fc-4d10-ab5c-170e13cedf15"
+  },
+  {
+   "codigo": "SHCO",
+   "receta_id": "adfc682f-380c-41a9-a83d-63f94e0d3042"
+  },
+  {
+   "codigo": "SINSHOAPP",
+   "receta_id": "d9954c93-6a80-45f6-95fb-579b837a62be"
+  },
+  {
+   "codigo": "TRUGOUAPP",
+   "receta_id": "14c61cda-2564-402a-b70f-82ebafc8d7b4"
+  },
+  {
+   "codigo": "TRUMISAPP",
+   "receta_id": "d950794b-23cf-4f1c-a775-ee71f5001eff"
+  },
+  {
+   "codigo": "TRWCROAPP",
+   "receta_id": "fd4c5628-6681-47dd-ab01-2d0de8ae6d28"
+  }
+ ],
+ "requiere": [
+  "lote-4"
+ ],
+ "aprobacion": "Carlo, 2026-10-29: «Si mete los skus a las que ya están listas» (los 23 códigos del menú MEX - A del portal del POS cuya receta ya existe en Costeo con el mismo nombre). Autoriza preparar el lote con el cargador existente; cada paso remoto (respaldo, ensayo y carga) requiere aprobación expresa.",
+ "notas": [
+  "Requiere el lote 4 (y por él los lotes 1–3): los 72 enlaces actuales deben seguir intactos antes y después",
+  "Fuente: catálogo del portal del POS (portal-new.thecoffee.jp, menú «MEX - A», id 16) leído en solo lectura el 2026-10-29; el default code del portal es el defaultCode de la API",
+  "Enlace = identidad código → receta. Los tamaños no se verifican aquí: combos con vaso, Cold Drip sin vaso y Fresh Soda/Gelato con tamaño mixto quedan en costeo parcial hasta verificarlos",
+  "Fuera: ZOEWATAPP y ZOETWIAPP (decisión N1/N2) y los productos que no tienen receta en Costeo"
+ ]
+}

@@ -119,6 +119,26 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.aprobacion).toMatch(/NO autoriza carga en producción ni desactivar duplicados/);
   });
 
+  it('lote 5: los 23 códigos del menú MEX - A con receta del mismo nombre, requiere los lotes 1–4 completos (72)', async () => {
+    const l = await leerLoteAprobado('lote-5');
+    expect(l.lote).toHaveLength(23);
+    expect(Object.keys(l.previos).sort()).toEqual(['lote-1', 'lote-2', 'lote-3', 'lote-4']);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(72);
+    const por = Object.fromEntries(l.lote.map((f) => [f.codigo, f]));
+    expect(por.SHCO.receta_nombre).toBe('Gelato Frappé Coffee');
+    expect(por.SINSHOAPP.receta_nombre).toBe('Pure Black (Single Shot)');
+    // El nombre observado es el de la API (doble espacio incluido), que usa el catálogo para las líneas sin código.
+    expect(por.MISICEDAPP.nombre_observado).toBe('Iced Latte +  Ham & Cheese Sandwich');
+    for (const f of l.lote) {
+      const canon = (s: string) => s.toLowerCase().replace(/\s+/g, ' ');
+      expect(canon(f.nombre_observado), f.codigo).toBe(canon(f.receta_nombre));
+      expect(f.evidencia).toMatch(/Portal POS \(menú MEX - A/);
+    }
+    for (const excluido of ['ZOEWATAPP', 'ZOETWIAPP', 'PANMUEAPP', 'COOMATAPP', 'ESPTONAPP'])
+      expect(l.lote.some((f) => f.codigo === excluido)).toBe(false);
+    expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
     await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));
