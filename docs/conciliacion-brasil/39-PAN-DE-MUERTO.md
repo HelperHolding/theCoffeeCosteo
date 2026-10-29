@@ -1,7 +1,7 @@
 # 39 · Pan de Muerto: alta por lote con el brief a franquiciatarios
 
-**Estado:** preparado y ensayado en local. **Sin aplicar en producción**: cada paso remoto (respaldo, ensayo y aplicar)
-requiere aprobación de Carlo.
+**Estado:** respaldo y ensayo remoto hechos, los dos limpios, con aprobación de Carlo. **Sin aplicar en producción**:
+aplicar requiere aprobación aparte.
 
 Fecha: 2026-10-29. Carlo pidió dejar con receta todos los productos que se venden, uno por uno, empezando por el Pan de
 Muerto. Lo que no tenía receta en las 13 sucursales configuradas, del 15 al 29 de octubre:
@@ -96,11 +96,32 @@ Sobre una copia del respaldo `2026-10-29T1659Z`, borrada al terminar. Los inform
 
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Respaldo lógico verificado.
-2. Ensayo remoto con ROLLBACK:
+1. ~~Respaldo lógico verificado~~ (hecho, aprobado por Carlo: «dale con el respaldo y el ensayo»).
+2. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote pan-de-muerto-lote-1 --usuario <uuid-perfil>`
 3. Aplicar: `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
 4. Verificar con una conexión nueva y repetir el ensayo («sin cambio»).
+
+**Respaldo `2026-10-29T2325Z`**, restaurado en local (`resp2325`):
+
+- `pg_restore` con 8 errores, todos de `vault`, como en los respaldos anteriores.
+- `verificar-restauracion.ts`: funciones, políticas, membresías y `v_resumen` bajo RLS iguales a producción.
+- Las 13 tablas de Costeo, comparadas fila por fila en UTC, son idénticas a producción: recetas, insumos, tamaños,
+  líneas, cantidades, bitácora, enlaces POS, catálogos, precios manuales y perfiles.
+- Solo difieren `auth` (sesiones activas) y la secuencia de `rappi_corridas`, por una corrida del cron después del
+  respaldo.
+
+**Ensayo remoto con ROLLBACK** (23:27 UTC):
+
+| Resultado        | Valor                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Creados          | 2 insumos y 3 productos, con el costo esperado ($18.0104, $26.6004 y $32.7504)                                         |
+| Problemas        | 0                                                                                                                      |
+| Bitácora         | 36 propios, 0 ajenos                                                                                                   |
+| Resto de la base | sin cambios                                                                                                            |
+| Transacción      | ROLLBACK. Con una conexión nueva siguen 174 recetas y 165 insumos, ninguno de Pan de Muerto, y la bitácora hasta #1378 |
+
+El informe se guardó fuera del repo, en el respaldo privado.
 
 ## Siguiente paso: enlaces POS y Rappi (lote aparte)
 
