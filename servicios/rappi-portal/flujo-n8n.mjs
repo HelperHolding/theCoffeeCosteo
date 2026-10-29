@@ -14,13 +14,23 @@ const SUPABASE = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_imp
 const SMTP = { id: '77HAkO1eZAVBGkN4', name: 'SMTP Notifications' }; // la misma de los reportes
 const AVISAR_A = 'cvalencia@mx.thecoffee.jp';
 
-const resumen = `const lote = $('Leer portal').first().json;
-const r = $('Guardar en Supabase').first().json;
-const ok = r.statusCode >= 200 && r.statusCode < 300;
-let estado = lote.estado ?? 'error';
-let mensaje = lote.mensaje ?? ('El lector respondió: ' + JSON.stringify(lote).slice(0, 300));
-if (!ok) { estado = 'error'; mensaje += ' Supabase respondió ' + r.statusCode + ': ' + JSON.stringify(r.body).slice(0, 300); }
-else if (r.body && typeof r.body === 'object') {
+const resumen = `// El lector puede fallar (clave, red, caído): entonces no se guarda nada y se avisa igual.
+const disparo = ['Vivo', 'Cierre', 'Repaso', 'Manual'].find((n) => $(n).isExecuted);
+const pedido = disparo ? $(disparo).first().json : {};
+const leido = $('Leer portal').first().json;
+const lote = leido.statusCode === 200 && leido.body && typeof leido.body === 'object' ? leido.body : null;
+const r = $('Guardar en Supabase').isExecuted ? $('Guardar en Supabase').first().json : null;
+let estado, mensaje;
+if (!lote) {
+  estado = 'error';
+  mensaje = 'El lector no respondió bien: ' + (leido.statusCode ? 'HTTP ' + leido.statusCode + ' ' + JSON.stringify(leido.body).slice(0, 200) : String(leido.error?.message ?? JSON.stringify(leido)).slice(0, 300)) + '. No se guardó nada.';
+} else {
+  estado = lote.estado ?? 'error';
+  mensaje = lote.mensaje ?? '';
+}
+const ok = r && r.statusCode >= 200 && r.statusCode < 300;
+if (lote && !ok) { estado = 'error'; mensaje += ' Supabase respondió ' + r?.statusCode + ': ' + JSON.stringify(r?.body).slice(0, 300); }
+else if (ok && r.body && typeof r.body === 'object') {
   const b = r.body;
   if (b.nuevos !== undefined) mensaje += ' Guardados: ' + b.nuevos + ' nuevos, ' + b.cambiados + ' cambiados, ' + b.desaparecidos + ' para revisar.';
   if (b.cambios?.length) mensaje += ' Cambios: ' + b.cambios.map((c) => '#' + c.id + ' ' + c.de + ' → ' + c.a).join(', ') + '.';
@@ -34,9 +44,9 @@ if (estado === 'error' || estado === 'sesion_expirada') {
   if (!previo || previo.estado !== estado || Date.now() - previo.t > 6 * 3600 * 1000) { avisar = true; st.ultimoAviso = { estado, t: Date.now() }; }
 } else {
   if (estado === 'ok' || estado === 'sin_ordenes') st.ultimoAviso = null;
-  if (lote.tipo === 'cierre' && (/menos de lo que contó/.test(mensaje) || (r.body?.desaparecidos ?? 0) > 0)) avisar = true;
+  if (lote?.tipo === 'cierre' && (/menos de lo que contó/.test(mensaje) || (r?.body?.desaparecidos ?? 0) > 0)) avisar = true;
 }
-return [{ json: { avisar, tipo: lote.tipo, desde: lote.desde, hasta: lote.hasta, estado, mensaje } }];`;
+return [{ json: { avisar, tipo: lote?.tipo ?? pedido.tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
 
 const id = () => randomUUID();
 const nodo = (name, type, typeVersion, position, parameters, extra = {}) => ({
@@ -105,10 +115,30 @@ const nodes = [
       sendBody: true,
       specifyBody: 'json',
       jsonBody: '={{ JSON.stringify({ tipo: $json.tipo, desde: $json.desde, hasta: $json.hasta }) }}',
-      options: { timeout: 600000 },
+      // Respuesta completa y sin cortar el flujo: si el lector falla (401, caído, red), «Resumen» avisa.
+      options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 600000 },
     },
-    { notes: 'Credencial: Header Auth x-api-key = RAPPI_THECOFFEE_KEY del lector.' },
+    {
+      notes: 'Credencial: Header Auth, Name x-api-key, Value = solo el valor de RAPPI_THECOFFEE_KEY.',
+      onError: 'continueRegularOutput',
+    },
   ),
+  nodo('¿Lector OK?', 'n8n-nodes-base.if', 2.2, [580, 270], {
+    conditions: {
+      options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 },
+      combinator: 'and',
+      conditions: [
+        {
+          id: id(),
+          leftValue: '={{ $json.statusCode }}',
+          rightValue: 200,
+          operator: { type: 'number', operation: 'equals' },
+        },
+      ],
+    },
+    looseTypeValidation: true,
+    options: {},
+  }),
   nodo(
     'Guardar en Supabase',
     'n8n-nodes-base.httpRequest',
@@ -121,7 +151,7 @@ const nodes = [
       genericAuthType: 'httpHeaderAuth',
       sendBody: true,
       specifyBody: 'json',
-      jsonBody: '={{ JSON.stringify({ p_lote: $json }) }}',
+      jsonBody: '={{ JSON.stringify({ p_lote: $json.body }) }}',
       options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 120000 },
     },
     { notes: 'Credencial: Header Auth apikey = llave secreta de Supabase. Solo llama rappi_importar.' },
@@ -176,7 +206,8 @@ const connections = {
   ...conecta('Cierre', 'Leer portal'),
   ...conecta('Repaso', 'Leer portal'),
   ...conecta('Manual', 'Leer portal'),
-  ...conecta('Leer portal', 'Guardar en Supabase'),
+  ...conecta('Leer portal', '¿Lector OK?'),
+  ...conecta('¿Lector OK?', 'Guardar en Supabase', 'Resumen'),
   ...conecta('Guardar en Supabase', 'Resumen'),
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
