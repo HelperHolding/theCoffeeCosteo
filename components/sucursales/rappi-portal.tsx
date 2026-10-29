@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Ban,
@@ -9,6 +9,7 @@ import {
   Clock3,
   ReceiptText,
   ShoppingBag,
+  X,
 } from 'lucide-react';
 import type { CanalRappi, ClaseEstado, RappiPortalVista } from '@/lib/sucursales/rappi-portal';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
@@ -310,13 +311,13 @@ export function RappiPortal({
 
               <Tarjeta
                 titulo="Pedidos"
-                descripcion="Todos los estados. Hora local de la tienda. Un pedido que cambió después (cancelación, reclamo) lo indica."
+                descripcion="Todos los estados. Hora local de la tienda. «Ver detalle» abre el resumen de la orden como en el portal de Rappi."
                 cuerpo={false}
               >
                 {pedidos.length === 0 ? (
                   <Vacio titulo={q ? 'Ningún pedido coincide' : 'Sin pedidos en el periodo'} />
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="relative overflow-x-auto">
                     <table className="tabla w-full">
                       <thead>
                         <tr>
@@ -327,110 +328,59 @@ export function RappiPortal({
                           <th scope="col" className="numero">
                             Total
                           </th>
+                          <th scope="col">
+                            <span className="sr-only">Detalle</span>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {pedidos.map((p) => {
-                          const open = pedidoAbierto === p.id;
                           const E = ESTADO[p.clase];
                           return (
-                            <Fragment key={p.id}>
-                              <tr>
-                                <td className="whitespace-nowrap font-medium">
-                                  <button
-                                    type="button"
-                                    aria-expanded={open}
-                                    onClick={() => setPedidoAbierto(open ? null : p.id)}
-                                    className="inline-flex items-center gap-1.5 text-left hover:underline"
-                                  >
-                                    {open ? (
-                                      <ChevronDown size={14} aria-hidden="true" className="shrink-0" />
-                                    ) : (
-                                      <ChevronRight size={14} aria-hidden="true" className="shrink-0" />
-                                    )}
-                                    <span className="tabular">
-                                      {fechaCorta(p.fecha)} {hora(p.creado)}
-                                    </span>
-                                  </button>
-                                  <span className="block pl-5 text-xs font-normal text-muted-foreground tabular">
-                                    #{p.id}
+                            <tr key={p.id}>
+                              <td className="whitespace-nowrap font-medium">
+                                <span className="tabular">
+                                  {fechaCorta(p.fecha)} {hora(p.creado)}
+                                </span>
+                                <span className="block text-xs font-normal text-muted-foreground tabular">
+                                  #{p.id}
+                                </span>
+                              </td>
+                              <td>
+                                <Etiqueta color={CANAL[p.canal].color}>{CANAL[p.canal].nombre}</Etiqueta>
+                              </td>
+                              <td className="text-sm">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <E.icono size={15} aria-hidden="true" className={E.clase} />
+                                  {p.estado_nombre}
+                                </span>
+                                {p.en_disputa && (
+                                  <span className="mt-0.5 flex items-center gap-1 text-xs text-ink-2">
+                                    <AlertTriangle size={12} aria-hidden="true" className="text-warn" />
+                                    Con reclamo
                                   </span>
-                                </td>
-                                <td>
-                                  <Etiqueta color={CANAL[p.canal].color}>{CANAL[p.canal].nombre}</Etiqueta>
-                                </td>
-                                <td className="text-sm">
-                                  <span className="inline-flex items-center gap-1.5">
-                                    <E.icono size={15} aria-hidden="true" className={E.clase} />
-                                    {p.estado_nombre}
+                                )}
+                                {p.revisar && (
+                                  <span className="block text-xs text-muted-foreground">
+                                    Ya no aparece en el portal
                                   </span>
-                                  {p.en_disputa && (
-                                    <span className="mt-0.5 flex items-center gap-1 text-xs text-ink-2">
-                                      <AlertTriangle size={12} aria-hidden="true" className="text-warn" />
-                                      Con reclamo
-                                    </span>
-                                  )}
-                                  {p.estado_anterior && (
-                                    <span className="block text-xs text-muted-foreground">
-                                      Antes: {p.estado_anterior}
-                                    </span>
-                                  )}
-                                  {p.revisar && (
-                                    <span className="block text-xs text-muted-foreground">
-                                      Ya no aparece en el portal
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="max-w-md text-sm">
-                                  {p.productos.map((x) => `${x.unidades}× ${x.nombre.trim()}`).join(', ')}
-                                </td>
-                                <td className="numero tabular">
-                                  {dinero(Math.round(p.bruto * 100), moneda)}
-                                </td>
-                              </tr>
-                              {open && (
-                                <tr>
-                                  <td colSpan={5} className="bg-surface-2/60">
-                                    <ul className="space-y-2 py-2 text-sm">
-                                      {p.productos.map((x, i) => (
-                                        <li key={i}>
-                                          <p className="font-medium">
-                                            {x.unidades}× {x.nombre.trim()}{' '}
-                                            <span className="font-normal text-ink-2 tabular">
-                                              {dinero(Math.round(x.precio * 100), moneda)}
-                                            </span>
-                                          </p>
-                                          {x.opciones.length > 0 && (
-                                            <ul className="mt-1 flex flex-wrap gap-1.5">
-                                              {x.opciones.map((o, j) => (
-                                                <li key={j}>
-                                                  <Etiqueta
-                                                    color={TIPOS[tipoOpcion(o.categoria)].color}
-                                                    titulo={o.categoria.trim()}
-                                                  >
-                                                    {o.descripcion.trim()}
-                                                    {o.precio
-                                                      ? ` +${dinero(Math.round(o.precio * 100), moneda)}`
-                                                      : ''}
-                                                  </Etiqueta>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          )}
-                                        </li>
-                                      ))}
-                                      <li className="text-xs text-ink-2">
-                                        Pago: {p.metodo_pago ?? 'sin dato'}
-                                        {p.descuento_aliado !== null &&
-                                          ` · descuento del aliado (Rappi) ${dinero(Math.round(p.descuento_aliado * 100), moneda)}`}
-                                        {p.cambios > 0 &&
-                                          ` · ${p.cambios} ${p.cambios === 1 ? 'cambio registrado' : 'cambios registrados'}`}
-                                      </li>
-                                    </ul>
-                                  </td>
-                                </tr>
-                              )}
-                            </Fragment>
+                                )}
+                              </td>
+                              <td className="max-w-md text-sm">
+                                {p.productos.map((x) => `${x.unidades}× ${x.nombre.trim()}`).join(', ')}
+                              </td>
+                              <td className="numero tabular">{dinero(Math.round(p.bruto * 100), moneda)}</td>
+                              <td className="whitespace-nowrap text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => setPedidoAbierto(p.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
+                                >
+                                  Ver detalle
+                                  <span className="sr-only"> del pedido {p.id}</span>
+                                </button>
+                              </td>
+                            </tr>
                           );
                         })}
                       </tbody>
@@ -442,6 +392,181 @@ export function RappiPortal({
           )}
         </>
       )}
+      <DetalleOrden
+        pedido={datos?.pedidos.find((p) => p.id === pedidoAbierto) ?? null}
+        moneda={moneda}
+        alCerrar={() => setPedidoAbierto(null)}
+      />
     </div>
+  );
+}
+
+type PedidoVista = RappiPortalVista['pedidos'][number];
+
+/**
+ * Resumen de una orden, con la misma estructura que el panel del portal de Rappi: cada producto con su precio, sus
+ * acompañamientos (también los de $0.00), subtotal y total después de descuentos. Cajón lateral (dialog nativo: foco
+ * atrapado y Esc cierra). Total después de descuentos = subtotal − descuento del aliado (discount_info del detalle).
+ */
+function DetalleOrden({
+  pedido,
+  moneda,
+  alCerrar,
+}: {
+  pedido: PedidoVista | null;
+  moneda: string;
+  alCerrar: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (pedido && !d.open) d.showModal();
+    if (!pedido && d.open) d.close();
+  }, [pedido]);
+  const pesos = (valor: number) => dinero(Math.round(valor * 100), moneda);
+  const E = pedido ? ESTADO[pedido.clase] : null;
+  return (
+    <dialog
+      ref={ref}
+      onClose={alCerrar}
+      onClick={(e) => e.target === ref.current && alCerrar()}
+      aria-labelledby="cajon-rappi-titulo"
+      className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-md overflow-y-auto border-l border-line bg-surface p-0 shadow-lift backdrop:bg-ink/40"
+    >
+      {pedido && E && (
+        <div className="space-y-4 p-5">
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 id="cajon-rappi-titulo" className="font-display text-xl font-bold tabular">
+                Orden {pedido.id}
+              </h2>
+              <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-ink-2">
+                <span className="inline-flex items-center gap-1.5">
+                  <E.icono size={15} aria-hidden="true" className={E.clase} />
+                  {pedido.estado_nombre}
+                </span>
+                <Etiqueta color={CANAL[pedido.canal].color}>{CANAL[pedido.canal].nombre}</Etiqueta>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={alCerrar}
+              className="grid size-9 shrink-0 place-items-center rounded-lg border border-line hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ink"
+            >
+              <X size={16} aria-hidden="true" />
+              <span className="sr-only">Cerrar</span>
+            </button>
+          </header>
+
+          <section className="rounded-xl border border-line p-4">
+            <div className="flex items-baseline justify-between gap-3 border-b border-line pb-3">
+              <h3 className="font-display font-bold">Resumen de la orden</h3>
+              <span className="text-xs text-muted-foreground tabular">
+                {fechaCorta(pedido.fecha)} · {hora(pedido.creado)}
+              </span>
+            </div>
+            <ul className="divide-y divide-line">
+              {pedido.productos.map((x, i) => (
+                <li key={i} className="py-3">
+                  <p className="flex items-baseline justify-between gap-3">
+                    <span>
+                      <span className="mr-2 text-ink-2 tabular">{x.unidades}</span>
+                      {x.nombre.trim()}
+                    </span>
+                    <span className="tabular">{pesos(x.precio)}</span>
+                  </p>
+                  {x.opciones.length > 0 && (
+                    <>
+                      <p className="mt-2 text-xs font-semibold text-ink-2">Acompañamientos</p>
+                      <ul className="mt-1 space-y-1">
+                        {x.opciones.map((o, j) => (
+                          <li key={j} className="flex items-baseline justify-between gap-3 text-xs">
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <span
+                                aria-hidden="true"
+                                className="size-1.5 shrink-0 rounded-full"
+                                style={{ backgroundColor: TIPOS[tipoOpcion(o.categoria)].color }}
+                              />
+                              <span className="truncate">
+                                {o.unidades > 1 ? `${o.unidades}× ` : ''}
+                                {o.descripcion.trim()}
+                                <span className="text-muted-foreground">
+                                  {' '}
+                                  · {o.categoria.trim().replace(/\.$/, '')}
+                                </span>
+                              </span>
+                            </span>
+                            <span className="text-ink-2 tabular">{pesos(o.precio)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <dl className="space-y-1.5 border-t border-line pt-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink-2">Subtotal</dt>
+                <dd className="tabular">{pesos(pedido.bruto)}</dd>
+              </div>
+              {pedido.descuento_aliado !== null ? (
+                <>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ink-2">Descuento del aliado</dt>
+                    <dd className="tabular">−{pesos(pedido.descuento_aliado)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3 pt-1 text-base">
+                    <dt className="font-display font-bold">Total después de descuentos</dt>
+                    <dd className="font-display font-bold tabular">
+                      {pesos(pedido.bruto - pedido.descuento_aliado)}
+                    </dd>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  El descuento de esta orden aún no se lee del portal.
+                </p>
+              )}
+            </dl>
+          </section>
+
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <dt className="text-ink-2">Pago</dt>
+            <dd>{pedido.metodo_pago ?? 'Sin dato'}</dd>
+            {pedido.en_disputa && (
+              <>
+                <dt className="text-ink-2">Reclamo</dt>
+                <dd>Abierto{pedido.estado_disputa ? ` (${pedido.estado_disputa})` : ''}</dd>
+              </>
+            )}
+            {pedido.estado_anterior && (
+              <>
+                <dt className="text-ink-2">Antes</dt>
+                <dd>{pedido.estado_anterior}</dd>
+              </>
+            )}
+            {pedido.cambios > 0 && (
+              <>
+                <dt className="text-ink-2">Cambios</dt>
+                <dd>
+                  {pedido.cambios} {pedido.cambios === 1 ? 'registrado' : 'registrados'} desde que se leyó
+                </dd>
+              </>
+            )}
+            {pedido.revisar && (
+              <>
+                <dt className="text-ink-2">Aviso</dt>
+                <dd>Ya no aparece en el portal de Rappi</dd>
+              </>
+            )}
+          </dl>
+          <p className="text-xs text-muted-foreground">
+            Datos del portal de Rappi. No incluye nombre ni datos del cliente.
+          </p>
+        </div>
+      )}
+    </dialog>
   );
 }
