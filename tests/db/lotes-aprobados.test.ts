@@ -155,6 +155,26 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
   });
 
+  it('lote 7: Pan de Muerto (doc 39), POS al Tradicional, combo y código propio de Rappi; requiere los lotes 1–6 (98)', async () => {
+    const l = await leerLoteAprobado('lote-7');
+    expect(l.lote.map((f) => [f.codigo, f.receta_nombre, f.nombre_observado])).toEqual([
+      ['PANMUEAPP', 'Pan de Muerto Tradicional', 'Pan de Muerto'],
+      ['RAPPIPANMUENAR', 'Pan de Muerto de Naranja', 'Pan de Muerto con Glaseado de Naranja.'],
+      ['TRUPANAPP', 'True White + Pan de Muerto', 'True White + Pan de Muerto'],
+    ]);
+    expect(Object.keys(l.previos).sort()).toEqual([
+      'lote-1',
+      'lote-2',
+      'lote-3',
+      'lote-4',
+      'lote-5',
+      'lote-6',
+    ]);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(98);
+    for (const f of l.lote) expect(f.evidencia).toMatch(/pan-de-muerto-lote-1 \(doc 39\)$/);
+    expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
     await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));

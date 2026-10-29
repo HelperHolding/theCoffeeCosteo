@@ -128,9 +128,12 @@ describe('líneas de un producto de Rappi', () => {
   });
 
   it('un producto sin equivalencia queda con un código que nunca es del POS', () => {
-    expect(lineasDe(producto('Pan de Muerto Tradicional', 65))[0].codigo).toBe(
-      'RAPPI:pan de muerto tradicional',
-    );
+    expect(lineasDe(producto('Spooky Biscuits', 70))[0].codigo).toBe('RAPPI:spooky biscuits');
+  });
+
+  it('Pan de Muerto (doc 39): el Tradicional es el del POS; el de Naranja, su código propio de Rappi', () => {
+    expect(lineasDe(producto('Pan de Muerto Tradicional.', 80))[0].codigo).toBe('PANMUEAPP');
+    expect(lineasDe(producto('Pan de Muerto con Glaseado de Naranja.', 80))[0].codigo).toBe('RAPPIPANMUENAR');
   });
 
   it('combo solo de Rappi: se arma con sus partes y sus personalizaciones; el precio va en la línea', () => {
@@ -153,7 +156,7 @@ describe('líneas de un producto de Rappi', () => {
     );
     expect(pan.partes?.map((p) => [p.codigo, nombres(p.customs)])).toEqual([
       ['4TW', ['Regular - 240ml']],
-      ['RAPPI:pan de muerto tradicional', []],
+      ['PANMUEAPP', []],
     ]);
   });
 });

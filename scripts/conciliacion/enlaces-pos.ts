@@ -71,6 +71,12 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/38-lote-6.manifiesto.json',
     sha256: 'c98468ab0bff3786cda4e16fb17118214d30c6d27e21853a8f8b5b4ff4c96c4d',
   },
+  // Preparado el 2026-10-29 (doc 39): Pan de Muerto (PANMUEAPP al Tradicional, TRUPANAPP al combo y el código propio
+  // de Rappi del de Naranja), con las recetas de pan-de-muerto-lote-1. Cargar exige aprobación aparte.
+  'lote-7': {
+    manifiesto: 'docs/conciliacion-brasil/39-lote-7.manifiesto.json',
+    sha256: '66630760dc0db848b9d30f527f3cc1c63618a7ec53a06b57466e3f3dc24be439',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -80,6 +86,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-4': '28',
   'lote-5': '36',
   'lote-6': '38',
+  'lote-7': '39',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>

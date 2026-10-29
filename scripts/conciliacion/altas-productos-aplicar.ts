@@ -14,7 +14,7 @@ import { aplicarAltas, docAltas, leerLoteAltas, type ModoAlta } from './altas-pr
  *     npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote <lote> --revertir --ejecucion <uuid> --confirmo jpqkmnfjwzniptszjuli --usuario <uuid>
  *   --local <url>: copia en localhost (respaldo restaurado). No equivale a autorización remota.
  * DATABASE_URL se lee con el cargador existente, se valida con el parser contra el proyecto y nunca se imprime.
- * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/<doc del lote>-informes/ (31 o 37).
+ * El informe (sin URL ni credenciales) se guarda en docs/conciliacion-brasil/<doc del lote>-informes/ (31, 37 o 39).
  */
 const args = process.argv.slice(2);
 const valor = (f: string) => (args.includes(f) ? args[args.indexOf(f) + 1] : undefined);

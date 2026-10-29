@@ -1,0 +1,137 @@
+{
+ "lote": "pan-de-muerto-lote-1",
+ "fuente": {
+  "archivo": "Brief_Pan_de_Muerto_Franquiciatarios_4.pdf (comunicado a franquiciatarios, temporada 2026)",
+  "sha256": "0fb76669a04c21a4299574b572ceee46d998bd86ae85db1e8b2a8da484ea6ca0"
+ },
+ "insumos": [
+  {
+   "nombre": "PAN DE MUERTO TRADICIONAL",
+   "proveedor": "POR ASIGNAR",
+   "categoria": "PANADERIA",
+   "costoPaquete": 15.86,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Brief p. 1 y 4: «Natural M», 100 g con mantequilla; precio base de proveedor $15.86 por pieza (blíster de 8). Proveedor local en cada plaza"
+  },
+  {
+   "nombre": "PAN DE MUERTO DE NARANJA",
+   "proveedor": "POR ASIGNAR",
+   "categoria": "PANADERIA",
+   "costoPaquete": 24.45,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Brief p. 1 y 4: «Naranja M», 100 g con ganache de naranja; precio base de proveedor $24.45 por pieza (blíster de 4). Proveedor local en cada plaza"
+  }
+ ],
+ "productos": [
+  {
+   "nombre": "Pan de Muerto Tradicional",
+   "categoria": "Bakery",
+   "tamanos": ["Único"],
+   "lineas": [
+    {
+     "componente": "PAN DE MUERTO TRADICIONAL",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Brief p. 1: se vende por pieza"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Igual que el resto de la panadería por pieza (Croissant Traditional, Kouign Amann)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Igual que el resto de la panadería por pieza (Croissant Traditional, Kouign Amann)"
+    }
+   ],
+   "costoEsperado": { "Único": 18.0104 },
+   "precioLista": { "Único": 65 },
+   "nota": "Precio de red con IVA en mostrador (brief p. 1); en Rappi es $80. El POS vende los dos panes con el mismo producto («Pan de Muerto», PANMUEAPP): su enlace va en un lote aparte"
+  },
+  {
+   "nombre": "Pan de Muerto de Naranja",
+   "categoria": "Bakery",
+   "tamanos": ["Único"],
+   "lineas": [
+    {
+     "componente": "PAN DE MUERTO DE NARANJA",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Brief p. 1: se vende por pieza"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Igual que el resto de la panadería por pieza (Croissant Traditional, Kouign Amann)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Igual que el resto de la panadería por pieza (Croissant Traditional, Kouign Amann)"
+    }
+   ],
+   "costoEsperado": { "Único": 26.6004 },
+   "precioLista": { "Único": 65 },
+   "nota": "Precio de red con IVA en mostrador (brief p. 1); en Rappi es $80"
+  },
+  {
+   "nombre": "True White + Pan de Muerto",
+   "categoria": "Combos",
+   "tamanos": ["Único"],
+   "lineas": [
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": { "Único": 18 },
+     "origen": "True White Chica, como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "True White Chica, como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "True White Chica, como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "LECHE ENTERA",
+     "tipo": "insumo",
+     "cantidades": { "Único": 170 },
+     "origen": "True White Chica, como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Como True White + Pain Au Chocolat"
+    },
+    {
+     "componente": "PAN DE MUERTO TRADICIONAL",
+     "tipo": "insumo",
+     "cantidades": { "Único": 1 },
+     "origen": "Rappi lo vende como «Pan de Muerto Tradicional + True White»"
+    }
+   ],
+   "costoEsperado": { "Único": 32.7504 },
+   "nota": "Combo del POS (TRUPANAPP, vendido en Rubén Darío a $155). Sin precio de lista: el de combos es de cada sucursal (doc 37). Su enlace va en un lote aparte"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-29: «Tú por lote» (alta del Pan de Muerto con el brief a franquiciatarios: dos panes por pieza y el combo con True White). Autoriza preparar el lote; cada paso remoto (respaldo, ensayo y aplicar) requiere aprobación expresa."
+}
