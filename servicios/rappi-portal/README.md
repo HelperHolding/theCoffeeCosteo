@@ -33,7 +33,8 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 
 ## Operación
 
-- **En vivo:** cada 10 min de 07:00 a 23:50, ayer y hoy.
+- **En vivo:** cada 10 min de 07:07 a 23:57 (minutos 7, 17, 27…), ayer y hoy. Esos minutos son para no coincidir
+  con el lector de Dodo (0, 15, 30, 45): el servidor tiene 2 GB y cada lector abre un navegador.
 - **Cierre:** 06:30, los últimos 7 días.
 - **Repaso:** domingo 05:30, los últimos 14 días.
 - **Reponer días:** `POST` al webhook «Reponer» con `{"tipo":"manual","desde":"…","hasta":"…"}`, máximo 62 días.

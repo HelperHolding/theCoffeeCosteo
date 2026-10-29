@@ -57,7 +57,9 @@ const fijar = (name, position, campos) =>
   });
 const nodes = [
   nodo('Cada 10 min', 'n8n-nodes-base.scheduleTrigger', 1.2, [0, 0], {
-    rule: { interval: [{ field: 'cronExpression', expression: '*/10 7-23 * * *' }] },
+    // Minutos 7, 17, 27…: el lector de Dodo corre a los 0, 15, 30 y 45, y el servidor (2 GB) no debe abrir dos
+    // navegadores a la vez.
+    rule: { interval: [{ field: 'cronExpression', expression: '7-59/10 7-23 * * *' }] },
   }),
   fijar('Vivo', [220, 0], { tipo: 'vivo' }),
   nodo('Cierre 6:30', 'n8n-nodes-base.scheduleTrigger', 1.2, [0, 180], {
