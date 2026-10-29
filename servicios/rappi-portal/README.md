@@ -13,8 +13,7 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 
 ## Instalación (cada paso con OK de Carlo)
 
-1. **Usuario del lector en Rappi.** Carlo lo crea en Rappi → Usuarios, con acceso de solo lectura a las tiendas del
-   piloto si el portal lo permite. Las credenciales no pasan por el chat ni por el repo.
+1. **Cuenta del lector.** Rappi no permite crear un usuario aparte, así que el lector usa una cuenta existente del portal, que pone Carlo en el `.env` del servidor. Las credenciales no pasan por el chat ni por el repo. El lector es **SOLO LECTURA** por código (ver «Solo lectura» abajo).
 2. **Servidor de n8n.**
    - Copiar esta carpeta a `./rappi-thecoffee` junto al `docker-compose` de n8n.
    - Agregar el servicio de `compose.rappi-thecoffee.yml`.
@@ -45,3 +44,12 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 - **Agregar una sucursal:**
   - sus dos tiendas (normal y Turbo) en `RAPPI_TIENDAS` y en `rappi_tiendas` (por migración);
   - `rappiPortal: true` en `lib/sucursales/config.ts`.
+
+## Solo lectura
+
+Pedido expreso de Carlo: el lector nunca cambia nada en Rappi.
+
+- **Candado 1, en el navegador:** se bloquea toda petición que no sea GET/HEAD/OPTIONS. Solo salen el inicio de sesión de Auth0 (`login.partners.rappi.com`) y la consulta del historial (`by-stores`, un POST que solo busca).
+- **Candado 2, en el código:** `pedirApi` solo acepta dos lecturas: el historial y el detalle de un pedido. Cualquier otra ruta da error.
+- Fuera del formulario de login, el lector no hace clic en nada.
+- **Probado el 2026-10-29 sin credenciales:** se detuvo en el login (`sesion_expirada`) y bloqueó los envíos de analítica del portal (Google Analytics y Amplitude).

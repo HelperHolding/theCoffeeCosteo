@@ -2,8 +2,12 @@
 //   POST /sincronizar {tipo: vivo|cierre|repaso|manual, desde?, hasta?}  (header x-api-key)
 //   → el lote de public.rappi_importar; n8n lo manda tal cual a Supabase.
 //   GET /salud
-// Solo lectura: abre el portal, deja que renueve su token y pide el mismo JSON que pide la página del historial. Nunca
-// toca pedidos, menú ni tienda. Sin datos personales en la respuesta.
+// SOLO LECTURA (pedido expreso de Carlo, 2026-10-29). El lector usa una cuenta real del portal, así que nunca debe
+// cambiar nada en Rappi (pedidos, menú, tienda, horarios, promociones, usuarios, datos bancarios). Dos candados:
+//   1. Navegador: toda petición que no sea GET/HEAD/OPTIONS se bloquea, salvo el inicio de sesión de Auth0
+//      (login.partners.rappi.com) y la consulta del historial (by-stores, un POST que solo busca). Ver SALIDAS.
+//   2. Código: pedirApi solo acepta las dos lecturas de LECTURAS (historial y detalle de un pedido).
+// Fuera del formulario de login, el lector no hace clic en nada. Sin datos personales en la respuesta.
 //
 // Sesión: storageState de Playwright en DATOS/sesion.json, reescrito tras cada corrida. Si Rappi la cierra, entra solo
 // con el usuario propio del lector (RAPPI_USUARIO / RAPPI_CLAVE, que pone Carlo en el servidor). Un login fallido
@@ -39,6 +43,17 @@ const TIENDAS = RAPPI_TIENDAS.split(',')
   .filter(Boolean);
 const PAGINA = 100;
 const MAX_DETALLES = 80;
+
+/** Candado 1: lo único que puede salir del navegador fuera de GET/HEAD/OPTIONS. */
+const SALIDAS = [
+  /^https:\/\/login\.partners\.rappi\.com\//,
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/rests-stores-config\/orders\/by-stores\?country=MX$/,
+];
+/** Candado 2: las ÚNICAS llamadas al API de Rappi que hace el lector, ambas de lectura. */
+const LECTURAS = [
+  { metodo: 'POST', ruta: /^\/rests-stores-config\/orders\/by-stores\?country=MX$/ },
+  { metodo: 'GET', ruta: /^\/rests-stores-config\/orders\/\d+\?country=MX&language=es$/ },
+];
 
 const escribir = (ruta, datos) => {
   writeFileSync(`${ruta}.tmp`, JSON.stringify(datos));
@@ -100,9 +115,11 @@ async function iniciarSesion(pagina) {
   return 'El inicio de sesión automático no entró al portal (usuario, contraseña o un paso nuevo de Rappi).';
 }
 
-/** Llama al API del portal desde la página, con el token y los encabezados que usa la propia página. */
-const pedirApi = (pagina, metodo, ruta, cuerpo) =>
-  pagina.evaluate(
+/** Llama al API del portal desde la página, con el token y los encabezados que usa la propia página. Solo LECTURAS. */
+const pedirApi = (pagina, metodo, ruta, cuerpo) => {
+  if (!LECTURAS.some((l) => l.metodo === metodo && l.ruta.test(ruta)))
+    throw new Error(`SOLO LECTURA: llamada no permitida ${metodo} ${ruta}`);
+  return pagina.evaluate(
     async ({ url, metodo, cuerpo, version }) => {
       const r = await fetch(url, {
         method: metodo,
@@ -119,6 +136,7 @@ const pedirApi = (pagina, metodo, ruta, cuerpo) =>
     },
     { url: `${API}${ruta}`, metodo, cuerpo, version: RAPPI_CLIENTE_VERSION },
   );
+};
 
 /** Ventana por tipo de corrida (hora de México): vivo = ayer y hoy; cierre = 7 días; repaso = 14 días. */
 function ventana({ tipo, desde, hasta }) {
@@ -141,12 +159,27 @@ async function sincronizar({ tipo, desde, hasta }) {
       locale: 'es-MX',
       timezoneId: 'America/Mexico_City',
     });
+    // Candado 1 (SOLO LECTURA): lo que no sea de lectura no sale del navegador.
+    const bloqueadas = [];
+    await contexto.route('**/*', (ruta) => {
+      const r = ruta.request();
+      if (['GET', 'HEAD', 'OPTIONS'].includes(r.method()) || SALIDAS.some((x) => x.test(r.url())))
+        return ruta.continue();
+      const u = new URL(r.url());
+      if (bloqueadas.length < 20) bloqueadas.push(`${r.method()} ${u.host}${u.pathname}`);
+      return ruta.abort();
+    });
     const pagina = await contexto.newPage();
     await pagina.goto(`${PORTAL}/home`, { waitUntil: 'domcontentloaded' });
     let relogin = false;
     if (!(await esperarSesion(pagina))) {
       const fallo = await iniciarSesion(pagina);
-      if (fallo) return { ...base, estado: 'sesion_expirada', mensaje: fallo };
+      if (fallo)
+        return {
+          ...base,
+          estado: 'sesion_expirada',
+          mensaje: `${fallo}${bloqueadas.length ? ` Bloqueadas por SOLO LECTURA: ${bloqueadas.join(', ')}.` : ''}`,
+        };
       relogin = true;
     }
 
