@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Ban,
@@ -9,7 +9,6 @@ import {
   Clock3,
   ReceiptText,
   ShoppingBag,
-  X,
 } from 'lucide-react';
 import type { CanalRappi, ClaseEstado, RappiPortalVista } from '@/lib/sucursales/rappi-portal';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
@@ -34,6 +33,9 @@ const ESTADO: Record<ClaseEstado, { icono: typeof CheckCircle2; clase: string }>
   cancelado: { icono: Ban, clase: 'text-bad' },
   otro: { icono: Clock3, clase: 'text-ink-2' },
 };
+
+/** Pedidos por tanda en la tabla: cada uno lleva su detalle completo. */
+const PAGINA_PEDIDOS = 50;
 
 /** «2026-10-27T07:43:02» (hora local de la tienda, tal como la guarda el portal) → «07:43». */
 const hora = (creado: string) => creado.slice(11, 16);
@@ -68,7 +70,7 @@ export function RappiPortal({
   const [buscar, setBuscar] = useState('');
   const [canal, setCanal] = useState<CanalRappi | 'todos'>('todos');
   const [abierto, setAbierto] = useState<string | null>(null);
-  const [pedidoAbierto, setPedidoAbierto] = useState<string | null>(null);
+  const [visibles, setVisibles] = useState(PAGINA_PEDIDOS);
   const { desde, hasta } = rango(periodo, zona);
   const { datos, error, cargando, recargar } = useLectura<RappiPortalVista>(
     `/api/sucursales/${companyId}/rappi-portal?desde=${desde}&hasta=${hasta}`,
@@ -89,6 +91,9 @@ export function RappiPortal({
         (!q || p.id.includes(q) || p.productos.some((x) => x.nombre.toLocaleLowerCase('es-MX').includes(q))),
     );
   }, [datos, q, canal]);
+
+  // Al cambiar periodo, tienda o búsqueda se vuelve a los primeros pedidos.
+  useEffect(() => setVisibles(PAGINA_PEDIDOS), [desde, hasta, canal, q]);
 
   const t = datos ? (canal === 'todos' ? datos.totales : datos.porCanal[canal]) : null;
   const maxVenta = Math.max(1, ...productos.map((p) => p.ventaCent));
@@ -311,262 +316,190 @@ export function RappiPortal({
 
               <Tarjeta
                 titulo="Pedidos"
-                descripcion="Todos los estados. Hora local de la tienda. «Ver detalle» abre el resumen de la orden como en el portal de Rappi."
+                descripcion="Cada pedido con su detalle, como en el portal de Rappi: productos, acompañamientos (con precio cuando cuestan) y total después de descuentos. Hora local de la tienda."
                 cuerpo={false}
               >
                 {pedidos.length === 0 ? (
                   <Vacio titulo={q ? 'Ningún pedido coincide' : 'Sin pedidos en el periodo'} />
                 ) : (
-                  <div className="relative overflow-x-auto">
-                    <table className="tabla w-full">
-                      <thead>
-                        <tr>
-                          <th scope="col">Pedido</th>
-                          <th scope="col">Tienda</th>
-                          <th scope="col">Estado</th>
-                          <th scope="col">Productos</th>
-                          <th scope="col" className="numero">
-                            Total
-                          </th>
-                          <th scope="col">
-                            <span className="sr-only">Detalle</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pedidos.map((p) => {
-                          const E = ESTADO[p.clase];
-                          return (
-                            <tr key={p.id}>
-                              <td className="whitespace-nowrap font-medium">
-                                <span className="tabular">
-                                  {fechaCorta(p.fecha)} {hora(p.creado)}
-                                </span>
-                                <span className="block text-xs font-normal text-muted-foreground tabular">
-                                  #{p.id}
-                                </span>
-                              </td>
-                              <td>
-                                <Etiqueta color={CANAL[p.canal].color}>{CANAL[p.canal].nombre}</Etiqueta>
-                              </td>
-                              <td className="text-sm">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <E.icono size={15} aria-hidden="true" className={E.clase} />
-                                  {p.estado_nombre}
-                                </span>
-                                {p.en_disputa && (
-                                  <span className="mt-0.5 flex items-center gap-1 text-xs text-ink-2">
-                                    <AlertTriangle size={12} aria-hidden="true" className="text-warn" />
-                                    Con reclamo
-                                  </span>
-                                )}
-                                {p.revisar && (
-                                  <span className="block text-xs text-muted-foreground">
-                                    Ya no aparece en el portal
-                                  </span>
-                                )}
-                              </td>
-                              <td className="max-w-md text-sm">
-                                {p.productos.map((x) => `${x.unidades}× ${x.nombre.trim()}`).join(', ')}
-                              </td>
-                              <td className="numero tabular">{dinero(Math.round(p.bruto * 100), moneda)}</td>
-                              <td className="whitespace-nowrap text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => setPedidoAbierto(p.id)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
-                                >
-                                  Ver detalle
-                                  <span className="sr-only"> del pedido {p.id}</span>
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <>
+                    <ul className="divide-y divide-line md:hidden">
+                      {pedidos.slice(0, visibles).map((p) => (
+                        <TarjetaPedido key={p.id} pedido={p} moneda={moneda} />
+                      ))}
+                    </ul>
+                    <div className="relative hidden overflow-x-auto md:block">
+                      <table className="tabla w-full min-w-[720px]">
+                        <thead>
+                          <tr>
+                            <th scope="col" className="w-52">
+                              Pedido
+                            </th>
+                            <th scope="col">Detalle</th>
+                            <th scope="col" className="numero w-56">
+                              Total
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pedidos.slice(0, visibles).map((p) => (
+                            <FilaPedido key={p.id} pedido={p} moneda={moneda} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {pedidos.length > visibles && (
+                      <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 text-sm">
+                        <span className="text-ink-2">
+                          {numero(visibles)} de {numero(pedidos.length)} pedidos
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setVisibles((v) => v + PAGINA_PEDIDOS)}
+                          className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-ink"
+                        >
+                          Mostrar {numero(Math.min(PAGINA_PEDIDOS, pedidos.length - visibles))} más
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </Tarjeta>
             </>
           )}
         </>
       )}
-      <DetalleOrden
-        pedido={datos?.pedidos.find((p) => p.id === pedidoAbierto) ?? null}
-        moneda={moneda}
-        alCerrar={() => setPedidoAbierto(null)}
-      />
     </div>
   );
 }
 
 type PedidoVista = RappiPortalVista['pedidos'][number];
 
-/**
- * Resumen de una orden, con la misma estructura que el panel del portal de Rappi: cada producto con su precio, sus
- * acompañamientos (también los de $0.00), subtotal y total después de descuentos. Cajón lateral (dialog nativo: foco
- * atrapado y Esc cierra). Total después de descuentos = subtotal − descuento del aliado (discount_info del detalle).
- */
-function DetalleOrden({
-  pedido,
-  moneda,
-  alCerrar,
-}: {
-  pedido: PedidoVista | null;
-  moneda: string;
-  alCerrar: () => void;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    if (pedido && !d.open) d.showModal();
-    if (!pedido && d.open) d.close();
-  }, [pedido]);
-  const pesos = (valor: number) => dinero(Math.round(valor * 100), moneda);
-  const E = pedido ? ESTADO[pedido.clase] : null;
+/** Fecha, número, tienda, estado, reclamo y pago de un pedido. */
+function EncabezadoPedido({ p }: { p: PedidoVista }) {
+  const E = ESTADO[p.clase];
   return (
-    <dialog
-      ref={ref}
-      onClose={alCerrar}
-      onClick={(e) => e.target === ref.current && alCerrar()}
-      aria-labelledby="cajon-rappi-titulo"
-      className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-md overflow-y-auto border-l border-line bg-surface p-0 shadow-lift backdrop:bg-ink/40"
-    >
-      {pedido && E && (
-        <div className="space-y-4 p-5">
-          <header className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 id="cajon-rappi-titulo" className="font-display text-xl font-bold tabular">
-                Orden {pedido.id}
-              </h2>
-              <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-ink-2">
-                <span className="inline-flex items-center gap-1.5">
-                  <E.icono size={15} aria-hidden="true" className={E.clase} />
-                  {pedido.estado_nombre}
-                </span>
-                <Etiqueta color={CANAL[pedido.canal].color}>{CANAL[pedido.canal].nombre}</Etiqueta>
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={alCerrar}
-              className="grid size-9 shrink-0 place-items-center rounded-lg border border-line hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ink"
-            >
-              <X size={16} aria-hidden="true" />
-              <span className="sr-only">Cerrar</span>
-            </button>
-          </header>
+    <>
+      <p className="font-semibold tabular">
+        {fechaCorta(p.fecha)} · {hora(p.creado)}
+      </p>
+      <p className="text-xs text-muted-foreground tabular">#{p.id}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <Etiqueta color={CANAL[p.canal].color}>{CANAL[p.canal].nombre}</Etiqueta>
+        <span className="inline-flex items-center gap-1 text-xs text-ink-2">
+          <E.icono size={14} aria-hidden="true" className={E.clase} />
+          {p.estado_nombre}
+        </span>
+      </div>
+      {p.en_disputa && (
+        <p className="mt-1 flex items-center gap-1 text-xs text-ink-2">
+          <AlertTriangle size={12} aria-hidden="true" className="text-warn" />
+          Con reclamo{p.estado_disputa ? ` (${p.estado_disputa})` : ''}
+        </p>
+      )}
+      {p.revisar && <p className="mt-1 text-xs text-muted-foreground">Ya no aparece en el portal</p>}
+      <p className="mt-1 text-xs text-muted-foreground">{p.metodo_pago ?? 'Pago sin dato'}</p>
+    </>
+  );
+}
 
-          <section className="rounded-xl border border-line p-4">
-            <div className="flex items-baseline justify-between gap-3 border-b border-line pb-3">
-              <h3 className="font-display font-bold">Resumen de la orden</h3>
-              <span className="text-xs text-muted-foreground tabular">
-                {fechaCorta(pedido.fecha)} · {hora(pedido.creado)}
-              </span>
-            </div>
-            <ul className="divide-y divide-line">
-              {pedido.productos.map((x, i) => (
-                <li key={i} className="py-3">
-                  <p className="flex items-baseline justify-between gap-3">
-                    <span>
-                      <span className="mr-2 text-ink-2 tabular">{x.unidades}</span>
-                      {x.nombre.trim()}
-                    </span>
-                    <span className="tabular">{pesos(x.precio)}</span>
-                  </p>
-                  {x.opciones.length > 0 && (
-                    <>
-                      <p className="mt-2 text-xs font-semibold text-ink-2">Acompañamientos</p>
-                      <ul className="mt-1 space-y-1">
-                        {x.opciones.map((o, j) => (
-                          <li key={j} className="flex items-baseline justify-between gap-3 text-xs">
-                            <span className="flex min-w-0 items-center gap-1.5">
-                              <span
-                                aria-hidden="true"
-                                className="size-1.5 shrink-0 rounded-full"
-                                style={{ backgroundColor: TIPOS[tipoOpcion(o.categoria)].color }}
-                              />
-                              <span className="truncate">
-                                {o.unidades > 1 ? `${o.unidades}× ` : ''}
-                                {o.descripcion.trim()}
-                                <span className="text-muted-foreground">
-                                  {' '}
-                                  · {o.categoria.trim().replace(/\.$/, '')}
-                                </span>
-                              </span>
-                            </span>
-                            <span className="text-ink-2 tabular">{pesos(o.precio)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
+/** Productos con su precio y, debajo, sus acompañamientos (el precio solo cuando cuestan, para no amontonar). */
+function ProductosPedido({ p, pesos }: { p: PedidoVista; pesos: (valor: number) => string }) {
+  return (
+    <ul className="space-y-2.5">
+      {p.productos.map((x, i) => (
+        <li key={i}>
+          <p className="flex items-baseline justify-between gap-4 text-sm">
+            <span className="font-medium">
+              <span className="mr-1.5 text-ink-2 tabular">{x.unidades}×</span>
+              {x.nombre.trim()}
+            </span>
+            <span className="shrink-0 text-ink-2 tabular">{pesos(x.precio)}</span>
+          </p>
+          {x.opciones.length > 0 && (
+            <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 pl-5 text-xs text-ink-2">
+              {x.opciones.map((o, j) => (
+                <li key={j} className="inline-flex items-center gap-1.5" title={o.categoria.trim()}>
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: TIPOS[tipoOpcion(o.categoria)].color }}
+                  />
+                  <span>
+                    {o.unidades > 1 ? `${o.unidades}× ` : ''}
+                    {o.descripcion.trim()}
+                    {o.precio > 0 && <span className="text-ink tabular"> +{pesos(o.precio)}</span>}
+                  </span>
                 </li>
               ))}
             </ul>
-            <dl className="space-y-1.5 border-t border-line pt-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt className="text-ink-2">Subtotal</dt>
-                <dd className="tabular">{pesos(pedido.bruto)}</dd>
-              </div>
-              {pedido.descuento_aliado !== null ? (
-                <>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-ink-2">Descuento del aliado</dt>
-                    <dd className="tabular">−{pesos(pedido.descuento_aliado)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3 pt-1 text-base">
-                    <dt className="font-display font-bold">Total después de descuentos</dt>
-                    <dd className="font-display font-bold tabular">
-                      {pesos(pedido.bruto - pedido.descuento_aliado)}
-                    </dd>
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  El descuento de esta orden aún no se lee del portal.
-                </p>
-              )}
-            </dl>
-          </section>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-            <dt className="text-ink-2">Pago</dt>
-            <dd>{pedido.metodo_pago ?? 'Sin dato'}</dd>
-            {pedido.en_disputa && (
-              <>
-                <dt className="text-ink-2">Reclamo</dt>
-                <dd>Abierto{pedido.estado_disputa ? ` (${pedido.estado_disputa})` : ''}</dd>
-              </>
-            )}
-            {pedido.estado_anterior && (
-              <>
-                <dt className="text-ink-2">Antes</dt>
-                <dd>{pedido.estado_anterior}</dd>
-              </>
-            )}
-            {pedido.cambios > 0 && (
-              <>
-                <dt className="text-ink-2">Cambios</dt>
-                <dd>
-                  {pedido.cambios} {pedido.cambios === 1 ? 'registrado' : 'registrados'} desde que se leyó
-                </dd>
-              </>
-            )}
-            {pedido.revisar && (
-              <>
-                <dt className="text-ink-2">Aviso</dt>
-                <dd>Ya no aparece en el portal de Rappi</dd>
-              </>
-            )}
-          </dl>
-          <p className="text-xs text-muted-foreground">
-            Datos del portal de Rappi. No incluye nombre ni datos del cliente.
-          </p>
-        </div>
+/** Subtotal, descuento del aliado y total después de descuentos (subtotal − total_discount_by_partner). */
+function TotalesPedido({ p, pesos }: { p: PedidoVista; pesos: (valor: number) => string }) {
+  return (
+    <dl className="space-y-0.5 text-xs">
+      <div className="flex justify-between gap-3">
+        <dt className="text-ink-2">Subtotal</dt>
+        <dd className="tabular">{pesos(p.bruto)}</dd>
+      </div>
+      {p.descuento_aliado !== null ? (
+        <>
+          <div className="flex justify-between gap-3">
+            <dt className="text-ink-2">Descuento del aliado</dt>
+            <dd className="tabular">−{pesos(p.descuento_aliado)}</dd>
+          </div>
+          <div className="flex justify-between gap-3 border-t border-line pt-1 text-sm">
+            <dt className="font-semibold">Total</dt>
+            <dd className="font-semibold tabular">{pesos(p.bruto - p.descuento_aliado)}</dd>
+          </div>
+        </>
+      ) : (
+        <p className="text-right text-muted-foreground">Descuento aún sin leer</p>
       )}
-    </dialog>
+    </dl>
+  );
+}
+
+/**
+ * Un pedido con su detalle completo, con la estructura del resumen de orden del portal de Rappi. En escritorio, un
+ * renglón de la tabla (pedido · detalle · total); en móvil, una tarjeta con lo mismo apilado, sin desplazar de lado.
+ */
+function FilaPedido({ pedido: p, moneda }: { pedido: PedidoVista; moneda: string }) {
+  const pesos = (valor: number) => dinero(Math.round(valor * 100), moneda);
+  return (
+    <tr className="align-top">
+      <td className="py-3">
+        <EncabezadoPedido p={p} />
+      </td>
+      <td className="py-3">
+        <ProductosPedido p={p} pesos={pesos} />
+      </td>
+      <td className="py-3">
+        <div className="ml-auto max-w-56">
+          <TotalesPedido p={p} pesos={pesos} />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function TarjetaPedido({ pedido: p, moneda }: { pedido: PedidoVista; moneda: string }) {
+  const pesos = (valor: number) => dinero(Math.round(valor * 100), moneda);
+  return (
+    <li className="space-y-3 px-4 py-4">
+      <div>
+        <EncabezadoPedido p={p} />
+      </div>
+      <ProductosPedido p={p} pesos={pesos} />
+      <div className="rounded-lg bg-surface-2/60 px-3 py-2">
+        <TotalesPedido p={p} pesos={pesos} />
+      </div>
+    </li>
   );
 }
