@@ -16,9 +16,10 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 1. **Cuenta del lector.** Rappi no permite crear un usuario aparte, así que el lector usa una cuenta existente del portal, que pone Carlo en el `.env` del servidor. Las credenciales no pasan por el chat ni por el repo. El lector es **SOLO LECTURA** por código (ver «Solo lectura» abajo).
 2. **Servidor de n8n.**
    - Copiar esta carpeta a `./rappi-thecoffee` junto al `docker-compose` de n8n.
-   - Agregar el servicio de `compose.rappi-thecoffee.yml`.
+   - Copiar `compose.rappi-thecoffee.yml` como `/opt/n8n/docker-compose.override.yml`: Docker Compose lo junta solo, sin editar `docker-compose.yml`.
    - Carlo pone en el `.env` del compose `RAPPI_THECOFFEE_KEY`, `RAPPI_THECOFFEE_USUARIO` y `RAPPI_THECOFFEE_CLAVE`.
-   - `docker compose up -d --build rappi-thecoffee` (solo ese servicio; n8n no se reinicia).
+   - `docker compose build rappi-thecoffee && docker compose up -d --no-deps rappi-thecoffee` (solo ese servicio; n8n no se reinicia).
+   - **Instalado el 2026-10-29:** respaldo en `/opt/n8n/backups/rappi-thecoffee-*`. `/salud` responde desde n8n, y sin credenciales se detiene en el login.
 3. **Prueba del lector** desde el contenedor de n8n: `GET http://rappi-thecoffee:3101/salud` y un
    `POST /sincronizar {"tipo":"manual","desde":"<ayer>","hasta":"<ayer>"}`. Debe responder `estado: ok` con pedidos de
    las dos tiendas de Namóra.
