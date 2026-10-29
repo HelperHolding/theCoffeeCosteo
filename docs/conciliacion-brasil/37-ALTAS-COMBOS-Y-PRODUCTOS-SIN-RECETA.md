@@ -1,6 +1,6 @@
 # 37 · Productos del POS sin receta: qué se da de alta y qué no (alta de 3 combos)
 
-**Estado:** lote de 3 combos preparado el 2026-10-29, con manifiesto, pruebas y ensayo local. **Sin ensayo remoto y sin aplicar.** Cada paso remoto requiere aprobación expresa de Carlo.
+**Estado:** lote de 3 combos preparado el 2026-10-29, con manifiesto, pruebas, ensayo local, respaldo verificado y **ensayo remoto con ROLLBACK limpio**. **Sin aplicar.** Cada paso remoto requiere aprobación expresa de Carlo.
 
 ## Los 41 productos del menú sin receta en Costeo
 
@@ -62,10 +62,29 @@ Carlo pidió armar los combos del menú que salen de recetas que ya tenemos, aun
 | Repetir | 3 «sin cambio», 0 registros |
 | Revertir | 3 borrados; vuelve a 165 |
 
+## Respaldo y ensayo remoto (2026-10-29, aprobados por Carlo)
+
+**Respaldo `2026-10-29T1638Z`**, restaurado en local:
+- 0 errores fuera de `vault`;
+- 21,613 filas, iguales a producción;
+- `analytics_ventas_diarias` (846) y `perfil_modulos` (13), comparadas fila por fila en UTC: idénticas.
+
+**Ensayo remoto con ROLLBACK** (16:42 UTC). Antes de correrlo se comprobó que producción no cambió desde el respaldo: 165 productos, bitácora hasta #1257 y ninguno de los 3 combos.
+
+| Resultado | Valor |
+|---|---|
+| Creados | 3, con el costo esperado ($43.6904, $38.7304, $242.00) |
+| Problemas | 0 |
+| Bitácora | 42 propios, 0 ajenos |
+| Resto de la base | sin cambios |
+| Transacción | ROLLBACK; con una conexión nueva sigue en 165 productos y bitácora #1257 |
+
+El informe se guardó fuera del repo, en el respaldo privado.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Respaldo lógico verificado (o confirmar que el `2026-10-29T1558Z` sigue vigente).
-2. Ensayo remoto con ROLLBACK:
+1. ~~Respaldo lógico verificado~~ (hecho: `2026-10-29T1638Z`).
+2. ~~Ensayo remoto con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-combos-lote-1 --usuario <uuid-perfil>`
 3. Aplicar:
    `… --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
