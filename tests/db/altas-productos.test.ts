@@ -129,7 +129,11 @@ describe('manifiesto', () => {
         .lineas.filter((l) => l.componente.startsWith('HIELO')),
     ).toHaveLength(1);
     expect(m.aprobacion).toMatch(/NO autoriza ensayo remoto ni aplicar en producción/);
-    expect(Object.keys(LOTES_ALTAS_APROBADOS)).toEqual(['altas-zoho-lote-1', 'altas-combos-lote-1']);
+    expect(Object.keys(LOTES_ALTAS_APROBADOS)).toEqual([
+      'altas-zoho-lote-1',
+      'altas-combos-lote-1',
+      'pan-de-muerto-lote-1',
+    ]);
   });
 
   it('lote de combos (doc 37): 3 combos del menú del POS con nuestras recetas, tamaño Único y costo esperado', async () => {
@@ -154,6 +158,38 @@ describe('manifiesto', () => {
       'COFFEE MUG 300 ML WHITE',
     ]);
     expect(m.aprobacion).toMatch(/cada paso remoto requiere aprobación expresa/);
+  });
+
+  it('lote de Pan de Muerto (doc 39): 2 insumos nuevos del brief, 2 panes a $65 y el combo con True White', async () => {
+    const m = await leerLoteAltas('pan-de-muerto-lote-1');
+    expect(
+      m.insumos!.map((i) => [i.nombre, i.proveedor, i.categoria, i.costoPaquete / i.presentacion, i.unidad]),
+    ).toEqual([
+      ['PAN DE MUERTO TRADICIONAL', 'POR ASIGNAR', 'PANADERIA', 15.86, 'pza'],
+      ['PAN DE MUERTO DE NARANJA', 'POR ASIGNAR', 'PANADERIA', 24.45, 'pza'],
+    ]);
+    expect(
+      m.productos.map((p) => [
+        p.nombre,
+        p.categoria,
+        p.tamanos.join('/'),
+        p.costoEsperado['Único'],
+        p.precioLista?.['Único'],
+      ]),
+    ).toEqual([
+      ['Pan de Muerto Tradicional', 'Bakery', 'Único', 18.0104, 65],
+      ['Pan de Muerto de Naranja', 'Bakery', 'Único', 26.6004, 65],
+      ['True White + Pan de Muerto', 'Combos', 'Único', 32.7504, undefined],
+    ]);
+    // Pieza + bolsa + etiqueta, como el resto de la panadería; el combo es True White Chica + el pan tradicional.
+    const lineas = (n: string) => m.productos.find((p) => p.nombre === n)!.lineas.map((l) => l.componente);
+    expect(lineas('Pan de Muerto de Naranja')).toEqual([
+      'PAN DE MUERTO DE NARANJA',
+      'BOLSAS PARA PAN PAQUETE (1000 PIEZAS)',
+      'ETIQUETAS THE COFFEE ROLLO',
+    ]);
+    expect(lineas('True White + Pan de Muerto')).toContain('PAN DE MUERTO TRADICIONAL');
+    expect(m.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
   });
 
   it('se rechazan manifiestos incoherentes', () => {
@@ -260,5 +296,115 @@ describe('ejecución', () => {
     });
     expect(tarde.error).toMatch(/posterior/);
     expect((await productos()).length).toBe(2);
+  });
+});
+
+describe('insumos nuevos y precio de lista (doc 39)', () => {
+  // Un producto terminado: su insumo nuevo se crea en el mismo lote, con el precio de lista de la red.
+  const PAN = 'PAN DE MUERTO PRUEBA';
+  const conPan = (cambiar: (m: ManifiestoAltas) => void = () => {}) =>
+    manifiesto((m) => {
+      m.insumos = [
+        {
+          nombre: PAN,
+          proveedor: 'PROVEEDOR PRUEBA',
+          categoria: 'CATEGORIA PRUEBA',
+          costoPaquete: 15.86,
+          presentacion: 1,
+          unidad: 'pza',
+          origen: 'brief',
+        },
+      ];
+      m.productos.push({
+        nombre: 'Pan de Muerto Prueba',
+        categoria: 'Other Beverages',
+        tamanos: ['Único'],
+        lineas: [
+          { componente: PAN, tipo: 'insumo', cantidades: { Único: 1 }, origen: 'brief' },
+          { componente: 'SORA TONIC', tipo: 'insumo', cantidades: { Único: 1 }, origen: 'prueba' },
+        ],
+        costoEsperado: { Único: 15.86 + 52 },
+        precioLista: { Único: 65 },
+      });
+      cambiar(m);
+    });
+  const insumo = async () =>
+    (
+      await db.query<{ costo: string; unidad: string }>(
+        `select costo_unitario::text as costo, unidad::text from insumos where nombre = $1`,
+        [PAN],
+      )
+    ).rows.map((x) => ({ costo: Number(x.costo), unidad: x.unidad }));
+  const precio = async () =>
+    (
+      await db.query<{ p: string | null }>(
+        `select pt.precio_lista::text as p from producto_tamanos pt join recetas r on r.id = pt.producto_id where r.nombre = 'Pan de Muerto Prueba'`,
+      )
+    ).rows.map((x) => Number(x.p));
+
+  it('se rechazan insumos o precios incoherentes', () => {
+    const mal = (f: (m: ManifiestoAltas) => void, e: RegExp) =>
+      expect(() => validarManifiestoAltas(conPan(f))).toThrow(e);
+    expect(() => validarManifiestoAltas(conPan())).not.toThrow();
+    mal((m) => m.insumos!.push({ ...m.insumos![0] }), /repetido/);
+    mal((m) => (m.insumos![0].unidad = 'kg' as never), /unidad/);
+    mal((m) => (m.insumos![0].presentacion = 0), /presentación/);
+    mal((m) => (m.productos[2].precioLista = { Chica: 65 }), /precio de lista/);
+  });
+
+  it('el ensayo crea el insumo, el producto y su precio con la bitácora exacta, y no deja nada', async () => {
+    const b0 = await bitacora();
+    const i = await aplicarAltas(cx, 'ensayo', conPan(), { usuario: admin });
+    expect(i.error).toBeUndefined();
+    expect(i.insumos).toEqual([expect.objectContaining({ nombre: PAN, resultado: 'creado', problemas: [] })]);
+    expect(i.totales.creado).toBe(3);
+    // 16 de los otros dos + 1 insumo + (1 receta + 1 tamaño + 2 líneas + 2 cantidades) + 1 precio
+    expect([i.bitacoraPropia, i.restoSinCambios, i.transaccion]).toEqual([16 + 1 + 6 + 1, true, 'rollback']);
+    expect(await insumo()).toEqual([]);
+    expect(await bitacora()).toBe(b0);
+  });
+
+  it('aplicar deja el costo por pieza y el precio de lista; repetir es «sin cambio»', async () => {
+    const i = await aplicarAltas(cx, 'aplicar', conPan(), { usuario: admin });
+    expect(i.error).toBeUndefined();
+    expect(await insumo()).toEqual([{ costo: 15.86, unidad: 'pza' }]);
+    expect(await precio()).toEqual([65]);
+    const otra = await aplicarAltas(cx, 'aplicar', conPan(), { usuario: admin });
+    expect(otra.error).toBeUndefined();
+    expect(otra.insumos[0].resultado).toBe('sin cambio');
+    expect(otra.bitacoraPropia).toBe(0);
+    // Con otro precio de lista ya no es la misma alta.
+    const cambiado = await aplicarAltas(
+      cx,
+      'aplicar',
+      conPan((m) => (m.productos[2].precioLista = { Único: 80 })),
+      { usuario: admin },
+    );
+    expect(cambiado.error).toMatch(/otros datos/);
+  });
+
+  it('si el insumo ya existe sin los productos (estado mezclado), no se crea nada', async () => {
+    await crearInsumo(db, { nombre: PAN, costoPaquete: 15.86, presentacion: 1, unidad: 'pza' });
+    const i = await aplicarAltas(cx, 'aplicar', conPan(), { usuario: admin });
+    expect(i.error).toMatch(/insumos nuevos del lote: estado mezclado/);
+    expect(await productos()).toEqual([]);
+  });
+
+  it('revertir borra también el insumo; no si otra receta ya lo usa', async () => {
+    const ap = await aplicarAltas(cx, 'aplicar', conPan(), { usuario: admin });
+    const rv = await aplicarAltas(cx, 'revertir', conPan(), { usuario: admin, ejecucion: ap.ejecucion });
+    expect(rv.error).toBeUndefined();
+    expect(rv.insumos[0].resultado).toBe('borrado');
+    expect([await insumo(), await productos()]).toEqual([[], []]);
+    const ap2 = await aplicarAltas(cx, 'aplicar', conPan(), { usuario: admin });
+    const otro = await crearSubreceta(db, { nombre: 'Mix PAN', rendimiento: 1 });
+    await agregarLinea(db, otro, {
+      insumoId: (await db.query<{ id: string }>(`select id from insumos where nombre = $1`, [PAN])).rows[0]
+        .id,
+      cantidades: 1,
+    });
+    const tarde = await aplicarAltas(cx, 'revertir', conPan(), { usuario: admin, ejecucion: ap2.ejecucion });
+    expect(tarde.error).toMatch(/Otras recetas usan|posterior/);
+    expect((await insumo()).length).toBe(1);
   });
 });

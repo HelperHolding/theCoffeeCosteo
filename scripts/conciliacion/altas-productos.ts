@@ -5,21 +5,24 @@ import type { Conexion } from './fase4';
 
 /**
  * Alta de productos nuevos con su receta (doc 31): en UNA transacción, cada producto se crea con guardar_receta (el
- * mismo camino del portal: permisos, componentes activos, tamaños y bitácora). No modifica insumos, precios, enlaces
- * POS ni otras recetas.
+ * mismo camino del portal: permisos, componentes activos, tamaños y bitácora). No modifica insumos existentes, enlaces
+ * POS ni otras recetas. Opcional (doc 39): insumos NUEVOS que usan sus líneas (productos terminados, como el Pan de
+ * Muerto) y el precio de lista por tamaño de los productos del lote.
  *  1. lote aprobado: manifiesto con huella fijada en LOTES_ALTAS_APROBADOS; declara nombre, categoría, tamaños,
- *     líneas (componente, tipo y cantidad por tamaño) y el costo esperado por tamaño;
+ *     líneas (componente, tipo y cantidad por tamaño) y el costo esperado por tamaño; y, si los hay, los insumos nuevos
+ *     (proveedor, categoría, costo del paquete, presentación y unidad) y el precio de lista;
  *  2. perfil obligatorio también en el ensayo (activo, operaciones o admin): autor de la bitácora;
- *  3. REPEATABLE READ; ningún producto del lote puede existir ya (si todos existen con exactamente la receta del
- *     manifiesto → «sin cambio»; cualquier otra mezcla → problema y no se crea nada);
- *  4. tras crear: receta, tamaños, líneas y cantidades idénticas al manifiesto; costo por tamaño = costo esperado
- *     (si un costo de compra cambió desde que se preparó el lote, se detiene);
- *  5. bitácora: exactamente un registro por receta, tamaño, línea y cantidad, de esta transacción, con autor y
- *     origen carga_masiva; se les pone la nota de la ejecución. Otro registro propio aborta;
- *  6. huellas: insumos, enlaces POS, precios manuales, el resto de recetas, líneas, cantidades, tamaños y costos;
+ *  3. REPEATABLE READ; ningún producto ni insumo nuevo del lote puede existir ya (si todos existen exactamente como
+ *     en el manifiesto → «sin cambio»; cualquier otra mezcla → problema y no se crea nada);
+ *  4. tras crear: insumos, receta, tamaños, líneas, cantidades y precios idénticos al manifiesto; costo por tamaño =
+ *     costo esperado (si un costo de compra cambió desde que se preparó el lote, se detiene);
+ *  5. bitácora: exactamente un registro por insumo, receta, tamaño, línea, cantidad y precio, de esta transacción,
+ *     con autor y origen carga_masiva; se les pone la nota de la ejecución. Otro registro propio aborta;
+ *  6. huellas: el resto de insumos, enlaces POS, precios manuales, el resto de recetas, líneas, cantidades, tamaños
+ *     y costos;
  *  7. cierre verificado (cierre.ts); COMMIT solo en aplicar/revertir.
- * `revertir` exige el id de ejecución: borra solo los productos que esa ejecución creó, si no tienen registros
- * posteriores en la bitácora, enlaces POS ni precios manuales.
+ * `revertir` exige el id de ejecución: borra solo los productos y los insumos que esa ejecución creó, si no tienen
+ * registros posteriores en la bitácora, enlaces POS, precios manuales ni otras recetas que usen esos insumos.
  */
 export type ModoAlta = 'ensayo' | 'aplicar' | 'revertir';
 export type NombreTamano = 'Chica' | 'Grande' | 'Único';
@@ -35,11 +38,24 @@ export interface ProductoAlta {
   tamanos: NombreTamano[];
   lineas: LineaAlta[];
   costoEsperado: Partial<Record<NombreTamano, number>>;
+  /** Precio de lista (con IVA) por tamaño; sin él, el producto queda sin precio de lista. */
+  precioLista?: Partial<Record<NombreTamano, number>>;
   nota?: string;
+}
+/** Insumo nuevo del lote, por nombres de catálogo (proveedor y categoría de insumo deben existir). */
+export interface InsumoAlta {
+  nombre: string;
+  proveedor: string;
+  categoria: string;
+  costoPaquete: number;
+  presentacion: number;
+  unidad: 'gr' | 'ml' | 'pza';
+  origen: string;
 }
 export interface ManifiestoAltas {
   lote: string;
   fuente: { archivo: string; sha256: string };
+  insumos?: InsumoAlta[];
   productos: ProductoAlta[];
   aprobacion: string;
 }
@@ -57,10 +73,20 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
     manifiesto: 'docs/conciliacion-brasil/37-altas-combos-lote-1.manifiesto.json',
     sha256: '28b8eee7d461e7ac13635ec821b66eef4f2fadd0d644f4b4b558d4451878614f',
   },
+  // Carlo, 2026-10-29 (doc 39): Pan de Muerto del brief a franquiciatarios (2 insumos nuevos, 2 panes y el combo con
+  // True White). Cada paso remoto exige aprobación aparte.
+  'pan-de-muerto-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/39-pan-de-muerto-lote-1.manifiesto.json',
+    sha256: '2c1c4afc729f3aa82eb50d6decfdbd5181242237f7ae2ffafd0b84adf9eff668',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes (por omisión, el 31). */
-export const DOC_ALTAS: Record<string, string> = { 'altas-zoho-lote-1': '31', 'altas-combos-lote-1': '37' };
+export const DOC_ALTAS: Record<string, string> = {
+  'altas-zoho-lote-1': '31',
+  'altas-combos-lote-1': '37',
+  'pan-de-muerto-lote-1': '39',
+};
 export const docAltas = (lote: string) => DOC_ALTAS[lote] ?? '31';
 
 const TOL = 1e-4;
@@ -71,6 +97,23 @@ export function validarManifiestoAltas(m: ManifiestoAltas) {
   if (!m.fuente?.archivo?.trim() || !/^[0-9a-f]{64}$/.test(m.fuente.sha256 ?? ''))
     throw new Error('El manifiesto no declara la fuente con su sha256');
   if (!Array.isArray(m.productos) || !m.productos.length) throw new Error('El manifiesto no tiene productos');
+  const nuevos = new Set<string>();
+  for (const i of m.insumos ?? []) {
+    if (!i.nombre?.trim() || i.nombre !== i.nombre.trim() || nuevos.has(i.nombre))
+      throw new Error(`Insumo inválido o repetido: «${i.nombre}»`);
+    nuevos.add(i.nombre);
+    if (!i.proveedor?.trim() || !i.categoria?.trim())
+      throw new Error(`${i.nombre}: falta proveedor o categoría`);
+    if (!(
+      Number.isFinite(i.costoPaquete) &&
+      i.costoPaquete >= 0 &&
+      Number.isFinite(i.presentacion) &&
+      i.presentacion > 0
+    ))
+      throw new Error(`${i.nombre}: costo o presentación inválidos`);
+    if (!['gr', 'ml', 'pza'].includes(i.unidad)) throw new Error(`${i.nombre}: unidad inválida`);
+    if (!i.origen?.trim()) throw new Error(`${i.nombre}: falta el origen`);
+  }
   const nombres = new Set<string>();
   for (const p of m.productos) {
     if (!p.nombre?.trim() || p.nombre !== p.nombre.trim() || nombres.has(p.nombre))
@@ -102,6 +145,9 @@ export function validarManifiestoAltas(m: ManifiestoAltas) {
     for (const tam of p.tamanos)
       if (!(typeof p.costoEsperado?.[tam] === 'number' && p.costoEsperado[tam]! >= 0))
         throw new Error(`${p.nombre}: falta el costo esperado de ${tam}`);
+    for (const [t, v] of Object.entries(p.precioLista ?? {}))
+      if (!p.tamanos.includes(t as NombreTamano) || !(typeof v === 'number' && Number.isFinite(v) && v > 0))
+        throw new Error(`${p.nombre}: precio de lista inválido en ${t}`);
   }
 }
 
@@ -135,6 +181,8 @@ export interface InformeAlta {
     costos?: Record<string, number>;
     problemas: string[];
   }[];
+  /** Insumos nuevos del lote (vacío si el lote no trae). */
+  insumos: { nombre: string; id?: string; resultado: ResultadoAlta; problemas: string[] }[];
   totales: Record<ResultadoAlta, number>;
   bitacoraPropia: number;
   bitacoraAjena: number;
@@ -143,9 +191,12 @@ export interface InformeAlta {
   error?: string;
 }
 
-/** [nombre, consulta]: $1 = ids de las recetas del lote (vacío antes de crear). */
+/**
+ * [nombre, consulta]: $1 = ids de las recetas del lote (vacío antes de crear), salvo en «insumos (resto)», donde $1 son
+ * los nombres de los insumos nuevos del lote.
+ */
 const HUELLAS: [string, string][] = [
-  ['insumos', 'select * from public.insumos'],
+  ['insumos (resto)', 'select * from public.insumos where nombre <> all ($1::text[])'],
   ['producto_codigo_pos', 'select * from public.producto_codigo_pos'],
   ['precio_canal_manual', 'select * from public.precio_canal_manual'],
   ['recetas (resto)', 'select * from public.recetas where id <> all ($1::uuid[])'],
@@ -176,6 +227,7 @@ export async function aplicarAltas(
     usuario: opciones.usuario,
     ejecucion,
     productos: (m.productos ?? []).map((p) => ({ nombre: p.nombre, resultado: 'problema', problemas: [] })),
+    insumos: (m.insumos ?? []).map((i) => ({ nombre: i.nombre, resultado: 'problema', problemas: [] })),
     totales: { creado: 0, 'sin cambio': 0, borrado: 0, problema: 0 },
     bitacoraPropia: 0,
     bitacoraAjena: 0,
@@ -197,32 +249,69 @@ export async function aplicarAltas(
     return informe;
   }
   const nota = `${m.lote}, ejecución ${ejecucion} (docs/conciliacion-brasil/${docAltas(m.lote)})`;
+  const nuevos = m.insumos ?? [];
   const huellas = async (ids: string[]) => {
     const h: Record<string, string> = {};
     for (const [nombre, sql] of HUELLAS)
       h[nombre] = (
         await cx.query<{ h: string }>(
           `select count(*)::text || ':' || md5(coalesce(string_agg(x::text, '|' order by x::text), '')) as h from (${sql}) x`,
-          sql.includes('$1') ? [ids] : [],
+          nombre === 'insumos (resto)' ? [nuevos.map((i) => i.nombre)] : sql.includes('$1') ? [ids] : [],
         )
       ).rows[0].h;
     return h;
   };
+  /** Diferencias entre un insumo de la base y el del manifiesto. */
+  const difiereInsumo = async (i: InsumoAlta) => {
+    const x = (
+      await cx.query<{
+        proveedor: string;
+        categoria: string;
+        costo_paquete: string;
+        presentacion: string;
+        unidad: string;
+        activo: boolean;
+      }>(
+        `select p.nombre as proveedor, c.nombre as categoria, i.costo_paquete::text, i.presentacion::text, i.unidad::text, i.activo
+           from public.insumos i join public.proveedores p on p.id = i.proveedor_id join public.categorias_insumo c on c.id = i.categoria_id
+          where i.nombre = $1`,
+        [i.nombre],
+      )
+    ).rows[0];
+    if (!x) return ['no existe'];
+    const problemas: string[] = [];
+    if (x.proveedor !== i.proveedor) problemas.push(`proveedor ${x.proveedor}, se esperaba ${i.proveedor}`);
+    if (x.categoria !== i.categoria) problemas.push(`categoría ${x.categoria}, se esperaba ${i.categoria}`);
+    if (Math.abs(Number(x.costo_paquete) - i.costoPaquete) > TOL)
+      problemas.push(`costo del paquete ${x.costo_paquete}, se esperaba ${i.costoPaquete}`);
+    if (Math.abs(Number(x.presentacion) - i.presentacion) > TOL)
+      problemas.push(`presentación ${x.presentacion}, se esperaba ${i.presentacion}`);
+    if (x.unidad !== i.unidad) problemas.push(`unidad ${x.unidad}, se esperaba ${i.unidad}`);
+    if (!x.activo) problemas.push('inactivo');
+    return problemas;
+  };
   const composicion = async (
     id: string,
-  ): Promise<{ categoria: string | null; tamanos: string[]; comp: Composicion }> => {
+  ): Promise<{
+    categoria: string | null;
+    tamanos: string[];
+    precios: Map<string, number | null>;
+    comp: Composicion;
+  }> => {
     const cab = (
       await cx.query<{ categoria: string | null }>(
         `select c.nombre as categoria from public.recetas r left join public.categorias_producto c on c.id = r.categoria_id where r.id = $1`,
         [id],
       )
     ).rows[0];
-    const tamanos = (
-      await cx.query<{ t: string }>(
-        `select t.nombre as t from public.producto_tamanos pt join public.tamanos t on t.id = pt.tamano_id where pt.producto_id = $1 order by 1`,
+    const filas = (
+      await cx.query<{ t: string; precio: string | null }>(
+        `select t.nombre as t, pt.precio_lista::text as precio from public.producto_tamanos pt join public.tamanos t on t.id = pt.tamano_id where pt.producto_id = $1 order by 1`,
         [id],
       )
-    ).rows.map((x) => x.t);
+    ).rows;
+    const tamanos = filas.map((x) => x.t);
+    const precios = new Map(filas.map((x) => [x.t, x.precio === null ? null : Number(x.precio)]));
     const comp: Composicion = new Map();
     for (const l of (
       await cx.query<{ k: string; t: string; c: string }>(
@@ -237,7 +326,7 @@ export async function aplicarAltas(
       comp.set(l.k, x);
       x.set(l.t, (x.get(l.t) ?? 0) + Number(l.c));
     }
-    return { categoria: cab?.categoria ?? null, tamanos, comp };
+    return { categoria: cab?.categoria ?? null, tamanos, precios, comp };
   };
   const difiere = (p: ProductoAlta, real: Awaited<ReturnType<typeof composicion>>) => {
     const problemas: string[] = [];
@@ -245,6 +334,14 @@ export async function aplicarAltas(
       problemas.push(`categoría ${real.categoria}, se esperaba ${p.categoria}`);
     if (real.tamanos.join(',') !== [...p.tamanos].sort().join(','))
       problemas.push(`tamaños ${real.tamanos.join('/')}`);
+    // El precio de lista solo se compara si el lote lo declara (los lotes anteriores no tocan precios).
+    if (p.precioLista)
+      for (const t of p.tamanos) {
+        const a = p.precioLista[t] ?? null,
+          b = real.precios.get(t) ?? null;
+        if (a === null ? b !== null : b === null || Math.abs(a - b) > TOL)
+          problemas.push(`precio de lista ${t} ${b ?? 'ninguno'}, se esperaba ${a ?? 'ninguno'}`);
+      }
     const esperado: Composicion = new Map(
       p.lineas.map((l) => [
         `${l.tipo}:${l.componente}`,
@@ -289,10 +386,19 @@ export async function aplicarAltas(
         )
       ).rows.map((r) => [r.nombre, r.id]),
     );
+    const insumosExistentes = new Map(
+      (
+        await cx.query<{ id: string; nombre: string }>(
+          `select id, nombre from public.insumos where nombre = any ($1::text[]) for update`,
+          [nuevos.map((i) => i.nombre)],
+        )
+      ).rows.map((r) => [r.nombre, r.id]),
+    );
     const maxBitacora = Number(
       (await cx.query<{ m: string }>(`select coalesce(max(id), 0) as m from bitacora`)).rows[0].m,
     );
     let ids: string[] = [];
+    let idsInsumos: string[] = [];
 
     if (modo === 'revertir') {
       const propios = (
@@ -308,11 +414,18 @@ export async function aplicarAltas(
           .rows[0].m,
       );
       ids = propios.map((p) => p.receta_id);
+      idsInsumos = (
+        await cx.query<{ id: string }>(
+          `select registro_id as id from bitacora where nota = $1 and tabla = 'insumos' and campo = '*'`,
+          [nota],
+        )
+      ).rows.map((x) => x.id);
       const posteriores = Number(
         (
           await cx.query<{ n: string }>(
-            `select count(*) as n from bitacora where receta_id = any ($1::uuid[]) and id > $2`,
-            [ids, ultimo],
+            `select count(*) as n from bitacora
+              where (receta_id = any ($1::uuid[]) or (tabla = 'insumos' and registro_id = any ($3::text[]))) and id > $2`,
+            [ids, ultimo, idsInsumos],
           )
         ).rows[0].n,
       );
@@ -335,7 +448,17 @@ export async function aplicarAltas(
           informe.productos[i].problemas.push('esta ejecución no creó este producto');
         else informe.productos[i].id = id;
       }
-      if (informe.productos.some((x) => x.problemas.length))
+      for (const [i, n] of nuevos.entries()) {
+        const id = insumosExistentes.get(n.nombre);
+        if (!id || !idsInsumos.includes(id))
+          informe.insumos[i].problemas.push('esta ejecución no creó este insumo');
+        else informe.insumos[i].id = id;
+      }
+      if (idsInsumos.length !== nuevos.length)
+        throw new Error(
+          `La ejecución creó ${idsInsumos.length} insumo(s) y el lote declara ${nuevos.length}`,
+        );
+      if ([...informe.productos, ...informe.insumos].some((x) => x.problemas.length))
         throw new Error('El lote no coincide con lo que creó la ejecución');
       const borrados = (
         await cx.query(`delete from public.recetas where id = any ($1::uuid[]) returning id`, [ids])
@@ -343,6 +466,25 @@ export async function aplicarAltas(
       if (borrados !== ids.length)
         throw new Error(`Se borraron ${borrados} productos y se esperaban ${ids.length}`);
       for (const x of informe.productos) x.resultado = 'borrado';
+      if (idsInsumos.length) {
+        // Sin los productos del lote, ninguna otra receta puede usar los insumos que se borran.
+        const enUso = Number(
+          (
+            await cx.query<{ n: string }>(
+              `select count(*) as n from public.receta_lineas where insumo_id = any ($1::uuid[])`,
+              [idsInsumos],
+            )
+          ).rows[0].n,
+        );
+        if (enUso)
+          throw new Error(`Otras recetas usan ${enUso} vez/veces los insumos del lote: no se revierte`);
+        const insumosBorrados = (
+          await cx.query(`delete from public.insumos where id = any ($1::uuid[]) returning id`, [idsInsumos])
+        ).rows.length;
+        if (insumosBorrados !== idsInsumos.length)
+          throw new Error(`Se borraron ${insumosBorrados} insumos y se esperaban ${idsInsumos.length}`);
+        for (const x of informe.insumos) x.resultado = 'borrado';
+      }
       informe.restoSinCambios = JSON.stringify(await huellas(ids)) === JSON.stringify(antes);
     } else {
       const todos = m.productos.every((p) => existentes.has(p.nombre));
@@ -350,16 +492,26 @@ export async function aplicarAltas(
         throw new Error(
           `Ya existen ${existentes.size} de ${m.productos.length} productos del lote: estado mezclado, no se crea nada`,
         );
+      // Los insumos nuevos siguen a los productos: todos existen (repetición) o ninguno (alta).
+      if (insumosExistentes.size !== (todos ? nuevos.length : 0))
+        throw new Error(
+          `Ya existen ${insumosExistentes.size} de ${nuevos.length} insumos nuevos del lote: estado mezclado, no se crea nada`,
+        );
       if (todos) {
-        // Idempotente: solo si cada producto tiene exactamente la receta del manifiesto.
+        // Idempotente: solo si cada insumo y cada producto están exactamente como en el manifiesto.
+        for (const [i, n] of nuevos.entries()) {
+          informe.insumos[i].id = insumosExistentes.get(n.nombre);
+          informe.insumos[i].problemas.push(...(await difiereInsumo(n)));
+          if (!informe.insumos[i].problemas.length) informe.insumos[i].resultado = 'sin cambio';
+        }
         for (const [i, p] of m.productos.entries()) {
           const id = existentes.get(p.nombre)!;
           informe.productos[i].id = id;
           informe.productos[i].problemas.push(...difiere(p, await composicion(id)));
           if (!informe.productos[i].problemas.length) informe.productos[i].resultado = 'sin cambio';
         }
-        if (informe.productos.some((x) => x.problemas.length))
-          throw new Error('Los productos existen con otra receta: no se toca nada');
+        if ([...informe.productos, ...informe.insumos].some((x) => x.problemas.length))
+          throw new Error('Los productos o insumos existen con otros datos: no se toca nada');
       } else {
         const antes = await huellas([]);
         const categorias = new Map(
@@ -369,6 +521,37 @@ export async function aplicarAltas(
             )
           ).rows.map((c) => [c.nombre, c.id]),
         );
+        if (nuevos.length) {
+          const catalogo = async (tabla: 'proveedores' | 'categorias_insumo') =>
+            new Map(
+              (
+                await cx.query<{ id: string; nombre: string }>(`select id, nombre from public.${tabla}`)
+              ).rows.map((x) => [x.nombre, x.id]),
+            );
+          const [proveedores, categoriasInsumo] = [
+            await catalogo('proveedores'),
+            await catalogo('categorias_insumo'),
+          ];
+          for (const [i, n] of nuevos.entries()) {
+            const ii = informe.insumos[i];
+            const [prov, cat] = [proveedores.get(n.proveedor), categoriasInsumo.get(n.categoria)];
+            if (!prov) ii.problemas.push(`el proveedor ${n.proveedor} no existe`);
+            if (!cat) ii.problemas.push(`la categoría de insumo ${n.categoria} no existe`);
+            if (ii.problemas.length) continue;
+            ii.id = (
+              await cx.query<{ id: string }>(
+                `insert into public.insumos (nombre, proveedor_id, categoria_id, costo_paquete, presentacion, unidad, updated_by)
+                 values ($1, $2, $3, $4, $5, $6::public.unidad, $7) returning id`,
+                [n.nombre, prov, cat, n.costoPaquete, n.presentacion, n.unidad, opciones.usuario],
+              )
+            ).rows[0].id;
+            ii.problemas.push(...(await difiereInsumo(n)));
+            if (!ii.problemas.length) ii.resultado = 'creado';
+          }
+          if (informe.insumos.some((x) => x.problemas.length))
+            throw new Error('Algún insumo nuevo no se puede crear: no se crea nada');
+          idsInsumos = informe.insumos.map((x) => x.id!);
+        }
         const insumos = new Map(
           (
             await cx.query<{ id: string; nombre: string }>(
@@ -414,6 +597,16 @@ export async function aplicarAltas(
             ])
           ).rows[0].r;
           ip.id = r.id;
+          // guardar_receta no acepta precios: el de lista va aparte, como en el portal.
+          for (const [t, precio] of Object.entries(p.precioLista ?? {})) {
+            const n = (
+              await cx.query(
+                `update public.producto_tamanos set precio_lista = $3 where producto_id = $1 and tamano_id = $2 returning 1`,
+                [r.id, tamanos.get(t), precio],
+              )
+            ).rows.length;
+            if (n !== 1) ip.problemas.push(`no se pudo poner el precio de lista ${t}`);
+          }
         }
         if (informe.productos.some((x) => x.problemas.length))
           throw new Error('Algún producto no se puede crear: no se crea nada');
@@ -442,18 +635,19 @@ export async function aplicarAltas(
       }
     }
 
-    // Bitácora: solo registros de esta transacción, todos de los productos del lote y del autor.
+    // Bitácora: solo registros de esta transacción, todos de los productos e insumos del lote y del autor.
     const propias = (
       await cx.query<{
         id: string;
         propia: boolean;
         tabla: string;
+        registro_id: string | null;
         receta_id: string | null;
         campo: string;
         origen: string;
         usuario_id: string | null;
       }>(
-        `select id, fecha = now() as propia, tabla, receta_id, campo, origen, usuario_id from bitacora where id > $1 order by id`,
+        `select id, fecha = now() as propia, tabla, registro_id, receta_id, campo, origen, usuario_id from bitacora where id > $1 order by id`,
         [maxBitacora],
       )
     ).rows;
@@ -465,23 +659,28 @@ export async function aplicarAltas(
         ? null // las bajas en cascada registran recetas, tamaños, líneas y cantidades: se cuentan abajo
         : informe.productos.every((x) => x.resultado === 'sin cambio')
           ? 0
-          : m.productos.reduce(
+          : nuevos.length +
+            m.productos.reduce(
               (s, p) =>
                 s +
                 1 +
                 p.tamanos.length +
                 p.lineas.length +
-                p.lineas.reduce((t, l) => t + Object.keys(l.cantidades).length, 0),
+                p.lineas.reduce((t, l) => t + Object.keys(l.cantidades).length, 0) +
+                Object.keys(p.precioLista ?? {}).length,
               0,
             );
-    const ajenas = mias.filter(
-      (b) =>
+    const ajenas = mias.filter((b) => {
+      if (b.origen !== 'carga_masiva' || b.usuario_id !== opciones.usuario) return true;
+      if (b.tabla === 'insumos') return b.campo !== '*' || !idsInsumos.includes(String(b.registro_id));
+      // El alta de un tamaño registra «*»; ponerle el precio de lista registra solo ese campo.
+      const campoValido = b.campo === '*' || (b.tabla === 'producto_tamanos' && b.campo === 'precio_lista');
+      return (
         !['recetas', 'producto_tamanos', 'receta_lineas', 'linea_cantidades'].includes(b.tabla) ||
         !ids.includes(String(b.receta_id)) ||
-        b.campo !== '*' ||
-        b.origen !== 'carga_masiva' ||
-        b.usuario_id !== opciones.usuario,
-    );
+        !campoValido
+      );
+    });
     if (ajenas.length)
       throw new Error(
         `Esta ejecución dejó ${ajenas.length} registro(s) de bitácora inesperado(s): no se aplica nada`,
@@ -500,8 +699,11 @@ export async function aplicarAltas(
       if (x.problemas.length) x.resultado = 'problema';
       informe.totales[x.resultado]++;
     }
+    for (const x of informe.insumos) if (x.problemas.length) x.resultado = 'problema';
     if (informe.totales.problema)
       throw new Error(`${informe.totales.problema} producto(s) con problemas: no se aplica nada`);
+    if (informe.insumos.some((x) => x.resultado === 'problema'))
+      throw new Error('Algún insumo nuevo con problemas: no se aplica nada');
     if (informe.restoSinCambios === false) throw new Error('Cambió algo fuera de los productos del lote');
     if (modo !== 'ensayo') fin = 'commit';
   } catch (e) {
