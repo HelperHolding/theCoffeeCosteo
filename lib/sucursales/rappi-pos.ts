@@ -36,6 +36,8 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   'coffee frappé': 'COFFRAAPP',
   'cold brew': '1COLDB',
   'cold drip v60': '1CDV60',
+  // Sin receta todavía (2026-10-30): quedan ligadas a su código del POS; cuentan solas cuando el código tenga receta.
+  'cookie matcha & white chocolate': 'COOMATAPP',
   'cookie tradicional': 'COOTRAAPP',
   'cookie triple chocolate': 'COOCHOAPP',
   'croissant relleno de queso y jamón': 'CROSTUAPP',
@@ -74,6 +76,7 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   'salted caramel frappé': 'SALFRAAPP',
   'sandwich jamón, queso, cherry y orégano': 'BR3',
   'sora iced latte': 'SOICAUAPP',
+  'spooky biscuits': 'SPOBISAPP', // sin receta todavía, ligada a su código del POS
   'sora latte': 'SOLAAUAPP',
   'sándwich de tres quesos': 'QQ2',
   'sándwich jamón y queso': 'MQ1',
