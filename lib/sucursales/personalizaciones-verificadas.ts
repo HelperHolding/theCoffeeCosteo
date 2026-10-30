@@ -72,6 +72,12 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   '4ac9187c-fdaf-4678-8e91-7ead2d596c9b': [
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
+  // Espresso Tonic
+  '4af99017-fa21-4a12-8aa1-213a145b8d4b': [
+    'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
+    'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
+    'Traditional Tonic', // tónica de la receta (Carlo, 2026-10-30)
+  ],
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': [
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
@@ -406,6 +412,10 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   '00f47aba-88e6-4ebc-a815-5833f8b29871': {
     'Cold brew - Kraft': { cambia: { de: GRANO_BLACK, a: GRANO_KRAFT } },
     'Cold brew - White': { cambia: { de: GRANO_BLACK, a: GRANO_WHITE } },
+  },
+  // Espresso Tonic
+  '4af99017-fa21-4a12-8aa1-213a145b8d4b': {
+    'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
   },
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': {

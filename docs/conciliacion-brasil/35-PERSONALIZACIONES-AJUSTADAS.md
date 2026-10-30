@@ -121,6 +121,11 @@ Quedan fuera, a propósito:
 
 Las recetas no cambian: el Pure Black (Double Shot) lleva 18 g, que con esta regla es correcto.
 
+**Espresso Tonic** (Carlo, 2026-10-30): se agrega a la misma regla. Su receta la creó el doc 40 (#71) en tamaño Único con la receta
+Chica: 18 g de café, 170 ml de tónica, 130 g de hielo y vaso de 14 oz. Single y Double son la receta, «Traditional Tonic» es la tónica
+de la receta (neutra) y Extra Double deja 36 g. «With Sparkling Water (Fresh Soda)», que cambia la tónica por agua mineral, queda fuera
+hasta definirlo. Cuenta en cuanto `ESPTONAPP` quede enlazado (lote-8 del doc 40).
+
 El Cold brew no cambia: lleva 100 ml de concentrado en los dos tamaños (20 g de café), con la proporción del concentrado
 de 200 g por 1 L, y eso ya está en su receta.
 
