@@ -1,8 +1,8 @@
 # 41 · Zoé: alta de «Zoe Water Twist» y enlaces de sus códigos POS
 
 **Estado:** el alta quedó **APLICADA** en producción el 2026-10-30: ejecución `8d8fa908…`, bitácora #1597–1602; receta
-`902a845f-5a02-4ac7-a424-e64ce036bc9f`, $22. El **lote-9** está preparado, ensayado en local y con **ensayo remoto limpio**,
-**sin cargar**. Falta cargarlo y el merge.
+`902a845f-5a02-4ac7-a424-e64ce036bc9f`, $22. El **lote-9** quedó **CARGADO** el 2026-10-30 con aprobación de Carlo: carga `ba6f95b6…`, 105 → 107
+enlaces, bitácora #1605–1606.
 
 Carlo pidió coordinar con el chat «Módulo Sucursales» y subir cuando ese chat diera el OK. Dio el OK el 2026-10-30: no tiene
 nada en curso que toque estos archivos, la base ni los productos Zoé.
@@ -90,6 +90,17 @@ Archivos `41-lote-9.csv` y `41-lote-9.manifiesto.json` (sha256 `5d44fa3b…`), f
 | Ensayo local (copia del respaldo) | 2 altas; 105 previos intactos; 2 registros; aplicar 105 → 107; repetir «sin cambio»; revertir vuelve a 105 |
 | Ensayo remoto (ROLLBACK) | 2 altas, 0 problemas; los 105 previos intactos; 2 registros propios, 0 ajenos; datos comerciales sin cambios; con una conexión nueva sigue en 105 enlaces y bitácora #1602 |
 
+**Carga en producción** (2026-10-30, aprobada por Carlo después de ver el ensayo). Antes se comprobó que producción seguía
+igual que en el ensayo.
+
+| Paso | Resultado |
+| --- | --- |
+| Cargar | 2 altas, 0 problemas; 105 previos intactos; 2 registros propios (#1605–1606), 0 ajenos; datos comerciales sin cambios; COMMIT |
+| Conexión nueva | 107 enlaces: ZOETWIAPP → Zoe Water Twist y ZOEWATAPP → Zoé Water Natural, los dos de esta carga |
+| Repetir ensayo | 2 «sin cambio», 0 registros, ROLLBACK |
+
+El `carga_id` completo y el comando de reversión están en el respaldo privado (`informes-sku-lote-9/REVERSION.md`).
+
 **Mejora posible del chat «Módulo Sucursales»:** el POS manda el sabor del Twist como opción («Mixed Berries» y «Lemon
 Ginger»). Con ajustes en `personalizaciones-verificadas.ts`, Consumo podría contar el sabor exacto en lugar de ½ y ½. Lo
 propone ese chat a Carlo.
@@ -105,6 +116,5 @@ cueste $22 y no $44. No se carga nada en Zoho: va al documento de cambios para i
 1. ~~Ensayo remoto del alta con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-zoe-lote-1 --usuario <uuid-perfil>`
 2. ~~Aplicar el alta, verificar y repetir el ensayo~~ (hecho).
-3. ~~Preparar el lote-9 y ensayarlo en local y en remoto~~ (hecho); falta cargarlo:
-   `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-9 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
+3. ~~Preparar, ensayar y cargar el lote-9~~ (hecho: 107 enlaces).
 4. Merge del PR.
