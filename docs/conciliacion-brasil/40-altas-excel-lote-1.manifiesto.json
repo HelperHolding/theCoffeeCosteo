@@ -1,0 +1,226 @@
+{
+ "lote": "altas-excel-lote-1",
+ "fuente": {
+  "archivo": "Costeo_TheCoffee.xlsx (costeo del equipo, recibido el 2026-10-30)",
+  "sha256": "163b9832d68d313d0b9de8c7cce66a78558385f02b02b951e46554bed86819f2"
+ },
+ "insumos": [
+  {
+   "nombre": "MACADAMIA COOKIE",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 24.5,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Costeo_TheCoffee.xlsx, hoja Insumos: MACADAMIA COOKIE, OH LALA, PANADERIA, $24.50 por pieza"
+  },
+  {
+   "nombre": "COOKIE MATCHA & WHITE CHOCOLATE",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 24.5,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Costeo_TheCoffee.xlsx, hoja Insumos: COOKIE MATCHA & WHITE CHOCOLATE, OH LALA, PANADERIA, $24.50 por pieza"
+  },
+  {
+   "nombre": "SALTED CARAMEL COOKIE",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 24.5,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Costeo_TheCoffee.xlsx, hoja Insumos: SALTED CARAMEL COOKIE, OH LALA, PANADERIA, $24.50 por pieza"
+  }
+ ],
+ "productos": [
+  {
+   "nombre": "Espresso Tonic",
+   "categoria": "Cold",
+   "tamanos": [
+    "Chica",
+    "Grande"
+   ],
+   "lineas": [
+    {
+     "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 18,
+      "Grande": 18
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    },
+    {
+     "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 170,
+      "Grande": 290
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    },
+    {
+     "componente": "HIELO (g)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 130,
+      "Grande": 245
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (HIELO 130/245); en gramos como el resto de las bebidas frías de la base"
+    },
+    {
+     "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    },
+    {
+     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Grande": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    },
+    {
+     "componente": "TAPA FRIO PET (1,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    },
+    {
+     "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 1,
+      "Grande": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+    }
+   ],
+   "costoEsperado": {
+    "Chica": 19.7405,
+    "Grande": 25.6162
+   },
+   "nota": "Receta del Excel del equipo (ESPRESSO TONIC); sin el AGUA de 36 ml del espresso, como el resto de las bebidas con espresso de la base. Código POS ESPTONAPP: su enlace va en un lote aparte"
+  },
+  {
+   "nombre": "Macadamia Cookie",
+   "categoria": "Sweets",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "MACADAMIA COOKIE",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (Macadamia Cookie): se compra hecha, una pieza"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 26.6504
+   },
+   "nota": "Se compra hecha (Carlo, 2026-10-29); costo y proveedor del Excel del equipo. Su código POS va en un lote aparte"
+  },
+  {
+   "nombre": "Cookie Matcha & White Chocolate",
+   "categoria": "Sweets",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "COOKIE MATCHA & WHITE CHOCOLATE",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (Cookie Matcha & White Chocolate): se compra hecha, una pieza"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 26.6504
+   },
+   "nota": "Se compra hecha (Carlo, 2026-10-29); costo y proveedor del Excel del equipo. Su código POS va en un lote aparte"
+  },
+  {
+   "nombre": "Salted Caramel Cookie",
+   "categoria": "Sweets",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Igual que el resto de la panadería por pieza (Cookie Triple Chocolate)"
+    },
+    {
+     "componente": "SALTED CARAMEL COOKIE",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (Salted Caramel Cookie): se compra hecha, una pieza"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 26.6504
+   },
+   "nota": "Se compra hecha (Carlo, 2026-10-29); costo y proveedor del Excel del equipo. Su código POS va en un lote aparte"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-30: «prepara la base para agregar recetas que no tengamos y productos nuevos con receta […] corrige los costos a como los tenga ese excel que es el más actualizado». Decidió: Pan de Muerto se queda en $15.86; empaques y los casos de Croissant Serrano & Gouda y Kit Café White 1kg se quedan como en la base; cantidades de ingredientes del Excel. «No hagas merge todavía»: solo se prepara; cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

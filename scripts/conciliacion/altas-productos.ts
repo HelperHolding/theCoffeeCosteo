@@ -79,6 +79,12 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
     manifiesto: 'docs/conciliacion-brasil/39-pan-de-muerto-lote-1.manifiesto.json',
     sha256: '2c1c4afc729f3aa82eb50d6decfdbd5181242237f7ae2ffafd0b84adf9eff668',
   },
+  // Carlo, 2026-10-30 (doc 40): Espresso Tonic y 3 cookies del costeo del equipo (Costeo_TheCoffee.xlsx), con los 3
+  // insumos de las cookies. Preparado sin merge; cada paso remoto exige aprobación aparte.
+  'altas-excel-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/40-altas-excel-lote-1.manifiesto.json',
+    sha256: 'a311977085436e6f3439f20f2262098f78ed7689e3c1277b9be8dc68da43d9bc',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes (por omisión, el 31). */
@@ -86,6 +92,7 @@ export const DOC_ALTAS: Record<string, string> = {
   'altas-zoho-lote-1': '31',
   'altas-combos-lote-1': '37',
   'pan-de-muerto-lote-1': '39',
+  'altas-excel-lote-1': '40',
 };
 export const docAltas = (lote: string) => DOC_ALTAS[lote] ?? '31';
 
