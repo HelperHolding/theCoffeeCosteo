@@ -79,6 +79,10 @@ Las listas viven en `lib/sucursales/rappi-pos.ts`. Cambiarlas exige evidencia, c
 
 Los tres combos del POS (`MISICEDAPP`, `TRWCROAPP`, `MATLEMAPP`) son los mismos de Rappi y usan su receta de combo.
 
+El sabor elegido decide el producto (Carlo, 2026-10-30): «Kouign Amann Dulce de Leche» con «Elige Tu Favorito: Avellana»
+cuenta como Kouign Amann Hazelnut (`KOAMAVAPP`) y toma su nombre. Con «Dulce de Leche», o sin opción, sigue siendo
+`KOAMDLAPP`. La opción de sabor no es una personalización.
+
 ### Combos que solo existen en Rappi
 
 | Combo                                  | Partes                                                                                  |
