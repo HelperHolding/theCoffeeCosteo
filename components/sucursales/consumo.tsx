@@ -243,8 +243,9 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
             verificado para esa receta y cada personalización es neutra o tiene su ajuste calculado: las
             mismas listas revisadas que usa Costeo. Ejemplos: «Lactose free» descuenta deslactosada en lugar
             de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Café
-            por shot: el Double (36 ml) es la receta, 18 g; el Single deja 9 g y el Extra Double, 36 g. Miel,
-            leches vegetales y lo demás aún no se calculan: esa unidad queda fuera completa.
+            por shot: cada shot son 18 g; el Single (18 ml) es la receta y el Double (36 ml) lleva 36 g. El
+            Extra Double, la miel, las leches vegetales y lo demás aún no se calculan: esa unidad queda fuera
+            completa.
           </li>
           <li>
             Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni

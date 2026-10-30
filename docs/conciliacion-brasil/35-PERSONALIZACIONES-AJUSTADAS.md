@@ -101,28 +101,29 @@ Carlo autorizó aplicar únicamente la migración 26, ensayada con el código de
 
 ## Shots (2026-10-30, regla de Carlo)
 
-Carlo: el shot normal, «Double shot (36ml)», usa **18 g** de café. Es lo que ya dicen las recetas de espresso.
-«Single Shot (18ml)» usa 9 g y «Extra Double shot (36ml)», 36 g en total. Rappi manda los mismos tres («Café: Single /
-Double / Extra Double Shot»).
+Carlo: **cada shot son 18 g de café.** «Single Shot (18ml)» usa 18 g, que es lo que ya dicen las recetas de espresso, y
+«Double shot (36ml)» usa 36 g. Rappi manda las mismas opciones («Café: Single / Double / Extra Double Shot»).
 
 Se aplica a las 28 recetas ligadas al POS que llevan 18 g de café en grano directo en todos sus tamaños: lattes, True
-White, Americano, frappés con espresso y sus combos.
+White, Americano, frappés con espresso, Pure Black (Single Shot) y sus combos.
 
-- `Double shot (36ml)` → neutra: es la receta.
-- `Single Shot (18ml)` → el café queda en 9 g.
-- `Extra Double shot (36ml)` → el café queda en 36 g.
+- `Single Shot (18ml)` → neutra: es la receta.
+- `Double shot (36ml)` → el café queda en 36 g.
 
 Quedan fuera, a propósito:
 
-- Hot Drip V60, porque es café filtrado.
-- Pure Black (Single Shot), porque su receta lleva 18 g y no 9: hay que confirmarla.
+- **`Extra Double shot (36ml)`:** falta saber cuántos shots suma en total. Mientras tanto, esa unidad queda fuera por
+  personalización.
+- **Hot Drip V60:** es café filtrado.
+- **Pure Black (Double Shot):** su receta lleva 18 g y, con esta regla, debería llevar 36 g. Hay que corregir la receta.
 
 El Cold brew no cambia: lleva 100 ml de concentrado en los dos tamaños (20 g de café), con la proporción del concentrado
 de 200 g por 1 L, y eso ya está en su receta.
 
 **Efecto en Namóra (POS + Rappi, del 23 al 29 de octubre):**
 
-- las unidades que entran a Consumo pasaron de 217 a 517 de 899;
-- el café White pasó de 582 g a 5.30 kg.
+- las unidades que entran a Consumo pasaron de 217 a 502 de 899;
+- el café White pasó de 582 g a 8.86 kg (POS 6.00 kg y Rappi 2.86 kg);
+- 35 unidades con Extra Double quedan fuera hasta saber cuántos shots suma.
 
 El shot era lo que más dejaba fuera.
