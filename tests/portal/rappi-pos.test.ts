@@ -128,7 +128,12 @@ describe('líneas de un producto de Rappi', () => {
   });
 
   it('un producto sin equivalencia queda con un código que nunca es del POS', () => {
-    expect(lineasDe(producto('Spooky Biscuits', 70))[0].codigo).toBe('RAPPI:spooky biscuits');
+    expect(lineasDe(producto('Triple Frap', 199))[0].codigo).toBe('RAPPI:triple frap');
+  });
+
+  it('lo que aún no tiene receta queda ligado a su código del POS: cuenta solo cuando el código tenga receta', () => {
+    expect(lineasDe(producto('Spooky Biscuits', 70))[0].codigo).toBe('SPOBISAPP');
+    expect(lineasDe(producto('Cookie Matcha & White Chocolate', 70))[0].codigo).toBe('COOMATAPP');
   });
 
   it('Pan de Muerto (doc 39): el Tradicional es el del POS; el de Naranja, su código propio de Rappi', () => {
@@ -287,7 +292,8 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
       de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), creaTu('Iced Latte', 'Sándwich Jamón y Queso')),
       consumo,
     );
-    expect(r.cobertura).toMatchObject({ lineas: 2, conReceta: 2, incluidas: 2 });
+    // Un combo cuenta como sus productos: 2 combos = 4 unidades (2 bebidas y 2 sándwiches).
+    expect(r.cobertura).toMatchObject({ lineas: 4, conReceta: 4, incluidas: 4 });
     expect(r.insumos.map((i) => [i.insumo, i.cantidad])).toEqual([
       ['LECHE ENTERA', 500],
       ['PAN', 2],
@@ -300,13 +306,16 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     );
   });
 
-  it('una parte sin receta deja el combo sin enlace; una personalización no calculada, fuera por personalización', () => {
+  it('Costeo necesita todas las partes; en Consumo cada producto del combo entra o queda fuera por sí mismo', () => {
     const sinParte = de(creaTu('Iced Latte', 'Sándwich Misterioso'));
     expect(costear(sinParte, costeo).resumen.cobertura.sinEnlaceCent).toBe(16400);
-    expect(consumir(sinParte, consumo).cobertura.sinEnlace).toBe(1);
+    expect(consumir(sinParte, consumo).cobertura).toMatchObject({ lineas: 2, sinEnlace: 1, incluidas: 1 });
+    // La bebida con avena aún no se calcula, pero el sándwich del combo sí suma.
     const avena = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
     expect(costear(avena, costeo).resumen.parcial.motivos.personalizacion).toBe(1);
-    expect(consumir(avena, consumo).cobertura.excluidas.personalizacion).toBe(1);
+    const r = consumir(avena, consumo);
+    expect(r.cobertura).toMatchObject({ lineas: 2, incluidas: 1, excluidas: { personalizacion: 1 } });
+    expect(r.insumos.find((i) => i.insumo === 'PAN')).toMatchObject({ cantidad: 1, rappi: 1 });
   });
 
   it('cada insumo dice cuánto es de Rappi y qué productos lo consumen; lo que no tiene receta queda listado', () => {
@@ -323,13 +332,19 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
       descuentoPct: 0,
       customs: [],
     });
-    const ps = [pos, ...de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), producto('Spooky Biscuits', 70))];
+    const ps = [pos, ...de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), producto('Triple Frap', 199))];
     const r = consumir(ps, consumo);
     const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
     expect(leche).toMatchObject({ cantidad: 260, rappi: 250 });
     expect(leche.detalle).toEqual([
-      { receta: 'Crea tu The Coffee', cantidad: 250, rappi: 250 },
+      { receta: 'Iced Latte', combo: 'Crea tu The Coffee', cantidad: 240, rappi: 240 },
       { receta: 'Sándwich jamón y queso', cantidad: 10, rappi: 0 },
+      { receta: 'Sándwich jamón y queso', combo: 'Crea tu The Coffee', cantidad: 10, rappi: 10 },
+    ]);
+    // El mismo sándwich, suelto en el POS y dentro del combo de Rappi: dos filas, cada una con su venta.
+    expect(r.productos.filter((p) => p.recetaId === MQ).map((p) => [p.combo ?? 'suelto', p.lineas])).toEqual([
+      ['suelto', 1],
+      ['Crea tu The Coffee', 1],
     ]);
     expect(r.insumos.find((i) => i.insumo === 'PAN')).toMatchObject({ cantidad: 2, rappi: 1 });
     expect(r.categorias.find((c) => c.categoria === 'LECHE')!.totales).toEqual([
@@ -337,12 +352,42 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     ]);
     expect(r.sinReceta).toEqual([
       { nombre: 'Espresso Tonic', unidades: 1, rappi: 0, sinCodigo: false },
-      { nombre: 'Spooky Biscuits', unidades: 1, rappi: 1, sinCodigo: false },
+      { nombre: 'Triple Frap', unidades: 1, rappi: 1, sinCodigo: false },
     ]);
     // Un combo de Rappi al que le falta una parte se lista por esa parte.
     expect(consumir(de(creaTu('Iced Latte', 'Sándwich Misterioso')), consumo).sinReceta).toEqual([
       { nombre: 'Sándwich Misterioso', unidades: 1, rappi: 1, sinCodigo: false },
     ]);
+  });
+
+  it('combos del POS por sus productos (solo donde se activa, hoy Namóra): la mayonesa va al sándwich y lo demás a la bebida', () => {
+    const combo: PedidoNormal = {
+      ...de(producto('Iced Latte', 1))[0],
+      origen: 'mostrador',
+      numeroPedidoRappi: null,
+      lineas: [
+        {
+          codigo: 'MISICEDAPP',
+          nombre: 'Iced Latte + Ham & Cheese Sandwich',
+          importeCent: 13900,
+          descuentoPct: 0,
+          customs: [
+            { codigo: 'X', nombre: 'Large - 600ml', importeCent: 0, descuentoPct: 0 },
+            { codigo: 'X', nombre: 'Chipotle Mayo', importeCent: 0, descuentoPct: 0 },
+          ],
+        },
+      ],
+    };
+    // Sin activar: el combo del POS va con su propio código (aquí sin receta enlazada).
+    expect(consumir([combo], consumo).cobertura).toMatchObject({ lineas: 1, sinEnlace: 1 });
+    const r = consumir([combo], consumo, [combo], undefined, [], true);
+    // La bebida Grande entra; el sándwich con mayonesa de chipotle aún no se calcula.
+    expect(r.cobertura).toMatchObject({ lineas: 2, incluidas: 1, excluidas: { personalizacion: 1 } });
+    expect(r.productos.map((p) => [p.receta, p.combo, p.lineas])).toEqual([
+      ['Iced Latte', 'Iced Latte + Ham & Cheese Sandwich', 1],
+      ['Sándwich jamón y queso', 'Iced Latte + Ham & Cheese Sandwich', 0],
+    ]);
+    expect(r.insumos.find((i) => i.insumo === 'LECHE ENTERA')).toMatchObject({ cantidad: 240, rappi: 0 });
   });
 });
 

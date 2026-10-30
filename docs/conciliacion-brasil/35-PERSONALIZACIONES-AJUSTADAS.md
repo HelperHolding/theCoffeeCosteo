@@ -109,11 +109,10 @@ White, Americano, frappés con espresso, Pure Black (Single Shot) y sus combos.
 
 - `Single Shot (18ml)` → neutra: es la receta.
 - `Double shot (36ml)` → el café queda en 36 g.
+- `Extra Double shot (36ml)` → el café queda en 72 g: son dos Double (Carlo, confirmado con Operaciones el mismo día).
 
 Quedan fuera, a propósito:
 
-- **`Extra Double shot (36ml)`:** falta saber cuántos shots suma en total. Mientras tanto, esa unidad queda fuera por
-  personalización.
 - **Hot Drip V60:** es café filtrado.
 - **Pure Black (Double Shot):** su receta lleva 18 g y, con esta regla, debería llevar 36 g. Hay que corregir la receta.
 
@@ -122,8 +121,7 @@ de 200 g por 1 L, y eso ya está en su receta.
 
 **Efecto en Namóra (POS + Rappi, del 23 al 29 de octubre):**
 
-- las unidades que entran a Consumo pasaron de 217 a 502 de 899;
-- el café White pasó de 582 g a 8.86 kg (POS 6.00 kg y Rappi 2.86 kg);
-- 35 unidades con Extra Double quedan fuera hasta saber cuántos shots suma.
+- las unidades que entran a Consumo pasaron de 217 a 517 de 899;
+- el café White pasó de 582 g a 9.94 kg (POS 6.58 kg y Rappi 3.37 kg), con Single, Double y Extra Double.
 
 El shot era lo que más dejaba fuera.

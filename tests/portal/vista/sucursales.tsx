@@ -16,6 +16,7 @@ import { claveCosto, type DatosCosteo } from '../../../lib/sucursales/costeo';
 import { claveConsumo, type DatosConsumo, type InsumoReceta } from '../../../lib/sucursales/consumo';
 import { periodoDeUrl } from '../../../lib/sucursales/periodo';
 import { construirRappiPortal, type RpcRappiPortal } from '../../../lib/sucursales/rappi-portal';
+import { pedidoRappiAPos } from '../../../lib/sucursales/rappi-pos';
 import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
@@ -183,6 +184,7 @@ const ID = {
   mil: '9756eec9-1f09-45ee-a45b-21ac8c54bb22',
   bro: 'b0000000-0000-4000-8000-000000000001',
   pum: 'b0000000-0000-4000-8000-000000000002',
+  cro: 'b0000000-0000-4000-8000-000000000003',
 };
 const costeo: DatosCosteo | null =
   new URLSearchParams(window.location.search).get('costeo') === '0'
@@ -196,6 +198,9 @@ const costeo: DatosCosteo | null =
           ['4MIL', { recetaId: ID.mil, receta: 'Matcha Iced Latte' }],
           ['BRO13', { recetaId: ID.bro, receta: 'Brownie' }],
           ['PUMPL', { recetaId: ID.pum, receta: 'Pumpkin Latte' }],
+          // Códigos del menú real que usa el Rappi sintético del portal (combo «Crea tu The Coffee»).
+          ['4TW', { recetaId: ID.tw, receta: 'True White' }],
+          ['CROSTUAPP', { recetaId: ID.cro, receta: 'Croissant filled with cheese and ham' }],
         ]),
         costos: new Map(
           (
@@ -207,11 +212,12 @@ const costeo: DatosCosteo | null =
               [ID.mil, 'Chica', 2600],
               [ID.mil, 'Grande', 3100],
               [ID.bro, 'Único', 2900],
+              [ID.cro, 'Único', 3100],
               [ID.pum, 'Chica', 3000],
             ] as const
           ).map(([r, t, c]) => [claveCosto(r, t), { costoCent: c, usaInactivo: false }]),
         ),
-        unicas: new Set([ID.bro]),
+        unicas: new Set([ID.bro, ID.cro]),
       };
 
 // Recetas SINTÉTICAS (cantidades inventadas) para el consumo teórico. Pumpkin Latte sin tamaño verificado.
@@ -237,8 +243,15 @@ const VASO = ins('va', 'VASO FRÍO', 'pza', 'DESECHABLE', 1);
 const consumo: DatosConsumo = {
   leidoEn: new Date().toISOString(),
   enlaces: costeo?.enlaces ?? new Map(),
-  unicas: new Set([ID.bro]),
+  unicas: new Set([ID.bro, ID.cro]),
   recetas: new Map([
+    [
+      claveConsumo(ID.cro, 'Único'),
+      [
+        ins('cr', 'CROISSANT TRADICIONAL', 'pza', 'PANADERIA', 1),
+        ins('jq', 'JAMÓN', 'gr', 'PERECEDEROS', 30),
+      ],
+    ],
     [
       claveConsumo(ID.tw, 'Chica'),
       [DESLAC(220), CAFE(9), ins('ch', 'CHOCOLATE BLANCO', 'gr', 'INGREDIENTES', 20), VASO],
@@ -381,8 +394,17 @@ window.fetch = async (entrada, init) => {
     return Response.json(construirRappiPortal(rappiPortalSintetico(desde, hasta), desde, hasta));
   if (m[2] === 'costeo' && !costeo)
     return Response.json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, { status: 403 });
-  if (m[2] === 'costeo') return Response.json(await construirCosteo(cfg, desde, hasta, origen, costeo!));
-  if (m[2] === 'consumo') return Response.json(await construirConsumo(cfg, desde, hasta, origen, consumo));
+  // Namóra sintética: Rappi del portal traducido al POS, como en producción (fuenteRappi).
+  const rappi = portal
+    ? async (d: string, h: string) =>
+        rappiPortalSintetico(d, h)
+          .pedidos.map(pedidoRappiAPos)
+          .filter((p) => p !== null)
+    : undefined;
+  if (m[2] === 'costeo')
+    return Response.json(await construirCosteo(cfg, desde, hasta, origen, costeo!, null, rappi));
+  if (m[2] === 'consumo')
+    return Response.json(await construirConsumo(cfg, desde, hasta, origen, consumo, null, rappi));
   const cuerpo =
     m[2] === 'vivo'
       ? await construirVivo(cfg, origen, { forzar: q.get('fresco') === '1' })

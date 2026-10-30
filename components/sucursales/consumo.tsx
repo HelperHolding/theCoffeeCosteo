@@ -149,6 +149,11 @@ function Contenido({ d }: { d: RespuestaConsumo }) {
   );
 }
 
+/** De qué venta salió un producto que se vendió dentro de un combo. */
+function EnCombo({ combo }: { combo: string }) {
+  return <span className="block text-xs font-normal text-muted-foreground">en {combo}</span>;
+}
+
 /** ¿Separar POS y Rappi? Solo si la sucursal tiene Rappi y el filtro de origen incluye los dos. */
 const separaRappi = (d: RespuestaConsumo) => d.sucursal.rappi && d.origen === 'todos';
 
@@ -243,9 +248,9 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
             verificado para esa receta y cada personalización es neutra o tiene su ajuste calculado: las
             mismas listas revisadas que usa Costeo. Ejemplos: «Lactose free» descuenta deslactosada en lugar
             de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Café
-            por shot: cada shot son 18 g; el Single (18 ml) es la receta y el Double (36 ml) lleva 36 g. El
-            Extra Double, la miel, las leches vegetales y lo demás aún no se calculan: esa unidad queda fuera
-            completa.
+            por shot: el Single (18 ml) es la receta, 18 g; el Double (36 ml) lleva 36 g y el Extra Double
+            (dos Double), 72 g. La miel, las leches vegetales y lo demás aún no se calculan: esa unidad queda
+            fuera completa.
           </li>
           <li>
             Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni
@@ -255,8 +260,14 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
           {d.sucursal.rappiPortal && (
             <li>
               Rappi se lee del portal de Rappi (tienda normal y Turbo, cada 10 minutos) con las mismas reglas
-              que el POS. Los combos que solo existen en Rappi se arman con sus partes (bebida y pan
-              elegidos).
+              que el POS.
+            </li>
+          )}
+          {d.sucursal.rappiPortal && (
+            <li>
+              Un combo cuenta como sus productos, en Rappi y en el POS: la bebida y el pan entran cada uno con
+              su receta, igual que cuando se venden sueltos, y quedan marcados con el combo en el que se
+              vendieron. Si una parte aún no se calcula, las demás sí suman.
             </li>
           )}
         </ul>
@@ -676,7 +687,10 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
                             <tbody>
                               {i.detalle.map((p) => (
                                 <tr key={p.receta} className="border-t border-line/60">
-                                  <td className="py-1 pl-6">{p.receta}</td>
+                                  <td className="py-1 pl-6">
+                                    {p.receta}
+                                    {p.combo && <EnCombo combo={p.combo} />}
+                                  </td>
                                   <td className="py-1 text-right tabular">
                                     {cantidad(p.cantidad, i.unidad)}
                                   </td>
@@ -762,6 +776,7 @@ function Productos({ d }: { d: RespuestaConsumo }) {
                         <PanelRightOpen size={14} aria-hidden="true" className="shrink-0" />
                         {p.receta}
                       </button>
+                      {p.combo && <EnCombo combo={p.combo} />}
                     </td>
                     <td className="numero">
                       <span className="flex items-center justify-end gap-2">
@@ -869,6 +884,7 @@ function Cajon({ producto, alCerrar }: { producto: ConsumoProducto | null; alCer
               <h2 id="cajon-consumo-titulo" className="font-display text-xl font-bold">
                 {producto.receta}
               </h2>
+              {producto.combo && <EnCombo combo={producto.combo} />}
               <p className="mt-1 text-xs text-muted-foreground">
                 {numero(producto.lineas)} unidades entran al consumo
                 {producto.tamanos.length > 0 &&
