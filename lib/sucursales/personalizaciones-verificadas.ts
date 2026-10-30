@@ -92,7 +92,9 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Gelato Frappé Coffee
   'adfc682f-380c-41a9-a83d-63f94e0d3042': [
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
+    'Milk uht (Gelato)', // leche entera, la de la receta
     'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
+    'Tradicional Gelato', // helado de la receta
   ],
   // Gelato Frappé Matcha
   '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': [
@@ -371,6 +373,13 @@ const CAFE_WHITE = GRANO_WHITE;
 const CAFE_BLACK = GRANO_BLACK;
 const CREAMER_PUMPKIN = 'CHOBANI D.CREAMER PUMPKIN SPICE';
 const DESLACTOSADA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: DESLACTOSADA } };
+/**
+ * Leches vegetales (Carlo, 2026-10-30): las normales, no Califia, con los mismos ml que la leche entera de la receta,
+ * igual que «Lactose free». Van en las mismas recetas que la deslactosada.
+ */
+const AVENA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: 'LECHE AVENA' } };
+const ALMENDRA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: 'LECHE ALMENDRA' } };
+const COCO_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: 'LECHE COCO' } };
 
 /**
  * Personalizaciones que cambian la receta y cuyo efecto se conoce sin pedir datos (etapa 1b, doc 35), por receta de
@@ -379,7 +388,8 @@ const DESLACTOSADA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: DESLACTOSADA }
  * del 2026-10-30): en las recetas de espresso con 18 g de café en todos sus tamaños, «Single Shot (18ml)» y «Double shot
  * (36ml)» usan los mismos 18 g de la receta (neutras; cambia la preparación) y «Extra Double shot (36ml)» deja 36 g.
  * Fuera, a propósito: Hot Drip V60 (café filtrado), «Lactose free» en Americano y Cold brew (no llevan leche: la agrega)
- * y lo que pide datos a Operaciones/Compras (miel, leches vegetales, More/Less de jarabes sin ml, Chipotle Mayo).
+ * y lo que pide datos a Operaciones/Compras (miel, More/Less de jarabes sin ml, Chipotle Mayo). Las leches vegetales
+ * (Oatmilk, Almond Milk, Coconut Milk) van donde va «Lactose free» (Carlo, 2026-10-30).
  */
 export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string, Ajuste>>> = {
   // Americano
@@ -393,20 +403,32 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Chai Frap
   'a00da002-92a3-4a48-ab47-b62ee9aa6a13': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Chai Iced Latte
   '130033f6-dd70-4178-8366-945ea9674199': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Chai Latte
   '5153b158-4329-4ffd-9e79-9cc9d4f06a2a': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Coffee Frap
   'ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Cold brew
   '00f47aba-88e6-4ebc-a815-5833f8b29871': {
@@ -420,19 +442,26 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Gelato Frappé Chai
   '0252e4e5-3d19-49c1-9f01-2b0f72c1e21b': {
     'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+    'Oatmilk (Gelato)': AVENA_POR_ENTERA,
   },
   // Gelato Frappé Coffee
   'adfc682f-380c-41a9-a83d-63f94e0d3042': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+    'Oatmilk (Gelato)': AVENA_POR_ENTERA,
   },
   // Gelato Frappé Matcha
   '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': {
     'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+    'Oatmilk (Gelato)': AVENA_POR_ENTERA,
   },
   // Hot Drip V60
   'e0b13ec8-1c24-4ed8-9be2-5198d63a5485': {
@@ -445,13 +474,19 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Iced Chocolate
   'c55e8b1f-300e-42f7-9c4a-f57b038c987e': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     'Without Sprinkles': { cantidad: { insumo: CHIPS, valor: 0 } },
   },
   // Iced Latte
   'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Iced Latte + Cookie Tradicional
   '480a3080-d543-4540-adfc-d4e64ba06248': {
@@ -459,13 +494,20 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Iced Latte + Ham & Cheese Sandwich
   'e95e45e9-b5fc-4d10-ab5c-170e13cedf15': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Iced Vanilla
   '15556232-34f4-490e-a9b7-0c01998bc4c1': {
     'Average Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     'Less Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
     'More Vanilla (20ml)': { cantidad: { insumo: VAINILLA, valor: 20 } },
@@ -474,7 +516,10 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Ichigo Matcha
   'e201b60f-62e1-4c56-80e5-2b4873baf74f': {
     'Average Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     'Less Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
     'More Vanilla (20ml)': { cantidad: { insumo: VAINILLA, valor: 20 } },
@@ -482,37 +527,75 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Isopure Iced Latte
   '1a316b88-1212-4403-9dfd-4de2652653ab': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Isopure Iced Matcha
   'be97f8cd-e66b-4dca-a38a-c971bdecd3d3': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Macchiato
   '4255bb6b-1a50-42a4-896d-d3f424b6ceab': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Mad Mocha
   'da45b5bd-3eca-452e-a18e-5a558e4dc517': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Matcha Frap
   'bb72c7a6-d900-4d47-bf56-4a74654ccf4b': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Matcha Iced Latte
   '9756eec9-1f09-45ee-a45b-21ac8c54bb22': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
+  },
+  // Matcha Iced Latte + Lemon Cake
+  'a1455ee0-cb6d-4195-bd11-01660fc56cb3': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
+  },
+  // Matcha Iced Mint
+  '4b651700-0745-42fe-8e78-7b44dbdb66ee': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Matcha Latte
   'c7ca994c-897c-45d7-a62f-a7ba2f66bbce': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Matcha Vanilla Latte
   '3f7f8456-b0a4-49fd-be25-32c1f4b0e17c': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
   },
@@ -523,12 +606,18 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Pumpkin Latte
   '170be377-ff76-4bbc-b6d5-85cd9708b21c': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     // Solo Rappi («Ajusta tu creamer», rappi-pos.ts): la receta lleva 30 ml en Chica y Grande (= Medio, Carlo).
     'Less Creamer (20ml)': { cantidad: { insumo: CREAMER_PUMPKIN, valor: 20 } },
     'More Creamer (40ml)': { cantidad: { insumo: CREAMER_PUMPKIN, valor: 40 } },
@@ -536,7 +625,10 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Pumpkin Spice Frap
   '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Pure Black (Double Shot)
   '89e80a88-123d-4b13-b166-f4e56c506525': {
@@ -549,29 +641,47 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Salted Caramel
   '7867787b-4957-485c-822b-3106558d33a1': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Salted Caramel Frap
   '052a61f6-55ff-4ac8-9459-ab4939789420': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Sora Iced Latte (Signature)
   '087d714a-45ca-44da-a3ad-55ce92a2bccb': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Sora Latte (Signature)
   '2cc57a88-1966-4f7d-9604-461978c7c252': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Taro Frap
   '817fe3be-7d8b-49be-8e1a-6acde12ccb1c': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // True White
   'a96339d6-80e7-440b-a33b-bca51440d8e6': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // True White + Croissant Serrano & Gouda
   '14c61cda-2564-402a-b70f-82ebafc8d7b4': {
@@ -579,7 +689,11 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // True White + Croissant filled with cheese and ham
   'fd4c5628-6681-47dd-ab01-2d0de8ae6d28': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // True White + Grilled Ham & Cheese Sandwich
   'd950794b-23cf-4f1c-a775-ee71f5001eff': {
@@ -595,12 +709,18 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Urban Chocolate
   '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Vanilla Latte
   '1183a781-40b8-4654-9f49-92d317873907': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
     'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
   },

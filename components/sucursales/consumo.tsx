@@ -155,7 +155,7 @@ function Contenido({ d }: { d: RespuestaConsumo }) {
       ) : (
         <>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <Leches leches={leches} piloto={!!d.sucursal.rappiPortal} />
+            <Leches leches={leches} />
             <TendenciaDiaria d={d} />
           </div>
           <Categorias d={d} />
@@ -255,8 +255,8 @@ function DetalleCobertura({ k, d }: { k: ClaveCobertura; d: RespuestaConsumo }) 
         />
         {c.sinContar > 0 && (
           <p className="text-xs text-muted-foreground">
-            Esas unidades cuentan su receta; la opción con costo extra (p. ej. mayonesa o leche de avena) aún
-            no. El detalle de cada insumo dice cuál y cuántas.
+            Esas unidades cuentan su receta; la opción con costo extra (p. ej. mayonesa o miel) aún no. El
+            detalle de cada insumo dice cuál y cuántas.
           </p>
         )}
       </>
@@ -342,15 +342,16 @@ function ComoSeCuenta({ d }: { d: RespuestaConsumo }) {
           verificado para esa receta y la receta tiene cantidades para ese tamaño.
         </li>
         <li>
-          Las personalizaciones usan las mismas listas revisadas que Costeo: «Lactose free» descuenta
-          deslactosada en lugar de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft
-          sustituye al Black. Café por shot: el Single y el Double usan los 18 g de la receta y el Extra
+          Las personalizaciones usan las mismas listas revisadas que Costeo: «Milk» es la leche entera de la
+          receta; «Lactose free» descuenta deslactosada y avena, almendra o coco descuentan su leche (las
+          normales), con los mismos ml que la entera. La vainilla con ml usa esa cantidad y el grano White o
+          Kraft sustituye al Black. Café por shot: el Single y el Double usan los 18 g de la receta y el Extra
           Double, 36 g.
         </li>
         <li>
           {d.sucursal.rappiPortal
-            ? 'Lo que aún no se calcula (miel, leches vegetales, mayonesa…) no saca la unidad: entra con su receta. Las opciones con costo extra quedan anotadas en el detalle de cada insumo.'
-            : 'Una personalización que aún no se calcula (miel, leches vegetales…) deja fuera esa unidad completa.'}
+            ? 'Lo que aún no se calcula (miel, mayonesa, jarabes «More/Less» sin ml…) no saca la unidad: entra con su receta. Las opciones con costo extra quedan anotadas en el detalle de cada insumo.'
+            : 'Una personalización que aún no se calcula (miel, mayonesa, jarabes «More/Less» sin ml…) deja fuera esa unidad completa.'}
         </li>
         {d.sucursal.rappiPortal && (
           <li>
@@ -468,14 +469,14 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
   );
 }
 
-function Leches({ leches, piloto }: { leches: RespuestaConsumo['insumos']; piloto: boolean }) {
+function Leches({ leches }: { leches: RespuestaConsumo['insumos'] }) {
   const total = leches.reduce((a, l) => a + l.cantidad, 0);
   const max = Math.max(1, ...leches.map((l) => l.cantidad));
   const orden = [...leches].sort((a, b) => b.cantidad - a.cantidad);
   return (
     <Tarjeta
       titulo="Leche por tipo"
-      descripcion={`La leche que piden las recetas, con «Lactose free» ya como deslactosada. Las leches vegetales pedidas como personalización aún no se calculan: ${piloto ? 'esas bebidas cuentan la leche de su receta (entera) y quedan anotadas en el detalle del insumo.' : 'esas unidades quedan fuera.'}`}
+      descripcion="La leche que piden las recetas. «Lactose free» cuenta como deslactosada y avena, almendra o coco como su leche (las normales), con los mismos ml que la entera de la receta."
     >
       {orden.length === 0 ? (
         <p className="text-sm text-muted-foreground">

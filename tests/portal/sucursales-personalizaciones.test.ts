@@ -298,7 +298,11 @@ describe('ajustes calculados (etapa 1b)', () => {
     expect(
       PERSONALIZACIONES_AJUSTADAS['00f47aba-88e6-4ebc-a815-5833f8b29871']?.['Lactose free'],
     ).toBeUndefined();
-    for (const n of ['Single Shot (18ml)', 'Double shot (36ml)', 'Average Honey', 'Oatmilk', 'Chipotle Mayo'])
+    // Leches vegetales (Carlo, 2026-10-30): exactamente donde va «Lactose free», nunca en Americano ni Cold brew.
+    for (const a of Object.values(PERSONALIZACIONES_AJUSTADAS))
+      for (const n of ['Oatmilk', 'Almond Milk', 'Coconut Milk']) expect(n in a, n).toBe('Lactose free' in a);
+    expect(PERSONALIZACIONES_AJUSTADAS[AMERICANO]?.['Oatmilk']).toBeUndefined();
+    for (const n of ['Single Shot (18ml)', 'Double shot (36ml)', 'Average Honey', 'Chipotle Mayo'])
       expect(
         Object.values(PERSONALIZACIONES_AJUSTADAS).some((a) => n in a),
         n,

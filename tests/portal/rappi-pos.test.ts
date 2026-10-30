@@ -330,10 +330,10 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     const sinParte = de(creaTu('Iced Latte', 'Sándwich Misterioso'));
     expect(costear(sinParte, costeo).resumen.cobertura.sinEnlaceCent).toBe(16400);
     expect(consumir(sinParte, consumo).cobertura).toMatchObject({ lineas: 2, sinEnlace: 1, incluidas: 1 });
-    // La bebida con avena aún no se calcula, pero el sándwich del combo sí suma.
-    const avena = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
-    expect(costear(avena, costeo).resumen.parcial.motivos.personalizacion).toBe(1);
-    const r = consumir(avena, consumo);
+    // La bebida con miel aún no se calcula, pero el sándwich del combo sí suma.
+    const miel = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Miel', 'Promedio']]));
+    expect(costear(miel, costeo).resumen.parcial.motivos.personalizacion).toBe(1);
+    const r = consumir(miel, consumo);
     expect(r.cobertura).toMatchObject({ lineas: 2, incluidas: 1, excluidas: { personalizacion: 1 } });
     expect(r.insumos.find((i) => i.insumo === 'PAN')).toMatchObject({ cantidad: 1, rappi: 1 });
     // Cuadre de la leche: 2 unidades la llevan; entra el sándwich y la bebida queda fuera con su razón.
@@ -346,24 +346,25 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
         unidades: 1,
         rappi: 1,
         motivo: 'personalizacion',
-        razon: 'lleva «Oatmilk», que aún no se calcula',
+        razon: 'lleva «Average Honey», que aún no se calcula',
       },
     ]);
     expect(r.productos.find((p) => p.recetaId === IL)!.razones).toEqual([
-      { motivo: 'personalizacion', razon: 'lleva «Oatmilk», que aún no se calcula', unidades: 1 },
+      { motivo: 'personalizacion', razon: 'lleva «Average Honey», que aún no se calcula', unidades: 1 },
     ]);
   });
 
   it('piloto: lo que aún no se calcula no saca la unidad; si tuvo costo extra queda anotado en el detalle', () => {
-    const avena = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
-    const r = consumir(avena, consumo, avena, undefined, [], true);
+    // Miel con precio de ejemplo: lo que importa es que tuvo costo extra.
+    const miel = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Miel', 'Mucho', 5]]));
+    const r = consumir(miel, consumo, miel, undefined, [], true);
     expect(r.cobertura).toMatchObject({
       lineas: 2,
       incluidas: 2,
       sinContar: 1,
       excluidas: { personalizacion: 0 },
     });
-    // Se cuenta su receta (leche entera); la avena, con costo extra, queda anotada sin contar.
+    // Se cuenta su receta (leche entera); la miel, con costo extra, queda anotada sin contar.
     const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
     expect(leche).toMatchObject({ cantidad: 250, rappi: 250, unidades: 2, fuera: [] });
     expect(leche.detalle).toEqual([
@@ -373,7 +374,7 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
         unidades: 1,
         cantidad: 240,
         rappi: 240,
-        sinContar: [{ nombre: 'Oatmilk', unidades: 1 }],
+        sinContar: [{ nombre: 'More Honey', unidades: 1 }],
       },
       {
         receta: 'Sándwich jamón y queso',
@@ -386,8 +387,49 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     ]);
   });
 
+  it('leches vegetales: cambian la entera de la receta por la normal, con los mismos ml (como la deslactosada)', () => {
+    // Iced Latte real: «Oatmilk», «Almond Milk» y «Coconut Milk» están verificadas (Carlo, 2026-10-30).
+    const conLineas: DatosConsumo = {
+      ...consumo,
+      lineas: new Map([[claveConsumo(IL, 'Grande'), [{ insumo: 'LECHE ENTERA', cantidad: 240 }]]]),
+      sustitutos: new Map(
+        ['LECHE AVENA', 'LECHE ALMENDRA', 'LECHE COCO'].map((n) => [
+          n,
+          { insumoId: n, insumo: n, unidad: 'ml', categoria: 'LECHE' },
+        ]),
+      ),
+    };
+    const ps = de(
+      producto('Iced Latte', 106, [
+        ['Elige el Tamaño', 'Grande 590 ml'],
+        ['Leche', 'Avena', 17],
+      ]),
+      producto('Iced Latte', 106, [
+        ['Elige el Tamaño', 'Grande 590 ml'],
+        ['Leche', 'Almendra', 17],
+      ]),
+      producto('Iced Latte', 106, [
+        ['Elige el Tamaño', 'Grande 590 ml'],
+        ['Leche', 'Leche de coco', 17],
+      ]),
+      producto('Iced Latte', 89, [
+        ['Elige el Tamaño', 'Grande 590 ml'],
+        ['Leche', 'Entera'],
+      ]),
+    );
+    const r = consumir(ps, conLineas);
+    expect(r.cobertura).toMatchObject({ lineas: 4, incluidas: 4, ajustadas: 3 });
+    // Una bebida por leche: 240 ml cada una, en su propio insumo.
+    expect(r.insumos.map((i) => [i.insumo, i.cantidad, i.unidades]).sort()).toEqual([
+      ['LECHE ALMENDRA', 240, 1],
+      ['LECHE AVENA', 240, 1],
+      ['LECHE COCO', 240, 1],
+      ['LECHE ENTERA', 240, 1],
+    ]);
+  });
+
   it('un insumo que solo llevan unidades fuera aparece en cero con su cuadre, pero no suma a su categoría', () => {
-    const r = consumir(de(producto('Iced Latte', 89, [['Leche', 'Avena', 17]])), consumo);
+    const r = consumir(de(producto('Iced Latte', 89, [['Miel', 'Promedio']])), consumo);
     expect(r.insumos).toEqual([
       expect.objectContaining({
         insumo: 'LECHE ENTERA',
