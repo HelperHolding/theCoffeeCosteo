@@ -155,7 +155,17 @@ export interface ResultadoConsumo {
   }[];
   productos: ConsumoProducto[];
   tamanos: { tamano: string; lineas: number }[];
-  diario: { fecha: string; lineas: number; incluidas: number; cantidades: Record<string, number> }[];
+  /**
+   * Por día: unidades vendidas (todas) y las que entran; por insumo, la cantidad y cuántos productos vendidos lo llevan
+   * (`unidades`, mismo criterio que InsumoConsumo.unidades).
+   */
+  diario: {
+    fecha: string;
+    lineas: number;
+    incluidas: number;
+    cantidades: Record<string, number>;
+    unidades: Record<string, number>;
+  }[];
 }
 
 const claveReceta = (recetaId: string, tamano: string) => `${recetaId}:${tamano}`;
@@ -312,12 +322,21 @@ export function consumir(
   const nombreCombo = (clave: string) => nombresCombo.get(clave)?.nombre ?? clave;
   const tamanos = new Map<string, number>();
   const diario = new Map(
-    fechas.map((f) => [f, { fecha: f, lineas: 0, incluidas: 0, cantidades: {} as Record<string, number> }]),
+    fechas.map((f) => [
+      f,
+      {
+        fecha: f,
+        lineas: 0,
+        incluidas: 0,
+        cantidades: {} as Record<string, number>,
+        unidades: {} as Record<string, number>,
+      },
+    ]),
   );
   for (const p of ps) {
     let dia = diario.get(p.fecha);
     if (!dia) {
-      dia = { fecha: p.fecha, lineas: 0, incluidas: 0, cantidades: {} };
+      dia = { fecha: p.fecha, lineas: 0, incluidas: 0, cantidades: {}, unidades: {} };
       diario.set(p.fecha, dia);
     }
     const deRappi = p.origen === 'rappi';
@@ -415,6 +434,7 @@ export function consumir(
           vistos.add(i.insumoId);
           t.unidades++;
           d.unidades++;
+          dia.unidades[i.insumoId] = (dia.unidades[i.insumoId] ?? 0) + 1;
           for (const n of r.sinContar) d.extras.set(n, (d.extras.get(n) ?? 0) + 1);
         }
         d.cantidad += i.cantidad;

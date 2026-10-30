@@ -155,7 +155,7 @@ function Contenido({ d }: { d: RespuestaConsumo }) {
       ) : (
         <>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <Leches leches={leches} />
+            <Leches leches={leches} piloto={!!d.sucursal.rappiPortal} />
             <TendenciaDiaria d={d} />
           </div>
           <Categorias d={d} />
@@ -468,14 +468,14 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
   );
 }
 
-function Leches({ leches }: { leches: RespuestaConsumo['insumos'] }) {
+function Leches({ leches, piloto }: { leches: RespuestaConsumo['insumos']; piloto: boolean }) {
   const total = leches.reduce((a, l) => a + l.cantidad, 0);
   const max = Math.max(1, ...leches.map((l) => l.cantidad));
   const orden = [...leches].sort((a, b) => b.cantidad - a.cantidad);
   return (
     <Tarjeta
       titulo="Leche por tipo"
-      descripcion="La leche que piden las recetas, con «Lactose free» ya como deslactosada. Las leches vegetales pedidas como personalización aún no se calculan (esas unidades quedan fuera)."
+      descripcion={`La leche que piden las recetas, con «Lactose free» ya como deslactosada. Las leches vegetales pedidas como personalización aún no se calculan: ${piloto ? 'esas bebidas cuentan la leche de su receta (entera) y quedan anotadas en el detalle del insumo.' : 'esas unidades quedan fuera.'}`}
     >
       {orden.length === 0 ? (
         <p className="text-sm text-muted-foreground">
@@ -538,6 +538,9 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
   if (!insumo) return null;
   const dias = d.diario;
   const valores = dias.map((x) => x.cantidades[insumo.insumoId] ?? 0);
+  const llevan = dias.map((x) => x.unidades[insumo.insumoId] ?? 0);
+  const nombreInsumo = insumo.insumo.toLocaleLowerCase('es-MX');
+  const productosQueLlevan = (n: number) => `${numero(n)} ${n === 1 ? 'producto' : 'productos'}`;
   const maxV = Math.max(...valores, 1);
   const paso = 10 ** Math.floor(Math.log10(maxV / 2));
   const tope = Math.ceil(maxV / 2 / paso) * paso * 2;
@@ -566,7 +569,7 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
   return (
     <Tarjeta
       titulo="Consumo por día"
-      descripcion="Un insumo a la vez, de las unidades que entran al consumo."
+      descripcion="Un insumo a la vez: cuánto piden las recetas cada día y cuántos productos vendidos lo llevan."
       acciones={
         <label className="text-sm">
           <span className="sr-only">Insumo</span>
@@ -655,13 +658,20 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
               filas={[
                 {
                   color: AZUL.fuerte,
-                  etiqueta: insumo.insumo.toLocaleLowerCase('es-MX'),
+                  etiqueta: nombreInsumo,
                   valor: cantidad(valores[activo], insumo.unidad),
                 },
                 {
-                  color: '#a39e94',
-                  etiqueta: `de ${numero(dias[activo].lineas)} vendidas`,
-                  valor: `${numero(dias[activo].incluidas)} unidades`,
+                  color: AZUL.medio,
+                  etiqueta: `llevan ${nombreInsumo}`,
+                  valor: productosQueLlevan(llevan[activo]),
+                },
+                // Cobertura del día, de todos los productos (no solo los que llevan este insumo).
+                {
+                  color: AZUL.claro,
+                  etiqueta: 'vendidos entran al consumo',
+                  // Espacios duros: la cifra no se parte en dos renglones.
+                  valor: `${numero(dias[activo].incluidas)} de ${numero(dias[activo].lineas)}`,
                 },
               ]}
             />
@@ -675,10 +685,13 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
                 <tr>
                   <th scope="col">Día</th>
                   <th scope="col" className="numero">
-                    {insumo.insumo.toLocaleLowerCase('es-MX')}
+                    {nombreInsumo}
                   </th>
                   <th scope="col" className="numero">
-                    Unidades que entran
+                    Productos que lo llevan
+                  </th>
+                  <th scope="col" className="numero">
+                    Entran al consumo (todo lo vendido)
                   </th>
                 </tr>
               </thead>
@@ -687,6 +700,7 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
                   <tr key={x.fecha}>
                     <td>{fechaCorta(x.fecha)}</td>
                     <td className="numero">{cantidad(valores[i], insumo.unidad)}</td>
+                    <td className="numero">{numero(llevan[i])}</td>
                     <td className="numero">
                       {numero(x.incluidas)} de {numero(x.lineas)}
                     </td>
