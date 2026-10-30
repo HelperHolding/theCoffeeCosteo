@@ -5,7 +5,7 @@
 - `altas-excel-lote-1`: ejecución `f548de32…`, bitácora #1520–1560;
 - `recetas-excel-lote-1`: ejecución `d022b4f5…`, bitácora #1561–1582.
 
-El **lote-8 de enlaces POS** está preparado y ensayado en local, **sin ensayo remoto y sin cargar**. Faltan su carga y el merge, cada
+El **lote-8 de enlaces POS** está preparado, ensayado en local y con **ensayo remoto limpio**, **sin cargar**. Faltan su carga y el merge, cada
 uno con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
 requieren su aprobación expresa.
 
@@ -208,6 +208,14 @@ errores fuera de `vault`.
 | Aplicar | COMMIT; 101 → 105 enlaces |
 | Repetir | 4 «sin cambio», 0 registros |
 | Revertir por carga | 4 bajas; vuelve a 101 |
+
+**Ensayo remoto con ROLLBACK** (2026-10-30, aprobado por Carlo). Antes, producción tenía 101 enlaces, 181 recetas y
+bitácora hasta #1582.
+
+- Resultado: 4 altas y 0 problemas; los 101 enlaces previos intactos antes y después; 4 registros propios y 0 ajenos;
+  datos comerciales sin cambios.
+- Con una conexión nueva, producción sigue en 101 enlaces y bitácora #1582.
+- Informe en el respaldo privado (`informes-sku-lote-8`).
 
 La regla de shots del Espresso Tonic va en el PR #75 del chat «Módulo Sucursales». Es solo código y empieza a contar en
 cuanto ESPTONAPP tenga enlace.
