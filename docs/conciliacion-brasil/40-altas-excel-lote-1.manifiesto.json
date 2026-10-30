@@ -38,77 +38,62 @@
    "nombre": "Espresso Tonic",
    "categoria": "Cold",
    "tamanos": [
-    "Chica",
-    "Grande"
+    "Único"
    ],
    "lineas": [
     {
      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 18,
-      "Grande": 18
+      "Único": 18
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC, Chica)"
     },
     {
      "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 170,
-      "Grande": 290
+      "Único": 170
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC, Chica)"
     },
     {
      "componente": "HIELO (g)",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 130,
-      "Grande": 245
+      "Único": 130
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (HIELO 130/245); en gramos como el resto de las bebidas frías de la base"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (HIELO 130, Chica); en gramos como el resto de las bebidas frías de la base"
     },
     {
      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 1
+      "Único": 1
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
-    },
-    {
-     "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
-     "tipo": "insumo",
-     "cantidades": {
-      "Grande": 1
-     },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC, Chica)"
     },
     {
      "componente": "TAPA FRIO PET (1,000 PZS)",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 1,
-      "Grande": 1
+      "Único": 1
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC, Chica)"
     },
     {
      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
      "tipo": "insumo",
      "cantidades": {
-      "Chica": 1,
-      "Grande": 1
+      "Único": 1
      },
-     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC)"
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario (ESPRESSO TONIC, Chica)"
     }
    ],
    "costoEsperado": {
-    "Chica": 19.7405,
-    "Grande": 25.6162
+    "Único": 19.7405
    },
-   "nota": "Receta del Excel del equipo (ESPRESSO TONIC); sin el AGUA de 36 ml del espresso, como el resto de las bebidas con espresso de la base. Código POS ESPTONAPP: su enlace va en un lote aparte"
+   "nota": "Receta Chica del Excel del equipo (ESPRESSO TONIC) como tamaño Único: el POS lo vende en un solo tamaño y siempre sin vaso (Carlo, 2026-10-30); sin el AGUA de 36 ml del espresso, como el resto de las bebidas con espresso de la base. Código POS ESPTONAPP: su enlace va en un lote aparte"
   },
   {
    "nombre": "Macadamia Cookie",

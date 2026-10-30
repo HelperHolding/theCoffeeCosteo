@@ -38,13 +38,17 @@ recetas (Salted Caramel, Macchiato, Gelato Frappé Matcha, Iced Blueberry Matcha
 
 ## Lote `altas-excel-lote-1`
 
-Cargador: `altas-productos.ts` (doc 31). Manifiesto `40-altas-excel-lote-1.manifiesto.json`, sha256 `a3119770…`.
+Cargador: `altas-productos.ts` (doc 31). Manifiesto `40-altas-excel-lote-1.manifiesto.json`, sha256 `541fdd48…`.
 
 | Alta | Composición | Costo |
 | --- | --- | --- |
 | Insumos MACADAMIA COOKIE, COOKIE MATCHA & WHITE CHOCOLATE y SALTED CARAMEL COOKIE | $24.50 / 1 pza · OH LALA · PANADERIA | $24.50 |
-| Espresso Tonic (Cold, Chica y Grande) | Café White 18 g, tónica 170/290 ml, hielo (g) 130/245, vaso 14/20 oz, tapa y popote | $19.7405 / $25.6162 |
+| Espresso Tonic (Cold, **Único**) | Receta Chica: café White 18 g, tónica 170 ml, hielo (g) 130, vaso 14 oz, tapa y popote | $19.7405 |
 | Macadamia Cookie, Cookie Matcha & White Chocolate y Salted Caramel Cookie (Sweets, Único) | pieza + bolsa + etiqueta, como Cookie Triple Chocolate | $26.6504 c/u |
+
+**Espresso Tonic Único:** Carlo confirmó el 2026-10-30 (a través del chat «Módulo Sucursales») que va como tamaño Único con
+la receta Chica. Los datos del POS lo respaldan: en las 13 sucursales configuradas (15–29 de octubre) ESPTONAPP se vendió
+96 veces, siempre sin vaso, y el tamaño grande se cobra como opción aparte, que este producto nunca lleva.
 
 Ninguno lleva precio de lista. Sus códigos POS (ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP) se enlazan en un lote
 aparte después de crearlos, porque el enlace necesita los ids de las recetas nuevas.
@@ -113,12 +117,17 @@ $19.544) e Iced Blueberry Matcha Chica ($15.608 contra $15.604), por el redondeo
 
 | Paso | altas-excel-lote-1 | recetas-excel-lote-1 |
 | --- | --- | --- |
-| Ensayo | 4 productos y 3 insumos con el costo esperado; 49 registros propios, 0 ajenos; resto sin cambios; ROLLBACK | 11 cambios (10 recetas y 1 insumo); 22 registros propios, 0 ajenos; 14 costos declarados y ninguno más; ROLLBACK |
+| Ensayo | 4 productos y 3 insumos con el costo esperado; 41 registros propios (Espresso Tonic Único), 0 ajenos; resto sin cambios; ROLLBACK | 11 cambios (10 recetas y 1 insumo); 22 registros propios, 0 ajenos; 14 costos declarados y ninguno más; ROLLBACK |
 | Aplicar | COMMIT | COMMIT |
 | Repetir | 4 «sin cambio» | 11 «sin cambio» |
 | Revertir | 4 borrados | 11 revertidos |
 
 Después de revertir, la copia quedó idéntica al respaldo: recetas, cantidades, costos e insumos.
+
+Con el Espresso Tonic Único, el ensayo se repitió sobre otra copia de `resp1704`: aplicar las altas (41 registros), repetir
+(«sin cambio»), aplicar el lote de recetas encima (22 registros, costos completos) y revertir las altas. La suite completa
+sobre main `37f1264` da 609 pruebas OK y 5 omitidas; solo falla `paridad`, que necesita el Excel de migración, igual que
+en main.
 
 Los informes se guardaron en el respaldo privado, `informes-excel-40`.
 
@@ -140,7 +149,7 @@ manifiesto.
 
 ## Coordinación con el chat de Rappi y Consumo (2026-10-30)
 
-**Rama al día:** la rama ya incluye main hasta el #73, sin conflictos. Los únicos archivos en común son `altas-productos.ts`
+**Rama al día:** la rama ya incluye main hasta el #74 (`37f1264`), sin conflictos. Los únicos archivos en común son `altas-productos.ts`
 y su prueba, y el lote `pan-de-muerto-lote-1` se conserva. Con eso pasan 316 pruebas (las de `tests/db` del cargador y
 las del portal) y `tsc` sale sin errores. Según el otro chat, el #71 sobre main con el #73 y el #74 tampoco tiene
 conflictos (609 pruebas).
@@ -159,8 +168,9 @@ correctos y el #71 no los cambia.
 
 **Después de aplicar el #71:**
 
-- **Enlaces POS** para ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP. Con el #73, la Cookie Matcha de Rappi ya está ligada
+- **Enlaces POS** para ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP: lote `lote-8`, con `requiere: ['lote-7']` (101 enlaces previos), sin tocar las entradas que ya existen en `LOTES_APROBADOS` y `DOC_LOTE`. Con el #73, la Cookie Matcha de Rappi ya está ligada
   a COOMATAPP y empieza a contar en cuanto ese código tenga enlace.
-- **Espresso Tonic:** su receta lleva 18 g de café, un shot. El otro chat debe agregarlo a la regla de shots y poner
-  «Traditional Tonic» como personalización neutra en `personalizaciones-verificadas.ts`. Si no, sus ventas con shot
+- **Espresso Tonic:** su receta lleva 18 g de café, un shot. Con el id de la receta y el enlace de ESPTONAPP, el chat
+  «Módulo Sucursales» agrega Single y Double como neutras, Extra Double con 36 g y «Traditional Tonic» como neutra, en
+  `personalizaciones-verificadas.ts`; este PR no toca ese archivo. Si no, sus ventas con shot
   quedan fuera de Consumo.

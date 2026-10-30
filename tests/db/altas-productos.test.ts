@@ -145,13 +145,15 @@ describe('manifiesto', () => {
       'SALTED CARAMEL COOKIE OH LALA PANADERIA 24.5/1 pza',
     ]);
     expect(m.productos.map((p) => [p.nombre, p.categoria, p.tamanos.join('/'), JSON.stringify(p.costoEsperado)])).toEqual([
-      ['Espresso Tonic', 'Cold', 'Chica/Grande', '{"Chica":19.7405,"Grande":25.6162}'],
+      ['Espresso Tonic', 'Cold', 'Único', '{"Único":19.7405}'],
       ['Macadamia Cookie', 'Sweets', 'Único', '{"Único":26.6504}'],
       ['Cookie Matcha & White Chocolate', 'Sweets', 'Único', '{"Único":26.6504}'],
       ['Salted Caramel Cookie', 'Sweets', 'Único', '{"Único":26.6504}'],
     ]);
-    // Sin el agua del espresso y con el hielo en gramos, como el resto de las bebidas frías de la base; sin precio de lista.
+    // Único con la receta Chica (vaso de 14 oz); sin el agua del espresso y con el hielo en gramos; sin precio de lista.
     const et = m.productos[0];
+    expect(et.lineas.map((l) => `${l.componente} ${l.cantidades['Único']}`)).toContain('VASO FRÍO PET 14 OZ (1,000 PZS) 1');
+    expect(et.lineas.map((l) => l.componente)).not.toContain('VASO FRÍO PET 20 OZ (1,000 PZS)');
     expect(et.lineas.map((l) => l.componente)).not.toContain('AGUA');
     expect(et.lineas.find((l) => l.componente.startsWith('HIELO'))!.componente).toBe('HIELO (g)');
     expect(m.productos.every((p) => !p.precioLista)).toBe(true);

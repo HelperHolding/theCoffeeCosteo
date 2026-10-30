@@ -83,7 +83,7 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
   // insumos de las cookies. Preparado sin merge; cada paso remoto exige aprobación aparte.
   'altas-excel-lote-1': {
     manifiesto: 'docs/conciliacion-brasil/40-altas-excel-lote-1.manifiesto.json',
-    sha256: 'a311977085436e6f3439f20f2262098f78ed7689e3c1277b9be8dc68da43d9bc',
+    sha256: '541fdd48eb8b949786720ec7019cfd54814f169b3d01976d4d9bf47556ebe463',
   },
 };
 
