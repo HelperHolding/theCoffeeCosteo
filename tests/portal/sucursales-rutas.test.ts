@@ -615,7 +615,8 @@ describe('Productos y Pedidos', () => {
     ]);
     const leche = d.insumos.find((i: { insumo: string }) => i.insumo === 'LECHE ENTERA');
     expect(leche.fuera.map((x: { unidades: number; razon: string }) => [x.unidades, x.razon])).toEqual([
-      [4, 'lleva «Oatmilk», que aún no se calcula'],
+      // «Oatmilk» ya es un ajuste (leche de avena), pero esta receta de prueba no lleva la leche entera directa.
+      [4, 'faltan datos de la receta para calcular sus personalizaciones'],
     ]);
     expect(d.diario.map((x: { fecha: string; incluidas: number }) => [x.fecha, x.incluidas])).toEqual([
       ['2026-10-21', 1],
