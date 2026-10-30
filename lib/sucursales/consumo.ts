@@ -303,6 +303,13 @@ export function consumir(
       insumos: Map<string, CantidadInsumo>;
     }
   >();
+  /**
+   * Un combo se identifica por su código, no por cómo viene escrito: «True White + Croissant de queso y jamón» (Rappi)
+   * y «True White + Croissant filled with cheese and ham» (POS) son TRWCROAPP; «Crea Tu…» y «Crea tu…» son el mismo.
+   * Las filas guardan la clave del combo y al final llevan un solo nombre: el del POS si se vendió ahí, si no el primero.
+   */
+  const nombresCombo = new Map<string, { nombre: string; pos: boolean }>();
+  const nombreCombo = (clave: string) => nombresCombo.get(clave)?.nombre ?? clave;
   const tamanos = new Map<string, number>();
   const diario = new Map(
     fechas.map((f) => [f, { fecha: f, lineas: 0, incluidas: 0, cantidades: {} as Record<string, number> }]),
@@ -322,10 +329,16 @@ export function consumir(
     const contar = (
       u: { codigo: string; nombre: string; customs: LineaNormal['customs'] },
       clave: string,
-      combo?: string,
+      venta?: { clave: string; nombre: string },
     ) => {
       cob.lineas++;
       dia.lineas++;
+      const combo = venta?.clave;
+      if (venta) {
+        const n = nombresCombo.get(venta.clave);
+        if (!n || (!deRappi && !n.pos))
+          nombresCombo.set(venta.clave, { nombre: venta.nombre, pos: !deRappi });
+      }
       const enlace = datos.enlaces.get(u.codigo);
       if (!enlace) {
         cob.sinEnlace++;
@@ -427,7 +440,9 @@ export function consumir(
       // Un combo cuenta como sus productos: los de Rappi traen sus partes; los del POS se arman con COMBOS_POS
       // (solo donde se activa, hoy el piloto de Namóra).
       const partes = l.partes ?? (piloto ? partesCombo(id.codigo, l) : undefined);
-      if (partes) for (const pt of partes) contar(pt, `${id.clave}>${pt.codigo}`, l.nombre);
+      if (partes)
+        for (const pt of partes)
+          contar(pt, `${id.clave}>${pt.codigo}`, { clave: id.clave, nombre: l.nombre });
       else contar({ codigo: id.codigo, nombre: l.nombre, customs: l.customs }, id.clave);
     }
   }
@@ -441,6 +456,7 @@ export function consumir(
       detalle: [...detalle.values()]
         .map(({ extras, ...d }) => ({
           ...d,
+          ...(d.combo ? { combo: nombreCombo(d.combo) } : {}),
           cantidad: redondear(d.cantidad),
           rappi: redondear(d.rappi),
           sinContar: [...extras]
@@ -448,9 +464,9 @@ export function consumir(
             .sort((a, b) => b.unidades - a.unidades || a.nombre.localeCompare(b.nombre, 'es-MX')),
         }))
         .sort((a, b) => b.cantidad - a.cantidad || a.receta.localeCompare(b.receta, 'es-MX')),
-      fuera: [...fuera.values()].sort(
-        (a, b) => b.unidades - a.unidades || a.receta.localeCompare(b.receta, 'es-MX'),
-      ),
+      fuera: [...fuera.values()]
+        .map((x) => (x.combo ? { ...x, combo: nombreCombo(x.combo) } : x))
+        .sort((a, b) => b.unidades - a.unidades || a.receta.localeCompare(b.receta, 'es-MX')),
     }))
     .sort((a, b) => a.categoria.localeCompare(b.categoria, 'es-MX') || b.cantidad - a.cantidad);
   const categorias = new Map<
@@ -493,6 +509,7 @@ export function consumir(
     productos: [...productos.values()]
       .map((x) => ({
         ...x,
+        ...(x.combo ? { combo: nombreCombo(x.combo) } : {}),
         razones: [...x.razones.values()].sort((a, b) => b.unidades - a.unidades),
         tamanos: [...x.tamanos].map(([tamano, lineas]) => ({ tamano, lineas })),
         insumos: [...x.insumos.values()]

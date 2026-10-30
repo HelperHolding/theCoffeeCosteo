@@ -513,6 +513,48 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     )!;
     expect(pan.detalle[0].sinContar).toEqual([{ nombre: 'Chipotle Mayo', unidades: 1 }]);
   });
+  it('un combo es uno aunque venga escrito distinto (POS y Rappi, mayúsculas): una fila con el nombre del POS', () => {
+    const pos: PedidoNormal = {
+      ...de(producto('Iced Latte', 1))[0],
+      origen: 'mostrador',
+      numeroPedidoRappi: null,
+      lineas: [
+        {
+          codigo: 'MISICEDAPP',
+          nombre: 'Iced Latte + Ham & Cheese Sandwich',
+          importeCent: 13900,
+          descuentoPct: 0,
+          customs: [],
+        },
+      ],
+    };
+    const ps = [
+      ...de(
+        producto('Iced Latte + Sandwich jamón y queso', 139),
+        creaTu('Iced Latte', 'Sándwich Jamón y Queso'),
+      ),
+      pos,
+      ...de(
+        producto('Crea Tu The Coffee', 164, [
+          ['Elige tu Bebida', 'Iced Latte'],
+          ['Elige el Tamaño', 'Grande 590 ml', 15],
+          ['Elige tu Sandwich', 'Sándwich Jamón y Queso'],
+        ]),
+      ),
+    ];
+    const r = consumir(ps, consumo, ps, undefined, [], true);
+    const porCombo = (xs: { combo?: string; unidades?: number; lineas?: number }[]) =>
+      xs
+        .map((x) => [x.combo, x.unidades ?? x.lineas])
+        .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+    // Dos filas, no cuatro: el combo del POS con su nombre del POS y «Crea tu» con el primero que llegó.
+    const esperado = [
+      ['Crea tu The Coffee', 2],
+      ['Iced Latte + Ham & Cheese Sandwich', 2],
+    ];
+    expect(porCombo(r.insumos.find((x) => x.insumo === 'PAN')!.detalle)).toEqual(esperado);
+    expect(porCombo(r.productos.filter((p) => p.recetaId === MQ))).toEqual(esperado);
+  });
 });
 
 describe('Pumpkin Latte de Rappi (grande, con creamer)', () => {
