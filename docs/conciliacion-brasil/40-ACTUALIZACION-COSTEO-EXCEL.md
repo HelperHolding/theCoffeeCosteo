@@ -1,7 +1,7 @@
 # 40 · Actualización de la base con el costeo del equipo (Costeo_TheCoffee.xlsx)
 
-**Estado:** preparado el 2026-10-30, con manifiestos, pruebas, respaldo verificado y ensayo local. **Sin ensayo remoto,
-sin aplicar y sin merge.** Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
+**Estado:** preparado el 2026-10-30, con manifiestos, pruebas, respaldo verificado, ensayo local y **ensayo remoto con
+ROLLBACK limpio de los dos lotes**. **Sin aplicar y sin merge.** Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
 requieren su aprobación expresa.
 
 ## Origen
@@ -131,12 +131,32 @@ en main.
 
 Los informes se guardaron en el respaldo privado, `informes-excel-40`.
 
+## Respaldo y ensayo remoto (2026-10-30, aprobados por Carlo)
+
+**Respaldo `2026-10-30T1843Z`**, restaurado en `resp1843`:
+
+- 0 errores fuera de `vault`;
+- 23,989 filas, iguales a producción;
+- `analytics_ventas_diarias` (846) y `perfil_modulos` (14), comparadas fila por fila en UTC: idénticas.
+
+**Antes del ensayo, producción tenía:** 177 recetas, 167 insumos, 101 enlaces y bitácora hasta #1456.
+
+| Lote | Resultado (ROLLBACK) |
+| --- | --- |
+| `altas-excel-lote-1` | 4 productos y 3 insumos creados, con costos $19.7405 (Espresso Tonic Único) y $26.6504 (cookies); 41 registros propios, 0 ajenos; resto sin cambios |
+| `recetas-excel-lote-1` | 11 cambios (10 recetas y 1 insumo); 22 registros propios, 0 ajenos; los 14 costos pasan del previo al nuevo y ninguno más; resto sin cambios |
+
+Después, con una conexión nueva, producción sigue igual: los mismos conteos, bitácora hasta #1456 y la misma huella de
+todos los costos.
+
+Los informes se guardaron en el respaldo privado, `informes-excel-40`.
+
 ## Procedimiento remoto (cada paso y el merge requieren aprobación)
 
 Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
 
-1. Respaldo nuevo si la base cambió desde `2026-10-30T1704Z`.
-2. Ensayo remoto con ROLLBACK de los dos lotes:
+1. ~~Respaldo nuevo~~ (hecho: `2026-10-30T1843Z`).
+2. ~~Ensayo remoto con ROLLBACK de los dos lotes~~ (hecho, limpio):
    - `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-excel-lote-1 --usuario <uuid-perfil>`
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-excel-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
 3. Aplicar los dos con `--aplicar --confirmo jpqkmnfjwzniptszjuli`.
