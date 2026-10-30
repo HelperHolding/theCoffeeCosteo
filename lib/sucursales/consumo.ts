@@ -1,6 +1,7 @@
 import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from './metricas';
 import type { LineaNormal, PedidoNormal } from './normalizar';
 import { cambiosPersonalizaciones, tamanoVerificado } from './costeo';
+import { partesCombo } from './combos';
 
 /**
  * Consumo TEÓRICO según receta de las ventas de Sucursales (docs/sucursales/13). Puro: no lee la base.
@@ -69,14 +70,16 @@ export interface ConsumoProducto {
   clave: string;
   recetaId: string;
   receta: string;
-  /** Líneas que entran al consumo y las que no (por motivo). */
+  /** Si el producto se vendió dentro de un combo, el nombre del combo (trazabilidad de la venta). */
+  combo?: string;
+  /** Unidades que entran al consumo y las que no (por motivo). */
   lineas: number;
   excluidas: Record<MotivoExcluido, number>;
   tamanos: { tamano: string; lineas: number }[];
   insumos: CantidadInsumo[];
 }
 export interface CoberturaConsumo {
-  /** A: todas las líneas del periodo (unidades vendidas). */
+  /** A: todas las unidades del periodo. Un combo cuenta como sus productos (bebida y pan, cada uno una unidad). */
   lineas: number;
   generico: number;
   /** B: A − GENERIC. */
@@ -98,7 +101,8 @@ export interface CoberturaConsumo {
 export interface InsumoConsumo extends CantidadInsumo {
   productos: number;
   rappi: number;
-  detalle: { receta: string; cantidad: number; rappi: number }[];
+  /** Por producto (y combo en el que se vendió, si aplica). */
+  detalle: { receta: string; combo?: string; cantidad: number; rappi: number }[];
 }
 /**
  * Producto vendido que aún no suma al consumo porque no tiene receta enlazada (o, sin código, no se identifica). En
@@ -160,6 +164,8 @@ export function consumir(
   evidencia: PedidoNormal[] = ps,
   catalogo?: CatalogoNombres,
   fechas: string[] = [],
+  /** Contar los combos del POS por sus productos (COMBOS_POS). Hoy solo el piloto de Namóra (rappiPortal). */
+  combosPorProducto = false,
 ): ResultadoConsumo {
   const identidad = identificador(evidencia, catalogo);
   const cob = {
@@ -177,7 +183,7 @@ export function consumir(
     CantidadInsumo & {
       rappi: number;
       productos: Set<string>;
-      detalle: Map<string, { receta: string; cantidad: number; rappi: number }>;
+      detalle: Map<string, { receta: string; combo?: string; cantidad: number; rappi: number }>;
     }
   >();
   const sinReceta = new Map<string, SinReceta>();
@@ -205,86 +211,93 @@ export function consumir(
       diario.set(p.fecha, dia);
     }
     const deRappi = p.origen === 'rappi';
-    for (const l of p.lineas) {
+    /**
+     * Cuenta una unidad con su receta: un producto suelto o un producto dentro de un combo. Cada producto entra o queda
+     * fuera por sí mismo (el croissant de un combo suma aunque la bebida lleve algo que aún no se calcula) y conserva
+     * de qué venta salió (`combo`).
+     */
+    const contar = (
+      u: { codigo: string; nombre: string; customs: LineaNormal['customs'] },
+      clave: string,
+      combo?: string,
+    ) => {
       cob.lineas++;
       dia.lineas++;
-      const id = identidad(l);
-      if (id.sinCodigo) {
-        cob.sinCodigo++;
-        anotarSinReceta(id.clave, l.nombre, deRappi, true);
-        continue;
-      }
-      if (id.codigo === CODIGO_GENERICO) {
-        cob.generico++;
-        continue;
-      }
-      // Combo de Rappi armado con partes: necesita receta en TODAS sus partes; consume la suma de sus partes.
-      const partes = l.partes?.map((pt) => ({ pt, enlace: datos.enlaces.get(pt.codigo) }));
-      const enlace = partes ? undefined : datos.enlaces.get(id.codigo);
-      if (partes ? partes.some((x) => !x.enlace) : !enlace) {
+      const enlace = datos.enlaces.get(u.codigo);
+      if (!enlace) {
         cob.sinEnlace++;
-        // Un combo cuenta por la parte que falta (p. ej. el pan de un combo con bebida).
-        const falta = partes?.find((x) => !x.enlace)?.pt;
-        anotarSinReceta(
-          falta ? `parte:${falta.codigo}` : id.clave,
-          falta?.nombre || l.nombre,
-          deRappi,
-          false,
-        );
-        continue;
+        anotarSinReceta(combo ? `parte:${u.codigo}` : clave, u.nombre, deRappi, false);
+        return;
       }
       cob.conReceta++;
-      let x = productos.get(id.clave);
+      let x = productos.get(clave);
       if (!x) {
         x = {
-          clave: id.clave,
-          ...(enlace ?? { recetaId: id.codigo, receta: l.nombre }),
+          clave,
+          ...enlace,
+          ...(combo ? { combo } : {}),
           lineas: 0,
           excluidas: motivosVacios(),
           tamanos: new Map(),
           insumos: new Map(),
         };
-        productos.set(id.clave, x);
+        productos.set(clave, x);
       }
-      const recetas = partes
-        ? partes.map(({ pt, enlace: e }) => recetaDe(pt, e!.recetaId, datos))
-        : [recetaDe(l, enlace!.recetaId, datos)];
-      const fallo = recetas.find((r) => 'motivo' in r);
-      if (fallo && 'motivo' in fallo) {
-        excluidas[fallo.motivo]++;
-        x.excluidas[fallo.motivo]++;
-        continue;
+      const r = recetaDe(u, enlace.recetaId, datos);
+      if ('motivo' in r) {
+        excluidas[r.motivo]++;
+        x.excluidas[r.motivo]++;
+        return;
       }
-      const ok = recetas as Exclude<(typeof recetas)[number], { motivo: MotivoExcluido }>[];
       cob.incluidas++;
-      if (ok.some((r) => r.ajustada)) cob.ajustadas++;
+      if (r.ajustada) cob.ajustadas++;
       dia.incluidas++;
       x.lineas++;
-      for (const { tamano } of ok) {
-        x.tamanos.set(tamano, (x.tamanos.get(tamano) ?? 0) + 1);
-        tamanos.set(tamano, (tamanos.get(tamano) ?? 0) + 1);
-      }
-      for (const r of ok.flatMap((o) => o.receta)) {
-        const t = insumos.get(r.insumoId) ?? {
-          ...r,
+      x.tamanos.set(r.tamano, (x.tamanos.get(r.tamano) ?? 0) + 1);
+      tamanos.set(r.tamano, (tamanos.get(r.tamano) ?? 0) + 1);
+      for (const i of r.receta) {
+        const t = insumos.get(i.insumoId) ?? {
+          ...i,
           cantidad: 0,
           rappi: 0,
           productos: new Set<string>(),
           detalle: new Map(),
         };
-        t.cantidad += r.cantidad;
-        if (deRappi) t.rappi += r.cantidad;
-        t.productos.add(id.clave);
-        const d = t.detalle.get(id.clave) ?? { receta: x.receta, cantidad: 0, rappi: 0 };
-        d.cantidad += r.cantidad;
-        if (deRappi) d.rappi += r.cantidad;
-        t.detalle.set(id.clave, d);
-        insumos.set(r.insumoId, t);
-        const pi = x.insumos.get(r.insumoId) ?? { ...r, cantidad: 0 };
-        pi.cantidad += r.cantidad;
-        x.insumos.set(r.insumoId, pi);
-        dia.cantidades[r.insumoId] = (dia.cantidades[r.insumoId] ?? 0) + r.cantidad;
+        t.cantidad += i.cantidad;
+        if (deRappi) t.rappi += i.cantidad;
+        t.productos.add(clave);
+        const d = t.detalle.get(clave) ?? {
+          receta: x.receta,
+          ...(combo ? { combo } : {}),
+          cantidad: 0,
+          rappi: 0,
+        };
+        d.cantidad += i.cantidad;
+        if (deRappi) d.rappi += i.cantidad;
+        t.detalle.set(clave, d);
+        insumos.set(i.insumoId, t);
+        const pi = x.insumos.get(i.insumoId) ?? { ...i, cantidad: 0 };
+        pi.cantidad += i.cantidad;
+        x.insumos.set(i.insumoId, pi);
+        dia.cantidades[i.insumoId] = (dia.cantidades[i.insumoId] ?? 0) + i.cantidad;
       }
+    };
+    for (const l of p.lineas) {
+      const id = identidad(l);
+      if (id.sinCodigo || id.codigo === CODIGO_GENERICO) {
+        cob.lineas++;
+        dia.lineas++;
+        if (id.sinCodigo) {
+          cob.sinCodigo++;
+          anotarSinReceta(id.clave, l.nombre, deRappi, true);
+        } else cob.generico++;
+        continue;
+      }
+      // Un combo cuenta como sus productos: los de Rappi traen sus partes; los del POS se arman con COMBOS_POS
+      // (solo donde se activa, hoy el piloto de Namóra).
+      const partes = l.partes ?? (combosPorProducto ? partesCombo(id.codigo, l) : undefined);
+      if (partes) for (const pt of partes) contar(pt, `${id.clave}>${pt.codigo}`, l.nombre);
+      else contar({ codigo: id.codigo, nombre: l.nombre, customs: l.customs }, id.clave);
     }
   }
   const identificables = cob.lineas - cob.generico;
