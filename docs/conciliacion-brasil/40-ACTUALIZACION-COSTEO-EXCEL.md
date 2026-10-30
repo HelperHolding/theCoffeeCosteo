@@ -1,7 +1,11 @@
 # 40 · Actualización de la base con el costeo del equipo (Costeo_TheCoffee.xlsx)
 
-**Estado:** preparado el 2026-10-30, con manifiestos, pruebas, respaldo verificado, ensayo local y **ensayo remoto con
-ROLLBACK limpio de los dos lotes**. **Sin aplicar y sin merge.** Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
+**Estado:** **APLICADO en producción el 2026-10-30**, con aprobación de Carlo:
+
+- `altas-excel-lote-1`: ejecución `f548de32…`, bitácora #1520–1560;
+- `recetas-excel-lote-1`: ejecución `d022b4f5…`, bitácora #1561–1582.
+
+Faltan el lote-8 de enlaces POS y el merge, cada uno con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
 requieren su aprobación expresa.
 
 ## Origen
@@ -151,6 +155,31 @@ todos los costos.
 
 Los informes se guardaron en el respaldo privado, `informes-excel-40`.
 
+## Aplicación en producción (2026-10-30, aprobada por Carlo)
+
+Antes de aplicar se comprobó que producción seguía igual que en el ensayo: 177 recetas, 167 insumos, 101 enlaces,
+bitácora hasta #1456 y la misma huella de costos.
+
+| Lote | Resultado |
+| --- | --- |
+| `altas-excel-lote-1` | 4 productos y 3 insumos creados; 41 registros propios (#1520–1560), 0 ajenos; resto sin cambios; COMMIT |
+| `recetas-excel-lote-1` | 11 cambios; 22 registros propios (#1561–1582), 0 ajenos; 14 costos como se declararon y ninguno más; COMMIT |
+| Conexión nueva | 181 recetas, 170 insumos, 101 enlaces y bitácora hasta #1582 |
+| Repetir los ensayos | 4 y 11 «sin cambio», 0 registros, ROLLBACK |
+
+**Recetas creadas** (para el lote-8 y la regla de shots):
+
+| Producto | Costo | id |
+| --- | --- | --- |
+| Espresso Tonic | $19.7405 (Único) | `4af99017-fa21-4a12-8aa1-213a145b8d4b` |
+| Macadamia Cookie | $26.6504 | `69556aa2-c4eb-4c4d-9bf6-f09646059f77` |
+| Cookie Matcha & White Chocolate | $26.6504 | `c1f0cdda-1a90-4d75-bd38-4364219f3bfc` |
+| Salted Caramel Cookie | $26.6504 | `f143e005-a85a-4d33-b082-bb330d9aa10b` |
+
+La reversión, con ejecuciones completas y comandos, quedó en el respaldo privado (`informes-excel-40/REVERSION.md`). Se
+hace en orden inverso: primero las recetas y después las altas. Requiere aprobación y se niega si hubo cambios
+posteriores.
+
 ## Procedimiento remoto (cada paso y el merge requieren aprobación)
 
 Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
@@ -159,8 +188,8 @@ Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
 2. ~~Ensayo remoto con ROLLBACK de los dos lotes~~ (hecho, limpio):
    - `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-excel-lote-1 --usuario <uuid-perfil>`
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-excel-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
-3. Aplicar los dos con `--aplicar --confirmo jpqkmnfjwzniptszjuli`.
-4. Verificar con una conexión nueva y repetir el ensayo, que debe dar «sin cambio».
+3. ~~Aplicar los dos~~ (hecho).
+4. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
 5. Lote de enlaces POS para ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP.
 6. Merge del PR.
 
