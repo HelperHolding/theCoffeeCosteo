@@ -5,8 +5,8 @@
 - `altas-excel-lote-1`: ejecución `f548de32…`, bitácora #1520–1560;
 - `recetas-excel-lote-1`: ejecución `d022b4f5…`, bitácora #1561–1582.
 
-El **lote-8 de enlaces POS** está preparado, ensayado en local y con **ensayo remoto limpio**, **sin cargar**. Faltan su carga y el merge, cada
-uno con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
+El **lote-8 de enlaces POS** quedó **CARGADO** el 2026-10-30 con aprobación de Carlo: carga `ded0fbc3…`, 101 → 105
+enlaces, bitácora #1587–1590. Falta el merge, con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
 requieren su aprobación expresa.
 
 ## Origen
@@ -217,6 +217,16 @@ bitácora hasta #1582.
 - Con una conexión nueva, producción sigue en 101 enlaces y bitácora #1582.
 - Informe en el respaldo privado (`informes-sku-lote-8`).
 
+**Carga en producción** (2026-10-30, aprobada por Carlo). Antes se comprobó que producción seguía igual que en el ensayo.
+
+| Paso | Resultado |
+| --- | --- |
+| Cargar | 4 altas, 0 problemas; 101 previos intactos; 4 registros propios (#1587–1590), 0 ajenos; datos comerciales sin cambios; COMMIT |
+| Conexión nueva | 105 enlaces; los 4 códigos apuntan a su receta y son de esta carga |
+| Repetir ensayo | 4 «sin cambio», 0 registros, ROLLBACK |
+
+El `carga_id` completo y el comando de reversión están en el respaldo privado (`informes-sku-lote-8/REVERSION.md`).
+
 La regla de shots del Espresso Tonic va en el PR #75 del chat «Módulo Sucursales». Es solo código y empieza a contar en
 cuanto ESPTONAPP tenga enlace.
 
@@ -230,8 +240,7 @@ Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-excel-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
 3. ~~Aplicar los dos~~ (hecho).
 4. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
-5. Lote-8 de enlaces POS (preparado y ensayado en local): ensayo remoto y carga, cada uno con aprobación:
-   `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-8 --usuario <uuid-perfil>`
+5. ~~Lote-8 de enlaces POS~~ (cargado: 105 enlaces).
 6. Merge del PR.
 
 Si una receta del lote cambia antes de aplicar (otra versión), el cargador se detiene. En ese caso hay que regenerar el
