@@ -137,3 +137,30 @@ Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
 
 Si una receta del lote cambia antes de aplicar (otra versión), el cargador se detiene. En ese caso hay que regenerar el
 manifiesto.
+
+## Coordinación con el chat de Rappi y Consumo (2026-10-30)
+
+**Rama al día:** la rama ya incluye main hasta el #73, sin conflictos. Los únicos archivos en común son `altas-productos.ts`
+y su prueba, y el lote `pan-de-muerto-lote-1` se conserva. Con eso pasan 316 pruebas (las de `tests/db` del cargador y
+las del portal) y `tsc` sale sin errores. Según el otro chat, el #71 sobre main con el #73 y el #74 tampoco tiene
+conflictos (609 pruebas).
+
+**Revalidación en solo lectura contra producción (2026-10-30):**
+
+- 177 recetas, 167 insumos y bitácora hasta #1456;
+- las 10 versiones de receta y los 14 costos previos son los del manifiesto;
+- ninguno de los 4 productos ni de los 3 insumos nuevos existe;
+- la Cookie Triple Chocolate sigue en $22.49.
+
+Antes del ensayo remoto toca un respaldo nuevo y repetir esta revalidación.
+
+**Pure Black (Double Shot):** según la regla final del #74, Single y Double llevan 18 g de café. Los 18 g de la base son
+correctos y el #71 no los cambia.
+
+**Después de aplicar el #71:**
+
+- **Enlaces POS** para ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP. Con el #73, la Cookie Matcha de Rappi ya está ligada
+  a COOMATAPP y empieza a contar en cuanto ese código tenga enlace.
+- **Espresso Tonic:** su receta lleva 18 g de café, un shot. El otro chat debe agregarlo a la regla de shots y poner
+  «Traditional Tonic» como personalización neutra en `personalizaciones-verificadas.ts`. Si no, sus ventas con shot
+  quedan fuera de Consumo.
