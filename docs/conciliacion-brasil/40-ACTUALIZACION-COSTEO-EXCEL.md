@@ -5,7 +5,8 @@
 - `altas-excel-lote-1`: ejecución `f548de32…`, bitácora #1520–1560;
 - `recetas-excel-lote-1`: ejecución `d022b4f5…`, bitácora #1561–1582.
 
-Faltan el lote-8 de enlaces POS y el merge, cada uno con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
+El **lote-8 de enlaces POS** está preparado y ensayado en local, **sin ensayo remoto y sin cargar**. Faltan su carga y el merge, cada
+uno con su aprobación. Carlo pidió no hacer merge porque otro chat trabaja en paralelo. Cada paso remoto y el merge
 requieren su aprobación expresa.
 
 ## Origen
@@ -180,6 +181,37 @@ La reversión, con ejecuciones completas y comandos, quedó en el respaldo priva
 hace en orden inverso: primero las recetas y después las altas. Requiere aprobación y se niega si hubo cambios
 posteriores.
 
+## Lote-8 de enlaces POS (preparado el 2026-10-30)
+
+Cargador: `enlaces-pos.ts`. Archivos `40-lote-8.csv` (sha256 `d327669d…`) y `40-lote-8.manifiesto.json` (sha256 `c276f40f…`),
+fijados en `LOTES_APROBADOS` con `DOC_LOTE['lote-8'] = '40'`. Requiere el lote 7 y, por él, los lotes 1–6: los 101 enlaces
+actuales deben seguir intactos.
+
+| Código POS | Receta | Venta en la API (119 sucursales, 15–28 oct) |
+| --- | --- | --- |
+| COOCARAPP | Salted Caramel Cookie | 10, en 1 sucursal |
+| COOMACAPP | Macadamia Cookie | sin ventas |
+| COOMATAPP | Cookie Matcha & White Chocolate | 350, en 36 sucursales (Rappi ya la traduce, #73) |
+| ESPTONAPP | Espresso Tonic (Único) | 353, en 49 sucursales, siempre sin vaso |
+
+Antes de prepararlo se comprobó en producción, en solo lectura, que las 4 recetas existen, son productos activos y
+ningún código ni receta estaba enlazado (101 enlaces).
+
+**Respaldo `2026-10-30T1851Z`**, tomado después de aplicar los lotes del doc 40: 24,101 filas, iguales a producción; 0
+errores fuera de `vault`.
+
+**Ensayo sobre una copia del respaldo**, borrada al terminar:
+
+| Paso | Resultado |
+| --- | --- |
+| Ensayo | 4 altas y 0 problemas; los 101 enlaces previos intactos; 4 registros propios, 0 ajenos; datos comerciales sin cambios; ROLLBACK |
+| Aplicar | COMMIT; 101 → 105 enlaces |
+| Repetir | 4 «sin cambio», 0 registros |
+| Revertir por carga | 4 bajas; vuelve a 101 |
+
+La regla de shots del Espresso Tonic va en el PR #75 del chat «Módulo Sucursales». Es solo código y empieza a contar en
+cuanto ESPTONAPP tenga enlace.
+
 ## Procedimiento remoto (cada paso y el merge requieren aprobación)
 
 Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
@@ -190,7 +222,8 @@ Carlo avisa cuándo se sube, para no pisar el trabajo del otro chat.
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-excel-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
 3. ~~Aplicar los dos~~ (hecho).
 4. ~~Verificar con una conexión nueva y repetir el ensayo~~ (hecho: «sin cambio»).
-5. Lote de enlaces POS para ESPTONAPP, COOMACAPP, COOMATAPP y COOCARAPP.
+5. Lote-8 de enlaces POS (preparado y ensayado en local): ensayo remoto y carga, cada uno con aprobación:
+   `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-8 --usuario <uuid-perfil>`
 6. Merge del PR.
 
 Si una receta del lote cambia antes de aplicar (otra versión), el cargador se detiene. En ese caso hay que regenerar el

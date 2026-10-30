@@ -77,6 +77,12 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/39-lote-7.manifiesto.json',
     sha256: '66630760dc0db848b9d30f527f3cc1c63618a7ec53a06b57466e3f3dc24be439',
   },
+  // Preparado el 2026-10-30 (doc 40): los códigos POS del Espresso Tonic y de las 3 cookies creados con
+  // altas-excel-lote-1. Cargar exige aprobación aparte.
+  'lote-8': {
+    manifiesto: 'docs/conciliacion-brasil/40-lote-8.manifiesto.json',
+    sha256: 'c276f40f0965ace58c8f7beed82c4181b32c608f04ff78863b927a7270d881a8',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -87,6 +93,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-5': '36',
   'lote-6': '38',
   'lote-7': '39',
+  'lote-8': '40',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>
