@@ -1,0 +1,25 @@
+{
+ "lote": "lote-9",
+ "archivo": "docs/conciliacion-brasil/41-lote-9.csv",
+ "filas": 2,
+ "sha256": "a485b2aed2bd774bacd616c79d185ea3d6a5ff21244286ecb70aa6beba641fa8",
+ "correspondencias": [
+  {
+   "codigo": "ZOETWIAPP",
+   "receta_id": "902a845f-5a02-4ac7-a424-e64ce036bc9f"
+  },
+  {
+   "codigo": "ZOEWATAPP",
+   "receta_id": "3db3fdab-3bbe-4ea9-a200-7cdd89c12b0e"
+  }
+ ],
+ "requiere": [
+  "lote-8"
+ ],
+ "aprobacion": "Carlo, 2026-10-30: «Si es twist entran los 2 sabores, y si ligalos porfa con el código»; «cuando él te diga tu mergeas a prod los cambios» (OK del chat Módulo Sucursales recibido). Cada paso remoto (ensayo y carga) se ejecuta con ensayo previo.",
+ "notas": [
+  "Requiere el lote 8 (y por él los lotes 1–7): los 105 enlaces actuales deben seguir intactos antes y después",
+  "ZOETWIAPP vende los dos sabores Twist: su receta (altas-zoe-lote-1, doc 41, ejecución 8d8fa908) lleva media botella de cada uno, $22",
+  "ZOEWATAPP se llama «Zoé Water» en el POS; nuestra receta de una botella es «Zoé Water Natural», como en el recetario de Zoho"
+ ]
+}

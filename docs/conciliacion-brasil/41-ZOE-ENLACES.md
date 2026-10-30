@@ -1,8 +1,11 @@
 # 41 · Zoé: alta de «Zoe Water Twist» y enlaces de sus códigos POS
 
-**Estado:** el alta está preparada el 2026-10-30, con manifiesto, prueba, ensayo local y **ensayo remoto limpio**. **Sin
-aplicar y sin merge.** El lote-9 de enlaces se prepara cuando el alta esté aplicada, porque necesita el id de la receta nueva. Cada
-paso remoto y el merge requieren aprobación expresa de Carlo.
+**Estado:** el alta quedó **APLICADA** en producción el 2026-10-30: ejecución `8d8fa908…`, bitácora #1597–1602; receta
+`902a845f-5a02-4ac7-a424-e64ce036bc9f`, $22. El **lote-9** está preparado, ensayado en local y con **ensayo remoto limpio**,
+**sin cargar**. Falta cargarlo y el merge.
+
+Carlo pidió coordinar con el chat «Módulo Sucursales» y subir cuando ese chat diera el OK. Dio el OK el 2026-10-30: no tiene
+nada en curso que toque estos archivos, la base ni los productos Zoé.
 
 ## Revisión en Zoho (2026-10-30, solo lectura)
 
@@ -60,7 +63,15 @@ bitácora hasta #1590, y no existía «Zoe Water Twist».
 - Resultado: 1 producto creado con costo $22; 6 registros propios y 0 ajenos; resto sin cambios.
 - Con una conexión nueva, producción sigue idéntica, con la misma huella de costos.
 
-## Lote-9 de enlaces (se prepara después del alta)
+**Aplicación** (2026-10-30). Respaldo previo `2026-10-30T1925Z`: 24,115 filas, iguales a producción.
+
+| Paso | Resultado |
+| --- | --- |
+| Aplicar | 1 producto creado a $22; 6 registros propios (#1597–1602), 0 ajenos; resto sin cambios; COMMIT |
+| Conexión nueva | 182 recetas; «Zoe Water Twist» con ½ Frutos Rojos y ½ Limón y Jengibre; costo $22 |
+| Repetir ensayo | «sin cambio» |
+
+## Lote-9 de enlaces
 
 | Código POS | Receta |
 | --- | --- |
@@ -68,6 +79,21 @@ bitácora hasta #1590, y no existía «Zoe Water Twist».
 | ZOETWIAPP | Zoe Water Twist (la crea este alta) |
 
 Requiere el lote-8, con 105 enlaces previos intactos.
+
+Archivos `41-lote-9.csv` y `41-lote-9.manifiesto.json` (sha256 `5d44fa3b…`), fijados en `LOTES_APROBADOS` con
+`DOC_LOTE['lote-9'] = '41'`. La prueba de lotes que usaba «lote-9» como ejemplo de lote no aprobado ahora usa «lote-99».
+
+**Respaldo `2026-10-30T1929Z`**, tomado después del alta: 24,128 filas, iguales a producción.
+
+| Paso | Resultado |
+| --- | --- |
+| Ensayo local (copia del respaldo) | 2 altas; 105 previos intactos; 2 registros; aplicar 105 → 107; repetir «sin cambio»; revertir vuelve a 105 |
+| Ensayo remoto (ROLLBACK) | 2 altas, 0 problemas; los 105 previos intactos; 2 registros propios, 0 ajenos; datos comerciales sin cambios; con una conexión nueva sigue en 105 enlaces y bitácora #1602 |
+
+**Mejora posible del chat «Módulo Sucursales»:** el POS manda el sabor del Twist como opción («Mixed Berries» y «Lemon
+Ginger»). Con ajustes en `personalizaciones-verificadas.ts`, Consumo podría contar el sabor exacto en lugar de ½ y ½. Lo
+propone ese chat a Carlo.
+
 
 ## Para Zoho
 
@@ -78,6 +104,7 @@ cueste $22 y no $44. No se carga nada en Zoho: va al documento de cambios para i
 
 1. ~~Ensayo remoto del alta con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-zoe-lote-1 --usuario <uuid-perfil>`
-2. Aplicar el alta (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
-3. Preparar el lote-9 con el id de la receta nueva, ensayarlo en local y en remoto, y cargarlo.
+2. ~~Aplicar el alta, verificar y repetir el ensayo~~ (hecho).
+3. ~~Preparar el lote-9 y ensayarlo en local y en remoto~~ (hecho); falta cargarlo:
+   `npx tsx scripts/conciliacion/enlaces-pos-aplicar.ts --lote lote-9 --aplicar --confirmo jpqkmnfjwzniptszjuli --usuario <uuid-perfil>`
 4. Merge del PR.

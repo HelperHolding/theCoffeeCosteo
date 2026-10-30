@@ -192,8 +192,18 @@ describe('lotes aprobados reales', () => {
     expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* requiere aprobación expresa/);
   });
 
+  it('lote 9: Zoé (doc 41), ZOEWATAPP a Zoé Water Natural y ZOETWIAPP a Zoe Water Twist; requiere los lotes 1–8 (105)', async () => {
+    const l = await leerLoteAprobado('lote-9');
+    expect(l.lote.map((f) => [f.codigo, f.receta_nombre, f.nombre_observado])).toEqual([
+      ['ZOETWIAPP', 'Zoe Water Twist', 'Zoe Water Twist'],
+      ['ZOEWATAPP', 'Zoé Water Natural', 'Zoé Water'],
+    ]);
+    expect(Object.keys(l.previos)).toHaveLength(8);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(105);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
-    await expect(leerLoteAprobado('lote-9')).rejects.toThrow(/no está aprobado/);
+    await expect(leerLoteAprobado('lote-99')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));
     mkdirSync(join(raiz, 'docs/conciliacion-brasil'), { recursive: true });
     const ruta = LOTES_APROBADOS['lote-2'].manifiesto;
