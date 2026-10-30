@@ -141,6 +141,25 @@ describe('líneas de un producto de Rappi', () => {
     expect(lineasDe(producto('Pan de Muerto con Glaseado de Naranja.', 80))[0].codigo).toBe('RAPPIPANMUENAR');
   });
 
+  it('el sabor decide el producto: Kouign Amann Dulce de Leche con «Avellana» es el de avellana', () => {
+    const kouign = (sabor?: string) =>
+      lineasDe(producto('Kouign Amann Dulce de Leche', 75, sabor ? [['Elige Tu Favorito', sabor]] : []))[0];
+    // Toma el nombre del de avellana: el nombre «Dulce de Leche» nunca queda con dos códigos.
+    expect(kouign('Avellana')).toMatchObject({
+      codigo: 'KOAMAVAPP',
+      nombre: 'Kouign Amann Hazelnut',
+      importeCent: 7500,
+      customs: [],
+    });
+    expect(kouign('Dulce de Leche')).toMatchObject({
+      codigo: 'KOAMDLAPP',
+      nombre: 'Kouign Amann Dulce de Leche',
+      customs: [],
+    });
+    expect(kouign().codigo).toBe('KOAMDLAPP');
+    expect(lineasDe(producto('Kouign Amann Hazelnut', 75))[0].codigo).toBe('KOAMAVAPP');
+  });
+
   it('combo solo de Rappi: se arma con sus partes y sus personalizaciones; el precio va en la línea', () => {
     const [l] = lineasDe(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
     expect(l.codigo).toBe('RAPPI-COMBO:crea tu the coffee');

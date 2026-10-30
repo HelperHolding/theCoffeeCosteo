@@ -91,6 +91,17 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Productos que Rappi vende con el sabor como opción («Elige Tu Favorito»): el sabor elegido decide el producto (Carlo,
+ * 2026-10-30). «Kouign Amann Dulce de Leche» con «Avellana» es el Kouign Amann de avellana (en Namóra, 2 unidades el 29
+ * y el 30 de octubre). El renglón toma el nombre del producto de ese sabor: así un mismo nombre no queda con dos
+ * códigos (ver identificador). Con «Dulce de Leche» es el mismo producto.
+ */
+const SABORES_RAPPI: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  'kouign amann dulce de leche': { avellana: 'Kouign Amann Hazelnut' },
+};
+const CATEGORIA_SABOR = 'elige tu favorito';
+
+/**
  * Combos que solo existen en Rappi: se venden a su precio y se arman con sus partes (decisión de Carlo, 2026-10-29:
  * costo = suma de las partes). Cada parte sale de una categoría de acompañamientos; sus personalizaciones son las de
  * las categorías indicadas. Una parte sin receta deja el combo sin enlace (p. ej. Pan de Muerto,
@@ -206,6 +217,8 @@ const CATEGORIAS: Readonly<Record<string, (d: string, codigo: string) => string 
       'mas - 40 ml de creamer': 'More Creamer (40ml)',
       'menos - 20 ml de creamer': 'Less Creamer (20ml)',
     })[d],
+  // El sabor ya decidió el producto (SABORES_RAPPI): no es una personalización.
+  [CATEGORIA_SABOR]: () => null,
   // Combo del POS «Iced Latte + Ham & Cheese Sandwich»: solo nombran sus partes fijas.
   'personaliza tu iced latte': () => null,
   'personaliza tu sandwich': () => null,
@@ -247,7 +260,9 @@ const SIN_ENLACE = (nombre: string) => `RAPPI:${normalizarRappi(nombre)}`;
  * unidades; los acompañamientos con precio van como personalizaciones con su importe, así que Σ = precio del renglón.
  */
 export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea[] })[] {
-  const nombre = x.nombre.replace(/\s+/g, ' ').trim();
+  let nombre = x.nombre.replace(/\s+/g, ' ').trim();
+  const sabor = x.opciones.find((o) => normalizarRappi(o.categoria) === CATEGORIA_SABOR);
+  nombre = (sabor && SABORES_RAPPI[normalizarRappi(nombre)]?.[normalizarRappi(sabor.descripcion)]) ?? nombre;
   const clave = normalizarRappi(nombre);
   const combo = COMBOS_RAPPI[clave];
   let codigo = PRODUCTOS_RAPPI[clave] ?? SIN_ENLACE(nombre);
