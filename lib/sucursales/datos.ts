@@ -402,7 +402,8 @@ export async function construirConsumo(
     origen,
     lectura: info(l, ps.length),
     recetasLeidasEn: datos.leidoEn,
-    ...consumir(ps, datos, l.pedidos, catalogo ?? undefined, fechas),
+    // Combos del POS por sus productos: por ahora solo el piloto de Namóra (rappiPortal); luego las demás.
+    ...consumir(ps, datos, l.pedidos, catalogo ?? undefined, fechas, !!cfg.rappiPortal),
   };
 }
 
