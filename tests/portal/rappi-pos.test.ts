@@ -128,7 +128,12 @@ describe('líneas de un producto de Rappi', () => {
   });
 
   it('un producto sin equivalencia queda con un código que nunca es del POS', () => {
-    expect(lineasDe(producto('Spooky Biscuits', 70))[0].codigo).toBe('RAPPI:spooky biscuits');
+    expect(lineasDe(producto('Triple Frap', 199))[0].codigo).toBe('RAPPI:triple frap');
+  });
+
+  it('lo que aún no tiene receta queda ligado a su código del POS: cuenta solo cuando el código tenga receta', () => {
+    expect(lineasDe(producto('Spooky Biscuits', 70))[0].codigo).toBe('SPOBISAPP');
+    expect(lineasDe(producto('Cookie Matcha & White Chocolate', 70))[0].codigo).toBe('COOMATAPP');
   });
 
   it('Pan de Muerto (doc 39): el Tradicional es el del POS; el de Naranja, su código propio de Rappi', () => {
@@ -327,7 +332,7 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
       descuentoPct: 0,
       customs: [],
     });
-    const ps = [pos, ...de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), producto('Spooky Biscuits', 70))];
+    const ps = [pos, ...de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), producto('Triple Frap', 199))];
     const r = consumir(ps, consumo);
     const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
     expect(leche).toMatchObject({ cantidad: 260, rappi: 250 });
@@ -347,7 +352,7 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     ]);
     expect(r.sinReceta).toEqual([
       { nombre: 'Espresso Tonic', unidades: 1, rappi: 0, sinCodigo: false },
-      { nombre: 'Spooky Biscuits', unidades: 1, rappi: 1, sinCodigo: false },
+      { nombre: 'Triple Frap', unidades: 1, rappi: 1, sinCodigo: false },
     ]);
     // Un combo de Rappi al que le falta una parte se lista por esa parte.
     expect(consumir(de(creaTu('Iced Latte', 'Sándwich Misterioso')), consumo).sinReceta).toEqual([
