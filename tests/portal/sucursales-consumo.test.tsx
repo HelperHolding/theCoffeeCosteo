@@ -88,8 +88,10 @@ describe('consumo teórico según receta', () => {
       ['BROWNIE', 1, 1],
     ]);
     expect(r.categorias.find((c) => c.categoria === 'LECHE')?.totales).toEqual([
-      { unidad: 'ml', cantidad: 360 },
+      { unidad: 'ml', cantidad: 360, rappi: 0 },
     ]);
+    // Sin receta: el código sin enlace queda listado (Generic no: ya se cuenta aparte).
+    expect(r.sinReceta).toEqual([{ nombre: 'Sandwich', unidades: 1, rappi: 0, sinCodigo: false }]);
     expect(r.productos[0]).toMatchObject({
       receta: 'Iced Latte',
       lineas: 2,

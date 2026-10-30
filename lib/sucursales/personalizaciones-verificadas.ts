@@ -24,9 +24,11 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Americano
   '500360bd-fd76-4e22-bf01-9bd3ed6e2ae7': [
     'No Milk (Americano)', // la receta no lleva leche
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Black Ginger
   'af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'Traditional Tonic', // tónica de la receta
   ],
   // Black edition 250g
@@ -52,6 +54,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Coffee Frap
   'ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Cold brew
   '00f47aba-88e6-4ebc-a815-5833f8b29871': [
@@ -69,11 +72,16 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Gelato Frappé Chai
   '0252e4e5-3d19-49c1-9f01-2b0f72c1e21b': [
     'Milk uht (Gelato)', // leche entera, la de la receta
     'Tradicional Gelato', // helado de la receta
+  ],
+  // Gelato Frappé Coffee
+  'adfc682f-380c-41a9-a83d-63f94e0d3042': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Gelato Frappé Matcha
   '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': [
@@ -96,6 +104,10 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   'e0b13ec8-1c24-4ed8-9be2-5198d63a5485': [
     'Hot Drip Black', // grano BLACK, el de la receta
   ],
+  // Iced Black
+  'cb33752f-e335-46ec-b091-a8a2229eb946': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
   // Iced Chocolate
   'c55e8b1f-300e-42f7-9c4a-f57b038c987e': [
     'Milk', // leche entera, la de la receta
@@ -105,16 +117,23 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Iced Latte
   'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'Without Honey', // la receta no lleva miel
+  ],
+  // Iced Latte + Cookie Tradicional
+  '480a3080-d543-4540-adfc-d4e64ba06248': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Iced Latte + Ham & Cheese Sandwich
   'e95e45e9-b5fc-4d10-ab5c-170e13cedf15': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Iced Vanilla
   '15556232-34f4-490e-a9b7-0c01998bc4c1': [
     'Average Vanilla (15ml)', // la receta lleva 15 ml de vainilla
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'With Sprinkles', // la receta ya lleva 4 g de chips de chocolate
     'Without White Sprinkles', // la receta no lleva chispas blancas
   ],
@@ -126,6 +145,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // Isopure Iced Latte
   '1a316b88-1212-4403-9dfd-4de2652653ab': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'Without Honey', // la receta no lleva miel
   ],
   // Isopure Iced Matcha
@@ -138,11 +158,13 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Macchiato
   '4255bb6b-1a50-42a4-896d-d3f424b6ceab': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'Without Honey', // la receta no lleva miel
   ],
   // Mad Mocha
   'da45b5bd-3eca-452e-a18e-5a558e4dc517': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Matcha Frap
   'bb72c7a6-d900-4d47-bf56-4a74654ccf4b': [
@@ -172,31 +194,44 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
     'Average Vanilla (10ml)', // la receta lleva 10 ml de vainilla
     'Milk', // leche entera, la de la receta
   ],
+  // Nutty Latte (Signature)
+  '28d68f0b-1896-491a-9350-02ca52d7d1bd': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Pumpkin Latte
   '170be377-ff76-4bbc-b6d5-85cd9708b21c': [
     'Average Creamer (30ml)', // solo Rappi: la receta lleva 30 ml de creamer (Medio, Carlo 2026-10-29)
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Pumpkin Spice Frap
   '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Pure Black (Double Shot)
   '89e80a88-123d-4b13-b166-f4e56c506525': [
     'Lungo (Pure Black)', // mismos 18 g de café; cambia el agua
     'Ristretto (Pure Black)', // mismos 18 g de café; cambia el agua
   ],
+  // Pure Black (Single Shot)
+  'd9954c93-6a80-45f6-95fb-579b837a62be': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
   // Salted Caramel
   '7867787b-4957-485c-822b-3106558d33a1': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Salted Caramel Frap
   '052a61f6-55ff-4ac8-9459-ab4939789420': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Sora Iced Latte (Signature)
   '087d714a-45ca-44da-a3ad-55ce92a2bccb': [
@@ -219,11 +254,29 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   // True White
   'a96339d6-80e7-440b-a33b-bca51440d8e6': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
     'Without Honey', // la receta no lleva miel
+  ],
+  // True White + Croissant Serrano & Gouda
+  '14c61cda-2564-402a-b70f-82ebafc8d7b4': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // True White + Croissant filled with cheese and ham
   'fd4c5628-6681-47dd-ab01-2d0de8ae6d28': [
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
+  // True White + Grilled Ham & Cheese Sandwich
+  'd950794b-23cf-4f1c-a775-ee71f5001eff': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
+  // True White + Pain Au Chocolat
+  '370a151c-2cc8-4d54-bea6-0b81310637e7': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
+  // True White + Pan de Muerto
+  'e500b148-2921-4139-bdf0-184dcb567900': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // Tumbler (240ml)
   '7962a115-d69b-4b9d-afa8-8eb753b077ab': [
@@ -247,6 +300,11 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   '1183a781-40b8-4654-9f49-92d317873907': [
     'Average Vanilla (10ml)', // la receta lleva 10 ml de vainilla
     'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
+  ],
+  // Vanilla Latte + Pain au Chocolat
+  '2f38f651-98ba-4937-b541-b060854f45a7': [
+    'Single Shot (18ml)', // la receta lleva 18 g de café: un shot (Carlo, 2026-10-30)
   ],
   // White bag 250g
   '5ce9b244-40e2-4153-92b8-7c5dc38968d4': [
@@ -272,19 +330,30 @@ const JENGIBRE = 'JARABE DE JENGIBRE 1 LT (3 PZAS)';
 const GRANO_BLACK = 'CAFÉ TOSTADO EN GRANO BLACK 1.5 KG';
 const GRANO_WHITE = 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG';
 const GRANO_KRAFT = 'CAFÉ TOSTADO EN GRANO KRAFT 1.5 KG';
+/** Café de los shots (Carlo, 2026-10-30): cada shot = 18 g; Single (18 ml) = 18 g y Double (36 ml) = 36 g. */
+const CAFE_WHITE = GRANO_WHITE;
+const CAFE_BLACK = GRANO_BLACK;
 const CREAMER_PUMPKIN = 'CHOBANI D.CREAMER PUMPKIN SPICE';
 const DESLACTOSADA_POR_ENTERA: Ajuste = { cambia: { de: LECHE, a: DESLACTOSADA } };
 
 /**
  * Personalizaciones que cambian la receta y cuyo efecto se conoce sin pedir datos (etapa 1b, doc 35), por receta de
  * Costeo. Solo donde se vendieron (28-sep a 25-oct) y donde el insumo que tocan está directo en la receta, en todos sus
- * tamaños. La vainilla con ml en el nombre es la cantidad total (Average = la de la receta). Fuera, a propósito:
- * «Lactose free» en Americano y Cold brew (no llevan leche: la agrega) y todo lo que pide datos a Operaciones/Compras
- * (shots, miel, leches vegetales, More/Less de jarabes sin ml, Chipotle Mayo).
+ * tamaños. La vainilla con ml en el nombre es la cantidad total (Average = la de la receta). Shots (Carlo,
+ * 2026-10-30): cada shot = 18 g de café; en las recetas de espresso con 18 g en todos sus tamaños, «Single Shot (18ml)»
+ * es la receta (neutra) y «Double shot (36ml)» deja 36 g. Fuera, a propósito: «Extra Double shot» (falta saber cuántos
+ * shots suma), Hot Drip V60 (café filtrado), Pure Black (Double Shot) (su receta lleva 18 g, no 36), «Lactose free» en
+ * Americano y Cold brew (no llevan leche: la agrega) y lo que pide datos a Operaciones/Compras (miel, leches vegetales,
+ * More/Less de jarabes sin ml, Chipotle Mayo).
  */
 export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string, Ajuste>>> = {
+  // Americano
+  '500360bd-fd76-4e22-bf01-9bd3ed6e2ae7': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
   // Black Ginger
   'af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'No ginger': { cantidad: { insumo: JENGIBRE, valor: 0 } },
   },
   // Chai Frap
@@ -301,6 +370,7 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Coffee Frap
   'ad75d625-2fef-4ce3-8a3f-1e3c049ebbcf': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Cold brew
@@ -310,11 +380,16 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Gelato Frappé Chai
   '0252e4e5-3d19-49c1-9f01-2b0f72c1e21b': {
     'Lactose free (Gelato)': DESLACTOSADA_POR_ENTERA,
+  },
+  // Gelato Frappé Coffee
+  'adfc682f-380c-41a9-a83d-63f94e0d3042': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
   },
   // Gelato Frappé Matcha
   '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': {
@@ -325,6 +400,10 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
     'Hot Drip Kraft': { cambia: { de: GRANO_BLACK, a: GRANO_KRAFT } },
     'Hot Drip White': { cambia: { de: GRANO_BLACK, a: GRANO_WHITE } },
   },
+  // Iced Black
+  'cb33752f-e335-46ec-b091-a8a2229eb946': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
   // Iced Chocolate
   'c55e8b1f-300e-42f7-9c4a-f57b038c987e': {
     'Lactose free': DESLACTOSADA_POR_ENTERA,
@@ -332,11 +411,21 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Iced Latte
   'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Iced Latte + Cookie Tradicional
+  '480a3080-d543-4540-adfc-d4e64ba06248': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // Iced Latte + Ham & Cheese Sandwich
+  'e95e45e9-b5fc-4d10-ab5c-170e13cedf15': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
   },
   // Iced Vanilla
   '15556232-34f4-490e-a9b7-0c01998bc4c1': {
     'Average Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
     'Less Vanilla (10ml)': { cantidad: { insumo: VAINILLA, valor: 10 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
@@ -353,6 +442,7 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Isopure Iced Latte
   '1a316b88-1212-4403-9dfd-4de2652653ab': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Isopure Iced Matcha
@@ -361,10 +451,12 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Macchiato
   '4255bb6b-1a50-42a4-896d-d3f424b6ceab': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Mad Mocha
   'da45b5bd-3eca-452e-a18e-5a558e4dc517': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Matcha Frap
@@ -385,12 +477,18 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
     'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
   },
+  // Nutty Latte (Signature)
+  '28d68f0b-1896-491a-9350-02ca52d7d1bd': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Pumpkin Latte
   '170be377-ff76-4bbc-b6d5-85cd9708b21c': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
     // Solo Rappi («Ajusta tu creamer», rappi-pos.ts): la receta lleva 30 ml en Chica y Grande (= Medio, Carlo).
     'Less Creamer (20ml)': { cantidad: { insumo: CREAMER_PUMPKIN, valor: 20 } },
@@ -398,14 +496,21 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Pumpkin Spice Frap
   '7769fb2e-d7ac-46b6-abeb-e23634d40bd5': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // Pure Black (Single Shot)
+  'd9954c93-6a80-45f6-95fb-579b837a62be': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_BLACK, valor: 36 } },
   },
   // Salted Caramel
   '7867787b-4957-485c-822b-3106558d33a1': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Salted Caramel Frap
   '052a61f6-55ff-4ac8-9459-ab4939789420': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
   },
   // Sora Iced Latte (Signature)
@@ -422,7 +527,28 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // True White
   'a96339d6-80e7-440b-a33b-bca51440d8e6': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
+  },
+  // True White + Croissant Serrano & Gouda
+  '14c61cda-2564-402a-b70f-82ebafc8d7b4': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // True White + Croissant filled with cheese and ham
+  'fd4c5628-6681-47dd-ab01-2d0de8ae6d28': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // True White + Grilled Ham & Cheese Sandwich
+  'd950794b-23cf-4f1c-a775-ee71f5001eff': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // True White + Pain Au Chocolat
+  '370a151c-2cc8-4d54-bea6-0b81310637e7': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // True White + Pan de Muerto
+  'e500b148-2921-4139-bdf0-184dcb567900': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
   },
   // Urban Chocolate
   '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c': {
@@ -430,9 +556,14 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   },
   // Vanilla Latte
   '1183a781-40b8-4654-9f49-92d317873907': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
     'Lactose free': DESLACTOSADA_POR_ENTERA,
     'Less Vanilla (5ml)': { cantidad: { insumo: VAINILLA, valor: 5 } },
     'More Vanilla (15ml)': { cantidad: { insumo: VAINILLA, valor: 15 } },
+  },
+  // Vanilla Latte + Pain au Chocolat
+  '2f38f651-98ba-4937-b541-b060854f45a7': {
+    'Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
   },
 };
 

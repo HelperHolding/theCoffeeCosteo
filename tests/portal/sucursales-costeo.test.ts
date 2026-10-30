@@ -102,7 +102,7 @@ describe('costear', () => {
     // Parcial por personalización con costo (aunque el tamaño esté verificado).
     pedido(linea('5IL', 'Iced Latte', 8000, [c('Large - 600ml'), c('Oatmilk', 1300)])),
     // Parcial por personalización gratuita: el catálogo de efectos aún no existe.
-    pedido(linea('5IL', 'Iced Latte', 7000, [c('Regular - 440ml'), c('Double shot (36ml)')])),
+    pedido(linea('5IL', 'Iced Latte', 7000, [c('Regular - 440ml'), c('Average Honey')])),
     // Parcial por tamaño: Chai Frap Grande y Blueberry sin verificar.
     pedido(linea('FRACHAAPP', 'Chai Frap', 9900, [c('Large - 600ml')])),
     pedido(linea('ICEBLMAPP', 'Iced Blueberry Matcha', 9000, [c('Regular - 440ml')])),

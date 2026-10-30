@@ -73,7 +73,7 @@ describe('personalizaciones neutras', () => {
   it('basta una personalización que cambia la receta para que la línea sea parcial', () => {
     const r = costeo(
       latte('Lactose free'),
-      latte('Milk', 'Double shot (36ml)'),
+      latte('Milk', 'Oatmilk'),
       latte('Without Honey', 'Average Honey'),
     );
     expect(r.completo.lineas).toBe(0);
@@ -119,7 +119,6 @@ describe('integridad de la lista', () => {
       'Almond Milk',
       'Coconut Milk',
       'Double shot (36ml)',
-      'Single Shot (18ml)',
       'Extra Double shot (36ml)',
       'Less Honey',
       'Average Honey',
@@ -224,8 +223,26 @@ describe('ajustes calculados (etapa 1b)', () => {
     ).toBe(1);
     // Un ajuste verificado junto a una personalización que pide datos sigue parcial.
     expect(
-      costeo(conLineas(), vaso('5IL', 'Iced Latte', 'Lactose free', 'Double shot (36ml)')).parcial.lineas,
+      costeo(conLineas(), vaso('5IL', 'Iced Latte', 'Lactose free', 'Average Honey')).parcial.lineas,
     ).toBe(1);
+  });
+
+  it('shots (Carlo, 2026-10-30): cada shot = 18 g; Single es la receta y Double deja 36 g; Extra Double aún no', () => {
+    const shot = Math.round(18 * 0.4 * 100); // 18 g de café White en centavos
+    const r = costeo(
+      conLineas(),
+      vaso('5IL', 'Iced Latte', 'Single Shot (18ml)'),
+      vaso('5IL', 'Iced Latte', 'Double shot (36ml)'),
+      vaso('5IL', 'Iced Latte', 'Double shot (36ml)', 'Lactose free'),
+      vaso('2AM', 'Americano', 'Double shot (36ml)'),
+      vaso('5IL', 'Iced Latte', 'Extra Double shot (36ml)'),
+    );
+    expect(r.completo.lineas).toBe(4);
+    expect(r.completo.costoCent).toBe(
+      1544 + (1544 + shot) + (1544 + shot + Math.round(170 * 0.008 * 100)) + (1100 + shot),
+    );
+    // Extra Double: falta saber cuántos shots suma, así que queda fuera por personalización.
+    expect(r.parcial.motivos.personalizacion).toBe(1);
   });
 
   it('el sustituto inactivo vuelve la línea parcial por costo', () => {
@@ -243,11 +260,17 @@ describe('ajustes calculados (etapa 1b)', () => {
       expect(receta).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       for (const n of Object.keys(ajustes)) expect(neutras.has(`${receta}:${n}`), n).toBe(false);
     }
-    expect(PERSONALIZACIONES_AJUSTADAS[AMERICANO]).toBeUndefined();
+    expect(PERSONALIZACIONES_AJUSTADAS[AMERICANO]?.['Lactose free']).toBeUndefined();
     expect(
       PERSONALIZACIONES_AJUSTADAS['00f47aba-88e6-4ebc-a815-5833f8b29871']?.['Lactose free'],
     ).toBeUndefined();
-    for (const n of ['Double shot (36ml)', 'Single Shot (18ml)', 'Average Honey', 'Oatmilk', 'Chipotle Mayo'])
+    for (const n of [
+      'Single Shot (18ml)',
+      'Extra Double shot (36ml)',
+      'Average Honey',
+      'Oatmilk',
+      'Chipotle Mayo',
+    ])
       expect(
         Object.values(PERSONALIZACIONES_AJUSTADAS).some((a) => n in a),
         n,

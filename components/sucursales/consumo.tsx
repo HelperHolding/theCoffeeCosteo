@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { PanelRightOpen, X } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronRight, PanelRightOpen, X } from 'lucide-react';
 import type { RespuestaConsumo, SucursalInfo } from '@/lib/sucursales/contratos';
 import { CATEGORIA_LECHE, type ConsumoProducto, type MotivoExcluido } from '@/lib/sucursales/consumo';
 import type { FiltroOrigen } from '@/lib/sucursales/metricas';
@@ -144,9 +144,13 @@ function Contenido({ d }: { d: RespuestaConsumo }) {
           <Productos d={d} />
         </>
       )}
+      <SinRecetaTodavia d={d} />
     </>
   );
 }
+
+/** ¿Separar POS y Rappi? Solo si la sucursal tiene Rappi y el filtro de origen incluye los dos. */
+const separaRappi = (d: RespuestaConsumo) => d.sucursal.rappi && d.origen === 'todos';
 
 function Cobertura({ d }: { d: RespuestaConsumo }) {
   const c = d.cobertura;
@@ -238,8 +242,10 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
             Una línea del POS es una unidad. Entra si su código tiene receta enlazada, su tamaño está
             verificado para esa receta y cada personalización es neutra o tiene su ajuste calculado: las
             mismas listas revisadas que usa Costeo. Ejemplos: «Lactose free» descuenta deslactosada en lugar
-            de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Shots,
-            miel, leches vegetales y lo demás aún no se calculan: esa unidad queda fuera completa.
+            de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Café
+            por shot: cada shot son 18 g; el Single (18 ml) es la receta y el Double (36 ml) lleva 36 g. El
+            Extra Double, la miel, las leches vegetales y lo demás aún no se calculan: esa unidad queda fuera
+            completa.
           </li>
           <li>
             Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni
@@ -504,6 +510,12 @@ function Categorias({ d }: { d: RespuestaConsumo }) {
             </p>
             <p className="text-xs text-muted-foreground">
               {numero(c.insumos)} {c.insumos === 1 ? 'insumo' : 'insumos'}
+              {separaRappi(d) &&
+                c.totales.some((t) => t.rappi > 0) &&
+                ` · Rappi ${c.totales
+                  .filter((t) => t.rappi > 0)
+                  .map((t) => cantidad(t.rappi, t.unidad))
+                  .join(' + ')}`}
             </p>
           </li>
         ))}
@@ -524,10 +536,20 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
   const maxPorUnidad = new Map<string, number>();
   for (const i of d.insumos)
     maxPorUnidad.set(i.unidad, Math.max(maxPorUnidad.get(i.unidad) ?? 0, i.cantidad));
+  const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
+  const alternar = (id: string) =>
+    setAbiertos((a) => {
+      const n = new Set(a);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const separa = separaRappi(d);
+  const columnas = separa ? 6 : 4;
   return (
     <Tarjeta
       titulo="Insumos"
-      descripcion="Cantidad teórica del periodo y en cuántos productos aparece. La barra compara insumos de la misma unidad."
+      descripcion={`Cantidad teórica del periodo${separa ? ', separada en POS (Mostrador + App) y Rappi,' : ''} y qué productos la consumen: abre un insumo para ver el desglose. La barra compara insumos de la misma unidad.`}
       cuerpo={false}
     >
       <div className="flex flex-wrap items-end gap-3 px-5 pb-3 pt-4">
@@ -568,31 +590,116 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
                 <th scope="col" className="numero">
                   Cantidad teórica
                 </th>
+                {separa && (
+                  <>
+                    <th scope="col" className="numero">
+                      POS
+                    </th>
+                    <th scope="col" className="numero">
+                      Rappi
+                    </th>
+                  </>
+                )}
                 <th scope="col" className="numero">
                   Productos
                 </th>
               </tr>
             </thead>
             <tbody>
-              {lista.map((i) => (
-                <tr key={i.insumoId}>
-                  <td className="font-medium">{i.insumo}</td>
-                  <td>
-                    <Etiqueta color={colorCategoria(i.categoria)}>
-                      {i.categoria.toLocaleLowerCase('es-MX')}
-                    </Etiqueta>
-                  </td>
-                  <td className="numero">
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="w-20">
-                        <BarraCelda valor={i.cantidad} max={maxPorUnidad.get(i.unidad) ?? 1} />
-                      </span>
-                      <span className="w-24">{cantidad(i.cantidad, i.unidad)}</span>
-                    </span>
-                  </td>
-                  <td className="numero">{numero(i.productos)}</td>
-                </tr>
-              ))}
+              {lista.map((i) => {
+                const abierto = abiertos.has(i.insumoId);
+                return (
+                  <Fragment key={i.insumoId}>
+                    <tr>
+                      <td className="font-medium">
+                        <button
+                          type="button"
+                          onClick={() => alternar(i.insumoId)}
+                          aria-expanded={abierto}
+                          aria-controls={`desglose-${i.insumoId}`}
+                          className="flex items-center gap-1.5 text-left hover:underline"
+                        >
+                          <ChevronRight
+                            size={14}
+                            aria-hidden="true"
+                            className={`shrink-0 transition-transform motion-reduce:transition-none ${abierto ? 'rotate-90' : ''}`}
+                          />
+                          {i.insumo}
+                        </button>
+                      </td>
+                      <td>
+                        <Etiqueta color={colorCategoria(i.categoria)}>
+                          {i.categoria.toLocaleLowerCase('es-MX')}
+                        </Etiqueta>
+                      </td>
+                      <td className="numero">
+                        <span className="flex items-center justify-end gap-2">
+                          <span className="w-20">
+                            <BarraCelda valor={i.cantidad} max={maxPorUnidad.get(i.unidad) ?? 1} />
+                          </span>
+                          <span className="w-24">{cantidad(i.cantidad, i.unidad)}</span>
+                        </span>
+                      </td>
+                      {separa && (
+                        <>
+                          <td className="numero">{cantidad(i.cantidad - i.rappi, i.unidad)}</td>
+                          <td className="numero">{i.rappi ? cantidad(i.rappi, i.unidad) : '—'}</td>
+                        </>
+                      )}
+                      <td className="numero">{numero(i.productos)}</td>
+                    </tr>
+                    {abierto && (
+                      <tr id={`desglose-${i.insumoId}`} className="bg-surface-2/60">
+                        <td colSpan={columnas} className="!py-2">
+                          <table className="w-full text-xs">
+                            <caption className="sr-only">Productos que consumen {i.insumo}</caption>
+                            <thead className="text-muted-foreground">
+                              <tr>
+                                <th scope="col" className="py-1 pl-6 text-left font-medium">
+                                  Producto
+                                </th>
+                                <th scope="col" className="py-1 text-right font-medium">
+                                  Total
+                                </th>
+                                {separa && (
+                                  <>
+                                    <th scope="col" className="py-1 text-right font-medium">
+                                      POS
+                                    </th>
+                                    <th scope="col" className="py-1 pr-1 text-right font-medium">
+                                      Rappi
+                                    </th>
+                                  </>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {i.detalle.map((p) => (
+                                <tr key={p.receta} className="border-t border-line/60">
+                                  <td className="py-1 pl-6">{p.receta}</td>
+                                  <td className="py-1 text-right tabular">
+                                    {cantidad(p.cantidad, i.unidad)}
+                                  </td>
+                                  {separa && (
+                                    <>
+                                      <td className="py-1 text-right tabular">
+                                        {cantidad(p.cantidad - p.rappi, i.unidad)}
+                                      </td>
+                                      <td className="py-1 pr-1 text-right tabular">
+                                        {p.rappi ? cantidad(p.rappi, i.unidad) : '—'}
+                                      </td>
+                                    </>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -686,6 +793,54 @@ function Productos({ d }: { d: RespuestaConsumo }) {
         </div>
       )}
       <Cajon producto={abierto} alCerrar={() => setAbierto(null)} />
+    </Tarjeta>
+  );
+}
+
+/**
+ * Lo que se vende sin receta enlazada (o sin código). No suma al consumo, pero queda a la vista: el consumo se calcula
+ * al leer, así que cuando su código tenga receta sus unidades entran solas, también las de periodos pasados.
+ */
+function SinRecetaTodavia({ d }: { d: RespuestaConsumo }) {
+  if (!d.sinReceta.length) return null;
+  const separa = separaRappi(d);
+  return (
+    <Tarjeta
+      titulo="Se venden sin receta todavía"
+      descripcion="Todavía no suman al consumo. En cuanto su receta quede enlazada, sus unidades entran solas, también las de este periodo."
+      cuerpo={false}
+    >
+      <div className="overflow-x-auto">
+        <table className="tabla w-full">
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col" className="numero">
+                Unidades
+              </th>
+              {separa && (
+                <th scope="col" className="numero">
+                  De Rappi
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {d.sinReceta.map((s, k) => (
+              <tr key={`${k}-${s.nombre}`}>
+                <td>
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{s.nombre}</span>
+                    {s.sinCodigo && <Etiqueta color={COBERTURA.sinCodigo.color}>sin código</Etiqueta>}
+                  </span>
+                </td>
+                <td className="numero">{numero(s.unidades)}</td>
+                {separa && <td className="numero">{s.rappi ? numero(s.rappi) : '—'}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Tarjeta>
   );
 }
