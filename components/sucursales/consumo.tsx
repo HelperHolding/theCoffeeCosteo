@@ -49,16 +49,26 @@ const LECHES = [
 const PALETA = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
 const colorLeche = (insumo: string) => PALETA[LECHES.indexOf(insumo)] ?? '#a39e94';
 
-/** Etiqueta de categoría de insumo: el texto identifica, el color solo acompaña. */
+/**
+ * Etiqueta de categoría de insumo: el texto identifica, el color solo acompaña. Las 15 categorías de la base
+ * (categorias_insumo, 2026-10-30) llevan color propio; el gris queda solo para una categoría nueva sin color.
+ */
 const CATEGORIAS: Record<string, string> = {
-  LECHE: TIPOS.leche.color,
-  CAFÉ: TIPOS.cafe.color,
-  HIELO: '#86b6ef',
   AGUA: '#86b6ef',
   BEBIDAS: '#e87ba4',
+  CAFÉ: TIPOS.cafe.color,
+  DESECHABLE: '#2f9e9e',
+  HELADO: '#b48ce0',
+  HIELO: '#5cc4dc',
   INGREDIENTES: '#eda100',
+  INSUMOS: '#008300',
+  LECHE: TIPOS.leche.color,
+  MATERIALES: '#6250d6',
+  MERCH: '#8a9a2a',
+  PANADERIA: '#b9773b',
+  PERECEDEROS: '#e34948',
   POLVOS: '#eb6834',
-  DESECHABLE: '#a39e94',
+  'POR ASIGNAR': '#d58fa0',
 };
 const colorCategoria = (c: string) => CATEGORIAS[c] ?? '#a39e94';
 
@@ -71,6 +81,9 @@ export function cantidad(x: number, unidad: string) {
   if (unidad === 'pza') return `${fmt(x, 2)} pza`;
   return `${fmt(x, 1)} ${unidad}`;
 }
+
+/** Cantidad o «—» si es cero (p. ej. la parte POS de algo que solo se vendió en Rappi). */
+const cantidadOGuion = (x: number, unidad: string) => (x > 5e-4 ? cantidad(x, unidad) : '—');
 
 const MOTIVOS: Record<MotivoExcluido, string> = {
   tamano: 'tamaño sin verificar',
@@ -689,29 +702,106 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
 }
 
 function Categorias({ d }: { d: RespuestaConsumo }) {
+  const separa = separaRappi(d);
+  const suma = (ts: { cantidad: number; unidad: string }[]) =>
+    ts.map((t) => cantidad(t.cantidad, t.unidad)).join(' + ');
   return (
     <Tarjeta
       titulo="Por categoría de insumo"
-      descripcion="Totales por unidad de medida: gramos, mililitros y piezas no se suman entre sí."
+      descripcion="Totales por unidad de medida: gramos, mililitros y piezas no se suman entre sí. Abre una categoría para ver qué insumos dan su suma."
     >
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {d.categorias.map((c) => (
-          <li key={c.categoria} className="rounded-xl border border-line bg-paper px-3 py-2.5">
-            <Etiqueta color={colorCategoria(c.categoria)}>{c.categoria.toLocaleLowerCase('es-MX')}</Etiqueta>
-            <p className="mt-1.5 font-display text-lg font-bold tabular">
-              {c.totales.map((t) => cantidad(t.cantidad, t.unidad)).join(' + ')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {numero(c.insumos)} {c.insumos === 1 ? 'insumo' : 'insumos'}
-              {separaRappi(d) &&
-                c.totales.some((t) => t.rappi > 0) &&
-                ` · Rappi ${c.totales
-                  .filter((t) => t.rappi > 0)
-                  .map((t) => cantidad(t.rappi, t.unidad))
-                  .join(' + ')}`}
-            </p>
-          </li>
-        ))}
+        {d.categorias.map((c) => {
+          const nombre = c.categoria.toLocaleLowerCase('es-MX');
+          const rappi = c.totales.filter((t) => t.rappi > 0);
+          // Mismos insumos que suma la tarjeta (los que entran), por unidad y de mayor a menor.
+          const insumos = d.insumos
+            .filter((i) => i.categoria === c.categoria && i.unidades > 0)
+            .sort((x, y) => x.unidad.localeCompare(y.unidad) || y.cantidad - x.cantidad);
+          return (
+            <li key={c.categoria}>
+              <Detalle
+                titulo={`${nombre.charAt(0).toLocaleUpperCase('es-MX')}${nombre.slice(1)}: ${suma(c.totales)}`}
+                disparador={
+                  <button
+                    type="button"
+                    className="group h-full w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-left transition-colors hover:border-ink/25 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ink"
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <Etiqueta color={colorCategoria(c.categoria)}>{nombre}</Etiqueta>
+                      <ChevronDown
+                        size={14}
+                        aria-hidden="true"
+                        className="text-muted-foreground transition-colors group-hover:text-ink"
+                      />
+                    </span>
+                    <span className="mt-1.5 block font-display text-lg font-bold tabular">
+                      {suma(c.totales)}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {numero(c.insumos)} {c.insumos === 1 ? 'insumo' : 'insumos'}
+                      {separa &&
+                        rappi.length > 0 &&
+                        ` · Rappi ${suma(rappi.map((t) => ({ ...t, cantidad: t.rappi })))}`}
+                    </span>
+                  </button>
+                }
+              >
+                <table className="w-full text-xs">
+                  <caption className="sr-only">Insumos de {nombre} en el periodo</caption>
+                  <thead className="text-muted-foreground">
+                    <tr>
+                      <th scope="col" className="pb-1 text-left font-medium">
+                        Insumo
+                      </th>
+                      <th scope="col" className="pb-1 text-right font-medium">
+                        Cantidad
+                      </th>
+                      {separa && (
+                        <th scope="col" className="pb-1 pl-3 text-right font-medium">
+                          Rappi
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insumos.map((i) => (
+                      <tr key={i.insumoId} className="border-t border-ink/10 align-top">
+                        <td className="py-1.5 pr-2">
+                          <span className="block font-medium text-ink">{i.insumo}</span>
+                          <span className="text-muted-foreground">
+                            {numero(i.unidades)} {i.unidades === 1 ? 'unidad vendida' : 'unidades vendidas'}
+                          </span>
+                        </td>
+                        <td className="py-1.5 text-right tabular text-ink">
+                          {cantidad(i.cantidad, i.unidad)}
+                        </td>
+                        {separa && (
+                          <td className="py-1.5 pl-3 text-right tabular">
+                            {cantidadOGuion(i.rappi, i.unidad)}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    {c.totales.map((t) => (
+                      <tr key={t.unidad} className="border-t border-ink/20 font-semibold text-ink">
+                        <td className="pt-1.5">Total</td>
+                        <td className="pt-1.5 text-right tabular">{cantidad(t.cantidad, t.unidad)}</td>
+                        {separa && (
+                          <td className="pt-1.5 pl-3 text-right tabular">
+                            {cantidadOGuion(t.rappi, t.unidad)}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tfoot>
+                </table>
+              </Detalle>
+            </li>
+          );
+        })}
       </ul>
     </Tarjeta>
   );
@@ -787,8 +877,8 @@ function CuadreInsumo({ i, separa }: { i: InsumoConsumo; separa: boolean }) {
                 <td className={num}>{cantidad(p.cantidad, i.unidad)}</td>
                 {separa && (
                   <>
-                    <td className={num}>{cantidad(p.cantidad - p.rappi, i.unidad)}</td>
-                    <td className={num}>{p.rappi ? cantidad(p.rappi, i.unidad) : '—'}</td>
+                    <td className={num}>{cantidadOGuion(p.cantidad - p.rappi, i.unidad)}</td>
+                    <td className={num}>{cantidadOGuion(p.rappi, i.unidad)}</td>
                   </>
                 )}
               </tr>
@@ -799,8 +889,8 @@ function CuadreInsumo({ i, separa }: { i: InsumoConsumo; separa: boolean }) {
               <td className={num}>{cantidad(i.cantidad, i.unidad)}</td>
               {separa && (
                 <>
-                  <td className={num}>{cantidad(i.cantidad - i.rappi, i.unidad)}</td>
-                  <td className={num}>{i.rappi ? cantidad(i.rappi, i.unidad) : '—'}</td>
+                  <td className={num}>{cantidadOGuion(i.cantidad - i.rappi, i.unidad)}</td>
+                  <td className={num}>{cantidadOGuion(i.rappi, i.unidad)}</td>
                 </>
               )}
             </tr>
@@ -962,8 +1052,8 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
                       </td>
                       {separa && (
                         <>
-                          <td className="numero">{cantidad(i.cantidad - i.rappi, i.unidad)}</td>
-                          <td className="numero">{i.rappi ? cantidad(i.rappi, i.unidad) : '—'}</td>
+                          <td className="numero">{cantidadOGuion(i.cantidad - i.rappi, i.unidad)}</td>
+                          <td className="numero">{cantidadOGuion(i.rappi, i.unidad)}</td>
                         </>
                       )}
                       <td className="numero">{numero(i.productos)}</td>
