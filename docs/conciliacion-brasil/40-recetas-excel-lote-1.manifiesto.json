@@ -1,0 +1,306 @@
+{
+ "lote": "recetas-excel-lote-1",
+ "fuente": {
+  "archivo": "Costeo_TheCoffee.xlsx (costeo del equipo, recibido el 2026-10-30)",
+  "sha256": "163b9832d68d313d0b9de8c7cce66a78558385f02b02b951e46554bed86819f2"
+ },
+ "costosInsumo": [
+  {
+   "insumo": "COOKIE FULLY BAKED TRIPLE CHOCOLATE",
+   "previo": 22.49,
+   "nuevo": 24.5,
+   "origen": "Costeo_TheCoffee.xlsx, hoja Insumos: COOKIE TRIPLE CHOCOLATE, OH LALA, $24.50 por pieza"
+  }
+ ],
+ "recetas": [
+  {
+   "nombre": "Iced Latte + Ham & Cheese Sandwich",
+   "version": 26,
+   "celdas": [
+    {
+     "componente": "PECHUGA DE PAVO",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 40,
+     "nuevo": 30,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "QUESO CREMA PHILADELPHIA",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 10,
+     "nuevo": 30,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "QUESO MOZARELLA",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 20,
+     "nuevo": 40,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "True White + Grilled Ham & Cheese Sandwich",
+   "version": 22,
+   "celdas": [
+    {
+     "componente": "PECHUGA DE PAVO",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 40,
+     "nuevo": 30,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "QUESO CREMA PHILADELPHIA",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 10,
+     "nuevo": 30,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "QUESO MOZARELLA",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 20,
+     "nuevo": 40,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Misto + Tomate Cereja",
+   "version": 20,
+   "celdas": [
+    {
+     "componente": "PECHUGA DE PAVO",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 40,
+     "nuevo": 30,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "QUESO CREMA PHILADELPHIA",
+     "tipo": "insumo",
+     "tamano": "Único",
+     "previo": 10,
+     "nuevo": 20,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Iced Blueberry Matcha",
+   "version": 30,
+   "celdas": [
+    {
+     "componente": "JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA)",
+     "tipo": "insumo",
+     "tamano": "Chica",
+     "previo": 15,
+     "nuevo": 10,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA)",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 15,
+     "nuevo": 10,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Matcha Iced Mint",
+   "version": 29,
+   "celdas": [
+    {
+     "componente": "Mix MATCHA GOURMET ORGÁNICO 1 KG",
+     "tipo": "subreceta",
+     "tamano": "Grande",
+     "previo": 45.021012,
+     "nuevo": 36.046693,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Fresh Soda Pink Lemonade",
+   "version": 30,
+   "celdas": [
+    {
+     "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 232,
+     "nuevo": 220,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "FRESA NATURAL CONGELADA 2 KG",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 41,
+     "nuevo": 40,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Fresh Soda Passion fruit",
+   "version": 27,
+   "celdas": [
+    {
+     "componente": "PULPA DE MARACUYÁ 500 ML",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 82,
+     "nuevo": 70,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    },
+    {
+     "componente": "SCHWEPPES AGUA TÓNICA 296 ML",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 232,
+     "nuevo": 220,
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Salted Caramel",
+   "version": 32,
+   "cambiosInsumo": [
+    {
+     "desde": "JARABE DE CARAMELO 1 LT (3 PZAS)",
+     "hacia": "SALSA DE CARAMELO BOTE 4 LTS",
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Salted Caramel Frap",
+   "version": 34,
+   "lineasNuevas": [
+    {
+     "componente": "JARABE DE CARAMELO 1 LT (3 PZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Chica": 5,
+      "Grande": 5
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  },
+  {
+   "nombre": "Macchiato",
+   "version": 10,
+   "lineasNuevas": [
+    {
+     "componente": "VASO ESPRESSO PAPEL KRAFT 4 OZ (500 PZS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Costeo_TheCoffee.xlsx, hoja Recetario"
+    }
+   ]
+  }
+ ],
+ "costos": [
+  {
+   "producto": "Iced Latte + Ham & Cheese Sandwich",
+   "tamano": "Único",
+   "previo": 52.184,
+   "nuevo": 55.2913
+  },
+  {
+   "producto": "True White + Grilled Ham & Cheese Sandwich",
+   "tamano": "Único",
+   "previo": 51.484,
+   "nuevo": 54.5913
+  },
+  {
+   "producto": "Misto + Tomate Cereja",
+   "tamano": "Único",
+   "previo": 38.449,
+   "nuevo": 36.8227
+  },
+  {
+   "producto": "Iced Blueberry Matcha",
+   "tamano": "Chica",
+   "previo": 16.783,
+   "nuevo": 15.608
+  },
+  {
+   "producto": "Iced Blueberry Matcha",
+   "tamano": "Grande",
+   "previo": 20.871,
+   "nuevo": 19.696
+  },
+  {
+   "producto": "Matcha Iced Mint",
+   "tamano": "Grande",
+   "previo": 20.7973,
+   "nuevo": 19.548
+  },
+  {
+   "producto": "Fresh Soda Pink Lemonade",
+   "tamano": "Grande",
+   "previo": 22.248,
+   "nuevo": 21.5454
+  },
+  {
+   "producto": "Fresh Soda Passion fruit",
+   "tamano": "Grande",
+   "previo": 32.073,
+   "nuevo": 29.1054
+  },
+  {
+   "producto": "Salted Caramel",
+   "tamano": "Chica",
+   "previo": 20.04,
+   "nuevo": 19.7962
+  },
+  {
+   "producto": "Salted Caramel",
+   "tamano": "Grande",
+   "previo": 22.88,
+   "nuevo": 22.6362
+  },
+  {
+   "producto": "Salted Caramel Frap",
+   "tamano": "Chica",
+   "previo": 24.1362,
+   "nuevo": 25.2862
+  },
+  {
+   "producto": "Salted Caramel Frap",
+   "tamano": "Grande",
+   "previo": 26.7962,
+   "nuevo": 27.9462
+  },
+  {
+   "producto": "Macchiato",
+   "tamano": "Único",
+   "previo": 14.74,
+   "nuevo": 15.3
+  },
+  {
+   "producto": "Cookie Triple Chocolate",
+   "tamano": "Único",
+   "previo": 24.6404,
+   "nuevo": 26.6504
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-30: «prepara la base para agregar recetas que no tengamos y productos nuevos con receta […] corrige los costos a como los tenga ese excel que es el más actualizado». Decidió: Pan de Muerto se queda en $15.86; empaques y los casos de Croissant Serrano & Gouda y Kit Café White 1kg se quedan como en la base; cantidades de ingredientes del Excel. «No hagas merge todavía»: solo se prepara; cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

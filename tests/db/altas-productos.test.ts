@@ -133,7 +133,31 @@ describe('manifiesto', () => {
       'altas-zoho-lote-1',
       'altas-combos-lote-1',
       'pan-de-muerto-lote-1',
+      'altas-excel-lote-1',
     ]);
+  });
+
+  it('lote del Excel del equipo (doc 40): Espresso Tonic y 3 cookies con sus insumos, costo del Excel', async () => {
+    const m = await leerLoteAltas('altas-excel-lote-1');
+    expect(m.insumos!.map((i) => `${i.nombre} ${i.proveedor} ${i.categoria} ${i.costoPaquete}/${i.presentacion} ${i.unidad}`)).toEqual([
+      'MACADAMIA COOKIE OH LALA PANADERIA 24.5/1 pza',
+      'COOKIE MATCHA & WHITE CHOCOLATE OH LALA PANADERIA 24.5/1 pza',
+      'SALTED CARAMEL COOKIE OH LALA PANADERIA 24.5/1 pza',
+    ]);
+    expect(m.productos.map((p) => [p.nombre, p.categoria, p.tamanos.join('/'), JSON.stringify(p.costoEsperado)])).toEqual([
+      ['Espresso Tonic', 'Cold', 'Único', '{"Único":19.7405}'],
+      ['Macadamia Cookie', 'Sweets', 'Único', '{"Único":26.6504}'],
+      ['Cookie Matcha & White Chocolate', 'Sweets', 'Único', '{"Único":26.6504}'],
+      ['Salted Caramel Cookie', 'Sweets', 'Único', '{"Único":26.6504}'],
+    ]);
+    // Único con la receta Chica (vaso de 14 oz); sin el agua del espresso y con el hielo en gramos; sin precio de lista.
+    const et = m.productos[0];
+    expect(et.lineas.map((l) => `${l.componente} ${l.cantidades['Único']}`)).toContain('VASO FRÍO PET 14 OZ (1,000 PZS) 1');
+    expect(et.lineas.map((l) => l.componente)).not.toContain('VASO FRÍO PET 20 OZ (1,000 PZS)');
+    expect(et.lineas.map((l) => l.componente)).not.toContain('AGUA');
+    expect(et.lineas.find((l) => l.componente.startsWith('HIELO'))!.componente).toBe('HIELO (g)');
+    expect(m.productos.every((p) => !p.precioLista)).toBe(true);
+    expect(m.aprobacion).toMatch(/cada paso remoto .* y el merge requieren aprobación expresa/);
   });
 
   it('lote de combos (doc 37): 3 combos del menú del POS con nuestras recetas, tamaño Único y costo esperado', async () => {

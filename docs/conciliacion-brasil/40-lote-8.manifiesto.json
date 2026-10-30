@@ -1,0 +1,34 @@
+{
+ "lote": "lote-8",
+ "archivo": "docs/conciliacion-brasil/40-lote-8.csv",
+ "filas": 4,
+ "sha256": "d327669d1b3192e4be5dda1a0b36e54a3bf15fc5a26fb3bcc4605d6ece0e83a6",
+ "correspondencias": [
+  {
+   "codigo": "COOCARAPP",
+   "receta_id": "f143e005-a85a-4d33-b082-bb330d9aa10b"
+  },
+  {
+   "codigo": "COOMACAPP",
+   "receta_id": "69556aa2-c4eb-4c4d-9bf6-f09646059f77"
+  },
+  {
+   "codigo": "COOMATAPP",
+   "receta_id": "c1f0cdda-1a90-4d75-bd38-4364219f3bfc"
+  },
+  {
+   "codigo": "ESPTONAPP",
+   "receta_id": "4af99017-fa21-4a12-8aa1-213a145b8d4b"
+  }
+ ],
+ "requiere": [
+  "lote-7"
+ ],
+ "aprobacion": "Carlo, 2026-10-30: «Prepara lote-8» (códigos POS de los 4 productos creados con altas-excel-lote-1, doc 40). Autoriza preparar el lote con el cargador existente; cada paso remoto (ensayo y carga) requiere aprobación expresa.",
+ "notas": [
+  "Requiere el lote 7 (y por él los lotes 1–6): los 101 enlaces actuales deben seguir intactos antes y después",
+  "Las 4 recetas se crearon el 2026-10-30 con altas-excel-lote-1 (doc 40, ejecución f548de32) con el nombre exacto del POS",
+  "Espresso Tonic va en tamaño Único con la receta Chica: el POS lo vende en un solo tamaño y siempre sin vaso",
+  "Con el enlace de ESPTONAPP, el chat «Módulo Sucursales» agrega la regla de shots del Espresso Tonic (solo código)"
+ ]
+}
