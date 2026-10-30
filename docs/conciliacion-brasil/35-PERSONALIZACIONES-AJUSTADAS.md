@@ -101,27 +101,32 @@ Carlo autorizó aplicar únicamente la migración 26, ensayada con el código de
 
 ## Shots (2026-10-30, regla de Carlo)
 
-Carlo: **cada shot son 18 g de café.** «Single Shot (18ml)» usa 18 g, que es lo que ya dicen las recetas de espresso, y
-«Double shot (36ml)» usa 36 g. Rappi manda las mismas opciones («Café: Single / Double / Extra Double Shot»).
+Regla final de Carlo (2026-10-30): **«Single Shot (18ml)» y «Double shot (36ml)» usan los mismos 18 g de café**, que es
+lo que ya dicen las recetas de espresso; lo que cambia es la preparación. **«Extra Double shot (36ml)» usa 36 g.** Rappi
+manda las mismas opciones («Café: Single / Double / Extra Double Shot»).
 
-Se aplica a las 28 recetas ligadas al POS que llevan 18 g de café en grano directo en todos sus tamaños: lattes, True
-White, Americano, frappés con espresso, Pure Black (Single Shot) y sus combos.
+Antes de la regla final se aplicaron dos versiones que Carlo corrigió el mismo día: primero Double = 18 g, Single = 9 g
+y Extra Double = 36 g; después Single = 18 g, Double = 36 g y Extra Double = 72 g (#69 y #70). Esta reemplaza a las dos.
+
+Se aplica a las 29 recetas ligadas al POS que llevan 18 g de café en grano directo en todos sus tamaños: lattes, True
+White, Americano, frappés con espresso, los dos Pure Black y sus combos.
 
 - `Single Shot (18ml)` → neutra: es la receta.
-- `Double shot (36ml)` → el café queda en 36 g.
-- `Extra Double shot (36ml)` → el café queda en 72 g: son dos Double (Carlo, confirmado con Operaciones el mismo día).
+- `Double shot (36ml)` → neutra: también es la receta.
+- `Extra Double shot (36ml)` → el café queda en 36 g.
 
 Quedan fuera, a propósito:
 
 - **Hot Drip V60:** es café filtrado.
-- **Pure Black (Double Shot):** su receta lleva 18 g y, con esta regla, debería llevar 36 g. Hay que corregir la receta.
+
+Las recetas no cambian: el Pure Black (Double Shot) lleva 18 g, que con esta regla es correcto.
 
 El Cold brew no cambia: lleva 100 ml de concentrado en los dos tamaños (20 g de café), con la proporción del concentrado
 de 200 g por 1 L, y eso ya está en su receta.
 
 **Efecto en Namóra (POS + Rappi, del 23 al 29 de octubre):**
 
-- las unidades que entran a Consumo pasaron de 217 a 517 de 899;
-- el café White pasó de 582 g a 9.94 kg (POS 6.58 kg y Rappi 3.37 kg), con Single, Double y Extra Double.
+- las unidades que entran a Consumo pasaron de 217 (de 869) a 556 (de 937, contando los combos por sus productos, #72);
+- el café White: 6.14 kg (POS 3.88 kg y Rappi 2.27 kg) con la regla final.
 
 El shot era lo que más dejaba fuera.
