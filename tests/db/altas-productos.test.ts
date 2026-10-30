@@ -134,7 +134,21 @@ describe('manifiesto', () => {
       'altas-combos-lote-1',
       'pan-de-muerto-lote-1',
       'altas-excel-lote-1',
+      'altas-zoe-lote-1',
     ]);
+  });
+
+  it('Zoe Water Twist (doc 41): nombre del POS, media botella de cada sabor y el costo de una botella', async () => {
+    const m = await leerLoteAltas('altas-zoe-lote-1');
+    expect(m.insumos ?? []).toEqual([]);
+    expect(m.productos.map((p) => [p.nombre, p.categoria, p.tamanos.join('/'), p.costoEsperado['Único']])).toEqual([
+      ['Zoe Water Twist', 'BEBIDA CERRADA', 'Único', 22],
+    ]);
+    expect(m.productos[0].lineas.map((l) => `${l.componente} ${l.cantidades['Único']}`)).toEqual([
+      'ZOE WATER TWIST LIMÓN Y JENGIBRE 0.5',
+      'ZOE WATER TWIST FRUTOS ROJOS 0.5',
+    ]);
+    expect(m.aprobacion).toMatch(/cada paso remoto .* y el merge requieren aprobación expresa/);
   });
 
   it('lote del Excel del equipo (doc 40): Espresso Tonic y 3 cookies con sus insumos, costo del Excel', async () => {
