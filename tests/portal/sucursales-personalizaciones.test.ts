@@ -244,6 +244,41 @@ describe('ajustes calculados (etapa 1b)', () => {
     );
   });
 
+  it('Espresso Tonic (Único, 2026-10-30): Single, Double y Traditional Tonic son la receta; Extra Double, 36 g', () => {
+    const ESPRESSO_TONIC = '4af99017-fa21-4a12-8aa1-213a145b8d4b';
+    const d: DatosCosteo = {
+      ...conLineas(),
+      enlaces: new Map([['ESPTONAPP', { recetaId: ESPRESSO_TONIC, receta: 'Espresso Tonic' }]]),
+      costos: new Map([[claveCosto(ESPRESSO_TONIC, 'Único'), { costoCent: 1974, usaInactivo: false }]]),
+      unicas: new Set([ESPRESSO_TONIC]),
+      lineas: new Map([
+        [
+          claveCosto(ESPRESSO_TONIC, 'Único'),
+          [l('CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 18, 0.4), l('SCHWEPPES AGUA TÓNICA 296 ML', 170, 0.07)],
+        ],
+      ]),
+    };
+    // El POS lo vende sin vaso: es Único.
+    const tonic = (...extras: string[]) =>
+      linea(
+        'ESPTONAPP',
+        'Espresso Tonic',
+        9400,
+        extras.map((n) => c(n)),
+      );
+    const r = costeo(
+      d,
+      tonic('Double shot (36ml)', 'Traditional Tonic'),
+      tonic('Single Shot (18ml)', 'Traditional Tonic'),
+      tonic('Extra Double shot (36ml)', 'Traditional Tonic'),
+      tonic('Double shot (36ml)', 'With Sparkling Water (Fresh Soda)'),
+    );
+    expect(r.completo.lineas).toBe(3);
+    expect(r.completo.costoCent).toBe(1974 + 1974 + (1974 + Math.round(18 * 0.4 * 100)));
+    // Agua mineral en lugar de tónica: aún no se calcula.
+    expect(r.parcial.motivos.personalizacion).toBe(1);
+  });
+
   it('el sustituto inactivo vuelve la línea parcial por costo', () => {
     const d = conLineas({
       sustitutos: new Map([['LECHE DESLACTOSADAS', { costoUnitario: 0.03, activo: false }]]),
