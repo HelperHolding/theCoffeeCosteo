@@ -145,13 +145,14 @@ describe('líneas de un producto de Rappi', () => {
     const [l] = lineasDe(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
     expect(l.codigo).toBe('RAPPI-COMBO:crea tu the coffee');
     expect(l.importeCent + l.customs.reduce((s, c) => s + c.importeCent, 0)).toBe(16400);
+    // Las partes conservan el precio de cada opción solo para saber si tuvo costo extra; la venta sale de la línea.
     expect(l.partes).toEqual([
       {
         codigo: '5IL',
         nombre: 'Iced Latte',
         customs: [
-          { codigo: 'RAPPI', nombre: 'Large - 600ml', importeCent: 0, descuentoPct: 0 },
-          { codigo: 'RAPPI', nombre: 'Oatmilk', importeCent: 0, descuentoPct: 0 },
+          { codigo: 'RAPPI', nombre: 'Large - 600ml', importeCent: 1500, descuentoPct: 0 },
+          { codigo: 'RAPPI', nombre: 'Oatmilk', importeCent: 1700, descuentoPct: 0 },
         ],
       },
       { codigo: 'MQ1', nombre: 'Sándwich Jamón y Queso', customs: [] },
@@ -316,6 +317,69 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     const r = consumir(avena, consumo);
     expect(r.cobertura).toMatchObject({ lineas: 2, incluidas: 1, excluidas: { personalizacion: 1 } });
     expect(r.insumos.find((i) => i.insumo === 'PAN')).toMatchObject({ cantidad: 1, rappi: 1 });
+    // Cuadre de la leche: 2 unidades la llevan; entra el sándwich y la bebida queda fuera con su razón.
+    const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
+    expect(leche).toMatchObject({ cantidad: 10, unidades: 1 });
+    expect(leche.fuera).toEqual([
+      {
+        receta: 'Iced Latte',
+        combo: 'Crea tu The Coffee',
+        unidades: 1,
+        rappi: 1,
+        motivo: 'personalizacion',
+        razon: 'lleva «Oatmilk», que aún no se calcula',
+      },
+    ]);
+    expect(r.productos.find((p) => p.recetaId === IL)!.razones).toEqual([
+      { motivo: 'personalizacion', razon: 'lleva «Oatmilk», que aún no se calcula', unidades: 1 },
+    ]);
+  });
+
+  it('piloto: lo que aún no se calcula no saca la unidad; si tuvo costo extra queda anotado en el detalle', () => {
+    const avena = de(creaTu('Iced Latte', 'Sándwich Jamón y Queso', [['Leche', 'Avena', 17]]));
+    const r = consumir(avena, consumo, avena, undefined, [], true);
+    expect(r.cobertura).toMatchObject({
+      lineas: 2,
+      incluidas: 2,
+      sinContar: 1,
+      excluidas: { personalizacion: 0 },
+    });
+    // Se cuenta su receta (leche entera); la avena, con costo extra, queda anotada sin contar.
+    const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
+    expect(leche).toMatchObject({ cantidad: 250, rappi: 250, unidades: 2, fuera: [] });
+    expect(leche.detalle).toEqual([
+      {
+        receta: 'Iced Latte',
+        combo: 'Crea tu The Coffee',
+        unidades: 1,
+        cantidad: 240,
+        rappi: 240,
+        sinContar: [{ nombre: 'Oatmilk', unidades: 1 }],
+      },
+      {
+        receta: 'Sándwich jamón y queso',
+        combo: 'Crea tu The Coffee',
+        unidades: 1,
+        cantidad: 10,
+        rappi: 10,
+        sinContar: [],
+      },
+    ]);
+  });
+
+  it('un insumo que solo llevan unidades fuera aparece en cero con su cuadre, pero no suma a su categoría', () => {
+    const r = consumir(de(producto('Iced Latte', 89, [['Leche', 'Avena', 17]])), consumo);
+    expect(r.insumos).toEqual([
+      expect.objectContaining({
+        insumo: 'LECHE ENTERA',
+        cantidad: 0,
+        unidades: 0,
+        productos: 0,
+        detalle: [],
+      }),
+    ]);
+    expect(r.insumos[0].fuera).toHaveLength(1);
+    expect(r.categorias).toEqual([]);
   });
 
   it('cada insumo dice cuánto es de Rappi y qué productos lo consumen; lo que no tiene receta queda listado', () => {
@@ -337,10 +401,26 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
     expect(leche).toMatchObject({ cantidad: 260, rappi: 250 });
     expect(leche.detalle).toEqual([
-      { receta: 'Iced Latte', combo: 'Crea tu The Coffee', cantidad: 240, rappi: 240 },
-      { receta: 'Sándwich jamón y queso', cantidad: 10, rappi: 0 },
-      { receta: 'Sándwich jamón y queso', combo: 'Crea tu The Coffee', cantidad: 10, rappi: 10 },
+      {
+        receta: 'Iced Latte',
+        combo: 'Crea tu The Coffee',
+        unidades: 1,
+        cantidad: 240,
+        rappi: 240,
+        sinContar: [],
+      },
+      { receta: 'Sándwich jamón y queso', unidades: 1, cantidad: 10, rappi: 0, sinContar: [] },
+      {
+        receta: 'Sándwich jamón y queso',
+        combo: 'Crea tu The Coffee',
+        unidades: 1,
+        cantidad: 10,
+        rappi: 10,
+        sinContar: [],
+      },
     ]);
+    // Cuadra: 3 unidades vendidas llevan leche y las 3 entran.
+    expect(leche).toMatchObject({ unidades: 3, fuera: [] });
     // El mismo sándwich, suelto en el POS y dentro del combo de Rappi: dos filas, cada una con su venta.
     expect(r.productos.filter((p) => p.recetaId === MQ).map((p) => [p.combo ?? 'suelto', p.lineas])).toEqual([
       ['suelto', 1],
@@ -381,13 +461,38 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     // Sin activar: el combo del POS va con su propio código (aquí sin receta enlazada).
     expect(consumir([combo], consumo).cobertura).toMatchObject({ lineas: 1, sinEnlace: 1 });
     const r = consumir([combo], consumo, [combo], undefined, [], true);
-    // La bebida Grande entra; el sándwich con mayonesa de chipotle aún no se calcula.
-    expect(r.cobertura).toMatchObject({ lineas: 2, incluidas: 1, excluidas: { personalizacion: 1 } });
+    // La bebida Grande entra y el sándwich también: la mayonesa de chipotle aún no se calcula, pero ya no lo saca
+    // (Carlo, 2026-10-30). Sin costo extra, no queda anotada.
+    expect(r.cobertura).toMatchObject({
+      lineas: 2,
+      incluidas: 2,
+      sinContar: 0,
+      excluidas: { personalizacion: 0 },
+    });
     expect(r.productos.map((p) => [p.receta, p.combo, p.lineas])).toEqual([
       ['Iced Latte', 'Iced Latte + Ham & Cheese Sandwich', 1],
-      ['Sándwich jamón y queso', 'Iced Latte + Ham & Cheese Sandwich', 0],
+      ['Sándwich jamón y queso', 'Iced Latte + Ham & Cheese Sandwich', 1],
     ]);
-    expect(r.insumos.find((i) => i.insumo === 'LECHE ENTERA')).toMatchObject({ cantidad: 240, rappi: 0 });
+    expect(r.insumos.find((i) => i.insumo === 'LECHE ENTERA')).toMatchObject({
+      cantidad: 250,
+      rappi: 0,
+      unidades: 2,
+    });
+    expect(r.insumos.find((i) => i.insumo === 'PAN')!.detalle[0].sinContar).toEqual([]);
+    // Con costo extra, la mayonesa queda anotada en el sándwich (no en la bebida).
+    const conCosto = {
+      ...combo,
+      lineas: [
+        {
+          ...combo.lineas[0],
+          customs: [combo.lineas[0].customs[0], { ...combo.lineas[0].customs[1], importeCent: 1000 }],
+        },
+      ],
+    };
+    const pan = consumir([conCosto], consumo, [conCosto], undefined, [], true).insumos.find(
+      (i) => i.insumo === 'PAN',
+    )!;
+    expect(pan.detalle[0].sinContar).toEqual([{ nombre: 'Chipotle Mayo', unidades: 1 }]);
   });
 });
 
