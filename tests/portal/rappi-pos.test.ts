@@ -308,6 +308,42 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     expect(costear(avena, costeo).resumen.parcial.motivos.personalizacion).toBe(1);
     expect(consumir(avena, consumo).cobertura.excluidas.personalizacion).toBe(1);
   });
+
+  it('cada insumo dice cuánto es de Rappi y qué productos lo consumen; lo que no tiene receta queda listado', () => {
+    // Un sándwich del POS (mostrador) y un combo de Rappi; un producto del POS y otro de Rappi sin receta.
+    const pos: PedidoNormal = {
+      ...de(producto('Sándwich Jamón y Queso', 70))[0],
+      origen: 'mostrador',
+      numeroPedidoRappi: null,
+    };
+    pos.lineas.push({
+      codigo: 'ESPTONAPP',
+      nombre: 'Espresso Tonic',
+      importeCent: 9400,
+      descuentoPct: 0,
+      customs: [],
+    });
+    const ps = [pos, ...de(creaTu('Iced Latte', 'Sándwich Jamón y Queso'), producto('Spooky Biscuits', 70))];
+    const r = consumir(ps, consumo);
+    const leche = r.insumos.find((i) => i.insumo === 'LECHE ENTERA')!;
+    expect(leche).toMatchObject({ cantidad: 260, rappi: 250 });
+    expect(leche.detalle).toEqual([
+      { receta: 'Crea tu The Coffee', cantidad: 250, rappi: 250 },
+      { receta: 'Sándwich jamón y queso', cantidad: 10, rappi: 0 },
+    ]);
+    expect(r.insumos.find((i) => i.insumo === 'PAN')).toMatchObject({ cantidad: 2, rappi: 1 });
+    expect(r.categorias.find((c) => c.categoria === 'LECHE')!.totales).toEqual([
+      { unidad: 'ml', cantidad: 260, rappi: 250 },
+    ]);
+    expect(r.sinReceta).toEqual([
+      { nombre: 'Espresso Tonic', unidades: 1, rappi: 0, sinCodigo: false },
+      { nombre: 'Spooky Biscuits', unidades: 1, rappi: 1, sinCodigo: false },
+    ]);
+    // Un combo de Rappi al que le falta una parte se lista por esa parte.
+    expect(consumir(de(creaTu('Iced Latte', 'Sándwich Misterioso')), consumo).sinReceta).toEqual([
+      { nombre: 'Sándwich Misterioso', unidades: 1, rappi: 1, sinCodigo: false },
+    ]);
+  });
 });
 
 describe('Pumpkin Latte de Rappi (grande, con creamer)', () => {

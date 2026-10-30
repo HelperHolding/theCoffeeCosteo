@@ -94,10 +94,31 @@ export interface CoberturaConsumo {
   sobreTotal: number | null;
   sobreIdentificable: number | null;
 }
+/** Un insumo del periodo: total, cuánto viene de Rappi (el resto es del POS) y qué productos lo consumen. */
+export interface InsumoConsumo extends CantidadInsumo {
+  productos: number;
+  rappi: number;
+  detalle: { receta: string; cantidad: number; rappi: number }[];
+}
+/**
+ * Producto vendido que aún no suma al consumo porque no tiene receta enlazada (o, sin código, no se identifica). En
+ * cuanto su código tenga receta, sus unidades entran solas: no se guarda nada aparte.
+ */
+export interface SinReceta {
+  nombre: string;
+  unidades: number;
+  rappi: number;
+  sinCodigo: boolean;
+}
 export interface ResultadoConsumo {
   cobertura: CoberturaConsumo;
-  insumos: (CantidadInsumo & { productos: number })[];
-  categorias: { categoria: string; insumos: number; totales: { unidad: string; cantidad: number }[] }[];
+  insumos: InsumoConsumo[];
+  sinReceta: SinReceta[];
+  categorias: {
+    categoria: string;
+    insumos: number;
+    totales: { unidad: string; cantidad: number; rappi: number }[];
+  }[];
   productos: ConsumoProducto[];
   tamanos: { tamano: string; lineas: number }[];
   diario: { fecha: string; lineas: number; incluidas: number; cantidades: Record<string, number> }[];
@@ -151,7 +172,21 @@ export function consumir(
     ajustadas: 0,
   };
   const excluidas = motivosVacios();
-  const insumos = new Map<string, CantidadInsumo & { productos: Set<string> }>();
+  const insumos = new Map<
+    string,
+    CantidadInsumo & {
+      rappi: number;
+      productos: Set<string>;
+      detalle: Map<string, { receta: string; cantidad: number; rappi: number }>;
+    }
+  >();
+  const sinReceta = new Map<string, SinReceta>();
+  const anotarSinReceta = (clave: string, nombre: string, deRappi: boolean, sinCodigo: boolean) => {
+    const s = sinReceta.get(clave) ?? { nombre, unidades: 0, rappi: 0, sinCodigo };
+    s.unidades++;
+    if (deRappi) s.rappi++;
+    sinReceta.set(clave, s);
+  };
   const productos = new Map<
     string,
     Omit<ConsumoProducto, 'tamanos' | 'insumos'> & {
@@ -169,12 +204,14 @@ export function consumir(
       dia = { fecha: p.fecha, lineas: 0, incluidas: 0, cantidades: {} };
       diario.set(p.fecha, dia);
     }
+    const deRappi = p.origen === 'rappi';
     for (const l of p.lineas) {
       cob.lineas++;
       dia.lineas++;
       const id = identidad(l);
       if (id.sinCodigo) {
         cob.sinCodigo++;
+        anotarSinReceta(id.clave, l.nombre, deRappi, true);
         continue;
       }
       if (id.codigo === CODIGO_GENERICO) {
@@ -186,6 +223,14 @@ export function consumir(
       const enlace = partes ? undefined : datos.enlaces.get(id.codigo);
       if (partes ? partes.some((x) => !x.enlace) : !enlace) {
         cob.sinEnlace++;
+        // Un combo cuenta por la parte que falta (p. ej. el pan de un combo con bebida).
+        const falta = partes?.find((x) => !x.enlace)?.pt;
+        anotarSinReceta(
+          falta ? `parte:${falta.codigo}` : id.clave,
+          falta?.nombre || l.nombre,
+          deRappi,
+          false,
+        );
         continue;
       }
       cob.conReceta++;
@@ -220,9 +265,20 @@ export function consumir(
         tamanos.set(tamano, (tamanos.get(tamano) ?? 0) + 1);
       }
       for (const r of ok.flatMap((o) => o.receta)) {
-        const t = insumos.get(r.insumoId) ?? { ...r, cantidad: 0, productos: new Set<string>() };
+        const t = insumos.get(r.insumoId) ?? {
+          ...r,
+          cantidad: 0,
+          rappi: 0,
+          productos: new Set<string>(),
+          detalle: new Map(),
+        };
         t.cantidad += r.cantidad;
+        if (deRappi) t.rappi += r.cantidad;
         t.productos.add(id.clave);
+        const d = t.detalle.get(id.clave) ?? { receta: x.receta, cantidad: 0, rappi: 0 };
+        d.cantidad += r.cantidad;
+        if (deRappi) d.rappi += r.cantidad;
+        t.detalle.set(id.clave, d);
         insumos.set(r.insumoId, t);
         const pi = x.insumos.get(r.insumoId) ?? { ...r, cantidad: 0 };
         pi.cantidad += r.cantidad;
@@ -232,14 +288,28 @@ export function consumir(
     }
   }
   const identificables = cob.lineas - cob.generico;
-  const listaInsumos = [...insumos.values()]
-    .map(({ productos: ps, ...r }) => ({ ...r, cantidad: redondear(r.cantidad), productos: ps.size }))
+  const listaInsumos: InsumoConsumo[] = [...insumos.values()]
+    .map(({ productos: ps, detalle, ...r }) => ({
+      ...r,
+      cantidad: redondear(r.cantidad),
+      rappi: redondear(r.rappi),
+      productos: ps.size,
+      detalle: [...detalle.values()]
+        .map((d) => ({ ...d, cantidad: redondear(d.cantidad), rappi: redondear(d.rappi) }))
+        .sort((a, b) => b.cantidad - a.cantidad || a.receta.localeCompare(b.receta, 'es-MX')),
+    }))
     .sort((a, b) => a.categoria.localeCompare(b.categoria, 'es-MX') || b.cantidad - a.cantidad);
-  const categorias = new Map<string, { insumos: number; totales: Map<string, number> }>();
+  const categorias = new Map<
+    string,
+    { insumos: number; totales: Map<string, { cantidad: number; rappi: number }> }
+  >();
   for (const i of listaInsumos) {
     const c = categorias.get(i.categoria) ?? { insumos: 0, totales: new Map() };
     c.insumos++;
-    c.totales.set(i.unidad, (c.totales.get(i.unidad) ?? 0) + i.cantidad);
+    const t = c.totales.get(i.unidad) ?? { cantidad: 0, rappi: 0 };
+    t.cantidad += i.cantidad;
+    t.rappi += i.rappi;
+    c.totales.set(i.unidad, t);
     categorias.set(i.categoria, c);
   }
   return {
@@ -251,11 +321,18 @@ export function consumir(
       sobreIdentificable: identificables > 0 ? cob.incluidas / identificables : null,
     },
     insumos: listaInsumos,
+    sinReceta: [...sinReceta.values()].sort(
+      (a, b) => b.unidades - a.unidades || a.nombre.localeCompare(b.nombre, 'es-MX'),
+    ),
     categorias: [...categorias]
       .map(([categoria, c]) => ({
         categoria,
         insumos: c.insumos,
-        totales: [...c.totales].map(([unidad, cantidad]) => ({ unidad, cantidad: redondear(cantidad) })),
+        totales: [...c.totales].map(([unidad, t]) => ({
+          unidad,
+          cantidad: redondear(t.cantidad),
+          rappi: redondear(t.rappi),
+        })),
       }))
       .sort((a, b) => a.categoria.localeCompare(b.categoria, 'es-MX')),
     productos: [...productos.values()]
