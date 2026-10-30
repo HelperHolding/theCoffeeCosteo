@@ -83,6 +83,11 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/40-lote-8.manifiesto.json',
     sha256: 'c276f40f0965ace58c8f7beed82c4181b32c608f04ff78863b927a7270d881a8',
   },
+  // 2026-10-30 (doc 41): Zoé. ZOEWATAPP a Zoé Water Natural y ZOETWIAPP a Zoe Water Twist (altas-zoe-lote-1).
+  'lote-9': {
+    manifiesto: 'docs/conciliacion-brasil/41-lote-9.manifiesto.json',
+    sha256: '5d44fa3b2449d5d6857f077b3577a25bb6a38cb025d1b16e0850f817134845ba',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -94,6 +99,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-6': '38',
   'lote-7': '39',
   'lote-8': '40',
+  'lote-9': '41',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>

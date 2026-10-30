@@ -1,0 +1,39 @@
+{
+ "lote": "altas-zoe-lote-1",
+ "fuente": {
+  "archivo": "API The Coffee y Zoho Analytics «Looker Sucursales» (sep–oct 2026): ZOETWIAPP = «Zoe Water Twist», 637 unidades; «Recetario The Coffee Marzo 2026» de Zoho suma las dos botellas",
+  "sha256": "b7e8d9edf4e27e5b676eed9fd8053644aa332e8e560f4a5e6ecf897beabdac6f"
+ },
+ "productos": [
+  {
+   "nombre": "Zoe Water Twist",
+   "categoria": "BEBIDA CERRADA",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "ZOE WATER TWIST LIMÓN Y JENGIBRE",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 0.5
+     },
+     "origen": "Carlo, 2026-10-30: «si es twist entran los 2 sabores» — ZOETWIAPP («Zoe Water Twist» en el POS) vende los dos sabores; media botella de cada uno reparte el consumo y deja el costo de una botella"
+    },
+    {
+     "componente": "ZOE WATER TWIST FRUTOS ROJOS",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 0.5
+     },
+     "origen": "Carlo, 2026-10-30: «si es twist entran los 2 sabores» — ZOETWIAPP («Zoe Water Twist» en el POS) vende los dos sabores; media botella de cada uno reparte el consumo y deja el costo de una botella"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 22
+   },
+   "nota": "Nombre exacto del POS (ZOETWIAPP). Los dos sabores cuestan $22 (264/12): el costo es el de una botella. Zoho suma las dos botellas ($44), como el Mug y el Félix antes del doc 34. Su enlace va en el lote-9, junto con ZOEWATAPP → Zoé Water Natural"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-10-30: «Si es twist entran los 2 sabores, y si ligalos porfa con el código». Autoriza preparar el alta y el enlace con los cargadores existentes; cada paso remoto (ensayo y carga) y el merge requieren aprobación expresa."
+}

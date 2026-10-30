@@ -85,6 +85,12 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
     manifiesto: 'docs/conciliacion-brasil/40-altas-excel-lote-1.manifiesto.json',
     sha256: '541fdd48eb8b949786720ec7019cfd54814f169b3d01976d4d9bf47556ebe463',
   },
+  // Carlo, 2026-10-30 (doc 41): «Zoe Water Twist» del POS (ZOETWIAPP) con media botella de cada sabor Twist. Cada paso
+  // remoto exige aprobación aparte.
+  'altas-zoe-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/41-altas-zoe-lote-1.manifiesto.json',
+    sha256: '9725327ed06abb6af379c6e81bb266da6805a8deacdccac7f0fe962bb2ad487b',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes (por omisión, el 31). */
@@ -93,6 +99,7 @@ export const DOC_ALTAS: Record<string, string> = {
   'altas-combos-lote-1': '37',
   'pan-de-muerto-lote-1': '39',
   'altas-excel-lote-1': '40',
+  'altas-zoe-lote-1': '41',
 };
 export const docAltas = (lote: string) => DOC_ALTAS[lote] ?? '31';
 
