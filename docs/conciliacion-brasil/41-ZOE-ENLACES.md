@@ -1,7 +1,7 @@
 # 41 · Zoé: alta de «Zoe Water Twist» y enlaces de sus códigos POS
 
-**Estado:** el alta está preparada el 2026-10-30, con manifiesto, prueba y ensayo local. **Sin ensayo remoto, sin aplicar y
-sin merge.** El lote-9 de enlaces se prepara cuando el alta esté aplicada, porque necesita el id de la receta nueva. Cada
+**Estado:** el alta está preparada el 2026-10-30, con manifiesto, prueba, ensayo local y **ensayo remoto limpio**. **Sin
+aplicar y sin merge.** El lote-9 de enlaces se prepara cuando el alta esté aplicada, porque necesita el id de la receta nueva. Cada
 paso remoto y el merge requieren aprobación expresa de Carlo.
 
 ## Revisión en Zoho (2026-10-30, solo lectura)
@@ -54,6 +54,12 @@ fuente: el `sha256` de la fuente es la huella de la cadena de evidencia (código
 
 Los informes se guardaron en el respaldo privado, `informes-altas-zoe-lote-1`.
 
+**Ensayo remoto con ROLLBACK** (2026-10-30, aprobado por Carlo). Antes, producción tenía 181 recetas, 105 enlaces y
+bitácora hasta #1590, y no existía «Zoe Water Twist».
+
+- Resultado: 1 producto creado con costo $22; 6 registros propios y 0 ajenos; resto sin cambios.
+- Con una conexión nueva, producción sigue idéntica, con la misma huella de costos.
+
 ## Lote-9 de enlaces (se prepara después del alta)
 
 | Código POS | Receta |
@@ -70,7 +76,7 @@ cueste $22 y no $44. No se carga nada en Zoho: va al documento de cambios para i
 
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Ensayo remoto del alta con ROLLBACK:
+1. ~~Ensayo remoto del alta con ROLLBACK~~ (hecho, limpio):
    `npx tsx scripts/conciliacion/altas-productos-aplicar.ts --lote altas-zoe-lote-1 --usuario <uuid-perfil>`
 2. Aplicar el alta (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
 3. Preparar el lote-9 con el id de la receta nueva, ensayarlo en local y en remoto, y cargarlo.
