@@ -118,7 +118,6 @@ describe('integridad de la lista', () => {
       'Oatmilk',
       'Almond Milk',
       'Coconut Milk',
-      'Double shot (36ml)',
       'Extra Double shot (36ml)',
       'Less Honey',
       'Average Honey',
@@ -227,7 +226,7 @@ describe('ajustes calculados (etapa 1b)', () => {
     ).toBe(1);
   });
 
-  it('shots (Carlo y Operaciones, 2026-10-30): Single 18 g (la receta), Double 36 g y Extra Double 72 g', () => {
+  it('shots (Carlo, regla final 2026-10-30): Single y Double usan los 18 g de la receta; Extra Double, 36 g', () => {
     const shot = Math.round(18 * 0.4 * 100); // 18 g de café White en centavos
     const r = costeo(
       conLineas(),
@@ -239,13 +238,9 @@ describe('ajustes calculados (etapa 1b)', () => {
     );
     expect(r.completo.lineas).toBe(5);
     expect(r.parcial.lineas).toBe(0);
-    // Extra Double = dos Double = 72 g: tres shots más que la receta.
+    // Single y Double = la receta; Extra Double = 36 g: un shot más.
     expect(r.completo.costoCent).toBe(
-      1544 +
-        (1544 + shot) +
-        (1544 + shot + Math.round(170 * 0.008 * 100)) +
-        (1100 + shot) +
-        (1544 + 3 * shot),
+      1544 + 1544 + (1544 + Math.round(170 * 0.008 * 100)) + 1100 + (1544 + shot),
     );
   });
 
@@ -268,7 +263,7 @@ describe('ajustes calculados (etapa 1b)', () => {
     expect(
       PERSONALIZACIONES_AJUSTADAS['00f47aba-88e6-4ebc-a815-5833f8b29871']?.['Lactose free'],
     ).toBeUndefined();
-    for (const n of ['Single Shot (18ml)', 'Average Honey', 'Oatmilk', 'Chipotle Mayo'])
+    for (const n of ['Single Shot (18ml)', 'Double shot (36ml)', 'Average Honey', 'Oatmilk', 'Chipotle Mayo'])
       expect(
         Object.values(PERSONALIZACIONES_AJUSTADAS).some((a) => n in a),
         n,
