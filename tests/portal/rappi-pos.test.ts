@@ -440,6 +440,10 @@ describe('Costeo y Consumo de un combo armado con sus partes', () => {
     ]);
     // Cuadra: 3 unidades vendidas llevan leche y las 3 entran.
     expect(leche).toMatchObject({ unidades: 3, fuera: [] });
+    // Por día: cuántos productos llevan cada insumo, aparte de la cobertura de todo lo vendido.
+    expect(r.diario).toEqual([
+      expect.objectContaining({ fecha: '2026-10-27', lineas: 5, incluidas: 3, unidades: { le: 3, pan: 2 } }),
+    ]);
     // El mismo sándwich, suelto en el POS y dentro del combo de Rappi: dos filas, cada una con su venta.
     expect(r.productos.filter((p) => p.recetaId === MQ).map((p) => [p.combo ?? 'suelto', p.lineas])).toEqual([
       ['suelto', 1],
