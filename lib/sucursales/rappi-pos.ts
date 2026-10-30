@@ -273,7 +273,9 @@ export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea
       return {
         codigo: codigoParte,
         nombre: nombreParte,
-        customs: customs(x.opciones, codigoParte, parte.personaliza).map((c) => ({ ...c, importeCent: 0 })),
+        // Conserva el precio de la opción solo para saber si tuvo costo extra (Consumo lo anota): la venta del combo
+        // se suma por las personalizaciones de la línea, nunca por las de sus partes.
+        customs: customs(x.opciones, codigoParte, parte.personaliza),
       };
     });
   } else {

@@ -607,9 +607,15 @@ describe('Productos y Pedidos', () => {
     // 4 pedidos × (4MIL con Oatmilk → fuera por personalización + BRO13 Único → entra).
     expect(d.cobertura).toMatchObject({ lineas: 8, incluidas: 4, conReceta: 8, generico: 0 });
     expect(d.cobertura.excluidas).toEqual({ tamano: 0, personalizacion: 4, receta: 0 });
+    // La leche del 4MIL queda en cero, con su cuadre: 4 unidades la llevan y las 4 quedan fuera.
     expect(d.insumos.map((i: { insumo: string; cantidad: number }) => [i.insumo, i.cantidad])).toEqual([
       ['PAPEL', 2],
+      ['LECHE ENTERA', 0],
       ['BROWNIE', 4],
+    ]);
+    const leche = d.insumos.find((i: { insumo: string }) => i.insumo === 'LECHE ENTERA');
+    expect(leche.fuera.map((x: { unidades: number; razon: string }) => [x.unidades, x.razon])).toEqual([
+      [4, 'lleva «Oatmilk», que aún no se calcula'],
     ]);
     expect(d.diario.map((x: { fecha: string; incluidas: number }) => [x.fecha, x.incluidas])).toEqual([
       ['2026-10-21', 1],

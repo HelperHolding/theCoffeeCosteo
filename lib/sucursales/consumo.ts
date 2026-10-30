@@ -2,6 +2,7 @@ import { CODIGO_GENERICO, ES_TAMANO, identificador, type CatalogoNombres } from 
 import type { LineaNormal, PedidoNormal } from './normalizar';
 import { cambiosPersonalizaciones, tamanoVerificado } from './costeo';
 import { partesCombo } from './combos';
+import { ajusteVerificado, personalizacionNeutra } from './personalizaciones-verificadas';
 
 /**
  * Consumo TEÓRICO según receta de las ventas de Sucursales (docs/sucursales/13). Puro: no lee la base.
@@ -12,6 +13,7 @@ import { partesCombo } from './combos';
  *   verificadas.ts). El ajuste mueve las MISMAS cantidades que Costeo sobre las líneas directas de la receta
  *   (cambiosPersonalizaciones), p. ej. «Lactose free» descuenta deslactosada en lugar de entera. Además, la receta
  *   debe tener cantidades para ese tamaño. Diferencia con Costeo: un insumo inactivo no saca la línea (no hay costo).
+ *   Piloto de Namóra: una personalización que aún no se calcula no saca la línea (ver recetaDe).
  * - Misma identidad de líneas que Productos y Costeo (`identificador` con la evidencia de todo el periodo).
  */
 export interface InsumoReceta {
@@ -75,6 +77,8 @@ export interface ConsumoProducto {
   /** Unidades que entran al consumo y las que no (por motivo). */
   lineas: number;
   excluidas: Record<MotivoExcluido, number>;
+  /** Por qué quedaron fuera esas unidades (mismo texto que el cuadre de cada insumo). */
+  razones: { motivo: MotivoExcluido; razon: string; unidades: number }[];
   tamanos: { tamano: string; lineas: number }[];
   insumos: CantidadInsumo[];
 }
@@ -93,16 +97,42 @@ export interface CoberturaConsumo {
   incluidas: number;
   /** De las incluidas, cuántas con una personalización que cambió la receta (ajuste verificado). */
   ajustadas: number;
+  /** De las incluidas, cuántas con una opción con costo extra que aún no se calcula (piloto; p. ej. mayonesa, avena). */
+  sinContar: number;
   /** incluidas ÷ A e incluidas ÷ B (null si el denominador es 0). */
   sobreTotal: number | null;
   sobreIdentificable: number | null;
 }
-/** Un insumo del periodo: total, cuánto viene de Rappi (el resto es del POS) y qué productos lo consumen. */
+/**
+ * Un insumo del periodo, cuadrado: cuánto se consume (y cuánto de Rappi; el resto es del POS), qué productos lo
+ * consumen y qué unidades vendidas que lo llevan quedaron fuera y por qué. Vendidas = Σ detalle.unidades + Σ fuera.unidades.
+ */
 export interface InsumoConsumo extends CantidadInsumo {
   productos: number;
   rappi: number;
-  /** Por producto (y combo en el que se vendió, si aplica). */
-  detalle: { receta: string; combo?: string; cantidad: number; rappi: number }[];
+  /** Unidades que entran y llevan este insumo. */
+  unidades: number;
+  /**
+   * Por producto (y combo en el que se vendió, si aplica). `sinContar`: unidades que entraron con una opción con costo
+   * extra que aún no se calcula (p. ej. mayonesa de chipotle): se contó su receta sin esa opción.
+   */
+  detalle: {
+    receta: string;
+    combo?: string;
+    unidades: number;
+    cantidad: number;
+    rappi: number;
+    sinContar: { nombre: string; unidades: number }[];
+  }[];
+  /** Unidades vendidas cuya receta lleva este insumo pero quedaron fuera, con el motivo explicado. */
+  fuera: {
+    receta: string;
+    combo?: string;
+    unidades: number;
+    rappi: number;
+    motivo: MotivoExcluido;
+    razon: string;
+  }[];
 }
 /**
  * Producto vendido que aún no suma al consumo porque no tiene receta enlazada (o, sin código, no se identifica). En
@@ -134,27 +164,70 @@ const motivosVacios = (): Record<MotivoExcluido, number> => ({ tamano: 0, person
 const redondear = (x: number) => Math.round(x * 1000) / 1000;
 
 /**
- * Insumos de una línea (o de una parte de un combo de Rappi) según su receta, tamaño verificado y personalizaciones, o
- * por qué queda fuera. Mismo orden de motivos de siempre: tamaño → personalización → receta → personalización.
+ * Insumos de una línea (o de una parte de un combo) según su receta, tamaño verificado y personalizaciones, o por qué
+ * queda fuera (con la razón explicada). Mismo orden de motivos de siempre: tamaño → personalización → receta.
+ *
+ * Piloto de Namóra (Carlo, 2026-10-30: «que no se eliminen; esos detalles los vemos más adelante con las recetas ya
+ * bien establecidas por Brasil»): una personalización que aún no se calcula NO saca la unidad. Entra con su receta y
+ * con los ajustes que sí están verificados; de las que no se calculan, solo las que traen costo extra quedan anotadas
+ * (`sinContar`) para verlas en el detalle. Fuera del piloto, la regla estricta de siempre (la misma de Costeo).
  */
 function recetaDe(
   l: Pick<LineaNormal, 'customs'>,
   recetaId: string,
   datos: DatosConsumo,
-): { motivo: MotivoExcluido } | { tamano: string; receta: InsumoReceta[]; ajustada: boolean } {
+  piloto: boolean,
+):
+  | { motivo: MotivoExcluido; razon: string }
+  | { tamano: string; receta: InsumoReceta[]; ajustada: boolean; sinContar: string[] } {
   const tamano = tamanoVerificado(l, recetaId, datos);
-  if (!tamano) return { motivo: 'tamano' };
+  if (!tamano) {
+    const vasos = l.customs.filter((c) => ES_TAMANO.test(c.nombre)).map((c) => c.nombre);
+    return {
+      motivo: 'tamano',
+      razon: vasos.length
+        ? `el vaso ${vasos.join(' y ')} aún no está verificado para esta receta`
+        : 'el ticket no trae vaso y la receta tiene más de un tamaño',
+    };
+  }
   const base = datos.recetas.get(claveReceta(recetaId, tamano));
-  const cambios = cambiosPersonalizaciones(
-    recetaId,
-    l.customs.filter((c) => !ES_TAMANO.test(c.nombre)).map((c) => c.nombre),
-    datos.lineas?.get(claveReceta(recetaId, tamano)),
-  );
-  if (!cambios) return { motivo: 'personalizacion' };
-  if (!base?.length) return { motivo: 'receta' };
-  const receta = conCambios(base, cambios, datos.sustitutos);
-  if (!receta) return { motivo: 'personalizacion' };
-  return { tamano, receta, ajustada: cambios.size > 0 };
+  const sinCantidades = { motivo: 'receta' as const, razon: `la receta no tiene cantidades para ${tamano}` };
+  const directas = datos.lineas?.get(claveReceta(recetaId, tamano));
+  const personalizaciones = l.customs.filter((c) => !ES_TAMANO.test(c.nombre));
+  const nombres = [...new Set(personalizaciones.map((c) => c.nombre))];
+  const calculable = (n: string) => personalizacionNeutra(recetaId, n) || !!ajusteVerificado(recetaId, n);
+  if (!piloto) {
+    const cambios = cambiosPersonalizaciones(recetaId, nombres, directas);
+    const pendientes = () => nombres.filter((n) => !calculable(n));
+    const porPersonalizacion = () => ({
+      motivo: 'personalizacion' as const,
+      razon: pendientes().length
+        ? `lleva ${pendientes()
+            .map((n) => `«${n}»`)
+            .join(' y ')}, que aún no se calcula`
+        : 'faltan datos de la receta para calcular sus personalizaciones',
+    });
+    if (!cambios) return porPersonalizacion();
+    if (!base?.length) return sinCantidades;
+    const receta = conCambios(base, cambios, datos.sustitutos);
+    if (!receta) return porPersonalizacion();
+    return { tamano, receta, ajustada: cambios.size > 0, sinContar: [] };
+  }
+  if (!base?.length) return sinCantidades;
+  // Piloto: se aplican los ajustes verificados; si aun así no se pueden aplicar, se cuenta la receta tal cual.
+  const cambios = cambiosPersonalizaciones(recetaId, nombres.filter(calculable), directas);
+  const conAjustes = cambios && conCambios(base, cambios, datos.sustitutos);
+  const aplicados = conAjustes
+    ? nombres.filter(calculable)
+    : nombres.filter((n) => personalizacionNeutra(recetaId, n));
+  const sinContar = [
+    ...new Set(
+      personalizaciones
+        .filter((c) => !aplicados.includes(c.nombre) && c.importeCent > 0)
+        .map((c) => c.nombre),
+    ),
+  ];
+  return { tamano, receta: conAjustes ?? base, ajustada: !!conAjustes && cambios!.size > 0, sinContar };
 }
 
 /** `ps`: pedidos ya filtrados por origen; `evidencia`: todos los del periodo (ver identificador). */
@@ -164,8 +237,11 @@ export function consumir(
   evidencia: PedidoNormal[] = ps,
   catalogo?: CatalogoNombres,
   fechas: string[] = [],
-  /** Contar los combos del POS por sus productos (COMBOS_POS). Hoy solo el piloto de Namóra (rappiPortal). */
-  combosPorProducto = false,
+  /**
+   * Piloto de Namóra (rappiPortal): los combos del POS cuentan por sus productos (COMBOS_POS) y una personalización
+   * que aún no se calcula no saca la unidad (ver recetaDe). Luego se replica a las demás sucursales.
+   */
+  piloto = false,
 ): ResultadoConsumo {
   const identidad = identificador(evidencia, catalogo);
   const cob = {
@@ -176,16 +252,42 @@ export function consumir(
     conReceta: 0,
     incluidas: 0,
     ajustadas: 0,
+    sinContar: 0,
   };
   const excluidas = motivosVacios();
+  type Fila = InsumoConsumo['detalle'][number] & { extras: Map<string, number> };
+  type Fuera = InsumoConsumo['fuera'][number];
   const insumos = new Map<
     string,
     CantidadInsumo & {
       rappi: number;
+      unidades: number;
       productos: Set<string>;
-      detalle: Map<string, { receta: string; combo?: string; cantidad: number; rappi: number }>;
+      detalle: Map<string, Fila>;
+      fuera: Map<string, Fuera>;
     }
   >();
+  // Insumos que lleva cada receta en cualquiera de sus tamaños: para cuadrar las unidades que quedan fuera.
+  const deReceta = new Map<string, Map<string, InsumoReceta>>();
+  for (const [k, receta] of datos.recetas) {
+    const recetaId = k.slice(0, k.lastIndexOf(':'));
+    const m = deReceta.get(recetaId) ?? new Map<string, InsumoReceta>();
+    for (const i of receta) if (!m.has(i.insumoId)) m.set(i.insumoId, i);
+    deReceta.set(recetaId, m);
+  }
+  const insumo = (i: InsumoReceta) => {
+    const t = insumos.get(i.insumoId) ?? {
+      ...i,
+      cantidad: 0,
+      rappi: 0,
+      unidades: 0,
+      productos: new Set<string>(),
+      detalle: new Map<string, Fila>(),
+      fuera: new Map<string, Fuera>(),
+    };
+    insumos.set(i.insumoId, t);
+    return t;
+  };
   const sinReceta = new Map<string, SinReceta>();
   const anotarSinReceta = (clave: string, nombre: string, deRappi: boolean, sinCodigo: boolean) => {
     const s = sinReceta.get(clave) ?? { nombre, unidades: 0, rappi: 0, sinCodigo };
@@ -195,7 +297,8 @@ export function consumir(
   };
   const productos = new Map<
     string,
-    Omit<ConsumoProducto, 'tamanos' | 'insumos'> & {
+    Omit<ConsumoProducto, 'tamanos' | 'insumos' | 'razones'> & {
+      razones: Map<string, ConsumoProducto['razones'][number]>;
       tamanos: Map<string, number>;
       insumos: Map<string, CantidadInsumo>;
     }
@@ -238,44 +341,72 @@ export function consumir(
           ...(combo ? { combo } : {}),
           lineas: 0,
           excluidas: motivosVacios(),
+          razones: new Map(),
           tamanos: new Map(),
           insumos: new Map(),
         };
         productos.set(clave, x);
       }
-      const r = recetaDe(u, enlace.recetaId, datos);
+      const r = recetaDe(u, enlace.recetaId, datos, piloto);
+      // En el cuadre de cada insumo, una fila por receta y combo (dos códigos de la misma receta no se repiten).
+      const fila = `${enlace.recetaId}|${combo ?? ''}`;
       if ('motivo' in r) {
         excluidas[r.motivo]++;
         x.excluidas[r.motivo]++;
+        const kr = `${r.motivo}|${r.razon}`;
+        const rz = x.razones.get(kr) ?? { motivo: r.motivo, razon: r.razon, unidades: 0 };
+        rz.unidades++;
+        x.razones.set(kr, rz);
+        // Cuadre: la unidad queda anotada, con su razón, en cada insumo que lleva su receta.
+        for (const i of deReceta.get(enlace.recetaId)?.values() ?? []) {
+          const f = insumo(i).fuera;
+          const k = `${fila}|${r.motivo}|${r.razon}`;
+          const e = f.get(k) ?? {
+            receta: x.receta,
+            ...(combo ? { combo } : {}),
+            unidades: 0,
+            rappi: 0,
+            motivo: r.motivo,
+            razon: r.razon,
+          };
+          e.unidades++;
+          if (deRappi) e.rappi++;
+          f.set(k, e);
+        }
         return;
       }
       cob.incluidas++;
       if (r.ajustada) cob.ajustadas++;
+      if (r.sinContar.length) cob.sinContar++;
       dia.incluidas++;
       x.lineas++;
       x.tamanos.set(r.tamano, (x.tamanos.get(r.tamano) ?? 0) + 1);
       tamanos.set(r.tamano, (tamanos.get(r.tamano) ?? 0) + 1);
+      const vistos = new Set<string>();
       for (const i of r.receta) {
-        const t = insumos.get(i.insumoId) ?? {
-          ...i,
-          cantidad: 0,
-          rappi: 0,
-          productos: new Set<string>(),
-          detalle: new Map(),
-        };
+        const t = insumo(i);
         t.cantidad += i.cantidad;
         if (deRappi) t.rappi += i.cantidad;
         t.productos.add(clave);
-        const d = t.detalle.get(clave) ?? {
+        const d = t.detalle.get(fila) ?? {
           receta: x.receta,
           ...(combo ? { combo } : {}),
+          unidades: 0,
           cantidad: 0,
           rappi: 0,
+          sinContar: [],
+          extras: new Map<string, number>(),
         };
+        // Una unidad cuenta una vez por insumo, aunque la receta lo lleve en varias líneas.
+        if (!vistos.has(i.insumoId)) {
+          vistos.add(i.insumoId);
+          t.unidades++;
+          d.unidades++;
+          for (const n of r.sinContar) d.extras.set(n, (d.extras.get(n) ?? 0) + 1);
+        }
         d.cantidad += i.cantidad;
         if (deRappi) d.rappi += i.cantidad;
-        t.detalle.set(clave, d);
-        insumos.set(i.insumoId, t);
+        t.detalle.set(fila, d);
         const pi = x.insumos.get(i.insumoId) ?? { ...i, cantidad: 0 };
         pi.cantidad += i.cantidad;
         x.insumos.set(i.insumoId, pi);
@@ -295,28 +426,39 @@ export function consumir(
       }
       // Un combo cuenta como sus productos: los de Rappi traen sus partes; los del POS se arman con COMBOS_POS
       // (solo donde se activa, hoy el piloto de Namóra).
-      const partes = l.partes ?? (combosPorProducto ? partesCombo(id.codigo, l) : undefined);
+      const partes = l.partes ?? (piloto ? partesCombo(id.codigo, l) : undefined);
       if (partes) for (const pt of partes) contar(pt, `${id.clave}>${pt.codigo}`, l.nombre);
       else contar({ codigo: id.codigo, nombre: l.nombre, customs: l.customs }, id.clave);
     }
   }
   const identificables = cob.lineas - cob.generico;
   const listaInsumos: InsumoConsumo[] = [...insumos.values()]
-    .map(({ productos: ps, detalle, ...r }) => ({
+    .map(({ productos: ps, detalle, fuera, ...r }) => ({
       ...r,
       cantidad: redondear(r.cantidad),
       rappi: redondear(r.rappi),
       productos: ps.size,
       detalle: [...detalle.values()]
-        .map((d) => ({ ...d, cantidad: redondear(d.cantidad), rappi: redondear(d.rappi) }))
+        .map(({ extras, ...d }) => ({
+          ...d,
+          cantidad: redondear(d.cantidad),
+          rappi: redondear(d.rappi),
+          sinContar: [...extras]
+            .map(([nombre, unidades]) => ({ nombre, unidades }))
+            .sort((a, b) => b.unidades - a.unidades || a.nombre.localeCompare(b.nombre, 'es-MX')),
+        }))
         .sort((a, b) => b.cantidad - a.cantidad || a.receta.localeCompare(b.receta, 'es-MX')),
+      fuera: [...fuera.values()].sort(
+        (a, b) => b.unidades - a.unidades || a.receta.localeCompare(b.receta, 'es-MX'),
+      ),
     }))
     .sort((a, b) => a.categoria.localeCompare(b.categoria, 'es-MX') || b.cantidad - a.cantidad);
   const categorias = new Map<
     string,
     { insumos: number; totales: Map<string, { cantidad: number; rappi: number }> }
   >();
-  for (const i of listaInsumos) {
+  // Las categorías suman lo que se consume: un insumo que solo aparece por unidades fuera no cuenta aquí.
+  for (const i of listaInsumos.filter((x) => x.unidades > 0)) {
     const c = categorias.get(i.categoria) ?? { insumos: 0, totales: new Map() };
     c.insumos++;
     const t = c.totales.get(i.unidad) ?? { cantidad: 0, rappi: 0 };
@@ -351,6 +493,7 @@ export function consumir(
     productos: [...productos.values()]
       .map((x) => ({
         ...x,
+        razones: [...x.razones.values()].sort((a, b) => b.unidades - a.unidades),
         tamanos: [...x.tamanos].map(([tamano, lineas]) => ({ tamano, lineas })),
         insumos: [...x.insumos.values()]
           .map((i) => ({ ...i, cantidad: redondear(i.cantidad) }))

@@ -1,11 +1,17 @@
 'use client';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, PanelRightOpen, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info, PanelRightOpen, X } from 'lucide-react';
 import type { RespuestaConsumo, SucursalInfo } from '@/lib/sucursales/contratos';
-import { CATEGORIA_LECHE, type ConsumoProducto, type MotivoExcluido } from '@/lib/sucursales/consumo';
+import {
+  CATEGORIA_LECHE,
+  type ConsumoProducto,
+  type InsumoConsumo,
+  type MotivoExcluido,
+} from '@/lib/sucursales/consumo';
 import type { FiltroOrigen } from '@/lib/sucursales/metricas';
 import { claseCampo } from '@/lib/crm/formato';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { AZUL, BarraCelda, Etiqueta, TIPOS } from './colores';
 import { Tooltip } from './graficas';
@@ -62,7 +68,7 @@ const fmt = (x: number, dec: number) =>
 export function cantidad(x: number, unidad: string) {
   if (unidad === 'gr') return x >= 1000 ? `${fmt(x / 1000, 1)} kg` : `${fmt(x, x < 10 ? 1 : 0)} g`;
   if (unidad === 'ml') return x >= 1000 ? `${fmt(x / 1000, 1)} L` : `${fmt(x, x < 10 ? 1 : 0)} ml`;
-  if (unidad === 'pza') return `${fmt(x, 1)} pza`;
+  if (unidad === 'pza') return `${fmt(x, 2)} pza`;
   return `${fmt(x, 1)} ${unidad}`;
 }
 
@@ -123,7 +129,7 @@ export function SeccionConsumo({
 }
 
 function Contenido({ d }: { d: RespuestaConsumo }) {
-  const leches = d.insumos.filter((i) => i.categoria === CATEGORIA_LECHE);
+  const leches = d.insumos.filter((i) => i.categoria === CATEGORIA_LECHE && i.unidades > 0);
   return (
     <>
       <Cobertura d={d} />
@@ -157,6 +163,207 @@ function EnCombo({ combo }: { combo: string }) {
 /** ¿Separar POS y Rappi? Solo si la sucursal tiene Rappi y el filtro de origen incluye los dos. */
 const separaRappi = (d: RespuestaConsumo) => d.sucursal.rappi && d.origen === 'todos';
 
+/** Pop-up de detalle (se abre con clic o teclado; Esc y el botón lo cierran). */
+function Detalle({
+  titulo,
+  disparador,
+  children,
+}: {
+  titulo: string;
+  disparador: React.ReactElement;
+  children: React.ReactNode;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  return (
+    <Popover open={abierto} onOpenChange={setAbierto}>
+      <PopoverTrigger asChild>{disparador}</PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        // Arriba deja libre la barra fija del portal.
+        collisionPadding={{ top: 80, right: 16, bottom: 16, left: 16 }}
+        className="con-info-pop max-h-[min(70vh,34rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border-white/70 p-0 text-sm"
+      >
+        <div className="flex items-start justify-between gap-3 px-4 pt-4">
+          <p className="font-display text-base font-bold">{titulo}</p>
+          <button
+            type="button"
+            onClick={() => setAbierto(false)}
+            aria-label="Cerrar"
+            className="-mt-1 -mr-1 grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-ink/5"
+          >
+            <X size={15} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="space-y-3 px-4 pt-1 pb-4 text-ink-2">{children}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Lista corta de cifras (etiqueta → valor) dentro de un pop-up. */
+function Cifras({ filas }: { filas: { etiqueta: React.ReactNode; valor: React.ReactNode }[] }) {
+  return (
+    <dl className="divide-y divide-ink/10 rounded-xl bg-ink/[0.04]">
+      {filas.map((f, k) => (
+        <div key={k} className="flex items-baseline justify-between gap-3 px-3 py-2">
+          <dt className="min-w-0 text-xs text-ink-2">{f.etiqueta}</dt>
+          <dd className="tabular shrink-0 text-right font-semibold text-ink">{f.valor}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+const MAX_EN_POPUP = 8;
+
+/** Qué hay detrás de cada parte de la barra de cobertura: productos y razones, con las mismas cifras. */
+function DetalleCobertura({ k, d }: { k: ClaveCobertura; d: RespuestaConsumo }) {
+  const c = d.cobertura;
+  if (k === 'incluidas')
+    return (
+      <>
+        <p>Su código tiene receta enlazada, su tamaño está verificado y la receta tiene cantidades.</p>
+        <Cifras
+          filas={[
+            ...d.tamanos.map((t) => ({ etiqueta: `Tamaño ${t.tamano}`, valor: numero(t.lineas) })),
+            ...(c.ajustadas > 0
+              ? [{ etiqueta: 'Con una personalización ya calculada', valor: numero(c.ajustadas) }]
+              : []),
+            ...(c.sinContar > 0
+              ? [
+                  {
+                    etiqueta: 'Con una opción con costo extra que aún no se cuenta',
+                    valor: numero(c.sinContar),
+                  },
+                ]
+              : []),
+          ]}
+        />
+        {c.sinContar > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Esas unidades cuentan su receta; la opción con costo extra (p. ej. mayonesa o leche de avena) aún
+            no. El detalle de cada insumo dice cuál y cuántas.
+          </p>
+        )}
+      </>
+    );
+  if (k === 'tamano' || k === 'personalizacion' || k === 'receta') {
+    const filas = d.productos
+      .filter((p) => p.excluidas[k] > 0)
+      .sort((a, b) => b.excluidas[k] - a.excluidas[k]);
+    return (
+      <>
+        <p>Tienen receta, pero esta unidad no se puede contar todavía. Por producto y por qué:</p>
+        <ul className="divide-y divide-ink/10 rounded-xl bg-ink/[0.04]">
+          {filas.slice(0, MAX_EN_POPUP).map((p) => (
+            <li key={p.clave} className="px-3 py-2">
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 font-medium text-ink">
+                  {p.receta}
+                  {p.combo && <EnCombo combo={p.combo} />}
+                </span>
+                <span className="tabular shrink-0 font-semibold text-ink">{numero(p.excluidas[k])}</span>
+              </span>
+              {p.razones
+                .filter((r) => r.motivo === k)
+                .map((r) => (
+                  <span key={r.razon} className="block text-xs text-muted-foreground">
+                    {numero(r.unidades)}: {r.razon}
+                  </span>
+                ))}
+            </li>
+          ))}
+        </ul>
+        {filas.length > MAX_EN_POPUP && (
+          <p className="text-xs text-muted-foreground">
+            Y {numero(filas.length - MAX_EN_POPUP)} productos más: están en «Por producto».
+          </p>
+        )}
+      </>
+    );
+  }
+  if (k === 'sinEnlace' || k === 'sinCodigo') {
+    const filas = d.sinReceta.filter((s) => s.sinCodigo === (k === 'sinCodigo'));
+    return (
+      <>
+        <p>
+          {k === 'sinEnlace'
+            ? 'Su código aún no tiene receta enlazada. En cuanto se enlace, sus unidades entran solas.'
+            : 'El nombre se vendió con más de un código en el periodo: no se elige uno.'}
+        </p>
+        <Cifras
+          filas={filas.slice(0, MAX_EN_POPUP).map((s) => ({ etiqueta: s.nombre, valor: numero(s.unidades) }))}
+        />
+        {filas.length > MAX_EN_POPUP && (
+          <p className="text-xs text-muted-foreground">
+            Y {numero(filas.length - MAX_EN_POPUP)} más: están en «Se venden sin receta todavía».
+          </p>
+        )}
+      </>
+    );
+  }
+  return (
+    <p>Ventas capturadas como Generic en el POS: no dicen qué producto fue, así que no tienen receta.</p>
+  );
+}
+
+/** Cómo se cuenta: las reglas del consumo, en el pop-up del encabezado. */
+function ComoSeCuenta({ d }: { d: RespuestaConsumo }) {
+  return (
+    <Detalle
+      titulo="Cómo se cuenta"
+      disparador={
+        <button
+          type="button"
+          className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ink"
+        >
+          <Info size={14} aria-hidden="true" />
+          Cómo se cuenta
+        </button>
+      }
+    >
+      <ul className="list-disc space-y-2 pl-4 text-xs">
+        <li>
+          Cada producto vendido es una unidad. Entra si su código tiene receta enlazada, su tamaño está
+          verificado para esa receta y la receta tiene cantidades para ese tamaño.
+        </li>
+        <li>
+          Las personalizaciones usan las mismas listas revisadas que Costeo: «Lactose free» descuenta
+          deslactosada en lugar de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft
+          sustituye al Black. Café por shot: el Single y el Double usan los 18 g de la receta y el Extra
+          Double, 36 g.
+        </li>
+        <li>
+          {d.sucursal.rappiPortal
+            ? 'Lo que aún no se calcula (miel, leches vegetales, mayonesa…) no saca la unidad: entra con su receta. Las opciones con costo extra quedan anotadas en el detalle de cada insumo.'
+            : 'Una personalización que aún no se calcula (miel, leches vegetales…) deja fuera esa unidad completa.'}
+        </li>
+        {d.sucursal.rappiPortal && (
+          <li>
+            Un combo cuenta como sus productos, en Rappi y en el POS: la bebida y el pan entran cada uno con
+            su receta, igual que sueltos, marcados con el combo en el que se vendieron.
+          </li>
+        )}
+        <li>
+          Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades, sin dinero.
+        </li>
+        <li>
+          {d.sucursal.rappiPortal
+            ? 'Rappi se lee del portal de Rappi (tienda normal y Turbo, cada 10 minutos) con las mismas reglas que el POS.'
+            : d.sucursal.rappi
+              ? 'Rappi entra con las mismas reglas que el POS.'
+              : 'Rappi de esta sucursal no llega por la API: su consumo no está aquí.'}
+        </li>
+        <li>
+          No es inventario ni merma: es lo que piden las recetas de Costeo, leídas el{' '}
+          {new Date(d.recetasLeidasEn).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}.
+        </li>
+      </ul>
+    </Detalle>
+  );
+}
+
 function Cobertura({ d }: { d: RespuestaConsumo }) {
   const c = d.cobertura;
   const [activo, setActivo] = useState<ClaveCobertura | null>(null);
@@ -169,107 +376,79 @@ function Cobertura({ d }: { d: RespuestaConsumo }) {
     sinCodigo: c.sinCodigo,
     generico: c.generico,
   };
-  const claves = Object.keys(COBERTURA) as ClaveCobertura[];
+  // Solo las partes con unidades: lo que está en cero no ocupa lugar.
+  const claves = (Object.keys(COBERTURA) as ClaveCobertura[]).filter((k) => valores[k] > 0);
   return (
     <Tarjeta
       titulo="Consumo teórico según receta"
-      descripcion={`Lo que piden las recetas de Costeo para las unidades vendidas. No es inventario ni merma: no sale de un conteo. Recetas leídas el ${new Date(d.recetasLeidasEn).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}.`}
+      descripcion="Lo que piden las recetas de Costeo para lo vendido. No es inventario ni merma."
+      acciones={<ComoSeCuenta d={d} />}
     >
-      <div className="space-y-4 text-sm">
-        <p className="text-base text-ink">
-          <span className="font-display text-3xl font-black tabular">{numero(c.incluidas)}</span>{' '}
-          <span className="text-ink-2">
-            de {numero(c.lineas)} unidades vendidas entran al consumo:{' '}
-            <strong className="text-ink">{porcentaje(c.sobreTotal)}</strong> de todas (A) y{' '}
-            <strong className="text-ink">{porcentaje(c.sobreIdentificable)}</strong> de las identificables (B
-            = A − Generic).
-            {c.ajustadas > 0 &&
-              ` ${numero(c.ajustadas)} de ellas con una personalización que cambia la receta, ya calculada (p. ej. deslactosada en lugar de entera).`}
-          </span>
-        </p>
-        <div
-          className="flex h-4 w-full gap-[2px] overflow-hidden rounded-[4px]"
-          role="img"
-          aria-label={`Cobertura en unidades: ${claves
-            .filter((k) => valores[k] > 0)
-            .map((k) => `${COBERTURA[k].nombre} ${numero(valores[k])}`)
-            .join(', ')}`}
-        >
-          {claves
-            .filter((k) => valores[k] > 0)
-            .map((k) => (
-              <span
-                key={k}
-                onPointerEnter={() => setActivo(k)}
-                onPointerLeave={() => setActivo(null)}
-                className="h-full transition-opacity"
-                style={{
-                  width: `${(valores[k] / c.lineas) * 100}%`,
-                  backgroundColor: COBERTURA[k].color,
-                  opacity: activo && activo !== k ? 0.35 : 1,
-                }}
-              />
-            ))}
+      <div className="space-y-3 text-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <p className="text-ink-2">
+            <span className="font-display text-3xl font-black tabular text-ink">{numero(c.incluidas)}</span>{' '}
+            de {numero(c.lineas)} unidades vendidas entran al consumo
+          </p>
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-sm text-ink">{porcentaje(c.sobreTotal)}</strong> de todas ·{' '}
+            <strong className="text-sm text-ink">{porcentaje(c.sobreIdentificable)}</strong> sin Generic
+          </p>
         </div>
-        <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          className="flex h-3 w-full gap-[2px] overflow-hidden rounded-[4px]"
+          role="img"
+          aria-label={`Cobertura en unidades: ${claves.map((k) => `${COBERTURA[k].nombre} ${numero(valores[k])}`).join(', ')}`}
+        >
           {claves.map((k) => (
-            <li
+            <span
               key={k}
               onPointerEnter={() => setActivo(k)}
               onPointerLeave={() => setActivo(null)}
-              className={`flex items-center gap-2 rounded-lg px-1.5 py-1 transition-colors ${activo === k ? 'bg-surface-2' : ''}`}
-            >
-              <span
-                aria-hidden="true"
-                className="size-3 shrink-0 rounded-[3px]"
-                style={{ backgroundColor: COBERTURA[k].color }}
-              />
-              <span className="min-w-0 flex-1 truncate">{COBERTURA[k].nombre}</span>
-              <span className="tabular font-semibold">{numero(valores[k])}</span>
-              <span className="w-11 text-right text-xs tabular text-muted-foreground">
-                {porcentaje(c.lineas ? valores[k] / c.lineas : null, 0)}
-              </span>
+              className="h-full transition-opacity"
+              style={{
+                width: `${(valores[k] / c.lineas) * 100}%`,
+                backgroundColor: COBERTURA[k].color,
+                opacity: activo && activo !== k ? 0.35 : 1,
+              }}
+            />
+          ))}
+        </div>
+        <ul
+          className="flex flex-wrap gap-2"
+          aria-label="Partes de la cobertura (abre una para ver el detalle)"
+        >
+          {claves.map((k) => (
+            <li key={k}>
+              <Detalle
+                titulo={`${COBERTURA[k].nombre}: ${numero(valores[k])}`}
+                disparador={
+                  <button
+                    type="button"
+                    onPointerEnter={() => setActivo(k)}
+                    onPointerLeave={() => setActivo(null)}
+                    onFocus={() => setActivo(k)}
+                    onBlur={() => setActivo(null)}
+                    className={`flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-left transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ink ${activo === k ? 'bg-surface-2' : ''}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-2.5 shrink-0 rounded-[3px]"
+                      style={{ backgroundColor: COBERTURA[k].color }}
+                    />
+                    <span>{COBERTURA[k].nombre}</span>
+                    <span className="tabular font-semibold">{numero(valores[k])}</span>
+                    <span className="tabular text-xs text-muted-foreground">
+                      {porcentaje(valores[k] / c.lineas, 0)}
+                    </span>
+                    <ChevronDown size={13} aria-hidden="true" className="text-muted-foreground" />
+                  </button>
+                }
+              >
+                <DetalleCobertura k={k} d={d} />
+              </Detalle>
             </li>
           ))}
-        </ul>
-        {d.tamanos.length > 0 && (
-          <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            Tamaños de lo que entra:
-            {d.tamanos.map((t) => (
-              <Etiqueta key={t.tamano} color={TIPOS.tamano.color}>
-                {t.tamano} · {numero(t.lineas)}
-              </Etiqueta>
-            ))}
-          </p>
-        )}
-        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-          <li>
-            Una línea del POS es una unidad. Entra si su código tiene receta enlazada, su tamaño está
-            verificado para esa receta y cada personalización es neutra o tiene su ajuste calculado: las
-            mismas listas revisadas que usa Costeo. Ejemplos: «Lactose free» descuenta deslactosada en lugar
-            de entera, la vainilla con ml usa esa cantidad y el grano White o Kraft sustituye al Black. Café
-            por shot: el Single y el Double usan los 18 g de la receta (cambia la preparación) y el Extra
-            Double, 36 g. La miel, las leches vegetales y lo demás aún no se calculan: esa unidad queda fuera
-            completa.
-          </li>
-          <li>
-            Las sub-recetas se expanden hasta sus insumos con su rendimiento. Solo cantidades: sin costos ni
-            dinero.
-          </li>
-          {!d.sucursal.rappi && <li>Rappi de esta sucursal no llega por la API: su consumo no está aquí.</li>}
-          {d.sucursal.rappiPortal && (
-            <li>
-              Rappi se lee del portal de Rappi (tienda normal y Turbo, cada 10 minutos) con las mismas reglas
-              que el POS.
-            </li>
-          )}
-          {d.sucursal.rappiPortal && (
-            <li>
-              Un combo cuenta como sus productos, en Rappi y en el POS: la bebida y el pan entran cada uno con
-              su receta, igual que cuando se venden sueltos, y quedan marcados con el combo en el que se
-              vendieron. Si una parte aún no se calcula, las demás sí suman.
-            </li>
-          )}
         </ul>
       </div>
     </Tarjeta>
@@ -330,11 +509,14 @@ function Leches({ leches }: { leches: RespuestaConsumo['insumos'] }) {
 /** Columnas por día de un insumo (una sola serie, un eje). Hover, foco y flechas muestran el día. */
 function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
   const candidatos = useMemo(
-    () => [...d.insumos].sort((a, b) => b.productos - a.productos || b.cantidad - a.cantidad),
+    () =>
+      d.insumos
+        .filter((i) => i.unidades > 0)
+        .sort((a, b) => b.productos - a.productos || b.cantidad - a.cantidad),
     [d],
   );
   const porDefecto =
-    d.insumos.filter((i) => i.categoria === CATEGORIA_LECHE).sort((a, b) => b.cantidad - a.cantidad)[0] ??
+    candidatos.filter((i) => i.categoria === CATEGORIA_LECHE).sort((a, b) => b.cantidad - a.cantidad)[0] ??
     candidatos[0];
   const [id, setId] = useState(porDefecto?.insumoId ?? '');
   const insumo = d.insumos.find((i) => i.insumoId === id) ?? porDefecto;
@@ -535,6 +717,133 @@ function Categorias({ d }: { d: RespuestaConsumo }) {
   );
 }
 
+/**
+ * Cuadre de un insumo: las unidades vendidas cuya receta lo lleva = las que entran (por producto, con cuánto
+ * consumen) + las que quedan fuera (con la razón). Las opciones con costo extra que aún no se cuentan quedan anotadas
+ * en su producto.
+ */
+function CuadreInsumo({ i, separa }: { i: InsumoConsumo; separa: boolean }) {
+  const fuera = i.fuera.reduce((a, f) => a + f.unidades, 0);
+  const columnas = separa ? 5 : 3;
+  const encabezado = 'bg-transparent py-1 font-medium normal-case tracking-normal text-muted-foreground';
+  const th = `${encabezado} text-right`;
+  const num = 'py-1 text-right tabular';
+  const total = 'font-semibold text-ink';
+  return (
+    <div className="space-y-2 py-1 pl-6 text-xs">
+      <p className="text-sm text-ink-2">
+        <strong className="text-ink">{numero(i.unidades + fuera)}</strong> unidades vendidas llevan {i.insumo}{' '}
+        en su receta: <strong className="text-ink">{numero(i.unidades)} entran</strong> (
+        {cantidad(i.cantidad, i.unidad)})
+        {fuera > 0 ? (
+          <>
+            {' '}
+            y <strong className="text-ink">{numero(fuera)} quedan fuera</strong>, cada una con su razón.
+          </>
+        ) : (
+          '; ninguna queda fuera.'
+        )}
+      </p>
+      <table className="w-full">
+        <caption className="sr-only">Cuadre de {i.insumo}: unidades que entran y que quedan fuera</caption>
+        <thead>
+          <tr>
+            <th scope="col" className={`${encabezado} text-left`}>
+              Producto
+            </th>
+            <th scope="col" className={th}>
+              Unidades
+            </th>
+            <th scope="col" className={th}>
+              Cantidad
+            </th>
+            {separa && (
+              <>
+                <th scope="col" className={th}>
+                  POS
+                </th>
+                <th scope="col" className={th}>
+                  Rappi
+                </th>
+              </>
+            )}
+          </tr>
+        </thead>
+        {i.detalle.length > 0 && (
+          <tbody>
+            {i.detalle.map((p, n) => (
+              <tr key={`${n}-${p.receta}`} className="align-top">
+                <td className="py-1">
+                  {p.receta}
+                  {p.combo && <EnCombo combo={p.combo} />}
+                  {p.sinContar.length > 0 && (
+                    <span className="block text-muted-foreground">
+                      {p.sinContar.map((s) => `${numero(s.unidades)} con «${s.nombre}»`).join(', ')}: costo
+                      extra que aún no se cuenta
+                    </span>
+                  )}
+                </td>
+                <td className={num}>{numero(p.unidades)}</td>
+                <td className={num}>{cantidad(p.cantidad, i.unidad)}</td>
+                {separa && (
+                  <>
+                    <td className={num}>{cantidad(p.cantidad - p.rappi, i.unidad)}</td>
+                    <td className={num}>{p.rappi ? cantidad(p.rappi, i.unidad) : '—'}</td>
+                  </>
+                )}
+              </tr>
+            ))}
+            <tr className={total}>
+              <td className="py-1">Entran</td>
+              <td className={num}>{numero(i.unidades)}</td>
+              <td className={num}>{cantidad(i.cantidad, i.unidad)}</td>
+              {separa && (
+                <>
+                  <td className={num}>{cantidad(i.cantidad - i.rappi, i.unidad)}</td>
+                  <td className={num}>{i.rappi ? cantidad(i.rappi, i.unidad) : '—'}</td>
+                </>
+              )}
+            </tr>
+          </tbody>
+        )}
+        {fuera > 0 && (
+          <tbody>
+            {i.fuera.map((f, n) => (
+              <tr key={`${n}-${f.receta}`} className="align-top">
+                <td className="py-1">
+                  {f.receta}
+                  {f.combo && <EnCombo combo={f.combo} />}
+                  <span className="block text-muted-foreground">Fuera: {f.razon}</span>
+                </td>
+                <td className={num}>
+                  {numero(f.unidades)}
+                  {separa && f.rappi > 0 && (
+                    <span className="block text-muted-foreground">{numero(f.rappi)} de Rappi</span>
+                  )}
+                </td>
+                <td className={`${num} text-muted-foreground`}>no suma</td>
+                {separa && <td colSpan={2} />}
+              </tr>
+            ))}
+            <tr className={total}>
+              <td className="py-1">Quedan fuera</td>
+              <td className={num}>{numero(fuera)}</td>
+              <td colSpan={columnas - 2} />
+            </tr>
+          </tbody>
+        )}
+        <tfoot>
+          <tr className={total}>
+            <td className="py-1">Vendidas que llevan este insumo</td>
+            <td className={num}>{numero(i.unidades + fuera)}</td>
+            <td colSpan={columnas - 2} />
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}
+
 function Insumos({ d }: { d: RespuestaConsumo }) {
   const [buscar, setBuscar] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -560,7 +869,7 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
   return (
     <Tarjeta
       titulo="Insumos"
-      descripcion={`Cantidad teórica del periodo${separa ? ', separada en POS (Mostrador + App) y Rappi,' : ''} y qué productos la consumen: abre un insumo para ver el desglose. La barra compara insumos de la misma unidad.`}
+      descripcion={`Cantidad teórica del periodo${separa ? ', separada en POS (Mostrador + App) y Rappi' : ''}. Abre un insumo para ver su cuadre: qué productos lo consumen y qué unidades que lo llevan quedaron fuera y por qué. La barra compara insumos de la misma unidad.`}
       cuerpo={false}
     >
       <div className="flex flex-wrap items-end gap-3 px-5 pb-3 pt-4">
@@ -662,52 +971,7 @@ function Insumos({ d }: { d: RespuestaConsumo }) {
                     {abierto && (
                       <tr id={`desglose-${i.insumoId}`} className="bg-surface-2/60">
                         <td colSpan={columnas} className="!py-2">
-                          <table className="w-full text-xs">
-                            <caption className="sr-only">Productos que consumen {i.insumo}</caption>
-                            <thead className="text-muted-foreground">
-                              <tr>
-                                <th scope="col" className="py-1 pl-6 text-left font-medium">
-                                  Producto
-                                </th>
-                                <th scope="col" className="py-1 text-right font-medium">
-                                  Total
-                                </th>
-                                {separa && (
-                                  <>
-                                    <th scope="col" className="py-1 text-right font-medium">
-                                      POS
-                                    </th>
-                                    <th scope="col" className="py-1 pr-1 text-right font-medium">
-                                      Rappi
-                                    </th>
-                                  </>
-                                )}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {i.detalle.map((p) => (
-                                <tr key={p.receta} className="border-t border-line/60">
-                                  <td className="py-1 pl-6">
-                                    {p.receta}
-                                    {p.combo && <EnCombo combo={p.combo} />}
-                                  </td>
-                                  <td className="py-1 text-right tabular">
-                                    {cantidad(p.cantidad, i.unidad)}
-                                  </td>
-                                  {separa && (
-                                    <>
-                                      <td className="py-1 text-right tabular">
-                                        {cantidad(p.cantidad - p.rappi, i.unidad)}
-                                      </td>
-                                      <td className="py-1 pr-1 text-right tabular">
-                                        {p.rappi ? cantidad(p.rappi, i.unidad) : '—'}
-                                      </td>
-                                    </>
-                                  )}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <CuadreInsumo i={i} separa={separa} />
                         </td>
                       </tr>
                     )}
@@ -929,15 +1193,17 @@ function Cajon({ producto, alCerrar }: { producto: ConsumoProducto | null; alCer
               ))}
             </tbody>
           </table>
-          {(Object.keys(MOTIVOS) as MotivoExcluido[]).some((k) => producto.excluidas[k] > 0) && (
-            <p className="rounded-xl bg-paper px-3 py-2 text-xs text-muted-foreground">
-              Fuera del consumo:{' '}
-              {(Object.keys(MOTIVOS) as MotivoExcluido[])
-                .filter((k) => producto.excluidas[k] > 0)
-                .map((k) => `${numero(producto.excluidas[k])} ${MOTIVOS[k]}`)
-                .join(' · ')}
-              .
-            </p>
+          {producto.razones.length > 0 && (
+            <div className="rounded-xl bg-paper px-3 py-2 text-xs text-muted-foreground">
+              <p className="font-medium text-ink-2">Unidades fuera del consumo y por qué</p>
+              <ul className="mt-1 space-y-0.5">
+                {producto.razones.map((r) => (
+                  <li key={`${r.motivo}|${r.razon}`}>
+                    {numero(r.unidades)}: {r.razon}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}
