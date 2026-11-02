@@ -236,7 +236,9 @@ export type FuenteRappi = (desde: string, hasta: string) => Promise<PedidoNormal
 
 /**
  * Suma a una lectura del POS los pedidos de Rappi del portal del mismo periodo (origen «rappi»). Un pedido que ya llegó
- * por el POS (refundId = ID de Rappi) no se cuenta dos veces. Si Rappi no se pudo leer, la lectura queda parcial.
+ * por el POS (refundId = ID de Rappi) no se cuenta dos veces: se queda la versión del portal, que trae productos,
+ * tamaños y opciones en vez de «Generic» (Rubén Darío, 2026-11-02: los 21 pedidos Rappi del POS del 27-oct y 1-nov
+ * estaban en el portal con el mismo número). Si Rappi no se pudo leer, la lectura queda parcial.
  */
 export async function conRappi(l: LecturaNormal, rappi?: FuenteRappi): Promise<LecturaNormal> {
   if (!rappi || l.estado === 'error') return l;
@@ -247,17 +249,21 @@ export async function conRappi(l: LecturaNormal, rappi?: FuenteRappi): Promise<L
       estado: 'parcial',
       avisos: ['No se pudieron leer los pedidos de Rappi del portal.', ...l.avisos],
     };
-  const enPos = new Set(l.pedidos.map((p) => p.numeroPedidoRappi).filter(Boolean));
-  const nuevos = extra.filter(
-    (p) => p.fecha >= l.desde && p.fecha <= l.hasta && !enPos.has(p.numeroPedidoRappi),
-  );
-  if (!nuevos.length) return l;
+  const delPeriodo = extra.filter((p) => p.fecha >= l.desde && p.fecha <= l.hasta);
+  const portal = new Map(delPeriodo.filter((p) => p.numeroPedidoRappi).map((p) => [p.numeroPedidoRappi, p]));
+  const reemplazados = new Set<string>();
+  const pedidos = l.pedidos.map((p) => {
+    const r = p.numeroPedidoRappi ? portal.get(p.numeroPedidoRappi) : undefined;
+    if (!r) return p;
+    reemplazados.add(p.numeroPedidoRappi!);
+    return r;
+  });
+  const nuevos = delPeriodo.filter((p) => !p.numeroPedidoRappi || !reemplazados.has(p.numeroPedidoRappi));
+  if (!nuevos.length && !reemplazados.size) return l;
   return {
     ...l,
     // Del más reciente al más antiguo, como el POS.
-    pedidos: [...l.pedidos, ...nuevos].sort(
-      (a, b) => b.fecha.localeCompare(a.fecha) || b.segundo - a.segundo,
-    ),
+    pedidos: [...pedidos, ...nuevos].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.segundo - a.segundo),
     totalDeclarado: l.totalDeclarado === null ? null : l.totalDeclarado + nuevos.length,
   };
 }

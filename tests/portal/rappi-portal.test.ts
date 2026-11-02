@@ -123,12 +123,15 @@ describe('construirRappiPortal', () => {
 });
 
 describe('pestaña Rappi', () => {
-  it('Namóra la tiene por el portal (con filtro de Rappi: se suma); una sucursal sin Rappi en la API ni portal no', () => {
+  it('las 11 de Guadalajara la tienen por el portal (con filtro de Rappi: se suma); Cancún y Juárez por la API', () => {
     const namora = sucursalInfo(configDe(513)!);
     expect(configDe(513)!.rappi).toBe(false);
     expect(namora).toMatchObject({ rappi: true, rappiPortal: true });
     expect(pestanasDe(namora).map((p) => p.id)).toContain('rappi');
-    expect(pestanasDe(sucursalInfo(configDe(384)!)).map((p) => p.id)).not.toContain('rappi');
-    expect(pestanasDe(sucursalInfo(configDe(532)!)).map((p) => p.id)).toContain('rappi');
+    const gdl = [532, 384, 457, 459, 477, 515, 514, 518, 513, 567, 631];
+    for (const id of gdl)
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    for (const id of [612, 583])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: false });
   });
 });

@@ -13,7 +13,7 @@ vi.mock('next/link', () => ({
 import { consumir, claveConsumo, type DatosConsumo } from '../../lib/sucursales/consumo';
 import { claveCosto, costear, type DatosCosteo } from '../../lib/sucursales/costeo';
 import { normalizar } from '../../lib/sucursales/normalizar';
-import { configDe } from '../../lib/sucursales/config';
+import { configDe, type ConfigSucursal } from '../../lib/sucursales/config';
 import { periodoDeUrl, rango } from '../../lib/sucursales/periodo';
 import { sucursalInfo } from '../../lib/sucursales/datos';
 import { SeccionesSucursal } from '../../components/sucursales/secciones';
@@ -228,10 +228,10 @@ describe('periodo compartido', () => {
 });
 
 describe('secciones de la sucursal', () => {
-  const montar = (id: number, puedeCostear: boolean) =>
+  const montar = (id: number, puedeCostear: boolean, cambios: Partial<ConfigSucursal> = {}) =>
     render(
       <SeccionesSucursal
-        sucursal={sucursalInfo(configDe(id)!)}
+        sucursal={sucursalInfo({ ...configDe(id)!, ...cambios })}
         puedeCostear={puedeCostear}
         seccionInicial="ventas"
         tabInicial="productos"
@@ -246,8 +246,9 @@ describe('secciones de la sucursal', () => {
     expect(screen.getByRole('button', { name: /Consumo/ })).toBeInTheDocument();
   });
 
-  it('GDL sin Rappi en la API: sin pestaña ni filtro de Rappi, y «todos» es Mostrador + App', () => {
-    montar(384, true);
+  it('sin Rappi en la API ni portal: sin pestaña ni filtro de Rappi, y «todos» es Mostrador + App', () => {
+    // Desde el 2026-11-02 todas las sucursales tienen Rappi; el caso se arma quitándole el portal a Ventura.
+    montar(384, true, { rappiPortal: false });
     expect(screen.getByText('Sin Rappi en la API')).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Rappi' })).toBeNull();
     expect(screen.queryByRole('radio', { name: 'Rappi' })).toBeNull();

@@ -228,9 +228,20 @@ describe('rappi_importar', () => {
   });
 
   it('rechaza tiendas que no están registradas', async () => {
+    // «The Coffee Ventura (copy)»: está en la cuenta del portal pero no se da de alta (docs/rappi-portal/05).
     await expect(
-      importar(lote([], { tiendas: [{ rappi_tienda_id: 'MX1930260682', por_dia: {} }] })),
+      importar(lote([], { tiendas: [{ rappi_tienda_id: 'MX1930455612', por_dia: {} }] })),
     ).rejects.toThrow(/no registrada/);
+  });
+});
+
+describe('tiendas de Guadalajara (migración 29)', () => {
+  it('las 11 sucursales tienen su tienda normal y su Turbo', async () => {
+    const r = await db.query<{ company_id: number; canales: string }>(
+      `select company_id, string_agg(canal, ',' order by canal) canales from public.rappi_tiendas group by 1 order by 1`,
+    );
+    expect(r.rows.map((x) => x.company_id)).toEqual([384, 457, 459, 477, 513, 514, 515, 518, 532, 567, 631]);
+    expect(new Set(r.rows.map((x) => x.canales))).toEqual(new Set(['normal,turbo']));
   });
 });
 
