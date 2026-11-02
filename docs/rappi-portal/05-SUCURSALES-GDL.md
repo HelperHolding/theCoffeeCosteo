@@ -69,9 +69,9 @@ corrida de comprobación (paso 4).
 
 - Hay copias en la cuenta: «Ventura (copy)» `MX1930455612` y «Aleden Puerta - Turbo (copy)» `MX1930468098` (sin
   pedidos el 27-oct). No se usan.
-- **Rubén Darío** ya tiene Rappi por la API del POS, como «Generic». Sus tiendas se leen, pero mostrarlas en la página
-  necesita una decisión aparte: reemplazar sus pedidos `RAPPI` del POS por los del portal (cruzados por `refundId`) para
-  no contarlos dos veces. Hasta entonces sigue como hoy.
+- **Rubén Darío** ya tiene Rappi por la API del POS, incompleto («Generic» y sin vaso). Sus tiendas se leen, pero
+  aprovecharlas necesita una decisión aparte (doc 06). Cuando un pedido llega por los dos lados (`refundId`), la página
+  no lo cuenta dos veces, pero se queda con la versión del POS. Hasta entonces sigue como hoy.
 
 ## Pasos (cada uno con OK de Carlo)
 
@@ -95,8 +95,8 @@ corrida de comprobación (paso 4).
    después del paso 5: si llega una tienda sin alta, `rappi_importar` rechaza el lote completo, Namóra incluida.
 7. **Historial:** reposiciones manuales por el webhook «Reponer», de 18 días cada una, de madrugada. Se revisa la memoria
    del servidor en la primera.
-8. **Mostrar en la página**, por sucursal:
-   - medir su cobertura, como en el doc 04 (productos «sin enlace»);
+8. **Mostrar en la página**, por sucursal (auditoría y lista completa en el doc 06):
+   - medir su Rappi con `scripts/sucursales/auditar-replica.ts` (sin traducción, tamaños, cuadre);
    - PR con `rappiPortal: true` y `alcance: ALCANCE_POS_RAPPI_PORTAL` en `lib/sucursales/config.ts`.
 9. **Una semana de seguimiento:** duración de las corridas, memoria y swap del servidor. Si se aprieta, se sube el
    droplet a 2 vCPU y 4 GB ($24/mes). Ese cambio reinicia el servidor unos minutos, y Dodo también se detiene.
