@@ -14,11 +14,13 @@
 // con el usuario propio del lector (RAPPI_USUARIO / RAPPI_CLAVE, que pone Carlo en el servidor). Un login fallido
 // bloquea el reintento 6 h (no insiste con una contraseña mala).
 //
-// Variables: EXTRACTOR_KEY, RAPPI_USUARIO, RAPPI_CLAVE, RAPPI_TIENDAS (coma), DATOS (/datos), PUERTO (3101).
+// Variables: EXTRACTOR_KEY, RAPPI_USUARIO, RAPPI_CLAVE, RAPPI_TIENDAS (coma), RAPPI_CONCURRENCIA (3), DATOS (/datos),
+// PUERTO (3101).
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { setTimeout as esperar } from 'node:timers/promises';
 import { chromium } from 'playwright-core';
-import { diasEntre, fechaMX, huellaListado, pedidoDeListado } from './lote.mjs';
+import { diasEntre, enParalelo, fechaMX, huellaListado, pedidoDeListado } from './lote.mjs';
 
 const PORTAL = 'https://partners.rappi.com';
 const API = 'https://services.rappi.com/rests-partners-gateway/cauth';
@@ -28,6 +30,7 @@ const {
   RAPPI_CLAVE,
   RAPPI_TIENDAS = 'MX1930270777,MX1930301156',
   RAPPI_CLIENTE_VERSION = '4.6.7',
+  RAPPI_CONCURRENCIA = '3',
   DATOS = '/datos',
   PUERTO = '3101',
   CHROMIUM,
@@ -43,7 +46,18 @@ const TIENDAS = RAPPI_TIENDAS.split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 const PAGINA = 100;
-const MAX_DETALLES = 80;
+/** Detalles (descuentos) por corrida: «en vivo» lee lo nuevo; las demás ponen al día lo que haya quedado sin leer. */
+const MAX_DETALLES = { vivo: 80, cierre: 400, repaso: 400, manual: 1000 };
+/**
+ * Consultas al portal a la vez, en la misma página. Una por tienda y día, como antes; con 22 tiendas (11 sucursales,
+ * normal y Turbo) en fila, «en vivo» tardaría minutos (docs/rappi-portal/05).
+ */
+const CONCURRENCIA = Math.min(6, Math.max(1, Number(RAPPI_CONCURRENCIA) || 3));
+/** Tope de una reposición manual (días × tiendas), para que termine antes de los 10 min que espera n8n. */
+const MAX_CONSULTAS_MANUAL = 400;
+
+/** El portal respondió 401/403: la sesión ya no sirve. */
+class SesionCaducada extends Error {}
 
 /** Candado 1: lo único que puede salir del navegador fuera de GET/HEAD/OPTIONS. */
 const SALIDAS = [
@@ -239,8 +253,44 @@ function ventana({ tipo, desde, hasta }) {
   return { desde: fechaMX(-1), hasta: fechaMX(0) };
 }
 
-async function sincronizar({ tipo, desde, hasta }) {
+/** Pedidos de una tienda en un día. Si Rappi responde 429 o 5xx, reintenta dos veces con pausa. */
+async function listarDia(pagina, tienda, dia) {
+  let total = null;
+  const vistos = new Map();
+  for (let pag = 0; pag < 10; pag++) {
+    let r;
+    for (let intento = 0; ; intento++) {
+      r = await pedirApi(pagina, 'POST', '/rests-stores-config/orders/by-stores?country=MX', {
+        country_code: 'MX',
+        language: 'es',
+        from: dia,
+        to: dia,
+        store_ids: [tienda],
+        page_number: pag,
+        page_size: PAGINA,
+        order_id: '',
+      });
+      if (!(r.status === 429 || r.status >= 500) || intento === 2) break;
+      await esperar(2000 * (intento + 1));
+    }
+    if (r.status === 401 || r.status === 403)
+      throw new SesionCaducada(`El portal respondió ${r.status} al historial.`);
+    if (r.status !== 200 || !Array.isArray(r.json?.results))
+      throw new Error(`Historial ${tienda} ${dia}: HTTP ${r.status}.`);
+    total ??= r.json.total_rows;
+    for (const o of r.json.results) vistos.set(String(o.id), o);
+    // Rappi quita filas de cada página después de paginar (con page_size 10 entrega 8, 8, 4 de 25): una página
+    // corta no es la última. Se sigue hasta cubrir total_rows (o hasta una página vacía).
+    if (!r.json.results.length || (pag + 1) * PAGINA >= (total ?? 0)) break;
+  }
+  return { tienda, dia, total: total ?? 0, ordenes: [...vistos.values()] };
+}
+
+const idDe = (o) => String(o.id).replace(/^MX/, '');
+
+async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
   const base = { tipo, desde, hasta, estado: 'ok', mensaje: '', tiendas: [], pedidos: [] };
+  const inicio = Date.now();
   const navegador = await chromium.launch({
     headless: true,
     ...(CHROMIUM ? { executablePath: CHROMIUM } : {}),
@@ -276,66 +326,59 @@ async function sincronizar({ tipo, desde, hasta }) {
       relogin = entro;
     }
 
+    // Historial: una consulta por tienda y día, CONCURRENCIA a la vez; los resultados quedan en orden de tienda y día.
+    let listados;
+    try {
+      listados = await enParalelo(
+        tiendas.flatMap((tienda) => diasEntre(desde, hasta).map((dia) => ({ tienda, dia }))),
+        CONCURRENCIA,
+        ({ tienda, dia }) => listarDia(pagina, tienda, dia),
+      );
+    } catch (e) {
+      if (e instanceof SesionCaducada) return { ...base, estado: 'sesion_expirada', mensaje: e.message };
+      throw e;
+    }
+
+    // Detalle (descuentos) solo de lo nuevo o cambiado, hasta el tope del tipo de corrida.
     const cache = leerJson(CACHE, {});
+    const sinDetalle = listados
+      .flatMap((l) => l.ordenes)
+      .map((o) => ({ id: idDe(o), h: huellaListado(o) }))
+      .filter(({ id, h }) => /^\d{5,20}$/.test(id) && cache[id]?.h !== h);
+    const porLeer = sinDetalle.slice(0, MAX_DETALLES[tipo]);
+    let detalles = 0;
+    await enParalelo(porLeer, CONCURRENCIA, async ({ id, h }) => {
+      const r = await pedirApi(pagina, 'GET', `/rests-stores-config/orders/${id}?country=MX&language=es`);
+      if (r.status === 200 && r.json) {
+        cache[id] = { h, d: { discount_info: r.json.discount_info ?? null }, t: Date.now() };
+        detalles++;
+      }
+    });
+
     const pedidos = [];
     const omitidos = [];
-    let nuevosDetalles = 0;
-    for (const tienda of TIENDAS) {
-      const porDia = {};
-      for (const dia of diasEntre(desde, hasta)) {
-        let total = null;
-        const vistos = new Map();
-        for (let pag = 0; pag < 10; pag++) {
-          const r = await pedirApi(pagina, 'POST', '/rests-stores-config/orders/by-stores?country=MX', {
-            country_code: 'MX',
-            language: 'es',
-            from: dia,
-            to: dia,
-            store_ids: [tienda],
-            page_number: pag,
-            page_size: PAGINA,
-            order_id: '',
-          });
-          if (r.status === 401 || r.status === 403)
-            return {
-              ...base,
-              estado: 'sesion_expirada',
-              mensaje: `El portal respondió ${r.status} al historial.`,
-            };
-          if (r.status !== 200 || !Array.isArray(r.json?.results))
-            throw new Error(`Historial ${tienda} ${dia}: HTTP ${r.status}.`);
-          total ??= r.json.total_rows;
-          for (const o of r.json.results) vistos.set(String(o.id), o);
-          // Rappi quita filas de cada página después de paginar (con page_size 10 entrega 8, 8, 4 de 25): una página
-          // corta no es la última. Se sigue hasta cubrir total_rows (o hasta una página vacía).
-          if (!r.json.results.length || (pag + 1) * PAGINA >= (total ?? 0)) break;
-        }
-        porDia[dia] = { total_rows: total ?? 0, devueltos: vistos.size };
-        for (const o of vistos.values()) {
-          const id = String(o.id).replace(/^MX/, '');
-          const h = huellaListado(o);
-          let detalle = cache[id]?.h === h ? cache[id].d : null;
-          if (!detalle && nuevosDetalles < MAX_DETALLES) {
-            nuevosDetalles++;
-            const r = await pedirApi(
-              pagina,
-              'GET',
-              `/rests-stores-config/orders/${id}?country=MX&language=es`,
-            );
-            if (r.status === 200 && r.json) {
-              detalle = { discount_info: r.json.discount_info ?? null };
-              cache[id] = { h, d: detalle, t: Date.now() };
-            }
-          }
-          try {
-            pedidos.push(pedidoDeListado(o, tienda, detalle));
-          } catch (e) {
-            omitidos.push(String(e.message).slice(0, 160));
-          }
+    const porTienda = new Map(
+      tiendas.map((t) => [t, { rappi_tienda_id: t, por_dia: {}, nombres: new Set() }]),
+    );
+    for (const l of listados) {
+      const t = porTienda.get(l.tienda);
+      t.por_dia[l.dia] = { total_rows: l.total, devueltos: l.ordenes.length };
+      for (const o of l.ordenes) {
+        if (o.store_name) t.nombres.add(String(o.store_name).trim());
+        const id = idDe(o);
+        const detalle = cache[id]?.h === huellaListado(o) ? cache[id].d : null;
+        try {
+          pedidos.push(pedidoDeListado(o, l.tienda, detalle));
+        } catch (e) {
+          omitidos.push(String(e.message).slice(0, 160));
         }
       }
-      base.tiendas.push({ rappi_tienda_id: tienda, por_dia: porDia });
     }
+    // `nombre` es el de la tienda en sus pedidos: sirve para comprobar el ID de una tienda nueva. rappi_importar lo
+    // ignora.
+    base.tiendas = [...porTienda.values()].map(({ nombres, ...t }) =>
+      nombres.size ? { ...t, nombre: [...nombres].join(' / ') } : t,
+    );
 
     // Caché de detalles: solo lo de los últimos 30 días.
     const limite = Date.now() - 30 * 86_400_000;
@@ -357,9 +400,13 @@ async function sincronizar({ tipo, desde, hasta }) {
       base.tiendas = [];
     } else {
       base.estado = base.pedidos.length ? 'ok' : 'sin_ordenes';
+      const resto = sinDetalle.length - detalles;
       base.mensaje = [
         relogin ? 'Sesión renovada con login automático.' : '',
-        `Leídos ${base.pedidos.length} pedidos de ${TIENDAS.length} tiendas (${desde} a ${hasta}).`,
+        `Leídos ${base.pedidos.length} pedidos de ${tiendas.length} tiendas (${desde} a ${hasta}) en ${Math.round((Date.now() - inicio) / 1000)} s.`,
+        sinDetalle.length
+          ? `Descuentos leídos de ${detalles} pedidos${resto ? `; faltan ${resto} para las siguientes corridas` : ''}.`
+          : '',
         // Visto el 2026-11-02: la descarga «ORDERS_HISTORY_REPORT» del portal trae los mismos pedidos que el listado,
         // así que la diferencia la cuenta Rappi pero no la muestra en ningún lado (docs/rappi-portal/01).
         faltan.length
@@ -413,10 +460,30 @@ createServer(async (req, res) => {
     diasEntre(v.desde, v.hasta).length > 62
   )
     return responder(res, 400, { error: 'Periodo inválido (AAAA-MM-DD, máximo 62 días).' });
+  // Solo en «manual»: otras tiendas de la cuenta, para comprobar una tienda antes de darla de alta en rappi_tiendas
+  // (docs/rappi-portal/05). Es la misma lectura; rappi_importar rechaza el lote si trae una tienda sin alta.
+  let tiendas = TIENDAS;
+  if (datos.tiendas !== undefined) {
+    if (
+      tipo !== 'manual' ||
+      !Array.isArray(datos.tiendas) ||
+      !datos.tiendas.length ||
+      datos.tiendas.length > 30 ||
+      !datos.tiendas.every((t) => /^MX\d{6,20}$/.test(String(t)))
+    )
+      return responder(res, 400, {
+        error: 'tiendas: solo en corridas manuales, de 1 a 30 IDs de Rappi (MX…).',
+      });
+    tiendas = [...new Set(datos.tiendas.map(String))];
+  }
+  if (tipo === 'manual' && diasEntre(v.desde, v.hasta).length * tiendas.length > MAX_CONSULTAS_MANUAL)
+    return responder(res, 400, {
+      error: `Reposición muy larga para ${tiendas.length} tiendas: a lo más ${Math.floor(MAX_CONSULTAS_MANUAL / tiendas.length)} días por corrida.`,
+    });
   const vacio = { tipo, ...v, tiendas: [], pedidos: [] };
   if (enCurso)
     return responder(res, 200, { ...vacio, estado: 'ocupado', mensaje: 'Ya había una corrida en curso.' });
-  enCurso = sincronizar({ tipo, ...v });
+  enCurso = sincronizar({ tipo, ...v, tiendas });
   try {
     responder(res, 200, await enCurso);
   } catch (e) {

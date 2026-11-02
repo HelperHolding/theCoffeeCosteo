@@ -35,17 +35,24 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 
 - **En vivo:** cada 10 min de 07:07 a 23:57 (minutos 7, 17, 27…), ayer y hoy. Esos minutos son para no coincidir
   con el lector de Dodo (0, 15, 30, 45): el servidor tiene 2 GB y cada lector abre un navegador.
-- **Cierre:** 06:30, los últimos 7 días.
-- **Repaso:** domingo 05:30, los últimos 14 días.
-- **Reponer días:** `POST` al webhook «Reponer» con `{"tipo":"manual","desde":"…","hasta":"…"}`, máximo 62 días.
+- **Cierre:** 05:07, los últimos 7 días. **Repaso:** domingo 04:07, los últimos 14 días. A esas horas Dodo no corre
+  (su cierre es a las 6:30 y dura hasta 8 min).
+- **Consultas:** una por tienda y día, 3 a la vez en la misma página (`RAPPI_CONCURRENCIA`). Reintenta un 429 o 5xx.
+- **Reponer días:** `POST` al webhook «Reponer» con `{"tipo":"manual","desde":"…","hasta":"…"}`. Máximo 62 días y 400
+  consultas (días × tiendas): con 22 tiendas, 18 días por corrida.
+- **Registro:** cada corrida queda en `rappi_corridas`, con su duración en el mensaje. n8n no guarda las que salen
+  bien.
 - **Sesión:**
   - vive en el volumen `rappi_thecoffee` (`/datos/sesion.json`);
   - si Rappi la cierra, el lector entra solo con su usuario;
   - antes de escribir, elige México y espera a que el formulario habilite usuario y contraseña (si no, avisa sin
     contar como login fallido y la siguiente corrida reintenta);
   - si ese login falla, no reintenta en 6 h y avisa por correo.
-- **Agregar una sucursal:**
-  - sus dos tiendas (normal y Turbo) en `RAPPI_TIENDAS` y en `rappi_tiendas` (por migración);
+- **Agregar una sucursal** (`docs/rappi-portal/05`):
+  - comprobar sus dos tiendas (normal y Turbo) con una corrida `manual` que traiga `"tiendas": [...]`, sin pasar por
+    n8n: el `nombre` de cada tienda del lote debe ser el de la sucursal;
+  - darlas de alta en `rappi_tiendas` (por migración) y **después** agregarlas a `RAPPI_TIENDAS`. Si llega una tienda
+    sin alta, `rappi_importar` rechaza el lote completo;
   - `rappiPortal: true` en `lib/sucursales/config.ts`.
 
 ## Solo lectura

@@ -72,12 +72,14 @@ const nodes = [
     rule: { interval: [{ field: 'cronExpression', expression: '7-59/10 7-23 * * *' }] },
   }),
   fijar('Vivo', [220, 0], { tipo: 'vivo' }),
-  nodo('Cierre 6:30', 'n8n-nodes-base.scheduleTrigger', 1.2, [0, 180], {
-    rule: { interval: [{ triggerAtHour: 6, triggerAtMinute: 30 }] },
+  // Cierre y repaso de madrugada: Dodo no corre entre 0:00 y 6:30, y su cierre de las 6:30 dura hasta 8 min (medido
+  // el 2026-11-02, docs/rappi-portal/05). Antes el nuestro también era a las 6:30.
+  nodo('Cierre 5:07', 'n8n-nodes-base.scheduleTrigger', 1.2, [0, 180], {
+    rule: { interval: [{ field: 'cronExpression', expression: '7 5 * * *' }] },
   }),
   fijar('Cierre', [220, 180], { tipo: 'cierre' }),
   nodo('Repaso domingo', 'n8n-nodes-base.scheduleTrigger', 1.2, [0, 360], {
-    rule: { interval: [{ field: 'cronExpression', expression: '30 5 * * 0' }] },
+    rule: { interval: [{ field: 'cronExpression', expression: '7 4 * * 0' }] },
   }),
   fijar('Repaso', [220, 360], { tipo: 'repaso' }),
   nodo(
@@ -199,7 +201,7 @@ const conecta = (de, ...a) => ({
 });
 const connections = {
   ...conecta('Cada 10 min', 'Vivo'),
-  ...conecta('Cierre 6:30', 'Cierre'),
+  ...conecta('Cierre 5:07', 'Cierre'),
   ...conecta('Repaso domingo', 'Repaso'),
   ...conecta('Reponer (webhook)', 'Manual'),
   ...conecta('Vivo', 'Leer portal'),
@@ -227,7 +229,16 @@ const flujo = {
   name: NOMBRE,
   nodes,
   connections,
-  settings: { executionOrder: 'v1', timezone: 'America/Mexico_City' },
+  // Las corridas que salen bien no se guardan en n8n: con 22 tiendas serían ~1 MB cada una, y cada corrida ya queda
+  // en rappi_corridas (y si algo sale mal, llega el correo). Se guardan las que fallan dentro de n8n y las que se
+  // corren a mano desde el editor.
+  settings: {
+    executionOrder: 'v1',
+    timezone: 'America/Mexico_City',
+    saveDataSuccessExecution: 'none',
+    saveDataErrorExecution: 'all',
+    saveManualExecutions: true,
+  },
 };
 
 const i = process.argv.indexOf('--archivo');
