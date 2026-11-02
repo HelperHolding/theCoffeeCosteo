@@ -1,7 +1,7 @@
 # 42 · Tamaños verificados con el recetario oficial 2026 y dos correcciones del #71
 
-**Estado:** preparado el 2026-11-02, con código, pruebas, lote y ensayo local. **Sin ensayo remoto, sin aplicar y sin
-merge.** Cada paso remoto y el merge requieren aprobación expresa de Carlo.
+**Estado:** preparado el 2026-11-02, con código, pruebas, lotes, ensayo local y **ensayo remoto limpio de los dos lotes**.
+**Sin aplicar y sin merge.** Cada paso remoto y el merge requieren aprobación expresa de Carlo.
 
 ## Origen
 
@@ -114,10 +114,29 @@ leche (deslactosada o avena): 8 renglones y 13 unidades en 2 tiendas, del 2 al 2
 
 Después de revertir, la copia quedó idéntica al respaldo: tamaños, precios manuales, líneas y cantidades.
 
+## Respaldo y ensayo remoto (2026-11-02)
+
+**Respaldo `2026-11-02T2333Z`**, restaurado en `resp2333`: 24,747 filas, iguales a producción; 0 errores fuera de `vault`.
+
+**Antes del ensayo, producción tenía:** 182 recetas, 244 tamaños, 83 precios manuales y bitácora hasta #1606.
+
+| Lote | Resultado (ROLLBACK) |
+| --- | --- |
+| `recetas-recetario-lote-1` | 2 recetas y 3 celdas; 3 registros propios, 0 ajenos; los 3 costos declarados y ninguno más |
+| `tamanos-gelato-lote-1` | 2 productos pasan a Chica y Grande; 36 registros propios, 0 ajenos; Coffee $22.90 / $26.98 y Matcha $20.72 / $24.80; resto sin cambios |
+
+Después, con una conexión nueva, producción sigue idéntica: los mismos conteos y la misma huella de costos.
+
+**V60 (Carlo, 2026-11-02):** se queda como está.
+
+**Rappi:** hoy vende el Gelato Frappé Coffee en un solo tamaño y se lee como Large, pero Rappi va a agregar la opción. Si
+llega como «Elige el tamaño» (mediano 440 ml / grande 590 ml), `rappi-pos.ts` ya la traduce y deja de suponer el Large. Si
+llega con otro nombre, la opción quedará sin traducir y se agrega cuando aparezca.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
-1. Respaldo nuevo.
-2. Ensayo remoto con ROLLBACK de los dos lotes:
+1. ~~Respaldo nuevo~~ (hecho: `2026-11-02T2333Z`).
+2. ~~Ensayo remoto con ROLLBACK de los dos lotes~~ (hecho, limpio):
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-recetario-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
    - `npx tsx scripts/conciliacion/tamanos-producto-aplicar.ts --lote tamanos-gelato-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
 3. Aplicar los dos (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
