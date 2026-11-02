@@ -55,23 +55,70 @@ Los dos vuelven exactamente a los valores que tenían antes del #71.
 
 Los informes se guardaron en el respaldo privado, `informes-recetario-42`.
 
-## Gelato Frappés: decisión pendiente
+## Gelato Frappés: Chica y Grande (Carlo, 2026-11-02)
 
-En Costeo, los Gelato Frappés son de un solo tamaño (Único). El POS los vende con vaso Regular o Large, y el recetario
-tiene las dos tallas. Una línea con vaso de un producto Único no se puede costear, así que salen como «tamaño sin verificar».
+Carlo pidió revisar si el POS y Rappi venden las dos tallas, y agregarlas si el dato llega bien.
 
-Hay dos opciones:
+**POS** (API, 13 sucursales, 19-oct a 1-nov): el vaso llega en la línea como «Regular - 440ml» o «Large - 600ml», y el
+Large cobra +$10.
 
-1. **Agregar el tamaño Grande** con la receta del recetario (200 g de helado y 140 ml de leche, mismo café o matcha) y
-   mapear Regular → Chica y Large → Grande. Cuentan las dos tallas.
-   - Falta confirmar el empaque de la Grande: vaso de 20 oz, con la misma tapa y popote.
-   - Requiere ampliar el cargador, porque `recetas-ajustes.ts` no agrega tamaños.
-2. **Contar solo el Regular** como el tamaño Único. El Large sigue sin contarse.
+| Producto | Regular | Large | Sin vaso |
+| --- | --- | --- | --- |
+| Gelato Frappé Coffee (SHCO) | 108 (+11 sin código) | 106 (+11) | 4 |
+| Gelato Frappé Matcha (SHMA) | 46 (+2) | 46 (+1) | 1 (+1) |
+| Gelato Frappé Chai (SHCI) | — | — | 75 (+4): siempre sin vaso |
+
+**Rappi** (portal de Namóra): solo vende el Gelato Frappé Coffee, sin opción de tamaño. La única opción que trae es la
+leche (deslactosada o avena): 8 renglones y 13 unidades en 2 tiendas, del 2 al 22 de octubre. Con la regla del
+2026-10-29 («lo que Rappi vende sin tamaño es el grande»), entra como Large - 600ml.
+
+**Cambios:**
+
+- **Lote `tamanos-gelato-lote-1`** (cargador nuevo `tamanos-producto.ts`; manifiesto `42-tamanos-gelato-lote-1.manifiesto.json`,
+  sha256 `d8eaa55d…`). Coffee y Matcha pasan de Único a Chica y Grande:
+  - **Chica:** la receta Único actual, que es la Regular del recetario.
+  - **Grande:** 200 g de helado, 140 ml de leche, el mismo café o matcha, vaso de 20 oz, tapa y popote, como Coffee Frap y
+    Matcha Frap.
+
+  | Producto | Precio de lista | Precio manual de Rappi | Costo |
+  | --- | --- | --- | --- |
+  | Gelato Frappé Coffee | Chica $94, Grande $104 | $129, pasa del Único al Grande | $22.90 · $26.98 |
+  | Gelato Frappé Matcha | Chica $90, Grande $100 | $112, pasa del Único al Grande | $20.72 · $24.80 |
+
+  El precio de la Grande es el de la Chica más los $10 que cobra el POS. El precio manual de Rappi es el del menú del
+  2026-10-07.
+- **Código:**
+  - `tamanos-verificados.ts`: Regular → Chica y Large → Grande en Coffee y Matcha. La lista queda en 37.
+  - `rappi-pos.ts`: «gelato frappé coffee» sin tamaño se lee como Large - 600ml.
+- **Fuera:** el Gelato Frappé Chai se queda de tamaño Único, porque el POS lo vende sin vaso. Mocha, Chocolate y Horchai no
+  vienen en el recetario. Las pocas ventas de Coffee y Matcha sin vaso quedan sin tamaño verificado.
+
+**Cargador `tamanos-producto.ts`:**
+
+- En una transacción: alta de los tamaños con su precio de lista y precios manuales; las cantidades del Único pasan a la
+  Chica; se agregan las de la Grande y la línea del vaso de 20 oz; baja del Único, cuyo precio manual cae en cascada.
+- Bloqueo optimista por versión y estado previo exacto (tamaños, precios, manuales y líneas).
+- Costos esperados por tamaño; ningún otro costo cambia.
+- Bitácora exacta y huellas del resto.
+- Reversión por ejecución, que deja el producto exactamente como estaba.
+- 5 pruebas.
+
+**Ensayo sobre una copia del respaldo `2026-10-30T1929Z`**, borrada al terminar:
+
+| Paso | Resultado |
+| --- | --- |
+| Ensayo | 2 productos cambiados; 36 registros propios, 0 ajenos; costos de Chica y Grande como los declarados; resto sin cambios; ROLLBACK |
+| Aplicar | COMMIT |
+| Repetir | «sin cambio» |
+| Revertir | vuelve al estado previo |
+
+Después de revertir, la copia quedó idéntica al respaldo: tamaños, precios manuales, líneas y cantidades.
 
 ## Procedimiento remoto (cada paso requiere aprobación)
 
 1. Respaldo nuevo.
-2. Ensayo remoto con ROLLBACK:
-   `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-recetario-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
-3. Aplicar (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
-4. Merge del PR. El código de tamaños entra con el merge.
+2. Ensayo remoto con ROLLBACK de los dos lotes:
+   - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-recetario-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
+   - `npx tsx scripts/conciliacion/tamanos-producto-aplicar.ts --lote tamanos-gelato-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
+3. Aplicar los dos (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
+4. Merge del PR. El código de tamaños y el vaso de Rappi entran con el merge, después de aplicar los lotes.

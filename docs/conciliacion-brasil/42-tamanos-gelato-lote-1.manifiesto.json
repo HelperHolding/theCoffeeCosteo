@@ -1,0 +1,308 @@
+{
+ "lote": "tamanos-gelato-lote-1",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026 (Canva) p.46 y p.48; API The Coffee (13 sucursales, 2026-10-19..2026-11-01): Regular - 440ml y Large - 600ml (+$10) en SHCO y SHMA",
+  "sha256": "1a2fe5d924b6c546102cb8446f84bf799b7ff1477b5687fdb50c71e7f25fce12"
+ },
+ "productos": [
+  {
+   "nombre": "Gelato Frappé Coffee",
+   "version": 16,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": 94,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 129,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · actualización 2026-10-07"
+       }
+      ]
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 18
+      }
+     },
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "HELADO DE SABOR VAINILLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 150
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 100
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": 94,
+      "manuales": []
+     },
+     "Grande": {
+      "precioLista": 104,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 129,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · actualización 2026-10-07"
+       }
+      ]
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 18,
+       "Grande": 18
+      }
+     },
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "HELADO DE SABOR VAINILLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 150,
+       "Grande": 200
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 100,
+       "Grande": 140
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "RECETARIO OFICIAL 2026 (Canva) p.46: Grande (600 ml); vaso de 20 oz como el resto de las bebidas frías grandes (Coffee Frap, Matcha Frap)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 22.9
+   },
+   "costoNuevo": {
+    "Chica": 22.9,
+    "Grande": 26.98
+   },
+   "nota": "RECETARIO OFICIAL 2026 (Canva) p.46: Regular (440 ml) = la receta Único actual; Grande (600 ml) con 200 g de helado y 140 ml de leche, mismo café o matcha. El POS cobra +$10 por el vaso Large. Rappi lo vende sin tamaño: es el Grande (regla del 2026-10-29), así que su precio manual de Rappi pasa al Grande"
+  },
+  {
+   "nombre": "Gelato Frappé Matcha",
+   "version": 15,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": 90,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 112,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · actualización 2026-10-07"
+       }
+      ]
+     }
+    },
+    "lineas": [
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "HELADO DE SABOR VAINILLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 150
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 100
+      }
+     },
+     {
+      "componente": "Mix MATCHA GOURMET ORGÁNICO 1 KG",
+      "tipo": "subreceta",
+      "cantidades": {
+       "Único": 36.046693
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": 90,
+      "manuales": []
+     },
+     "Grande": {
+      "precioLista": 100,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 112,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · actualización 2026-10-07"
+       }
+      ]
+     }
+    },
+    "lineas": [
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "HELADO DE SABOR VAINILLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 150,
+       "Grande": 200
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 100,
+       "Grande": 140
+      }
+     },
+     {
+      "componente": "Mix MATCHA GOURMET ORGÁNICO 1 KG",
+      "tipo": "subreceta",
+      "cantidades": {
+       "Chica": 36.046693,
+       "Grande": 36.046693
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "RECETARIO OFICIAL 2026 (Canva) p.48: Grande (600 ml); vaso de 20 oz como el resto de las bebidas frías grandes (Coffee Frap, Matcha Frap)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 20.718
+   },
+   "costoNuevo": {
+    "Chica": 20.718,
+    "Grande": 24.798
+   },
+   "nota": "RECETARIO OFICIAL 2026 (Canva) p.48: Regular (440 ml) = la receta Único actual; Grande (600 ml) con 200 g de helado y 140 ml de leche, mismo café o matcha. El POS cobra +$10 por el vaso Large. Rappi lo vende sin tamaño: es el Grande (regla del 2026-10-29), así que su precio manual de Rappi pasa al Grande"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-11-02: «Revisa si en rappi también tiene 2 opciones y si en POS tiene las 2 opciones y la API lo reporta correctamente cuando es uno u otro agrégalo para costear correctamente». Autoriza preparar el lote; cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}
