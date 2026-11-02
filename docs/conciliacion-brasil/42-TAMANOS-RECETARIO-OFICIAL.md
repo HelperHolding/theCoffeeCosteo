@@ -1,7 +1,11 @@
 # 42 · Tamaños verificados con el recetario oficial 2026 y dos correcciones del #71
 
-**Estado:** preparado el 2026-11-02, con código, pruebas, lotes, ensayo local y **ensayo remoto limpio de los dos lotes**.
-**Sin aplicar y sin merge.** Cada paso remoto y el merge requieren aprobación expresa de Carlo.
+**Estado:** **APLICADO en producción el 2026-11-02**, con aprobación de Carlo:
+
+- `recetas-recetario-lote-1`: ejecución `7d6efac5…`, bitácora #1646–1648;
+- `tamanos-gelato-lote-1`: ejecución `ac195ad0…`, bitácora #1649–1684.
+
+El código (tamaños verificados, vaso de Rappi y Chipotle Mayo) entra con el merge de este PR, después de aplicar los lotes. Cada paso remoto y el merge requieren aprobación expresa de Carlo.
 
 ## Origen
 
@@ -133,11 +137,25 @@ Después, con una conexión nueva, producción sigue idéntica: los mismos conte
 llega como «Elige el tamaño» (mediano 440 ml / grande 590 ml), `rappi-pos.ts` ya la traduce y deja de suponer el Large. Si
 llega con otro nombre, la opción quedará sin traducir y se agrega cuando aparezca.
 
+## Aplicación en producción (2026-11-02, aprobada por Carlo después de ver el ensayo)
+
+Antes se comprobó que producción seguía igual que en el ensayo.
+
+| Paso | Resultado |
+| --- | --- |
+| `recetas-recetario-lote-1` | 2 recetas cambiadas; 3 registros propios (#1646–1648), 0 ajenos; costos como los declarados; COMMIT |
+| `tamanos-gelato-lote-1` | 2 productos en Chica y Grande; 36 registros propios (#1649–1684), 0 ajenos; resto sin cambios; COMMIT |
+| Conexión nueva | 182 recetas, 246 tamaños, 83 precios manuales y bitácora hasta #1684. Gelato Frappé Coffee: Chica $94 (costo $22.90) y Grande $104 (costo $26.98, Rappi $129). Matcha: Chica $90 ($20.72) y Grande $100 ($24.80, Rappi $112) |
+| Repetir los ensayos | 2 y 2 «sin cambio», 0 registros |
+
+La reversión, con las ejecuciones completas, está en el respaldo privado (`informes-doc-42/REVERSION.md`). Se hace en orden
+inverso: primero los tamaños y después las recetas.
+
 ## Procedimiento remoto (cada paso requiere aprobación)
 
 1. ~~Respaldo nuevo~~ (hecho: `2026-11-02T2333Z`).
 2. ~~Ensayo remoto con ROLLBACK de los dos lotes~~ (hecho, limpio):
    - `npx tsx scripts/conciliacion/recetas-ajustes-aplicar.ts --lote recetas-recetario-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
    - `npx tsx scripts/conciliacion/tamanos-producto-aplicar.ts --lote tamanos-gelato-lote-1 --usuario <uuid-perfil> --informes <carpeta privada>`
-3. Aplicar los dos (`--aplicar --confirmo jpqkmnfjwzniptszjuli`), verificar y repetir el ensayo.
+3. ~~Aplicar los dos, verificar y repetir el ensayo~~ (hecho).
 4. Merge del PR. El código de tamaños y el vaso de Rappi entran con el merge, después de aplicar los lotes.
