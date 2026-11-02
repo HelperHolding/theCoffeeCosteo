@@ -91,8 +91,13 @@ describe('personalizaciones neutras', () => {
     expect(r.parcial.motivos.personalizacion).toBe(1);
   });
 
-  it('«Chipotle Mayo» sigue siendo parcial: la salsa no está en la receta', () => {
-    const r = costeo(linea('MQ1', 'Grilled Ham & Cheese Sandwich', 8900, [c('Chipotle Mayo')]));
+  it('«Chipotle Mayo» es neutra en los sándwiches: extra sin costo, se costea en $0 (Carlo, 2026-11-02)', () => {
+    const r = costeo(
+      linea('MQ1', 'Grilled Ham & Cheese Sandwich', 8900, [c('Chipotle Mayo')]),
+      latte('Chipotle Mayo'),
+    );
+    expect(r.completo.lineas).toBe(1);
+    expect(r.completo.costoCent).toBe(3674);
     expect(r.parcial.motivos.personalizacion).toBe(1);
   });
 
@@ -122,7 +127,6 @@ describe('integridad de la lista', () => {
       'Less Honey',
       'Average Honey',
       'More Honey',
-      'Chipotle Mayo',
       'Without Sprinkles',
       'More Vanilla (20ml)',
       'Less Vanilla (10ml)',

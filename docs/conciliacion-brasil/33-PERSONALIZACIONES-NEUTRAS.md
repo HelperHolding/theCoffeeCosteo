@@ -59,8 +59,7 @@ El margen agregado cambia porque cambia la mezcla de líneas que entran al cálc
    - gramos del shot sencillo y del extra;
    - ml de miel;
    - marca de leche vegetal;
-   - ml de «More/Less»;
-   - Chipotle Mayo.
+   - ml de «More/Less».
 
    Las preguntas están en el Excel de pendientes, fuera del repo.
 
@@ -71,6 +70,28 @@ El margen agregado cambia porque cambia la mezcla de líneas que entran al cálc
 - opciones de la receta;
 - que basta una no neutra para que la línea sea parcial;
 - que la lista es por receta;
-- que Chipotle Mayo sigue parcial;
+- que Chipotle Mayo es neutra en los sándwiches (se costea en $0);
 - que el tamaño se sigue exigiendo;
 - la integridad de la lista: ids válidos, sin opciones que cambian cantidades, Mug excluido.
+
+## Chipotle Mayo en $0 (2026-11-02)
+
+Carlo decidió que la Chipotle Mayo, que es un extra, se considere **sin costo** en el costeo.
+
+**Cómo llega**, leído en la API en solo lectura (13 sucursales configuradas, 19-oct a 1-nov, 17,134 líneas, 0 errores):
+siempre como personalización «Chipotle Mayo» (o «Without Chipotle Mayo») a $0, en mostrador y app.
+
+| Producto (código) | Con | Sin |
+| --- | --- | --- |
+| Grilled Ham & Cheese Sandwich (MQ1) | 233 | 223 |
+| Grilled Ham Cheese and Tomato Sandwich (BR3) | 147 | 86 |
+| Grilled Cheese Sandwich (QQ2) | 65 | 63 |
+| Croissant filled with cheese and ham (CROSTUAPP) | 56 | 47 |
+
+Las cifras incluyen las líneas sin código del mismo producto. En los combos del POS, la mayonesa ya se asigna al sándwich
+(`combos.ts`). Rappi la traduce a «Chipotle Mayo» (`rappi-pos.ts`).
+
+**Cambio:** «Chipotle Mayo» queda neutra, como «Without Chipotle Mayo», en los 5 sándwiches que ya tenían esa opción:
+Grilled Ham & Cheese, Grilled Ham Cheese and Tomato, Grilled Cheese, Croissant filled with cheese and ham, y Croissant
+filled with cheese. Fuera de esas recetas sigue sin ser neutra (por ejemplo, en una bebida).
+

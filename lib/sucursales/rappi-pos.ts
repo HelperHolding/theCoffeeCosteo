@@ -142,7 +142,7 @@ const VASOS: Readonly<Record<string, string>> = {
 /**
  * Bebidas que Rappi vende sin opción de tamaño: son las grandes (Carlo, 2026-10-29). El vaso es el Large que usa el POS
  * de Namóra para ese producto (1 al 28 de octubre): 355 ml en las calientes y 600 ml en los frappés. Cold Drip V60 no
- * está: en el POS no lleva vaso.
+ * está: en el POS no lleva vaso. El Gelato Frappé Coffee entra con su tamaño Grande (doc 42).
  */
 export const VASO_UNICO_RAPPI: Readonly<Record<string, string>> = {
   americano: 'Large - 355ml',
@@ -161,6 +161,7 @@ export const VASO_UNICO_RAPPI: Readonly<Record<string, string>> = {
   'pumpkin spice frap': 'Large - 600ml',
   'salted caramel frappé': 'Large - 600ml',
   'taro frappé': 'Large - 600ml',
+  'gelato frappé coffee': 'Large - 600ml',
 };
 const LECHES: Readonly<Record<string, string>> = {
   entera: 'Milk',

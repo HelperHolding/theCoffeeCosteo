@@ -87,8 +87,8 @@ describe('tamaño verificado', () => {
         d,
       ),
     ).toBeNull();
-    // La lista no incluye los pendientes de E1.
-    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(31);
+    // La lista no incluye los pendientes de E1; suma los 6 del recetario oficial (doc 42).
+    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(37);
     expect(TAMANOS_VERIFICADOS[CHAI_FRAP]).toEqual({ Regular: 'Chica' });
   });
 });

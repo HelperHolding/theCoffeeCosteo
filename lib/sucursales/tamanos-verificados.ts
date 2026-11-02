@@ -1,8 +1,9 @@
 /**
  * Tamaños verificados por producto (receta de Costeo): qué vaso del POS («Regular - …ml» / «Large - …ml») corresponde
  * a qué tamaño de Costeo. Lista explícita, NUNCA una regla global: solo productos con evidencia de precio por tamaño en
- * 532 (E1 del doc 16, lotes 3 y 4). Quedan fuera, por ejemplo, Iced Blueberry Matcha y Matcha Iced Mint (E1 pendiente) y
- * el Grande de Chai Frap. «Sin vaso» solo se costea en productos de tamaño Único (ver costeo.ts).
+ * 532 (E1 del doc 16, lotes 3 y 4) o con la receta del recetario oficial 2026 (doc 42: Fresh Sodas, Iced Blueberry Matcha,
+ * Matcha Iced Mint y los Gelato Frappés Coffee y Matcha). Quedan fuera, por ejemplo, el Grande de Chai Frap y el Gelato
+ * Frappé Chai (el POS lo vende sin vaso: es de tamaño Único). «Sin vaso» solo se costea en productos de tamaño Único (ver costeo.ts).
  * Cambiar esta lista exige evidencia y revisión, como un lote.
  */
 export const TAMANOS_VERIFICADOS: Record<string, Partial<Record<'Regular' | 'Large', 'Chica' | 'Grande'>>> = {
@@ -68,4 +69,16 @@ export const TAMANOS_VERIFICADOS: Record<string, Partial<Record<'Regular' | 'Lar
   'fcf0d45d-76b2-48a4-8d96-d8abc228eca8': { Regular: 'Chica', Large: 'Grande' }, // lote 4, doc 28
   // Urban Chocolate (4UC)
   '2c8b49a6-7b2f-489e-8932-1d1ff8c7754c': { Regular: 'Chica', Large: 'Grande' }, // lote 4, doc 28
+  // Fresh Soda Passion fruit (FSOD4)
+  '6465a09a-6612-4542-8298-67108c507e12': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.44, doc 42
+  // Fresh Soda Pink Lemonade (FSOD2)
+  'e5b9dc6b-e750-4a91-8120-065cd719582c': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.43, doc 42
+  // Gelato Frappé Coffee (SHCO): pasa a Chica y Grande con tamanos-gelato-lote-1
+  'adfc682f-380c-41a9-a83d-63f94e0d3042': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.46, doc 42
+  // Gelato Frappé Matcha (SHMA): pasa a Chica y Grande con tamanos-gelato-lote-1
+  '22e7e73c-3f8e-471d-b86a-63a35fcfcb64': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.48, doc 42
+  // Iced Blueberry Matcha (ICEBLMAPP)
+  '4fb97fb3-b62f-4d7d-a9f5-db9d5cf5b5c9': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.59, doc 42
+  // Matcha Iced Mint (7IC)
+  '4b651700-0745-42fe-8e78-7b44dbdb66ee': { Regular: 'Chica', Large: 'Grande' }, // recetario oficial p.37, doc 42
 };
