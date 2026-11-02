@@ -247,9 +247,21 @@ describe('POS + Rappi del portal', () => {
 
   it('suma los del periodo, sin repetir los que ya llegaron por el POS, y ordena del más reciente', async () => {
     const l = await conRappi(lectura(), async () => rappi);
-    expect(l.pedidos.map((p) => p.numeroPedidoRappi)).toEqual(['2950000001', null, '2950000009']);
+    // El repetido (…09) lleva la hora del portal (13:05), más tarde que el del mostrador (10:00).
+    expect(l.pedidos.map((p) => p.numeroPedidoRappi)).toEqual(['2950000001', '2950000009', null]);
     expect(l.totalDeclarado).toBe(3);
     expect(l.estado).toBe('completa');
+  });
+
+  it('si un pedido llegó por los dos lados se queda la versión del portal (Rubén Darío: «Generic» en el POS)', async () => {
+    const l = await conRappi(lectura(), async () => rappi);
+    const doble = l.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!;
+    expect(doble).toBe(rappi[1]);
+    expect(doble.tipo).toBe('RAPPI_PORTAL');
+    expect(l.pedidos.filter((p) => p.numeroPedidoRappi === '2950000009')).toHaveLength(1);
+    // Solo el POS lo tiene: se conserva tal cual.
+    const soloPos = await conRappi(lectura(), async () => [rappi[0]]);
+    expect(soloPos.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!.tipo).toBe('CREDIT');
   });
 
   it('si Rappi no se pudo leer la lectura queda parcial y lo dice; sin fuente o con error del POS, no cambia', async () => {

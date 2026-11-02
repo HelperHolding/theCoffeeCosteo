@@ -38,10 +38,6 @@ export interface ConfigSucursal {
 const ALCANCE_RAPPI =
   'Incluye Rappi (forma de pago RAPPI en la API). Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
-/** Sin Rappi en la API: solo lo que cobra el POS. No se estima lo que falta. */
-const ALCANCE_POS =
-  'Ventas del POS: Mostrador y App. Rappi de esta sucursal no llega por la API, así que no se incluye ni se estima.';
-
 /** Rappi no llega por la API del POS: se lee del portal de Rappi (docs/rappi-portal) y se suma a las ventas. */
 const ALCANCE_POS_RAPPI_PORTAL =
   'Incluye Rappi, leído del portal de Rappi (tienda normal y Turbo) cada 10 minutos. Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
@@ -50,6 +46,8 @@ const ALCANCE_POS_RAPPI_PORTAL =
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
  * id de la API = tienda del CRM (lookerStoreId = número Jestor), día 27 conciliado (venta = suma por productos, a lo
  * más 1 ¢ de redondeo) y hora local de Guadalajara (último pedido de hoy ≤ hora actual).
+ * Rappi no llega por la API del POS: se lee del portal de Partners (docs/rappi-portal; tiendas en el doc 07). Piloto
+ * Namóra el 2026-10-29; las demás desde el 2026-11-02, con sus tiendas comprobadas en el filtro del portal.
  */
 const gdl = (
   companyId: number,
@@ -66,7 +64,8 @@ const gdl = (
   zona: 'America/Mexico_City',
   modoTiempo: 'local-etiquetada-z',
   rappi: false,
-  alcance: ALCANCE_POS,
+  rappiPortal: true,
+  alcance: ALCANCE_POS_RAPPI_PORTAL,
 });
 
 export const sucursalesConfiguradas: ConfigSucursal[] = [
@@ -96,7 +95,8 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     alcance: ALCANCE_RAPPI,
   },
   {
-    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Tiene Rappi por la API.
+    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Tiene Rappi por la API del POS, pero
+    // llega como «Generic»: con rappiPortal, cada pedido toma la versión del portal (mismo número; conRappi).
     companyId: 532,
     lookerStoreId: 455,
     nombre: 'Rubén Darío',
@@ -106,7 +106,8 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     zona: 'America/Mexico_City',
     modoTiempo: 'local-etiquetada-z',
     rappi: true,
-    alcance: ALCANCE_RAPPI,
+    rappiPortal: true,
+    alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
   gdl(384, 301, 'Ventura', 'Zapopan · Puerta del Valle'),
   gdl(457, 355, 'Aleden', 'Zapopan · Av. Universidad'),
@@ -119,8 +120,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   gdl(514, 397, 'Essentia', 'Country Club'),
   // API «The Coffee Calle Otawa» (sic).
   gdl(518, 428, 'Calle Ottawa', 'Providencia'),
-  // Piloto de Rappi desde el portal de Partners (docs/rappi-portal): tienda normal MX1930270777 y Turbo MX1930301156.
-  { ...gdl(513, 394, 'Namóra', 'Chapultepec Sur'), rappiPortal: true, alcance: ALCANCE_POS_RAPPI_PORTAL },
+  gdl(513, 394, 'Namóra', 'Chapultepec Sur'),
   gdl(567, 475, 'Gran Plaza', 'Zapopan · Don Bosco Vallarta'),
   gdl(631, 542, 'Forum Tlaquepaque', 'Prados del Nilo'),
 ];
