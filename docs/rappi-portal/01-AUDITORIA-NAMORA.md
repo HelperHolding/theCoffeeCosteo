@@ -97,8 +97,14 @@ Base: `https://services.rappi.com/rests-partners-gateway/cauth`. Todos con `Auth
 | **Total**    | **84**       | **79**            |
 
 - Las páginas de 15 devuelven 13–15 filas; con `page_size` 100 llegan las mismas 79. No hay repetidos entre páginas.
-- **Sin confirmar** qué pedidos faltan y por qué. La exportación «Descargar CSV» podría traerlos (requiere permiso de
-  Carlo para descargarla).
+- **Resuelto el 2026-11-02 (con permiso de Carlo):** la descarga del historial (`ORDERS_HISTORY_REPORT`, 24-oct a
+  1-nov, las dos tiendas, 205 pedidos) trae **exactamente** los mismos pedidos que el listado y que `rappi_pedidos`;
+  le faltan los mismos 18 respecto a `total_rows`. Rappi los cuenta pero no los muestra en ningún lado del portal: no
+  están en disputas (`orders-dispute/by-stores`) ni en cancelaciones de Finanzas (204 sin datos). No hay nada que
+  reponer del lado del lector.
+- Rappi quita filas **después** de paginar (28-oct Namóra Turbo, `total_rows` 25: con `page_size` 10 llegan 8, 8 y 4;
+  con 5, 3-5-4-4-4; siempre los mismos 20). El lector ya no toma una página corta como la última: sigue hasta cubrir
+  `total_rows`.
 - En toda la marca pasa lo mismo: la primera página de 15 trajo 13 filas, con `total_rows` = 3,144 en 8 días.
 
 ## 4. Inventario de campos
@@ -230,6 +236,6 @@ máquina; el flujo tiene `availableInMCP: true`). Instancia `n8n.thecoffeemexico
 
 1. ¿El inicio de sesión pidió código por SMS/correo o captcha?
 2. ¿Dónde están los pedidos de Rappi de Rubén Darío que no aparecen en `MX1930260682`?
-3. ¿Autorizas descargar un CSV del historial de Namóra (21–28 oct) para ver si trae los 5 pedidos que faltan en el
-   listado? Se guardaría fuera del repo.
+3. ~~¿Autorizas descargar un CSV del historial?~~ Descargado el 2026-11-02 (fuera del repo): trae lo mismo que el
+   listado (ver «Calidad del listado»).
 4. ¿Conviene pedir a Rappi o al proveedor del POS la integración oficial para Namóra en lugar de leer el portal?
