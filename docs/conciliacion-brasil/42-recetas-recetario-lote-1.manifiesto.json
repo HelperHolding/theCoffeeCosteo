@@ -1,0 +1,66 @@
+{
+ "lote": "recetas-recetario-lote-1",
+ "fuente": {
+  "archivo": "RECETARIO OFICIAL 2026 (Canva, «Manual de Preparación de Bebidas y Alimentos», leído el 2026-11-02): p.37 Matcha Iced Mint y p.59 Iced Blueberry Matcha",
+  "sha256": "706359800945357ab28fe9ff85942c418726c932721c3ddb2c9f174645e588b9"
+ },
+ "recetas": [
+  {
+   "nombre": "Iced Blueberry Matcha",
+   "version": 32,
+   "celdas": [
+    {
+     "componente": "JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA)",
+     "tipo": "insumo",
+     "tamano": "Chica",
+     "previo": 10,
+     "nuevo": 15,
+     "origen": "RECETARIO OFICIAL 2026 (Canva), p.59: 15 ml de jarabe de blueberry en Regular y Grande; 10 ml es la opción «Menos». Regresa el valor anterior al #71"
+    },
+    {
+     "componente": "JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA)",
+     "tipo": "insumo",
+     "tamano": "Grande",
+     "previo": 10,
+     "nuevo": 15,
+     "origen": "RECETARIO OFICIAL 2026 (Canva), p.59: 15 ml de jarabe de blueberry en Regular y Grande; 10 ml es la opción «Menos». Regresa el valor anterior al #71"
+    }
+   ]
+  },
+  {
+   "nombre": "Matcha Iced Mint",
+   "version": 30,
+   "celdas": [
+    {
+     "componente": "Mix MATCHA GOURMET ORGÁNICO 1 KG",
+     "tipo": "subreceta",
+     "tamano": "Grande",
+     "previo": 36.046693,
+     "nuevo": 45.021012,
+     "origen": "RECETARIO OFICIAL 2026 (Canva), p.37: Grande (600 ml) lleva 45 ml de matcha. Regresa el valor anterior al #71"
+    }
+   ]
+  }
+ ],
+ "costos": [
+  {
+   "producto": "Iced Blueberry Matcha",
+   "tamano": "Chica",
+   "previo": 15.608,
+   "nuevo": 16.783
+  },
+  {
+   "producto": "Iced Blueberry Matcha",
+   "tamano": "Grande",
+   "previo": 19.696,
+   "nuevo": 20.871
+  },
+  {
+   "producto": "Matcha Iced Mint",
+   "tamano": "Grande",
+   "previo": 19.548,
+   "nuevo": 20.7973
+  }
+ ],
+ "aprobacion": "Carlo, 2026-11-02: «Agrega todo lo necesario» (regresar al recetario oficial el jarabe del Iced Blueberry Matcha y el matcha de la Grande del Matcha Iced Mint, que el #71 tomó del Excel del equipo). Autoriza preparar el lote; cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

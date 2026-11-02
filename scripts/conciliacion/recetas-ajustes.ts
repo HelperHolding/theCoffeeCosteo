@@ -83,10 +83,19 @@ export const LOTES_AJUSTES_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/40-recetas-excel-lote-1.manifiesto.json',
     sha256: '18b09ac8cf0e52ba9807c0c4e09118f35e28a6367b6f596e413ffe5ba5e021a0',
   },
+  // Carlo, 2026-11-02 (doc 42): Iced Blueberry Matcha (jarabe 15 ml) y Matcha Iced Mint Grande (45 ml de matcha) vuelven
+  // al recetario oficial. Cada paso remoto exige aprobación aparte.
+  'recetas-recetario-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/42-recetas-recetario-lote-1.manifiesto.json',
+    sha256: 'e8299d3b4647caf8cd8233d1c32092c6ee69d1182e07bff99d3b6aebcfde5db4',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes. */
-export const DOC_AJUSTES: Record<string, string> = { 'recetas-excel-lote-1': '40' };
+export const DOC_AJUSTES: Record<string, string> = {
+  'recetas-excel-lote-1': '40',
+  'recetas-recetario-lote-1': '42',
+};
 export const docAjustes = (lote: string) => DOC_AJUSTES[lote] ?? '40';
 
 const TOL = 1e-4;

@@ -150,7 +150,7 @@ describe('manifiesto', () => {
 
   it('el lote real (doc 40): 10 recetas, el costo de la Cookie Triple Chocolate y 14 costos que cambian', async () => {
     const m = await leerLoteAjustes('recetas-excel-lote-1');
-    expect(Object.keys(LOTES_AJUSTES_APROBADOS)).toEqual(['recetas-excel-lote-1']);
+    expect(Object.keys(LOTES_AJUSTES_APROBADOS)).toEqual(['recetas-excel-lote-1', 'recetas-recetario-lote-1']);
     expect(m.costosInsumo!.map((c) => `${c.insumo} ${c.previo}→${c.nuevo}`)).toEqual([
       'COOKIE FULLY BAKED TRIPLE CHOCOLATE 22.49→24.5',
     ]);
@@ -183,6 +183,23 @@ describe('manifiesto', () => {
     expect(cambios.join(' | ')).not.toMatch(/TAPA|HIELO|AGUA ·|JAMON SERRANO|WHITE MERCH|PAN DE MUERTO/);
     expect(m.costos).toHaveLength(14);
     expect(m.aprobacion).toMatch(/No hagas merge todavía/);
+  });
+
+  it('lote del recetario oficial (doc 42): regresa 3 celdas del #71 y declara sus 3 costos', async () => {
+    const m = await leerLoteAjustes('recetas-recetario-lote-1');
+    expect(m.costosInsumo ?? []).toEqual([]);
+    expect(
+      m.recetas!.flatMap((r) => (r.celdas ?? []).map((c) => `${r.nombre} · ${c.componente} ${c.tamano} ${c.previo}→${c.nuevo}`)),
+    ).toEqual([
+      'Iced Blueberry Matcha · JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA) Chica 10→15',
+      'Iced Blueberry Matcha · JARABE DE BLUEBERRY 1 LITRO ( 1 PIEZA) Grande 10→15',
+      'Matcha Iced Mint · Mix MATCHA GOURMET ORGÁNICO 1 KG Grande 36.046693→45.021012',
+    ]);
+    expect(m.costos.map((c) => `${c.producto} ${c.tamano} ${c.previo}→${c.nuevo}`)).toEqual([
+      'Iced Blueberry Matcha Chica 15.608→16.783',
+      'Iced Blueberry Matcha Grande 19.696→20.871',
+      'Matcha Iced Mint Grande 19.548→20.7973',
+    ]);
   });
 
   it('leerLoteAjustes exige la huella aprobada', async () => {
