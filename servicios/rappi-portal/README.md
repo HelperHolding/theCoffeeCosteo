@@ -41,6 +41,8 @@ Contenedor junto a n8n que lee el historial del portal de Rappi Partners y devue
 - **Sesión:**
   - vive en el volumen `rappi_thecoffee` (`/datos/sesion.json`);
   - si Rappi la cierra, el lector entra solo con su usuario;
+  - antes de escribir, elige México y espera a que el formulario habilite usuario y contraseña (si no, avisa sin
+    contar como login fallido y la siguiente corrida reintenta);
   - si ese login falla, no reintenta en 6 h y avisa por correo.
 - **Agregar una sucursal:**
   - sus dos tiendas (normal y Turbo) en `RAPPI_TIENDAS` y en `rappi_tiendas` (por migración);

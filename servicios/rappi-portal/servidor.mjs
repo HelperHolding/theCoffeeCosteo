@@ -124,6 +124,42 @@ async function abrirFormulario(pagina) {
   return null;
 }
 
+/**
+ * Elige México y espera a que el formulario habilite usuario y contraseña (vienen `disabled` hasta elegir país).
+ * La lista de países llega unos segundos después de que se ve el formulario y, al llegar, vuelve a Colombia: si se
+ * eligió antes, el usuario se queda deshabilitado (cierre del 2026-11-02 06:30: `fill` agotó 30 s). Por eso espera a
+ * que el <select> del formulario tenga los países, comprueba que se habilitó y reintenta hasta 4 veces.
+ */
+async function elegirMexico(pagina) {
+  const habilitado = () =>
+    pagina
+      .locator('#login-username:enabled, #login-password:enabled')
+      .count()
+      .then((n) => n === 2)
+      .catch(() => false);
+  for (let intento = 0; intento < 4; intento++) {
+    await pagina
+      .waitForFunction(() => (document.querySelector('select')?.options.length ?? 0) > 1, null, {
+        timeout: 15_000,
+      })
+      .catch(() => {});
+    await pagina
+      .locator('#login-country-trigger')
+      .click({ timeout: 5_000 })
+      .catch(() => {});
+    await pagina
+      .getByRole('option', { name: /México/ })
+      .click({ timeout: 5_000 })
+      .catch(() => {});
+    const fin = Date.now() + 5_000;
+    while (Date.now() < fin) {
+      if (await habilitado()) return true;
+      await pagina.waitForTimeout(500);
+    }
+  }
+  return false;
+}
+
 /** { fallo: texto o null, entro: si hubo login con usuario y contraseña }. */
 async function iniciarSesion(pagina) {
   if (!RAPPI_USUARIO || !RAPPI_CLAVE)
@@ -154,8 +190,12 @@ async function iniciarSesion(pagina) {
       fallo: 'El formulario de inicio de sesión de Rappi cambió (no aparece el selector de país).',
       entro: false,
     };
-  await pais.click();
-  await pagina.getByRole('option', { name: /México/ }).click();
+  if (!(await elegirMexico(pagina)))
+    return {
+      fallo:
+        'El formulario de inicio de sesión de Rappi no habilitó el usuario tras elegir México. La siguiente corrida lo vuelve a intentar.',
+      entro: false,
+    };
   await pagina.locator('#login-username').fill(RAPPI_USUARIO);
   await pagina.locator('#login-password').fill(RAPPI_CLAVE);
   await pagina.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
@@ -266,7 +306,9 @@ async function sincronizar({ tipo, desde, hasta }) {
             throw new Error(`Historial ${tienda} ${dia}: HTTP ${r.status}.`);
           total ??= r.json.total_rows;
           for (const o of r.json.results) vistos.set(String(o.id), o);
-          if (r.json.results.length < PAGINA) break;
+          // Rappi quita filas de cada página después de paginar (con page_size 10 entrega 8, 8, 4 de 25): una página
+          // corta no es la última. Se sigue hasta cubrir total_rows (o hasta una página vacía).
+          if (!r.json.results.length || (pag + 1) * PAGINA >= (total ?? 0)) break;
         }
         porDia[dia] = { total_rows: total ?? 0, devueltos: vistos.size };
         for (const o of vistos.values()) {
@@ -318,7 +360,11 @@ async function sincronizar({ tipo, desde, hasta }) {
       base.mensaje = [
         relogin ? 'Sesión renovada con login automático.' : '',
         `Leídos ${base.pedidos.length} pedidos de ${TIENDAS.length} tiendas (${desde} a ${hasta}).`,
-        faltan.length ? `El listado devolvió menos de lo que contó: ${faltan.join(', ')}.` : '',
+        // Visto el 2026-11-02: la descarga «ORDERS_HISTORY_REPORT» del portal trae los mismos pedidos que el listado,
+        // así que la diferencia la cuenta Rappi pero no la muestra en ningún lado (docs/rappi-portal/01).
+        faltan.length
+          ? `El listado devolvió menos de lo que contó (Rappi tampoco los muestra en su historial ni en su descarga): ${faltan.join(', ')}.`
+          : '',
       ]
         .filter(Boolean)
         .join(' ');
