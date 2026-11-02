@@ -66,10 +66,12 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Croissant filled with cheese
   '49a02218-0eb3-4a49-8742-c4b6c6c0da9c': [
+    'Chipotle Mayo', // extra sin costo: se costea en $0 (Carlo, 2026-11-02)
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
   // Croissant filled with cheese and ham
   '4ac9187c-fdaf-4678-8e91-7ead2d596c9b': [
+    'Chipotle Mayo', // extra sin costo: se costea en $0 (Carlo, 2026-11-02)
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
   // Espresso Tonic
@@ -103,14 +105,17 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Grilled Cheese Sandwich
   '9c5f7529-8809-464a-a61a-911d507e2d03': [
+    'Chipotle Mayo', // extra sin costo: se costea en $0 (Carlo, 2026-11-02)
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
   // Grilled Ham & Cheese Sandwich
   'ae3742b2-0188-4fc3-88c4-533a8ecb40c9': [
+    'Chipotle Mayo', // extra sin costo: se costea en $0 (Carlo, 2026-11-02)
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
   // Grilled Ham Cheese and Tomato Sandwich
   'ff0a88ca-d7c0-4d73-84a3-125815f9274e': [
+    'Chipotle Mayo', // extra sin costo: se costea en $0 (Carlo, 2026-11-02)
     'Without Chipotle Mayo', // la receta no lleva mayonesa
   ],
   // Hot Drip V60
