@@ -31,7 +31,7 @@ Cada paso suma al anterior:
 | Café extra (Dirty Chai, Chocold Mint) | confirmar un shot de 18 g | 91.0 % |
 | Fresh Soda, leches, sprinkles, creamer y resto | datos de Operaciones | 94.1 % |
 | Tamaños | combos con vaso, Chai Frap Grande, V60 sin vaso y Rappi sin vaso | ~99 % |
-| GENERIC y Triple Frap | Rubén Darío al lector del portal (PR #85/#86) y receta del Triple Frap | 100 % |
+| GENERIC y Triple Frap | Rubén Darío al lector del portal (PRs #86 y #88) y receta del Triple Frap | 100 % |
 
 El detalle por personalización, tamaño y sucursal está en `entregables/Costeo_Sucursales_que_falta_2026-11-03.xlsx`, que
 queda fuera del repositorio.
