@@ -109,14 +109,16 @@ export function crearConsultasCrm(db: Db): Consulta[] {
   const detallar = async (
     filas: {
       entidad: string;
-      entidad_id: string;
+      entidad_id: string | null;
       cambios: unknown;
       actor_id: string | null;
       origen: string;
     }[],
   ) => {
     const ids = (entidad: string) => [
-      ...new Set(filas.filter((f) => f.entidad === entidad).map((f) => f.entidad_id)),
+      ...new Set(
+        filas.filter((f) => f.entidad === entidad && f.entidad_id).map((f) => f.entidad_id as string),
+      ),
     ];
     const [items, actividades] = await Promise.all([
       ids('crm_checklist_items').length
@@ -138,7 +140,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
           : v;
     return Promise.all(
       filas.map(async (h) => ({
-        elemento: nombres.get(h.entidad_id) ?? null,
+        elemento: (h.entidad_id && nombres.get(h.entidad_id)) ?? null,
         // Contenido de notas/descripciones nunca se guarda: solo consta que cambió. Las etapas ya van en el resumen.
         cambios:
           h.cambios && typeof h.cambios === 'object'
@@ -681,6 +683,168 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         origen: h.origen,
       }));
       return resultadoPagina(datos, e.pagina, e.limite);
+    },
+  );
+
+  // CRM Unificado (doc 40 §5.8): candados, movimientos y vencimientos del Pipeline general.
+  type CardAgente = { nombre: string; detalle: string | null; enlace: string };
+  const nombreEtapa = (e?: { nombre: string; numero: number | null }) =>
+    e ? `${e.numero ? `${e.numero} · ` : ''}${e.nombre}` : null;
+  const cardsPorId = async (ids: { id: string; tipo: string }[]) => {
+    const f = ids.filter((x) => x.tipo === 'franquiciatario').map((x) => x.id);
+    const s = ids.filter((x) => x.tipo === 'sucursal').map((x) => x.id);
+    const [fs, ss] = await Promise.all([
+      f.length
+        ? db.from('crm_franquiciatarios').select('id,nombre,ciudad_interes').in('id', f)
+        : { data: [], error: null },
+      s.length
+        ? db.from('crm_tiendas').select('id,nombre,ciudad,franquiciatario').in('id', s)
+        : { data: [], error: null },
+    ]);
+    return new Map<string, CardAgente>([
+      ...exigir(fs).map((x): [string, CardAgente] => [
+        x.id,
+        { nombre: x.nombre, detalle: x.ciudad_interes, enlace: `/crm/franquiciatarios/${x.id}` },
+      ]),
+      ...exigir(ss).map((x): [string, CardAgente] => [
+        x.id,
+        {
+          nombre: x.nombre,
+          detalle: [x.franquiciatario, x.ciudad].filter(Boolean).join(' · ') || null,
+          enlace: `/crm/sucursales/${x.id}`,
+        },
+      ]),
+    ]);
+  };
+  type EtapaAgente = { id: string; clave: string | null; nombre: string; numero: number | null };
+  let generales: Promise<EtapaAgente[]> | undefined;
+  const etapasGenerales = () =>
+    (generales ??= Promise.resolve(
+      db.from('crm_etapas').select('id,clave,nombre,numero').eq('embudo', 'general').order('orden'),
+    ).then((r) => exigir(r) as EtapaAgente[]));
+
+  registrar(
+    'consultar_bloqueadas',
+    'Cards del Pipeline general que no pueden avanzar: el primer requisito que falta, qué área lo cumple y cuántos lleva. Filtra por etapa (clave, p. ej. "pld", "cof") o por área que debe cumplir ("ventas", "legal", "proyectos"). No incluye las que tienen el candado liberado.',
+    z.object({
+      etapa: texto,
+      area: z.enum(['ventas', 'legal', 'proyectos', '']).default(''),
+      pagina,
+      limite,
+    }),
+    async (e) => {
+      const etapas = await etapasGenerales();
+      const etapa = e.etapa ? etapas.find((x) => x.clave === e.etapa) : undefined;
+      if (e.etapa && !etapa)
+        return { error: `No existe la etapa "${e.etapa}". Claves: ${etapas.map((x) => x.clave).join(', ')}` };
+      let q = db
+        .from('crm_v_candados')
+        .select('*', { count: 'exact' })
+        .not('faltante', 'is', null)
+        .eq('liberado', false);
+      if (etapa) q = q.eq('etapa_id', etapa.id);
+      if (e.area) q = q.eq('faltante_area', e.area);
+      const r = await q.order('card_id').range((e.pagina - 1) * e.limite, e.pagina * e.limite - 1);
+      const filas = exigir(r);
+      const cards = await cardsPorId(filas.map((c) => ({ id: c.card_id, tipo: c.tipo_card })));
+      const datos = filas.map((c) => ({
+        card: cards.get(c.card_id) ?? null,
+        tipo: c.tipo_card,
+        etapa: nombreEtapa(etapas.find((x) => x.id === c.etapa_id)),
+        requisitos_listos: `${c.listos}/${c.total}`,
+        falta: c.faltante,
+        lo_cumple: c.faltante_area,
+      }));
+      return { total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
+    },
+  );
+
+  registrar(
+    'historial_card',
+    'Quién movió una card del Pipeline general y cuándo: cambios de etapa, requisitos registrados o validados, candados liberados (con motivo), documentos, descargas y avisos. Busca la card por nombre (franquiciatario o sucursal) o pasa su ID.',
+    z.object({ nombre: texto, card_id: id.optional(), pagina, limite }),
+    async (e) => {
+      let ids: { id: string; tipo: 'franquiciatario' | 'sucursal' }[] = [];
+      if (e.card_id)
+        ids = [
+          { id: e.card_id, tipo: 'franquiciatario' },
+          { id: e.card_id, tipo: 'sucursal' },
+        ];
+      else if (e.nombre) {
+        const [f, s] = await Promise.all([
+          db.from('crm_franquiciatarios').select('id').ilike('nombre', literal(e.nombre)).limit(5),
+          db
+            .from('crm_tiendas')
+            .select('id')
+            .eq('embudo', 'general')
+            .ilike('nombre', literal(e.nombre))
+            .limit(5),
+        ]);
+        ids = [
+          ...exigir(f).map((x) => ({ id: x.id, tipo: 'franquiciatario' as const })),
+          ...exigir(s).map((x) => ({ id: x.id, tipo: 'sucursal' as const })),
+        ];
+      } else return { error: 'Indica el nombre de la card o su ID.' };
+      const cards = await cardsPorId(ids);
+      const encontradas = ids.filter((x) => cards.has(x.id));
+      if (!encontradas.length) return { coincidencias: 0, mensaje: 'No encontré una card con ese nombre.' };
+      if (encontradas.length > 1 && !e.card_id)
+        return {
+          varias_coincidencias: encontradas.map((x) => ({ id: x.id, tipo: x.tipo, ...cards.get(x.id) })),
+        };
+      const c = encontradas[0];
+      const r = await db
+        .from('crm_historial')
+        .select('fecha,accion,resumen,actor_nombre,actor_area,motivo,origen')
+        .eq(c.tipo === 'franquiciatario' ? 'franquiciatario_id' : 'tienda_id', c.id)
+        .neq('accion', 'importado')
+        .order('fecha', { ascending: false })
+        .range((e.pagina - 1) * e.limite, e.pagina * e.limite - 1);
+      const datos = exigir(r).map((h) => ({
+        fecha: h.fecha,
+        que: h.resumen,
+        quien: h.actor_nombre ?? (h.origen === 'zoho' ? 'Zoho (sin autor)' : 'Sistema'),
+        area: h.actor_area,
+        motivo: h.motivo,
+        origen: h.origen,
+      }));
+      return {
+        card: { id: c.id, tipo: c.tipo, ...cards.get(c.id) },
+        ...resultadoPagina(datos, e.pagina, e.limite),
+      };
+    },
+  );
+
+  registrar(
+    'consultar_vencimientos',
+    'Fechas por vencer de las sucursales: COF (2 meses antes de la apertura estimada), aviso de 5 días hábiles (con festivos) antes de la apertura confirmada, límite de apertura (constancia + 120 días) y COF tardía. Filtra por tipo y por rango de fechas (YYYY-MM-DD); "este mes" = del día 1 al último día del mes.',
+    z.object({
+      tipo: z.enum(['cof', 'apertura_5_habiles', 'limite_120', 'cof_tardia', '']).default(''),
+      desde: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+      hasta: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+      pagina,
+      limite,
+    }),
+    async (e) => {
+      let q = db.from('crm_v_vencimientos').select('*', { count: 'exact' }).order('fecha');
+      if (e.tipo) q = q.eq('tipo', e.tipo);
+      if (e.desde) q = q.gte('fecha', e.desde);
+      if (e.hasta) q = q.lte('fecha', e.hasta);
+      const r = await q.range((e.pagina - 1) * e.limite, e.pagina * e.limite - 1);
+      const datos = exigir(r).map((v) => ({
+        sucursal: { id: v.tienda_id, nombre: v.nombre, enlace: `/crm/sucursales/${v.tienda_id}` },
+        tipo: v.tipo,
+        fecha: v.fecha,
+        avisa_a: v.area,
+        detalle: v.mensaje,
+      }));
+      return { hoy: hoy(), total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
     },
   );
 

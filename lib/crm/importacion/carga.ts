@@ -327,6 +327,8 @@ export async function cambiosDelCrm(db: Ejecutor): Promise<number> {
 export async function revertir(db: Ejecutor, runId: string) {
   await db.query('begin');
   try {
+    // Los borrados de la reversión quedan en la bitácora como importación (los eventos del CRM son inalterables).
+    await db.query(`select set_config('app.origen', 'importacion', true)`);
     const t = await db.query<{ id: string }>(`select id from public.crm_tiendas where import_run_id = $1`, [
       runId,
     ]);

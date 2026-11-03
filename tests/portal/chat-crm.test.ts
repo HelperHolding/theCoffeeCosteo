@@ -65,6 +65,9 @@ it('usa las reglas y solo las consultas del CRM', async () => {
     'consultar_prospecto',
     'buscar_contactos',
     'historial_cambios',
+    'consultar_bloqueadas',
+    'historial_card',
+    'consultar_vencimientos',
   ]);
 });
 
@@ -88,6 +91,8 @@ it('enlaza solo registros internos del CRM', () => {
   const uuid = '0f8fad5b-d9cb-469f-a165-70867728950e';
   expect(enlacePortal(`/crm/tiendas/${uuid}`)).toBeDefined();
   expect(enlacePortal(`/crm/contactos/${uuid}`)).toBeDefined();
+  expect(enlacePortal(`/crm/franquiciatarios/${uuid}`)).toBeDefined();
+  expect(enlacePortal(`/crm/sucursales/${uuid}`)).toBeDefined();
   expect(enlacePortal(`/crm/tiendas/${uuid}/borrar`)).toBeUndefined();
   expect(enlacePortal('https://externo.test/crm/tiendas/x')).toBeUndefined();
 });

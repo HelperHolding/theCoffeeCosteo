@@ -1,4 +1,4 @@
-// Contrato de las tablas del CRM (supabase/migrations/20261020000014_crm_esquema.sql).
+// Contrato de las tablas del CRM (migraciones 14 en adelante; CRM Unificado: 30–35).
 interface Auditoria {
   creado_en: string;
   actualizado_en: string;
@@ -21,13 +21,21 @@ interface Zoho {
 export type TipoEtapa = 'abierta' | 'lateral' | 'ganada' | 'perdida';
 export interface Etapa {
   id: string;
-  embudo: 'tiendas' | 'prospectos';
+  embudo: 'tiendas' | 'prospectos' | 'general';
   nombre: string;
   orden: number;
   tipo: TipoEtapa;
   activa: boolean;
   zoho_valor: string | null;
   creado_en: string;
+  // Embudo general (migración 31).
+  clave: string | null;
+  numero: number | null;
+  area: ClaveArea | null;
+  funcion: 'aprobacion_locales' | null;
+  card: TipoCard | null;
+  opcional: boolean;
+  provisional: boolean;
 }
 
 export const MARCAS_CAFETERA = ['La Marzocco', 'Victoria Arduino'] as const;
@@ -46,7 +54,7 @@ export const TIPOS_FRANQUICIA = {
 export interface Tienda extends Auditoria, Zoho {
   id: string;
   nombre: string;
-  embudo: 'tiendas';
+  embudo: 'tiendas' | 'general';
   etapa_id: string;
   posicion: number;
   responsable_id: string | null;
@@ -72,6 +80,15 @@ export interface Tienda extends Auditoria, Zoho {
   url_carpeta_contrato: string | null;
   url_dictamen_local: string | null;
   revisar: string[];
+  // Sucursal del Pipeline general (migración 31).
+  franquiciatario_id: string | null;
+  fecha_estimada_apertura: string | null;
+  fecha_confirmada_apertura: string | null;
+  fecha_limite_apertura: string | null;
+  etapa_previa_id: string | null;
+  muestra: boolean;
+  etapa_origen_id: string | null;
+  archivado_por: string | null;
 }
 
 export interface Prospecto extends Auditoria, Zoho {
@@ -163,6 +180,7 @@ export interface Actividad extends Auditoria, Zoho {
   tienda_id: string | null;
   prospecto_id: string | null;
   contacto_id: string | null;
+  franquiciatario_id: string | null;
 }
 
 export interface Nota extends Auditoria, Zoho {
@@ -174,6 +192,7 @@ export interface Nota extends Auditoria, Zoho {
   prospecto_id: string | null;
   contacto_id: string | null;
   actividad_id: string | null;
+  franquiciatario_id: string | null;
 }
 
 export interface Etiqueta {
@@ -246,26 +265,241 @@ export interface Archivo {
   zoho_created_at: string | null;
   imported_at: string | null;
   import_run_id: string | null;
+  franquiciatario_id: string | null;
+  tipo_documento: string | null;
+  version_documento: number;
+  reemplaza_a: string | null;
+  motivo_retiro: string | null;
 }
+
+export type AccionHistorial =
+  | 'creado'
+  | 'editado'
+  | 'etapa'
+  | 'responsable'
+  | 'archivado'
+  | 'nota'
+  | 'checklist'
+  | 'archivo'
+  | 'importado'
+  | 'requisito_cumplido'
+  | 'requisito_validado'
+  | 'requisito_revertido'
+  | 'requisito_no_aplica'
+  | 'candado_liberado'
+  | 'sucursal_creada'
+  | 'archivo_version'
+  | 'archivo_retirado'
+  | 'archivo_descargado'
+  | 'acceso'
+  | 'aviso'
+  | 'eliminado'
+  | 'liga'
+  | 'etiqueta'
+  | 'configuracion';
+export type OrigenHistorial = 'crm' | 'importacion' | 'zoho' | 'sistema' | 'agente';
 
 export interface Historial {
   id: number;
   entidad: string;
-  entidad_id: string;
+  entidad_id: string | null;
   tienda_id: string | null;
-  accion:
-    | 'creado'
-    | 'editado'
-    | 'etapa'
-    | 'responsable'
-    | 'archivado'
-    | 'nota'
-    | 'checklist'
-    | 'archivo'
-    | 'importado';
+  franquiciatario_id: string | null;
+  accion: AccionHistorial;
   resumen: string;
   cambios: unknown;
   actor_id: string | null;
-  origen: 'crm' | 'importacion' | 'zoho';
+  actor_nombre: string | null;
+  actor_area: string | null;
+  origen: OrigenHistorial;
+  motivo: string | null;
   fecha: string;
+}
+
+// CRM Unificado (migraciones 30–35, doc 40).
+export type ClaveArea = 'ventas' | 'legal' | 'proyectos' | 'finanzas';
+export type TipoCard = 'franquiciatario' | 'sucursal';
+export type RolArea = 'head' | 'miembro' | 'lectura';
+export type TipoRequisito = 'documento' | 'fecha' | 'validacion' | 'firma' | 'dato';
+export type EstadoRequisito = 'pendiente' | 'cumplido' | 'validado' | 'no_aplica';
+export const TERRITORIOS = {
+  disponible: 'Disponible',
+  restringida: 'Restringida',
+  exclusiva: 'Exclusiva',
+  bloqueada: 'Bloqueada',
+} as const;
+
+export interface Area {
+  clave: ClaveArea;
+  nombre: string;
+  color: string;
+  activa: boolean;
+  orden: number;
+}
+export interface Membresia {
+  user_id: string;
+  area: ClaveArea;
+  rol: RolArea;
+  funciones: string[];
+  creado_en: string;
+  creado_por: string | null;
+  actualizado_en: string;
+  actualizado_por: string | null;
+  version: number;
+}
+export interface Franquiciatario {
+  id: string;
+  nombre: string;
+  tipo_persona: 'fisica' | 'moral' | null;
+  correo: string | null;
+  telefono: string | null;
+  ciudad_interes: string | null;
+  estado_interes: string | null;
+  origen: string | null;
+  territorio: keyof typeof TERRITORIOS | null;
+  responsable_id: string | null;
+  embudo: 'general';
+  etapa_id: string;
+  etapa_previa_id: string | null;
+  posicion: number;
+  formalizado_en: string | null;
+  firmante: string | null;
+  obligado_solidario: string | null;
+  razon_social: string | null;
+  rfc: string | null;
+  regimen_fiscal: string | null;
+  codigo_postal_fiscal: string | null;
+  prospecto_id: string | null;
+  muestra: boolean;
+  etapa_origen_id: string | null;
+  creado_en: string;
+  actualizado_en: string;
+  creado_por: string | null;
+  actualizado_por: string | null;
+  version: number;
+  archivado_en: string | null;
+  archivado_por: string | null;
+}
+export interface Requisito {
+  id: string;
+  clave: string;
+  etapa_id: string;
+  nombre: string;
+  tipo: TipoRequisito;
+  area_cumple: ClaveArea;
+  area_valida: ClaveArea;
+  funcion_cumple: 'aprobacion_locales' | null;
+  obligatorio: boolean;
+  campo: string | null;
+  tipo_documento: string | null;
+  depende_de: string[];
+  anticipable: boolean;
+  orden: number;
+  ayuda: string;
+  activo: boolean;
+  actualizado_en: string;
+  actualizado_por: string | null;
+  version: number;
+}
+export interface Cumplimiento {
+  id: string;
+  requisito_id: string;
+  franquiciatario_id: string | null;
+  tienda_id: string | null;
+  card_id: string;
+  estado: EstadoRequisito;
+  valor: string | null;
+  fecha: string | null;
+  archivo_id: string | null;
+  nota: string | null;
+  cumplido_por: string | null;
+  cumplido_en: string | null;
+  validado_por: string | null;
+  validado_en: string | null;
+  actualizado_en: string;
+  version: number;
+}
+export interface Liberacion {
+  id: string;
+  franquiciatario_id: string | null;
+  tienda_id: string | null;
+  card_id: string;
+  etapa_id: string;
+  faltantes: { clave: string; nombre: string; area: ClaveArea }[];
+  motivo: string;
+  liberado_por: string;
+  liberado_en: string;
+  consumida_en: string | null;
+}
+export type TipoAviso = 'cof' | 'apertura_5_habiles' | 'limite_120' | 'cof_tardia';
+export interface Aviso {
+  id: string;
+  tipo: TipoAviso;
+  tienda_id: string;
+  franquiciatario_id: string | null;
+  area: ClaveArea;
+  fecha_objetivo: string;
+  mensaje: string;
+  generado_en: string;
+  atendido_por: string | null;
+  atendido_en: string | null;
+}
+export interface Festivo {
+  fecha: string;
+  nombre: string;
+  creado_en: string;
+  creado_por: string | null;
+}
+/** Vista crm_v_candados: candado de la etapa actual de cada card del embudo general. */
+export interface CandadoCard {
+  tipo_card: TipoCard;
+  card_id: string;
+  etapa_id: string;
+  total: number;
+  listos: number;
+  faltante: string | null;
+  faltante_area: ClaveArea | null;
+  liberado: boolean;
+}
+/** Vista crm_v_vencimientos. */
+export interface VencimientoCard {
+  tienda_id: string;
+  franquiciatario_id: string | null;
+  nombre: string;
+  tipo: TipoAviso;
+  area: ClaveArea;
+  fecha: string;
+  aviso_desde: string;
+  mensaje: string;
+}
+/** Función crm_requisitos_de: estado de cada requisito para una card. */
+export interface RequisitoCard {
+  requisito_id: string;
+  clave: string;
+  etapa_id: string;
+  etapa_clave: string;
+  etapa_orden: number;
+  de_etapa_actual: boolean;
+  nombre: string;
+  tipo: TipoRequisito;
+  area_cumple: ClaveArea;
+  area_valida: ClaveArea;
+  funcion_cumple: 'aprobacion_locales' | null;
+  obligatorio: boolean;
+  campo: string | null;
+  tipo_documento: string | null;
+  depende_de: string[];
+  anticipable: boolean;
+  orden: number;
+  ayuda: string;
+  estado: EstadoRequisito;
+  cumplimiento_id: string | null;
+  valor: string | null;
+  fecha: string | null;
+  archivo_id: string | null;
+  nota: string | null;
+  cumplido_por: string | null;
+  cumplido_en: string | null;
+  validado_por: string | null;
+  validado_en: string | null;
 }

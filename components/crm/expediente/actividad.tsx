@@ -13,7 +13,13 @@ const iconos = {
   checklist: ListChecks,
   archivo: FilePlus2,
 } as const;
-const origen = { crm: '', importacion: ' · importado de Zoho', zoho: ' · en Zoho' } as const;
+const origen = {
+  crm: '',
+  importacion: ' · importado de Zoho',
+  zoho: ' · en Zoho',
+  sistema: ' · automático',
+  agente: ' · agente',
+} as const;
 
 /** Notas (con su contenido) y la línea de tiempo del historial, de lo más reciente a lo más antiguo. */
 export function ActividadTienda({
@@ -23,7 +29,7 @@ export function ActividadTienda({
   editable,
   nombres,
 }: {
-  relacion: { tienda_id?: string; prospecto_id?: string; contacto_id?: string };
+  relacion: { tienda_id?: string; prospecto_id?: string; contacto_id?: string; franquiciatario_id?: string };
   notas: Nota[];
   historial: Historial[];
   editable: boolean;

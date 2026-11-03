@@ -45,6 +45,22 @@ export function estadoOrbe(status: string, partes: Parte[]): { estado: EstadoOrb
 }
 
 export function sugerenciasPara(ruta: string, titulo?: string): string[] {
+  if ((ruta.startsWith('/crm/sucursales/') || ruta.startsWith('/crm/franquiciatarios/')) && titulo)
+    return [
+      `¿Qué le falta a ${titulo} para avanzar?`,
+      `¿Quién movió ${titulo} y cuándo?`,
+      `¿Qué fechas vencen de ${titulo}?`,
+    ];
+  if (
+    ruta.startsWith('/crm/pipeline') ||
+    ruta.startsWith('/crm/pendientes') ||
+    ruta.startsWith('/crm/vencimientos')
+  )
+    return [
+      '¿Qué cards están bloqueadas y por qué?',
+      '¿Qué COF vencen este mes?',
+      '¿Qué candados se liberaron y quién los liberó?',
+    ];
   if (ruta.startsWith('/crm/tiendas/') && titulo)
     return [
       `¿Cómo va ${titulo} y qué le falta?`,

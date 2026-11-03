@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { Encabezado } from '@/components/portal/piezas';
@@ -20,6 +20,8 @@ export default async function FichaProspecto({
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { db, accesos } = await sesionCrm();
+  const franq = await db.from('crm_franquiciatarios').select('id').eq('prospecto_id', id).maybeSingle();
+  if (franq.data) redirect(`/crm/franquiciatarios/${franq.data.id}`);
   const [p, etapas, notas, historial, perfiles] = await Promise.all([
     db.from('crm_prospectos').select('*').eq('id', id).maybeSingle(),
     db

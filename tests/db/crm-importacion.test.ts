@@ -289,5 +289,6 @@ it('revertir se niega si hay archivos ligados o cambios de usuarios (después de
   );
   expect(await cambiosDelCrm(db)).toBeGreaterThan(0);
   await expect(revertir(db, run)).rejects.toThrow('cambios de usuarios');
-  await db.query(`delete from crm_historial where origen = 'crm'`);
+  // La bitácora del CRM es inalterable (migración 33): ese evento ya no se puede borrar.
+  await expect(db.query(`delete from crm_historial where origen = 'crm'`)).rejects.toThrow('no se edita ni se borra');
 });
