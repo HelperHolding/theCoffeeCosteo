@@ -18,6 +18,9 @@ import { sumarDias } from './tiempo';
 
 type Servicio = SupabaseClient;
 
+/** Igual que el semáforo de proveedor.ts (4): más lecturas a la vez solo esperarían en su cola. */
+const LECTURAS_A_LA_VEZ = 4;
+
 export function clienteServicio(): Servicio | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -118,29 +121,35 @@ export async function cortar(
       .filter((f) => f <= ahora.fecha)
       .map((fecha) => ({ cfg, fecha, corte: fecha === ahora.fecha ? ahora.segundo : 86400 }));
   });
-  // El proveedor ya limita a 4 lecturas a la vez (semáforo de proveedor.ts).
+  // De LECTURAS_A_LA_VEZ en LECTURAS_A_LA_VEZ, como el semáforo del proveedor: si se lanzan todas juntas, cada
+  // lectura cuenta su presupuesto de 25 s mientras espera turno y muchas se agotan (historial del 2026-11-03: 35 de 161
+  // días sin leer en el primer bloque).
+  const cortarUno = async ({ cfg, fecha, corte }: (typeof trabajos)[number]) => {
+    const leidoEn = new Date();
+    const l = await conRappi(
+      await leerVentana(cfg, fecha, fecha, { forzar: corte < 86400 }),
+      rappiServicio(db, cfg),
+    );
+    if (l.estado === 'error') {
+      fallidas.push({ companyId: cfg.companyId, fecha, motivo: l.error ?? 'error' });
+      return;
+    }
+    filas.push(
+      resumirDia({
+        companyId: cfg.companyId,
+        fecha,
+        leidoEn,
+        corteSegundo: corte,
+        completa: l.estado === 'completa',
+        pedidos: l.pedidos,
+        catalogo: cat,
+      }),
+    );
+  };
+  let siguiente = 0;
   await Promise.all(
-    trabajos.map(async ({ cfg, fecha, corte }) => {
-      const leidoEn = new Date();
-      const l = await conRappi(
-        await leerVentana(cfg, fecha, fecha, { forzar: corte < 86400 }),
-        rappiServicio(db, cfg),
-      );
-      if (l.estado === 'error') {
-        fallidas.push({ companyId: cfg.companyId, fecha, motivo: l.error ?? 'error' });
-        return;
-      }
-      filas.push(
-        resumirDia({
-          companyId: cfg.companyId,
-          fecha,
-          leidoEn,
-          corteSegundo: corte,
-          completa: l.estado === 'completa',
-          pedidos: l.pedidos,
-          catalogo: cat,
-        }),
-      );
+    Array.from({ length: Math.min(LECTURAS_A_LA_VEZ, trabajos.length) }, async () => {
+      while (siguiente < trabajos.length) await cortarUno(trabajos[siguiente++]);
     }),
   );
   for (let i = 0; i < filas.length; i += 50) {
