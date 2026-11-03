@@ -110,3 +110,25 @@ de tendencia desde la API tardaría minutos en cada carga.
 - **El tablero lee solo esa tabla:** carga al instante y dice cuándo fue el último corte.
 
 Lleva migración (respaldo, ensayo con ROLLBACK y OK de Carlo) y un disparador cada 10 minutos.
+
+## Lote 2: validación con el 2 de noviembre
+
+Todas en `America/Mexico_City`, `local-etiquetada-z`; ninguna recibe Rappi por el POS. Interlomas y Satélite van en la
+zona metropolitana de la Ciudad de México. Tecnológico (Metepec) y Patio Toluca van en «Toluca», aunque el CRM las pone
+en «Ciudad de México».
+
+| Sucursal       | company_id | Jestor | Pedidos |      Venta | Venta = productos | Horario |
+| -------------- | ---------: | -----: | ------: | ---------: | ----------------- | ------- |
+| Puerta Polanco |        642 |    555 |      64 |  $6,996.00 | exacta            | 7–16 h  |
+| Interlomas     |        608 |    473 |      73 |  $8,695.80 | exacta            | 7–20 h  |
+| Satélite       |        606 |    478 |      61 | $11,499.00 | exacta            | 7–19 h  |
+| Portales Norte |        506 |    387 |      43 |  $8,317.50 | exacta            | 9–21 h  |
+| Río Nazas      |        550 |    424 |      54 |  $8,385.00 | exacta            | 7–19 h  |
+| Insurgentes    |        611 |    490 |      35 |  $4,731.40 | exacta            | 8–20 h  |
+| La del Valle   |        549 |    404 |      44 |  $6,846.60 | exacta            | 8–20 h  |
+| Tecnológico    |        610 |    476 |      30 |  $4,209.01 | 1 ¢ de redondeo   | 9–20 h  |
+| Patio Santa Fe |        643 |    554 |      14 |  $2,679.00 | exacta            | 8–20 h  |
+| Patio Toluca   |        646 |    560 |      19 |  $2,264.70 | exacta            | 8–19 h  |
+
+Puerta Polanco cierra a distinta hora según el día (16 h el 2-nov, 17 h el 30-oct, 20 h el 28-oct); su horario es
+siempre posible en la Ciudad de México.

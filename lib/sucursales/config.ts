@@ -69,6 +69,8 @@ const delPos =
     alcance: ALCANCE_POS,
   });
 const cdmx = delPos('Ciudad de México');
+/** Zona metropolitana de Toluca (Toluca y Metepec). */
+const toluca = delPos('Toluca');
 
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
@@ -163,6 +165,19 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   cdmx(607, 472, 'Santa Fe', 'Vasco de Quiroga'),
   cdmx(507, 402, 'Hamburgo', 'Cuauhtémoc · Juárez'),
   cdmx(625, 539, 'Plaza Samara', 'Álvaro Obregón · Santa Fe'),
+  // Lote 2, Ciudad de México y Toluca: validadas con el 2 de noviembre (Tecnológico con 1 ¢ de redondeo). Interlomas y
+  // Satélite van en la zona metropolitana de la Ciudad de México. Tecnológico (Metepec) y Patio Toluca van en Toluca,
+  // aunque el CRM las ponga en «Ciudad de México». Puerta Polanco cierra a distinta hora según el día (16, 17 o 20 h).
+  cdmx(642, 555, 'Puerta Polanco', 'Miguel Hidalgo · Polanco'),
+  cdmx(608, 473, 'Interlomas', 'Interlomas'),
+  cdmx(606, 478, 'Satélite', 'Ciudad Satélite'),
+  cdmx(506, 387, 'Portales Norte', 'Benito Juárez · Portales Norte'),
+  cdmx(550, 424, 'Río Nazas', 'Cuauhtémoc'),
+  cdmx(611, 490, 'Insurgentes', 'Benito Juárez · Del Valle'),
+  cdmx(549, 404, 'La del Valle', 'Benito Juárez · Del Valle'),
+  cdmx(643, 554, 'Patio Santa Fe', 'Álvaro Obregón · Santa Fe'),
+  toluca(610, 476, 'Tecnológico', 'Metepec · Plaza Tecnológico'),
+  toluca(646, 560, 'Patio Toluca', 'Toluca · Vértice'),
 ];
 
 export const configDe = (companyId: number) =>
