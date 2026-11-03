@@ -29,6 +29,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Black Ginger
   'af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95': [
+    'Average Gengibre (Black Ginger)', // = receta: 15 ml de jarabe de jengibre (Carlo, 2026-11-03)
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
     'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
     'Traditional Tonic', // tónica de la receta
@@ -82,6 +83,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Flat Caramel
   'f33b95a8-a338-4009-8c03-42edfd81bb6a': [
+    'Average Caramelo (hot)', // = receta: 10 ml de jarabe de caramelo (Carlo, 2026-11-03)
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
     'Milk', // leche entera, la de la receta
     'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
@@ -208,6 +210,7 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Matcha Iced Mint
   '4b651700-0745-42fe-8e78-7b44dbdb66ee': [
+    'Average Mint', // = receta: 15 ml de jarabe de menta (Carlo, 2026-11-03)
     'Milk', // leche entera, la de la receta
   ],
   // Matcha Latte
@@ -258,6 +261,8 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
   ],
   // Salted Caramel
   '7867787b-4957-485c-822b-3106558d33a1': [
+    'Average Caramelo (hot)', // = receta: jarabe de caramelo salado y salsa (Carlo, 2026-11-03)
+    'Average Salted Caramel (cold)', // = receta: jarabe de caramelo salado y salsa (Carlo, 2026-11-03)
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
     'Milk', // leche entera, la de la receta
     'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
