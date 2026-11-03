@@ -69,7 +69,8 @@ export async function tablero(db: Db) {
       db,
       'crm_tiendas',
       'id,nombre,etapa_id,posicion,version,franquiciatario,ciudad,tipo_franquicia,fecha_programada_arranque,revisar',
-      (q) => q.is('archivado_en', null),
+      // Solo el Kanban de Zoho; las sucursales del Pipeline general viven en /crm/pipeline.
+      (q) => q.is('archivado_en', null).eq('embudo', 'tiendas'),
     ),
     leerTodo<{ id: string; tienda_id: string | null }>(db, 'crm_notas', 'id,tienda_id', (q) =>
       q.not('tienda_id', 'is', null).is('archivado_en', null),

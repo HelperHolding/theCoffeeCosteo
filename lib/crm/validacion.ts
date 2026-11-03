@@ -4,6 +4,7 @@ import {
   ESTATUS_CONTRATO,
   MARCAS_CAFETERA,
   PRIORIDADES,
+  TERRITORIOS,
   TIPOS_FRANQUICIA,
 } from './tipos';
 
@@ -44,6 +45,55 @@ export const camposTienda = {
   url_dictamen_local: { tipo: 'url' },
 } satisfies Record<string, Campo>;
 export type CampoTienda = keyof typeof camposTienda;
+
+/** Campos editables del franquiciatario (CRM Unificado). La etapa solo cambia con crm_avanzar. */
+export const camposFranquiciatario = {
+  nombre: { tipo: 'texto', requerido: true, max: 200 },
+  tipo_persona: opcion(['fisica', 'moral']),
+  correo: { tipo: 'correo' },
+  telefono: { tipo: 'texto', max: 40 },
+  ciudad_interes: { tipo: 'texto', max: 120 },
+  estado_interes: { tipo: 'texto', max: 120 },
+  origen: { tipo: 'texto', max: 120 },
+  territorio: opcion(Object.keys(TERRITORIOS)),
+  firmante: { tipo: 'texto', max: 200 },
+  obligado_solidario: { tipo: 'texto', max: 200 },
+  razon_social: { tipo: 'texto', max: 200 },
+  rfc: { tipo: 'texto', max: 13 },
+  regimen_fiscal: { tipo: 'texto', max: 120 },
+  codigo_postal_fiscal: { tipo: 'texto', max: 5 },
+} satisfies Record<string, Campo>;
+
+/** Campos editables de la sucursal en el Pipeline general (los de Zoho siguen en camposTienda). */
+export const camposSucursal = {
+  nombre: { tipo: 'texto', requerido: true, max: 200 },
+  ciudad: { tipo: 'texto', max: 120 },
+  direccion: { tipo: 'texto', max: 400 },
+  numero_tienda_jestor: { tipo: 'entero' },
+  fecha_estimada_apertura: { tipo: 'fecha' },
+  fecha_confirmada_apertura: { tipo: 'fecha' },
+  fecha_limite_apertura: { tipo: 'fecha' },
+  arquitecto_asignado: { tipo: 'texto', max: 200 },
+} satisfies Record<string, Campo>;
+
+/** Tipos de documento del expediente (doc 40 §3). */
+export const TIPOS_DOCUMENTO = {
+  comprobante_apartado: 'Comprobante del apartado',
+  comprobante_pago: 'Comprobante de pago',
+  survey: 'Survey',
+  pld: 'PLD',
+  csf: 'Constancia de Situación Fiscal',
+  carta_intencion: 'Carta de intención',
+  propuesta_local: 'Propuesta de local',
+  dictamen: 'Dictamen del Comité',
+  dictamen_firmado: 'Dictamen firmado',
+  contrato_arrendamiento: 'Contrato de arrendamiento',
+  constancia: 'Constancia de arrendamiento',
+  cof: 'Circular Oferta de Franquicia',
+  contrato_franquicia: 'Contrato de franquicia',
+  evidencia: 'Evidencia (correo o confirmación)',
+  otro: 'Otro',
+} as const;
 
 export const camposActividad = {
   asunto: { tipo: 'texto', requerido: true, max: 300 },

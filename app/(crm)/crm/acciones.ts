@@ -122,7 +122,12 @@ export async function archivarTienda(id: string, version: number): Promise<Resul
   }
 }
 
-type Relacion = { tienda_id?: string; prospecto_id?: string; contacto_id?: string };
+type Relacion = {
+  tienda_id?: string;
+  prospecto_id?: string;
+  contacto_id?: string;
+  franquiciatario_id?: string;
+};
 const relacion = (r: Relacion) => {
   const ids = Object.entries(r).filter(([, v]) => typeof v === 'string' && v);
   if (ids.length !== 1) throw new Error('La nota o actividad debe pertenecer a un solo registro.');
@@ -265,19 +270,24 @@ export async function confirmarArchivo(tienda: string, id: string, subido: boole
   try {
     const { db } = await editor();
     if (!subido)
-      await db.from('crm_archivos').update({ archivado_en: new Date().toISOString() }).eq('id', id);
+      await db
+        .from('crm_archivos')
+        .update({ archivado_en: new Date().toISOString(), motivo_retiro: 'La subida no terminó' })
+        .eq('id', id);
     return {};
   } catch (e) {
     return fallo(e);
   }
 }
 
-export async function archivarArchivo(tienda: string, id: string): Promise<Resultado> {
+export async function archivarArchivo(tienda: string, id: string, motivo: string): Promise<Resultado> {
   try {
     const { db } = await editor();
+    // Retirar un archivo siempre lleva motivo: la base lo exige y queda en la bitácora (migración 33).
+    if (motivo.trim().length < 5) return { error: 'Escribe por qué se retira el archivo.' };
     const r = await db
       .from('crm_archivos')
-      .update({ archivado_en: new Date().toISOString() })
+      .update({ archivado_en: new Date().toISOString(), motivo_retiro: motivo.trim().slice(0, 500) })
       .eq('id', id)
       .select('id');
     if (r.error) return { error: mensaje(r.error) };
@@ -298,6 +308,9 @@ export async function enlaceArchivo(id: string): Promise<Resultado<{ url: string
       .is('archivado_en', null)
       .maybeSingle();
     if (a.error || !a.data) return { error: 'No se encontró el archivo.' };
+    // Cada descarga queda en la bitácora antes de firmar la liga (migración 33).
+    const d = await db.rpc('crm_registrar_descarga', { p_archivo: id });
+    if (d.error) return { error: 'No se pudo registrar la descarga. Intenta de nuevo.' };
     const r = await db.storage
       .from('crm-archivos')
       .createSignedUrl(a.data.ruta, 60, { download: a.data.nombre });

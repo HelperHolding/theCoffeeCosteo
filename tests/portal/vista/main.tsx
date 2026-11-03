@@ -7,6 +7,7 @@ import { VistaCatalogo } from './catalogo';
 import { VistaChat } from './chat';
 import { VistaModulos } from './modulos';
 import { VistaExpediente, VistaTiendas } from './crm';
+import { VistaExpedienteUnificado, VistaPipeline } from './crm-unificado';
 import { VistaSucursales } from './sucursales';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
 // Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
@@ -38,8 +39,14 @@ const filas = [
   americano('Rappi', 2, 69, 0.18, 6.14),
   americano('App propia', 3, 62, 0, 0),
 ];
+// ?noche: modo noche del muro para revisar el tema oscuro sin tocar localStorage.
+if (window.location.search.includes('noche')) document.documentElement.setAttribute('data-luz', 'noche');
 createRoot(document.getElementById('root')!).render(
-  window.location.search.includes('sucursales') ? (
+  window.location.search.includes('pipeline') ? (
+    <VistaPipeline />
+  ) : window.location.search.includes('expediente-unificado') ? (
+    <VistaExpedienteUnificado />
+  ) : window.location.search.includes('sucursales') ? (
     <VistaSucursales />
   ) : window.location.search.includes('chat') ? (
     <VistaChat />

@@ -64,8 +64,9 @@ export function DocumentosTienda({
 
   const archivar = (a: Archivo) =>
     iniciar(async () => {
-      if (!window.confirm(`¿Archivar ${a.nombre}? Dejará de verse en el expediente.`)) return;
-      const r = await archivarArchivo(tienda ?? '', a.id);
+      const motivo = window.prompt(`¿Por qué se retira ${a.nombre}? Queda en la bitácora.`);
+      if (!motivo?.trim()) return;
+      const r = await archivarArchivo(tienda ?? '', a.id, motivo);
       if (r.error !== undefined) return setAviso({ tipo: 'error', texto: r.error });
       router.refresh();
     });

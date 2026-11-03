@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { Buscador, Paginacion, POR_PAGINA, paginaDe, textoBusqueda } from '@/components/crm/listas';
@@ -10,6 +11,12 @@ export default async function Prospectos({
   searchParams: Promise<{ q?: string; etapa?: string; pagina?: string }>;
 }) {
   const { db } = await sesionCrm();
+  // Con la muestra mapeada, los prospectos viven en el Pipeline (etapas 1–2) como franquiciatarios.
+  const mapeados = await db
+    .from('crm_franquiciatarios')
+    .select('id', { count: 'exact', head: true })
+    .not('prospecto_id', 'is', null);
+  if (!mapeados.error && mapeados.count) redirect('/crm/pipeline?tramo=ventas');
   const sp = await searchParams;
   const pagina = paginaDe(sp.pagina);
   const q = textoBusqueda(sp.q);

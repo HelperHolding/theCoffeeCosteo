@@ -52,10 +52,13 @@ export function ActividadesTienda({
   tienda,
   actividades,
   editable,
+  relacion,
 }: {
   tienda: string;
   actividades: Actividad[];
   editable: boolean;
+  /** Registro al que cuelgan las nuevas actividades (por omisión, la tienda). */
+  relacion?: { tienda_id?: string; franquiciatario_id?: string };
 }) {
   const [nueva, setNueva] = useState(false);
   const [error, setError] = useState('');
@@ -98,7 +101,7 @@ export function ActividadesTienda({
             action={(form) =>
               iniciar(async () => {
                 setError('');
-                const r = await crearActividad({ tienda_id: tienda }, Object.fromEntries(form));
+                const r = await crearActividad(relacion ?? { tienda_id: tienda }, Object.fromEntries(form));
                 if (r.error !== undefined) return setError(r.error);
                 setNueva(false);
                 router.refresh();

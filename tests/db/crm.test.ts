@@ -359,7 +359,7 @@ describe('archivos', () => {
       expect(
         (await db.query('delete from storage.objects where name = $1 returning id', [ruta])).rows,
       ).toHaveLength(0);
-      await db.query('update crm_archivos set archivado_en = now() where id = $1', [id]);
+      await db.query(`update crm_archivos set archivado_en = now(), motivo_retiro = 'Prueba de retiro' where id = $1`, [id]);
       expect((await db.query('select id from storage.objects where name = $1', [ruta])).rows).toHaveLength(0);
     });
     await comoUsuario(db, sinCrm, async () => {

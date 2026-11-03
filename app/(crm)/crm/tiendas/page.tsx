@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { CircleCheck, CirclePause, CircleX, Store } from 'lucide-react';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
@@ -9,6 +10,12 @@ import { NuevaTienda } from '@/components/crm/nueva-tienda';
 
 export default async function Tiendas() {
   const { db, accesos } = await sesionCrm();
+  // Con la muestra ya mapeada al Pipeline general este tablero queda vacío: se redirige (no se rompen enlaces).
+  const viejas = await db
+    .from('crm_tiendas')
+    .select('id', { count: 'exact', head: true })
+    .eq('embudo', 'tiendas');
+  if (!viejas.error && !viejas.count) redirect('/crm/pipeline?tramo=locales');
   const editable = puedeEditarCrm(accesos);
   const { etapas, tarjetas } = await tablero(db);
   const grupos = resumenPorGrupo(columnas(etapas, tarjetas));

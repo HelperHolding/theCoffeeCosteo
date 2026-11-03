@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { expediente } from '@/lib/crm/consultas';
@@ -23,6 +23,9 @@ export default async function ExpedienteTienda({
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { db, accesos } = await sesionCrm();
+  // Una tienda que ya es sucursal del Pipeline general tiene su expediente nuevo.
+  const embudo = await db.from('crm_tiendas').select('embudo').eq('id', id).maybeSingle();
+  if (embudo.data?.embudo === 'general') redirect(`/crm/sucursales/${id}`);
   const editable = puedeEditarCrm(accesos);
   const [e, perfiles] = await Promise.all([expediente(db, id), db.from('perfiles').select('user_id,nombre')]);
   if (!e) notFound();

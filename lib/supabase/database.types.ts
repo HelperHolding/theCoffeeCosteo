@@ -204,6 +204,14 @@ export interface Database {
       crm_checklist_items: Tabla<Crm.ChecklistItem>;
       crm_archivos: Tabla<Crm.Archivo>;
       crm_historial: Tabla<Crm.Historial>;
+      crm_areas: Tabla<Crm.Area>;
+      crm_membresias: Tabla<Crm.Membresia>;
+      crm_franquiciatarios: Tabla<Crm.Franquiciatario>;
+      crm_requisitos: Tabla<Crm.Requisito>;
+      crm_cumplimientos: Tabla<Crm.Cumplimiento>;
+      crm_liberaciones: Tabla<Crm.Liberacion>;
+      crm_avisos: Tabla<Crm.Aviso>;
+      crm_festivos: Tabla<Crm.Festivo>;
     };
     Views: {
       v_resumen: { Row: Registro<Resumen>; Relationships: [] };
@@ -216,6 +224,8 @@ export interface Database {
         Row: { subreceta_id: string; costo_unitario: number; usa_inactivo: boolean };
         Relationships: [];
       };
+      crm_v_candados: { Row: Registro<Crm.CandadoCard>; Relationships: [] };
+      crm_v_vencimientos: { Row: Registro<Crm.VencimientoCard>; Relationships: [] };
     };
     Functions: {
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
@@ -226,11 +236,59 @@ export interface Database {
         Returns: Crm.Tienda;
       };
       crm_renumerar_etapa: { Args: { p_etapa: string }; Returns: number };
+      crm_requisitos_de: {
+        Args: { p_tipo: Crm.TipoCard; p_card: string; p_todas?: boolean };
+        Returns: Crm.RequisitoCard[];
+      };
+      crm_avanzar: {
+        Args: {
+          p_tipo: Crm.TipoCard;
+          p_card: string;
+          p_destino: string;
+          p_version: number;
+          p_motivo?: string | null;
+          p_nombre_sucursal?: string | null;
+        };
+        Returns: Json;
+      };
+      crm_cumplir: {
+        Args: {
+          p_tipo: Crm.TipoCard;
+          p_card: string;
+          p_requisito: string;
+          p_valor?: string | null;
+          p_fecha?: string | null;
+          p_archivo?: string | null;
+          p_nota?: string | null;
+        };
+        Returns: Crm.Cumplimiento;
+      };
+      crm_validar: { Args: { p_cumplimiento: string; p_nota?: string | null }; Returns: Crm.Cumplimiento };
+      crm_revertir_requisito: {
+        Args: { p_cumplimiento: string; p_motivo: string };
+        Returns: Crm.Cumplimiento;
+      };
+      crm_liberar_candado: {
+        Args: { p_tipo: Crm.TipoCard; p_card: string; p_motivo: string };
+        Returns: Crm.Liberacion;
+      };
+      crm_crear_sucursal: {
+        Args: { p_franquiciatario: string; p_nombre: string; p_ciudad?: string | null };
+        Returns: string;
+      };
+      crm_cancelar_cascada: { Args: { p_franquiciatario: string; p_motivo: string }; Returns: number };
+      crm_registrar_descarga: { Args: { p_archivo: string }; Returns: undefined };
+      crm_generar_avisos: { Args: { p_hoy?: string | null }; Returns: number };
+      crm_atender_aviso: { Args: { p_aviso: string }; Returns: undefined };
+      crm_es_head: { Args: Record<string, never>; Returns: boolean };
       sucursales_puede_costeo: { Args: { p_company: number }; Returns: boolean };
       sucursales_datos_costeo: { Args: { p_company: number }; Returns: Json };
       sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };
       sucursales_catalogo_pos: { Args: { p_company: number }; Returns: Json };
-      sucursales_rappi_portal: { Args: { p_company: number; p_desde: string; p_hasta: string }; Returns: Json };
+      sucursales_rappi_portal: {
+        Args: { p_company: number; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;
