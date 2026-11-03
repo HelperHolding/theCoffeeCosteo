@@ -91,6 +91,13 @@ export const LOTES_ALTAS_APROBADOS: Record<string, { manifiesto: string; sha256:
     manifiesto: 'docs/conciliacion-brasil/41-altas-zoe-lote-1.manifiesto.json',
     sha256: '9725327ed06abb6af379c6e81bb266da6805a8deacdccac7f0fe962bb2ad487b',
   },
+  // Carlo, 2026-11-03 (doc 43): Spooky Biscuit, Croque Monsieur y Croissant filled with cheese and cured ham de los archivos
+  // del equipo (Materia_Prima_ALTA y Recetario_ALTA, 2-nov), con sus 3 insumos de OH LALA. Cada paso remoto exige
+  // aprobación aparte.
+  'altas-equipo-nov-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/43-altas-equipo-nov-lote-1.manifiesto.json',
+    sha256: '1c55cbc288a729b7302cc90abc997c63e654fb72712df1a7b6b074763ea87e8c',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes (por omisión, el 31). */
@@ -100,6 +107,7 @@ export const DOC_ALTAS: Record<string, string> = {
   'pan-de-muerto-lote-1': '39',
   'altas-excel-lote-1': '40',
   'altas-zoe-lote-1': '41',
+  'altas-equipo-nov-lote-1': '43',
 };
 export const docAltas = (lote: string) => DOC_ALTAS[lote] ?? '31';
 
