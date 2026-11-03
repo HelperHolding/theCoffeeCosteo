@@ -135,7 +135,30 @@ describe('manifiesto', () => {
       'pan-de-muerto-lote-1',
       'altas-excel-lote-1',
       'altas-zoe-lote-1',
+      'altas-equipo-nov-lote-1',
     ]);
+  });
+
+  it('archivos del equipo (doc 43): 3 productos del POS con su pieza de OH LALA, bolsa y etiqueta', async () => {
+    const m = await leerLoteAltas('altas-equipo-nov-lote-1');
+    expect(m.insumos!.map((i) => `${i.nombre} ${i.proveedor} ${i.categoria} ${i.costoPaquete}/${i.presentacion} ${i.unidad}`)).toEqual([
+      'SPOOKY BISCUIT OH LALA PANADERIA 22.49/1 pza',
+      'CROQUE MONSIEUR OH LALA PANADERIA 35.55/1 pza',
+      'CROISSANT FILLED WITH CHEESE AND CURED HAM OH LALA PANADERIA 67/1 pza',
+    ]);
+    expect(m.productos.map((p) => [p.nombre, p.categoria, p.tamanos.join('/'), p.costoEsperado['Único']])).toEqual([
+      ['Spooky Biscuit', 'Sweets', 'Único', 24.6404],
+      ['Croque Monsieur', 'Sandwiches', 'Único', 37.7004],
+      ['Croissant filled with cheese and cured ham', 'Bakery', 'Único', 69.1504],
+    ]);
+    for (const p of m.productos)
+      expect(p.lineas.map((l) => `${l.componente} ${l.cantidades['Único']}`)).toEqual([
+        'BOLSAS PARA PAN PAQUETE (1000 PIEZAS) 1',
+        'ETIQUETAS THE COFFEE ROLLO 1',
+        `${m.insumos!.find((i) => p.lineas.some((l) => l.componente === i.nombre))!.nombre} 1`,
+      ]);
+    expect(m.productos.every((p) => !p.precioLista)).toBe(true);
+    expect(m.aprobacion).toMatch(/cada paso remoto .* y el merge requieren aprobación expresa/i);
   });
 
   it('Zoe Water Twist (doc 41): nombre del POS, media botella de cada sabor y el costo de una botella', async () => {

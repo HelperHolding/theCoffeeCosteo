@@ -1,0 +1,60 @@
+{
+ "lote": "recetas-equipo-nov-lote-1",
+ "fuente": {
+  "archivo": "Materia_Prima_ALTA_Nov2026.xlsx y Recetario_ALTA_Nov2026.xlsx (archivos del equipo, recibidos el 2026-11-02)",
+  "sha256": "1533b917011707c46bbdaa862a7c47bf566b4abf5a001bd9bd26a25a95fab512"
+ },
+ "costosInsumo": [
+  {
+   "insumo": "MACADAMIA COOKIE",
+   "previo": 24.5,
+   "nuevo": 22.49,
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: COOKIES, OH LALA, $22.49 por pieza (Carlo, 2026-11-03: «Sí, $22.49»)"
+  },
+  {
+   "insumo": "COOKIE MATCHA & WHITE CHOCOLATE",
+   "previo": 24.5,
+   "nuevo": 22.49,
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: COOKIE MATCHA & WHITE CHOCOLATE, OH LALA, $22.49 por pieza (Carlo, 2026-11-03: «Sí, $22.49»)"
+  },
+  {
+   "insumo": "SALTED CARAMEL COOKIE",
+   "previo": 24.5,
+   "nuevo": 22.49,
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: SALTED CARAMEL COOKIE, OH LALA, $22.49 por pieza (Carlo, 2026-11-03: «Sí, $22.49»)"
+  },
+  {
+   "insumo": "COOKIE FULLY BAKED TRIPLE CHOCOLATE",
+   "previo": 24.5,
+   "nuevo": 22.49,
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: COOKIES, OH LALA, $22.49 por pieza (Carlo, 2026-11-03: «Sí, $22.49»)"
+  }
+ ],
+ "costos": [
+  {
+   "producto": "Macadamia Cookie",
+   "tamano": "Único",
+   "previo": 26.6504,
+   "nuevo": 24.6404
+  },
+  {
+   "producto": "Cookie Matcha & White Chocolate",
+   "tamano": "Único",
+   "previo": 26.6504,
+   "nuevo": 24.6404
+  },
+  {
+   "producto": "Salted Caramel Cookie",
+   "tamano": "Único",
+   "previo": 26.6504,
+   "nuevo": 24.6404
+  },
+  {
+   "producto": "Cookie Triple Chocolate",
+   "tamano": "Único",
+   "previo": 26.6504,
+   "nuevo": 24.6404
+  }
+ ],
+ "aprobacion": "Carlo, 2026-11-03: «quiero que revises los exceles que ya llenó el equipo para que verifiques recetas que faltan»; «Sí, $22.49» para las cookies de OH LALA. Cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

@@ -1,0 +1,150 @@
+{
+ "lote": "altas-equipo-nov-lote-1",
+ "fuente": {
+  "archivo": "Materia_Prima_ALTA_Nov2026.xlsx y Recetario_ALTA_Nov2026.xlsx (archivos del equipo, recibidos el 2026-11-02)",
+  "sha256": "1533b917011707c46bbdaa862a7c47bf566b4abf5a001bd9bd26a25a95fab512"
+ },
+ "insumos": [
+  {
+   "nombre": "SPOOKY BISCUIT",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 22.49,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: SPOOKY BISCUIT, OH LALA, PANADERIA, $22.49 por pieza"
+  },
+  {
+   "nombre": "CROQUE MONSIEUR",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 35.55,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: CROQUE MONSIEUR, OH LALA, PANADERIA, $35.55 por pieza"
+  },
+  {
+   "nombre": "CROISSANT FILLED WITH CHEESE AND CURED HAM",
+   "proveedor": "OH LALA",
+   "categoria": "PANADERIA",
+   "costoPaquete": 67.0,
+   "presentacion": 1,
+   "unidad": "pza",
+   "origen": "Materia_Prima_ALTA_Nov2026.xlsx: CROISSANT FILLED WITH CHEESE AND CURED HAM, OH LALA, PANADERIA, $67 por pieza"
+  }
+ ],
+ "productos": [
+  {
+   "nombre": "Spooky Biscuit",
+   "categoria": "Sweets",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Spooky Biscuit = pieza + bolsa + etiqueta"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Spooky Biscuit = pieza + bolsa + etiqueta"
+    },
+    {
+     "componente": "SPOOKY BISCUIT",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Spooky Biscuit = pieza + bolsa + etiqueta"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 24.6404
+   },
+   "nota": "Nombre exacto del POS (SPOBISAPP, Halloween). Rappi «Spooky Biscuits» ya se liga a SPOBISAPP (#73). Su enlace va en el lote-10"
+  },
+  {
+   "nombre": "Croque Monsieur",
+   "categoria": "Sandwiches",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Croque Monsieur = pieza + bolsa + etiqueta"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Croque Monsieur = pieza + bolsa + etiqueta"
+    },
+    {
+     "componente": "CROQUE MONSIEUR",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx: Croque Monsieur = pieza + bolsa + etiqueta"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 37.7004
+   },
+   "nota": "Nombre exacto del POS (CROQMNAPP). El recetario oficial lo sirve en tabla con servilleta en mesa; se costea con bolsa y etiqueta como el archivo del equipo y el resto de los sándwiches de la base. Su enlace va en el lote-10"
+  },
+  {
+   "nombre": "Croissant filled with cheese and cured ham",
+   "categoria": "Bakery",
+   "tamanos": [
+    "Único"
+   ],
+   "lineas": [
+    {
+     "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx trae solo la pieza; bolsa y etiqueta como el resto de la panadería de la base (empaques: se mantiene la base, Carlo 2026-10-30)"
+    },
+    {
+     "componente": "ETIQUETAS THE COFFEE ROLLO",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx trae solo la pieza; bolsa y etiqueta como el resto de la panadería de la base (empaques: se mantiene la base, Carlo 2026-10-30)"
+    },
+    {
+     "componente": "CROISSANT FILLED WITH CHEESE AND CURED HAM",
+     "tipo": "insumo",
+     "cantidades": {
+      "Único": 1
+     },
+     "origen": "Recetario_ALTA_Nov2026.xlsx trae solo la pieza; bolsa y etiqueta como el resto de la panadería de la base (empaques: se mantiene la base, Carlo 2026-10-30)"
+    }
+   ],
+   "costoEsperado": {
+    "Único": 69.1504
+   },
+   "nota": "Nombre exacto del POS (CROPORAPP). Su enlace va en el lote-10"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-11-03: «quiero que revises los exceles que ya llenó el equipo para que verifiques recetas que faltan»; «Sí, $22.49» para las cookies de OH LALA. Cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

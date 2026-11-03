@@ -89,12 +89,19 @@ export const LOTES_AJUSTES_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/42-recetas-recetario-lote-1.manifiesto.json',
     sha256: 'e8299d3b4647caf8cd8233d1c32092c6ee69d1182e07bff99d3b6aebcfde5db4',
   },
+  // Carlo, 2026-11-03 (doc 43): «Sí, $22.49» — las 4 cookies de OH LALA vuelven a $22.49 como en Materia_Prima_ALTA (2-nov).
+  // Cada paso remoto exige aprobación aparte.
+  'recetas-equipo-nov-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/43-recetas-equipo-nov-lote-1.manifiesto.json',
+    sha256: '46601ae2a4fea284afcdcd771c948908712fa8346255e96cb49244711ea78a40',
+  },
 };
 
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes. */
 export const DOC_AJUSTES: Record<string, string> = {
   'recetas-excel-lote-1': '40',
   'recetas-recetario-lote-1': '42',
+  'recetas-equipo-nov-lote-1': '43',
 };
 export const docAjustes = (lote: string) => DOC_AJUSTES[lote] ?? '40';
 
