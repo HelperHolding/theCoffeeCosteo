@@ -87,8 +87,9 @@ describe('tamaño verificado', () => {
         d,
       ),
     ).toBeNull();
-    // La lista no incluye los pendientes de E1; suma los 6 del recetario oficial (doc 42).
-    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(37);
+    // La lista no incluye los pendientes de E1; suma los 6 del recetario oficial (doc 42), el combo Matcha Iced
+    // Latte + Lemon Cake (doc 44) y los 4 combos con vaso Regular y Large (doc 45).
+    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(42);
     expect(TAMANOS_VERIFICADOS[CHAI_FRAP]).toEqual({ Regular: 'Chica' });
   });
 });

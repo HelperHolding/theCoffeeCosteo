@@ -193,6 +193,8 @@ completas» son las unidades que suman a Costeo completo y a Consumo; las dos us
 
 ## Para replicar en otra sucursal de Guadalajara
 
+Las 10 sucursales restantes, con sus tiendas y los pasos con OK de Carlo, están en el doc 05.
+
 1. Agregar sus tiendas a `rappi_tiendas` por migración. Las tiendas Turbo están en el doc 03.
 2. Agregarlas a `RAPPI_TIENDAS` del lector en el servidor y hacer el backfill del mes.
 3. Poner `rappiPortal: true` y `alcance: ALCANCE_POS_RAPPI_PORTAL` en `lib/sucursales/config.ts`.

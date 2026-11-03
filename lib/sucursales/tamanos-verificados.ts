@@ -15,6 +15,17 @@ export const TAMANOS_VERIFICADOS: Record<string, Partial<Record<'Regular' | 'Lar
   '7867787b-4957-485c-822b-3106558d33a1': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
   // Matcha Iced Latte (4MIL)
   '9756eec9-1f09-45ee-a45b-21ac8c54bb22': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
+  // Matcha Iced Latte + Lemon Cake (combo): Chica 14 oz y Grande 20 oz, como el Matcha Iced Latte (doc 44)
+  'a1455ee0-cb6d-4195-bd11-01660fc56cb3': { Regular: 'Chica', Large: 'Grande' },
+  // Combos que el POS vende con Regular y Large (+$10): pasan a Chica y Grande con tamanos-combos-lote-1 (doc 45)
+  // Iced Latte + Ham & Cheese Sandwich (MISICEDAPP)
+  'e95e45e9-b5fc-4d10-ab5c-170e13cedf15': { Regular: 'Chica', Large: 'Grande' }, // doc 45
+  // True White + Croissant filled with cheese and ham (TRWCROAPP)
+  'fd4c5628-6681-47dd-ab01-2d0de8ae6d28': { Regular: 'Chica', Large: 'Grande' }, // doc 45
+  // True White + Croissant Serrano & Gouda (TRUGOUAPP)
+  '14c61cda-2564-402a-b70f-82ebafc8d7b4': { Regular: 'Chica', Large: 'Grande' }, // doc 45
+  // True White + Grilled Ham & Cheese Sandwich (TRUMISAPP)
+  'd950794b-23cf-4f1c-a775-ee71f5001eff': { Regular: 'Chica', Large: 'Grande' }, // doc 45
   // Iced Vanilla (1IC)
   '15556232-34f4-490e-a9b7-0c01998bc4c1': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
   // Vanilla Latte (2VLT)

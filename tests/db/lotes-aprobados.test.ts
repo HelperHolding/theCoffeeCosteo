@@ -202,6 +202,22 @@ describe('lotes aprobados reales', () => {
     expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(105);
   });
 
+  it('lote 10: los 3 productos del POS del doc 43, con el nombre exacto del POS; requiere los lotes 1–9 (107)', async () => {
+    const l = await leerLoteAprobado('lote-10');
+    expect(l.lote.map((f) => [f.codigo, f.receta_nombre])).toEqual([
+      ['CROPORAPP', 'Croissant filled with cheese and cured ham'],
+      ['CROQMNAPP', 'Croque Monsieur'],
+      ['SPOBISAPP', 'Spooky Biscuit'],
+    ]);
+    expect(Object.keys(l.previos)).toHaveLength(9);
+    expect(Object.values(l.previos).reduce((n, f) => n + f.length, 0)).toBe(107);
+    for (const f of l.lote) {
+      expect(f.nombre_observado, f.codigo).toBe(f.receta_nombre);
+      expect(f.evidencia).toMatch(/altas-equipo-nov-lote-1 \(doc 43\)$/);
+    }
+    expect(l.manifiesto.aprobacion).toMatch(/cada paso remoto .* y el merge requieren aprobación expresa/i);
+  });
+
   it('un lote fuera de LOTES_APROBADOS o un manifiesto alterado se rechazan', async () => {
     await expect(leerLoteAprobado('lote-99')).rejects.toThrow(/no está aprobado/);
     const raiz = mkdtempSync(join(tmpdir(), 'manif-'));

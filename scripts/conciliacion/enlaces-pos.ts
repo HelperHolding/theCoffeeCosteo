@@ -88,6 +88,12 @@ export const LOTES_APROBADOS: Record<string, { manifiesto: string; sha256: strin
     manifiesto: 'docs/conciliacion-brasil/41-lote-9.manifiesto.json',
     sha256: '5d44fa3b2449d5d6857f077b3577a25bb6a38cb025d1b16e0850f817134845ba',
   },
+  // Preparado el 2026-11-03 (doc 43): los códigos POS de Spooky Biscuit, Croque Monsieur y el croissant de jamón curado,
+  // creados con altas-equipo-nov-lote-1. Cargar exige aprobación aparte.
+  'lote-10': {
+    manifiesto: 'docs/conciliacion-brasil/43-lote-10.manifiesto.json',
+    sha256: '387530e0be8b6e2b38335e85148366976694d58ea4bde42e7b3abb6bda517d50',
+  },
 };
 /** Documento de cada lote aprobado (informes y nota de bitácora). */
 export const DOC_LOTE: Record<string, string> = {
@@ -100,6 +106,7 @@ export const DOC_LOTE: Record<string, string> = {
   'lote-7': '39',
   'lote-8': '40',
   'lote-9': '41',
+  'lote-10': '43',
 };
 /** Referencia de la nota: el documento del lote si está asignado; si no (lotes de prueba), el nombre del lote. */
 const referenciaLote = (nombre: string) =>

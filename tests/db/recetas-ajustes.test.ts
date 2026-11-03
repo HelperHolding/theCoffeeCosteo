@@ -150,7 +150,11 @@ describe('manifiesto', () => {
 
   it('el lote real (doc 40): 10 recetas, el costo de la Cookie Triple Chocolate y 14 costos que cambian', async () => {
     const m = await leerLoteAjustes('recetas-excel-lote-1');
-    expect(Object.keys(LOTES_AJUSTES_APROBADOS)).toEqual(['recetas-excel-lote-1', 'recetas-recetario-lote-1']);
+    expect(Object.keys(LOTES_AJUSTES_APROBADOS)).toEqual([
+      'recetas-excel-lote-1',
+      'recetas-recetario-lote-1',
+      'recetas-equipo-nov-lote-1',
+    ]);
     expect(m.costosInsumo!.map((c) => `${c.insumo} ${c.previo}→${c.nuevo}`)).toEqual([
       'COOKIE FULLY BAKED TRIPLE CHOCOLATE 22.49→24.5',
     ]);
@@ -200,6 +204,24 @@ describe('manifiesto', () => {
       'Iced Blueberry Matcha Grande 19.696→20.871',
       'Matcha Iced Mint Grande 19.548→20.7973',
     ]);
+  });
+
+  it('cookies de OH LALA (doc 43): las 4 vuelven a $22.49 y solo cambian sus 4 productos', async () => {
+    const m = await leerLoteAjustes('recetas-equipo-nov-lote-1');
+    expect(m.recetas ?? []).toEqual([]);
+    expect(m.costosInsumo!.map((c) => `${c.insumo} ${c.previo}→${c.nuevo}`)).toEqual([
+      'MACADAMIA COOKIE 24.5→22.49',
+      'COOKIE MATCHA & WHITE CHOCOLATE 24.5→22.49',
+      'SALTED CARAMEL COOKIE 24.5→22.49',
+      'COOKIE FULLY BAKED TRIPLE CHOCOLATE 24.5→22.49',
+    ]);
+    expect(m.costos.map((c) => `${c.producto} ${c.tamano} ${c.previo}→${c.nuevo}`)).toEqual([
+      'Macadamia Cookie Único 26.6504→24.6404',
+      'Cookie Matcha & White Chocolate Único 26.6504→24.6404',
+      'Salted Caramel Cookie Único 26.6504→24.6404',
+      'Cookie Triple Chocolate Único 26.6504→24.6404',
+    ]);
+    expect(m.aprobacion).toMatch(/«Sí, \$22\.49»/);
   });
 
   it('leerLoteAjustes exige la huella aprobada', async () => {

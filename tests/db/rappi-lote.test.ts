@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
-import { diasEntre, fechaMX, pedidoDeListado } from '../../servicios/rappi-portal/lote.mjs';
+import { diasEntre, enParalelo, fechaMX, pedidoDeListado } from '../../servicios/rappi-portal/lote.mjs';
 
 // El lector (servicios/rappi-portal) convierte el JSON del portal al lote de rappi_importar. Forma del JSON observada
 // el 2026-10-29 en un pedido de Namóra (doc 01 §4); cliente anonimizado.
@@ -101,7 +101,12 @@ describe('lote del lector de Rappi', () => {
       estado: 'ok',
       mensaje: '',
       tiendas: [
-        { rappi_tienda_id: 'MX1930270777', por_dia: { '2026-10-28': { total_rows: 13, devueltos: 12 } } },
+        {
+          rappi_tienda_id: 'MX1930270777',
+          por_dia: { '2026-10-28': { total_rows: 13, devueltos: 12 } },
+          // El lector manda el nombre de la tienda en sus pedidos; rappi_importar lo ignora.
+          nombre: 'The Coffee Namóra',
+        },
       ],
       pedidos: [pedidoDeListado(listado, 'MX1930270777', detalle)],
     };
@@ -134,5 +139,34 @@ describe('lote del lector de Rappi', () => {
     ]);
     // 2026-10-29 03:00 UTC = 28 de octubre 21:00 en México.
     expect(fechaMX(0, new Date('2026-10-29T03:00:00Z'))).toBe('2026-10-28');
+  });
+
+  it('enParalelo: a lo más n a la vez y resultados en el orden de entrada', async () => {
+    let corriendo = 0;
+    let maximo = 0;
+    const r = await enParalelo([30, 5, 20, 1, 10, 2, 8], 3, async (ms) => {
+      maximo = Math.max(maximo, ++corriendo);
+      await new Promise((ok) => setTimeout(ok, ms));
+      corriendo--;
+      return ms * 2;
+    });
+    expect(r).toEqual([60, 10, 40, 2, 20, 4, 16]);
+    expect(maximo).toBe(3);
+    expect(await enParalelo([], 3, async () => 1)).toEqual([]);
+  });
+
+  it('enParalelo: al primer error no toma más y espera a los que corrían antes de lanzarlo', async () => {
+    const empezados: number[] = [];
+    const terminados: number[] = [];
+    const corrida = enParalelo([0, 1, 2, 3, 4, 5], 2, async (i) => {
+      empezados.push(i);
+      await new Promise((ok) => setTimeout(ok, i === 1 ? 5 : 20));
+      if (i === 1) throw new Error('sesión caducada');
+      terminados.push(i);
+    });
+    await expect(corrida).rejects.toThrow('sesión caducada');
+    // 0 y 1 empiezan; 1 falla a los 5 ms; 0 termina y ya no se toma ninguno más.
+    expect(empezados).toEqual([0, 1]);
+    expect(terminados).toEqual([0]);
   });
 });
