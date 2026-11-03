@@ -1,0 +1,846 @@
+{
+ "lote": "tamanos-combos-lote-1",
+ "fuente": {
+  "archivo": "API The Coffee (13 sucursales, 2026-10-20..2026-11-02): MISICEDAPP, TRWCROAPP, TRUGOUAPP y TRUMISAPP se venden con Regular y Large (+$10); recetas Grande del Iced Latte y del True White en producción (2026-11-03)",
+  "sha256": "59450905dbc6d077f63144d9334943436c625f582baf27a7c568dbed01ddd859"
+ },
+ "productos": [
+  {
+   "nombre": "Iced Latte + Ham & Cheese Sandwich",
+   "version": 29,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": 119,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 151,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · equivalencia confirmada 2026-10-07"
+       }
+      ]
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 18
+      }
+     },
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 170
+      }
+     },
+     {
+      "componente": "BRIOCHE TRENZA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 0.25
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 30
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 30
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 40
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": 119,
+      "manuales": [
+       {
+        "canal": "Rappi",
+        "precio": 151,
+        "nota": "Menu_Rappi_The_Coffee.xlsx · equivalencia confirmada 2026-10-07"
+       }
+      ]
+     },
+     "Grande": {
+      "precioLista": 129,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 18,
+       "Grande": 18
+      }
+     },
+     {
+      "componente": "POPOTE CON PUNTA NEGRO (2,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "TAPA FRIO PET (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 14 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 170,
+       "Grande": 290
+      }
+     },
+     {
+      "componente": "BRIOCHE TRENZA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 0.25,
+       "Grande": 0.25
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 30,
+       "Grande": 30
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 30,
+       "Grande": 30
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 40,
+       "Grande": 40
+      }
+     },
+     {
+      "componente": "VASO FRÍO PET 20 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "Iced Latte Grande (receta en producción): VASO FRÍO PET 20 OZ (1,000 PZS) en lugar de VASO FRÍO PET 14 OZ (1,000 PZS)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 55.2913
+   },
+   "costoNuevo": {
+    "Chica": 55.2913,
+    "Grande": 58.1313
+   },
+   "nota": "El POS lo vende con Regular y Large (+$10). Chica = la receta Único actual (la bebida es la Chica del Iced Latte); Grande = la misma receta con la bebida Grande del Iced Latte (vaso, tapa y leche). Precio de lista de la Grande = Chica + $10, como cobra el POS; el precio manual de Rappi queda en la Chica, porque Rappi también vende los dos tamaños"
+  },
+  {
+   "nombre": "True White + Croissant filled with cheese and ham",
+   "version": 22,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": null,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 170
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "CROISSANT TRADICIONAL",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 40
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 10
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 20
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": null,
+      "manuales": []
+     },
+     "Grande": {
+      "precioLista": null,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 18,
+       "Grande": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 170,
+       "Grande": 250
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "CROISSANT TRADICIONAL",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 40,
+       "Grande": 40
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 10,
+       "Grande": 10
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 20,
+       "Grande": 20
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS) en lugar de VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)"
+     },
+     {
+      "componente": "TAPA CALIENTE 90MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): TAPA CALIENTE 90MM (1,000 PZS) en lugar de TAPA CALIENTE 80MM (1,000 PZS)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 49.524
+   },
+   "costoNuevo": {
+    "Chica": 49.524,
+    "Grande": 51.484
+   },
+   "nota": "El POS lo vende con Regular y Large (+$10). Chica = la receta Único actual (la bebida es la Chica del True White); Grande = la misma receta con la bebida Grande del True White (vaso, tapa y leche). Precio de lista de la Grande = Chica + $10, como cobra el POS; sin precio de lista, como hoy"
+  },
+  {
+   "nombre": "True White + Croissant Serrano & Gouda",
+   "version": 22,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": 125,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 170
+      }
+     },
+     {
+      "componente": "CROISSANT TRADICIONAL",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "JAMON SERRANO 100G TGM",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 2.5
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 10
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 40
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": 125,
+      "manuales": []
+     },
+     "Grande": {
+      "precioLista": 135,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 18,
+       "Grande": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 170,
+       "Grande": 250
+      }
+     },
+     {
+      "componente": "CROISSANT TRADICIONAL",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "JAMON SERRANO 100G TGM",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 2.5,
+       "Grande": 2.5
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 10,
+       "Grande": 10
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 40,
+       "Grande": 40
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS) en lugar de VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)"
+     },
+     {
+      "componente": "TAPA CALIENTE 90MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): TAPA CALIENTE 90MM (1,000 PZS) en lugar de TAPA CALIENTE 80MM (1,000 PZS)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 53.8839
+   },
+   "costoNuevo": {
+    "Chica": 53.8839,
+    "Grande": 55.8439
+   },
+   "nota": "El POS lo vende con Regular y Large (+$10). Chica = la receta Único actual (la bebida es la Chica del True White); Grande = la misma receta con la bebida Grande del True White (vaso, tapa y leche). Precio de lista de la Grande = Chica + $10, como cobra el POS"
+  },
+  {
+   "nombre": "True White + Grilled Ham & Cheese Sandwich",
+   "version": 25,
+   "previo": {
+    "tamanos": {
+     "Único": {
+      "precioLista": 119,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 170
+      }
+     },
+     {
+      "componente": "BRIOCHE TRENZA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 0.25
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 30
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 30
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Único": 40
+      }
+     }
+    ]
+   },
+   "nuevo": {
+    "tamanos": {
+     "Chica": {
+      "precioLista": 119,
+      "manuales": []
+     },
+     "Grande": {
+      "precioLista": 129,
+      "manuales": []
+     }
+    },
+    "lineas": [
+     {
+      "componente": "CAFÉ TOSTADO EN GRANO WHITE 1.5 KG",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 18,
+       "Grande": 18
+      }
+     },
+     {
+      "componente": "TAPA CALIENTE 80MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1
+      }
+     },
+     {
+      "componente": "BOLSAS PARA PAN PAQUETE (1000 PIEZAS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "ETIQUETAS THE COFFEE ROLLO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 1,
+       "Grande": 1
+      }
+     },
+     {
+      "componente": "LECHE ENTERA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 170,
+       "Grande": 250
+      }
+     },
+     {
+      "componente": "BRIOCHE TRENZA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 0.25,
+       "Grande": 0.25
+      }
+     },
+     {
+      "componente": "PECHUGA DE PAVO",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 30,
+       "Grande": 30
+      }
+     },
+     {
+      "componente": "QUESO CREMA PHILADELPHIA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 30,
+       "Grande": 30
+      }
+     },
+     {
+      "componente": "QUESO MOZARELLA",
+      "tipo": "insumo",
+      "cantidades": {
+       "Chica": 40,
+       "Grande": 40
+      }
+     },
+     {
+      "componente": "VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS) en lugar de VASO CALIENTE PAPEL KRAFT 8 OZ (500 PZS)"
+     },
+     {
+      "componente": "TAPA CALIENTE 90MM (1,000 PZS)",
+      "tipo": "insumo",
+      "cantidades": {
+       "Grande": 1
+      },
+      "origen": "True White Grande (receta en producción): TAPA CALIENTE 90MM (1,000 PZS) en lugar de TAPA CALIENTE 80MM (1,000 PZS)"
+     }
+    ]
+   },
+   "renombrar": {
+    "de": "Único",
+    "a": "Chica"
+   },
+   "costoPrevio": {
+    "Único": 54.5913
+   },
+   "costoNuevo": {
+    "Chica": 54.5913,
+    "Grande": 56.5513
+   },
+   "nota": "El POS lo vende con Regular y Large (+$10). Chica = la receta Único actual (la bebida es la Chica del True White); Grande = la misma receta con la bebida Grande del True White (vaso, tapa y leche). Precio de lista de la Grande = Chica + $10, como cobra el POS"
+  }
+ ],
+ "aprobacion": "Carlo, 2026-11-03: «Si crealo para poder costear bien, dices que el POS si lo especifica entonces con eso la armamos». Autoriza preparar el lote; cada paso remoto (respaldo, ensayo y carga) y el merge requieren aprobación expresa."
+}

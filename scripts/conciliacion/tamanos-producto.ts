@@ -64,9 +64,18 @@ export const LOTES_TAMANOS_APROBADOS: Record<string, { manifiesto: string; sha25
     manifiesto: 'docs/conciliacion-brasil/42-tamanos-gelato-lote-1.manifiesto.json',
     sha256: 'd8eaa55dab1164ac81a9ceb9344b667cb71ae03f2ff09c33c83e4f1f219b6df7',
   },
+  // Carlo, 2026-11-03 (doc 45): los 4 combos que el POS vende con vaso Regular y Large pasan a Chica y Grande; la Grande
+  // lleva la bebida Grande de su receta suelta. Cada paso remoto exige aprobación aparte.
+  'tamanos-combos-lote-1': {
+    manifiesto: 'docs/conciliacion-brasil/45-tamanos-combos-lote-1.manifiesto.json',
+    sha256: 'fd093436992bb1931b2218904f84233cfb5bfefcc0b0bae3a4ac664954d74ed2',
+  },
 };
 /** Documento de cada lote, para la nota de la bitácora y la carpeta de informes. */
-export const DOC_TAMANOS: Record<string, string> = { 'tamanos-gelato-lote-1': '42' };
+export const DOC_TAMANOS: Record<string, string> = {
+  'tamanos-gelato-lote-1': '42',
+  'tamanos-combos-lote-1': '45',
+};
 export const docTamanos = (lote: string) => DOC_TAMANOS[lote] ?? '42';
 
 const TOL = 1e-4;

@@ -136,6 +136,43 @@ describe('manifiesto', () => {
   });
 });
 
+describe('lote real de combos (doc 45)', () => {
+  it('Chica = la receta Único; Grande = la bebida Grande de la receta suelta; Grande a +$10', async () => {
+    const m = await leerLoteTamanos('tamanos-combos-lote-1');
+    expect(Object.keys(LOTES_TAMANOS_APROBADOS)).toEqual(['tamanos-gelato-lote-1', 'tamanos-combos-lote-1']);
+    expect(
+      m.productos.map((p) => [
+        p.nombre,
+        p.costoPrevio.Único,
+        p.costoNuevo.Chica,
+        p.costoNuevo.Grande,
+        p.nuevo.tamanos.Chica!.precioLista,
+        p.nuevo.tamanos.Grande!.precioLista,
+      ]),
+    ).toEqual([
+      ['Iced Latte + Ham & Cheese Sandwich', 55.2913, 55.2913, 58.1313, 119, 129],
+      ['True White + Croissant filled with cheese and ham', 49.524, 49.524, 51.484, null, null],
+      ['True White + Croissant Serrano & Gouda', 53.8839, 53.8839, 55.8439, 125, 135],
+      ['True White + Grilled Ham & Cheese Sandwich', 54.5913, 54.5913, 56.5513, 119, 129],
+    ]);
+    const solo = (n: number, t: 'Chica' | 'Grande') =>
+      m.productos[n].nuevo.lineas
+        .filter((l) => l.cantidades[t] !== undefined && l.cantidades.Chica !== l.cantidades.Grande)
+        .map((l) => `${l.componente} ${l.cantidades[t]}`);
+    expect(solo(0, 'Grande')).toEqual(['LECHE ENTERA 290', 'VASO FRÍO PET 20 OZ (1,000 PZS) 1']);
+    expect(solo(1, 'Grande')).toEqual([
+      'LECHE ENTERA 250',
+      'VASO CALIENTE PAPEL KRAFT 12 OZ (1,000 PZS) 1',
+      'TAPA CALIENTE 90MM (1,000 PZS) 1',
+    ]);
+    // El precio manual de Rappi del Iced Latte + Ham & Cheese queda en la Chica: Rappi vende los dos tamaños.
+    expect(m.productos[0].nuevo.tamanos.Chica!.manuales.map((x) => `${x.canal} ${x.precio}`)).toEqual([
+      'Rappi 151',
+    ]);
+    expect(m.productos[0].nuevo.tamanos.Grande!.manuales).toEqual([]);
+  });
+});
+
 describe('ejecución', () => {
   it('solo admin', async () => {
     const i = await aplicarTamanos(cx, 'ensayo', await manifiesto(), { usuario: operaciones });
