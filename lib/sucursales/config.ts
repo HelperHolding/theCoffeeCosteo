@@ -69,6 +69,12 @@ const delPos =
     alcance: ALCANCE_POS,
   });
 const cdmx = delPos('Ciudad de México');
+/** Rappi del portal prendido en una sucursal del lote, con sus tiendas en rappi_tiendas y su historial cargados. */
+const conPortal = (c: ConfigSucursal): ConfigSucursal => ({
+  ...c,
+  rappiPortal: true,
+  alcance: ALCANCE_POS_RAPPI_PORTAL,
+});
 
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
@@ -153,16 +159,17 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   gdl(631, 542, 'Forum Tlaquepaque', 'Prados del Nilo'),
   // Lote 1, Ciudad de México: validadas con el 2 de noviembre (Polanco y Patio Universidad con 2 y 1 ¢ de redondeo).
   // Ubicación tomada de la dirección del CRM.
-  cdmx(519, 411, 'La Mexicana', 'Cuajimalpa · Santa Fe'),
-  cdmx(546, 453, 'Plaza Carso', 'Miguel Hidalgo · Ampliación Granada'),
-  cdmx(545, 432, 'Polanco', 'Av. Horacio'),
+  conPortal(cdmx(519, 411, 'La Mexicana', 'Cuajimalpa · Santa Fe')),
+  conPortal(cdmx(546, 453, 'Plaza Carso', 'Miguel Hidalgo · Ampliación Granada')),
+  conPortal(cdmx(545, 432, 'Polanco', 'Av. Horacio')),
+  // Roma Sur: sin tiendas en la cuenta del portal de Rappi (2026-11-03), queda solo con el POS.
   cdmx(469, 363, 'Roma Sur', 'Cuauhtémoc · Roma Sur'),
-  cdmx(670, 556, 'Reforma', 'Miguel Hidalgo · Lomas de Chapultepec'),
-  cdmx(460, 354, 'Pasaje Parián', 'Av. Álvaro Obregón'),
-  cdmx(626, 540, 'Patio Universidad', 'Benito Juárez · Xoco'),
-  cdmx(607, 472, 'Santa Fe', 'Vasco de Quiroga'),
-  cdmx(507, 402, 'Hamburgo', 'Cuauhtémoc · Juárez'),
-  cdmx(625, 539, 'Plaza Samara', 'Álvaro Obregón · Santa Fe'),
+  conPortal(cdmx(670, 556, 'Reforma', 'Miguel Hidalgo · Lomas de Chapultepec')),
+  conPortal(cdmx(460, 354, 'Pasaje Parián', 'Av. Álvaro Obregón')),
+  conPortal(cdmx(626, 540, 'Patio Universidad', 'Benito Juárez · Xoco')),
+  conPortal(cdmx(607, 472, 'Santa Fe', 'Vasco de Quiroga')),
+  conPortal(cdmx(507, 402, 'Hamburgo', 'Cuauhtémoc · Juárez')),
+  conPortal(cdmx(625, 539, 'Plaza Samara', 'Álvaro Obregón · Santa Fe')),
 ];
 
 export const configDe = (companyId: number) =>
