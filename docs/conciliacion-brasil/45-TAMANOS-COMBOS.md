@@ -1,7 +1,7 @@
 # 45 · Combos con vaso Regular y Large: Chica y Grande
 
-**Estado:** PREPARADO, con ensayo local limpio. **No** se ha hecho el ensayo remoto ni se ha aplicado nada en producción, y el
-PR no está mergeado. Cada paso remoto (ensayo y carga) y el merge requieren la aprobación expresa de Carlo.
+**Estado:** PREPARADO, con ensayo local y ensayo remoto limpios (2026-11-03). **No** se ha aplicado nada en producción, y el
+PR no está mergeado. La carga y el merge requieren la aprobación expresa de Carlo.
 
 ## Por qué
 
@@ -79,6 +79,13 @@ Se hizo sobre una copia del respaldo `2026-11-03T1725Z` (24,965 filas, iguales a
 | Revertir | revertido; la copia queda idéntica al respaldo (tamaños, precios manuales, cantidades y costos) |
 
 Los informes están en el respaldo privado, en `informes-tamanos-combos-45`.
+
+## Ensayo remoto (2026-11-03, aprobado por Carlo)
+
+Corrió con ROLLBACK. Antes, producción tenía 185 recetas, 249 tamaños, 83 precios manuales, 110 enlaces y bitácora hasta #1752.
+
+- Resultado: 4 combos cambiados con los costos esperados; 103 registros propios, 0 ajenos; el resto y los demás costos sin cambios.
+- Con una conexión nueva, producción sigue idéntica: mismos conteos, misma huella de costos y de cantidades.
 
 ## Orden propuesto
 
