@@ -7,6 +7,9 @@
  * Cambiar esta lista exige evidencia y revisión, como un lote.
  */
 export const TAMANOS_VERIFICADOS: Record<string, Partial<Record<'Regular' | 'Large', 'Chica' | 'Grande'>>> = {
+  // Cold Drip V60 (1CDV60): Chica y Grande en Costeo. Ni el POS ni Rappi traen vaso; en Rappi va el chico por omisión
+  // (Carlo, 2026-11-03, VASO_UNICO_RAPPI). El «sin vaso» del POS sigue sin mapeo (E2, doc 16).
+  '7799a6fe-bf6f-4247-842c-a071588cd9ac': { Regular: 'Chica' },
   // True White (4TW)
   'a96339d6-80e7-440b-a33b-bca51440d8e6': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
   // Americano (2AM)
