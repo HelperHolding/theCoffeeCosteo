@@ -21,6 +21,34 @@ export function diasEntre(desde, hasta) {
   return out;
 }
 
+/**
+ * Corre `fn` sobre cada elemento con a lo más `n` a la vez y devuelve los resultados en el orden de entrada. Al primer
+ * error deja de tomar elementos, espera a los que ya corrían y lo lanza: no queda nada corriendo al cerrar el navegador.
+ * @template T, R
+ * @param {T[]} elementos
+ * @param {number} n
+ * @param {(x: T) => Promise<R>} fn
+ * @returns {Promise<R[]>}
+ */
+export async function enParalelo(elementos, n, fn) {
+  const res = new Array(elementos.length);
+  let siguiente = 0;
+  let fallo = null;
+  const trabajador = async () => {
+    while (!fallo && siguiente < elementos.length) {
+      const i = siguiente++;
+      try {
+        res[i] = await fn(elementos[i]);
+      } catch (e) {
+        fallo ??= { e };
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(n, elementos.length)) }, trabajador));
+  if (fallo) throw fallo.e;
+  return res;
+}
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null);
 
 /**
