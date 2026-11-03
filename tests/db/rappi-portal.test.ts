@@ -235,12 +235,14 @@ describe('rappi_importar', () => {
   });
 });
 
-describe('tiendas de Guadalajara (migración 29)', () => {
-  it('las 11 sucursales tienen su tienda normal y su Turbo', async () => {
+describe('tiendas de Rappi (migraciones 29 y 36)', () => {
+  it('Guadalajara (11) y el lote 1 de CDMX (9, sin Roma Sur) tienen su tienda normal y su Turbo', async () => {
     const r = await db.query<{ company_id: number; canales: string }>(
       `select company_id, string_agg(canal, ',' order by canal) canales from public.rappi_tiendas group by 1 order by 1`,
     );
-    expect(r.rows.map((x) => x.company_id)).toEqual([384, 457, 459, 477, 513, 514, 515, 518, 532, 567, 631]);
+    expect(r.rows.map((x) => x.company_id)).toEqual([
+      384, 457, 459, 460, 477, 507, 513, 514, 515, 518, 519, 532, 545, 546, 567, 607, 625, 626, 631, 670,
+    ]);
     expect(new Set(r.rows.map((x) => x.canales))).toEqual(new Set(['normal,turbo']));
   });
 });
