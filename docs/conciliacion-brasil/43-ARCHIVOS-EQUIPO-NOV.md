@@ -1,7 +1,11 @@
 # 43 · Archivos del equipo (noviembre): 3 altas del POS y cookies a $22.49
 
-**Estado:** PREPARADO. Ensayo local y ensayo remoto limpios (2026-11-03). **No** se ha aplicado nada en producción, y el PR no
-está mergeado. Cada paso remoto (ensayo y carga) y el merge requieren la aprobación expresa de Carlo.
+**Estado:** los dos lotes quedaron **APLICADOS** en producción el 2026-11-03 con aprobación de Carlo:
+
+- altas: ejecución `ba906ccd…`, bitácora #1716–1742;
+- cookies: ejecución `1de17650…`, bitácora #1743–1746.
+
+Faltan el lote-10 de enlaces y el merge. Cada uno requiere la aprobación expresa de Carlo.
 
 ## Fuente
 
@@ -101,10 +105,30 @@ Corrió con ROLLBACK. Antes, producción tenía 182 recetas, 170 insumos, 246 ta
 
 Con una conexión nueva, producción sigue idéntica: mismos conteos, misma huella de costos y de insumos.
 
+## Aplicación (2026-11-03, aprobada por Carlo)
+
+Respaldo previo `2026-11-03T1617Z`: 24,873 filas, iguales a producción. Antes de escribir se comprobó que producción seguía como
+en el ensayo: mismos conteos, bitácora hasta #1684 y las mismas huellas de costos e insumos.
+
+| Lote | Resultado |
+| --- | --- |
+| altas-equipo-nov-lote-1 | 3 productos y 3 insumos creados; 27 registros propios (#1716–1742), 0 ajenos; resto sin cambios; COMMIT |
+| recetas-equipo-nov-lote-1 | 4 costos de insumo cambiados; 4 registros propios (#1743–1746), 0 ajenos; resto sin cambios; COMMIT |
+
+Entre el #1684 y el #1716 no hay registros: son ids que consumieron las transacciones de ensayo que terminaron en ROLLBACK.
+
+Recetas nuevas:
+
+- Spooky Biscuit: `c6640374-ac27-4f48-9530-fd2621fab738`, $24.6404
+- Croque Monsieur: `fe0b4275-b5d9-4230-9baa-4b306a0f7571`, $37.7004
+- Croissant filled with cheese and cured ham: `494e00ff-ef59-4c7c-b50a-e3066f0c2a18`, $69.1504
+
+Las 4 cookies quedaron en $24.6404. Al repetir el ensayo, los dos lotes dan «sin cambio» y 0 registros. La reversión está en
+`REVERSION.md`, en el respaldo privado `informes-equipo-nov-43`.
+
 ## Pendiente
 
-1. Aplicar en producción.
-2. Lote-10 de enlaces: SPOBISAPP, CROQMNAPP y CROPORAPP.
-3. Merge.
+1. Lote-10 de enlaces: SPOBISAPP, CROQMNAPP y CROPORAPP.
+2. Merge.
 
 Cada paso requiere el OK de Carlo.
