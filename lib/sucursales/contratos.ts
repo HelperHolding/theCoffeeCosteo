@@ -2,6 +2,7 @@ import type { CosteoProducto, CosteoResumen } from './costeo';
 import type { ResultadoConsumo } from './consumo';
 import type { FiltroOrigen, Insight, ProductoResumen, Resumen } from './metricas';
 import type { Origen } from './normalizar';
+import type { TableroHoy, TableroPeriodo } from './resumen';
 
 /** Contratos JSON entre los route handlers de Sucursales y el navegador. Sin datos crudos del proveedor. */
 export interface SucursalInfo {
@@ -178,4 +179,12 @@ export interface RespuestaTendencias {
    */
   mapa: (number | null)[][];
   conciliacion: Conciliacion;
+}
+
+/** Tablero de México (docs/sucursales/16): totales del corte de las sucursales del usuario, separados por origen. */
+export interface TableroMexico {
+  generadoEn: string;
+  semanas: number;
+  hoy: TableroHoy;
+  periodo: TableroPeriodo;
 }
