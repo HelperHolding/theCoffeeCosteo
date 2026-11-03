@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { CalendarClock, CircleCheck, Lock, LockOpen } from 'lucide-react';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { armarCards, etapasGenerales, pipeline } from '@/lib/crm/unificado/consultas';
 import { estadoCandado } from '@/lib/crm/unificado/modelo';
-import { Encabezado, Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
+import { PanelCifras } from '@/components/crm/unificado/piezas';
 import { PipelineGeneral, TablaCards } from '@/components/crm/unificado/pipeline';
 import { NuevoFranquiciatario } from '@/components/crm/unificado/nuevo-franquiciatario';
 
@@ -96,35 +96,19 @@ export default async function Pipeline({
       >
         {editable && <NuevoFranquiciatario />}
       </Encabezado>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi
-          etiqueta="Bloqueadas"
-          valor={conteo('bloqueada')}
-          icono={Lock}
-          tono="sin-precio"
-          nota="de las cards a la vista"
-        />
-        <Kpi
-          etiqueta="Listas para avanzar"
-          valor={conteo('lista')}
-          icono={CircleCheck}
-          tono="ok"
-          nota="todo validado"
-        />
-        <Kpi
-          etiqueta="Candados liberados"
-          valor={conteo('liberada')}
-          icono={LockOpen}
-          tono="bajo"
-          nota="por consumir"
-        />
-        <Kpi
-          etiqueta="Vencen en 14 días"
-          valor={vencen}
-          icono={CalendarClock}
-          nota="COF, 5 días hábiles, 120 días"
-        />
-      </div>
+      <PanelCifras
+        cifras={[
+          {
+            etiqueta: 'Bloqueadas',
+            valor: conteo('bloqueada'),
+            tono: 'bad',
+            nota: 'de las cards a la vista',
+          },
+          { etiqueta: 'Listas para avanzar', valor: conteo('lista'), tono: 'ok', nota: 'todo validado' },
+          { etiqueta: 'Candados liberados', valor: conteo('liberada'), tono: 'warn', nota: 'por consumir' },
+          { etiqueta: 'Vencen en 14 días', valor: vencen, nota: 'COF, 5 días hábiles, 120 días' },
+        ]}
+      />
       {cards.length === 0 ? (
         <Tarjeta cuerpo={false}>
           <Vacio titulo="Aún no hay cards en el Pipeline">

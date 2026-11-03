@@ -34,6 +34,7 @@ import { ActividadTienda } from '@/components/crm/expediente/actividad';
 import { ActividadesTienda } from '@/components/crm/expediente/actividades';
 import { Candado, ChipEtapa } from './card-pipeline';
 import { DialogoMovimiento, MenuMover } from './mover';
+import { Avatar, Chip, FichaFecha, Medidor, RecorridoEtapas } from './piezas';
 import { subirDocumento } from './subida';
 import { enlaceArchivo } from '@/app/(crm)/crm/acciones';
 import {
@@ -47,13 +48,7 @@ import {
   validarRequisito,
 } from '@/app/(crm)/crm/acciones-pipeline';
 import { destinos, type Destino } from '@/lib/crm/unificado/reglas';
-import {
-  AREAS,
-  cuando,
-  textoVencimiento,
-  type CardPipeline,
-  type EtapaGeneral,
-} from '@/lib/crm/unificado/modelo';
+import { AREAS, cuando, type CardPipeline, type EtapaGeneral } from '@/lib/crm/unificado/modelo';
 import { TIPOS_DOCUMENTO } from '@/lib/crm/validacion';
 import {
   TERRITORIOS,
@@ -449,7 +444,10 @@ function Requisitos({
         const encabezado = (
           <span className="flex flex-wrap items-center gap-2">
             <ChipEtapa etapa={etapa} />
-            <span className="text-xs text-muted-foreground tabular">
+            <span className="inline-flex items-center gap-2 text-xs text-muted-foreground tabular">
+              <span className="w-16">
+                <Medidor listos={n} total={rs.length} />
+              </span>
               {n}/{rs.length} listos
             </span>
             {adelanto && (
@@ -823,6 +821,33 @@ type CampoEditable = {
   tipo?: 'date' | 'email' | 'number' | 'select';
   opciones?: Record<string, string>;
 };
+/** Recuadros del Resumen: cada grupo responde una pregunta (quién, dónde, con qué datos fiscales…). */
+const GRUPOS_FRANQUICIATARIO = [
+  { titulo: 'Contacto', campos: ['nombre', 'correo', 'telefono', 'origen'] },
+  { titulo: 'Interés y territorio', campos: ['ciudad_interes', 'estado_interes', 'territorio'] },
+  {
+    titulo: 'Datos fiscales y contrato',
+    campos: [
+      'tipo_persona',
+      'firmante',
+      'obligado_solidario',
+      'razon_social',
+      'rfc',
+      'regimen_fiscal',
+      'codigo_postal_fiscal',
+    ],
+  },
+];
+const GRUPOS_SUCURSAL = [
+  {
+    titulo: 'Local',
+    campos: ['nombre', 'ciudad', 'direccion', 'numero_tienda_jestor', 'arquitecto_asignado'],
+  },
+  {
+    titulo: 'Fechas de apertura',
+    campos: ['fecha_limite_apertura', 'fecha_estimada_apertura', 'fecha_confirmada_apertura'],
+  },
+];
 const CAMPOS_FRANQUICIATARIO: CampoEditable[] = [
   { campo: 'nombre', etiqueta: 'Nombre o razón comercial' },
   { campo: 'correo', etiqueta: 'Correo', tipo: 'email' },
@@ -882,50 +907,96 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
         );
       }}
     >
-      <dl className="grid gap-x-6 gap-y-3 rounded-2xl border border-line bg-surface p-5 shadow-card sm:grid-cols-2 lg:grid-cols-3">
-        {datos.tipo === 'sucursal' && datos.franquiciatario && (
-          <div>
-            <dt className="text-xs text-muted-foreground">Franquiciatario</dt>
-            <dd className="mt-0.5 text-sm font-medium">
-              <Link href={`/crm/franquiciatarios/${datos.franquiciatario.id}`} className="hover:underline">
-                {datos.franquiciatario.nombre}
-              </Link>
-            </dd>
-          </div>
-        )}
-        <div>
-          <dt className="text-xs text-muted-foreground">
-            {datos.tipo === 'franquiciatario' ? 'Vendedor' : 'Responsable'}
-          </dt>
-          <dd className="mt-0.5 text-sm font-medium">{responsable ?? 'Sin asignar'}</dd>
-        </div>
-        {campos.map((c) => (
-          <div key={c.campo}>
-            {editando ? (
-              <label>
-                {c.etiqueta}
-                {c.tipo === 'select' ? (
-                  <select name={c.campo} defaultValue={String(fila[c.campo] ?? '')}>
-                    <option value="">—</option>
-                    {Object.entries(c.opciones ?? {}).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input name={c.campo} type={c.tipo ?? 'text'} defaultValue={String(fila[c.campo] ?? '')} />
-                )}
-              </label>
-            ) : (
-              <>
-                <dt className="text-xs text-muted-foreground">{c.etiqueta}</dt>
-                <dd className="mt-0.5 text-sm font-medium">{texto(c)}</dd>
-              </>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="rounded-2xl border border-line bg-surface p-5 shadow-card">
+          <h3 className="text-sm font-semibold">Personas</h3>
+          <dl className="mt-3 space-y-3">
+            {datos.tipo === 'sucursal' && datos.franquiciatario && (
+              <div className="flex items-center gap-3">
+                <Avatar nombre={datos.franquiciatario.nombre} tam={36} />
+                <div className="min-w-0">
+                  <dt className="text-xs text-muted-foreground">Franquiciatario</dt>
+                  <dd className="truncate text-sm font-medium">
+                    <Link
+                      href={`/crm/franquiciatarios/${datos.franquiciatario.id}`}
+                      className="hover:underline"
+                    >
+                      {datos.franquiciatario.nombre}
+                    </Link>
+                  </dd>
+                </div>
+              </div>
             )}
-          </div>
+            <div className="flex items-center gap-3">
+              <Avatar nombre={responsable ?? '?'} area={datos.etapa.area} tam={36} />
+              <div className="min-w-0">
+                <dt className="text-xs text-muted-foreground">
+                  {datos.tipo === 'franquiciatario' ? 'Vendedor' : 'Responsable'}
+                </dt>
+                <dd className="truncate text-sm font-medium">{responsable ?? 'Sin asignar'}</dd>
+              </div>
+            </div>
+          </dl>
+        </section>
+        {(datos.tipo === 'franquiciatario' ? GRUPOS_FRANQUICIATARIO : GRUPOS_SUCURSAL).map((g) => (
+          <section
+            key={g.titulo}
+            className={cn(
+              'rounded-2xl border border-line bg-surface p-5 shadow-card',
+              g.campos.length > 5 && 'lg:col-span-2',
+            )}
+          >
+            <h3 className="text-sm font-semibold">{g.titulo}</h3>
+            <dl
+              className={cn(
+                'mt-3 grid gap-x-6 gap-y-3',
+                g.campos.length > 3 && 'sm:grid-cols-2',
+                g.campos.length > 5 && 'lg:grid-cols-3',
+              )}
+            >
+              {campos
+                .filter((c) => g.campos.includes(c.campo))
+                .map((c) => (
+                  <div key={c.campo} className="min-w-0">
+                    {editando ? (
+                      <label>
+                        {c.etiqueta}
+                        {c.tipo === 'select' ? (
+                          <select name={c.campo} defaultValue={String(fila[c.campo] ?? '')}>
+                            <option value="">—</option>
+                            {Object.entries(c.opciones ?? {}).map(([k, v]) => (
+                              <option key={k} value={k}>
+                                {v}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            name={c.campo}
+                            type={c.tipo ?? 'text'}
+                            defaultValue={String(fila[c.campo] ?? '')}
+                          />
+                        )}
+                      </label>
+                    ) : (
+                      <>
+                        <dt className="text-xs text-muted-foreground">{c.etiqueta}</dt>
+                        <dd
+                          className={cn(
+                            'mt-0.5 break-words text-sm font-medium',
+                            texto(c) === '—' && 'text-muted-foreground',
+                          )}
+                        >
+                          {texto(c)}
+                        </dd>
+                      </>
+                    )}
+                  </div>
+                ))}
+            </dl>
+          </section>
         ))}
-      </dl>
+      </div>
       {error && (
         <p role="alert" className="placa px-3 py-2 text-sm text-bad">
           {error}
@@ -1111,75 +1182,118 @@ export function ExpedienteCard({
   return (
     <div className="space-y-5">
       <section
-        className="placa flex flex-wrap items-center gap-x-6 gap-y-3 p-4"
+        className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-card"
         aria-label="Estado de la card"
       >
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5">
-          <ChipEtapa etapa={etapa} />
-          <Candado card={card} etapa={etapa} />
-          {bloqueadoTerritorio && (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-bad">
-              <Lock size={13} aria-hidden="true" /> Territorio bloqueado
-            </span>
-          )}
-          {card.vencimiento && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 text-[12px]',
-                card.vencimiento.dias <= 7 ? 'text-warn' : 'text-muted-foreground',
-              )}
-            >
-              <Clock size={13} aria-hidden="true" /> {textoVencimiento(card.vencimiento)}
-            </span>
-          )}
-          {card.muestra && (
-            <span className="text-[12px] text-muted-foreground">Muestra: sin requisitos registrados</span>
-          )}
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
-          {usuario.esHead && !lista && etapa.tipo === 'abierta' && (
-            <LiberarCandado
-              datos={datos}
-              faltantes={faltantes}
-              usuario={usuario}
-              abiertoInicial={liberarAbierto}
-            />
-          )}
-          <MenuMover
-            nombre={card.nombre}
-            destinos={posibles.filter((d) => d.tipo !== 'siguiente')}
-            alElegir={elegir}
-            deshabilitado={moviendo}
-            compacto={false}
-          />
-          {siguiente && (
-            <Button
-              disabled={!lista || !puedeMover || moviendo}
-              onClick={() => elegir(siguiente)}
-              aria-label={`Avanzar a ${siguiente.etapa.numero ? `la etapa ${siguiente.etapa.numero}, ` : ''}${siguiente.etapa.nombre}`}
-              title={
-                !puedeMover ? `La mueve ${etapa.funcion ?? AREAS[etapa.area].nombre}` : siguiente.etapa.nombre
-              }
-            >
-              {siguiente.etapa.numero
-                ? `Avanzar a la etapa ${siguiente.etapa.numero}`
-                : `Avanzar a ${siguiente.etapa.nombre}`}
-              <ArrowRight aria-hidden="true" />
-            </Button>
-          )}
-        </div>
-        {!lista && etapa.tipo === 'abierta' && (
-          <p className="basis-full text-xs text-muted-foreground">
-            No puede avanzar:{' '}
-            {bloqueadoTerritorio
-              ? 'el territorio está bloqueado (solo Standby o Descartada, o un head libera el candado).'
-              : faltantes.length > 1
-                ? `faltan ${faltantes.length} requisitos obligatorios de esta etapa.`
-                : 'falta 1 requisito obligatorio de esta etapa.'}
-          </p>
+        {(etapa.card === datos.tipo || etapa.provisional) && etapa.tipo === 'abierta' && (
+          <RecorridoEtapas etapas={datos.etapas} actual={etapa} tipo={datos.tipo} />
         )}
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(14rem,auto)]">
+          <div className="min-w-0 space-y-2.5 rounded-xl border border-line bg-surface-2/50 p-4">
+            <p className="text-xs font-medium text-muted-foreground">Etapa actual</p>
+            <ChipEtapa etapa={etapa} className="text-[12px]" />
+            <Candado card={card} etapa={etapa} />
+            <Medidor listos={card.requisitos.listos} total={card.requisitos.total} />
+            {bloqueadoTerritorio && (
+              <p className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-bad">
+                <Lock size={13} aria-hidden="true" /> Territorio bloqueado
+              </p>
+            )}
+            {!lista && etapa.tipo === 'abierta' && faltantes.length > 0 && (
+              <ul role="list" className="flex flex-wrap gap-1.5" aria-label="Requisitos que faltan">
+                {faltantes.slice(0, 4).map((r) => (
+                  <li key={r.requisito_id}>
+                    <Chip color={AREAS[efectiva(r.area_cumple)].color}>{r.nombre}</Chip>
+                  </li>
+                ))}
+                {faltantes.length > 4 && (
+                  <li className="text-[11px] text-muted-foreground">y {faltantes.length - 4} más</li>
+                )}
+              </ul>
+            )}
+            {card.muestra && (
+              <p className="text-[12px] text-muted-foreground">Muestra: sin requisitos registrados</p>
+            )}
+          </div>
+          <div className="min-w-0 rounded-xl border border-line bg-surface-2/50 p-4">
+            <p className="text-xs font-medium text-muted-foreground">Próximo vencimiento</p>
+            {card.vencimiento ? (
+              <div className="mt-2.5 flex items-center gap-3">
+                <FichaFecha
+                  fecha={card.vencimiento.fecha}
+                  tono={card.vencimiento.dias < 0 ? 'bad' : card.vencimiento.dias <= 7 ? 'warn' : undefined}
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{card.vencimiento.etiqueta}</p>
+                  <p
+                    className={cn(
+                      'mt-0.5 inline-flex items-center gap-1 text-xs',
+                      card.vencimiento.dias < 0
+                        ? 'font-semibold text-bad'
+                        : card.vencimiento.dias <= 7
+                          ? 'text-warn'
+                          : 'text-muted-foreground',
+                    )}
+                  >
+                    <Clock size={12} aria-hidden="true" />
+                    {card.vencimiento.dias < 0
+                      ? `venció hace ${-card.vencimiento.dias} d`
+                      : card.vencimiento.dias === 0
+                        ? 'vence hoy'
+                        : `en ${card.vencimiento.dias} días`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2.5 text-sm text-muted-foreground">Sin vencimientos activos.</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2 lg:justify-center">
+            {siguiente && (
+              <Button
+                disabled={!lista || !puedeMover || moviendo}
+                onClick={() => elegir(siguiente)}
+                aria-label={`Avanzar a ${siguiente.etapa.numero ? `la etapa ${siguiente.etapa.numero}, ` : ''}${siguiente.etapa.nombre}`}
+                title={
+                  !puedeMover
+                    ? `La mueve ${etapa.funcion ?? AREAS[etapa.area].nombre}`
+                    : siguiente.etapa.nombre
+                }
+              >
+                {siguiente.etapa.numero
+                  ? `Avanzar a la etapa ${siguiente.etapa.numero}`
+                  : `Avanzar a ${siguiente.etapa.nombre}`}
+                <ArrowRight aria-hidden="true" />
+              </Button>
+            )}
+            <MenuMover
+              nombre={card.nombre}
+              destinos={posibles.filter((d) => d.tipo !== 'siguiente')}
+              alElegir={elegir}
+              deshabilitado={moviendo}
+              compacto={false}
+            />
+            {usuario.esHead && !lista && etapa.tipo === 'abierta' && (
+              <LiberarCandado
+                datos={datos}
+                faltantes={faltantes}
+                usuario={usuario}
+                abiertoInicial={liberarAbierto}
+              />
+            )}
+            {!lista && etapa.tipo === 'abierta' && (
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                {bloqueadoTerritorio
+                  ? 'Territorio bloqueado: solo Standby o Descartada, o un head libera el candado.'
+                  : faltantes.length > 1
+                    ? `Faltan ${faltantes.length} requisitos obligatorios para avanzar.`
+                    : 'Falta 1 requisito obligatorio para avanzar.'}
+              </p>
+            )}
+          </div>
+        </div>
         {errorMover && !destino && (
-          <p role="alert" className="basis-full text-sm text-bad">
+          <p role="alert" className="text-sm text-bad">
             {errorMover}
           </p>
         )}

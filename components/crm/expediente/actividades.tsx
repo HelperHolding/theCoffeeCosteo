@@ -31,7 +31,7 @@ export function EstadoActividad({ actividad, editable }: { actividad: Actividad;
             router.refresh();
           })
         }
-        className="h-8 rounded-lg border border-line-strong bg-surface px-2 text-xs"
+        className="!h-8 rounded-lg border border-line-strong bg-surface !py-0 px-2 text-xs"
       >
         {Object.entries(ESTADOS_ACTIVIDAD).map(([v, n]) => (
           <option key={v} value={v}>

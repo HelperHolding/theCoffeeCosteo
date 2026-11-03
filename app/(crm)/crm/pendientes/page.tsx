@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { armarCards, etapasGenerales, vencimientos } from '@/lib/crm/unificado/consultas';
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
-import { Encabezado, Tarjeta } from '@/components/portal/piezas';
-import { TablaCards } from '@/components/crm/unificado/pipeline';
-import { BandejaAvisos } from '@/components/crm/unificado/avisos';
+import { Encabezado } from '@/components/portal/piezas';
+import { VistaPendientes } from '@/components/crm/unificado/vistas/pendientes';
 import type { CandadoCard, ClaveArea, Cumplimiento, Requisito } from '@/lib/crm/tipos';
 
 const MAX = 50;
@@ -81,49 +79,19 @@ export default async function MisPendientes() {
             : `Lo que le toca a ${usuario.areas.map((a) => a[0].toUpperCase() + a.slice(1)).join(' y ') || 'tu área'}, por urgencia.`
         }
       />
-      <Tarjeta
-        titulo="Avisos sin atender"
-        descripcion="COF a 2 meses, 5 días hábiles antes de abrir y límite de 120 días."
-        cuerpo={false}
-      >
-        <BandejaAvisos avisos={misAvisos} areas={usuario.areas} todas={todas} />
-      </Tarjeta>
-      {vencidos.length > 0 && (
-        <Tarjeta titulo="Vencen en 7 días o ya vencieron" cuerpo={false}>
-          <ul role="list" className="divide-y divide-line">
-            {vencidos.map((v) => (
-              <li
-                key={`${v.tipo}-${v.tienda_id}`}
-                className="flex flex-wrap justify-between gap-2 px-5 py-3 text-sm"
-              >
-                <Link href={`/crm/sucursales/${v.tienda_id}`} className="hover:underline">
-                  {v.mensaje}
-                </Link>
-                <span className={v.dias < 0 ? 'font-semibold text-bad' : 'text-warn'}>
-                  {v.dias < 0 ? `venció hace ${-v.dias} d` : v.dias === 0 ? 'hoy' : `en ${v.dias} d`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Tarjeta>
-      )}
-      <section className="space-y-2">
-        <h2 className="placa inline-block px-3 py-1.5 text-sm">Requisitos por validar ({aValidar.length})</h2>
-        <TablaCards cards={cardsValidar} etapas={etapas} />
-      </section>
-      <section className="space-y-2">
-        <h2 className="placa inline-block px-3 py-1.5 text-sm">
-          Listas para avanzar en etapas de mi área ({listas.length}) · bloqueadas:{' '}
-          {bloqueadas.length.toLocaleString('es-MX')}
-        </h2>
-        <TablaCards cards={cardsListas} etapas={etapas} />
-      </section>
-      <section className="space-y-2">
-        <h2 className="placa inline-block px-3 py-1.5 text-sm">
-          Mis leads como vendedor ({cardsPropias.length})
-        </h2>
-        <TablaCards cards={cardsPropias} etapas={etapas} />
-      </section>
+      <VistaPendientes
+        etapas={etapas}
+        avisos={misAvisos}
+        vencidos={vencidos}
+        porValidar={cardsValidar}
+        totalPorValidar={aValidar.length}
+        listas={cardsListas}
+        totalListas={cs.filter((c) => c.liberado || c.listos >= c.total).length}
+        bloqueadas={bloqueadas.length}
+        propias={cardsPropias}
+        areas={usuario.areas}
+        todas={todas}
+      />
     </>
   );
 }

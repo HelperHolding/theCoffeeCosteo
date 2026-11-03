@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { sesionCrm } from '@/lib/supabase/sesion';
-import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Encabezado } from '@/components/portal/piezas';
+import { VistaContactos } from '@/components/crm/unificado/vistas/directorio';
 import { Buscador, Paginacion, POR_PAGINA, paginaDe, textoBusqueda } from '@/components/crm/listas';
 import { claseCampo } from '@/lib/crm/formato';
 import { TIPOS_CONTACTO } from '@/lib/crm/tipos';
@@ -55,45 +55,7 @@ export default async function Contactos({
           ))}
         </select>
       </Buscador>
-      {filas.length === 0 ? (
-        <Tarjeta cuerpo={false}>
-          <Vacio titulo={q || sp.tipo ? 'Sin resultados' : 'Aún no hay contactos'}>
-            {q || sp.tipo ? 'Prueba con otra búsqueda.' : 'Se cargarán con la importación de Zoho.'}
-          </Vacio>
-        </Tarjeta>
-      ) : (
-        <div className="relative overflow-x-auto rounded-2xl border border-line bg-surface shadow-card">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="border-b border-line text-left text-xs text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">Contacto</th>
-                <th className="px-4 py-3 font-medium">Tipo</th>
-                <th className="px-4 py-3 font-medium">Franquiciatario</th>
-                <th className="px-4 py-3 font-medium">Plaza</th>
-                <th className="px-4 py-3 font-medium">Teléfono</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((c) => (
-                <tr key={c.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-2.5">
-                    <Link href={`/crm/contactos/${c.id}`} className="font-medium hover:underline">
-                      {[c.nombre, c.apellidos].filter(Boolean).join(' ')}
-                    </Link>
-                    <p className="text-xs text-muted-foreground">
-                      {[c.puesto, c.correo].filter(Boolean).join(' · ')}
-                    </p>
-                  </td>
-                  <td className="px-4 py-2.5 text-ink-2">{c.tipo_contacto ?? '—'}</td>
-                  <td className="px-4 py-2.5 text-ink-2">{c.franquiciatario ?? '—'}</td>
-                  <td className="px-4 py-2.5 text-ink-2">{c.plaza ?? '—'}</td>
-                  <td className="px-4 py-2.5 text-ink-2">{c.telefono ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <VistaContactos filas={filas} filtrado={!!(q || sp.tipo)} />
       <Paginacion
         ruta="/crm/contactos"
         params={{ q: sp.q, tipo: sp.tipo }}

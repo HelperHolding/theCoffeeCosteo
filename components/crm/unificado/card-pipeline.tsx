@@ -10,6 +10,7 @@ import {
   type CardPipeline,
   type EtapaGeneral,
 } from '@/lib/crm/unificado/modelo';
+import { Avatar, Chip, Medidor } from '@/components/crm/unificado/piezas';
 
 export const rutaCard = (c: Pick<CardPipeline, 'id' | 'tipo'>) =>
   c.tipo === 'franquiciatario' ? `/crm/franquiciatarios/${c.id}` : `/crm/sucursales/${c.id}`;
@@ -139,22 +140,37 @@ export function CardPipelineVista({
         {acciones}
       </div>
 
-      <div className="mt-2.5 space-y-1.5">
-        <Candado card={card} etapa={etapa} />
-        {v && (
-          <p
-            className={cn(
-              'inline-flex items-center gap-1.5 text-[12px]',
-              v.dias < 0 ? 'font-semibold text-bad' : v.dias <= 7 ? 'text-warn' : 'text-muted-foreground',
-            )}
-          >
-            <Clock size={13} aria-hidden="true" className="shrink-0" />
-            {textoVencimiento(v)}
-          </p>
-        )}
-      </div>
+      {estadoCandado(card, etapa) !== 'sin-candado' && (
+        <div className="mt-3 space-y-1.5">
+          <Candado card={card} etapa={etapa} compacto />
+          <Medidor listos={card.requisitos.listos} total={card.requisitos.total} />
+          {card.requisitos.faltante && !card.liberado && (
+            <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-ink-2">
+              <span className="shrink-0 text-muted-foreground">Falta</span>
+              <Chip color={AREAS[card.requisitos.faltante.area].color} className="min-w-0">
+                {card.requisitos.faltante.nombre}
+              </Chip>
+            </p>
+          )}
+        </div>
+      )}
+      {v && (
+        <p
+          className={cn(
+            'mt-2 inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11.5px]',
+            v.dias < 0
+              ? 'bg-bad-soft font-semibold text-bad'
+              : v.dias <= 7
+                ? 'bg-warn-soft text-warn'
+                : 'bg-surface-2 text-ink-2',
+          )}
+        >
+          <Clock size={12} aria-hidden="true" className="shrink-0" />
+          {textoVencimiento(v)}
+        </p>
+      )}
 
-      <footer className="mt-2.5 flex items-center gap-3 border-t border-line pt-2 text-[11px] text-muted-foreground">
+      <footer className="mt-3 flex items-center gap-3 border-t border-line pt-2 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1" title="Archivos">
           <Paperclip size={12} aria-hidden="true" /> <span className="sr-only">Archivos:</span>
           {card.archivos}
@@ -164,8 +180,9 @@ export function CardPipelineVista({
           {card.notas}
         </span>
         {card.ultimo && (
-          <span className="ml-auto truncate" title="Último movimiento">
-            {card.ultimo.actor} · {cuando(card.ultimo.fecha, ahora)}
+          <span className="ml-auto flex min-w-0 items-center gap-1.5" title="Último movimiento">
+            <Avatar nombre={card.ultimo.actor} tam={18} />
+            <span className="truncate">{cuando(card.ultimo.fecha, ahora)}</span>
           </span>
         )}
       </footer>
