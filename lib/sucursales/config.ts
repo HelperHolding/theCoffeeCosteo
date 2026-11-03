@@ -42,6 +42,34 @@ const ALCANCE_RAPPI =
 const ALCANCE_POS_RAPPI_PORTAL =
   'Incluye Rappi, leído del portal de Rappi (tienda normal y Turbo) cada 10 minutos. Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
+/** Sin Rappi en la API y todavía sin sus tiendas del portal: solo lo que cobra el POS. No se estima lo que falta. */
+const ALCANCE_POS =
+  'Ventas del POS: Mostrador y App. El Rappi de esta sucursal todavía no se lee del portal de Rappi, así que no se incluye ni se estima.';
+
+/**
+ * Sucursales que se dan de alta por lotes de 10 (docs/sucursales/15). En cada una, antes de entrar:
+ * - nombre e id de la API = tienda del CRM (lookerStoreId = número Jestor);
+ * - un día cerrado conciliado (venta = suma por productos, a lo más 2 ¢ de redondeo del proveedor);
+ * - horario de sus pedidos posible en su zona (scripts/sucursales/validar-sucursal.ts).
+ * Entran solo con el POS; su Rappi del portal se prende por lote (rappiPortal) cuando sus tiendas y su historial estén
+ * cargados.
+ */
+const delPos =
+  (ciudad: string, zona = 'America/Mexico_City') =>
+  (companyId: number, lookerStoreId: number, nombre: string, ubicacion: string): ConfigSucursal => ({
+    companyId,
+    lookerStoreId,
+    nombre,
+    ciudad,
+    ubicacion,
+    moneda: 'MXN',
+    zona,
+    modoTiempo: 'local-etiquetada-z',
+    rappi: false,
+    alcance: ALCANCE_POS,
+  });
+const cdmx = delPos('Ciudad de México');
+
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
  * id de la API = tienda del CRM (lookerStoreId = número Jestor), día 27 conciliado (venta = suma por productos, a lo
@@ -123,6 +151,18 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   gdl(513, 394, 'Namóra', 'Chapultepec Sur'),
   gdl(567, 475, 'Gran Plaza', 'Zapopan · Don Bosco Vallarta'),
   gdl(631, 542, 'Forum Tlaquepaque', 'Prados del Nilo'),
+  // Lote 1, Ciudad de México: validadas con el 2 de noviembre (Polanco y Patio Universidad con 2 y 1 ¢ de redondeo).
+  // Ubicación tomada de la dirección del CRM.
+  cdmx(519, 411, 'La Mexicana', 'Cuajimalpa · Santa Fe'),
+  cdmx(546, 453, 'Plaza Carso', 'Miguel Hidalgo · Ampliación Granada'),
+  cdmx(545, 432, 'Polanco', 'Av. Horacio'),
+  cdmx(469, 363, 'Roma Sur', 'Cuauhtémoc · Roma Sur'),
+  cdmx(670, 556, 'Reforma', 'Miguel Hidalgo · Lomas de Chapultepec'),
+  cdmx(460, 354, 'Pasaje Parián', 'Av. Álvaro Obregón'),
+  cdmx(626, 540, 'Patio Universidad', 'Benito Juárez · Xoco'),
+  cdmx(607, 472, 'Santa Fe', 'Vasco de Quiroga'),
+  cdmx(507, 402, 'Hamburgo', 'Cuauhtémoc · Juárez'),
+  cdmx(625, 539, 'Plaza Samara', 'Álvaro Obregón · Santa Fe'),
 ];
 
 export const configDe = (companyId: number) =>
