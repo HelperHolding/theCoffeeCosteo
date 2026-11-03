@@ -2,6 +2,8 @@ import { sesionCrm } from '@/lib/supabase/sesion';
 import { modulosVisibles } from '@/lib/portal/modulos';
 import { leerTodo } from '@/lib/crm/consultas';
 import { Marco, type ItemBusqueda } from '@/components/portal/marco';
+// Mismo cristal sobre el muro que Sucursales (propuesta «vitrina»).
+import '../../(sucursales)/sucursales/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
   const { db, perfil, accesos } = await sesionCrm();
@@ -58,7 +60,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
       visibles={modulosVisibles(accesos, perfil.rol)}
       busqueda={busqueda}
     >
-      {children}
+      <div className="vitrina space-y-6">{children}</div>
     </Marco>
   );
 }

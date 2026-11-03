@@ -180,3 +180,18 @@ export function textoVencimiento(v: Vencimiento): string {
   if (v.dias === 0) return `${v.etiqueta} · vence hoy`;
   return `${v.etiqueta} · en ${v.dias} d`;
 }
+
+/** Nombre corto de cada tipo de vencimiento o aviso (crm_v_vencimientos.tipo). */
+export const ETIQUETA_VENCIMIENTO: Record<string, string> = {
+  cof: 'COF firmada',
+  apertura_5_habiles: 'Fecha confirmada a Legal',
+  limite_120: 'Límite de apertura',
+  cof_tardia: 'COF tardía',
+  pld_original: 'PLD original',
+};
+
+/** Primera área reconocible en `actor_area` de la bitácora (puede traer varias). */
+export function areaDeTexto(texto: string | null | undefined): ClaveArea | null {
+  const t = (texto ?? '').toLocaleLowerCase('es');
+  return (Object.keys(AREAS) as ClaveArea[]).find((a) => t.includes(a)) ?? null;
+}
