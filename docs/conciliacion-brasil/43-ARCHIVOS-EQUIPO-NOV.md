@@ -1,6 +1,6 @@
 # 43 · Archivos del equipo (noviembre): 3 altas del POS y cookies a $22.49
 
-**Estado:** PREPARADO. Ensayo local limpio. **No** se ha hecho el ensayo remoto ni se ha aplicado nada en producción, y el PR no
+**Estado:** PREPARADO. Ensayo local y ensayo remoto limpios (2026-11-03). **No** se ha aplicado nada en producción, y el PR no
 está mergeado. Cada paso remoto (ensayo y carga) y el merge requieren la aprobación expresa de Carlo.
 
 ## Fuente
@@ -90,11 +90,21 @@ Después de revertir los dos lotes, la copia quedó idéntica al respaldo: misma
 `altas-productos-aplicar.ts` no acepta `--informes` y escribe en `docs/conciliacion-brasil/43-informes/`. Al terminar, esos
 informes se mueven al respaldo privado y nunca se suben al repositorio.
 
+## Ensayo remoto (2026-11-03, aprobado por Carlo)
+
+Corrió con ROLLBACK. Antes, producción tenía 182 recetas, 170 insumos, 246 tamaños, 107 enlaces y bitácora hasta #1684.
+
+| Lote | Resultado |
+| --- | --- |
+| altas-equipo-nov-lote-1 | 3 productos y 3 insumos creados, con los costos esperados; 27 registros propios, 0 ajenos; resto sin cambios; ROLLBACK |
+| recetas-equipo-nov-lote-1 | 4 costos de insumo cambiados; los 4 productos pasan de $26.6504 a $24.6404; 4 registros propios, 0 ajenos; resto sin cambios; ROLLBACK |
+
+Con una conexión nueva, producción sigue idéntica: mismos conteos, misma huella de costos y de insumos.
+
 ## Pendiente
 
-1. Ensayo remoto de los dos lotes, con ROLLBACK.
-2. Aplicar en producción.
-3. Lote-10 de enlaces: SPOBISAPP, CROQMNAPP y CROPORAPP.
-4. Merge.
+1. Aplicar en producción.
+2. Lote-10 de enlaces: SPOBISAPP, CROQMNAPP y CROPORAPP.
+3. Merge.
 
 Cada paso requiere el OK de Carlo.
