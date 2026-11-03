@@ -1,0 +1,139 @@
+/*
+ * Tablero de México (docs/sucursales/16), skill movimiento-web. Es un tablero, así que el movimiento dice qué cambió:
+ * - una sola entrada orquestada al cargar: los bloques suben 12 px escalonados 60 ms y el mapa se enciende en diagonal
+ *   (de noroeste a sureste);
+ * - al cambiar el filtro o llegar un corte nuevo, las barras, columnas, anillo y colores del mapa se mueven a su nuevo
+ *   valor (transiciones, no se vuelven a animar desde cero) y las cifras cuentan hasta el nuevo valor (useCifra);
+ * - el punto «Al día» late mientras el corte está al día.
+ * Solo se animan transform, opacity y colores. Con movimiento reducido no se mueve nada.
+ */
+.tablero-mx {
+  --mx-ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
+  --mx-ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --mx-dur-corta: 250ms;
+  --mx-dur-media: 450ms;
+  --mx-dur-larga: 900ms;
+}
+
+/* Entrada de los bloques (una vez, al montar). */
+.tablero-mx [data-entra] {
+  animation: mx-entra var(--mx-dur-larga) var(--mx-ease-salida) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes mx-entra {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Mapa: cada estado se enciende según su diagonal (--d = columna + fila). */
+.mx-estado {
+  animation: mx-enciende 650ms var(--mx-ease-salida) both;
+  animation-delay: calc(250ms + var(--d, 0) * 45ms);
+  transition:
+    background-color var(--mx-dur-media) var(--mx-ease-suave),
+    color var(--mx-dur-media) var(--mx-ease-suave),
+    transform var(--mx-dur-corta) var(--mx-ease-suave),
+    box-shadow var(--mx-dur-corta) var(--mx-ease-suave);
+}
+@keyframes mx-enciende {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .mx-estado[data-con]:hover {
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 10px 22px -12px rgb(40 30 20 / 0.55);
+  }
+}
+
+/* Barras horizontales: crecen desde la izquierda al montar y se deslizan al nuevo ancho al filtrar. */
+.mx-barra {
+  transform-origin: left center;
+  animation: mx-crece-x 800ms var(--mx-ease-salida) both;
+  animation-delay: calc(200ms + var(--i, 0) * 40ms);
+  transition: width var(--mx-dur-media) var(--mx-ease-suave);
+}
+@keyframes mx-crece-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Columnas: crecen desde la base al montar y cambian de alto al filtrar. */
+.mx-columna {
+  transform-origin: center bottom;
+  animation: mx-crece-y 750ms var(--mx-ease-salida) both;
+  animation-delay: calc(200ms + var(--i, 0) * 30ms);
+  transition: height var(--mx-dur-media) var(--mx-ease-suave);
+}
+@keyframes mx-crece-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Líneas que se dibujan una vez (pathLength = 1). */
+.mx-traza {
+  stroke-dasharray: 1;
+  animation: mx-traza 1300ms var(--mx-ease-salida) both;
+  animation-delay: 250ms;
+}
+@keyframes mx-traza {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.mx-area {
+  animation: mx-aparece 900ms var(--mx-ease-salida) both;
+  animation-delay: 350ms;
+  transition: d var(--mx-dur-media) var(--mx-ease-suave);
+}
+@keyframes mx-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Anillo: cada segmento llega a su largo (stroke-dasharray) y se reacomoda al filtrar. */
+.mx-anillo {
+  transition:
+    stroke-dasharray var(--mx-dur-media) var(--mx-ease-suave),
+    stroke-dashoffset var(--mx-dur-media) var(--mx-ease-suave);
+  animation: mx-aparece 700ms var(--mx-ease-salida) both;
+  animation-delay: 300ms;
+}
+
+/* «Al día»: un anillo que late detrás del punto. */
+.mx-vivo {
+  position: relative;
+}
+.mx-vivo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: mx-late 2.4s var(--mx-ease-salida) infinite;
+}
+@keyframes mx-late {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tablero-mx *,
+  .tablero-mx *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

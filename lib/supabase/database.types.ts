@@ -289,6 +289,11 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      sucursales_tablero_hoy: { Args: { p_companias: number[]; p_hoys: string[] }; Returns: Json };
+      sucursales_tablero_periodo: {
+        Args: { p_companias: number[]; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;

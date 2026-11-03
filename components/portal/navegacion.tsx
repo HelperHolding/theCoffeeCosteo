@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Tags,
   LayoutGrid,
+  MapPinned,
   Store,
   UsersRound,
   Contact,
@@ -91,7 +92,10 @@ const gruposCrm: Grupo[] = [
 const gruposSucursales: Grupo[] = [
   {
     titulo: 'Sucursales',
-    enlaces: [{ href: '/sucursales', nombre: 'Directorio', icono: LayoutGrid, exacto: true }],
+    enlaces: [
+      { href: '/sucursales', nombre: 'Directorio', icono: LayoutGrid, exacto: true },
+      { href: '/sucursales/mexico', nombre: 'Tablero México', icono: MapPinned },
+    ],
   },
 ];
 
