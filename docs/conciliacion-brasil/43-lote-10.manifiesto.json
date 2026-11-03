@@ -1,0 +1,29 @@
+{
+ "lote": "lote-10",
+ "archivo": "docs/conciliacion-brasil/43-lote-10.csv",
+ "filas": 3,
+ "sha256": "2ef9626b4b7968de4a7d690d5b6a88e318aad7bc5a8679d85932076b85e51eb4",
+ "correspondencias": [
+  {
+   "codigo": "CROPORAPP",
+   "receta_id": "494e00ff-ef59-4c7c-b50a-e3066f0c2a18"
+  },
+  {
+   "codigo": "CROQMNAPP",
+   "receta_id": "fe0b4275-b5d9-4230-9baa-4b306a0f7571"
+  },
+  {
+   "codigo": "SPOBISAPP",
+   "receta_id": "c6640374-ac27-4f48-9530-fd2621fab738"
+  }
+ ],
+ "requiere": [
+  "lote-9"
+ ],
+ "aprobacion": "Carlo, 2026-11-03: «Prepara lote-10». Los códigos POS de los 3 productos creados con altas-equipo-nov-lote-1 (doc 43). Cada paso remoto (ensayo y carga) y el merge requieren aprobación expresa.",
+ "notas": [
+  "Requiere el lote 9 (y por él los lotes 1–8): los 107 enlaces actuales deben seguir intactos antes y después",
+  "Las 3 recetas se crearon el 2026-11-03 con altas-equipo-nov-lote-1 (ejecución ba906ccd, bitácora #1716–1742); el nombre de cada una es el exacto del POS",
+  "Rappi «Spooky Biscuits» ya se lee como SPOBISAPP (rappi-pos.ts, #73): con este enlace también se costea en Rappi"
+ ]
+}

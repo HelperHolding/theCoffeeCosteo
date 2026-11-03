@@ -5,7 +5,8 @@
 - altas: ejecución `ba906ccd…`, bitácora #1716–1742;
 - cookies: ejecución `1de17650…`, bitácora #1743–1746.
 
-Faltan el lote-10 de enlaces y el merge. Cada uno requiere la aprobación expresa de Carlo.
+El lote-10 de enlaces está preparado, con ensayo local limpio. Faltan su ensayo remoto, la carga y el merge; cada paso requiere
+la aprobación expresa de Carlo.
 
 ## Fuente
 
@@ -54,7 +55,7 @@ Cargador: `altas-productos.ts`. Manifiesto `43-altas-equipo-nov-lote-1.manifiest
 - Cada producto es pieza + BOLSAS PARA PAN ($1.30) + ETIQUETAS THE COFFEE ROLLO ($0.8504), en tamaño Único.
 - No llevan precio de lista, igual que las cookies del doc 40.
 - Ventas del POS del 15 al 28 de octubre:
-  - Spooky Biscuit: 272 unidades en 119 sucursales. Rappi «Spooky Biscuits» ya se liga a SPOBISAPP (#73).
+  - Spooky Biscuit: 272 ventas en 39 de las 119 sucursales consultadas. Rappi «Spooky Biscuits» ya se liga a SPOBISAPP (#73).
   - Croque Monsieur: 17 unidades, solo en Polanco.
   - Croissant de jamón curado: está en el menú, sin ventas en la muestra.
 - Los enlaces de los 3 códigos van en el **lote-10** (cargador `enlaces-pos.ts`; requiere el lote-9). Se prepara cuando las
@@ -126,9 +127,33 @@ Recetas nuevas:
 Las 4 cookies quedaron en $24.6404. Al repetir el ensayo, los dos lotes dan «sin cambio» y 0 registros. La reversión está en
 `REVERSION.md`, en el respaldo privado `informes-equipo-nov-43`.
 
+## Lote-10 de enlaces (preparado el 2026-11-03)
+
+Cargador: `enlaces-pos.ts`. Archivos `43-lote-10.csv` y `43-lote-10.manifiesto.json` (sha256 `387530e0…`). Requiere el lote-9.
+
+| Código POS | Receta |
+| --- | --- |
+| CROPORAPP | Croissant filled with cheese and cured ham (`494e00ff…`) |
+| CROQMNAPP | Croque Monsieur (`fe0b4275…`) |
+| SPOBISAPP | Spooky Biscuit (`c6640374…`) |
+
+Rappi «Spooky Biscuits» ya se lee como SPOBISAPP (#73). Con este enlace, también se costea en Rappi.
+
+**Ensayo local** sobre una copia del respaldo `2026-11-03T1623Z`, tomado después de aplicar los dos lotes (24,931 filas, iguales a
+producción). La copia se borró al terminar.
+
+| Paso | Resultado |
+| --- | --- |
+| Ensayo | 3 altas; 107 → 110 enlaces; los 107 previos intactos; 3 registros propios, 0 ajenos; comercial sin cambios; ROLLBACK |
+| Aplicar | COMMIT |
+| Repetir | «sin cambio» |
+| Revertir | 3 bajas; quedan los 107 |
+
+Los informes están en el respaldo privado, en `informes-sku-lote-10`.
+
 ## Pendiente
 
-1. Lote-10 de enlaces: SPOBISAPP, CROQMNAPP y CROPORAPP.
+1. Ensayo remoto y carga del lote-10.
 2. Merge.
 
 Cada paso requiere el OK de Carlo.
