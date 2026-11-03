@@ -137,6 +137,33 @@ describe('integridad de la lista', () => {
     for (const n of cambian) expect(todas.has(n), n).toBe(false);
   });
 
+  it('«Average» de jarabe = la receta (Carlo, 2026-11-03): solo en las recetas que llevan ese jarabe', () => {
+    const conAverage = Object.entries(PERSONALIZACIONES_NEUTRAS)
+      .flatMap(([receta, ns]) =>
+        ns
+          .filter((n) => /^Average (Caramelo|Salted Caramel|Gengibre|Mint)( |$)/.test(n))
+          .map((n) => `${receta} ${n}`),
+      )
+      .sort();
+    expect(conAverage).toEqual([
+      '4b651700-0745-42fe-8e78-7b44dbdb66ee Average Mint', // Matcha Iced Mint
+      '7867787b-4957-485c-822b-3106558d33a1 Average Caramelo (hot)', // Salted Caramel
+      '7867787b-4957-485c-822b-3106558d33a1 Average Salted Caramel (cold)', // Salted Caramel
+      'af7eeb7f-d1e2-4ea8-a8ab-d3c0f96b2e95 Average Gengibre (Black Ginger)', // Black Ginger
+      'f33b95a8-a338-4009-8c03-42edfd81bb6a Average Caramelo (hot)', // Flat Caramel
+    ]);
+    // More y Less cambian la cantidad: siguen sin regla hasta tener sus ml.
+    const todas = new Set(Object.values(PERSONALIZACIONES_NEUTRAS).flat());
+    for (const n of [
+      'More Salted Caramel (cold)',
+      'Less Salted Caramel (cold)',
+      'More Caramel (hot)',
+      'Less Mint',
+    ])
+      expect(todas.has(n), n).toBe(false);
+    expect(personalizacionNeutra(ICED_LATTE, 'Average Salted Caramel (cold)')).toBe(false);
+  });
+
   it('Mug no tiene opciones neutras: su receta suma las dos tazas', () => {
     expect(personalizacionNeutra(MUG, 'Mug Black')).toBe(false);
     expect(PERSONALIZACIONES_NEUTRAS[MUG]).toBeUndefined();
