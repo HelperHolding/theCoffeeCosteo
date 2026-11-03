@@ -124,7 +124,25 @@ describe('líneas de un producto de Rappi', () => {
     expect(
       nombres(lineasDe(producto('Americano', 69, [['Elige el tamaño', 'Tradicional 240 ml']]))[0].customs),
     ).toEqual(['Regular - 240ml']);
-    expect(lineasDe(producto('Cold Drip V60', 75))[0].customs).toEqual([]);
+    expect(lineasDe(producto('Pan de Muerto Tradicional', 75))[0].customs).toEqual([]);
+  });
+
+  it('desde el 2026-11-03 Rappi manda los dos tamaños: «Elige tu tamaño» cuenta, y un tamaño desconocido no es Grande', () => {
+    expect(opcionPos('Elige tu tamaño.', 'Grande 355 ml', '4TW')).toBe('Large - 355ml');
+    expect(
+      nombres(
+        lineasDe(producto('Pumpkin Latte', 89, [['Elige tu tamaño.', 'Tradicional 240 ml']]))[0].customs,
+      ),
+    ).toEqual(['Regular - 240ml']);
+    // Un texto que no está en la lista queda a la vista (fuera por tamaño), sin sumarle el Large por omisión.
+    expect(
+      nombres(lineasDe(producto('Americano', 59, [['Elige el Tamaño', 'Chica 240 ml']]))[0].customs),
+    ).toEqual(['Elige el Tamaño: Chica 240 ml']);
+  });
+
+  it('Métodos: Cold Drip V60 va en el vaso chico; Hot Drip V60 es de tamaño Único y no lleva vaso', () => {
+    expect(nombres(lineasDe(producto('Cold Drip V60', 75))[0].customs)).toEqual(['Regular - 440ml']);
+    expect(lineasDe(producto('Hot Drip V60', 69))[0].customs).toEqual([]);
   });
 
   it('un producto sin equivalencia queda con un código que nunca es del POS', () => {

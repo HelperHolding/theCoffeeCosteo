@@ -1,4 +1,3 @@
-import { ES_TAMANO } from './metricas';
 import type { CustomNormal, LineaNormal, PedidoNormal } from './normalizar';
 import type { PedidoRappi, ProductoRappi } from './rappi-portal';
 
@@ -114,7 +113,9 @@ interface ParteCombo {
   /** Categorías (normalizadas) de acompañamientos que personalizan esta parte. */
   personaliza: readonly string[];
 }
-const BEBIDA = ['leche', 'café', 'elige el tamaño', 'miel'] as const;
+/** Rappi escribe la categoría del vaso de dos formas: «Elige el Tamaño» y «Elige tu tamaño» (Pumpkin Iced Latte, True White…). */
+const CATEGORIAS_TAMANO = ['elige el tamaño', 'elige tu tamaño'] as const;
+const BEBIDA = ['leche', 'café', ...CATEGORIAS_TAMANO, 'miel'] as const;
 export const COMBOS_RAPPI: Readonly<Record<string, readonly ParteCombo[]>> = {
   'crea tu the coffee': [
     { eleccion: 'elige tu bebida', personaliza: BEBIDA },
@@ -140,12 +141,15 @@ const VASOS: Readonly<Record<string, string>> = {
   'grande 355 ml': 'Large - 355ml',
 };
 /**
- * Bebidas que Rappi vende sin opción de tamaño: son las grandes (Carlo, 2026-10-29). El vaso es el Large que usa el POS
- * de Namóra para ese producto (1 al 28 de octubre): 355 ml en las calientes y 600 ml en los frappés. Cold Drip V60 no
- * está: en el POS no lleva vaso. El Gelato Frappé Coffee entra con su tamaño Grande (doc 42).
+ * Vaso de las bebidas de Rappi que llegan sin opción de tamaño. Hasta el 2026-11-03 Rappi las vendía así y eran las
+ * grandes (Carlo, 2026-10-29): el Large que usa el POS de Namóra para ese producto (1 al 28 de octubre), 355 ml en las
+ * calientes y 600 ml en los frappés; el Gelato Frappé Coffee entra con su tamaño Grande (doc 42). Desde el 2026-11-03
+ * todas traen los dos tamaños y manda el elegido, salvo los Métodos: Cold Drip V60 va en el vaso chico (Carlo,
+ * 2026-11-03; Regular 440 ml = Chica en TAMANOS_VERIFICADOS) y Hot Drip V60 es de tamaño Único, sin vaso.
  */
 export const VASO_UNICO_RAPPI: Readonly<Record<string, string>> = {
   americano: 'Large - 355ml',
+  'cold drip v60': 'Regular - 440ml',
   'chai latte': 'Large - 355ml',
   'flat caramel': 'Large - 355ml',
   'mad mocha': 'Large - 355ml',
@@ -191,6 +195,7 @@ const VAINILLA: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 };
 const CATEGORIAS: Readonly<Record<string, (d: string, codigo: string) => string | null | undefined>> = {
   'elige el tamaño': (d) => VASOS[d],
+  'elige tu tamaño': (d) => VASOS[d],
   leche: (d) => LECHES[d],
   'leche latte': (d) => LECHES[d],
   'leche para tú gelato frappé': (d) =>
@@ -297,7 +302,11 @@ export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea
   } else {
     lineaCustoms = customs(x.opciones, codigo);
     const vaso = VASO_UNICO_RAPPI[clave];
-    if (vaso && !lineaCustoms.some((c) => ES_TAMANO.test(c.nombre)))
+    // Si el pedido trae tamaño, manda ese; uno que no está en VASOS queda a la vista (fuera por tamaño), no como Grande.
+    const eligioTamano = x.opciones.some((o) =>
+      (CATEGORIAS_TAMANO as readonly string[]).includes(normalizarRappi(o.categoria)),
+    );
+    if (vaso && !eligioTamano)
       lineaCustoms.push({ codigo: 'RAPPI', nombre: vaso, importeCent: 0, descuentoPct: 0 });
   }
   // Una línea por unidad; la última absorbe el redondeo, así que Σ líneas = precio del renglón.
