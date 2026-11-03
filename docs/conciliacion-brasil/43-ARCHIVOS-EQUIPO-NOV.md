@@ -5,7 +5,7 @@
 - altas: ejecución `ba906ccd…`, bitácora #1716–1742;
 - cookies: ejecución `1de17650…`, bitácora #1743–1746.
 
-El lote-10 de enlaces está preparado, con ensayo local limpio. Faltan su ensayo remoto, la carga y el merge; cada paso requiere
+El lote-10 de enlaces está preparado, con ensayo local y ensayo remoto limpios. Faltan la carga y el merge; cada paso requiere
 la aprobación expresa de Carlo.
 
 ## Fuente
@@ -151,9 +151,15 @@ producción). La copia se borró al terminar.
 
 Los informes están en el respaldo privado, en `informes-sku-lote-10`.
 
+**Ensayo remoto** (2026-11-03, aprobado por Carlo), con ROLLBACK. Antes, producción tenía 185 recetas, 107 enlaces y bitácora
+hasta #1746.
+
+- Resultado: 3 altas; 107 → 110 enlaces; los 107 previos intactos; 3 registros propios, 0 ajenos; comercial sin cambios.
+- Con una conexión nueva, producción sigue idéntica: misma huella de enlaces y de costos.
+
 ## Pendiente
 
-1. Ensayo remoto y carga del lote-10.
+1. Carga del lote-10.
 2. Merge.
 
 Cada paso requiere el OK de Carlo.
