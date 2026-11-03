@@ -5,8 +5,8 @@
 - altas: ejecución `ba906ccd…`, bitácora #1716–1742;
 - cookies: ejecución `1de17650…`, bitácora #1743–1746.
 
-El lote-10 de enlaces está preparado, con ensayo local y ensayo remoto limpios. Faltan la carga y el merge; cada paso requiere
-la aprobación expresa de Carlo.
+El **lote-10** quedó **CARGADO** el 2026-11-03 con aprobación de Carlo: carga `ac8e1509…`, 107 → 110 enlaces, bitácora
+#1750–1752. Solo falta el merge, que requiere la aprobación expresa de Carlo.
 
 ## Fuente
 
@@ -157,9 +157,20 @@ hasta #1746.
 - Resultado: 3 altas; 107 → 110 enlaces; los 107 previos intactos; 3 registros propios, 0 ajenos; comercial sin cambios.
 - Con una conexión nueva, producción sigue idéntica: misma huella de enlaces y de costos.
 
+**Carga** (2026-11-03, aprobada por Carlo). Antes de escribir se comprobó que producción seguía como en el ensayo remoto: los
+mismos conteos, la bitácora hasta #1746 y las mismas huellas de enlaces y costos. El respaldo previo es el `2026-11-03T1623Z`, y
+producción no cambió entre ese respaldo y la carga.
+
+| Paso | Resultado |
+| --- | --- |
+| Cargar | 3 altas; 107 → 110 enlaces; los 107 previos intactos; 3 registros propios (#1750–1752), 0 ajenos; comercial sin cambios; COMMIT |
+| Repetir el ensayo | «sin cambio»; 0 registros |
+
+Los costos de los productos no cambiaron: la huella es la misma antes y después. La reversión está en `REVERSION.md`, en el
+respaldo privado `informes-sku-lote-10`.
+
 ## Pendiente
 
-1. Carga del lote-10.
-2. Merge.
+Merge.
 
 Cada paso requiere el OK de Carlo.
