@@ -1,7 +1,7 @@
 # 45 · Combos con vaso Regular y Large: Chica y Grande
 
-**Estado:** PREPARADO, con ensayo local y ensayo remoto limpios (2026-11-03). **No** se ha aplicado nada en producción, y el
-PR no está mergeado. La carga y el merge requieren la aprobación expresa de Carlo.
+**Estado:** el lote quedó **APLICADO** en producción el 2026-11-03 con aprobación de Carlo: ejecución `4fa6b57b…`, bitácora
+#1856–1958. Solo falta el merge, que requiere la aprobación expresa de Carlo.
 
 ## Por qué
 
@@ -86,6 +86,28 @@ Corrió con ROLLBACK. Antes, producción tenía 185 recetas, 249 tamaños, 83 pr
 
 - Resultado: 4 combos cambiados con los costos esperados; 103 registros propios, 0 ajenos; el resto y los demás costos sin cambios.
 - Con una conexión nueva, producción sigue idéntica: mismos conteos, misma huella de costos y de cantidades.
+
+## Carga (2026-11-03, aprobada por Carlo)
+
+Antes de escribir se comprobó que producción seguía como en el ensayo remoto: mismos conteos, bitácora hasta #1752 y las mismas
+huellas de costos y cantidades. El respaldo previo es el `2026-11-03T1725Z`; producción no cambió entre el respaldo y la carga.
+
+| Paso | Resultado |
+| --- | --- |
+| Aplicar | 4 combos cambiados; 103 registros propios (#1856–1958), 0 ajenos; resto y demás costos sin cambios; COMMIT |
+| Repetir el ensayo | «sin cambio»; 0 registros |
+
+Producción quedó con 253 tamaños; los demás conteos no cambiaron. Leído después de la carga:
+
+| Combo | Chica | Grande |
+| --- | --- | --- |
+| Iced Latte + Ham & Cheese Sandwich | $119, costo $55.2913, Rappi $151 | $129, costo $58.1313 |
+| True White + Croissant filled with cheese and ham | sin precio, costo $49.5240 | sin precio, costo $51.4840 |
+| True White + Croissant Serrano & Gouda | $125, costo $53.8839 | $135, costo $55.8439 |
+| True White + Grilled Ham & Cheese Sandwich | $119, costo $54.5913 | $129, costo $56.5513 |
+
+Entre el #1752 y el #1856 no hay registros: son ids que consumieron los ensayos que terminaron en ROLLBACK. La reversión está
+en `REVERSION.md`, en el respaldo privado `informes-tamanos-combos-45`.
 
 ## Orden propuesto
 
