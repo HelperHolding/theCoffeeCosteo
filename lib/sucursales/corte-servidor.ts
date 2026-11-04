@@ -29,7 +29,7 @@ export function clienteServicio(): Servicio | null {
 }
 
 /** Nombres del POS de nuestros enlaces → código (igual que leerCatalogoPos, sin pasar por la sesión del usuario). */
-async function catalogo(db: Servicio): Promise<CatalogoNombres | undefined> {
+export async function catalogoServicio(db: Servicio): Promise<CatalogoNombres | undefined> {
   const r = await db.from('producto_codigo_pos').select('codigo, nombre_observado');
   if (r.error || !r.data) return undefined;
   const codigos = new Map<string, Set<string>>();
@@ -111,7 +111,7 @@ export async function cortar(
   }: { dias?: number; fechas?: string[]; sucursales?: ConfigSucursal[] } = {},
 ): Promise<ResultadoCorte> {
   const inicio = new Date();
-  const cat = await catalogo(db);
+  const cat = await catalogoServicio(db);
   const filas: FilaResumen[] = [];
   const fallidas: ResultadoCorte['fallidas'] = [];
   const trabajos = sucursales.flatMap((cfg) => {
