@@ -173,3 +173,22 @@ configuran con ese desfase fijo (`Etc/GMT+6` y `Etc/GMT+7`), que coincide con su
 
 Antes de esto, Cd. Juárez estaba en `America/Ciudad_Juarez`: desde el 1 de noviembre su «ahora» quedaba una hora
 atrás de sus pedidos. Falta confirmarlo con el proveedor.
+
+## Lote 7: identidad y validación
+
+En el CRM las 10 sí existen, pero con el campo «número Jestor» vacío. El número viene en el nombre («Plaza Cantabria -
+632») y coincide con el `lookerStoreId` de la API en 9 de ellas.
+
+- **El Campanario (547):** la API dice 438 y el CRM «El Campanario - 348», también en su campo. Parecen dígitos
+  invertidos, y ninguna otra sucursal de la API usa 348. Se usa el de la API; falta corregir el CRM.
+- **Validadas con el 2 de noviembre**; Plaza Norte con 1 ¢ de redondeo.
+- **Zonas:**
+  - Plaza Cantabria es de Ciudad Juárez y va con UTC−6 fijo, como 612. El 3 de noviembre su último pedido fue a las
+    18:00 cuando en Juárez eran las 17:10;
+  - Plaza Cumbres, de la ciudad de Chihuahua, coincide con `America/Chihuahua`;
+  - Durango Centro va con `America/Monterrey`.
+
+Con el lote 7 quedan configuradas las **79 sucursales** que vendieron entre el 27 de octubre y el 2 de noviembre.
+
+**Pendiente en el CRM:** llenar el número Jestor de esas 10 tiendas y corregir el de El Campanario. Es un cambio de datos
+del CRM, con OK de Carlo.

@@ -80,6 +80,8 @@ const vallarta = delPos('Puerto Vallarta');
 const veracruz = delPos('Veracruz');
 const cancun = delPos('Cancún', 'America/Cancun');
 const merida = delPos('Mérida', 'America/Merida');
+const durango = delPos('Durango', 'America/Monterrey');
+const leon = delPos('León');
 
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
@@ -199,7 +201,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   queretaro(509, 401, 'Los Arcos', 'Jardines de Querétaro'),
   queretaro(734, 650, 'UpTown Juriquilla', 'Juriquilla'),
   delPos('San Miguel de Allende')(466, 379, 'Canal 16', 'Centro'),
-  delPos('León')(614, 527, 'Torre Visu', 'Lomas del Campestre'),
+  leon(614, 527, 'Torre Visu', 'Lomas del Campestre'),
   delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso'),
   // Lote 4, centro-norte y occidente: validadas con el 2 de noviembre (Centro con 1 ¢ de redondeo).
   aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio'),
@@ -219,7 +221,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar'),
   delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro'),
   delPos('Tuxtla Gutiérrez')(781, 496, 'Aeropuerto Chiapas', 'Aeropuerto'),
-  delPos('Durango', 'America/Monterrey')(632, 547, 'Durango', 'Juan de la Barrera'),
+  durango(632, 547, 'Durango', 'Juan de la Barrera'),
   delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia'),
   // UTC−7 fijo, como Cd. Juárez: el POS no cambió de horario el 1 de noviembre (3-nov: último pedido 16:47 a las 16:04
   // de Tijuana). En verano es la hora local.
@@ -234,6 +236,21 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   merida(627, 538, 'Mayab', 'Cordemex'),
   merida(601, 452, 'Calle 47', 'Centro'),
   merida(655, 566, 'Arthouse Mérida', 'Altabrisa'),
+  // Lote 7: en el CRM el número Jestor viene en el nombre («Plaza Cantabria - 632») y el campo está vacío; el número
+  // del nombre es el lookerStoreId de la API. El Campanario: la API dice 438 y el CRM «El Campanario - 348» (dígitos
+  // invertidos; ninguna otra sucursal de la API usa 348): se usa el de la API. Validadas con el 2 de noviembre (Plaza
+  // Norte con 1 ¢ de redondeo). Plaza Cantabria es de Ciudad Juárez: UTC−6 fijo como 612 (3-nov: último pedido 18:00 a
+  // las 17:10 de Juárez). Plaza Cumbres, de la ciudad de Chihuahua: su hora coincide con America/Chihuahua.
+  delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria'),
+  leon(733, 649, 'Plaza Norte', 'Jardines del Moral'),
+  queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario'),
+  cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte'),
+  cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo'),
+  durango(715, 625, 'Durango Centro', 'Centro'),
+  vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta'),
+  cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico'),
+  delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres'),
+  cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen'),
 ];
 
 export const configDe = (companyId: number) =>
