@@ -18,12 +18,14 @@ const rpc: RpcConsumoNacional = {
       sin_receta: { mostrador: [{ nombre: 'Sandwich', unidades: 6, sinCodigo: false }] } },
   ],
   insumos: [
-    { insumo_id: 'le', insumo: 'LECHE ENTERA', unidad: 'ml', categoria: 'PERECEDEROS', presentacion: 1000, origen: 'mostrador', cantidad: 300000, sucursales: 2 },
-    { insumo_id: 'le', insumo: 'LECHE ENTERA', unidad: 'ml', categoria: 'PERECEDEROS', presentacion: 1000, origen: 'rappi', cantidad: 12500, sucursales: 1 },
-    { insumo_id: 'cf', insumo: 'CAFÉ BLACK', unidad: 'gr', categoria: 'INGREDIENTES', presentacion: 1500, origen: 'mostrador', cantidad: 45000, sucursales: 2 },
-    { insumo_id: 'vj', insumo: 'INSUMO VIEJO', unidad: 'pza', categoria: 'INSUMOS', presentacion: null, origen: 'app', cantidad: 5, sucursales: 1 },
+    { insumo_id: 'le', insumo: 'LECHE ENTERA', unidad: 'ml', categoria: 'PERECEDEROS', presentacion: 1000, origen: 'mostrador', cantidad: 300000 },
+    { insumo_id: 'le', insumo: 'LECHE ENTERA', unidad: 'ml', categoria: 'PERECEDEROS', presentacion: 1000, origen: 'rappi', cantidad: 12500 },
+    { insumo_id: 'cf', insumo: 'CAFÉ BLACK', unidad: 'gr', categoria: 'INGREDIENTES', presentacion: 1500, origen: 'mostrador', cantidad: 45000 },
+    { insumo_id: 'vj', insumo: 'INSUMO VIEJO', unidad: 'pza', categoria: 'INSUMOS', presentacion: null, origen: 'app', cantidad: 5 },
   ],
   anterior: [{ insumo_id: 'le', origen: 'mostrador', cantidad: 250000 }],
+  // Lo actual de las sucursales que tienen ambos meses (una sola de las dos): 200,000 de los 300,000 de mostrador.
+  actual_comun: [{ insumo_id: 'le', origen: 'mostrador', cantidad: 200000 }],
   sucursales_anterior: 1,
 };
 const d = armarConsumoNacional(rpc, '2026-10-01', [configDe(513)!, configDe(612)!], '2026-11-05T00:00:00Z');
@@ -43,8 +45,8 @@ describe('consumo nacional', () => {
     const le = v.categorias.find((c) => c.categoria === 'PERECEDEROS')!.filas[0];
     expect(le.cantidad).toBe(312500);
     expect(le.presentaciones).toBeCloseTo(312.5);
-    // Anterior solo mostrador (250,000): cambio de 312,500 contra 250,000.
-    expect(le.cambio).toBeCloseTo(0.25);
+    // El cambio compara el mismo conjunto de sucursales: 200,000 actuales contra 250,000 (no 312,500 contra 250,000).
+    expect(le.cambio).toBeCloseTo(-0.2);
     const viejo = v.categorias.find((c) => c.categoria === 'INSUMOS')!.filas[0];
     expect(viejo.presentaciones).toBeNull();
     expect(v.cobertura).toBeCloseTo((90 + 20 + 40) / (100 + 20 + 50));
@@ -60,8 +62,23 @@ describe('consumo nacional', () => {
   });
 
   it('sin mes anterior calculado no hay cambio (no es cero)', () => {
-    const sin = armarConsumoNacional({ ...rpc, anterior: [], sucursales_anterior: 0 }, '2026-10-01', [configDe(513)!], 'x');
+    const sin = armarConsumoNacional({ ...rpc, anterior: [], actual_comun: [], sucursales_anterior: 0 }, '2026-10-01', [configDe(513)!], 'x');
     expect(vistaConsumo(sin, 'todos').categorias.flatMap((c) => c.filas).every((f) => f.cambio === null)).toBe(true);
+  });
+
+  it('sin sucursales en común el cambio es nulo aunque haya consumo anterior', () => {
+    const sin = armarConsumoNacional({ ...rpc, actual_comun: [], sucursales_anterior: 0 }, '2026-10-01', [configDe(513)!], 'x');
+    expect(vistaConsumo(sin, 'todos').categorias.flatMap((c) => c.filas).every((f) => f.cambio === null)).toBe(true);
+  });
+
+  it('con sucursales en común pero sin consumo anterior de ese insumo el cambio es nulo', () => {
+    const v = vistaConsumo(d, 'todos');
+    expect(v.categorias.find((c) => c.categoria === 'INGREDIENTES')!.filas[0].cambio).toBeNull();
+  });
+
+  it('el contrato lleva cuántas sucursales se esperaban', () => {
+    expect(d.sucursalesEsperadas).toBe(2);
+    expect(armarConsumoNacional(rpc, '2026-10-01', [configDe(513)!], 'x').sucursalesEsperadas).toBe(1);
   });
 
   it('desglose de un insumo por ciudad y sucursal con su parte', () => {

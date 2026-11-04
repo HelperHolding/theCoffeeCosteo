@@ -134,15 +134,21 @@ revoke all on function public.sucursales_guardar_consumo_mes(date, integer, json
   from public, anon, authenticated;
 grant execute on function public.sucursales_guardar_consumo_mes(date, integer, jsonb, jsonb) to service_role;
 
--- 4. Lectura nacional (ligera): meses, cobertura por sucursal, consumo sumado por insumo y origen y el mes anterior
---    (solo de las sucursales del usuario que lo tienen calculado).
+-- 4. Lectura nacional (ligera): meses, cobertura por sucursal, consumo sumado por insumo y origen y el mes anterior.
+--    La comparación usa SOLO las sucursales del usuario que tienen AMBOS meses calculados: 'anterior' y 'actual_comun'
+--    suman el mismo conjunto y 'sucursales_anterior' cuenta ese conjunto.
 create function public.sucursales_consumo_nacional(p_mes date, p_companias integer[]) returns jsonb
 language plpgsql stable security definer set search_path = public, pg_temp as $$
 declare
   v integer[];
   ant date := (p_mes - interval '1 month')::date;
+  comunes integer[];
 begin
   v := array(select c from unnest(p_companias) c where public.sucursales_acceso(c));
+  comunes := array(
+    select a.company_id from public.sucursales_consumo_mes_sucursal a
+    join public.sucursales_consumo_mes_sucursal b on b.company_id = a.company_id and b.mes = ant
+    where a.mes = p_mes and a.company_id = any(v));
   return jsonb_build_object(
     'meses', coalesce((select jsonb_agg(m order by m desc) from (
         select distinct mes m from public.sucursales_consumo_mes_sucursal where company_id = any(v)) x), '[]'),
@@ -152,10 +158,10 @@ begin
       from public.sucursales_consumo_mes_sucursal s where s.mes = p_mes and s.company_id = any(v)), '[]'),
     'insumos', coalesce((select jsonb_agg(jsonb_build_object('insumo_id', x.insumo_id, 'insumo', x.insumo,
         'unidad', x.unidad, 'categoria', x.categoria, 'presentacion', i.presentacion, 'origen', x.origen,
-        'cantidad', x.cantidad, 'sucursales', x.sucursales) order by x.categoria, x.insumo, x.origen)
+        'cantidad', x.cantidad) order by x.categoria, x.insumo, x.origen)
       from (
         select insumo_id, origen, max(insumo) insumo, max(unidad) unidad, max(categoria) categoria,
-          sum(cantidad) cantidad, count(distinct company_id) sucursales
+          sum(cantidad) cantidad
         from public.sucursales_consumo_mes where mes = p_mes and company_id = any(v)
         group by insumo_id, origen) x
       left join public.insumos i on i.id = x.insumo_id), '[]'),
@@ -163,10 +169,15 @@ begin
         'cantidad', cantidad) order by insumo_id, origen)
       from (
         select insumo_id, origen, sum(cantidad) cantidad
-        from public.sucursales_consumo_mes where mes = ant and company_id = any(v)
+        from public.sucursales_consumo_mes where mes = ant and company_id = any(comunes)
         group by 1, 2) a), '[]'),
-    'sucursales_anterior', (select count(*) from public.sucursales_consumo_mes_sucursal
-      where mes = ant and company_id = any(v)));
+    'actual_comun', coalesce((select jsonb_agg(jsonb_build_object('insumo_id', insumo_id, 'origen', origen,
+        'cantidad', cantidad) order by insumo_id, origen)
+      from (
+        select insumo_id, origen, sum(cantidad) cantidad
+        from public.sucursales_consumo_mes where mes = p_mes and company_id = any(comunes)
+        group by 1, 2) a), '[]'),
+    'sucursales_anterior', coalesce(array_length(comunes, 1), 0));
 end $$;
 
 -- 5. Desglose por sucursal: un insumo (al abrirlo en el tablero) o todos con p_insumo nulo (exportar).

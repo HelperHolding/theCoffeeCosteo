@@ -45,8 +45,9 @@ const guardar = async (mes: string, company: number, filas: unknown[], completa 
 type Nacional = {
   meses: string[];
   sucursales: { company_id: number; completa: boolean }[];
-  insumos: { insumo_id: string; origen: string; cantidad: number; presentacion: number | null; sucursales: number }[];
+  insumos: { insumo_id: string; origen: string; cantidad: number; presentacion: number | null }[];
   anterior: { insumo_id: string; origen: string; cantidad: number }[];
+  actual_comun: { insumo_id: string; origen: string; cantidad: number }[];
   sucursales_anterior: number;
 };
 const nacional = (u: string, mes: string, companias: number[]) =>
@@ -76,7 +77,7 @@ beforeAll(async () => {
   ajeno = await crearUsuario(db, 'sucursales');
   for (const u of [gdl, ajeno])
     await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1, 'sucursales', 'lectura')`, [u]);
-  await db.query('insert into perfil_sucursales (user_id, company_id) values ($1, 513), ($1, 384), ($2, 532)', [
+  await db.query('insert into perfil_sucursales (user_id, company_id) values ($1, 513), ($1, 384), ($1, 612), ($2, 532)', [
     gdl,
     ajeno,
   ]);
@@ -88,6 +89,8 @@ beforeAll(async () => {
   await guardar('2026-10-01', 384, [fila('mostrador', leche, 'LECHE ENTERA', 500), fila('app', cafe, 'CAFÉ', 36, 'gr')], false);
   await guardar('2026-10-01', 532, [fila('mostrador', leche, 'LECHE ENTERA', 9999)]);
   await guardar('2026-09-01', 513, [fila('mostrador', leche, 'LECHE ENTERA', 800)]);
+  // 612 tiene septiembre pero NO octubre: no debe contar en la comparación de octubre.
+  await guardar('2026-09-01', 612, [fila('mostrador', leche, 'LECHE ENTERA', 5000)]);
 });
 afterAll(async () => db.close());
 
@@ -129,14 +132,33 @@ describe('migración 38: consumo nacional por mes', () => {
     ]);
     const lm = r.insumos.find((x) => x.insumo_id === leche && x.origen === 'mostrador')!;
     expect(Number(lm.cantidad)).toBe(1500); // 513 + 384; 532 no es suya
-    expect(lm.sucursales).toBe(2);
     expect(Number(lm.presentacion)).toBeGreaterThan(0);
     expect(Number(r.insumos.find((x) => x.insumo_id === leche && x.origen === 'rappi')!.cantidad)).toBe(200);
     expect(r.anterior).toEqual([{ insumo_id: leche, origen: 'mostrador', cantidad: 800 }]);
     expect(r.sucursales_anterior).toBe(1);
+    expect(r.actual_comun.map((x) => [x.insumo_id, x.origen, Number(x.cantidad)]).sort()).toEqual(
+      [[leche, 'mostrador', 1000], [leche, 'rappi', 200]].sort(),
+    );
     const otro = await nacional(ajeno, '2026-10-01', [513, 532]);
     expect(otro.sucursales.map((s) => s.company_id)).toEqual([532]);
     expect(otro.meses).toEqual(['2026-10-01']);
+  });
+
+  it('la comparación usa solo las sucursales que tienen AMBOS meses', async () => {
+    // 612 tiene septiembre (5,000) pero no octubre; 384 tiene octubre pero no septiembre.
+    const r = await nacional(gdl, '2026-10-01', [513, 384, 612]);
+    expect(r.anterior).toEqual([{ insumo_id: leche, origen: 'mostrador', cantidad: 800 }]);
+    expect(r.sucursales_anterior).toBe(1);
+    // Lo actual comparable es el de 513 solo, no el de 384.
+    expect(r.actual_comun.map((x) => [x.origen, Number(x.cantidad)]).sort()).toEqual([
+      ['mostrador', 1000],
+      ['rappi', 200],
+    ]);
+    // Sin ninguna sucursal con ambos meses no hay comparación.
+    const sin = await nacional(gdl, '2026-10-01', [384, 612]);
+    expect(sin.anterior).toEqual([]);
+    expect(sin.actual_comun).toEqual([]);
+    expect(sin.sucursales_anterior).toBe(0);
   });
 
   it('desglose por sucursal de un insumo o de todos', async () => {

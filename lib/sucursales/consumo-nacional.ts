@@ -23,9 +23,10 @@ export interface RpcConsumoNacional {
     presentacion: number | string | null;
     origen: Origen;
     cantidad: number | string;
-    sucursales: number;
   }[];
+  /** Mes anterior y mes actual, ambos solo de las sucursales que tienen los dos meses calculados. */
   anterior: { insumo_id: string; origen: Origen; cantidad: number | string }[];
+  actual_comun: { insumo_id: string; origen: Origen; cantidad: number | string }[];
   sucursales_anterior: number;
 }
 
@@ -45,22 +46,26 @@ export function armarConsumoNacional(
       categoria: x.categoria,
       presentacion: x.presentacion === null ? null : Number(x.presentacion),
       porOrigen: {},
-      sucursales: 0,
       anterior: {},
+      actualComun: {},
     };
     i.porOrigen[x.origen] = Number(x.cantidad);
-    i.sucursales = Math.max(i.sucursales, x.sucursales);
     insumos.set(x.insumo_id, i);
   }
   for (const a of rpc.anterior) {
     const i = insumos.get(a.insumo_id);
     if (i) i.anterior[a.origen] = Number(a.cantidad);
   }
+  for (const a of rpc.actual_comun) {
+    const i = insumos.get(a.insumo_id);
+    if (i) i.actualComun[a.origen] = Number(a.cantidad);
+  }
   return {
     generadoEn,
     mes,
     meses: rpc.meses,
     sucursalesAnterior: rpc.sucursales_anterior,
+    sucursalesEsperadas: sucursales.length,
     sucursales: rpc.sucursales.map(
       (s): SucursalConsumoMes => ({
         companyId: s.company_id,
@@ -92,7 +97,6 @@ export interface FilaInsumo {
   presentaciones: number | null;
   presentacion: number | null;
   cambio: number | null;
-  sucursales: number;
 }
 export interface VistaConsumo {
   categorias: { categoria: string; filas: FilaInsumo[] }[];
@@ -108,7 +112,9 @@ export function vistaConsumo(d: ConsumoNacional, f: FiltroOrigen): VistaConsumo 
   for (const i of d.insumos) {
     const cantidad = sumarOrigen(i.porOrigen, f);
     if (cantidad <= 0) continue;
+    // El cambio compara el mismo conjunto de sucursales: lo actual de las que tienen ambos meses contra su mes anterior.
     const antes = sumarOrigen(i.anterior, f);
+    const comun = sumarOrigen(i.actualComun, f);
     filas.push({
       insumoId: i.insumoId,
       insumo: i.insumo,
@@ -117,8 +123,7 @@ export function vistaConsumo(d: ConsumoNacional, f: FiltroOrigen): VistaConsumo 
       cantidad,
       presentacion: i.presentacion,
       presentaciones: i.presentacion && i.presentacion > 0 ? cantidad / i.presentacion : null,
-      cambio: d.sucursalesAnterior > 0 && antes > 0 ? cantidad / antes - 1 : null,
-      sucursales: i.sucursales,
+      cambio: d.sucursalesAnterior > 0 && antes > 0 ? comun / antes - 1 : null,
     });
   }
   const porCategoria = new Map<string, FilaInsumo[]>();

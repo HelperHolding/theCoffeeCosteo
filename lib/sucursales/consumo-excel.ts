@@ -26,7 +26,8 @@ export function hojasConsumo(a: {
       Consumo: f.cantidad,
       Presentación: f.presentacion ?? '',
       Presentaciones: f.presentaciones ?? '',
-      'Vs mes anterior': f.cambio === null ? '' : f.cambio,
+      // Porcentaje con un decimal (25 = +25 %), no la fracción.
+      'Vs mes anterior (%)': f.cambio === null ? '' : Math.round(f.cambio * 1000) / 10,
     })),
     porSucursal: [...suma]
       .filter(([, c]) => c > 0)

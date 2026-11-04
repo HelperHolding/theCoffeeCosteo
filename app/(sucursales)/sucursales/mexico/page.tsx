@@ -25,8 +25,8 @@ export default async function TableroMexico({
         titulo="Tablero de México"
         descripcion={
           todas
-            ? `La venta y el consumo de las ${lista.length} sucursales, sumados.`
-            : `La venta y el consumo de tus ${lista.length} sucursales, sumados.`
+            ? `La venta (se actualiza cada 10 minutos) y el consumo por mes de las ${lista.length} sucursales.`
+            : `La venta (se actualiza cada 10 minutos) y el consumo por mes de tus ${lista.length} sucursales.`
         }
       />
       {lista.length === 0 ? (

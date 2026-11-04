@@ -12,6 +12,12 @@ import { useLectura } from './use-lectura';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 export const nombreMes = (mes: string) => `${MESES[Number(mes.slice(5, 7)) - 1]} ${mes.slice(0, 4)}`;
+/** El mes del calendario anterior a un AAAA-MM-01 (con huecos en los calculados, no es el siguiente de la lista). */
+const mesAnteriorDe = (mes: string) => {
+  const a = Number(mes.slice(0, 4));
+  const m = Number(mes.slice(5, 7));
+  return m === 1 ? `${a - 1}-12-01` : `${a}-${String(m - 1).padStart(2, '0')}-01`;
+};
 const num = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 });
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 const cambioTexto = (c: number | null) => (c === null ? '—' : `${c > 0 ? '+' : ''}${Math.round(c * 100)} %`);
@@ -57,6 +63,7 @@ export function ConsumoNacionalVista() {
               type="button"
               aria-pressed={m === mesActivo}
               onClick={() => {
+                if (m === mesActivo) return;
                 setMes(m);
                 setAbierto(null);
               }}
@@ -107,17 +114,26 @@ function CuerpoConsumo({
   const mes = datos.mes!;
   const todas = v.categorias.flatMap((c) => c.filas);
   const comparable = datos.sucursalesAnterior > 0;
-  const previo = datos.meses[datos.meses.indexOf(mes) + 1];
+  const previo = mesAnteriorDe(mes);
+  const sinCalcular = datos.sucursalesEsperadas - v.sucursales;
+  const notasSucursales = [
+    sinCalcular > 0 ? `${sinCalcular} sin calcular` : null,
+    v.incompletas ? `${v.incompletas} con el mes incompleto` : null,
+  ].filter(Boolean);
   const suben = todas.filter((f) => f.cambio !== null && f.cambio > 0.03).length;
   const bajan = todas.filter((f) => f.cambio !== null && f.cambio < -0.03).length;
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero titulo="Ingredientes con consumo" valor={num.format(v.ingredientes)} />
-        <Numero titulo="Sucursales" valor={num.format(v.sucursales)} nota={v.incompletas ? `${v.incompletas} con el mes incompleto` : undefined} />
+        <Numero
+          titulo="Sucursales"
+          valor={`${num.format(v.sucursales)} de ${num.format(Math.max(datos.sucursalesEsperadas, v.sucursales))}`}
+          nota={notasSucursales.length ? notasSucursales.join(' · ') : undefined}
+        />
         <Numero titulo="Cobertura" valor={v.cobertura === null ? '—' : pct(v.cobertura)} nota="líneas con receta" />
         <Numero
-          titulo={`Vs ${previo ? nombreMes(previo) : 'el mes anterior'}`}
+          titulo={`Vs ${nombreMes(previo)}`}
           valor={comparable ? `▲ ${suben} · ▼ ${bajan}` : '—'}
           nota={comparable ? 'ingredientes que suben o bajan más de 3 %' : undefined}
         />
@@ -131,8 +147,8 @@ function CuerpoConsumo({
       )}
       {comparable && datos.sucursalesAnterior < v.sucursales && (
         <p role="status" className="rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn">
-          El mes anterior tiene solo {datos.sucursalesAnterior} de {v.sucursales} sucursales calculadas: el cambio compara
-          conjuntos distintos.
+          {datos.sucursalesAnterior} de {v.sucursales} sucursales tienen el mes anterior calculado: el cambio se calcula
+          solo con esas.
         </p>
       )}
 

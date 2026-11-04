@@ -20,16 +20,18 @@ const datos = (mes: string, cambios: Partial<ConsumoNacional> = {}): ConsumoNaci
   mes,
   meses: ['2026-10-01', '2026-09-01'],
   sucursalesAnterior: 1,
+  sucursalesEsperadas: 1,
   sucursales: [namora],
   insumos: [
     { insumoId: 'le', insumo: 'LECHE ENTERA', unidad: 'ml', categoria: 'PERECEDEROS', presentacion: 1000,
-      porOrigen: { mostrador: mes === '2026-10-01' ? 312500 : 250000 }, sucursales: 1, anterior: { mostrador: 250000 } },
+      porOrigen: { mostrador: mes === '2026-10-01' ? 312500 : 250000 }, anterior: { mostrador: 250000 },
+      actualComun: { mostrador: mes === '2026-10-01' ? 312500 : 250000 } },
     { insumoId: 'ca', insumo: 'CAFÉ HOUSE', unidad: 'gr', categoria: 'CAFÉ', presentacion: null,
-      porOrigen: { mostrador: 90000 }, sucursales: 1, anterior: { mostrador: 100000 } },
+      porOrigen: { mostrador: 90000 }, anterior: { mostrador: 100000 }, actualComun: { mostrador: 90000 } },
     { insumoId: 'az', insumo: 'AZÚCAR', unidad: 'gr', categoria: 'CAFÉ', presentacion: null,
-      porOrigen: { mostrador: 5000 }, sucursales: 1, anterior: { mostrador: 5000 } },
+      porOrigen: { mostrador: 5000 }, anterior: { mostrador: 5000 }, actualComun: { mostrador: 5000 } },
     { insumoId: 'po', insumo: 'POPOTE', unidad: 'pza', categoria: 'DESECHABLES', presentacion: null,
-      porOrigen: { rappi: 500 }, sucursales: 1, anterior: {} },
+      porOrigen: { rappi: 500 }, anterior: {}, actualComun: {} },
   ],
   ...cambios,
 });
@@ -121,23 +123,59 @@ describe('pestaña Consumo del Tablero México', () => {
     await screen.findByText('LECHE ENTERA');
     expect(screen.getByText('Vs Septiembre 2026').closest('.placa')).toHaveTextContent('—');
     expect(screen.queryByText(/▲/)).toBeNull();
-    expect(screen.queryByText(/compara conjuntos distintos/)).toBeNull();
+    expect(screen.queryByText(/tienen el mes anterior calculado/)).toBeNull();
   });
 
-  it('avisa cuando el mes anterior tiene menos sucursales calculadas', async () => {
-    usar((m) => datos(m, { sucursales: [namora, sucursal(514, 'Otra', 'Puebla')], sucursalesAnterior: 1 }));
+  it('avisa cuando solo parte de las sucursales tiene el mes anterior calculado', async () => {
+    usar((m) => datos(m, { sucursales: [namora, sucursal(514, 'Otra', 'Puebla')], sucursalesEsperadas: 2, sucursalesAnterior: 1 }));
     render(<ConsumoNacionalVista />);
     await screen.findByText('LECHE ENTERA');
-    const aviso = screen.getByText(/El mes anterior tiene solo 1 de 2 sucursales calculadas/);
+    const aviso = screen.getByText(/1 de 2 sucursales tienen el mes anterior calculado/);
     expect(aviso).toHaveAttribute('role', 'status');
-    expect(aviso).toHaveTextContent('el cambio compara conjuntos distintos');
+    expect(aviso).toHaveTextContent('el cambio se calcula solo con esas');
+  });
+
+  it('el KPI de sucursales muestra las calculadas contra las esperadas y las que faltan', async () => {
+    usar((m) => datos(m, { sucursales: [namora, sucursal(514, 'Otra', 'Puebla')], sucursalesEsperadas: 5 }));
+    render(<ConsumoNacionalVista />);
+    await screen.findByText('LECHE ENTERA');
+    const k = screen.getByText('Sucursales').closest('.placa')!;
+    expect(k).toHaveTextContent('2 de 5');
+    expect(k).toHaveTextContent('3 sin calcular');
+  });
+
+  it('con todas las sucursales calculadas no hay nota de faltantes', async () => {
+    usar();
+    render(<ConsumoNacionalVista />);
+    await screen.findByText('LECHE ENTERA');
+    const k = screen.getByText('Sucursales').closest('.placa')!;
+    expect(k).toHaveTextContent('1 de 1');
+    expect(k).not.toHaveTextContent('sin calcular');
+  });
+
+  it('la tarjeta contra el mes anterior nombra el mes del calendario aunque haya un hueco', async () => {
+    usar((m) => datos(m, { meses: ['2026-10-01', '2026-08-01'], sucursalesAnterior: 0 }));
+    render(<ConsumoNacionalVista />);
+    await screen.findByText('LECHE ENTERA');
+    expect(screen.getByText('Vs Septiembre 2026').closest('.placa')).toHaveTextContent('—');
+    expect(screen.queryByText(/Vs Agosto 2026/)).toBeNull();
+  });
+
+  it('pulsar el mes activo no vuelve a pedir los datos', async () => {
+    usar();
+    render(<ConsumoNacionalVista />);
+    await screen.findByText('LECHE ENTERA');
+    const antes = fetchFalso.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Octubre 2026' }));
+    expect(fetchFalso.mock.calls.length).toBe(antes);
+    expect(screen.getByText('LECHE ENTERA')).toBeInTheDocument();
   });
 
   it('no avisa si el mes anterior tiene todas las sucursales', async () => {
-    usar((m) => datos(m, { sucursales: [namora, sucursal(514, 'Otra', 'Puebla')], sucursalesAnterior: 2 }));
+    usar((m) => datos(m, { sucursales: [namora, sucursal(514, 'Otra', 'Puebla')], sucursalesEsperadas: 2, sucursalesAnterior: 2 }));
     render(<ConsumoNacionalVista />);
     await screen.findByText('LECHE ENTERA');
-    expect(screen.queryByText(/El mes anterior tiene solo/)).toBeNull();
+    expect(screen.queryByText(/tienen el mes anterior calculado/)).toBeNull();
   });
 
   it('avisa del mes incompleto, en singular y en plural', async () => {
@@ -162,7 +200,7 @@ describe('pestaña Consumo del Tablero México', () => {
   });
 
   it('sin meses calculados muestra el estado vacío', async () => {
-    usar(() => ({ generadoEn: 'x', mes: null, meses: [], sucursales: [], insumos: [], sucursalesAnterior: 0 }));
+    usar(() => ({ generadoEn: 'x', mes: null, meses: [], sucursales: [], insumos: [], sucursalesAnterior: 0, sucursalesEsperadas: 1 }));
     render(<ConsumoNacionalVista />);
     expect(await screen.findByText('Aún no hay meses calculados')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Mes' })).toBeNull();

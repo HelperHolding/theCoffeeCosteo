@@ -253,9 +253,18 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
         presentacion,
         origen,
         cantidad: Math.round(base * factorMes(mes) * CUOTA_ORIGEN[origen]),
-        sucursales: sucursalesConfiguradas.length,
       })),
     ),
+    // Todas las sucursales tienen ambos meses: lo actual comparable es lo actual completo.
+    actual_comun: anterior
+      ? INSUMOS_CONSUMO.flatMap(([, , , clave, , base]) =>
+          ORIGENES_CONSUMO.map((origen) => ({
+            insumo_id: clave,
+            origen,
+            cantidad: Math.round(base * factorMes(mes) * CUOTA_ORIGEN[origen]),
+          })),
+        )
+      : [],
     anterior: anterior
       ? INSUMOS_CONSUMO.flatMap(([, , , clave, , base]) =>
           ORIGENES_CONSUMO.map((origen) => ({
@@ -292,7 +301,7 @@ window.fetch = async (entrada, init) => {
     await new Promise((r) => setTimeout(r, 250));
     const generadoEn = new Date().toISOString();
     if (parametros.get('consumo-vacio') === '1') {
-      const vacioRpc: RpcConsumoNacional = { meses: [], sucursales: [], insumos: [], anterior: [], sucursales_anterior: 0 };
+      const vacioRpc: RpcConsumoNacional = { meses: [], sucursales: [], insumos: [], anterior: [], actual_comun: [], sucursales_anterior: 0 };
       return Response.json(armarConsumoNacional(vacioRpc, null, sucursalesConfiguradas, generadoEn));
     }
     const pedido = url.searchParams.get('mes');
@@ -327,7 +336,7 @@ export function VistaTableroMexico() {
         <Encabezado
           area="Sucursales"
           titulo="Tablero de México"
-          descripcion={`La venta y el consumo de las ${sucursalesConfiguradas.length} sucursales, sumados.`}
+          descripcion={`La venta (se actualiza cada 10 minutos) y el consumo por mes de las ${sucursalesConfiguradas.length} sucursales.`}
         />
         <VistasMexico vistaInicial={parametros.get('vista') === 'consumo' ? 'consumo' : 'ventas'} />
       </div>

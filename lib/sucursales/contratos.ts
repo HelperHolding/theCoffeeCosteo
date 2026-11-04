@@ -197,13 +197,17 @@ export interface SucursalConsumoMes {
 }
 export interface InsumoNacional {
   insumoId: string; insumo: string; unidad: string; categoria: string; presentacion: number | null;
-  porOrigen: Partial<Record<Origen, number>>; sucursales: number;
+  porOrigen: Partial<Record<Origen, number>>;
+  /** Mes anterior de las sucursales que tienen AMBOS meses, y el mes actual de ese mismo conjunto (el cambio sale de estos dos). */
   anterior: Partial<Record<Origen, number>>;
+  actualComun: Partial<Record<Origen, number>>;
 }
 export interface ConsumoNacional {
   generadoEn: string; mes: string | null; meses: string[];
   sucursales: SucursalConsumoMes[]; insumos: InsumoNacional[];
-  /** Cuántas de las sucursales del usuario tienen el mes anterior calculado (0 = sin comparación). */
+  /** Cuántas sucursales tienen el mes activo Y el anterior calculados: el conjunto del cambio (0 = sin comparación). */
   sucursalesAnterior: number;
+  /** Cuántas sucursales configuradas tiene el usuario: el denominador de las que ya se calcularon. */
+  sucursalesEsperadas: number;
 }
 export interface DesgloseConsumo { mes: string; filas: { companyId: number; insumoId: string; origen: Origen; cantidad: number }[] }
