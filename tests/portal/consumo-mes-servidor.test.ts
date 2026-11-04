@@ -96,3 +96,48 @@ describe('recorrido de un mes', () => {
     ).rejects.toThrow(/no ha cerrado/);
   });
 });
+
+describe('fallas por sucursal', () => {
+  it('si guardar falla en una sucursal se reporta y la siguiente se guarda', async () => {
+    const guardadas: number[] = [];
+    const avisos: string[] = [];
+    const r = await calcularMes({
+      mes: '2026-10-01',
+      sucursales: [configDe(513)!, configDe(612)!],
+      datos,
+      deps: {
+        leer: async (_c, d, h) => lectura(d, h, [p('2026-10-05', 'mostrador')]),
+        rappi: () => undefined,
+        guardar: async (f) => {
+          if (f.companyId === 513) throw new Error('No se pudo guardar 513: timeout');
+          guardadas.push(f.companyId);
+          return 1;
+        },
+        avance: (t) => avisos.push(t),
+      },
+    });
+    expect(guardadas).toEqual([612]);
+    expect(r.guardadas).toBe(1);
+    expect(r.fallidas).toEqual([{ companyId: 513, motivo: 'No se pudo guardar 513: timeout' }]);
+    expect(avisos.some((t) => t.includes('513') && t.includes('timeout'))).toBe(true);
+  });
+
+  it('si leer lanza una excepción la sucursal se reporta y se sigue', async () => {
+    const guardar = vi.fn(async () => 1);
+    const r = await calcularMes({
+      mes: '2026-10-01',
+      sucursales: [configDe(513)!, configDe(612)!],
+      datos,
+      deps: {
+        leer: async (c, d, h) => {
+          if (c.companyId === 513) throw new Error('red caída');
+          return lectura(d, h, []);
+        },
+        rappi: () => undefined,
+        guardar,
+      },
+    });
+    expect(r.fallidas).toEqual([{ companyId: 513, motivo: 'red caída' }]);
+    expect(r.guardadas).toBe(1);
+  });
+});

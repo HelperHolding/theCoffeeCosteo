@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { consumir, claveConsumo, type DatosConsumo } from '../../lib/sucursales/consumo';
-import { consumoMesSucursal, leerMes, mesCerrado, rappiPorDias } from '../../lib/sucursales/consumo-mes';
+import { consumoMesSucursal, elegirSucursales, leerMes, mesCerrado, rappiPorDias } from '../../lib/sucursales/consumo-mes';
 import { normalizar, type PedidoNormal } from '../../lib/sucursales/normalizar';
 import { configDe } from '../../lib/sucursales/config';
 import type { LecturaNormal } from '../../lib/sucursales/datos';
@@ -129,5 +129,16 @@ describe('Rappi día por día', () => {
   });
   it('sin fuente, sin Rappi', () => {
     expect(rappiPorDias(undefined)).toBeUndefined();
+  });
+});
+
+describe('elegirSucursales', () => {
+  const todas = [configDe(513)!, configDe(612)!];
+  it('sin ids devuelve todas; con ids, solo esas', () => {
+    expect(elegirSucursales([], todas)).toEqual(todas);
+    expect(elegirSucursales([612], todas).map((s) => s.companyId)).toEqual([612]);
+  });
+  it('si ninguna configurada coincide con --companias falla con un mensaje claro', () => {
+    expect(() => elegirSucursales([999], todas)).toThrow('Ninguna sucursal configurada coincide con --companias');
   });
 });

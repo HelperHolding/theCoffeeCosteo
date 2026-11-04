@@ -39,26 +39,33 @@ export async function calcularMes(a: {
   const r: ResultadoMes = { mes: a.mes, guardadas: 0, incompletas: [], fallidas: [], ms: 0 };
   for (const cfg of a.sucursales) {
     const t = Date.now();
-    const l = await conRappi(await a.deps.leer(cfg, a.mes, hasta), rappiPorDias(a.deps.rappi(cfg)));
-    if (l.estado === 'error') {
-      r.fallidas.push({ companyId: cfg.companyId, motivo: l.avisos[0] ?? l.error ?? 'error' });
-      a.deps.avance?.(`${cfg.companyId} ${cfg.nombre}: sin leer (${l.avisos[0] ?? l.error})`);
-      continue;
+    // Una sucursal que lanza (lectura, cálculo o guardado) se anota y se sigue con la siguiente: no tira todo el mes.
+    try {
+      const l = await conRappi(await a.deps.leer(cfg, a.mes, hasta), rappiPorDias(a.deps.rappi(cfg)));
+      if (l.estado === 'error') {
+        r.fallidas.push({ companyId: cfg.companyId, motivo: l.avisos[0] ?? l.error ?? 'error' });
+        a.deps.avance?.(`${cfg.companyId} ${cfg.nombre}: sin leer (${l.avisos[0] ?? l.error})`);
+        continue;
+      }
+      const fila = consumoMesSucursal({
+        mes: a.mes,
+        companyId: cfg.companyId,
+        lectura: l,
+        datos: a.datos,
+        catalogo: a.catalogo,
+        piloto: !!cfg.rappiPortal,
+      });
+      const n = await a.deps.guardar(fila);
+      r.guardadas++;
+      if (!fila.completa) r.incompletas.push(cfg.companyId);
+      a.deps.avance?.(
+        `${cfg.companyId} ${cfg.nombre}: ${l.pedidos.length} pedidos, ${n} renglones${fila.completa ? '' : ' (INCOMPLETA)'} en ${Math.round((Date.now() - t) / 1000)} s`,
+      );
+    } catch (e) {
+      const motivo = e instanceof Error ? e.message : String(e);
+      r.fallidas.push({ companyId: cfg.companyId, motivo });
+      a.deps.avance?.(`${cfg.companyId} ${cfg.nombre}: FALLÓ (${motivo})`);
     }
-    const fila = consumoMesSucursal({
-      mes: a.mes,
-      companyId: cfg.companyId,
-      lectura: l,
-      datos: a.datos,
-      catalogo: a.catalogo,
-      piloto: !!cfg.rappiPortal,
-    });
-    const n = await a.deps.guardar(fila);
-    r.guardadas++;
-    if (!fila.completa) r.incompletas.push(cfg.companyId);
-    a.deps.avance?.(
-      `${cfg.companyId} ${cfg.nombre}: ${l.pedidos.length} pedidos, ${n} renglones${fila.completa ? '' : ' (INCOMPLETA)'} en ${Math.round((Date.now() - t) / 1000)} s`,
-    );
   }
   r.ms = Date.now() - inicio;
   return r;

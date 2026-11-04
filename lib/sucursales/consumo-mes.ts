@@ -1,4 +1,5 @@
 // lib/sucursales/consumo-mes.ts
+import type { ConfigSucursal } from './config';
 import { consumir, type DatosConsumo } from './consumo';
 import type { FuenteRappi, LecturaNormal } from './datos';
 import type { CatalogoNombres } from './metricas';
@@ -49,6 +50,13 @@ export function leerMes(texto: string): { mes: string; desde: string; hasta: str
 }
 
 /** Un mes ('AAAA-MM-01') está cerrado si es anterior al mes actual en la Ciudad de México. */
+/** Las sucursales de --companias (todas las configuradas sin ids); si ninguna coincide es un error, no un mes vacío. */
+export function elegirSucursales(ids: number[], configuradas: ConfigSucursal[]): ConfigSucursal[] {
+  const elegidas = ids.length ? configuradas.filter((s) => ids.includes(s.companyId)) : configuradas;
+  if (!elegidas.length) throw new Error('Ninguna sucursal configurada coincide con --companias');
+  return elegidas;
+}
+
 export function mesCerrado(mes: string, ahora: Date = new Date()): boolean {
   return mes.slice(0, 7) < enZona(ahora, ZONA_MEXICO).fecha.slice(0, 7);
 }
