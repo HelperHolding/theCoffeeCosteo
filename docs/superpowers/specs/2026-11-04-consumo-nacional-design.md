@@ -68,7 +68,9 @@ devolvería `null`. La migración separa su cuerpo en una función interna `sucu
 
 - **Recetas:** las lee una vez por corrida desde la función interna. Son las mismas para todas las sucursales. Lee
   también el catálogo POS.
-- **Lectura por sucursal:** `leerDias` + `conRappi`, igual que `construirConsumo`, con 4 sucursales a la vez.
+- **Lectura por sucursal:** `leerDias` + `conRappi`, igual que `construirConsumo`. Las sucursales se procesan de una en una,
+  porque el proveedor tiene un único semáforo de 4 lecturas para todo el proceso: más sucursales a la vez solo harían
+  esperar.
 - **Cálculo:** `consumir` una vez por origen. Cada vez usa los pedidos de ese origen y, como evidencia, todos los del
   mes, así que la identidad de línea es la misma que en la página. Con `piloto = rappiPortal`, como `construirConsumo`.
 - **Escritura por sucursal:** en una sola llamada borra y escribe ese mes y esa sucursal. Volver a correr el mes lo

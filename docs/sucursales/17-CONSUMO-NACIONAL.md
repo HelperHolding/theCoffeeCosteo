@@ -13,13 +13,16 @@ sus sucursales; con todas, es México.
    «Todo» suma todos los orígenes guardados, `desconocido` incluido, igual que la página de cada sucursal.
 2. **Números clave:**
    - ingredientes con consumo;
-   - sucursales incluidas, y cuántas tienen el mes incompleto;
+   - sucursales calculadas contra las esperadas («75 de 79»), con la nota «N sin calcular» si faltan y cuántas tienen
+     el mes incompleto;
    - cobertura: líneas que entran al consumo entre líneas vendidas;
-   - **Vs <mes anterior>:** `▲ N · ▼ M`, los ingredientes que subieron más de 3 % y los que bajaron más de 3 %. No hay
-     cambio total porque las unidades son distintas (kg, L, piezas).
+   - **Vs <mes anterior>:** `▲ N · ▼ M`, los ingredientes que subieron más de 3 % y los que bajaron más de 3 %. El
+     nombre es el del mes del calendario anterior al activo; si ese mes no está calculado, muestra «—». No hay cambio
+     total porque las unidades son distintas (kg, L, piezas).
 3. **Avisos** (`role="status"`):
    - mes incompleto en alguna sucursal;
-   - el mes anterior tiene menos sucursales calculadas que el actual: «compara conjuntos distintos».
+   - solo parte de las sucursales tiene el mes anterior calculado: «N de M sucursales tienen el mes anterior calculado:
+     el cambio se calcula solo con esas».
 4. **Tabla por categoría** (INGREDIENTES, PERECEDEROS, INSUMOS…), una fila por ingrediente:
    - consumo nacional en su unidad;
    - **presentaciones de compra:** consumo / `presentacion` del insumo, con su descripción (p. ej. «312 × 1 kg»). Sin
@@ -30,7 +33,7 @@ sus sucursales; con todas, es México.
 6. **Sin receta:** productos vendidos que no se pudieron contar, sumados entre sucursales, con sus unidades, para
    corregir enlaces o recetas.
 7. **Exportar a Excel:** el mes y filtro que se ven. Hoja de resumen (categoría, ingrediente, unidad, consumo,
-   presentación, presentaciones, cambio) y hoja por sucursal × ingrediente. Archivo `consumo-nacional-AAAA-MM-<origen>.xlsx`.
+   presentación, presentaciones, «Vs mes anterior (%)» con un decimal, p. ej. 25 para +25 %) y hoja por sucursal × ingrediente. Archivo `consumo-nacional-AAAA-MM-<origen>.xlsx`.
 
 Mes sin calcular: no aparece como botón. Sin ningún mes calculado, la pestaña explica cómo calcularlo. Usa los colores y
 el movimiento del Tablero México (movimiento reducido respetado) y se ve bien en 375 px.
@@ -39,15 +42,15 @@ el movimiento del Tablero México (movimiento reducido respetado) y se ve bien e
 
 ```
 scripts/sucursales/consumo-mes.ts --mes 2026-10        (llave de servicio de .env.local)
-   ├─ sucursales_recetas_consumo_datos()               ← recetas, una vez por corrida
+   ├─ RPC sucursales_recetas_consumo_datos()           ← recetas, una vez por corrida
    └─ por sucursal, UNA POR UNA: leerDias + conRappi → consumir por origen
-        └─ sucursales_guardar_consumo_mes              ← borra y escribe ese mes y esa sucursal, en una transacción
-             └─ sucursales_consumo_mes / _mes_sucursal
+        └─ RPC sucursales_guardar_consumo_mes          ← borra y escribe ese mes y esa sucursal, en una transacción
+             └─ tablas sucursales_consumo_mes / sucursales_consumo_mes_sucursal
 /sucursales/mexico?vista=consumo
    └─ /api/sucursales/consumo-nacional                 (sesión del usuario)
-        └─ sucursales_consumo_nacional                 (sucursales_acceso en la base)
+        └─ RPC sucursales_consumo_nacional             (sucursales_acceso en la base)
    └─ /api/sucursales/consumo-nacional/desglose        (al abrir un insumo o exportar)
-        └─ sucursales_consumo_desglose
+        └─ RPC sucursales_consumo_desglose
 ```
 
 - **Migración 38** (`20261105000038_sucursales_consumo_mes.sql`):
@@ -71,11 +74,21 @@ scripts/sucursales/consumo-mes.ts --mes 2026-10        (llave de servicio de .en
 - **Por qué las sucursales van una por una:** cada sucursal ya lee sus 31 días con 4 lecturas a la vez, que es lo que
   aguanta el proveedor. Más sucursales a la vez solo hacen esperar y agotar lecturas, como pasó en el historial del
   corte (doc 16).
-- **Sucursal sin leer:** no se escribe y conserva su cálculo anterior; el script la lista al final.
+- **Sucursal sin leer o que falla:** no se escribe y conserva su cálculo anterior. Si algo lanza al leer, calcular o
+  guardar una sucursal, se anota con su motivo y la corrida sigue con la siguiente; el script las lista al final.
+- **Catálogo POS:** si no se puede leer, el script se detiene con «No se pudo leer el catálogo POS»: sin él, los
+  productos sin código quedarían fuera y las cantidades guardadas saldrían menores. La lectura pagina de 1,000 en
+  1,000 (max-rows de PostgREST).
+- **Comparación con el mes anterior:** solo cuenta las sucursales que tienen AMBOS meses calculados. La RPC devuelve
+  `anterior` y `actual_comun` sobre ese mismo conjunto y `sucursales_anterior` lo cuenta; el cambio es
+  `actual_comun / anterior − 1`. Una sucursal que falló este mes no hace parecer más bajo el total, y una nueva no
+  hace parecerlo más alto.
+- **Repetir sucursales:** las incompletas o fallidas se vuelven a correr con `--companias <ids>` (el script imprime
+  la lista); reemplaza solo esas.
 - **Días incompletos:** se escribe con `completa = false` y el tablero lo avisa.
 - **Receta vigente:** el cálculo usa la receta de cuando corre. Si una receta cambia, se vuelve a correr el mes;
   `recetas_leidas_en` lo deja visible.
-- **Tiempo esperado:** unos 6 a 8 minutos por mes con 79 sucursales.
+- **Tiempo esperado:** ~10 minutos estimados (sin medir aún), más las lecturas de Rappi día por día.
 
 ## Mismas cifras que cada sucursal
 
@@ -92,10 +105,11 @@ mes es la suma de las páginas de cada sucursal en ese mes.
   App y Rappi del portal, combos y personalizaciones); cobertura y sin receta por origen; lectura parcial marcada
   incompleta; sin pedidos, sin renglones; lectura de `AAAA-MM`; solo meses cerrados; Rappi día por día.
 - `tests/portal/consumo-mes-servidor.test.ts`: recorrido de sucursales una por una, sucursal sin leer no se escribe,
-  incompletas, mes no cerrado.
+  incompletas, mes no cerrado, y una sucursal que lanza no impide guardar la siguiente.
+- `tests/portal/corte-catalogo.test.ts`: el catálogo POS se pagina sin truncar.
 - `tests/portal/consumo-nacional.test.ts`: armado por insumo y origen, categorías, presentaciones, cambio contra el
-  mes anterior (sin mes anterior no hay cambio, no es cero), filtro de origen y desglose por ciudad y sucursal.
-- `tests/portal/consumo-excel.test.ts`: las hojas del Excel.
+  mes anterior sobre el mismo conjunto de sucursales (sin mes anterior no hay cambio, no es cero), filtro de origen y desglose por ciudad y sucursal.
+- `tests/portal/consumo-excel.test.ts`: las hojas del Excel, el cambio en porcentaje y la suma de orígenes.
 - `tests/portal/consumo-nacional-ui.test.tsx`: la vista, sus avisos y el KPI de cambio.
 - **Prueba visual con datos sintéticos** (`npm run prueba:visual`, `tests/portal/vista/tablero-mexico.tsx`), en
   escritorio, 375 px y modo día y noche.
@@ -103,9 +117,8 @@ mes es la suma de las páginas de cada sucursal en ese mes.
 
 ## Límites conocidos
 
-- Si algo lanza al guardar, la corrida se detiene. Las sucursales ya guardadas quedan; volver a correr el mes las
-  reemplaza.
-- La columna «sucursales» de cada insumo es el máximo por origen, no un conteo de sucursales distintas.
+- El script de cálculo no se prueba de punta a punta (escribe en la base real); sus piezas sí tienen pruebas.
+- El tiempo de una corrida de 79 sucursales no se ha medido.
 
 ## Pasos en producción (cada uno con OK)
 
