@@ -71,6 +71,15 @@ const delPos =
 const cdmx = delPos('Ciudad de México');
 /** Zona metropolitana de Toluca (Toluca y Metepec). */
 const toluca = delPos('Toluca');
+const queretaro = delPos('Querétaro');
+const aguascalientes = delPos('Aguascalientes');
+const sanLuis = delPos('San Luis Potosí');
+const colima = delPos('Colima');
+const vallarta = delPos('Puerto Vallarta');
+/** Zona metropolitana de Veracruz: Veracruz y Boca del Río. */
+const veracruz = delPos('Veracruz');
+const cancun = delPos('Cancún', 'America/Cancun');
+const merida = delPos('Mérida', 'America/Merida');
 
 /**
  * Guadalajara (docs/sucursales/13 §F1), validadas el 2026-10-28 con scripts/sucursales/validar-sucursal.ts: nombre e
@@ -105,7 +114,10 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     nombre: 'Cd. Juárez',
     ciudad: 'Ciudad Juárez',
     moneda: 'MXN',
-    zona: 'America/Ciudad_Juarez',
+    // UTC−6 fijo: el POS no cambió de horario el 1 de noviembre de 2026 (EE. UU. sí). Desde ese día los pedidos llegan
+    // una hora adelante de la hora local (3-nov: último pedido 17:25 a las 17:05 locales; apertura 8:35 en lugar de
+    // 7:40). En verano UTC−6 es la hora local; en invierno el día del portal es el de los tickets (docs/sucursales/15).
+    zona: 'Etc/GMT+6',
     modoTiempo: 'local-etiquetada-z',
     sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
     rappi: true,
@@ -178,6 +190,50 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   cdmx(643, 554, 'Patio Santa Fe', 'Álvaro Obregón · Santa Fe'),
   toluca(610, 476, 'Tecnológico', 'Metepec · Plaza Tecnológico'),
   toluca(646, 560, 'Patio Toluca', 'Toluca · Vértice'),
+  // Lote 3, centro y Bajío: validadas con el 2 de noviembre (Los Arcos con 1 ¢ de redondeo).
+  toluca(520, 420, 'Galerías Metepec', 'Metepec · Galerías'),
+  toluca(743, 618, 'Townsquare', 'Metepec · La Providencia'),
+  delPos('Valle de Bravo')(463, 347, 'Avándaro', 'Avándaro'),
+  delPos('Pachuca')(616, 529, 'Colosio Pachuca', 'Punta Azul'),
+  delPos('Puebla')(761, 617, 'Centro Histórico Puebla', 'Centro Histórico'),
+  queretaro(509, 401, 'Los Arcos', 'Jardines de Querétaro'),
+  queretaro(734, 650, 'UpTown Juriquilla', 'Juriquilla'),
+  delPos('San Miguel de Allende')(466, 379, 'Canal 16', 'Centro'),
+  delPos('León')(614, 527, 'Torre Visu', 'Lomas del Campestre'),
+  delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso'),
+  // Lote 4, centro-norte y occidente: validadas con el 2 de noviembre (Centro con 1 ¢ de redondeo).
+  aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio'),
+  aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada'),
+  delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro'),
+  sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico'),
+  sanLuis(763, 619, 'Covalia', 'Covalia'),
+  delPos('Tepatitlán')(508, 399, 'Tepatitlán', 'La Gloria'),
+  colima(721, 638, 'Constitución', 'Jardines Vista Hermosa'),
+  colima(553, 468, 'Colima', 'Av. Venustiano Carranza'),
+  vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro'),
+  vallarta(478, 373, 'Versalles', 'Versalles'),
+  // Lote 5, golfo, sur y norte: validadas con el 2 de noviembre (Ávila Camacho y Andamar con 1 ¢ de redondeo).
+  // Andamar está en Boca del Río aunque el CRM diga «Córdoba». Aeropuerto Chiapas abre a las 4 h (aeropuerto).
+  vallarta(584, 504, 'Fluvial', 'Las Gaviotas'),
+  veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro'),
+  veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar'),
+  delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro'),
+  delPos('Tuxtla Gutiérrez')(781, 496, 'Aeropuerto Chiapas', 'Aeropuerto'),
+  delPos('Durango', 'America/Monterrey')(632, 547, 'Durango', 'Juan de la Barrera'),
+  delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia'),
+  // UTC−7 fijo, como Cd. Juárez: el POS no cambió de horario el 1 de noviembre (3-nov: último pedido 16:47 a las 16:04
+  // de Tijuana). En verano es la hora local.
+  delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas'),
+  delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe'),
+  // Lote 6, sureste: validadas con el 2 de noviembre y el último pedido de hoy en su hora local (Puerto Cancún y Scala
+  // Huayacan con 3 y 1 ¢ de redondeo). Tulum, Mayab y Hermosillo vendieron poco el 2-nov; sus otros días son normales.
+  cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez'),
+  cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán'),
+  cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas'),
+  delPos('Tulum', 'America/Cancun')(462, 360, 'Tulum', 'Zona Hotelera'),
+  merida(627, 538, 'Mayab', 'Cordemex'),
+  merida(601, 452, 'Calle 47', 'Centro'),
+  merida(655, 566, 'Arthouse Mérida', 'Altabrisa'),
 ];
 
 export const configDe = (companyId: number) =>

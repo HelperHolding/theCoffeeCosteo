@@ -132,3 +132,44 @@ en «Ciudad de México».
 
 Puerta Polanco cierra a distinta hora según el día (16 h el 2-nov, 17 h el 30-oct, 20 h el 28-oct); su horario es
 siempre posible en la Ciudad de México.
+
+## Lotes 3 a 6: validación con el 2 de noviembre
+
+Las 36 sucursales pasaron la validación (identidad API = CRM, venta = productos, horario en su zona). Detalle por
+sucursal en los comentarios de `lib/sucursales/config.ts`.
+
+- **Redondeo del proveedor** (1 ¢ por pedido con descuento):
+  - Los Arcos, Centro Puerto Vallarta, Ávila Camacho, Andamar y Scala Huayacan, con 1 ¢;
+  - Puerto Cancún, con 3 ¢.
+- **Horarios propios:**
+  - Aeropuerto Chiapas abre a las 4 h;
+  - Andamar abre a las 10 h (plaza);
+  - Tulum, Mayab y Andenes Hermosillo vendieron poco el 2 de noviembre. El 28 y el 30 de octubre vendieron normal:
+    Tulum de 7 a 18 h, Mayab de 6 a 20 h y Hermosillo de 8 a 20 h. Mayab no abrió el domingo 1.
+- **Ciudades:**
+  - Andamar está en Boca del Río aunque el CRM diga «Córdoba», así que va en «Veracruz» con Ávila Camacho;
+  - Galerías Metepec y Townsquare van en «Toluca».
+- **Zonas, comprobadas con el último pedido del 3 de noviembre contra la hora local:**
+  - Cancún y Tulum: `America/Cancun`;
+  - Mérida: `America/Merida`;
+  - Durango y Torreón: `America/Monterrey`;
+  - Hermosillo: `America/Hermosillo`.
+
+## Cd. Juárez y Tijuana: el POS no cambió de horario el 1 de noviembre
+
+EE. UU. dejó el horario de verano el domingo 1 de noviembre. Ciudad Juárez y Tijuana lo siguen, pero el POS no:
+
+| Sucursal         | Hora local el 3-nov | Último pedido del 3-nov | Apertura antes del 1-nov | Apertura desde el 1-nov |
+| ---------------- | ------------------- | ----------------------- | ------------------------ | ----------------------- |
+| Cd. Juárez (612) | 17:05               | 17:25                   | 7:36–8:01                | 8:35–8:45               |
+| Tijuana (613)    | 16:04               | 16:47                   | 8:46–9:45                | 9:13–9:24               |
+
+Los tickets quedan en la hora de verano todo el año: UTC−6 en Juárez y UTC−7 en Tijuana. Por eso las dos se
+configuran con ese desfase fijo (`Etc/GMT+6` y `Etc/GMT+7`), que coincide con sus pedidos en cualquier temporada.
+
+- **En verano**, el día y la hora del portal son los locales.
+- **En invierno**, van una hora adelante de la hora local, igual que los tickets: por ejemplo, «hoy» cambia a las 23 h
+  locales.
+
+Antes de esto, Cd. Juárez estaba en `America/Ciudad_Juarez`: desde el 1 de noviembre su «ahora» quedaba una hora
+atrás de sus pedidos. Falta confirmarlo con el proveedor.
