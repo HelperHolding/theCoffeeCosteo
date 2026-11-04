@@ -37,8 +37,8 @@ Llave primaria `(mes, company_id, origen, insumo_id)`.
 
 - `mes`, `company_id`, `calculado_en`, `recetas_leidas_en`;
 - `completa` (boolean): todos los días del mes se leyeron completos;
-- `cobertura` (jsonb, por origen): líneas, líneas con receta, venta con receta y venta total, en centavos;
-- `sin_receta` (jsonb, por origen): productos vendidos que no se pudieron contar, con líneas y venta.
+- `cobertura` (jsonb, por origen): líneas vendidas, líneas que entran al consumo, Generic, sin código y sin enlace (mismas cuentas que `CoberturaConsumo`; en unidades, nunca dinero, como la sección Consumo);
+- `sin_receta` (jsonb, por origen): productos vendidos que no se pudieron contar, con sus unidades.
 
 Llave primaria `(mes, company_id)`.
 
@@ -46,10 +46,14 @@ Llave primaria `(mes, company_id)`.
 
 - Las dos tablas quedan cerradas al portal: `revoke all` a `anon` y `authenticated`. Solo escribe la llave de
   servicio.
-- Se leen por la RPC `sucursales_consumo_nacional(p_mes date, p_companias integer[])`:
-  - filtra con `sucursales_acceso`, igual que `sucursales_tablero_periodo`;
-  - devuelve los meses calculados, el consumo sumado por insumo y origen, el desglose por sucursal y la cobertura y
-    los productos sin receta.
+- Se leen por dos RPC, las dos filtran con `sucursales_acceso`, igual que `sucursales_tablero_periodo`:
+  - `sucursales_consumo_nacional(p_mes date, p_companias integer[])`: los meses calculados, el consumo nacional sumado
+    por insumo y origen (y el del mes anterior), y por sucursal su cobertura y sus productos sin receta. Es ligera:
+    unas 600 filas, no 79 × 150 × 4;
+  - `sucursales_consumo_desglose(p_mes date, p_companias integer[], p_insumo uuid)`: el consumo por sucursal y origen
+    de un insumo (al abrirlo) o de todos con `p_insumo` nulo (para exportar).
+- Escribe la RPC `sucursales_guardar_consumo_mes`, solo para `service_role`: borra y escribe un mes de una sucursal
+  en una sola transacción.
 
 **Recetas desde el script:** `sucursales_recetas_consumo` exige `auth.uid()` con acceso, y con la llave de servicio
 devolvería `null`. La migración separa su cuerpo en una función interna `sucursales_recetas_consumo_datos()`:
@@ -89,7 +93,7 @@ Pestaña **«Consumo»** en `/sucursales/mexico`, junto a la vista actual de ven
 - **Números clave:**
   - ingredientes con consumo;
   - sucursales incluidas, y cuántas tienen el mes incompleto;
-  - cobertura: venta con receta entre venta total;
+  - cobertura: líneas que entran al consumo entre líneas vendidas (como la sección Consumo);
   - cambio contra el mes anterior, si está calculado.
 - **Tabla por categoría** de insumo (INGREDIENTES, PERECEDEROS, INSUMOS…), con una fila por insumo:
   - cantidad nacional en su unidad;
@@ -99,7 +103,7 @@ Pestaña **«Consumo»** en `/sucursales/mexico`, junto a la vista actual de ven
 
   La presentación se lee del catálogo de insumos vigente.
 - **Desglose:** al abrir un insumo, su reparto por ciudad y por sucursal, con su parte del total.
-- **Sin receta:** lista de productos vendidos que no se contaron, sumados entre sucursales, con su venta, para
+- **Sin receta:** lista de productos vendidos que no se contaron, sumados entre sucursales, con sus unidades, para
   corregir enlaces o recetas.
 - **Exportar a Excel:** la tabla del mes y filtro actuales (insumo, categoría, unidad, cantidad, presentaciones) y una
   hoja por sucursal × insumo.
