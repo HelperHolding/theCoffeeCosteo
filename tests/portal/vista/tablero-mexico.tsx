@@ -2,8 +2,9 @@ import '../../../components/sucursales/tablero-mexico.css';
 import '../../../app/(sucursales)/sucursales/vitrina.css';
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
-import { TableroMexicoVista } from '../../../components/sucursales/tablero-mexico';
+import { VistasMexico } from '../../../components/sucursales/vistas-mexico';
 import { sucursalesConfiguradas as configuradas, type ConfigSucursal } from '../../../lib/sucursales/config';
+import { armarConsumoNacional, type RpcConsumoNacional } from '../../../lib/sucursales/consumo-nacional';
 import { diaLunes } from '../../../lib/sucursales/metricas';
 import type { Origen, PedidoNormal } from '../../../lib/sucursales/normalizar';
 import {
@@ -196,9 +197,108 @@ function rpcPeriodo(desde: string, hasta: string): RpcPeriodo {
   };
 }
 
+/** Consumo nacional sintético: 20 insumos de 4 categorías, tres meses, una sucursal incompleta. */
+const MESES_CONSUMO = ['2026-10-01', '2026-09-01', '2026-08-01'];
+const INSUMOS_CONSUMO: [string, string, string, string, number | null, number][] = [
+  ['LECHE ENTERA', 'ml', 'PERECEDEROS', 'le', 1000, 42000],
+  ['LECHE DESLACTOSADA', 'ml', 'PERECEDEROS', 'ld', 1000, 15000],
+  ['LECHE DE AVENA', 'ml', 'PERECEDEROS', 'la', 946, 9000],
+  ['CREMA PARA BATIR', 'ml', 'PERECEDEROS', 'cb', 1000, 3200],
+  ['CROISSANT CONGELADO', 'pza', 'PERECEDEROS', 'cc', 24, 520],
+  ['CAFÉ HOUSE BLEND', 'gr', 'CAFÉ', 'ch', 1000, 18000],
+  ['CAFÉ DESCAFEINADO', 'gr', 'CAFÉ', 'cd', 1000, 2200],
+  ['CAFÉ ESPECIAL DEL MES', 'gr', 'CAFÉ', 'ce', 500, 3100],
+  ['CAFÉ PARA FILTRADO', 'gr', 'CAFÉ', 'cf', 1000, 4800],
+  ['VASO 12 OZ', 'pza', 'DESECHABLES', 'v12', 1000, 3400],
+  ['VASO 16 OZ', 'pza', 'DESECHABLES', 'v16', 1000, 5200],
+  ['TAPA 12 OZ', 'pza', 'DESECHABLES', 't12', 1000, 3400],
+  ['TAPA 16 OZ', 'pza', 'DESECHABLES', 't16', 1000, 5200],
+  ['POPOTE', 'pza', 'DESECHABLES', 'po', 500, 4100],
+  ['SERVILLETA', 'pza', 'DESECHABLES', 'se', 2000, 9800],
+  ['JARABE DE VAINILLA', 'ml', 'POLVOS Y JARABES', 'jv', 750, 3900],
+  ['JARABE DE CARAMELO', 'ml', 'POLVOS Y JARABES', 'jc', 750, 2800],
+  ['POLVO DE MATCHA', 'gr', 'POLVOS Y JARABES', 'pm', 500, 1900],
+  ['POLVO DE CHAI', 'gr', 'POLVOS Y JARABES', 'pc', 1000, 3600],
+  ['CACAO EN POLVO', 'gr', 'POLVOS Y JARABES', 'ca', null, 1500],
+];
+const PESOS_CONSUMO = new Map(sucursalesConfiguradas.map((c, i) => [c.companyId, 0.6 + ((i * 37) % 100) / 100]));
+const sumaPesos = [...PESOS_CONSUMO.values()].reduce((a, b) => a + b, 0);
+const factorMes = (mes: string) => (mes === '2026-10-01' ? 1 : mes === '2026-09-01' ? 0.92 : 0.85);
+const CUOTA_ORIGEN = { mostrador: 0.72, rappi: 0.2, app: 0.08 } as const;
+const ORIGENES_CONSUMO = Object.keys(CUOTA_ORIGEN) as (keyof typeof CUOTA_ORIGEN)[];
+function rpcConsumo(mes: string): RpcConsumoNacional {
+  const anterior = MESES_CONSUMO[MESES_CONSUMO.indexOf(mes) + 1];
+  return {
+    meses: MESES_CONSUMO,
+    sucursales_anterior: anterior ? sucursalesConfiguradas.length : 0,
+    sucursales: sucursalesConfiguradas.map((c, i) => ({
+      company_id: c.companyId,
+      calculado_en: '2026-11-01T06:00:00Z',
+      recetas_leidas_en: '2026-11-01T05:00:00Z',
+      completa: c.companyId !== 518,
+      cobertura: { mostrador: { lineas: 400 + i * 10, incluidas: 372 + i * 10, generico: 4, sinCodigo: 6, sinEnlace: 18 } },
+      sin_receta: {
+        mostrador: [
+          { nombre: 'Sandwich del día', unidades: 14 + i, sinCodigo: false },
+          { nombre: 'Galleta especial', unidades: 6, sinCodigo: true },
+        ],
+      },
+    })),
+    insumos: INSUMOS_CONSUMO.flatMap(([insumo, unidad, categoria, clave, presentacion, base]) =>
+      ORIGENES_CONSUMO.map((origen) => ({
+        insumo_id: clave,
+        insumo,
+        unidad,
+        categoria,
+        presentacion,
+        origen,
+        cantidad: Math.round(base * factorMes(mes) * CUOTA_ORIGEN[origen]),
+        sucursales: sucursalesConfiguradas.length,
+      })),
+    ),
+    anterior: anterior
+      ? INSUMOS_CONSUMO.flatMap(([, , , clave, , base]) =>
+          ORIGENES_CONSUMO.map((origen) => ({
+            insumo_id: clave,
+            origen,
+            cantidad: Math.round(base * factorMes(anterior) * CUOTA_ORIGEN[origen] * (clave === 'ce' ? 1.4 : 1)),
+          })),
+        )
+      : [],
+  };
+}
+
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
+  if (url.pathname === '/api/sucursales/consumo-nacional/desglose') {
+    await new Promise((r) => setTimeout(r, 150));
+    const insumoId = url.searchParams.get('insumo');
+    const mes = `${url.searchParams.get('mes')}-01`;
+    const filas = rpcConsumo(mes).insumos.filter((i) => i.insumo_id === insumoId);
+    return Response.json({
+      mes,
+      filas: filas.flatMap((i) =>
+        sucursalesConfiguradas.map((c) => ({
+          companyId: c.companyId,
+          insumoId: i.insumo_id,
+          origen: i.origen,
+          cantidad: Math.round((Number(i.cantidad) * PESOS_CONSUMO.get(c.companyId)!) / sumaPesos),
+        })),
+      ),
+    });
+  }
+  if (url.pathname === '/api/sucursales/consumo-nacional') {
+    await new Promise((r) => setTimeout(r, 250));
+    const generadoEn = new Date().toISOString();
+    if (parametros.get('consumo-vacio') === '1') {
+      const vacioRpc: RpcConsumoNacional = { meses: [], sucursales: [], insumos: [], anterior: [], sucursales_anterior: 0 };
+      return Response.json(armarConsumoNacional(vacioRpc, null, sucursalesConfiguradas, generadoEn));
+    }
+    const pedido = url.searchParams.get('mes');
+    const mes = pedido ? `${pedido}-01` : MESES_CONSUMO[0];
+    return Response.json(armarConsumoNacional(rpcConsumo(mes), mes, sucursalesConfiguradas, generadoEn));
+  }
   if (url.pathname !== '/api/sucursales/tablero') return fetchNavegador(entrada, init);
   await new Promise((r) => setTimeout(r, 250));
   const semanas = Number(url.searchParams.get('semanas') ?? 8);
@@ -227,9 +327,9 @@ export function VistaTableroMexico() {
         <Encabezado
           area="Sucursales"
           titulo="Tablero de México"
-          descripcion={`La venta de las ${sucursalesConfiguradas.length} sucursales, sumada. Se actualiza cada 10 minutos.`}
+          descripcion={`La venta y el consumo de las ${sucursalesConfiguradas.length} sucursales, sumados.`}
         />
-        <TableroMexicoVista />
+        <VistasMexico vistaInicial={parametros.get('vista') === 'consumo' ? 'consumo' : 'ventas'} />
       </div>
     </Marco>
   );

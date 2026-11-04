@@ -3,13 +3,18 @@ import { sesionSucursales } from '@/lib/supabase/sesion';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { sucursalesConfiguradas } from '@/lib/sucursales/config';
 import { Encabezado, Tarjeta, Vacio } from '@/components/portal/piezas';
-import { TableroMexicoVista } from '@/components/sucursales/tablero-mexico';
+import { VistasMexico } from '@/components/sucursales/vistas-mexico';
 
 /**
- * Tablero de México (docs/sucursales/16): la venta de todas las sucursales del usuario, sumada. Con todas las
- * configuradas es México; con menos, la suma es solo de las suyas y así lo dice.
+ * Tablero de México (docs/sucursales/16): la venta y el consumo de todas las sucursales del usuario, sumados. Con
+ * todas las configuradas es México; con menos, la suma es solo de las suyas y así lo dice.
  */
-export default async function TableroMexico() {
+export default async function TableroMexico({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const q = await searchParams;
   const { companias } = await sesionSucursales();
   const lista = sucursalesAccesibles(companias);
   const todas = lista.length === sucursalesConfiguradas.length;
@@ -20,8 +25,8 @@ export default async function TableroMexico() {
         titulo="Tablero de México"
         descripcion={
           todas
-            ? `La venta de las ${lista.length} sucursales, sumada. Se actualiza cada 10 minutos.`
-            : `La venta de tus ${lista.length} sucursales, sumada. Se actualiza cada 10 minutos.`
+            ? `La venta y el consumo de las ${lista.length} sucursales, sumados.`
+            : `La venta y el consumo de tus ${lista.length} sucursales, sumados.`
         }
       />
       {lista.length === 0 ? (
@@ -31,7 +36,7 @@ export default async function TableroMexico() {
           </Vacio>
         </Tarjeta>
       ) : (
-        <TableroMexicoVista />
+        <VistasMexico vistaInicial={q.vista === 'consumo' ? 'consumo' : 'ventas'} />
       )}
     </>
   );
