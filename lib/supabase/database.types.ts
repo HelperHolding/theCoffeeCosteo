@@ -289,6 +289,8 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      sucursales_consumo_desglose: { Args: { p_mes: string; p_companias: number[]; p_insumo: string | null }; Returns: Json };
+      sucursales_consumo_nacional: { Args: { p_mes: string; p_companias: number[] }; Returns: Json };
       sucursales_tablero_hoy: { Args: { p_companias: number[]; p_hoys: string[] }; Returns: Json };
       sucursales_tablero_periodo: {
         Args: { p_companias: number[]; p_desde: string; p_hasta: string };

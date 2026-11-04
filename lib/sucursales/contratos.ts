@@ -1,6 +1,7 @@
 import type { CosteoProducto, CosteoResumen } from './costeo';
 import type { ResultadoConsumo } from './consumo';
 import type { FiltroOrigen, Insight, ProductoResumen, Resumen } from './metricas';
+import type { CoberturaMes, SinRecetaMes } from './consumo-mes';
 import type { Origen } from './normalizar';
 import type { TableroHoy, TableroPeriodo } from './resumen';
 
@@ -188,3 +189,21 @@ export interface TableroMexico {
   hoy: TableroHoy;
   periodo: TableroPeriodo;
 }
+
+/** Consumo nacional de ingredientes por mes (docs/sucursales/17), separado por origen. */
+export interface SucursalConsumoMes {
+  companyId: number; nombre: string; ciudad: string; completa: boolean; calculadoEn: string; recetasLeidasEn: string;
+  cobertura: Partial<Record<Origen, CoberturaMes>>; sinReceta: Partial<Record<Origen, SinRecetaMes[]>>;
+}
+export interface InsumoNacional {
+  insumoId: string; insumo: string; unidad: string; categoria: string; presentacion: number | null;
+  porOrigen: Partial<Record<Origen, number>>; sucursales: number;
+  anterior: Partial<Record<Origen, number>>;
+}
+export interface ConsumoNacional {
+  generadoEn: string; mes: string | null; meses: string[];
+  sucursales: SucursalConsumoMes[]; insumos: InsumoNacional[];
+  /** Cuántas de las sucursales del usuario tienen el mes anterior calculado (0 = sin comparación). */
+  sucursalesAnterior: number;
+}
+export interface DesgloseConsumo { mes: string; filas: { companyId: number; insumoId: string; origen: Origen; cantidad: number }[] }
