@@ -1,6 +1,7 @@
 'use client';
 import { Fragment, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { hojasConsumo } from '@/lib/sucursales/consumo-excel';
 import type { ConsumoNacional, DesgloseConsumo } from '@/lib/sucursales/contratos';
 import { armarDesglose, vistaConsumo, type FilaInsumo, type VistaConsumo } from '@/lib/sucursales/consumo-nacional';
 import { etiquetaOrigen, filtrosOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
@@ -265,6 +266,35 @@ function Desglose({ datos, fila, origen }: { datos: ConsumoNacional; fila: FilaI
   );
 }
 
-function BotonExportar(_: { datos: ConsumoNacional; origen: FiltroOrigen; filas: FilaInsumo[] }) {
-  return null; // Task 6
+function BotonExportar({ datos, origen, filas }: { datos: ConsumoNacional; origen: FiltroOrigen; filas: FilaInsumo[] }) {
+  const [ocupado, setOcupado] = useState(false);
+  const [fallo, setFallo] = useState(false);
+  const exportar = async () => {
+    setOcupado(true);
+    setFallo(false);
+    try {
+      const r = await fetch(`/api/sucursales/consumo-nacional/desglose?mes=${datos.mes!.slice(0, 7)}`);
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as DesgloseConsumo;
+      const h = hojasConsumo({ datos, origen, filas, desglose: d.filas });
+      const XLSX = await import('xlsx');
+      const libro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(h.resumen), 'Consumo');
+      XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(h.porSucursal), 'Por sucursal');
+      XLSX.writeFile(libro, h.nombreArchivo);
+    } catch {
+      setFallo(true);
+    } finally {
+      setOcupado(false);
+    }
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={exportar} disabled={ocupado} className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-sm font-semibold text-crema disabled:opacity-60">
+        <Download size={16} aria-hidden="true" />
+        {ocupado ? 'Preparando…' : 'Exportar a Excel'}
+      </button>
+      {fallo && <span role="alert" className="text-sm text-bad">No se pudo exportar. Intenta de nuevo.</span>}
+    </div>
+  );
 }
