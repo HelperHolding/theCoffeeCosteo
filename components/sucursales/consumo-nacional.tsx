@@ -1,8 +1,8 @@
 'use client';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { ConsumoNacional, DesgloseConsumo } from '@/lib/sucursales/contratos';
-import { armarDesglose, vistaConsumo, type FilaInsumo } from '@/lib/sucursales/consumo-nacional';
+import { armarDesglose, vistaConsumo, type FilaInsumo, type VistaConsumo } from '@/lib/sucursales/consumo-nacional';
 import { etiquetaOrigen, filtrosOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { cn } from '@/lib/utils';
@@ -30,9 +30,14 @@ export function ConsumoNacionalVista() {
   const { datos, error, recargar } = useLectura<ConsumoNacional>(
     `/api/sucursales/consumo-nacional${mes ? `?mes=${mes.slice(0, 7)}` : ''}`,
   );
+  // Al cambiar de mes useLectura vacía los datos: la barra se sigue pintando con el último resultado bueno
+  // para no perder el foco ni mover el diseño; solo el cuerpo muestra el esqueleto.
+  const ultimo = useRef<ConsumoNacional | null>(null);
+  if (datos) ultimo.current = datos;
+  const base = datos ?? ultimo.current;
   const v = useMemo(() => (datos ? vistaConsumo(datos, origen) : null), [datos, origen]);
-  if (!datos || !v) return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={3} />;
-  if (!datos.mes)
+  if (!base) return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={3} />;
+  if (!base.mes)
     return (
       <Tarjeta>
         <Vacio titulo="Aún no hay meses calculados">
@@ -40,20 +45,21 @@ export function ConsumoNacionalVista() {
         </Vacio>
       </Tarjeta>
     );
+  const mesActivo = mes ?? base.mes;
   return (
     <div className="tablero-mx space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="group" aria-label="Mes" className="flex flex-wrap gap-2">
-          {datos.meses.map((m) => (
+          {base.meses.map((m) => (
             <button
               key={m}
               type="button"
-              aria-pressed={m === datos.mes}
+              aria-pressed={m === mesActivo}
               onClick={() => {
                 setMes(m);
                 setAbierto(null);
               }}
-              className={cn('rounded-full px-3 py-1.5 text-sm font-semibold', m === datos.mes ? 'bg-ink text-crema' : 'bg-muted')}
+              className={cn('rounded-full px-3 py-1.5 text-sm font-semibold', m === mesActivo ? 'bg-ink text-crema' : 'bg-muted')}
             >
               {nombreMes(m)}
             </button>
@@ -73,31 +79,74 @@ export function ConsumoNacionalVista() {
           ))}
         </div>
       </div>
+      <div aria-busy={!datos && !error} className="space-y-6">
+        {!datos || !v ? (
+          error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={3} />
+        ) : (
+          <CuerpoConsumo datos={datos} v={v} origen={origen} abierto={abierto} setAbierto={setAbierto} />
+        )}
+      </div>
+    </div>
+  );
+}
 
+function CuerpoConsumo({
+  datos,
+  v,
+  origen,
+  abierto,
+  setAbierto,
+}: {
+  datos: ConsumoNacional;
+  v: VistaConsumo;
+  origen: FiltroOrigen;
+  abierto: string | null;
+  setAbierto: (id: string | null) => void;
+}) {
+  const mes = datos.mes!;
+  const todas = v.categorias.flatMap((c) => c.filas);
+  const comparable = datos.sucursalesAnterior > 0;
+  const previo = datos.meses[datos.meses.indexOf(mes) + 1];
+  const suben = todas.filter((f) => f.cambio !== null && f.cambio > 0.03).length;
+  const bajan = todas.filter((f) => f.cambio !== null && f.cambio < -0.03).length;
+  return (
+    <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero titulo="Ingredientes con consumo" valor={num.format(v.ingredientes)} />
         <Numero titulo="Sucursales" valor={num.format(v.sucursales)} nota={v.incompletas ? `${v.incompletas} con el mes incompleto` : undefined} />
         <Numero titulo="Cobertura" valor={v.cobertura === null ? '—' : pct(v.cobertura)} nota="líneas con receta" />
         <Numero
-          titulo="Contra el mes anterior"
-          valor={datos.sucursalesAnterior ? `${v.categorias.flatMap((c) => c.filas).filter((f) => (f.cambio ?? 0) > 0.1).length} suben >10 %` : '—'}
-          nota={datos.sucursalesAnterior && datos.sucursalesAnterior < v.sucursales ? `solo ${datos.sucursalesAnterior} sucursales con mes anterior` : undefined}
+          titulo={`Vs ${previo ? nombreMes(previo) : 'el mes anterior'}`}
+          valor={comparable ? `▲ ${suben} · ▼ ${bajan}` : '—'}
+          nota={comparable ? 'ingredientes que suben o bajan más de 3 %' : undefined}
         />
       </div>
 
       {v.incompletas > 0 && (
         <p role="status" className="rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn">
-          {v.incompletas} sucursales tienen días sin leer completos en {nombreMes(datos.mes)}: su consumo puede ser menor
-          al real.
+          {v.incompletas === 1 ? '1 sucursal tiene días sin leer completos' : `${v.incompletas} sucursales tienen días sin leer completos`}{' '}
+          en {nombreMes(mes)}: su consumo puede ser menor al real.
+        </p>
+      )}
+      {comparable && datos.sucursalesAnterior < v.sucursales && (
+        <p role="status" className="rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn">
+          El mes anterior tiene solo {datos.sucursalesAnterior} de {v.sucursales} sucursales calculadas: el cambio compara
+          conjuntos distintos.
         </p>
       )}
 
-      <BotonExportar datos={datos} origen={origen} filas={v.categorias.flatMap((c) => c.filas)} />
+      <BotonExportar datos={datos} origen={origen} filas={todas} />
 
       {v.categorias.map((c) => (
         <Tarjeta key={c.categoria}>
           <h3 className="font-display text-base font-bold">{c.categoria}</h3>
-          <table className="mt-3 w-full text-sm">
+          <table className="mt-3 w-full table-fixed text-sm">
+            <colgroup>
+              <col />
+              <col className="w-32 sm:w-40" />
+              <col className="hidden w-40 sm:table-column" />
+              <col className="w-20 sm:w-28" />
+            </colgroup>
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="py-1">Ingrediente</th>
@@ -137,9 +186,12 @@ export function ConsumoNacionalVista() {
           </ul>
         </Tarjeta>
       )}
-    </div>
+    </>
   );
 }
+
+const presentacionTexto = (f: FilaInsumo) =>
+  f.presentaciones === null ? '—' : `${num.format(f.presentaciones)} × ${num.format(f.presentacion!)} ${f.unidad}`;
 
 function Numero({ titulo, valor, nota }: { titulo: string; valor: string; nota?: string }) {
   return (
@@ -161,10 +213,11 @@ function FilaTabla({ fila: f, abierta, alAbrir }: { fila: FilaInsumo; abierta: b
           {f.insumo}
         </button>
       </td>
-      <td className="py-1.5 text-right tabular-nums">{cantidadTexto(f.cantidad, f.unidad)}</td>
-      <td className="hidden py-1.5 text-right tabular-nums sm:table-cell">
-        {f.presentaciones === null ? '—' : `${num.format(f.presentaciones)} × ${num.format(f.presentacion!)} ${f.unidad}`}
+      <td className="py-1.5 text-right tabular-nums">
+        {cantidadTexto(f.cantidad, f.unidad)}
+        <span className="block text-xs text-muted-foreground sm:hidden">{presentacionTexto(f)}</span>
       </td>
+      <td className="hidden py-1.5 text-right tabular-nums sm:table-cell">{presentacionTexto(f)}</td>
       <td
         className={cn(
           'py-1.5 text-right tabular-nums',
