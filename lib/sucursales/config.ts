@@ -69,6 +69,19 @@ const delPos =
     alcance: ALCANCE_POS,
   });
 const cdmx = delPos('Ciudad de México');
+/** Zona metropolitana de Toluca (Toluca y Metepec). */
+const toluca = delPos('Toluca');
+const queretaro = delPos('Querétaro');
+const aguascalientes = delPos('Aguascalientes');
+const sanLuis = delPos('San Luis Potosí');
+const colima = delPos('Colima');
+const vallarta = delPos('Puerto Vallarta');
+/** Zona metropolitana de Veracruz: Veracruz y Boca del Río. */
+const veracruz = delPos('Veracruz');
+const cancun = delPos('Cancún', 'America/Cancun');
+const merida = delPos('Mérida', 'America/Merida');
+const durango = delPos('Durango', 'America/Monterrey');
+const leon = delPos('León');
 /** Rappi del portal prendido en una sucursal del lote, con sus tiendas en rappi_tiendas y su historial cargados. */
 const conPortal = (c: ConfigSucursal): ConfigSucursal => ({
   ...c,
@@ -109,7 +122,10 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     nombre: 'Cd. Juárez',
     ciudad: 'Ciudad Juárez',
     moneda: 'MXN',
-    zona: 'America/Ciudad_Juarez',
+    // UTC−6 fijo: el POS no cambió de horario el 1 de noviembre de 2026 (EE. UU. sí). Desde ese día los pedidos llegan
+    // una hora adelante de la hora local (3-nov: último pedido 17:25 a las 17:05 locales; apertura 8:35 en lugar de
+    // 7:40). En verano UTC−6 es la hora local; en invierno el día del portal es el de los tickets (docs/sucursales/15).
+    zona: 'Etc/GMT+6',
     modoTiempo: 'local-etiquetada-z',
     sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
     rappi: true,
@@ -170,6 +186,78 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(cdmx(607, 472, 'Santa Fe', 'Vasco de Quiroga')),
   conPortal(cdmx(507, 402, 'Hamburgo', 'Cuauhtémoc · Juárez')),
   conPortal(cdmx(625, 539, 'Plaza Samara', 'Álvaro Obregón · Santa Fe')),
+  // Lote 2, Ciudad de México y Toluca: validadas con el 2 de noviembre (Tecnológico con 1 ¢ de redondeo). Interlomas y
+  // Satélite van en la zona metropolitana de la Ciudad de México. Tecnológico (Metepec) y Patio Toluca van en Toluca,
+  // aunque el CRM las ponga en «Ciudad de México». Puerta Polanco cierra a distinta hora según el día (16, 17 o 20 h).
+  cdmx(642, 555, 'Puerta Polanco', 'Miguel Hidalgo · Polanco'),
+  cdmx(608, 473, 'Interlomas', 'Interlomas'),
+  cdmx(606, 478, 'Satélite', 'Ciudad Satélite'),
+  cdmx(506, 387, 'Portales Norte', 'Benito Juárez · Portales Norte'),
+  cdmx(550, 424, 'Río Nazas', 'Cuauhtémoc'),
+  cdmx(611, 490, 'Insurgentes', 'Benito Juárez · Del Valle'),
+  cdmx(549, 404, 'La del Valle', 'Benito Juárez · Del Valle'),
+  cdmx(643, 554, 'Patio Santa Fe', 'Álvaro Obregón · Santa Fe'),
+  toluca(610, 476, 'Tecnológico', 'Metepec · Plaza Tecnológico'),
+  toluca(646, 560, 'Patio Toluca', 'Toluca · Vértice'),
+  // Lote 3, centro y Bajío: validadas con el 2 de noviembre (Los Arcos con 1 ¢ de redondeo).
+  toluca(520, 420, 'Galerías Metepec', 'Metepec · Galerías'),
+  toluca(743, 618, 'Townsquare', 'Metepec · La Providencia'),
+  delPos('Valle de Bravo')(463, 347, 'Avándaro', 'Avándaro'),
+  delPos('Pachuca')(616, 529, 'Colosio Pachuca', 'Punta Azul'),
+  delPos('Puebla')(761, 617, 'Centro Histórico Puebla', 'Centro Histórico'),
+  queretaro(509, 401, 'Los Arcos', 'Jardines de Querétaro'),
+  queretaro(734, 650, 'UpTown Juriquilla', 'Juriquilla'),
+  delPos('San Miguel de Allende')(466, 379, 'Canal 16', 'Centro'),
+  leon(614, 527, 'Torre Visu', 'Lomas del Campestre'),
+  delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso'),
+  // Lote 4, centro-norte y occidente: validadas con el 2 de noviembre (Centro con 1 ¢ de redondeo).
+  aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio'),
+  aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada'),
+  delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro'),
+  sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico'),
+  sanLuis(763, 619, 'Covalia', 'Covalia'),
+  delPos('Tepatitlán')(508, 399, 'Tepatitlán', 'La Gloria'),
+  colima(721, 638, 'Constitución', 'Jardines Vista Hermosa'),
+  colima(553, 468, 'Colima', 'Av. Venustiano Carranza'),
+  vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro'),
+  vallarta(478, 373, 'Versalles', 'Versalles'),
+  // Lote 5, golfo, sur y norte: validadas con el 2 de noviembre (Ávila Camacho y Andamar con 1 ¢ de redondeo).
+  // Andamar está en Boca del Río aunque el CRM diga «Córdoba». Aeropuerto Chiapas abre a las 4 h (aeropuerto).
+  vallarta(584, 504, 'Fluvial', 'Las Gaviotas'),
+  veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro'),
+  veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar'),
+  delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro'),
+  delPos('Tuxtla Gutiérrez')(781, 496, 'Aeropuerto Chiapas', 'Aeropuerto'),
+  durango(632, 547, 'Durango', 'Juan de la Barrera'),
+  delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia'),
+  // UTC−7 fijo, como Cd. Juárez: el POS no cambió de horario el 1 de noviembre (3-nov: último pedido 16:47 a las 16:04
+  // de Tijuana). En verano es la hora local.
+  delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas'),
+  delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe'),
+  // Lote 6, sureste: validadas con el 2 de noviembre y el último pedido de hoy en su hora local (Puerto Cancún y Scala
+  // Huayacan con 3 y 1 ¢ de redondeo). Tulum, Mayab y Hermosillo vendieron poco el 2-nov; sus otros días son normales.
+  cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez'),
+  cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán'),
+  cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas'),
+  delPos('Tulum', 'America/Cancun')(462, 360, 'Tulum', 'Zona Hotelera'),
+  merida(627, 538, 'Mayab', 'Cordemex'),
+  merida(601, 452, 'Calle 47', 'Centro'),
+  merida(655, 566, 'Arthouse Mérida', 'Altabrisa'),
+  // Lote 7: en el CRM el número Jestor viene en el nombre («Plaza Cantabria - 632») y el campo está vacío; el número
+  // del nombre es el lookerStoreId de la API. El Campanario: la API dice 438 y el CRM «El Campanario - 348» (dígitos
+  // invertidos; ninguna otra sucursal de la API usa 348): se usa el de la API. Validadas con el 2 de noviembre (Plaza
+  // Norte con 1 ¢ de redondeo). Plaza Cantabria es de Ciudad Juárez: UTC−6 fijo como 612 (3-nov: último pedido 18:00 a
+  // las 17:10 de Juárez). Plaza Cumbres, de la ciudad de Chihuahua: su hora coincide con America/Chihuahua.
+  delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria'),
+  leon(733, 649, 'Plaza Norte', 'Jardines del Moral'),
+  queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario'),
+  cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte'),
+  cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo'),
+  durango(715, 625, 'Durango Centro', 'Centro'),
+  vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta'),
+  cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico'),
+  delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres'),
+  cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen'),
 ];
 
 export const configDe = (companyId: number) =>

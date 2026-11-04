@@ -110,3 +110,85 @@ de tendencia desde la API tardaría minutos en cada carga.
 - **El tablero lee solo esa tabla:** carga al instante y dice cuándo fue el último corte.
 
 Lleva migración (respaldo, ensayo con ROLLBACK y OK de Carlo) y un disparador cada 10 minutos.
+
+## Lote 2: validación con el 2 de noviembre
+
+Todas en `America/Mexico_City`, `local-etiquetada-z`; ninguna recibe Rappi por el POS. Interlomas y Satélite van en la
+zona metropolitana de la Ciudad de México. Tecnológico (Metepec) y Patio Toluca van en «Toluca», aunque el CRM las pone
+en «Ciudad de México».
+
+| Sucursal       | company_id | Jestor | Pedidos |      Venta | Venta = productos | Horario |
+| -------------- | ---------: | -----: | ------: | ---------: | ----------------- | ------- |
+| Puerta Polanco |        642 |    555 |      64 |  $6,996.00 | exacta            | 7–16 h  |
+| Interlomas     |        608 |    473 |      73 |  $8,695.80 | exacta            | 7–20 h  |
+| Satélite       |        606 |    478 |      61 | $11,499.00 | exacta            | 7–19 h  |
+| Portales Norte |        506 |    387 |      43 |  $8,317.50 | exacta            | 9–21 h  |
+| Río Nazas      |        550 |    424 |      54 |  $8,385.00 | exacta            | 7–19 h  |
+| Insurgentes    |        611 |    490 |      35 |  $4,731.40 | exacta            | 8–20 h  |
+| La del Valle   |        549 |    404 |      44 |  $6,846.60 | exacta            | 8–20 h  |
+| Tecnológico    |        610 |    476 |      30 |  $4,209.01 | 1 ¢ de redondeo   | 9–20 h  |
+| Patio Santa Fe |        643 |    554 |      14 |  $2,679.00 | exacta            | 8–20 h  |
+| Patio Toluca   |        646 |    560 |      19 |  $2,264.70 | exacta            | 8–19 h  |
+
+Puerta Polanco cierra a distinta hora según el día (16 h el 2-nov, 17 h el 30-oct, 20 h el 28-oct); su horario es
+siempre posible en la Ciudad de México.
+
+## Lotes 3 a 6: validación con el 2 de noviembre
+
+Las 36 sucursales pasaron la validación (identidad API = CRM, venta = productos, horario en su zona). Detalle por
+sucursal en los comentarios de `lib/sucursales/config.ts`.
+
+- **Redondeo del proveedor** (1 ¢ por pedido con descuento):
+  - Los Arcos, Centro Puerto Vallarta, Ávila Camacho, Andamar y Scala Huayacan, con 1 ¢;
+  - Puerto Cancún, con 3 ¢.
+- **Horarios propios:**
+  - Aeropuerto Chiapas abre a las 4 h;
+  - Andamar abre a las 10 h (plaza);
+  - Tulum, Mayab y Andenes Hermosillo vendieron poco el 2 de noviembre. El 28 y el 30 de octubre vendieron normal:
+    Tulum de 7 a 18 h, Mayab de 6 a 20 h y Hermosillo de 8 a 20 h. Mayab no abrió el domingo 1.
+- **Ciudades:**
+  - Andamar está en Boca del Río aunque el CRM diga «Córdoba», así que va en «Veracruz» con Ávila Camacho;
+  - Galerías Metepec y Townsquare van en «Toluca».
+- **Zonas, comprobadas con el último pedido del 3 de noviembre contra la hora local:**
+  - Cancún y Tulum: `America/Cancun`;
+  - Mérida: `America/Merida`;
+  - Durango y Torreón: `America/Monterrey`;
+  - Hermosillo: `America/Hermosillo`.
+
+## Cd. Juárez y Tijuana: el POS no cambió de horario el 1 de noviembre
+
+EE. UU. dejó el horario de verano el domingo 1 de noviembre. Ciudad Juárez y Tijuana lo siguen, pero el POS no:
+
+| Sucursal         | Hora local el 3-nov | Último pedido del 3-nov | Apertura antes del 1-nov | Apertura desde el 1-nov |
+| ---------------- | ------------------- | ----------------------- | ------------------------ | ----------------------- |
+| Cd. Juárez (612) | 17:05               | 17:25                   | 7:36–8:01                | 8:35–8:45               |
+| Tijuana (613)    | 16:04               | 16:47                   | 8:46–9:45                | 9:13–9:24               |
+
+Los tickets quedan en la hora de verano todo el año: UTC−6 en Juárez y UTC−7 en Tijuana. Por eso las dos se
+configuran con ese desfase fijo (`Etc/GMT+6` y `Etc/GMT+7`), que coincide con sus pedidos en cualquier temporada.
+
+- **En verano**, el día y la hora del portal son los locales.
+- **En invierno**, van una hora adelante de la hora local, igual que los tickets: por ejemplo, «hoy» cambia a las 23 h
+  locales.
+
+Antes de esto, Cd. Juárez estaba en `America/Ciudad_Juarez`: desde el 1 de noviembre su «ahora» quedaba una hora
+atrás de sus pedidos. Falta confirmarlo con el proveedor.
+
+## Lote 7: identidad y validación
+
+En el CRM las 10 sí existen, pero con el campo «número Jestor» vacío. El número viene en el nombre («Plaza Cantabria -
+632») y coincide con el `lookerStoreId` de la API en 9 de ellas.
+
+- **El Campanario (547):** la API dice 438 y el CRM «El Campanario - 348», también en su campo. Parecen dígitos
+  invertidos, y ninguna otra sucursal de la API usa 348. Se usa el de la API; falta corregir el CRM.
+- **Validadas con el 2 de noviembre**; Plaza Norte con 1 ¢ de redondeo.
+- **Zonas:**
+  - Plaza Cantabria es de Ciudad Juárez y va con UTC−6 fijo, como 612. El 3 de noviembre su último pedido fue a las
+    18:00 cuando en Juárez eran las 17:10;
+  - Plaza Cumbres, de la ciudad de Chihuahua, coincide con `America/Chihuahua`;
+  - Durango Centro va con `America/Monterrey`.
+
+Con el lote 7 quedan configuradas las **79 sucursales** que vendieron entre el 27 de octubre y el 2 de noviembre.
+
+**Pendiente en el CRM:** llenar el número Jestor de esas 10 tiendas y corregir el de El Campanario. Es un cambio de datos
+del CRM, con OK de Carlo.
