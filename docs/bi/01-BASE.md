@@ -35,7 +35,7 @@ Tablas (migración 40). Todas cerradas al portal: RLS activo y sin permisos para
 | Tabla | Qué guarda |
 |---|---|
 | `bi_lineas` | Un renglón por línea de producto: fuente (`pos` o `zoho_rappi`), tienda, fecha, pedido, hora, canal, pago, código, nombre, unidades, importe y descuento. Nunca datos de clientes |
-| `bi_cargas` | Un renglón por fuente, tienda y día cargados, con `completa` y `rappi_en_pos`. Sin renglón = sin datos, nunca cero |
+| `bi_cargas` | Un renglón por fuente, tienda y día cargados, con `completa`, `rappi_en_pos` y `huella` (md5 de lo guardado). Sin renglón = sin datos, nunca cero |
 | `bi_tiendas` | Tienda, franquiciatario, tipo (Sucursales Propias o Franquicia) y `fecha_apertura` |
 | `bi_clasificacion_producto` | Código normalizado (ver `bi_codigo`) con `vigente_desde`: categoría Master, grupo, contiene café y promoción |
 | `bi_mapeo_pago` | Método, tipo y smartphone del POS a la etiqueta de Zoho |
@@ -45,7 +45,7 @@ Funciones:
 
 | Función | Quién la usa | Qué hace |
 |---|---|---|
-| `bi_guardar_dia` | `service_role` | Reemplaza un día de una tienda y fuente en una sola transacción. Guarda `rappi_en_pos = (fuente = 'pos') y (p_rappi_portal o alguna línea de canal rappi)`. Normaliza el código con `bi_codigo`. Un `p_lineas` nulo o que no sea arreglo, o una tienda que no está en `bi_tiendas`, es error. Toma un candado de aviso por fuente, tienda y día |
+| `bi_guardar_dia` | `service_role` | Reemplaza un día de una tienda y fuente en una sola transacción. Guarda `rappi_en_pos = (fuente = 'pos') y (p_rappi_portal o alguna línea de canal rappi)`. Normaliza el código con `bi_codigo`. Un `p_lineas` nulo o que no sea arreglo, o una tienda que no está en `bi_tiendas`, es error. Toma un candado de aviso por fuente, tienda y día. Con la misma huella no reescribe el día (solo renueva `leido_en`) |
 | `bi_codigo` | la base | Normaliza el código de producto: mayúsculas, sin espacios al inicio ni al final y espacios internos (también U+00A0) colapsados a uno |
 | `bi_semana`, `bi_anio_semana` | la base | Semana ISO y año de la etiqueta de Zoho. Puras, `sql immutable` y sin `search_path` para que se inlineen |
 | `bi_meses_operando`, `bi_maduracion` | la base | Antigüedad de la tienda contra una fecha. Puras, igual que las anteriores |
@@ -92,6 +92,13 @@ El Rappi del portal ya se mezcla con el del POS en `conRappi`. Por eso:
 - **F2 pasa `p_rappi_portal = true` en cada guardado `pos`** de una tienda con `rappiPortal`, incluso en los días sin ventas
   de Rappi; si no, ese día se sumaría el Rappi de Zoho además del portal. Como la marca viaja en el propio guardado, un
   guardado posterior del mismo día no la borra.
+- **Solo desde que existe el portal de la tienda.** `p_rappi_portal = rappiPortal y fecha >= primera fecha con pedidos en
+  rappi_pedidos de esa tienda`. Los días anteriores mandan `false`: ahí el POS no trae Rappi y el Rappi de Zoho debe
+  contar. Si la tienda aún no tiene pedidos, o falla la consulta de esa primera fecha, se manda `false` (el Rappi de Zoho
+  cuenta y no se pierde nada) y el fallo se anota en `bi.fallidos` con fecha `*`.
+- **Guardado idempotente.** `bi_cargas.huella` es el md5 de `p_lineas`, `p_completa` y `p_rappi_portal`. Si el día ya está
+  guardado con la misma huella, `bi_guardar_dia` solo actualiza `leido_en` y devuelve las `lineas` existentes, sin borrar
+  ni insertar (y `rappi_en_pos` no cambia). Con otra huella reemplaza el día como siempre.
 
 ## Semana de Zoho
 

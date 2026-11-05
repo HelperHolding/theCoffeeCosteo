@@ -7,7 +7,7 @@ import { aCsv, totalesPorDia } from '../../lib/bi/cotejo';
  * Cotejo de totales por tienda × día × fuente × canal × pago de bi_lineas, para compararlos contra Zoho.
  * Solo lectura (llave de servicio de .env.local). Escribe datos/bi-cotejo-<desde>-<hasta>.csv.
  *
- *   npx.cmd tsx scripts/bi/cotejo.ts --desde 2026-10-01 --hasta 2026-10-31 [--companias 384,532]
+ *   npx.cmd tsx --conditions=react-server scripts/bi/cotejo.ts --desde 2026-10-01 --hasta 2026-10-31 [--companias 384,532]
  */
 const args = process.argv.slice(2);
 const opcion = (n: string) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);

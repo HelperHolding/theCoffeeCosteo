@@ -17,7 +17,19 @@ Cada corte que guarda un día de una sucursal en `sucursales_resumen_dia` guarda
 
 - Las líneas salen de `lineasBi` (`lib/bi/lineas.ts`): una fila por línea del pedido, con el importe de la línea más sus
   modificadores, IVA incluido. El Rappi del portal ya viene mezclado con el POS, así que se guarda como fuente `pos` con
-  canal `rappi` y con `p_rappi_portal = true` en toda sucursal con portal (regla de «Rappi sin doble conteo» del doc 01).
+  canal `rappi` y con `p_rappi_portal` en las sucursales con portal, **solo desde la primera fecha con pedidos de esa tienda
+  en `rappi_pedidos`** (regla de «Rappi sin doble conteo» del doc 01).
+- **Rappi antes del portal.** Una vez por corte, para cada tienda con `rappiPortal`, `cortar` consulta su primera
+  `fecha_local` en `rappi_pedidos`. Los días anteriores mandan `p_rappi_portal = false`, así el Rappi de Zoho de la historia
+  (antes de oct-2026) no desaparece del BI. Si la consulta falla, manda `false` y lo anota en `bi.fallidos` con fecha `*`
+  y motivo «inicio del portal de Rappi».
+- **Huella.** `bi_cargas.huella` guarda un md5 de lo que se guardó. Si el corte repite un día igual, `bi_guardar_dia` solo
+  renueva `leido_en`: no borra ni inserta (evita millones de filas muertas al día con el cron de 10 minutos).
+- **Orden y tiempos del corte.** Primero se leen los días, luego se guarda el resumen y, al final, el BI (de 4 en 4). Cada
+  guardado del BI tiene 15 s de límite y, pasados 240 s desde el inicio del corte, los que faltan quedan en `bi.fallidos`
+  como «sin tiempo». Un BI lento nunca pierde el resumen ni la fila de `sucursales_cortes`.
+- **Interruptor.** `BI_CARGA=0` en las variables de Vercel apaga toda escritura del BI (altas de tiendas y guardados) sin
+  revertir el despliegue; `bi` sale en ceros. Quitar la variable (o ponerla en otro valor) la reanuda.
 - **Nota sobre el cierre de las 5:30.** Ahora también guarda 8 días × 79 tiendas en el BI. Se estima de 20 a 60 s más.
   **Hay que medirlo después del merge**: la función tiene `maxDuration` de 300 s.
 
@@ -54,6 +66,8 @@ El BI **nunca frena** el corte del Tablero México: un día que no se guarda en 
 
 1. **Ensayo y merge.** Ensayar las migraciones 40 y 41 con ROLLBACK, luego PR y merge con OK. El merge aplica las
    migraciones y **desde ese momento el cron escribe las líneas de hoy**.
+   - Si el código se despliega **antes** de que las migraciones estén aplicadas, los primeros cortes anotarán «BI sin
+     guardar». Es inofensivo (el resumen se guarda igual) y el merge las aplica.
 2. **Piloto** con 6 tiendas (384, 532, 612, 583, 613, 545) en dos ventanas. Escribe en la base de `.env.local`: solo con OK.
 
    ```bash
@@ -72,7 +86,12 @@ El BI **nunca frena** el corte del Tablero México: un día que no se guarda en 
    - **Tolerancia:** 0.5 % o 2 pedidos por tienda y día.
    - Se documentan las diferencias (en este doc, al terminar el piloto).
    - Recordar las tiendas sin alta (Hernández Macías, Correo 37 y Unknown): el BI queda unas 9 mil órdenes debajo de Zoho.
-4. **Historia completa**, por años y por partes:
+4. **Historia completa**, por años y por partes. **Escribe en la base real: solo con OK.** Ten en cuenta:
+   - Además del BI, crea filas de `sucursales_resumen_dia` para días que nunca tuvieron resumen (2024-01-01 → 2026-08-09).
+   - Cada bloque de 7 días inserta una fila en `sucursales_cortes`, lo que mueve el «último corte» que muestra el Tablero
+     México.
+   - Los días anteriores a la apertura de una tienda quedan como «cargados con 0 líneas».
+   - Los días anteriores al portal de Rappi mandan `p_rappi_portal = false` (ver «Qué carga y cuándo»).
 
    ```bash
    npx.cmd tsx --conditions=react-server scripts/sucursales/corte.ts --desde 2024-01-01 --hasta 2024-12-31
@@ -103,3 +122,9 @@ Los CSV traen totales de ventas: `datos/*.csv` está en `.gitignore` (igual que 
 - Confirmar la **maduración de 3 meses**.
 - **Rendimiento** de `bi_tablero` y `bi_tendencias` con la historia completa (F4, meta de 3 s).
 - Medir el cierre de las 5:30 con el BI (ver nota arriba).
+
+### Después del merge
+
+- Revisar que los primeros cortes no traigan «BI sin guardar» en `sucursales_cortes.mensaje`.
+- Medir el cierre de las 5:30 (la función tiene `maxDuration` de 300 s y el BI tiene presupuesto de 240 s).
+- Vigilar filas muertas e IO de `bi_lineas` durante un día.

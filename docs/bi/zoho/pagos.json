@@ -14,7 +14,6 @@
     { "metodo_pos": "RAPPI", "tipo_pos": "RAPPI_TURBO", "smartphone": false, "etiqueta": "RAPPI TURBO", "pedidos": 0, "evidencia": [], "nota": "Rappi del portal de Partners en tienda Turbo según rappi_tiendas.canal." }
   ],
   "sinEvidencia": [
-    { "etiqueta": "RAPPI TURBO", "nota": "Solo en Rappi de Zoho y del portal (tiendas Turbo). La carga F2/F3 la asigna por tienda de Rappi; no viene del POS." },
     { "etiqueta": "CONTINGENCY - IFOOD", "nota": "No apareció en los días revisados." },
     { "etiqueta": "WALLET", "nota": "No apareció en los días revisados." }
   ],
