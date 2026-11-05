@@ -9,7 +9,9 @@
     { "metodo_pos": "CARTAO", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - CARD", "pedidos": 5, "evidencia": ["545:32234231", "545:32229265", "545:32222279"] },
     { "metodo_pos": "VIRTUAL_WALLET", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - CARD", "pedidos": 7, "evidencia": ["545:32235022", "545:32231383", "545:32226917"] },
     { "metodo_pos": "WALLET_BALANCE", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - WALLET", "pedidos": 15, "evidencia": ["545:32235104", "545:32235102", "545:32233764"] },
-    { "metodo_pos": "RAPPI", "tipo_pos": "CREDIT", "smartphone": false, "etiqueta": "RAPPI", "pedidos": 4, "evidencia": ["532:32235824", "532:32235810", "532:32219721"], "nota": "Rappi que llega por el POS (solo Rubén Darío). En Zoho no aparece con este id: Zoho carga Rappi con el número de orden de Rappi (2485…), como RAPPI o RAPPI TURBO." }
+    { "metodo_pos": "RAPPI", "tipo_pos": "CREDIT", "smartphone": false, "etiqueta": "RAPPI", "pedidos": 4, "evidencia": ["532:32235824", "532:32235810", "532:32219721"], "nota": "Rappi que llega por el POS (solo Rubén Darío). En Zoho no aparece con este id: Zoho carga Rappi con el número de orden de Rappi (2485…), como RAPPI o RAPPI TURBO." },
+    { "metodo_pos": "RAPPI", "tipo_pos": "RAPPI_PORTAL", "smartphone": false, "etiqueta": "RAPPI", "pedidos": 0, "evidencia": [], "nota": "Rappi del portal de Partners en tienda normal (lib/sucursales/rappi-pos.ts)." },
+    { "metodo_pos": "RAPPI", "tipo_pos": "RAPPI_TURBO", "smartphone": false, "etiqueta": "RAPPI TURBO", "pedidos": 0, "evidencia": [], "nota": "Rappi del portal de Partners en tienda Turbo según rappi_tiendas.canal." }
   ],
   "sinEvidencia": [
     { "etiqueta": "RAPPI TURBO", "nota": "Solo en Rappi de Zoho y del portal (tiendas Turbo). La carga F2/F3 la asigna por tienda de Rappi; no viene del POS." },

@@ -415,6 +415,8 @@ insert into public.bi_mapeo_pago (metodo_pos, tipo_pos, smartphone, etiqueta) va
 ('CARTAO', 'WALLET', true, 'APP - CARD'),
 ('DINHEIRO', 'CONTINGENCY', false, 'CONTINGENCY - MONEY'),
 ('RAPPI', 'CREDIT', false, 'RAPPI'),
+('RAPPI', 'RAPPI_PORTAL', false, 'RAPPI'),
+('RAPPI', 'RAPPI_TURBO', false, 'RAPPI TURBO'),
 ('VIRTUAL_WALLET', 'WALLET', true, 'APP - CARD'),
 ('WALLET_BALANCE', 'WALLET', true, 'APP - WALLET')
 on conflict do nothing;

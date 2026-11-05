@@ -60,7 +60,7 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
     const r = await db
       .from('rappi_pedidos')
       .select(
-        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, estado_anterior, revisar, rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
+        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
       )
       .eq('company_id', cfg.companyId)
       .gte('fecha_local', desde)
@@ -94,7 +94,13 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
           opciones: (y.opciones ?? []) as PedidoRappi['productos'][number]['opciones'],
         })),
       } as PedidoRappi);
-      if (p) pedidos.push(p);
+      if (p) {
+        // Tienda Turbo según rappi_tiendas.canal: el POS no lo distingue, la carga del BI sí.
+        const tienda = x.rappi_tiendas as { canal?: string } | { canal?: string }[] | null;
+        const canal = Array.isArray(tienda) ? tienda[0]?.canal : tienda?.canal;
+        if (canal === 'turbo') p.tipo = 'RAPPI_TURBO';
+        pedidos.push(p);
+      }
     }
     return pedidos;
   };
