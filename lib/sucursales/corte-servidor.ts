@@ -29,11 +29,22 @@ export function clienteServicio(): Servicio | null {
 }
 
 /** Nombres del POS de nuestros enlaces → código (igual que leerCatalogoPos, sin pasar por la sesión del usuario). */
-async function catalogo(db: Servicio): Promise<CatalogoNombres | undefined> {
-  const r = await db.from('producto_codigo_pos').select('codigo, nombre_observado');
-  if (r.error || !r.data) return undefined;
+export async function catalogoServicio(db: Servicio): Promise<CatalogoNombres | undefined> {
+  // PostgREST corta cada respuesta en max-rows (1,000): se pagina, ordenado por la llave única, hasta una página corta.
+  const POR_PAGINA = 1000;
+  const filas: { codigo: string; nombre_observado: string | null }[] = [];
+  for (let desde = 0; ; desde += POR_PAGINA) {
+    const r = await db
+      .from('producto_codigo_pos')
+      .select('codigo, nombre_observado')
+      .order('codigo')
+      .range(desde, desde + POR_PAGINA - 1);
+    if (r.error || !r.data) return undefined;
+    filas.push(...(r.data as { codigo: string; nombre_observado: string | null }[]));
+    if (r.data.length < POR_PAGINA) break;
+  }
   const codigos = new Map<string, Set<string>>();
-  for (const e of r.data as { codigo: string; nombre_observado: string | null }[])
+  for (const e of filas)
     if (e.nombre_observado && e.codigo)
       codigos.set(e.nombre_observado, (codigos.get(e.nombre_observado) ?? new Set<string>()).add(e.codigo));
   return new Map([...codigos].filter(([, cs]) => cs.size === 1).map(([n, cs]) => [n, [...cs][0]]));
@@ -111,7 +122,7 @@ export async function cortar(
   }: { dias?: number; fechas?: string[]; sucursales?: ConfigSucursal[] } = {},
 ): Promise<ResultadoCorte> {
   const inicio = new Date();
-  const cat = await catalogo(db);
+  const cat = await catalogoServicio(db);
   const filas: FilaResumen[] = [];
   const fallidas: ResultadoCorte['fallidas'] = [];
   const trabajos = sucursales.flatMap((cfg) => {
