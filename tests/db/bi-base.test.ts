@@ -163,6 +163,8 @@ describe('semana y maduración como en Zoho', () => {
               public.bi_maduracion(null, '2026-04-01') n`,
     );
     expect(lim.rows[0]).toEqual({ a: 'Menor de 3 meses', b: 'Mayor de 3 meses', n: null });
+    const sinRef = await db.query<{ m: string | null }>(`select public.bi_maduracion('2026-01-01', null) m`);
+    expect(sinRef.rows[0].m).toBeNull();
   });
   it('marca Rappi del portal en un día sin ventas Rappi (solo servicio)', async () => {
     await guardar('pos', 513, '2026-10-03', [linea('1', 1)]);
