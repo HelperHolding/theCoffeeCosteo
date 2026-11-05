@@ -43,6 +43,8 @@ create table public.bi_cargas (
   completa boolean not null,
   rappi_en_pos boolean not null default false,
   lineas integer not null,
+  -- md5 de lo guardado (líneas, completa y marca del portal): un guardado igual no reescribe el día.
+  huella text,
   primary key (fuente, company_id, fecha)
 );
 
@@ -115,6 +117,8 @@ create function public.bi_guardar_dia(p_fuente text, p_company integer, p_fecha 
 language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   n integer;
+  v_huella text;
+  v_previa text;
 begin
   if p_fuente not in ('pos', 'zoho_rappi') then
     raise exception 'Fuente inválida: %', p_fuente;
@@ -129,6 +133,17 @@ begin
   end if;
   -- El cierre de las 5:30 y el corte de cada 10 minutos pueden chocar en el mismo día: se serializan.
   perform pg_advisory_xact_lock(hashtext(p_fuente || ':' || p_company || ':' || p_fecha));
+  -- Si el día ya está guardado igual (misma huella), solo se renueva leido_en: el corte de cada 10 minutos no debe
+  -- borrar e insertar de nuevo un día que no cambió (filas muertas). rappi_en_pos no cambia con la misma huella.
+  v_huella := md5(p_lineas::text || p_completa::text || coalesce(p_rappi_portal, false)::text);
+  select huella into v_previa from public.bi_cargas
+    where fuente = p_fuente and company_id = p_company and fecha = p_fecha;
+  if v_previa is not null and v_previa = v_huella then
+    update public.bi_cargas set leido_en = p_leido_en
+      where fuente = p_fuente and company_id = p_company and fecha = p_fecha
+      returning lineas into n;
+    return n;
+  end if;
   delete from public.bi_lineas where fuente = p_fuente and company_id = p_company and fecha = p_fecha;
   insert into public.bi_lineas (fuente, company_id, fecha, pedido, linea, hora, canal, metodo_pago, tipo_pago,
     smartphone, opcion_consumo, codigo, nombre, unidades, importe_cent, descuento_cent)
@@ -139,13 +154,13 @@ begin
     tipo_pago text, smartphone boolean, opcion_consumo text, codigo text, nombre text, unidades numeric,
     importe_cent bigint, descuento_cent bigint);
   get diagnostics n = row_count;
-  insert into public.bi_cargas (fuente, company_id, fecha, leido_en, completa, rappi_en_pos, lineas)
+  insert into public.bi_cargas (fuente, company_id, fecha, leido_en, completa, rappi_en_pos, lineas, huella)
   values (p_fuente, p_company, p_fecha, p_leido_en, p_completa,
     p_fuente = 'pos' and (coalesce(p_rappi_portal, false)
       or exists (select 1 from jsonb_to_recordset(p_lineas) as y(canal text) where y.canal = 'rappi')),
-    n)
+    n, v_huella)
   on conflict (fuente, company_id, fecha) do update set leido_en = excluded.leido_en, completa = excluded.completa,
-    rappi_en_pos = excluded.rappi_en_pos, lineas = excluded.lineas;
+    rappi_en_pos = excluded.rappi_en_pos, lineas = excluded.lineas, huella = excluded.huella;
   return n;
 end $$;
 

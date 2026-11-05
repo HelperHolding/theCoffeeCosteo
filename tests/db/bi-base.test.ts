@@ -139,6 +139,51 @@ describe('migración 40: base del BI', () => {
   });
 });
 
+describe('huella: no reescribir un día que no cambió', () => {
+  const fisicas = async (fecha: string) =>
+    (
+      await db.query<{ ctid: string }>(
+        `select ctid::text from bi_lineas where company_id = 513 and fecha = $1 order by pedido, linea`,
+        [fecha],
+      )
+    ).rows.map((r) => r.ctid);
+  const leidoEn = async (fecha: string) =>
+    (
+      await db.query<{ t: string }>(
+        `select leido_en::text t from bi_cargas where fuente='pos' and company_id=513 and fecha=$1`,
+        [fecha],
+      )
+    ).rows[0].t;
+  const carga = async (fecha: string) =>
+    (
+      await db.query<{ completa: boolean; rappi_en_pos: boolean; importe: string }>(
+        `select k.completa, k.rappi_en_pos, (select sum(importe_cent)::text from bi_lineas l where l.company_id=513 and l.fecha=k.fecha) importe
+         from bi_cargas k where k.fuente='pos' and k.company_id=513 and k.fecha=$1`,
+        [fecha],
+      )
+    ).rows[0];
+  it('guardar dos veces lo mismo no toca las líneas (mismo ctid), devuelve su número y renueva leido_en', async () => {
+    const ls = [linea('1', 1), linea('1', 2, { codigo: 'BRO13', nombre: 'Brownie' })];
+    expect(await guardar('pos', 513, '2026-10-20', ls)).toBe(2);
+    const antes = await fisicas('2026-10-20');
+    const t1 = await leidoEn('2026-10-20');
+    expect(await guardar('pos', 513, '2026-10-20', ls)).toBe(2);
+    expect(await fisicas('2026-10-20')).toEqual(antes);
+    expect(await leidoEn('2026-10-20')).not.toBe(t1);
+  });
+  it('una línea distinta, otro completa u otra marca del portal sí reemplazan el día', async () => {
+    await guardar('pos', 513, '2026-10-21', [linea('1', 1)]);
+    const antes = await fisicas('2026-10-21');
+    expect(await guardar('pos', 513, '2026-10-21', [linea('1', 1, { importe_cent: 9000 })])).toBe(1);
+    expect(await fisicas('2026-10-21')).not.toEqual(antes);
+    expect((await carga('2026-10-21')).importe).toBe('9000');
+    await guardar('pos', 513, '2026-10-21', [linea('1', 1, { importe_cent: 9000 })], false);
+    expect((await carga('2026-10-21')).completa).toBe(false);
+    await guardar('pos', 513, '2026-10-21', [linea('1', 1, { importe_cent: 9000 })], false, true);
+    expect((await carga('2026-10-21')).rappi_en_pos).toBe(true);
+  });
+});
+
 describe('semana y maduración como en Zoho', () => {
   it('bi_semana reproduce weekofyear de Zoho en todas las muestras', async () => {
     for (const m of zoho.semana.muestras) {
