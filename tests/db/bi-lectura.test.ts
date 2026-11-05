@@ -66,6 +66,7 @@ describe('bi_tablero', () => {
   it('solo sucursales del usuario; tablas cerradas', async () => {
     const r = await tablero(u, base);
     expect(r.kpis.venta_cent).toBe(8000 + 5000 + 8000 + 9000 + 7000 + 4000 + 8000);
+    expect(r.kpis.venta_bruta_cent).toBe(r.kpis.venta_cent); // sin neto en estas filas, neto = cobrado
     const o = await tablero(otro, base);
     expect(o.kpis.venta_cent).toBe(99900);
     await expect(comoUsuario(db, u, () => db.query('select * from bi_lineas'))).rejects.toThrow(/permission denied/);

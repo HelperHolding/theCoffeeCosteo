@@ -109,6 +109,34 @@ El BI **nunca frena** el corte del Tablero México: un día que no se guarda en 
 
    **Tiempo estimado:** unos 90 s por semana con 79 tiendas, unas 4 h en total. Se corre por partes.
 
+## Venta neta (migración 42)
+
+«Ventas Netas» = neto de la API (como Zoho); lo cobrado queda en `importe_cent`. «Net Amount (Local)» de Zoho es el
+`netAmout` del POS, después de la comisión del pago (3 % en APP - WALLET, 17.6 % en Rappi por POS). Ejemplo: el pedido
+29583590 cobró $98.10 y su neto es $95.16; Zoho muestra $95.16. El detalle del contrato está en el doc 01.
+
+### Resultado del piloto (2026-11-05)
+
+- Mostrador + app **exacto en 2025** (4 tiendas, 14 días): venta y tickets idénticos a Zoho.
+- En 2026, tickets ±4 por tienda en 84 días y venta arriba de 0.3 % a 2.8 % por la comisión de la app; corregido con la
+  migración 42 (el BI muestra el neto).
+- Rappi queda pendiente de F3.
+
+### Aplicar la migración 42
+
+La integración de Supabase no aplica migraciones al fusionar (el check sale «skipped»). Se aplica a mano en el SQL
+Editor **y se registra** en el mismo paso:
+
+1. Pegar y ejecutar `supabase/migrations/20261106000042_bi_neto.sql`.
+2. Registrarla:
+
+   ```sql
+   insert into supabase_migrations.schema_migrations (version, name) values ('20261106000042','bi_neto');
+   ```
+
+3. Volver a cortar las fechas del piloto (paso 2 del orden de despliegue) para que las filas traigan el neto; las filas
+   viejas leen el neto como lo cobrado.
+
 ## Cotejo
 
 `scripts/bi/cotejo.ts` (con `lib/bi/cotejo.ts`) lee `bi_lineas` con la llave de servicio, **solo lectura**, y escribe

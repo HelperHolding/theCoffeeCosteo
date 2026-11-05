@@ -127,6 +127,11 @@ Lo que F2 debe cumplir al llamar a `bi_guardar_dia`:
 - **Línea:** `linea` es el índice 1-based de la línea dentro de `PedidoNormal.lineas`, estable entre relecturas.
 - **Código:** `codigo = defaultCode || productName`; la base lo normaliza con `bi_codigo`.
 - **Importe:** `importe_cent = importeLinea(l)` (línea más modificadores, IVA incluido).
+- **Venta neta:** «Ventas Netas» = neto de la API (como Zoho); lo cobrado queda en `importe_cent`. El neto
+  (`importe_neto_cent`) es el `netAmout` del POS, después de la comisión del pago, prorrateado por línea con
+  `netoCent / ventaCent`; la última línea del pedido absorbe el redondeo. Sin `netoCent` (Rappi del portal) o si no se
+  manda, el neto es lo cobrado. `bi_tablero` y `bi_tendencias` suman el neto (y el filtro de monto va sobre el neto de
+  la línea); `kpis.venta_bruta_cent` trae lo cobrado.
 - **Descuento:** `descuento_cent` es un monto en centavos derivado. El `discount` de la línea en el POS es un
   porcentaje y el `amount` ya viene descontado. Si no se puede derivar bien, se manda 0 y se documenta.
 - **Unidades:** cada línea del POS es una unidad.
