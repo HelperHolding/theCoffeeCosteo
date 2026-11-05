@@ -53,7 +53,9 @@ cambió nada en Zoho.
 - **Primera transacción:** es la primera venta en «Looker Sucursales», que empieza el 2024-01-02. Para tener paridad,
   `bi_tiendas.fecha_apertura` se siembra con esa fecha (`origen_apertura = 'zoho'`).
 - **«Default Code» vacío:** 139 de las 335 combinaciones vienen sin código en Zoho (sobre todo App desde 2025). El POS
-  usa entonces el nombre como código (`normalizar.ts`), así que esas líneas se clasifican por nombre normalizado.
+  usa entonces el nombre como código (`normalizar.ts`). El código de clasificación siempre está normalizado (mayúsculas,
+  sin espacios al inicio ni al final y espacios internos colapsados a uno, también U+00A0), tanto en la semilla como en
+  `bi_guardar_dia`, así que esas líneas se clasifican por el nombre normalizado.
 - **Códigos con varias clasificaciones en el tiempo:** la clasificación se versiona por fecha. Por ejemplo,
   `SALFRAAPP` era «Salted Caramel Frappé / Bebida Fría» del 21 al 31 de agosto de 2026 y desde el 1 de septiembre es
   «Salted Caramel Frap / Fraps».

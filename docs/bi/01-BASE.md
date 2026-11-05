@@ -37,7 +37,7 @@ Tablas (migración 40). Todas cerradas al portal: RLS activo y sin permisos para
 | `bi_lineas` | Un renglón por línea de producto: fuente (`pos` o `zoho_rappi`), tienda, fecha, pedido, hora, canal, pago, código, nombre, unidades, importe y descuento. Nunca datos de clientes |
 | `bi_cargas` | Un renglón por fuente, tienda y día cargados, con `completa` y `rappi_en_pos`. Sin renglón = sin datos, nunca cero |
 | `bi_tiendas` | Tienda, franquiciatario, tipo (Sucursales Propias o Franquicia) y `fecha_apertura` |
-| `bi_clasificacion_producto` | Código con `vigente_desde`: categoría Master, grupo, contiene café y promoción |
+| `bi_clasificacion_producto` | Código normalizado (ver `bi_codigo`) con `vigente_desde`: categoría Master, grupo, contiene café y promoción |
 | `bi_mapeo_pago` | Método, tipo y smartphone del POS a la etiqueta de Zoho |
 | `bi_metas`, `bi_punto_equilibrio` | Para F5; todavía vacías |
 
@@ -45,12 +45,13 @@ Funciones:
 
 | Función | Quién la usa | Qué hace |
 |---|---|---|
-| `bi_guardar_dia` | `service_role` | Reemplaza un día de una tienda y fuente en una sola transacción y marca `rappi_en_pos` si el POS trae Rappi. Un `p_lineas` nulo o que no sea arreglo es error |
-| `bi_marcar_rappi_portal` | `service_role` | Marca que ese día el POS ya trae Rappi del portal |
-| `bi_semana`, `bi_anio_semana` | la base | Semana ISO y año de la etiqueta de Zoho |
-| `bi_meses_operando`, `bi_maduracion` | la base | Antigüedad de la tienda contra una fecha |
-| `bi_lineas_filtradas` | la base (cerrada) | Una sola definición de las líneas visibles con los 17 filtros; la usan las dos RPC de lectura |
-| `bi_tablero` | `authenticated` | Cargas, KPIs y cortes por grupo, café, Master, día, hora, pago, tienda, promoción, ranking por mes y fuente |
+| `bi_guardar_dia` | `service_role` | Reemplaza un día de una tienda y fuente en una sola transacción. Guarda `rappi_en_pos = (fuente = 'pos') y (p_rappi_portal o alguna línea de canal rappi)`. Normaliza el código con `bi_codigo`. Un `p_lineas` nulo o que no sea arreglo, o una tienda que no está en `bi_tiendas`, es error. Toma un candado de aviso por fuente, tienda y día |
+| `bi_codigo` | la base | Normaliza el código de producto: mayúsculas, sin espacios al inicio ni al final y espacios internos (también U+00A0) colapsados a uno |
+| `bi_semana`, `bi_anio_semana` | la base | Semana ISO y año de la etiqueta de Zoho. Puras, `sql immutable` y sin `search_path` para que se inlineen |
+| `bi_meses_operando`, `bi_maduracion` | la base | Antigüedad de la tienda contra una fecha. Puras, igual que las anteriores |
+| `bi_tiendas_filtradas` | la base (cerrada) | Las tiendas visibles que pasan los filtros que dependen solo de la tienda (franquiciatarios, tipos, comparable, años operando y maduración), resueltos una vez por consulta y sin duplicados |
+| `bi_lineas_filtradas` | la base (cerrada) | Una sola definición de las líneas visibles con los 17 filtros, con su canal; la usan las dos RPC de lectura |
+| `bi_tablero` | `authenticated` | Cargas, KPIs y cortes por grupo, café, Master, día, hora, pago, tienda, promoción, ranking por mes y fuente con canal (el Rappi del portal es `pos / rappi` y el de Zoho `zoho_rappi / rappi`) |
 | `bi_tendencias` | `authenticated` | Ventas por año y mes y por semana desde 2024-01-01 |
 
 **Acceso:** las dos RPC de lectura filtran las tiendas con `sucursales_acceso`, igual que el resto de Sucursales.
@@ -62,7 +63,7 @@ Semana») ignoran Fecha Relativa, Rango de Fechas y Semanas; `bi_tendencias` hac
 
 ### Semillas (migración 41)
 
-79 tiendas, 325 clasificaciones (320 códigos) y 8 pagos. Idempotente (`on conflict do nothing`).
+79 tiendas, 312 clasificaciones (307 códigos) y 8 pagos. Idempotente (`on conflict do nothing`).
 
 - **Atributos de tienda medidos contra hoy**, como en «Tiendas Comparables» de Zoho:
   - Comparable: 12 meses completos o más.
@@ -87,9 +88,10 @@ El Rappi del portal ya se mezcla con el del POS en `conRappi`. Por eso:
 - Se guarda como fuente `pos` con canal `rappi`.
 - El Rappi de Zoho (fuente `zoho_rappi`) se **ignora** en cualquier día de una tienda cuya carga `pos` tenga
   `rappi_en_pos = true`.
-- `bi_guardar_dia` marca `rappi_en_pos` solo si alguna línea trae canal `rappi`.
-- **F2 debe llamar a `bi_marcar_rappi_portal`** para las tiendas con Rappi del portal en los días sin ventas de Rappi;
-  si no, ese día se sumaría el Rappi de Zoho además del portal.
+- `bi_guardar_dia` guarda `rappi_en_pos = (p_fuente = 'pos') and (p_rappi_portal or hay una línea de canal rappi)`.
+- **F2 pasa `p_rappi_portal = true` en cada guardado `pos`** de una tienda con `rappiPortal`, incluso en los días sin ventas
+  de Rappi; si no, ese día se sumaría el Rappi de Zoho además del portal. Como la marca viaja en el propio guardado, un
+  guardado posterior del mismo día no la borra.
 
 ## Semana de Zoho
 
@@ -107,13 +109,52 @@ Las demás opciones son directas. Estas tres son criterio nuestro, a confirmar c
 - **N semanas anteriores:** solo la semana ISO que quedó N semanas atrás.
 - **Últimos 3 meses:** los 3 meses calendario completos antes del actual.
 
+## Contrato de carga (F2)
+
+Lo que F2 debe cumplir al llamar a `bi_guardar_dia`:
+
+- **Tienda:** debe existir en `bi_tiendas` (alta con `store_id`, nombre, tipo, franquiciatario y `fecha_apertura`)
+  antes de guardar; si no, la base lanza una excepción.
+- **Pedido:** `pedido = String(PedidoNormal.id)`. El POS usa 8 dígitos y el portal de Rappi usa el número de Rappi de
+  10 dígitos; no chocan.
+- **Línea:** `linea` es el índice 1-based de la línea dentro de `PedidoNormal.lineas`, estable entre relecturas.
+- **Código:** `codigo = defaultCode || productName`; la base lo normaliza con `bi_codigo`.
+- **Importe:** `importe_cent = importeLinea(l)` (línea más modificadores, IVA incluido).
+- **Descuento:** `descuento_cent` es un monto en centavos derivado. El `discount` de la línea en el POS es un
+  porcentaje y el `amount` ya viene descontado. Si no se puede derivar bien, se manda 0 y se documenta.
+- **Unidades:** cada línea del POS es una unidad.
+  - El portal de Rappi parte una cantidad n en n líneas.
+  - Las filas de Rappi de Zoho pueden traer cantidad mayor a 1; F3 debe partirlas en n líneas para que el UPT
+    (líneas ÷ tickets) sea comparable.
+  - Si el POS manda unidades negativas (devoluciones), hay que confirmarlo en F2 antes de cargar, porque el check
+    `unidades >= 0` haría fallar el día.
+- **Rappi Turbo:** el portal llega como `RAPPI / RAPPI_PORTAL` (`lib/sucursales/rappi-pos.ts`) sin marca de Turbo. F2
+  debe marcar Turbo (por ejemplo `tipo_pago = 'RAPPI_TURBO'`) según la tienda de Rappi y agregar las filas de mapeo
+  `('RAPPI','RAPPI_PORTAL',false) → 'RAPPI'` y `('RAPPI','RAPPI_TURBO',false) → 'RAPPI TURBO'`. Por ahora solo se
+  documenta; no se cambia código de Sucursales.
+- **Concurrencia:** el cierre de las 5:30 y el corte de cada 10 minutos pueden chocar en el mismo día.
+  `bi_guardar_dia` toma `pg_advisory_xact_lock(hashtext(p_fuente || ':' || p_company || ':' || p_fecha))` al inicio, así
+  que dos guardados del mismo día, tienda y fuente se serializan en vez de fallar.
+- **`p_rappi_portal`:** se pasa en cada guardado `pos` de una tienda con `rappiPortal`.
+
 ## Lo que dejó la clasificación y las semillas
 
-**Productos sin código (139 de 335 combinaciones).** Vienen sin «Default Code» en Zoho, sobre todo de la App desde
-2025. El POS usa el nombre como código (`normalizar.ts`), así que se clasifican por el nombre normalizado (mayúsculas,
-recortado, espacios colapsados). Si la App cambia un nombre, esa línea queda «Sin clasificar».
+**Código de producto (un solo criterio).** El código de clasificación siempre está **normalizado**: mayúsculas, sin
+espacios al inicio ni al final y con los espacios internos colapsados a uno (también el no separable U+00A0).
 
-**Tiendas sin configuración (3).** Zoho tiene tiendas que el POS no configura, así que no se siembran:
+- La base lo garantiza: `bi_guardar_dia` guarda `codigo = bi_codigo(...)` (el `nombre` se queda como vino) y
+  `bi_clasificacion_producto` tiene `check (codigo = bi_codigo(codigo))`.
+- El generador de la migración 41 aplica la misma normalización al `default_code` o al nombre. Las variantes que solo
+  difieren en mayúsculas o espacios («crea tu the coffee», «crea tu the  coffee», «Crea Tu The Coffee») se pliegan en un
+  código: las de clasificación idéntica se unen; las que difieren se versionan por fecha y, si empatan, se reportan en
+  `conflictos`.
+
+**Productos sin código (139 de 335 combinaciones).** Vienen sin «Default Code» en Zoho, sobre todo de la App desde
+2025. El POS usa el nombre como código (`normalizar.ts`), así que se clasifican por el nombre normalizado. Si la App
+cambia un nombre, esa línea queda «Sin clasificar».
+
+**Tiendas sin configuración (3).** Zoho tiene tiendas que el POS no configura, así que no se siembran (una tienda sin
+fila en `bi_tiendas` hace fallar `bi_guardar_dia`):
 
 | Store ID | Tienda | Pedidos en Zoho |
 |---|---|---|
@@ -121,8 +162,8 @@ recortado, espacios colapsados). Si la App cambia un nombre, esa línea queda «
 | 377 | Correo 37 | 2,158 |
 | 680 | Unknown | 1 |
 
-Cierran la cuenta: **el historial del BI quedará unas 9 mil órdenes por debajo de Zoho** por las dos tiendas cerradas.
-Hay que tenerlo presente en la comparación del piloto.
+Son 3 tiendas sin configurar y «Unknown» (680) tiene 1 pedido: **el historial del BI quedará unas 9 mil órdenes por
+debajo de Zoho** (Hernández Macías y Correo 37). Hay que tenerlo presente en la comparación del piloto.
 
 **Eat Here / To Go.** La API del POS **no lo da**. `opcion_consumo` queda nulo en las líneas del POS y el «Ajuste
 desechable Eat Here» de Zoho no se puede replicar. Es una pregunta abierta para el proveedor.
@@ -130,11 +171,11 @@ desechable Eat Here» de Zoho no se puede replicar. Es una pregunta abierta para
 ## Límites conocidos
 
 - Una llave `null` en el JSON de filtros da error. Es a propósito (falla cerrado); `aJsonRpc` ya quita los nulos.
-- `cargas` ignora los filtros de tienda y las compañías repetidas.
+- `cargas` cuenta solo las tiendas que pasan los filtros de tienda, sin repetidas, y por tienda solo de su apertura a hoy.
 - La clasificación se busca por línea y `bi_tendencias` lee todas las líneas desde 2024. El rendimiento se mide en el
   piloto, con meta de 3 s o menos; si no llega, se agrega un agregado diario.
 - `por_cafe` muestra «Sin dato» y ese valor no se puede filtrar.
-- Dos guardados del mismo día de una tienda al mismo tiempo pueden chocar: uno falla.
+- Dos guardados del mismo día de una tienda al mismo tiempo se serializan con un candado de aviso (ver «Contrato de carga (F2)»).
 
 ## Qué sigue
 
@@ -142,14 +183,14 @@ desechable Eat Here» de Zoho no se puede replicar. Es una pregunta abierta para
    - leer las líneas del corte;
    - script de historial;
    - piloto con 6 tiendas, comparado contra Zoho;
-   - marcar el Rappi del portal.
+   - pasar `p_rappi_portal` en cada guardado `pos` de las tiendas con portal.
 2. **F3 · Rappi de Zoho:** importar su historial (`zoho_rappi`).
 3. **F4 · Tablero:** la pantalla con los 17 filtros.
 4. **F5 · Metas y punto de equilibrio:** captura en `bi_metas` y `bi_punto_equilibrio`.
 
 ## Pruebas
 
-- `tests/db/bi-base.test.ts`: tablas, permisos, `bi_guardar_dia`, semana, maduración y marca de Rappi.
+- `tests/db/bi-base.test.ts`: tablas, permisos, `bi_guardar_dia`, tienda sin alta, `bi_codigo`, semana, maduración y marca de Rappi (`p_rappi_portal`).
 - `tests/db/bi-lectura.test.ts`: los 17 filtros, acceso por sucursal y Rappi sin doble conteo.
-- `tests/db/bi-semillas.test.ts` y `tests/portal/bi-semillas.test.ts`: la migración 41 y el generador.
+- `tests/db/bi-semillas.test.ts` y `tests/portal/bi-semillas.test.ts`: la migración 41 y el generador (incluye la prueba de que la migración coincide con lo que genera el script desde `docs/bi/zoho/`).
 - `tests/portal/bi-filtros.test.ts`: Fecha Relativa y `aJsonRpc`.
