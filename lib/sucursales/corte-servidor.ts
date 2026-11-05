@@ -1,7 +1,8 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { sucursalesConfiguradas, type ConfigSucursal } from './config';
-import { conRappi, hoyLocal, leerVentana, type FuenteRappi } from './datos';
+import { lineasBi } from '../bi/lineas';
+import { conRappi, hoyLocal, leerVentana, type FuenteRappi, type LecturaNormal } from './datos';
 import type { CatalogoNombres } from './metricas';
 import type { PedidoNormal } from './normalizar';
 import type { PedidoRappi } from './rappi-portal';
@@ -106,6 +107,33 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
   };
 }
 
+/**
+ * Da de alta en bi_tiendas las sucursales configuradas que faltan (la RPC bi_guardar_dia lanza si la tienda no existe).
+ * Una tienda nueva entra como 'Franquicia' sin franquiciatario: si fuera propia, se corrige a mano (docs/bi/02-CARGA.md).
+ * Nunca pisa una fila existente. Devuelve los company_id dados de alta; si algo falla, lanza.
+ */
+export async function asegurarTiendasBi(db: Servicio, sucursales: ConfigSucursal[]): Promise<number[]> {
+  const r = await db.from('bi_tiendas').select('company_id');
+  if (r.error || !r.data) throw new Error(r.error?.message ?? 'sin respuesta');
+  const existentes = new Set((r.data as { company_id: number }[]).map((x) => x.company_id));
+  const faltantes = sucursales.filter((c) => !existentes.has(c.companyId));
+  if (!faltantes.length) return [];
+  const alta = await db.from('bi_tiendas').upsert(
+    faltantes.map((c) => ({
+      company_id: c.companyId,
+      store_id: c.lookerStoreId,
+      nombre: c.nombre,
+      franquiciatario: null,
+      tipo: 'Franquicia',
+      fecha_apertura: null,
+      origen_apertura: null,
+    })),
+    { onConflict: 'company_id', ignoreDuplicates: true },
+  );
+  if (alta.error) throw new Error(alta.error.message);
+  return faltantes.map((c) => c.companyId);
+}
+
 export interface ResultadoCorte {
   fechas: string;
   sucursales: number;
@@ -113,6 +141,8 @@ export interface ResultadoCorte {
   completas: number;
   fallidas: { companyId: number; fecha: string; motivo: string }[];
   ms: number;
+  /** Guardado de las líneas del BI (docs/bi/01-BASE.md): una falla aquí nunca detiene el corte. */
+  bi: { guardados: number; fallidos: { companyId: number; fecha: string; motivo: string }[]; altas: number[] };
 }
 
 /**
@@ -125,12 +155,33 @@ export async function cortar(
     dias = 1,
     fechas,
     sucursales = sucursalesConfiguradas,
-  }: { dias?: number; fechas?: string[]; sucursales?: ConfigSucursal[] } = {},
+    leer = async (cfg, fecha, corte) =>
+      conRappi(await leerVentana(cfg, fecha, fecha, { forzar: corte < 86400 }), rappiServicio(db, cfg)),
+  }: {
+    dias?: number;
+    fechas?: string[];
+    sucursales?: ConfigSucursal[];
+    /** Lectura de un día; se inyecta en las pruebas. Por omisión, la misma que la página de la sucursal. */
+    leer?: (cfg: ConfigSucursal, fecha: string, corte: number) => Promise<LecturaNormal>;
+  } = {},
 ): Promise<ResultadoCorte> {
   const inicio = new Date();
   const cat = await catalogoServicio(db);
   const filas: FilaResumen[] = [];
   const fallidas: ResultadoCorte['fallidas'] = [];
+  const biFallidos: ResultadoCorte['bi']['fallidos'] = [];
+  let biGuardados = 0;
+  let altas: number[] = [];
+  try {
+    altas = await asegurarTiendasBi(db, sucursales);
+  } catch (e) {
+    // El BI de este corte se intenta igual: la base lanzará por cada tienda que falte.
+    biFallidos.push({
+      companyId: 0,
+      fecha: '*',
+      motivo: `altas de tiendas: ${e instanceof Error ? e.message : String(e)}`,
+    });
+  }
   const trabajos = sucursales.flatMap((cfg) => {
     const ahora = hoyLocal(cfg);
     const fs = fechas ?? Array.from({ length: dias }, (_, i) => sumarDias(ahora.fecha, -i));
@@ -143,10 +194,7 @@ export async function cortar(
   // días sin leer en el primer bloque).
   const cortarUno = async ({ cfg, fecha, corte }: (typeof trabajos)[number]) => {
     const leidoEn = new Date();
-    const l = await conRappi(
-      await leerVentana(cfg, fecha, fecha, { forzar: corte < 86400 }),
-      rappiServicio(db, cfg),
-    );
+    const l = await leer(cfg, fecha, corte);
     if (l.estado === 'error') {
       fallidas.push({ companyId: cfg.companyId, fecha, motivo: l.error ?? 'error' });
       return;
@@ -162,6 +210,21 @@ export async function cortar(
         catalogo: cat,
       }),
     );
+    try {
+      const r = await db.rpc('bi_guardar_dia', {
+        p_fuente: 'pos',
+        p_company: cfg.companyId,
+        p_fecha: fecha,
+        p_completa: l.estado === 'completa',
+        p_leido_en: leidoEn.toISOString(),
+        p_lineas: lineasBi(l.pedidos),
+        p_rappi_portal: !!cfg.rappiPortal,
+      });
+      if (r.error) biFallidos.push({ companyId: cfg.companyId, fecha, motivo: r.error.message });
+      else biGuardados++;
+    } catch (e) {
+      biFallidos.push({ companyId: cfg.companyId, fecha, motivo: e instanceof Error ? e.message : String(e) });
+    }
   };
   let siguiente = 0;
   await Promise.all(
@@ -188,18 +251,19 @@ export async function cortar(
     completas,
     fallidas,
     ms: Date.now() - inicio.getTime(),
+    bi: { guardados: biGuardados, fallidos: biFallidos, altas },
   };
+  const detalle = (f: { companyId: number; fecha: string; motivo: string }) => `${f.companyId} ${f.fecha} (${f.motivo})`;
+  const mensajes = [
+    fallidas.length ? `Sin leer: ${fallidas.map(detalle).join(', ')}` : null,
+    biFallidos.length ? `BI sin guardar: ${biFallidos.map(detalle).join(', ')}` : null,
+  ].filter(Boolean);
   await db.from('sucursales_cortes').insert({
     inicio: inicio.toISOString(),
     fechas: resultado.fechas,
     sucursales: resultado.sucursales,
     completas,
-    mensaje: fallidas.length
-      ? `Sin leer: ${fallidas.map((f) => `${f.companyId} ${f.fecha} (${f.motivo})`).join(', ')}`.slice(
-          0,
-          1000,
-        )
-      : null,
+    mensaje: mensajes.length ? mensajes.join(' | ').slice(0, 1000) : null,
   });
   return resultado;
 }
