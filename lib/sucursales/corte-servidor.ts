@@ -110,28 +110,47 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
 /**
  * Da de alta en bi_tiendas las sucursales configuradas que faltan (la RPC bi_guardar_dia lanza si la tienda no existe).
  * Una tienda nueva entra como 'Franquicia' sin franquiciatario: si fuera propia, se corrige a mano (docs/bi/02-CARGA.md).
- * Nunca pisa una fila existente. Devuelve los company_id dados de alta; si algo falla, lanza.
+ * Nunca pisa una fila existente. Inserta de una en una: una fila mala (p. ej. store_id repetido) no frena a las demás.
+ * Devuelve los company_id dados de alta y las que fallaron; si falla la consulta inicial, lanza.
  */
-export async function asegurarTiendasBi(db: Servicio, sucursales: ConfigSucursal[]): Promise<number[]> {
+export async function asegurarTiendasBi(
+  db: Servicio,
+  sucursales: ConfigSucursal[],
+): Promise<{ altas: number[]; fallidos: { companyId: number; fecha: string; motivo: string }[] }> {
   const r = await db.from('bi_tiendas').select('company_id');
   if (r.error || !r.data) throw new Error(r.error?.message ?? 'sin respuesta');
   const existentes = new Set((r.data as { company_id: number }[]).map((x) => x.company_id));
   const faltantes = sucursales.filter((c) => !existentes.has(c.companyId));
-  if (!faltantes.length) return [];
-  const alta = await db.from('bi_tiendas').upsert(
-    faltantes.map((c) => ({
-      company_id: c.companyId,
-      store_id: c.lookerStoreId,
-      nombre: c.nombre,
-      franquiciatario: null,
-      tipo: 'Franquicia',
-      fecha_apertura: null,
-      origen_apertura: null,
-    })),
-    { onConflict: 'company_id', ignoreDuplicates: true },
-  );
-  if (alta.error) throw new Error(alta.error.message);
-  return faltantes.map((c) => c.companyId);
+  const altas: number[] = [];
+  const fallidos: { companyId: number; fecha: string; motivo: string }[] = [];
+  for (const c of faltantes) {
+    try {
+      const alta = await db.from('bi_tiendas').upsert(
+        [
+          {
+            company_id: c.companyId,
+            store_id: c.lookerStoreId,
+            nombre: c.nombre,
+            franquiciatario: null,
+            tipo: 'Franquicia',
+            fecha_apertura: null,
+            origen_apertura: null,
+          },
+        ],
+        { onConflict: 'company_id', ignoreDuplicates: true },
+      );
+      if (alta.error)
+        fallidos.push({ companyId: c.companyId, fecha: '*', motivo: `alta de tienda: ${alta.error.message}` });
+      else altas.push(c.companyId);
+    } catch (e) {
+      fallidos.push({
+        companyId: c.companyId,
+        fecha: '*',
+        motivo: `alta de tienda: ${e instanceof Error ? e.message : String(e)}`,
+      });
+    }
+  }
+  return { altas, fallidos };
 }
 
 export interface ResultadoCorte {
@@ -173,13 +192,15 @@ export async function cortar(
   let biGuardados = 0;
   let altas: number[] = [];
   try {
-    altas = await asegurarTiendasBi(db, sucursales);
+    const a = await asegurarTiendasBi(db, sucursales);
+    altas = a.altas;
+    biFallidos.push(...a.fallidos);
   } catch (e) {
     // El BI de este corte se intenta igual: la base lanzará por cada tienda que falte.
     biFallidos.push({
       companyId: 0,
       fecha: '*',
-      motivo: `altas de tiendas: ${e instanceof Error ? e.message : String(e)}`,
+      motivo: `consulta de tiendas: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
   const trabajos = sucursales.flatMap((cfg) => {
@@ -255,15 +276,15 @@ export async function cortar(
   };
   const detalle = (f: { companyId: number; fecha: string; motivo: string }) => `${f.companyId} ${f.fecha} (${f.motivo})`;
   const mensajes = [
-    fallidas.length ? `Sin leer: ${fallidas.map(detalle).join(', ')}` : null,
-    biFallidos.length ? `BI sin guardar: ${biFallidos.map(detalle).join(', ')}` : null,
+    fallidas.length ? `Sin leer: ${fallidas.map(detalle).join(', ')}`.slice(0, 500) : null,
+    biFallidos.length ? `BI sin guardar: ${biFallidos.map(detalle).join(', ')}`.slice(0, 500) : null,
   ].filter(Boolean);
   await db.from('sucursales_cortes').insert({
     inicio: inicio.toISOString(),
     fechas: resultado.fechas,
     sucursales: resultado.sucursales,
     completas,
-    mensaje: mensajes.length ? mensajes.join(' | ').slice(0, 1000) : null,
+    mensaje: mensajes.length ? mensajes.join(' | ') : null,
   });
   return resultado;
 }

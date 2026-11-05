@@ -3,6 +3,8 @@ vi.mock('server-only', () => ({}));
 import { asegurarTiendasBi, cortar, rappiServicio } from '../../lib/sucursales/corte-servidor';
 import { sucursalesConfiguradas } from '../../lib/sucursales/config';
 import type { LecturaNormal } from '../../lib/sucursales/datos';
+import { lineasBi } from '../../lib/bi/lineas';
+import type { PedidoNormal } from '../../lib/sucursales/normalizar';
 
 const fila = (id: string, tienda: string, canal: string | null) => ({
   rappi_pedido_id: id,
@@ -46,7 +48,7 @@ describe('rappiServicio: Turbo', () => {
 });
 
 // Cliente falso del corte: registra el orden de las llamadas a rpc, upsert, insert y update.
-const clienteCorte = (opts: { existentes?: number[]; rpcError?: string } = {}) => {
+const clienteCorte = (opts: { existentes?: number[]; rpcError?: string; altaFalla?: number[] } = {}) => {
   const llamadas: { que: string; tabla?: string; args?: unknown; opts?: unknown }[] = [];
   const respuestaSelect = { data: (opts.existentes ?? []).map((company_id) => ({ company_id })), error: null };
   const db = {
@@ -55,7 +57,12 @@ const clienteCorte = (opts: { existentes?: number[]; rpcError?: string } = {}) =
         const r = Promise.resolve(tabla === 'bi_tiendas' ? respuestaSelect : { data: [], error: null });
         return Object.assign(r, { order: () => ({ range: async () => ({ data: [], error: null }) }) });
       },
-      upsert: async (args: unknown, o?: unknown) => (llamadas.push({ que: 'upsert', tabla, args, opts: o }), { error: null }),
+      upsert: async (args: unknown, o?: unknown) => {
+        llamadas.push({ que: 'upsert', tabla, args, opts: o });
+        const id = (args as { company_id?: number }[])[0]?.company_id;
+        const falla = tabla === 'bi_tiendas' && id !== undefined && (opts.altaFalla ?? []).includes(id);
+        return { error: falla ? { message: 'store_id duplicado' } : null };
+      },
       insert: async (args: unknown) => (llamadas.push({ que: 'insert', tabla, args }), { error: null }),
       update: (args: unknown) => (
         llamadas.push({ que: 'update', tabla, args }),
@@ -81,6 +88,13 @@ const lectura = (estado: LecturaNormal['estado'], error: LecturaNormal['error'] 
   pedidos: [],
 });
 
+const pedidoPrueba = (id: number, extra: Partial<PedidoNormal> = {}): PedidoNormal => ({
+  id, fecha: '2020-01-01', segundo: 36000, hora: '10:00:00', origen: 'mostrador', ventaCent: 0, netoCent: null,
+  descuentoCent: 0, metodo: 'CARTAO', tipo: 'EMV', numeroPedidoRappi: null, cuadra: true,
+  lineas: [{ codigo: 'LAT', nombre: 'Latte', importeCent: 5000, descuentoPct: 0, customs: [] }],
+  ...extra,
+});
+
 const base = sucursalesConfiguradas[0];
 const cfg = (rappiPortal: boolean) => ({ ...base, rappiPortal });
 
@@ -102,6 +116,35 @@ describe('cortar: guarda también el BI', () => {
       });
       expect(r.bi).toEqual({ guardados: 1, fallidos: [], altas: [] });
     }
+  });
+
+  it('p_lineas trae las líneas reales y p_leido_en es el mismo instante que leido_en del resumen', async () => {
+    const pedidos = [
+      pedidoPrueba(1, {
+        lineas: [
+          {
+            codigo: 'LAT', nombre: 'Latte', importeCent: 5000, descuentoPct: 0,
+            customs: [{ codigo: 'OAT', nombre: 'Leche de avena', importeCent: 800, descuentoPct: 0 }],
+          },
+        ],
+      }),
+      pedidoPrueba(2, { segundo: 50000, origen: 'app', metodo: 'PIX', tipo: 'ONLINE' }),
+    ];
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId] });
+    await cortar(db, {
+      fechas: ['2020-01-01'],
+      sucursales: [cfg(false)],
+      leer: async () => ({ ...lectura('completa'), pedidos }),
+    });
+    const rpc = llamadas.find((l) => l.que === 'rpc')!.args as { p_lineas: unknown; p_leido_en: string };
+    expect(rpc.p_lineas).toEqual(lineasBi(pedidos));
+    expect((rpc.p_lineas as { importe_cent: number }[])[0].importe_cent).toBe(5800);
+    const filas = llamadas.find((l) => l.que === 'upsert' && l.tabla === 'sucursales_resumen_dia')!.args as {
+      company_id: number; fecha: string; leido_en: string;
+    }[];
+    const fila = filas.find((f) => f.company_id === base.companyId && f.fecha === '2020-01-01')!;
+    expect(new Date(rpc.p_leido_en).toISOString()).toBe(rpc.p_leido_en);
+    expect(rpc.p_leido_en).toBe(fila.leido_en);
   });
 
   it('un día con estado error no llama a bi_guardar_dia', async () => {
@@ -137,6 +180,22 @@ describe('cortar: guarda también el BI', () => {
     expect(r.bi.fallidos[0].motivo).toBe('sin red');
   });
 
+  it('cada parte del mensaje tiene su propio tope: muchas «Sin leer» no ocultan «BI sin guardar»', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId], rpcError: 'x' });
+    const muchas = Array.from({ length: 60 }, (_, i) => `2019-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`);
+    await cortar(db, {
+      fechas: ['2020-01-01', ...muchas],
+      sucursales: [cfg(false)],
+      leer: async (_c, f) =>
+        f === '2020-01-01' ? lectura('completa') : lectura('error', 'red-muy-larga-para-llenar-el-mensaje' as never),
+    });
+    const corte = llamadas.find((l) => l.que === 'insert' && l.tabla === 'sucursales_cortes')!;
+    const mensaje = (corte.args as { mensaje: string }).mensaje;
+    expect(mensaje.length).toBeLessThanOrEqual(1003);
+    expect(mensaje.startsWith('Sin leer: ')).toBe(true);
+    expect(mensaje).toContain(' | BI sin guardar: ');
+  });
+
   it('da de alta las tiendas faltantes antes de los guardados', async () => {
     const { db, llamadas } = clienteCorte({ existentes: [] });
     const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(false)], leer: async () => lectura('completa') });
@@ -145,6 +204,17 @@ describe('cortar: guarda también el BI', () => {
     expect(iAlta).toBeGreaterThanOrEqual(0);
     expect(iAlta).toBeLessThan(iRpc);
     expect(r.bi.altas).toEqual([base.companyId]);
+  });
+
+  it('un alta que falla queda en bi.fallidos con su companyId y no frena las demás ni el corte', async () => {
+    const [a, b] = sucursalesConfiguradas;
+    const { db } = clienteCorte({ existentes: [], altaFalla: [a.companyId] });
+    const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [a, b], leer: async () => lectura('completa') });
+    expect(r.bi.altas).toEqual([b.companyId]);
+    expect(r.bi.fallidos.filter((f) => f.fecha === '*')).toEqual([
+      { companyId: a.companyId, fecha: '*', motivo: 'alta de tienda: store_id duplicado' },
+    ]);
+    expect(r.escritas).toBe(2);
   });
 
   it('dos cortes seguidos del mismo día llaman dos veces a bi_guardar_dia (el reemplazo es de la base)', async () => {
@@ -159,8 +229,9 @@ describe('asegurarTiendasBi', () => {
   it('hace upsert con ignoreDuplicates solo de las faltantes, como Franquicia sin franquiciatario', async () => {
     const [a, b] = sucursalesConfiguradas;
     const { db, llamadas } = clienteCorte({ existentes: [a.companyId] });
-    const altas = await asegurarTiendasBi(db, [a, b]);
+    const { altas, fallidos } = await asegurarTiendasBi(db, [a, b]);
     expect(altas).toEqual([b.companyId]);
+    expect(fallidos).toEqual([]);
     const up = llamadas.find((l) => l.que === 'upsert')!;
     expect(up.tabla).toBe('bi_tiendas');
     expect(up.opts).toEqual({ onConflict: 'company_id', ignoreDuplicates: true });
@@ -180,7 +251,7 @@ describe('asegurarTiendasBi', () => {
   it('sin faltantes no escribe nada', async () => {
     const [a] = sucursalesConfiguradas;
     const { db, llamadas } = clienteCorte({ existentes: [a.companyId] });
-    expect(await asegurarTiendasBi(db, [a])).toEqual([]);
+    expect(await asegurarTiendasBi(db, [a])).toEqual({ altas: [], fallidos: [] });
     expect(llamadas.some((l) => l.que === 'upsert')).toBe(false);
   });
 });
