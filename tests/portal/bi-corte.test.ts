@@ -291,6 +291,28 @@ describe('cortar: un BI lento no tumba el resumen', () => {
     expect(r.escritas).toBe(2);
   });
 
+  it('con presupuesto infinito (script de historial) no se omite ningún guardado, aunque pase el tiempo', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId] });
+    const fs = Array.from({ length: 30 }, (_, i) => `2020-01-${String(i + 1).padStart(2, '0')}`);
+    vi.useFakeTimers();
+    try {
+      const r = await cortar(db, {
+        fechas: fs,
+        sucursales: [cfg(false)],
+        leer: async () => {
+          vi.setSystemTime(Date.now() + 3_600_000);
+          return lectura('completa');
+        },
+        biPresupuestoMs: Number.POSITIVE_INFINITY,
+      });
+      expect(llamadas.filter((l) => l.que === 'rpc')).toHaveLength(30);
+      expect(r.bi.guardados).toBe(30);
+      expect(r.bi.fallidos.filter((f) => f.motivo === 'sin tiempo')).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('con BI_CARGA=0 no hay llamadas al BI y bi viene en ceros', async () => {
     vi.stubEnv('BI_CARGA', '0');
     try {

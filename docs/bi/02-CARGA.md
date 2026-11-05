@@ -28,6 +28,8 @@ Cada corte que guarda un día de una sucursal en `sucursales_resumen_dia` guarda
 - **Orden y tiempos del corte.** Primero se leen los días, luego se guarda el resumen y, al final, el BI (de 4 en 4). Cada
   guardado del BI tiene 15 s de límite y, pasados 240 s desde el inicio del corte, los que faltan quedan en `bi.fallidos`
   como «sin tiempo». Un BI lento nunca pierde el resumen ni la fila de `sucursales_cortes`.
+- **Script de historial.** `scripts/sucursales/corte.ts` no tiene presupuesto total (el de 240 s es del límite de Vercel),
+  solo el tiempo límite de cada guardado.
 - **Interruptor.** `BI_CARGA=0` en las variables de Vercel apaga toda escritura del BI (altas de tiendas y guardados) sin
   revertir el despliegue; `bi` sale en ceros. Quitar la variable (o ponerla en otro valor) la reanuda.
 - **Nota sobre el cierre de las 5:30.** Ahora también guarda 8 días × 79 tiendas en el BI. Se estima de 20 a 60 s más.
