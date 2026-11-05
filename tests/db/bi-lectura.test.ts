@@ -15,8 +15,8 @@ const servicio = async (sql: string, params: unknown[] = []) => {
   await db.exec('set role service_role');
   try { return await db.query(sql, params); } finally { await db.exec('reset role'); }
 };
-const guardar = (fuente: string, c: number, f: string, ls: unknown[], completa = true) =>
-  servicio('select public.bi_guardar_dia($1,$2,$3,$4,now(),$5)', [fuente, c, f, completa, JSON.stringify(ls)]);
+const guardar = (fuente: string, c: number, f: string, ls: unknown[], completa = true, rappiPortal = false) =>
+  servicio('select public.bi_guardar_dia($1,$2,$3,$4,now(),$5,$6)', [fuente, c, f, completa, JSON.stringify(ls), rappiPortal]);
 type T = Record<string, any>;
 const tablero = (user: string, p: Record<string, unknown>) =>
   comoUsuario(db, user, async () => (await db.query<{ r: T }>('select public.bi_tablero($1) r', [JSON.stringify(p)])).rows[0].r);
@@ -79,7 +79,12 @@ describe('bi_tablero', () => {
 
   it('Rappi de Zoho solo donde el POS no trae Rappi ese día', async () => {
     const r = await tablero(u, base);
-    expect(r.fuentes).toEqual(expect.arrayContaining([{ fuente: 'zoho_rappi', venta_cent: 4000 }]));
+    // Se distingue el Rappi del portal (pos / rappi) del de Zoho (zoho_rappi / rappi).
+    expect(r.fuentes).toEqual([
+      { fuente: 'pos', canal: 'mostrador', venta_cent: 8000 + 5000 + 8000 + 7000 + 8000 },
+      { fuente: 'pos', canal: 'rappi', venta_cent: 9000 },
+      { fuente: 'zoho_rappi', canal: 'rappi', venta_cent: 4000 },
+    ]);
     expect(r.kpis.tickets).toBe(6); // A, B, R1, C, ZR2, D
   });
 
@@ -102,6 +107,29 @@ describe('bi_tablero', () => {
   it('dice qué días no tienen carga (nunca cero)', async () => {
     const r = await tablero(u, base);
     expect(r.cargas).toEqual({ esperados: 4, con_carga: 3, incompletos: 1 });
+  });
+
+  it('compañías duplicadas no inflen cargas ni ventas', async () => {
+    const r = await tablero(u, { ...base, companias: [513, 513, 384, 384] });
+    expect(r.cargas).toEqual({ esperados: 4, con_carga: 3, incompletos: 1 });
+    expect(r.kpis.venta_cent).toBe(8000 + 5000 + 8000 + 9000 + 7000 + 4000 + 8000);
+  });
+
+  it('cargas solo cuenta tiendas que pasan los filtros de tienda', async () => {
+    const h = { ...base, hoy: '2026-10-06' };
+    expect((await tablero(u, { ...h, tipos: ['Franquicia'] })).cargas).toEqual({ esperados: 0, con_carga: 0, incompletos: 0 });
+    expect((await tablero(u, { ...h, tipos: ['Sucursales Propias'] })).cargas.esperados).toBe(4);
+    // hoy = 2025-01-01: solo Ventura (13 meses) es comparable.
+    expect((await tablero(u, { ...base, hoy: '2025-01-01', comparable: true })).cargas.esperados).toBe(0);
+  });
+
+  it('cargas recorta cada tienda a [apertura, hoy]: ni días previos a abrir ni futuros son faltantes', async () => {
+    // Ruben Darío (532) abre el 2025-01-10; el rango empieza antes.
+    const antes = await tablero(otro, { desde: '2025-01-08', hasta: '2025-01-12', companias: [532], hoy: '2026-10-06' });
+    expect(antes.cargas.esperados).toBe(3); // 10, 11 y 12 de enero
+    // Hoy es 2026-10-05: el 6 de octubre todavía no llega.
+    const futuro = await tablero(u, { ...base, hoy: '2026-10-05' });
+    expect(futuro.cargas).toEqual({ esperados: 2, con_carga: 2, incompletos: 0 });
   });
 
   it('rechaza rangos inválidos', async () => {

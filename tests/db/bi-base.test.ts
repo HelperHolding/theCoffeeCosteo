@@ -23,16 +23,24 @@ const linea = (pedido: string, n: number, extra: Record<string, unknown> = {}) =
   descuento_cent: 0,
   ...extra,
 });
-const guardar = async (fuente: string, company: number, fecha: string, lineas: unknown[], completa = true) => {
+const guardar = async (
+  fuente: string,
+  company: number,
+  fecha: string,
+  lineas: unknown[],
+  completa = true,
+  rappiPortal = false,
+) => {
   await db.exec('set role service_role');
   try {
     return (
-      await db.query<{ n: number }>('select public.bi_guardar_dia($1, $2, $3, $4, now(), $5) n', [
+      await db.query<{ n: number }>('select public.bi_guardar_dia($1, $2, $3, $4, now(), $5, $6) n', [
         fuente,
         company,
         fecha,
         completa,
         JSON.stringify(lineas),
+        rappiPortal,
       ])
     ).rows[0].n;
   } finally {
@@ -166,17 +174,67 @@ describe('semana y maduración como en Zoho', () => {
     const sinRef = await db.query<{ m: string | null }>(`select public.bi_maduracion('2026-01-01', null) m`);
     expect(sinRef.rows[0].m).toBeNull();
   });
-  it('marca Rappi del portal en un día sin ventas Rappi (solo servicio)', async () => {
-    await guardar('pos', 513, '2026-10-03', [linea('1', 1)]);
-    await expect(
-      comoUsuario(db, u, () => db.query(`select public.bi_marcar_rappi_portal(513, '2026-10-03')`)),
-    ).rejects.toThrow(/permission denied/);
-    await db.exec('set role service_role');
-    await db.query(`select public.bi_marcar_rappi_portal(513, '2026-10-03')`);
-    await db.exec('reset role');
-    const c = await db.query<{ r: boolean }>(
-      `select rappi_en_pos r from bi_cargas where fuente='pos' and company_id=513 and fecha='2026-10-03'`,
+});
+
+describe('marca de Rappi del portal (p_rappi_portal)', () => {
+  const marca = async (fecha: string) =>
+    (await db.query<{ r: boolean }>(`select rappi_en_pos r from bi_cargas where fuente='pos' and company_id=513 and fecha=$1`, [fecha]))
+      .rows[0].r;
+  it('con p_rappi_portal y sin líneas Rappi deja rappi_en_pos en true; un segundo guardado del día la conserva', async () => {
+    await guardar('pos', 513, '2026-10-03', [linea('1', 1)], true, true);
+    expect(await marca('2026-10-03')).toBe(true);
+    await guardar('pos', 513, '2026-10-03', [linea('1', 1), linea('2', 1)], true, true);
+    expect(await marca('2026-10-03')).toBe(true);
+  });
+  it('con false y sin líneas Rappi lo deja en false; la fuente zoho_rappi nunca lo marca', async () => {
+    await guardar('pos', 513, '2026-10-04', [linea('1', 1)], true, false);
+    expect(await marca('2026-10-04')).toBe(false);
+    await guardar('zoho_rappi', 513, '2026-10-04', [linea('R1', 1, { canal: 'rappi' })], true, true);
+    const z = await db.query<{ r: boolean }>(
+      `select rappi_en_pos r from bi_cargas where fuente='zoho_rappi' and company_id=513 and fecha='2026-10-04'`,
     );
-    expect(c.rows[0].r).toBe(true);
+    expect(z.rows[0].r).toBe(false);
+  });
+  it('bi_marcar_rappi_portal ya no existe', async () => {
+    const r = await db.query(`select 1 from pg_proc where proname = 'bi_marcar_rappi_portal'`);
+    expect(r.rows.length).toBe(0);
+  });
+});
+
+describe('tienda sin fila en bi_tiendas', () => {
+  it('guardar falla con un mensaje claro y no deja líneas ni carga', async () => {
+    await expect(guardar('pos', 999, '2026-10-20', [linea('1', 1)])).rejects.toThrow(/no está en bi_tiendas/);
+    const l = await db.query(`select 1 from bi_lineas where company_id = 999`);
+    const c = await db.query(`select 1 from bi_cargas where company_id = 999`);
+    expect([l.rows.length, c.rows.length]).toEqual([0, 0]);
+  });
+});
+
+describe('contrato del código de producto (bi_codigo)', () => {
+  it('mayúsculas, recorta, colapsa espacios internos y U+00A0', async () => {
+    const r = await db.query<{ c: string }>(
+      `select public.bi_codigo('  crea tu the  coffee' || chr(160) || ' ') c union all select public.bi_codigo('5il')
+       union all select public.bi_codigo('a' || chr(160) || chr(160) || 'b' || chr(9) || ' c')`,
+    );
+    expect(r.rows.map((x) => x.c)).toEqual(['CREA TU THE COFFEE', '5IL', 'A B C']);
+  });
+  it('es idempotente', async () => {
+    const r = await db.query<{ ok: boolean }>(
+      `select public.bi_codigo(public.bi_codigo(E' x  y ')) = public.bi_codigo(E' x  y ') ok`,
+    );
+    expect(r.rows[0].ok).toBe(true);
+  });
+  it('bi_guardar_dia guarda el código normalizado y deja el nombre como vino; la semilla lo clasifica', async () => {
+    await guardar('pos', 513, '2026-10-21', [linea('1', 1, { codigo: 'crea tu the  coffee', nombre: 'crea tu the  coffee' })]);
+    const r = await db.query<{ codigo: string; nombre: string; categoria: string }>(
+      `select l.codigo, l.nombre, c.categoria_master categoria from bi_lineas l
+       join bi_clasificacion_producto c on c.codigo = l.codigo where l.company_id = 513 and l.fecha = '2026-10-21'`,
+    );
+    expect(r.rows).toEqual([{ codigo: 'CREA TU THE COFFEE', nombre: 'crea tu the  coffee', categoria: 'Combo con Sandwich' }]);
+  });
+  it('la clasificación no admite códigos sin normalizar', async () => {
+    await expect(
+      db.query(`insert into bi_clasificacion_producto (codigo, vigente_desde, categoria_master, grupo, origen) values ('abc', '2026-01-01', 'X', 'Otros', 't')`),
+    ).rejects.toThrow();
   });
 });
