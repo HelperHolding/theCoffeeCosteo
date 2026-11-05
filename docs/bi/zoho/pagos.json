@@ -1,0 +1,20 @@
+{
+  "extraidoEn": "2026-11-05",
+  "metodo": "Pedidos del 2026-11-03 de Polanco (545 / Store ID 432) y Rubén Darío (532 / Store ID 455) leídos de la API del POS (solo lectura, OK de Sebastián) y cruzados por id (Order ID de Zoho = id del POS) contra «Looker Sucursales» en vista previa sin guardar. 146 pedidos del POS; cada combinación coincidió en todos sus pedidos.",
+  "mapeo": [
+    { "metodo_pos": "CARTAO", "tipo_pos": "EMV", "smartphone": false, "etiqueta": "TABLET - CARD", "pedidos": 25, "evidencia": ["545:32236481", "545:32235481", "545:32233581"] },
+    { "metodo_pos": "CARTAO", "tipo_pos": "CONTACTLESS_EMV", "smartphone": false, "etiqueta": "TABLET - CARD", "pedidos": 86, "evidencia": ["545:32235959", "545:32235687", "545:32235222"] },
+    { "metodo_pos": "CARTAO", "tipo_pos": "CONTINGENCY", "smartphone": false, "etiqueta": "CONTINGENCY - CARD", "pedidos": 1, "evidencia": ["545:32228689"] },
+    { "metodo_pos": "DINHEIRO", "tipo_pos": "CONTINGENCY", "smartphone": false, "etiqueta": "CONTINGENCY - MONEY", "pedidos": 3, "evidencia": ["532:32231409", "532:32229933", "532:32219092"] },
+    { "metodo_pos": "CARTAO", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - CARD", "pedidos": 5, "evidencia": ["545:32234231", "545:32229265", "545:32222279"] },
+    { "metodo_pos": "VIRTUAL_WALLET", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - CARD", "pedidos": 7, "evidencia": ["545:32235022", "545:32231383", "545:32226917"] },
+    { "metodo_pos": "WALLET_BALANCE", "tipo_pos": "WALLET", "smartphone": true, "etiqueta": "APP - WALLET", "pedidos": 15, "evidencia": ["545:32235104", "545:32235102", "545:32233764"] },
+    { "metodo_pos": "RAPPI", "tipo_pos": "CREDIT", "smartphone": false, "etiqueta": "RAPPI", "pedidos": 4, "evidencia": ["532:32235824", "532:32235810", "532:32219721"], "nota": "Rappi que llega por el POS (solo Rubén Darío). En Zoho no aparece con este id: Zoho carga Rappi con el número de orden de Rappi (2485…), como RAPPI o RAPPI TURBO." }
+  ],
+  "sinEvidencia": [
+    { "etiqueta": "RAPPI TURBO", "nota": "Solo en Rappi de Zoho y del portal (tiendas Turbo). La carga F2/F3 la asigna por tienda de Rappi; no viene del POS." },
+    { "etiqueta": "CONTINGENCY - IFOOD", "nota": "No apareció en los días revisados." },
+    { "etiqueta": "WALLET", "nota": "No apareció en los días revisados." }
+  ],
+  "reglaSinMapeo": "Una combinación sin fila en bi_mapeo_pago se muestra con el método crudo del POS (bi_lineas_filtradas usa coalesce(etiqueta, metodo_pago))."
+}
