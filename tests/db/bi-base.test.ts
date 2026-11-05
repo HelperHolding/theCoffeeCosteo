@@ -3,7 +3,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario } from './utilidades';
 
-// Migración 39: base del BI. Tablas cerradas; un día se guarda y reemplaza por RPC de servicio.
+// Migración 40: base del BI. Tablas cerradas; un día se guarda y reemplaza por RPC de servicio.
 let db: PGlite;
 let u: string;
 const linea = (pedido: string, n: number, extra: Record<string, unknown> = {}) => ({
@@ -47,7 +47,7 @@ beforeAll(async () => {
 });
 afterAll(async () => db.close());
 
-describe('migración 39: base del BI', () => {
+describe('migración 40: base del BI', () => {
   it('tablas y guardado cerrados al portal', async () => {
     for (const t of ['bi_lineas', 'bi_cargas', 'bi_tiendas', 'bi_clasificacion_producto', 'bi_mapeo_pago', 'bi_metas', 'bi_punto_equilibrio'])
       await expect(comoUsuario(db, u, () => db.query(`select * from ${t}`))).rejects.toThrow(/permission denied/);
