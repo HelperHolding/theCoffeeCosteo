@@ -37,6 +37,15 @@ export function leerPsv(texto: string): Record<string, string>[] {
   });
 }
 
+/**
+ * Contrato del código de producto (igual que public.bi_codigo en la migración 40): mayúsculas, sin espacios al
+ * inicio ni al final y con los espacios internos (también el no separable U+00A0) colapsados a uno.
+ */
+export function normalizarCodigo(s: string): string {
+  // En JavaScript \s ya incluye el no separable U+00A0.
+  return s.replace(/\s+/g, ' ').trim().toUpperCase();
+}
+
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const qn = (s: string | null) => (s === null ? 'null' : q(s));
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -86,10 +95,11 @@ export function generarSemillas(e: EntradaSemillas): SalidaSemillas {
     .filter((c) => !vistas.has(c))
     .sort((a, b) => a - b);
 
-  // Productos: clave = default_code o el nombre exacto cuando viene vacío (como el POS)
+  // Productos: clave = default_code o el nombre cuando viene vacío (como el POS), siempre normalizada. Las variantes
+  // que solo difieren en mayúsculas o espacios se pliegan en un código; las de clasificación idéntica se unen.
   const porCodigo = new Map<string, Map<string, Clasif>>();
   for (const p of leerPsv(e.productos)) {
-    const codigo = p.default_code !== '' ? p.default_code : p.product;
+    const codigo = normalizarCodigo(p.default_code !== '' ? p.default_code : p.product);
     if (codigo === '') continue;
     const cafe = p.contiene_cafe === '' || p.contiene_cafe === 'No definido' ? null : p.contiene_cafe;
     const clave = JSON.stringify([p.categoria_master, p.comida_bebida_combo_merch, cafe, p.promocion]);
