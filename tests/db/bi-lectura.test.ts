@@ -30,6 +30,10 @@ beforeAll(async () => {
   otro = await crearUsuario(db, 'sucursales');
   for (const x of [u, otro]) await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1,'sucursales','lectura')`, [x]);
   await db.query('insert into perfil_sucursales (user_id, company_id) values ($1,513),($1,384),($2,532)', [u, otro]);
+  // La migración 41 ya sembró datos reales: la prueba parte de tablas vacías para controlar sus propios datos.
+  await servicio('delete from bi_tiendas');
+  await servicio('delete from bi_mapeo_pago');
+  await servicio('delete from bi_clasificacion_producto');
   await servicio(`insert into bi_tiendas (company_id, store_id, nombre, franquiciatario, tipo, fecha_apertura, origen_apertura) values
     (513, 394, 'Namora', null, 'Sucursales Propias', '2024-03-01', 'crm'),
     (384, 301, 'Ventura', null, 'Sucursales Propias', '2023-11-27', 'pos'),
