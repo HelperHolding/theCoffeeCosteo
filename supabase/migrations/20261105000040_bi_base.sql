@@ -109,6 +109,10 @@ begin
   if p_fuente not in ('pos', 'zoho_rappi') then
     raise exception 'Fuente inválida: %', p_fuente;
   end if;
+  -- Un nulo o un no-arreglo es un error del llamador: sin esto se registraría un día vacío como cargado.
+  if p_lineas is null or jsonb_typeof(p_lineas) <> 'array' then
+    raise exception 'p_lineas debe ser un arreglo JSON (no nulo)';
+  end if;
   delete from public.bi_lineas where fuente = p_fuente and company_id = p_company and fecha = p_fecha;
   insert into public.bi_lineas (fuente, company_id, fecha, pedido, linea, hora, canal, metodo_pago, tipo_pago,
     smartphone, opcion_consumo, codigo, nombre, unidades, importe_cent, descuento_cent)
@@ -131,3 +135,45 @@ end $$;
 revoke all on function public.bi_guardar_dia(text, integer, date, boolean, timestamptz, jsonb)
   from public, anon, authenticated;
 grant execute on function public.bi_guardar_dia(text, integer, date, boolean, timestamptz, jsonb) to service_role;
+
+-- ===== Parte 2: semana, maduración y marca de Rappi del portal =====
+
+-- Semana como la rotula Zoho. Evidencia (docs/bi/zoho/filtros.json, semana.muestras): weekofyear(Date,2) de Zoho
+-- coincide con la semana ISO (empieza en lunes; la semana 1 contiene el primer jueves del año).
+create function public.bi_semana(p date) returns integer
+language sql immutable set search_path = public, pg_temp as $$
+  select extract(week from p)::int;
+$$;
+
+-- Año de la etiqueta «W{semana} {año}». Zoho usa el año CALENDARIO de la fecha, no el año ISO: el 2025-12-31 cae
+-- en la semana 1 y Zoho lo rotula «W1 2025» (y no «W1 2026»). Se replica tal cual, aunque sea una rareza.
+create function public.bi_anio_semana(p date) returns integer
+language sql immutable set search_path = public, pg_temp as $$
+  select extract(year from p)::int;
+$$;
+
+-- Meses completos entre la apertura (primera transacción de la tienda) y la fecha de referencia.
+create function public.bi_meses_operando(p_apertura date, p_ref date) returns integer
+language sql immutable set search_path = public, pg_temp as $$
+  select (extract(year from age(p_ref, p_apertura)) * 12 + extract(month from age(p_ref, p_apertura)))::int;
+$$;
+
+-- Tramos de filtros.json (maduracion). En Zoho se mide contra hoy: quien llama pasa current_date como p_ref.
+create function public.bi_maduracion(p_apertura date, p_ref date) returns text
+language sql immutable set search_path = public, pg_temp as $$
+  select case
+    when p_apertura is null then null
+    when public.bi_meses_operando(p_apertura, p_ref) < 3 then 'Menor de 3 meses'
+    else 'Mayor de 3 meses'
+  end;
+$$;
+
+-- Marca que el POS de ese día ya trae Rappi (el Rappi de Zoho de ese día se ignora al leer).
+create function public.bi_marcar_rappi_portal(p_company integer, p_fecha date) returns void
+language sql security definer set search_path = public, pg_temp as $$
+  update public.bi_cargas set rappi_en_pos = true
+  where fuente = 'pos' and company_id = p_company and fecha = p_fecha;
+$$;
+
+revoke all on function public.bi_marcar_rappi_portal(integer, date) from public, anon, authenticated;
+grant execute on function public.bi_marcar_rappi_portal(integer, date) to service_role;
