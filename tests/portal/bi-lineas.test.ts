@@ -59,4 +59,31 @@ describe('lineasBi', () => {
     });
     expect(lineasBi([p]).reduce((s, x) => s + x.importe_cent, 0)).toBe(p.ventaCent);
   });
+
+  it('prorratea el neto: 3 líneas con neto 3 % menor suman exactamente netoCent', () => {
+    const p = pedido({
+      origen: 'app', metodo: 'WALLET', ventaCent: 9810, netoCent: 9516,
+      lineas: [linea('A', 3333), linea('B', 3333), linea('C', 3144)],
+    });
+    const r = lineasBi([p]);
+    expect(r.map((x) => x.importe_cent)).toEqual([3333, 3333, 3144]);
+    expect(r.reduce((s, x) => s + x.importe_neto_cent, 0)).toBe(9516);
+    expect(r[0].importe_neto_cent).toBe(Math.round(3333 * (9516 / 9810)));
+  });
+
+  it('netoCent null (Rappi del portal): neto = bruto', () => {
+    const r = lineasBi([pedido({ origen: 'rappi', ventaCent: 5000, netoCent: null, lineas: [linea('A', 3000), linea('B', 2000)] })]);
+    expect(r.map((x) => x.importe_neto_cent)).toEqual([3000, 2000]);
+  });
+
+  it('Rappi del POS con comisión de 17.6 %', () => {
+    const r = lineasBi([pedido({ origen: 'rappi', ventaCent: 10000, netoCent: 8240, lineas: [linea('A', 6000), linea('B', 4000)] })]);
+    expect(r.reduce((s, x) => s + x.importe_neto_cent, 0)).toBe(8240);
+    expect(r[0].importe_neto_cent).toBe(4944);
+  });
+
+  it('pedido que no cuadra: solo redondea por línea', () => {
+    const r = lineasBi([pedido({ ventaCent: 9000, netoCent: 8730, cuadra: false, lineas: [linea('A', 3333), linea('B', 3333)] })]);
+    expect(r.map((x) => x.importe_neto_cent)).toEqual([3233, 3233]);
+  });
 });

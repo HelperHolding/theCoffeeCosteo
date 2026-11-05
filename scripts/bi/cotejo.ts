@@ -23,7 +23,7 @@ const db = createClient(env.get('NEXT_PUBLIC_SUPABASE_URL')!, env.get('SUPABASE_
 });
 
 const PAGINA = 1000;
-const columnas = 'fuente,company_id,fecha,pedido,linea,canal,metodo_pago,tipo_pago,smartphone,importe_cent';
+const columnas = 'fuente,company_id,fecha,pedido,linea,canal,metodo_pago,tipo_pago,smartphone,importe_cent,importe_neto_cent';
 const lineas: Parameters<typeof totalesPorDia>[0] = [];
 for (let desdeFila = 0; ; desdeFila += PAGINA) {
   let q = db.from('bi_lineas').select(columnas).gte('fecha', desde).lte('fecha', hasta);

@@ -6,7 +6,10 @@ export interface FilaCotejo {
   fuente: string;
   canal: string;
   etiqueta_pago: string;
+  /** Venta neta (neto de la API, como Zoho). */
   venta_cent: number;
+  /** Lo cobrado, antes de la comisión del pago. */
+  venta_bruta_cent: number;
   tickets: number;
   lineas: number;
 }
@@ -21,6 +24,8 @@ interface LineaCotejo {
   tipo_pago: string;
   smartphone: boolean;
   importe_cent: number;
+  /** Nulo o ausente en filas viejas: cae a importe_cent. */
+  importe_neto_cent?: number | null;
 }
 
 /** Totales por tienda × fecha × fuente × canal × etiqueta de pago. Un pago sin mapear cae al método crudo. */
@@ -48,6 +53,7 @@ export function totalesPorDia(
           canal: l.canal,
           etiqueta_pago: etiqueta,
           venta_cent: 0,
+          venta_bruta_cent: 0,
           tickets: 0,
           lineas: 0,
         },
@@ -55,7 +61,8 @@ export function totalesPorDia(
       };
       grupos.set(clave, g);
     }
-    g.fila.venta_cent += l.importe_cent;
+    g.fila.venta_cent += l.importe_neto_cent ?? l.importe_cent;
+    g.fila.venta_bruta_cent += l.importe_cent;
     g.fila.lineas += 1;
     g.pedidos.add(l.pedido);
   }
@@ -72,7 +79,7 @@ export function totalesPorDia(
 }
 
 const COLUMNAS: (keyof FilaCotejo)[] = [
-  'company_id', 'store_id', 'nombre', 'fecha', 'fuente', 'canal', 'etiqueta_pago', 'venta_cent', 'tickets', 'lineas',
+  'company_id', 'store_id', 'nombre', 'fecha', 'fuente', 'canal', 'etiqueta_pago', 'venta_cent', 'venta_bruta_cent', 'tickets', 'lineas',
 ];
 
 const celda = (v: string | number) => {

@@ -52,13 +52,28 @@ describe('totalesPorDia', () => {
   });
 });
 
+describe('totalesPorDia, neto y bruto', () => {
+  it('venta_cent suma el neto (coalesce al bruto) y venta_bruta_cent lo cobrado', () => {
+    const r = totalesPorDia(
+      [
+        { ...base, company_id: 384, fecha: '2026-10-01', pedido: 'A', importe_cent: 1000, importe_neto_cent: 970 },
+        { ...base, company_id: 384, fecha: '2026-10-01', pedido: 'B', importe_cent: 500, importe_neto_cent: null },
+        { ...base, company_id: 384, fecha: '2026-10-01', pedido: 'C', importe_cent: 200 },
+      ],
+      mapeo,
+      tiendas,
+    );
+    expect(r[0]).toMatchObject({ venta_cent: 970 + 500 + 200, venta_bruta_cent: 1700 });
+  });
+});
+
 describe('aCsv', () => {
   it('escapa comas y comillas', () => {
     const csv = aCsv([
-      { company_id: 1, store_id: 2, nombre: 'Roma, "Norte"', fecha: '2026-10-01', fuente: 'pos', canal: 'M', etiqueta_pago: 'x', venta_cent: 5, tickets: 1, lineas: 1 },
+      { company_id: 1, store_id: 2, nombre: 'Roma, "Norte"', fecha: '2026-10-01', fuente: 'pos', canal: 'M', etiqueta_pago: 'x', venta_cent: 5, venta_bruta_cent: 6, tickets: 1, lineas: 1 },
     ]);
     const [cab, fila] = csv.trim().split('\n');
-    expect(cab).toBe('company_id,store_id,nombre,fecha,fuente,canal,etiqueta_pago,venta_cent,tickets,lineas');
-    expect(fila).toBe('1,2,"Roma, ""Norte""",2026-10-01,pos,M,x,5,1,1');
+    expect(cab).toBe('company_id,store_id,nombre,fecha,fuente,canal,etiqueta_pago,venta_cent,venta_bruta_cent,tickets,lineas');
+    expect(fila).toBe('1,2,"Roma, ""Norte""",2026-10-01,pos,M,x,5,6,1,1');
   });
 });
