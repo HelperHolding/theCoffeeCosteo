@@ -48,13 +48,32 @@ describe('rappiServicio: Turbo', () => {
 });
 
 // Cliente falso del corte: registra el orden de las llamadas a rpc, upsert, insert y update.
-const clienteCorte = (opts: { existentes?: number[]; rpcError?: string; altaFalla?: number[] } = {}) => {
+const clienteCorte = (
+  opts: {
+    existentes?: number[];
+    rpcError?: string;
+    altaFalla?: number[];
+    rpcCuelga?: boolean;
+    portalDesde?: string | null;
+    portalFalla?: boolean;
+  } = {},
+) => {
   const llamadas: { que: string; tabla?: string; args?: unknown; opts?: unknown }[] = [];
   const respuestaSelect = { data: (opts.existentes ?? []).map((company_id) => ({ company_id })), error: null };
   const db = {
     from: (tabla: string) => ({
       select: () => {
         const r = Promise.resolve(tabla === 'bi_tiendas' ? respuestaSelect : { data: [], error: null });
+        const rappi = {
+          eq: () => rappi,
+          order: () => ({
+            limit: async () =>
+              opts.portalFalla
+                ? { data: null, error: { message: 'sin acceso' } }
+                : { data: opts.portalDesde ? [{ fecha_local: opts.portalDesde }] : [], error: null },
+          }),
+        };
+        if (tabla === 'rappi_pedidos') return rappi;
         return Object.assign(r, { order: () => ({ range: async () => ({ data: [], error: null }) }) });
       },
       upsert: async (args: unknown, o?: unknown) => {
@@ -69,9 +88,21 @@ const clienteCorte = (opts: { existentes?: number[]; rpcError?: string; altaFall
         { lt: () => ({ not: async () => ({ error: null }) }) }
       ),
     }),
-    rpc: async (nombre: string, args: unknown) => {
+    // Como el de supabase-js: un constructor con abortSignal. Con rpcCuelga nunca responde, salvo que se aborte.
+    rpc: (nombre: string, args: unknown) => {
       llamadas.push({ que: 'rpc', tabla: nombre, args });
-      return { error: opts.rpcError ? { message: opts.rpcError } : null };
+      let senal: AbortSignal | undefined;
+      const resultado = (): Promise<{ error: { message: string } | null }> =>
+        opts.rpcCuelga
+          ? new Promise((_, rechazar) => {
+              senal?.addEventListener('abort', () => rechazar(senal!.reason));
+            })
+          : Promise.resolve({ error: opts.rpcError ? { message: opts.rpcError } : null });
+      const c = {
+        abortSignal: (x: AbortSignal) => ((senal = x), c),
+        then: (ok: never, no: never) => resultado().then(ok, no),
+      };
+      return c;
     },
   };
   return { db: db as never, llamadas };
@@ -101,7 +132,7 @@ const cfg = (rappiPortal: boolean) => ({ ...base, rappiPortal });
 describe('cortar: guarda también el BI', () => {
   it('llama a bi_guardar_dia por tienda y día, con rappiPortal de la configuración', async () => {
     for (const rp of [true, false]) {
-      const { db, llamadas } = clienteCorte({ existentes: [base.companyId] });
+      const { db, llamadas } = clienteCorte({ existentes: [base.companyId], portalDesde: '2020-01-01' });
       const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(rp)], leer: async () => lectura('completa') });
       const rpc = llamadas.filter((l) => l.que === 'rpc');
       expect(rpc).toHaveLength(1);
@@ -172,9 +203,12 @@ describe('cortar: guarda también el BI', () => {
 
   it('un error lanzado por la red al guardar el BI tampoco rompe el corte', async () => {
     const { db } = clienteCorte({ existentes: [base.companyId] });
-    (db as { rpc: unknown }).rpc = async () => {
-      throw new Error('sin red');
-    };
+    (db as { rpc: unknown }).rpc = () => ({
+      abortSignal() {
+        return this;
+      },
+      then: (_ok: never, no: (e: Error) => void) => Promise.resolve().then(() => no(new Error('sin red'))),
+    });
     const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(false)], leer: async () => lectura('completa') });
     expect(r.escritas).toBe(1);
     expect(r.bi.fallidos[0].motivo).toBe('sin red');
@@ -222,6 +256,97 @@ describe('cortar: guarda también el BI', () => {
     for (let i = 0; i < 2; i++)
       await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(false)], leer: async () => lectura('completa') });
     expect(llamadas.filter((l) => l.que === 'rpc')).toHaveLength(2);
+  });
+});
+
+describe('cortar: un BI lento no tumba el resumen', () => {
+  it('con una RPC que nunca responde, el resumen y sucursales_cortes se guardan y el tiempo agotado queda en bi.fallidos', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId], rpcCuelga: true });
+    const r = await cortar(db, {
+      fechas: ['2020-01-01'],
+      sucursales: [cfg(false)],
+      leer: async () => lectura('completa'),
+      biTimeoutMs: 20,
+    });
+    expect(r.escritas).toBe(1);
+    expect(r.bi.guardados).toBe(0);
+    expect(r.bi.fallidos).toHaveLength(1);
+    expect(r.bi.fallidos[0].fecha).toBe('2020-01-01');
+    expect(llamadas.some((l) => l.que === 'upsert' && l.tabla === 'sucursales_resumen_dia')).toBe(true);
+    const corte = llamadas.find((l) => l.que === 'insert' && l.tabla === 'sucursales_cortes')!;
+    expect((corte.args as { mensaje: string }).mensaje).toContain('BI sin guardar: ');
+  });
+
+  it('agotado el presupuesto, los guardados que faltan quedan como «sin tiempo» y no se llama a la RPC', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId] });
+    const r = await cortar(db, {
+      fechas: ['2020-01-01', '2020-01-02'],
+      sucursales: [cfg(false)],
+      leer: async () => lectura('completa'),
+      biPresupuestoMs: 0,
+    });
+    expect(llamadas.some((l) => l.que === 'rpc')).toBe(false);
+    expect(r.bi.guardados).toBe(0);
+    expect(r.bi.fallidos.map((f) => f.motivo)).toEqual(['sin tiempo', 'sin tiempo']);
+    expect(r.escritas).toBe(2);
+  });
+
+  it('con BI_CARGA=0 no hay llamadas al BI y bi viene en ceros', async () => {
+    vi.stubEnv('BI_CARGA', '0');
+    try {
+      const { db, llamadas } = clienteCorte({ existentes: [] });
+      const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(true)], leer: async () => lectura('completa') });
+      expect(llamadas.some((l) => l.que === 'rpc' || l.tabla === 'bi_tiendas')).toBe(false);
+      expect(r.bi).toEqual({ guardados: 0, fallidos: [], altas: [] });
+      expect(r.escritas).toBe(1);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('el upsert del resumen ocurre antes del primer bi_guardar_dia', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId] });
+    await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(false)], leer: async () => lectura('completa') });
+    const iResumen = llamadas.findIndex((l) => l.que === 'upsert' && l.tabla === 'sucursales_resumen_dia');
+    const iRpc = llamadas.findIndex((l) => l.que === 'rpc');
+    const iCorte = llamadas.findIndex((l) => l.que === 'insert' && l.tabla === 'sucursales_cortes');
+    expect(iResumen).toBeGreaterThanOrEqual(0);
+    expect(iResumen).toBeLessThan(iRpc);
+    expect(iRpc).toBeLessThan(iCorte);
+  });
+});
+
+describe('cortar: p_rappi_portal solo desde que existe el portal de la tienda', () => {
+  it('portal desde 2026-10-24: el 23 manda false y el 24 manda true', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId], portalDesde: '2026-10-24' });
+    const r = await cortar(db, {
+      fechas: ['2026-10-23', '2026-10-24'],
+      sucursales: [cfg(true)],
+      leer: async () => lectura('completa'),
+    });
+    const porFecha = Object.fromEntries(
+      llamadas
+        .filter((l) => l.que === 'rpc')
+        .map((l) => [(l.args as { p_fecha: string }).p_fecha, (l.args as { p_rappi_portal: boolean }).p_rappi_portal]),
+    );
+    expect(porFecha).toEqual({ '2026-10-23': false, '2026-10-24': true });
+    expect(r.bi.fallidos).toEqual([]);
+  });
+
+  it('tienda con portal pero sin pedidos aún: manda false', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId], portalDesde: null });
+    await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(true)], leer: async () => lectura('completa') });
+    expect((llamadas.find((l) => l.que === 'rpc')!.args as { p_rappi_portal: boolean }).p_rappi_portal).toBe(false);
+  });
+
+  it('si la consulta del inicio falla, manda false y lo anota con fecha *', async () => {
+    const { db, llamadas } = clienteCorte({ existentes: [base.companyId], portalFalla: true });
+    const r = await cortar(db, { fechas: ['2020-01-01'], sucursales: [cfg(true)], leer: async () => lectura('completa') });
+    expect((llamadas.find((l) => l.que === 'rpc')!.args as { p_rappi_portal: boolean }).p_rappi_portal).toBe(false);
+    expect(r.bi.fallidos).toEqual([
+      { companyId: base.companyId, fecha: '*', motivo: 'inicio del portal de Rappi: sin acceso' },
+    ]);
+    expect(r.bi.guardados).toBe(1);
   });
 });
 
