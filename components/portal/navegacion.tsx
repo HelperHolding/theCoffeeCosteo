@@ -23,6 +23,7 @@ import {
   CalendarClock,
   ScrollText,
   Settings2,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
@@ -35,6 +36,7 @@ const entradaModulo: Record<IdModulo, Enlace> = {
   costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
   crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
   sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
+  bi: { href: '/bi', nombre: 'BI', icono: BarChart3 },
 };
 
 export const grupos: Grupo[] = [
@@ -99,11 +101,22 @@ const gruposSucursales: Grupo[] = [
   },
 ];
 
+const gruposBi: Grupo[] = [
+  {
+    titulo: 'BI',
+    enlaces: [
+      { href: '/bi', nombre: 'Tableros', icono: LayoutGrid, exacto: true },
+      { href: '/bi/the-coffee-mexico', nombre: 'The Coffee México', icono: MapPinned },
+    ],
+  },
+];
+
 const gruposPorSeccion: Record<Seccion, Grupo[]> = {
   inicio: [],
   costeo: grupos,
   crm: gruposCrm,
   sucursales: gruposSucursales,
+  bi: gruposBi,
 };
 
 /**

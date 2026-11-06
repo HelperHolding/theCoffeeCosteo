@@ -28,17 +28,35 @@ interface LineaCotejo {
   importe_neto_cent?: number | null;
 }
 
+/** Fila de bi_mapeo_pago; la vigencia (fechas AAAA-MM-DD, inclusive) distingue etiquetas del mismo pago en el tiempo. */
+export interface MapeoPago {
+  metodo_pos: string;
+  tipo_pos: string;
+  smartphone: boolean;
+  etiqueta: string;
+  vigente_desde?: string;
+  vigente_hasta?: string | null;
+}
+
 /** Totales por tienda × fecha × fuente × canal × etiqueta de pago. Un pago sin mapear cae al método crudo. */
 export function totalesPorDia(
   filas: LineaCotejo[],
-  mapeo: { metodo_pos: string; tipo_pos: string; smartphone: boolean; etiqueta: string }[],
+  mapeo: MapeoPago[],
   tiendas: { company_id: number; store_id: number; nombre: string }[],
 ): FilaCotejo[] {
-  const etiquetas = new Map(mapeo.map((m) => [`${m.metodo_pos}|${m.tipo_pos}|${m.smartphone}`, m.etiqueta]));
+  // Igual que el join de la base: la fila vigente en la fecha de la línea.
+  const mapeos = new Map<string, MapeoPago[]>();
+  for (const m of mapeo) {
+    const k = `${m.metodo_pos}|${m.tipo_pos}|${m.smartphone}`;
+    mapeos.set(k, [...(mapeos.get(k) ?? []), m]);
+  }
   const porTienda = new Map(tiendas.map((t) => [t.company_id, t]));
   const grupos = new Map<string, { fila: FilaCotejo; pedidos: Set<string> }>();
   for (const l of filas) {
-    const etiqueta = etiquetas.get(`${l.metodo_pago}|${l.tipo_pago}|${l.smartphone}`) ?? l.metodo_pago;
+    const etiqueta =
+      mapeos.get(`${l.metodo_pago}|${l.tipo_pago}|${l.smartphone}`)?.find(
+        (m) => l.fecha >= (m.vigente_desde ?? '2000-01-01') && (m.vigente_hasta == null || l.fecha <= m.vigente_hasta),
+      )?.etiqueta ?? l.metodo_pago;
     const clave = JSON.stringify([l.company_id, l.fecha, l.fuente, l.canal, etiqueta]);
     let g = grupos.get(clave);
     if (!g) {

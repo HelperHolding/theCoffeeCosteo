@@ -26,7 +26,7 @@ const base = { desde: '2026-10-05', hasta: '2026-10-05', companias: [513] };
 beforeAll(async () => {
   db = await crearDbLocal();
   u = await crearUsuario(db, 'sucursales');
-  await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1,'sucursales','lectura')`, [u]);
+  await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1,'bi','lectura')`, [u]);
   await db.query('insert into perfil_sucursales (user_id, company_id) values ($1,513)', [u]);
   await servicio('delete from bi_tiendas');
   await servicio('delete from bi_mapeo_pago');
