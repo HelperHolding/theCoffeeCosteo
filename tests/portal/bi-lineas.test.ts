@@ -82,6 +82,12 @@ describe('lineasBi', () => {
     expect(r[0].importe_neto_cent).toBe(4944);
   });
 
+  it('antes del 2026-03-01 Zoho usaba lo cobrado: neto = bruto aunque la API traiga neto', () => {
+    const p = { ventaCent: 9810, netoCent: 9516, lineas: [linea('A', 5000), linea('B', 4810)] };
+    expect(lineasBi([pedido({ ...p, fecha: '2026-02-28' })]).map((x) => x.importe_neto_cent)).toEqual([5000, 4810]);
+    expect(lineasBi([pedido({ ...p, fecha: '2026-03-01' })]).reduce((s, x) => s + x.importe_neto_cent, 0)).toBe(9516);
+  });
+
   it('pedido que no cuadra: solo redondea por línea', () => {
     const r = lineasBi([pedido({ ventaCent: 9000, netoCent: 8730, cuadra: false, lineas: [linea('A', 3333), linea('B', 3333)] })]);
     expect(r.map((x) => x.importe_neto_cent)).toEqual([3233, 3233]);

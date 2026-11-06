@@ -122,6 +122,34 @@ El BI **nunca frena** el corte del Tablero México: un día que no se guarda en 
   migración 42 (el BI muestra el neto).
 - Rappi queda pendiente de F3.
 
+### Zoho cambió de criterio el 2026-03-01
+
+Con el neto, 2025 quedó de 0.03 % a 0.35 % abajo de Zoho: hasta febrero de 2026, «Net Amount (Local)» era **lo
+cobrado**. El cambio fue de un día para otro. Por día, en líneas de app con centavos que no terminan en 0:
+
+- Hasta el 2026-02-28: 0 a 3 de unas 100 líneas de APP - CARD, y 0 en WALLET.
+- Desde el 2026-03-01: más o menos 1 de cada 10 en APP - CARD, y de la mitad a casi todas en APP - WALLET.
+
+El mismo día «WALLET» pasó a llamarse «APP - WALLET».
+
+Regla de carga (`ZOHO_NETO_DESDE` en `lib/bi/lineas.ts`):
+- Antes del 2026-03-01, `importe_neto_cent` = lo cobrado.
+- Desde ese día, es el neto de la API.
+
+Cotejo después de la 42 (2026-08-03 a 10-25, mostrador + app, neto contra Zoho):
+
+| Tienda | Diferencia |
+|---|---|
+| 301 | +0.02 % |
+| 432 | +0.04 % |
+| 455 | +0.11 % |
+| 477 | +0.03 % |
+| 482 | −$0.23 |
+| 498 | −$0.03 |
+
+**Pendiente:** la etiqueta de pago. Antes del 2026-03-01, `WALLET_BALANCE` en Zoho es «WALLET»; hoy `bi_mapeo_pago`
+no tiene fechas y lo etiqueta «APP - WALLET».
+
 ### Aplicar la migración 42
 
 La integración de Supabase no aplica migraciones al fusionar (el check sale «skipped»). Se aplica a mano en el SQL

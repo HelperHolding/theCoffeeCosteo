@@ -29,12 +29,20 @@ const descuentoCent = (importeCent: number, pct: number) =>
   pct > 0 && pct < 100 ? Math.round(importeCent / (1 - pct / 100)) - importeCent : 0;
 
 /**
- * Neto de cada línea de un pedido. Factor f = netoCent / ventaCent; sin neto (p. ej. Rappi del portal) o sin venta,
+ * Desde este día «Net Amount (Local)» de Zoho es el netAmout de la API (neto de la comisión del pago); antes era lo
+ * cobrado. Cambió de un día para otro: el 2026-02-28 casi ninguna línea de app trae centavos de comisión y desde el
+ * 2026-03-01 la mayoría sí (consulta de vista previa en Zoho, 2026-11-05; docs/bi/02-CARGA.md). El mismo día «WALLET»
+ * pasó a llamarse «APP - WALLET».
+ */
+export const ZOHO_NETO_DESDE = '2026-03-01';
+
+/**
+ * Neto de cada línea de un pedido. Antes de ZOHO_NETO_DESDE es lo cobrado, como en Zoho. Factor f = netoCent / ventaCent; sin neto (p. ej. Rappi del portal) o sin venta,
  * f = 1 y el neto es lo cobrado. Si el pedido cuadra y trae neto, la última línea absorbe el redondeo para que la suma
  * de netos sea exactamente netoCent; si no cuadra, solo se redondea por línea.
  */
 function netosDelPedido(p: PedidoNormal, importes: number[]): number[] {
-  const hayNeto = p.netoCent != null && p.ventaCent > 0;
+  const hayNeto = p.netoCent != null && p.ventaCent > 0 && p.fecha >= ZOHO_NETO_DESDE;
   const f = hayNeto ? p.netoCent! / p.ventaCent : 1;
   const netos = importes.map((i) => Math.round(i * f));
   if (hayNeto && p.cuadra && netos.length > 0) {
