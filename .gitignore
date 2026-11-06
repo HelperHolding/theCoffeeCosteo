@@ -1,6 +1,7 @@
 node_modules/
 .vitest/
 datos/*.xlsx
+datos/*.csv
 .env
 .env.*
 !.env.example

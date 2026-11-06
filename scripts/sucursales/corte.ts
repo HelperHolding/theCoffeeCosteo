@@ -30,8 +30,9 @@ const db = createClient(env.get('NEXT_PUBLIC_SUPABASE_URL')!, env.get('SUPABASE_
 const n = diasEntre(desde, hasta) + 1;
 for (let i = 0; i < n; i += 7) {
   const fechas = Array.from({ length: Math.min(7, n - i) }, (_, j) => sumarDias(desde, i + j));
-  const r = await cortar(db, { fechas, sucursales });
+  // Sin presupuesto total: el de 240 s es del límite de la función de Vercel y aquí no aplica (queda el tiempo por guardado).
+  const r = await cortar(db, { fechas, sucursales, biPresupuestoMs: Number.POSITIVE_INFINITY });
   console.log(
-    `${fechas[0]}…${fechas.at(-1)}: ${r.escritas} días guardados (${r.completas} completos) de ${sucursales.length} sucursales en ${Math.round(r.ms / 1000)} s${r.fallidas.length ? `; sin leer: ${r.fallidas.map((f) => `${f.companyId} ${f.fecha}`).join(', ')}` : ''}`,
+    `${fechas[0]}…${fechas.at(-1)}: ${r.escritas} días guardados (${r.completas} completos) de ${sucursales.length} sucursales en ${Math.round(r.ms / 1000)} s${r.fallidas.length ? `; sin leer: ${r.fallidas.map((f) => `${f.companyId} ${f.fecha}`).join(', ')}` : ''}; bi: ${r.bi.guardados} guardados, ${r.bi.fallidos.length} fallidos${r.bi.altas.length ? `; altas de tiendas: ${r.bi.altas.join(', ')}` : ''}`,
   );
 }

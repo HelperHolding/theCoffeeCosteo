@@ -1,0 +1,120 @@
+{
+  "extraidoEn": "2026-11-05",
+  "fuente": "Dashboard The Coffee México (view 2958916000007761303) y consultas de vista previa sin guardar sobre «Looker Sucursales» y «Tiendas Comparables»",
+  "fechaRelativa": [
+    "Hoy",
+    "Ayer",
+    "Esta semana",
+    "Semana anterior",
+    "2 semanas anteriores",
+    "3 semanas anteriores",
+    "4 semanas anteriores",
+    "Últimas 4 semanas",
+    "Este mes",
+    "Mes anterior",
+    "Últimos 3 meses",
+    "Este trimestre",
+    "Trimestre anterior",
+    "Este año",
+    "Año anterior"
+  ],
+  "fechaRelativaPorOmision": "Esta semana",
+  "fechaRelativaNotas": "En Zoho la lista incluye además «Others» (fechas fuera de todas las opciones); no se replica como opción. Las semanas son ISO (lunes a domingo), igual que weekofyear(Date,2).",
+  "comparable": {
+    "opciones": ["Comparable", "No Comparable"],
+    "regla": "Meses Operando >= 12",
+    "referencia": "hoy (no la fecha de la venta): es un atributo de la tienda"
+  },
+  "aniosOperando": {
+    "opciones": [0, 1, 2],
+    "regla": "floor(Meses Operando / 12)",
+    "referencia": "hoy"
+  },
+  "mesesOperando": {
+    "regla": "meses completos entre la primera transacción de la tienda y hoy",
+    "ejemplos": [
+      { "primera": "2025-10-17", "hoy": "2026-11-05", "meses": 12 },
+      { "primera": "2025-11-06", "hoy": "2026-11-05", "meses": 11 },
+      { "primera": "2026-10-16", "hoy": "2026-11-05", "meses": 0 },
+      { "primera": "2024-01-02", "hoy": "2026-11-05", "meses": 34 }
+    ]
+  },
+  "maduracion": [
+    { "etiqueta": "Menor de 3 meses", "minMeses": 0, "maxMeses": 2 },
+    { "etiqueta": "Mayor de 3 meses", "minMeses": 3, "maxMeses": null }
+  ],
+  "maduracionNotas": "Opciones vistas en el filtro. El corte exacto (3 meses cuenta como «Mayor») es supuesto: Zoho no muestra la fórmula en el filtro; se confirma en el piloto con Aeropuerto Chiapas (3 meses).",
+  "semana": {
+    "definicion": "weekofyear(Date,2) de Zoho = semana ISO (lunes a domingo). El filtro «Semanas y año» muestra 'W45 2026' y usa el año calendario de la fecha.",
+    "etiquetaFiltro": "W{semana} {año}",
+    "muestras": [
+      { "fecha": "2024-01-02", "semana": 1, "dia": "Tuesday" },
+      { "fecha": "2024-01-06", "semana": 1, "dia": "Saturday" },
+      { "fecha": "2024-01-07", "semana": 1, "dia": "Sunday" },
+      { "fecha": "2024-01-08", "semana": 2, "dia": "Monday" },
+      { "fecha": "2024-12-28", "semana": 52, "dia": "Saturday" },
+      { "fecha": "2024-12-29", "semana": 52, "dia": "Sunday" },
+      { "fecha": "2024-12-30", "semana": 1, "dia": "Monday" },
+      { "fecha": "2024-12-31", "semana": 1, "dia": "Tuesday" },
+      { "fecha": "2025-01-01", "semana": 1, "dia": "Wednesday" },
+      { "fecha": "2025-01-04", "semana": 1, "dia": "Saturday" },
+      { "fecha": "2025-01-05", "semana": 1, "dia": "Sunday" },
+      { "fecha": "2025-01-06", "semana": 2, "dia": "Monday" },
+      { "fecha": "2025-12-27", "semana": 52, "dia": "Saturday" },
+      { "fecha": "2025-12-28", "semana": 52, "dia": "Sunday" },
+      { "fecha": "2025-12-31", "semana": 1, "dia": "Wednesday" },
+      { "fecha": "2026-01-01", "semana": 1, "dia": "Thursday" },
+      { "fecha": "2026-01-03", "semana": 1, "dia": "Saturday" },
+      { "fecha": "2026-01-04", "semana": 1, "dia": "Sunday" },
+      { "fecha": "2026-01-05", "semana": 2, "dia": "Monday" },
+      { "fecha": "2026-11-01", "semana": 44, "dia": "Sunday" },
+      { "fecha": "2026-11-02", "semana": 45, "dia": "Monday" },
+      { "fecha": "2026-11-04", "semana": 45, "dia": "Wednesday" }
+    ]
+  },
+  "diaSemana": {
+    "opciones": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+    "regla": "columna «Día de la Semana Fórmula»: day_name(Date) traducido"
+  },
+  "metodosPago": [
+    "APP - CARD",
+    "APP - WALLET",
+    "CONTINGENCY - CARD",
+    "CONTINGENCY - IFOOD",
+    "CONTINGENCY - MONEY",
+    "RAPPI",
+    "RAPPI TURBO",
+    "TABLET - CARD",
+    "WALLET"
+  ],
+  "filtrosVisibles": ["Fecha Relativa", "Comparable", "Años Operando", "Rango de Fechas", "Día de la Semana"],
+  "filtrosOcultos": [
+    "Nombre de Tienda",
+    "Franquiciatario",
+    "Franquicia o Sucursales Propias",
+    "Categoría Master Franchise MX",
+    "Comida, Bebida, Combo y Merch",
+    "Contiene Café",
+    "Product",
+    "Método de Pago",
+    "Hora",
+    "Estatus de Maduración",
+    "Net Amount (Local)",
+    "Semanas y año"
+  ],
+  "reportes": [
+    {
+      "id": "R9",
+      "titulo": "Ventas por Año",
+      "ignora": ["Fecha Relativa", "Rango de Fechas", "Semanas y año"],
+      "evidencia": "Con «Esta semana» muestra ene-2024 a nov-2026"
+    },
+    {
+      "id": "R10",
+      "titulo": "Ventas por Semana",
+      "ignora": ["Fecha Relativa", "Rango de Fechas", "Semanas y año"],
+      "evidencia": "Con «Esta semana» muestra 148 semanas de 2024 a 2026"
+    }
+  ],
+  "reportesNotas": "Los demás reportes y tarjetas respetan todos los filtros (con «Esta semana» muestran solo lunes y martes de la semana en curso). La configuración «Aplicar a» de cada filtro no se pudo abrir sin modo edición; se confirma visualmente en el piloto."
+}
