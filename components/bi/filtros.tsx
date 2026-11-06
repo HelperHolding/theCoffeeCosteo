@@ -191,7 +191,7 @@ export function FiltrosBi({
 
   const o = opciones;
   return (
-    <section aria-label="Filtros" className="sticky top-0 z-20 border-b border-line bg-surface px-4 py-3">
+    <section aria-label="Filtros" className="z-20 border-b border-line bg-surface px-4 py-3 lg:sticky lg:top-0">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <CampoSelect
           id="bi-fr"
@@ -245,30 +245,6 @@ export function FiltrosBi({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          aria-expanded={masFiltros}
-          aria-controls="bi-mas-filtros"
-          onClick={() => setMasFiltros((m) => !m)}
-          className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-2"
-        >
-          {masFiltros ? 'Mostrar menos filtros' : 'Mostrar más filtros'}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            cancelarPendiente();
-            const limpio = leerUrl(new URLSearchParams());
-            sincronizarBorradores(limpio);
-            alCambiar(limpio);
-          }}
-          className="rounded-md px-3 py-1.5 text-sm font-semibold text-crema-strong underline"
-        >
-          Limpiar
-        </button>
-      </div>
-
       {masFiltros && (
         <div id="bi-mas-filtros" className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SelectorMultiple
@@ -310,6 +286,31 @@ export function FiltrosBi({
           <SelectorMultiple etiqueta="Semanas y año" valores={o?.semanas ?? []} buscar elegidos={filtros.semanas} alCambiar={(v) => aplicar({ semanas: v })} />
         </div>
       )}
+
+      {/* Debajo de los filtros extra: en el celular quedan al final de la lista desplegada, no a la mitad. */}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          aria-expanded={masFiltros}
+          aria-controls="bi-mas-filtros"
+          onClick={() => setMasFiltros((m) => !m)}
+          className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-2"
+        >
+          {masFiltros ? 'Mostrar menos filtros' : 'Mostrar más filtros'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            cancelarPendiente();
+            const limpio = leerUrl(new URLSearchParams());
+            sincronizarBorradores(limpio);
+            alCambiar(limpio);
+          }}
+          className="rounded-md px-3 py-1.5 text-sm font-semibold text-crema-strong underline"
+        >
+          Limpiar
+        </button>
+      </div>
 
       {chips.length > 0 && (
         <ul aria-label="Filtros activos" className="mt-3 flex flex-wrap gap-2">
