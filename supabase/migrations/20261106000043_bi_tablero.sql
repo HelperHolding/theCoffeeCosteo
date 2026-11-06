@@ -50,6 +50,24 @@ update public.bi_mapeo_pago set vigente_desde = '2026-03-01'
 insert into public.bi_mapeo_pago (metodo_pos, tipo_pos, smartphone, etiqueta, vigente_desde, vigente_hasta)
   values ('WALLET_BALANCE', 'WALLET', true, 'WALLET', '2000-01-01', '2026-02-28');
 
+-- Sin traslape de vigencias para la misma llave: un traslape duplicaría líneas en el join del mapeo.
+create function public.bi_mapeo_pago_sin_traslape() returns trigger
+language plpgsql set search_path = public, pg_temp as $$
+begin
+  if exists (
+    select 1 from public.bi_mapeo_pago m
+    where m.metodo_pos = new.metodo_pos and m.tipo_pos = new.tipo_pos and m.smartphone = new.smartphone
+      and not (tg_op = 'UPDATE' and m.vigente_desde = old.vigente_desde)
+      and daterange(m.vigente_desde, m.vigente_hasta, '[]') && daterange(new.vigente_desde, new.vigente_hasta, '[]')
+  ) then
+    raise exception 'La vigencia de % / % / smartphone % se traslapa con otra fila de bi_mapeo_pago',
+      new.metodo_pos, new.tipo_pos, new.smartphone;
+  end if;
+  return new;
+end $$;
+create trigger bi_mapeo_pago_sin_traslape before insert or update on public.bi_mapeo_pago
+  for each row execute function public.bi_mapeo_pago_sin_traslape();
+
 -- 5. bi_lineas_filtradas: misma definición que la 42; el join del mapeo de pago agrega la vigencia por fecha.
 create or replace function public.bi_lineas_filtradas(p jsonb, p_desde date, p_hasta date, p_con_semanas boolean)
 returns table (fuente text, company_id integer, fecha date, pedido text, canal text, hora smallint, codigo text,

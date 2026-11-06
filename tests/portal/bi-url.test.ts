@@ -69,3 +69,9 @@ describe('URL ↔ filtros', () => {
     });
   });
 });
+
+describe('leerUrl listas de texto', () => {
+  it('quita duplicados: prod=A,A → [A]', () => {
+    expect(leerUrl(new URLSearchParams('prod=A,A')).productos).toEqual(['A']);
+  });
+});

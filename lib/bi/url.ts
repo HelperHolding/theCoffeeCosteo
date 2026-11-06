@@ -47,7 +47,7 @@ const decodificar = (s: string) => {
   }
 };
 const lista = (q: URLSearchParams, k: string) =>
-  (q.get(k) ?? '').split(',').map((s) => decodificar(s).trim()).filter(Boolean);
+  [...new Set((q.get(k) ?? '').split(',').map((s) => decodificar(s).trim()).filter(Boolean))];
 const enteros = (q: URLSearchParams, k: string, min: number, max: number) =>
   [...new Set(lista(q, k).map(Number).filter((n) => Number.isInteger(n) && n >= min && n <= max))];
 const monto = (v: string | null) => {

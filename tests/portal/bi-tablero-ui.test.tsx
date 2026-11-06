@@ -213,3 +213,17 @@ describe('<TableroMexico> con datos en todos los bloques', () => {
     expect(screen.getByText('Con café')).toBeTruthy();
   });
 });
+
+describe('<TableroMexico> con periodo rechazado (400)', () => {
+  it('apunta al filtro y no ofrece Reintentar', async () => {
+    global.fetch = vi.fn(async (url: string) =>
+      String(url).includes('tendencias')
+        ? new Response(JSON.stringify({ hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }), { status: 200 })
+        : new Response(JSON.stringify({ error: 'El periodo no es válido.' }), { status: 400 }),
+    ) as never;
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByText(/Revisa el filtro Rango de Fechas/)).toBeTruthy());
+    expect(screen.getByText(/El periodo no es válido/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull();
+  });
+});

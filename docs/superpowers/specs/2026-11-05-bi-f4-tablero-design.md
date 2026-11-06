@@ -112,7 +112,7 @@ del 2026-03-01.
   | `sem` | Semanas y año |
 
   Las listas van separadas por comas.
-- **Valor por omisión:** sin parámetros, `fr=esta_semana`.
+- **Valor por omisión:** sin parámetros, `fr=esta-semana`.
 - **Fechas excluyentes:** `desde`/`hasta` y `fr` se excluyen; si vienen las dos, gana el rango.
 - **Route handler `app/api/bi/tablero/route.ts` (GET):**
   - Valida la sesión y el módulo: 401 sin sesión, 403 sin módulo `bi`.

@@ -4,7 +4,7 @@
 // el orquestador escribe la URL a partir de `alCambiar`.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RpcOpciones } from '@/lib/bi/tipos';
-import { FR_POR_OMISION, leerUrl, OPCIONES_FR, type FiltrosUrl } from '@/lib/bi/url';
+import { FR_POR_OMISION, hoyMexico, leerUrl, OPCIONES_FR, resolverPeriodo, type FiltrosUrl } from '@/lib/bi/url';
 import { SelectorMultiple } from './selector-multiple';
 
 const RETRASO_MS = 400;
@@ -64,6 +64,7 @@ export function FiltrosBi({
   alCambiar: (f: FiltrosUrl) => void;
 }) {
   const [masFiltros, setMasFiltros] = useState(false);
+  const [errorRango, setErrorRango] = useState<string | null>(null);
   const [rango, setRango] = useState({ desde: filtros.desde ?? '', hasta: filtros.hasta ?? '' });
   const [monto, setMonto] = useState({ min: filtros.montoMin?.toString() ?? '', max: filtros.montoMax?.toString() ?? '' });
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -113,8 +114,19 @@ export function FiltrosBi({
 
   const cambiarRango = (desde: string, hasta: string) => {
     setRango({ desde, hasta });
-    if (desde && hasta) aplicar({ fr: undefined, desde, hasta });
-    else if (!desde && !hasta && filtros.desde) aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined });
+    if (desde && hasta) {
+      // Periodo inválido o de más de 1,100 días: mensaje junto al filtro y sin llamar a la base.
+      const p = resolverPeriodo({ ...filtros, fr: undefined, desde, hasta }, hoyMexico(new Date()));
+      if (!p.ok) {
+        setErrorRango(p.error);
+        return;
+      }
+      setErrorRango(null);
+      aplicar({ fr: undefined, desde, hasta });
+    } else {
+      setErrorRango(null);
+      if (!desde && !hasta && filtros.desde) aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined });
+    }
   };
   const cambiarMonto = (lado: 'min' | 'max', texto: string) => {
     const siguiente = { ...monto, [lado]: texto };
@@ -218,6 +230,11 @@ export function FiltrosBi({
               <input id="bi-hasta" type="date" value={rango.hasta} onChange={(e) => cambiarRango(rango.desde, e.target.value)} className={CLASE_CAMPO} />
             </div>
           </div>
+          {errorRango && (
+            <p role="alert" className="mt-1 text-xs font-semibold text-bad">
+              {errorRango}
+            </p>
+          )}
         </fieldset>
         <SelectorMultiple
           etiqueta="Día de la Semana"

@@ -85,11 +85,46 @@ Para una persona: `insert … values ('<user_id>', 'bi', 'lectura')`. Sus sucurs
 
 ## Medición de rendimiento
 
-Con la sesión de un admin, en el SQL Editor, medir el tiempo de:
+El SQL Editor corre como `postgres`, sin JWT: `auth.uid()` es nulo, `bi_acceso` da falso y `bi_tablero` regresa vacío al
+instante. **Esa medición no mide nada** y daría un falso «cumple» de los 3 s. Hay que medir como un usuario real, dentro
+de una transacción que se deshace. En el SQL Editor, una prueba por vez:
 
 ```sql
-select public.bi_tablero('{"desde":"2026-01-01","hasta":"<hoy>","companias":[…79…]}');
+begin;
+-- La lista de tiendas se arma ANTES del cambio de rol: authenticated no puede leer bi_tiendas.
+select set_config('app.cias', (select jsonb_agg(company_id)::text from public.bi_tiendas), true);
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"<user_id de un admin con bi>","role":"authenticated"}', true);
+explain (analyze, buffers) select public.bi_tablero(jsonb_build_object(
+  'desde', '2026-01-01', 'hasta', current_date, 'companias', current_setting('app.cias')::jsonb));
+rollback;
 ```
+
+```sql
+begin;
+select set_config('app.cias', (select jsonb_agg(company_id)::text from public.bi_tiendas), true);
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"<user_id de un admin con bi>","role":"authenticated"}', true);
+explain (analyze, buffers) select public.bi_tendencias(jsonb_build_object(
+  'companias', current_setting('app.cias')::jsonb));
+rollback;
+```
+
+```sql
+begin;
+select set_config('app.cias', (select jsonb_agg(company_id)::text from public.bi_tiendas), true);
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"<user_id de un admin con bi>","role":"authenticated"}', true);
+explain (analyze, buffers) select public.bi_opciones(jsonb_build_object(
+  'desde', '2026-01-01', 'hasta', current_date, 'companias', current_setting('app.cias')::jsonb));
+rollback;
+```
+
+- Reemplaza `<user_id de un admin con bi>` por el `user_id` (uuid de `auth.users`) de un admin con módulo `bi` y las
+  sucursales asignadas en `perfil_sucursales`; `bi_acceso` filtra por ellas.
+- **Advertencia:** si faltan los claims, o el usuario no tiene `bi`, el resultado sale vacío (`null`/sin tiendas) y no
+  mide nada. Antes de fiarte del tiempo, corre el mismo `select` sin `explain` y confirma que trae cifras.
+- `rollback` al final deja la sesión como estaba; no cambia datos.
 
 | Prueba | Tiempo |
 |---|---|

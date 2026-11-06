@@ -147,3 +147,35 @@ describe('<SelectorMultiple>', () => {
     expect(boton.getAttribute('aria-expanded')).toBe('false');
   });
 });
+
+describe('<FiltrosBi> periodo inválido', () => {
+  const escribir = (desde: string, hasta: string) => {
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: desde } });
+    fireEvent.change(screen.getByLabelText('Hasta'), { target: { value: hasta } });
+  };
+
+  it('desde mayor que hasta: mensaje junto al filtro y no llama a alCambiar', () => {
+    const alCambiar = vi.fn();
+    render(<FiltrosBi filtros={base()} opciones={opciones} alCambiar={alCambiar} />);
+    escribir('2026-10-10', '2026-10-01');
+    expect(alCambiar).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toMatch(/periodo no es válido/i);
+  });
+
+  it('más de 1,100 días: mensaje y no llama a alCambiar', () => {
+    const alCambiar = vi.fn();
+    render(<FiltrosBi filtros={base()} opciones={opciones} alCambiar={alCambiar} />);
+    escribir('2023-01-01', '2026-10-01');
+    expect(alCambiar).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toMatch(/1,100 días/);
+  });
+
+  it('al corregir el rango el mensaje desaparece y se aplica', () => {
+    const alCambiar = vi.fn();
+    render(<FiltrosBi filtros={base()} opciones={opciones} alCambiar={alCambiar} />);
+    escribir('2026-10-10', '2026-10-01');
+    fireEvent.change(screen.getByLabelText('Hasta'), { target: { value: '2026-10-12' } });
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(alCambiar).toHaveBeenLastCalledWith(expect.objectContaining({ desde: '2026-10-10', hasta: '2026-10-12' }));
+  });
+});

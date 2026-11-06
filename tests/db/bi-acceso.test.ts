@@ -99,6 +99,22 @@ describe('migración 43', () => {
     expect(nada.productos).toEqual([]);
   });
 
+  it('bi_mapeo_pago rechaza vigencias que se traslapan para la misma llave', async () => {
+    await expect(db.query(
+      `insert into bi_mapeo_pago (metodo_pos, tipo_pos, smartphone, etiqueta, vigente_desde, vigente_hasta)
+       values ('WALLET_BALANCE','WALLET',true,'X','2026-02-01','2026-04-01')`)).rejects.toThrow(/se traslapa/);
+    // Otra llave con el mismo rango sí es válida.
+    await db.query(`insert into bi_mapeo_pago (metodo_pos, tipo_pos, smartphone, etiqueta, vigente_desde, vigente_hasta)
+      values ('OTRO','OTRO',false,'OTRO','2026-02-01','2026-04-01')`);
+    await db.query(`delete from bi_mapeo_pago where metodo_pos = 'OTRO'`);
+  });
+
+  it('bi_mapeo_pago conserva las dos filas de WALLET_BALANCE sin traslape', async () => {
+    const r = await db.query(
+      `select vigente_desde::text d, vigente_hasta::text h from bi_mapeo_pago where metodo_pos = 'WALLET_BALANCE' order by 1`);
+    expect(r.rows).toEqual([{ d: '2000-01-01', h: '2026-02-28' }, { d: '2026-03-01', h: null }]);
+  });
+
   it('bi_opciones rechaza periodos inválidos', async () => {
     await expect(rpc(conBi, 'bi_opciones', { desde: '2026-03-02', hasta: '2026-03-01' })).rejects.toThrow(/Periodo inválido/);
   });

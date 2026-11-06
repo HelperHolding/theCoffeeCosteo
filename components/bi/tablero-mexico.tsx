@@ -89,6 +89,12 @@ export function TableroMexico() {
             </Tarjeta>
           )}
         </>
+      ) : tablero.error?.status === 400 ? (
+        // El periodo o los filtros de la URL no valen: reintentar no cambiaría nada.
+        <div role="alert" className="rounded-2xl border border-bad/30 bg-bad-soft p-4 text-sm">
+          <p className="font-semibold text-bad">Revisa el filtro Rango de Fechas</p>
+          <p className="mt-1 text-ink-2">{tablero.error.mensaje} Corrígelo en los filtros de arriba.</p>
+        </div>
       ) : tablero.error ? (
         <ErrorCarga error={tablero.error} alReintentar={tablero.recargar} />
       ) : (

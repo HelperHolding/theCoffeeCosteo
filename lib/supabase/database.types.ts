@@ -17,7 +17,7 @@ export interface Perfil {
 export type NivelModulo = 'desarrollador' | 'edicion' | 'lectura';
 export interface PerfilModulo {
   user_id: string;
-  modulo: 'crm' | 'sucursales' | 'sucursales_costeo';
+  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi';
   nivel: NivelModulo;
   creado_en: string;
 }
