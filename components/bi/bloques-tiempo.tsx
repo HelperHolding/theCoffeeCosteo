@@ -7,6 +7,7 @@ import { diaMes, dinero, fechaCorta, numero, porcentaje } from '@/components/suc
 import type { pagoPorTienda } from '@/lib/bi/bloques';
 import type { RpcTablero } from '@/lib/bi/tipos';
 import { ColumnasYLinea, colorCategoria, type Categoria } from './graficas-bi';
+import { dineroEje } from './graficas-bi-piezas';
 
 const DIAS = [
   { dow: 1, corto: 'Lun', largo: 'Lunes' },
@@ -18,7 +19,6 @@ const DIAS = [
   { dow: 0, corto: 'Dom', largo: 'Domingo' },
 ];
 const hh = (h: number) => String(h).padStart(2, '0');
-const dineroEje = (v: number) => dinero(v, 'MXN', false);
 const dineroSerie = (v: number | null) => dinero(v, 'MXN', false);
 const SIN_VENTA = <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>;
 

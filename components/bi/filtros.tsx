@@ -191,7 +191,7 @@ export function FiltrosBi({
 
   const o = opciones;
   return (
-    <section aria-label="Filtros" className="z-20 border-b border-line bg-surface px-4 py-3 lg:sticky lg:top-0">
+    <section aria-label="Filtros" className="z-20 rounded-2xl border border-line bg-surface px-4 py-3 lg:sticky lg:top-[65px]">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <CampoSelect
           id="bi-fr"
