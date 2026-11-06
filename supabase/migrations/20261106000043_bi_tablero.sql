@@ -126,7 +126,6 @@ begin
   return r;
 end $$;
 
--- Ventas por Año y por Semana (R9 y R10 de Zoho): ignoran Fecha Relativa, Rango de Fechas y Semanas;
 revoke all on function public.bi_tablero(jsonb) from public, anon;
 grant execute on function public.bi_tablero(jsonb) to authenticated;
 

@@ -25,6 +25,26 @@ describe('totalesPorDia', () => {
     expect(r.find((f) => f.company_id === 532)!.etiqueta_pago).toBe('Efectivo');
   });
 
+  it('resuelve la etiqueta de pago por la vigencia en la fecha de la línea', () => {
+    const w = { fuente: 'pos', canal: 'app', metodo_pago: 'WALLET_BALANCE', tipo_pago: 'WALLET', smartphone: true, company_id: 384 };
+    const vigencias = [
+      { metodo_pos: 'WALLET_BALANCE', tipo_pos: 'WALLET', smartphone: true, etiqueta: 'APP - WALLET', vigente_desde: '2026-03-01', vigente_hasta: null },
+      { metodo_pos: 'WALLET_BALANCE', tipo_pos: 'WALLET', smartphone: true, etiqueta: 'WALLET', vigente_desde: '2000-01-01', vigente_hasta: '2026-02-28' },
+    ];
+    const r = totalesPorDia(
+      [
+        { ...w, fecha: '2026-02-28', pedido: 'A', importe_cent: 1000 },
+        { ...w, fecha: '2026-03-01', pedido: 'B', importe_cent: 1000 },
+      ],
+      vigencias,
+      tiendas,
+    );
+    expect(r.map((f) => [f.fecha, f.etiqueta_pago])).toEqual([
+      ['2026-02-28', 'WALLET'],
+      ['2026-03-01', 'APP - WALLET'],
+    ]);
+  });
+
   it('cuenta pedidos distintos como tickets y todas las filas como líneas', () => {
     const r = totalesPorDia(
       [

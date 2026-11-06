@@ -40,7 +40,7 @@ for (let desdeFila = 0; ; desdeFila += PAGINA) {
   if (data.length < PAGINA) break;
 }
 
-const mapeo = await db.from('bi_mapeo_pago').select('metodo_pos,tipo_pos,smartphone,etiqueta');
+const mapeo = await db.from('bi_mapeo_pago').select('metodo_pos,tipo_pos,smartphone,etiqueta,vigente_desde,vigente_hasta');
 if (mapeo.error) throw new Error(`bi_mapeo_pago: ${mapeo.error.message}`);
 const tiendas = await db.from('bi_tiendas').select('company_id,store_id,nombre');
 if (tiendas.error) throw new Error(`bi_tiendas: ${tiendas.error.message}`);
