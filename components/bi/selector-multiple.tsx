@@ -21,10 +21,15 @@ export function SelectorMultiple({ etiqueta, valores, elegidos, alCambiar, busca
   const boton = useRef<HTMLButtonElement>(null);
   const nombre = (v: string) => nombres?.[v] ?? v;
 
+  const cerrar = () => {
+    setAbierto(false);
+    setConsulta('');
+  };
+
   useEffect(() => {
     if (!abierto) return;
     const fuera = (e: MouseEvent) => {
-      if (raiz.current && !raiz.current.contains(e.target as Node)) setAbierto(false);
+      if (raiz.current && !raiz.current.contains(e.target as Node)) cerrar();
     };
     document.addEventListener('mousedown', fuera);
     return () => document.removeEventListener('mousedown', fuera);
@@ -37,7 +42,17 @@ export function SelectorMultiple({ etiqueta, valores, elegidos, alCambiar, busca
     alCambiar(elegidos.includes(v) ? elegidos.filter((x) => x !== v) : [...elegidos, v]);
 
   return (
-    <div ref={raiz} className="relative min-w-0">
+    <div
+      ref={raiz}
+      className="relative min-w-0"
+      onKeyDown={(e) => {
+        if (abierto && e.key === 'Escape') {
+          e.stopPropagation();
+          cerrar();
+          boton.current?.focus();
+        }
+      }}
+    >
       <label htmlFor={id} className="mb-1 block text-xs font-semibold text-ink-2">
         {etiqueta}
       </label>
@@ -46,8 +61,7 @@ export function SelectorMultiple({ etiqueta, valores, elegidos, alCambiar, busca
         id={id}
         type="button"
         aria-expanded={abierto}
-        aria-haspopup="true"
-        onClick={() => setAbierto((a) => !a)}
+        onClick={() => (abierto ? cerrar() : setAbierto(true))}
         className="flex w-full items-center justify-between gap-2 rounded-md border border-line bg-surface px-3 py-2 text-left text-sm"
       >
         <span className="truncate">{elegidos.length ? `${elegidos.length} elegidos` : 'Todos'}</span>
@@ -57,13 +71,6 @@ export function SelectorMultiple({ etiqueta, valores, elegidos, alCambiar, busca
         <div
           role="group"
           aria-label={etiqueta}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.stopPropagation();
-              setAbierto(false);
-              boton.current?.focus();
-            }
-          }}
           className="absolute left-0 right-0 z-30 mt-1 max-h-64 overflow-auto rounded-md border border-line-strong bg-surface p-2 shadow-lg"
         >
           {buscar && (

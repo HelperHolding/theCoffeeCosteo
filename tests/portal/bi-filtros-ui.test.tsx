@@ -96,6 +96,28 @@ describe('<FiltrosBi>', () => {
     expect(alCambiar).toHaveBeenCalledTimes(1);
     expect(alCambiar).toHaveBeenLastCalledWith(expect.objectContaining({ montoMin: 15 }));
   });
+
+  it('un monto pendiente viaja con el siguiente filtro', () => {
+    vi.useFakeTimers();
+    const alCambiar = vi.fn();
+    render(<FiltrosBi filtros={base()} opciones={opciones} alCambiar={alCambiar} />);
+    fireEvent.click(screen.getByRole('button', { name: /Mostrar más filtros/ }));
+    fireEvent.change(screen.getByLabelText('Net Amount mínimo'), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText('Fecha Relativa'), { target: { value: 'mes-anterior' } });
+    expect(alCambiar).toHaveBeenCalledTimes(1);
+    expect(alCambiar).toHaveBeenLastCalledWith(expect.objectContaining({ fr: 'mes-anterior', montoMin: 15 }));
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(alCambiar).toHaveBeenCalledTimes(1);
+  });
+
+  it('Limpiar reinicia los borradores de monto', () => {
+    render(<FiltrosBi filtros={base()} opciones={opciones} alCambiar={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: /Mostrar más filtros/ }));
+    const min = screen.getByLabelText('Net Amount mínimo') as HTMLInputElement;
+    fireEvent.change(min, { target: { value: '15' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }));
+    expect(min.value).toBe('');
+  });
 });
 
 describe('<SelectorMultiple>', () => {
@@ -110,8 +132,10 @@ describe('<SelectorMultiple>', () => {
     expect(alCambiar).toHaveBeenLastCalledWith(['a', 'b']);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'b' } });
     expect(screen.queryByLabelText('a')).toBeNull();
-    fireEvent.keyDown(screen.getByRole('group', { name: 'Producto' }), { key: 'Escape' });
+    fireEvent.keyDown(boton, { key: 'Escape' });
     expect(boton.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(boton);
+    expect((screen.getByRole('searchbox') as HTMLInputElement).value).toBe('');
   });
 
   it('cierra con clic fuera', () => {

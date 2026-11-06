@@ -67,6 +67,7 @@ export function FiltrosBi({
   const [rango, setRango] = useState({ desde: filtros.desde ?? '', hasta: filtros.hasta ?? '' });
   const [monto, setMonto] = useState({ min: filtros.montoMin?.toString() ?? '', max: filtros.montoMax?.toString() ?? '' });
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendiente = useRef<Partial<FiltrosUrl> | null>(null);
 
   // La URL manda: si cambia desde fuera, los borradores se alinean.
   useEffect(() => setRango({ desde: filtros.desde ?? '', hasta: filtros.hasta ?? '' }), [filtros.desde, filtros.hasta]);
@@ -79,15 +80,25 @@ export function FiltrosBi({
   const cancelarPendiente = () => {
     if (temporizador.current) clearTimeout(temporizador.current);
     temporizador.current = null;
+    pendiente.current = null;
+  };
+  const sincronizarBorradores = (f: FiltrosUrl) => {
+    setRango({ desde: f.desde ?? '', hasta: f.hasta ?? '' });
+    setMonto({ min: f.montoMin?.toString() ?? '', max: f.montoMax?.toString() ?? '' });
   };
   const aplicar = (cambio: Partial<FiltrosUrl>) => {
+    // Un monto por aplicar viaja en esta misma llamada en vez de perderse.
+    const siguiente = { ...filtros, ...pendiente.current, ...cambio };
     cancelarPendiente();
-    alCambiar({ ...filtros, ...cambio });
+    sincronizarBorradores(siguiente);
+    alCambiar(siguiente);
   };
   const aplicarConRetraso = (cambio: Partial<FiltrosUrl>) => {
     cancelarPendiente();
+    pendiente.current = cambio;
     temporizador.current = setTimeout(() => {
       temporizador.current = null;
+      pendiente.current = null;
       alCambiar({ ...filtros, ...cambio });
     }, RETRASO_MS);
   };
@@ -231,7 +242,9 @@ export function FiltrosBi({
           type="button"
           onClick={() => {
             cancelarPendiente();
-            alCambiar(leerUrl(new URLSearchParams()));
+            const limpio = leerUrl(new URLSearchParams());
+            sincronizarBorradores(limpio);
+            alCambiar(limpio);
           }}
           className="rounded-md px-3 py-1.5 text-sm font-semibold text-crema-strong underline"
         >
