@@ -40,4 +40,15 @@ describe('semillas del BI (migración 41)', () => {
     );
     expect(r.rows).toEqual([{ etiqueta: 'APP - CARD' }]);
   });
+
+  it('WALLET_BALANCE tiene dos vigencias (WALLET hasta 2026-02-28; APP - WALLET desde 2026-03-01)', async () => {
+    const r = await db.query<{ etiqueta: string; vigente_desde: string; vigente_hasta: string | null }>(
+      `select etiqueta, vigente_desde::text, vigente_hasta::text from bi_mapeo_pago
+       where metodo_pos = 'WALLET_BALANCE' order by vigente_desde`,
+    );
+    expect(r.rows).toEqual([
+      { etiqueta: 'WALLET', vigente_desde: '2000-01-01', vigente_hasta: '2026-02-28' },
+      { etiqueta: 'APP - WALLET', vigente_desde: '2026-03-01', vigente_hasta: null },
+    ]);
+  });
 });
