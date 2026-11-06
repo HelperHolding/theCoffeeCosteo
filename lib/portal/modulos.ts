@@ -1,12 +1,12 @@
 import type { NivelModulo } from '../supabase/database.types';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
-export type IdModulo = 'costeo' | 'crm' | 'sucursales';
+export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi';
 /**
  * Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita (sale de perfiles.rol).
  * 'sucursales_costeo': ver el Costeo de sus sucursales dentro de Sucursales, sin entrar al módulo Costeo.
  */
-export type Accesos = Partial<Record<'crm' | 'sucursales' | 'sucursales_costeo', NivelModulo>>;
+export type Accesos = Partial<Record<'crm' | 'sucursales' | 'sucursales_costeo' | 'bi', NivelModulo>>;
 
 export interface Modulo {
   id: IdModulo;
@@ -39,6 +39,14 @@ export const modulos: Modulo[] = [
     href: '/sucursales',
     // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales).
     acceso: (a) => a.sucursales !== undefined,
+  },
+  {
+    id: 'bi',
+    nombre: 'BI',
+    descripcion: 'Tableros de la red (los de Zoho Analytics): ventas, mezcla, pagos, productos y tendencias.',
+    href: '/bi',
+    // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales); lo exige bi_acceso.
+    acceso: (a) => a.bi !== undefined,
   },
 ];
 
