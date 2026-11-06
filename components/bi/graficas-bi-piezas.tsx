@@ -34,6 +34,15 @@ export const W = 720;
 export const LINEA_REJILLA = 'stroke-line';
 export const TEXTO_EJE = 'fill-muted-foreground text-[11px]';
 
+/** Pesos en el eje, de centavos a compacto ($400 k, $4 M): las cifras grandes de las tendencias caben en el margen. */
+const PESOS_EJE = new Intl.NumberFormat('es-MX', {
+  style: 'currency',
+  currency: 'MXN',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+export const dineroEje = (cent: number) => PESOS_EJE.format(cent / 100);
+
 /** Tres marcas redondas (0, mitad y tope) que cubren el máximo. */
 export function marcas(max: number) {
   const paso = 10 ** Math.floor(Math.log10(Math.max(1, max / 2)));

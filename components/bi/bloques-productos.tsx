@@ -9,12 +9,16 @@ import type { ErrorLecturaUi } from '@/components/sucursales/use-lectura';
 import type { rankingPorMes, tendenciaAnual, tendenciaSemanal } from '@/lib/bi/bloques';
 import { AvisoDesactualizado } from './estados-bi';
 import { Lineas, type Serie } from './graficas-bi';
+import { dineroEje } from './graficas-bi-piezas';
 
 const PRIMEROS = 20;
-const nombreMes = (mes: string) =>
-  new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+/** «Noviembre de 2026»: mayúscula solo al inicio (capitalize de CSS daría «De»). */
+const nombreMes = (mes: string) => {
+  const t = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(`${mes.slice(0, 10)}T12:00:00Z`),
   );
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
 
 /** Bloque 7: producto × mes, ordenado por venta. Por omisión, el mes más reciente y los 20 primeros. */
 export function RankingProductos({ meses }: { meses: ReturnType<typeof rankingPorMes> }) {
@@ -42,7 +46,7 @@ export function RankingProductos({ meses }: { meses: ReturnType<typeof rankingPo
                 setElegido(e.target.value);
                 setTodos(false);
               }}
-              className="rounded-md border border-line bg-surface px-3 py-2 text-sm capitalize"
+              className="rounded-md border border-line bg-surface px-3 py-2 text-sm"
             >
               {meses.map((m) => (
                 <option key={m.mes} value={m.mes}>
@@ -160,7 +164,7 @@ export function Tendencias({
   recibidoEn: number | null;
   alReintentar: () => void;
 }) {
-  const eje = (v: number) => dinero(v, 'MXN', false);
+  const eje = dineroEje;
   return (
     <Tarjeta titulo="Tendencias" descripcion="Ignoran las fechas y las semanas, como en Zoho.">
       {anual && semanal ? (
