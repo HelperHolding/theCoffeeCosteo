@@ -296,6 +296,9 @@ export interface Database {
         Args: { p_companias: number[]; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      bi_opciones: { Args: { p: Json }; Returns: Json };
+      bi_tablero: { Args: { p: Json }; Returns: Json };
+      bi_tendencias: { Args: { p: Json }; Returns: Json };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;
