@@ -147,8 +147,8 @@ Cotejo después de la 42 (2026-08-03 a 10-25, mostrador + app, neto contra Zoho)
 | 482 | −$0.23 |
 | 498 | −$0.03 |
 
-**Pendiente:** la etiqueta de pago. Antes del 2026-03-01, `WALLET_BALANCE` en Zoho es «WALLET»; hoy `bi_mapeo_pago`
-no tiene fechas y lo etiqueta «APP - WALLET».
+**Resuelto en la migración 43:** la etiqueta de pago. Antes del 2026-03-01, `WALLET_BALANCE` en Zoho es «WALLET»; desde
+ese día, «APP - WALLET». `bi_mapeo_pago` ya tiene vigencia por fecha (ver `docs/bi/03-TABLERO.md`).
 
 ### Aplicar la migración 42
 
