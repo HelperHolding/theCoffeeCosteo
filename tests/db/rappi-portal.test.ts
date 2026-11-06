@@ -235,15 +235,20 @@ describe('rappi_importar', () => {
   });
 });
 
-describe('tiendas de Rappi (migraciones 29 y 36)', () => {
-  it('Guadalajara (11) y el lote 1 de CDMX (9, sin Roma Sur) tienen su tienda normal y su Turbo', async () => {
+describe('tiendas de Rappi (migraciones 29, 36 y 39)', () => {
+  it('Guadalajara (11), lote 1 (9, sin Roma Sur) y lote 2 (10): normal y Turbo, salvo Patio Santa Fe y Patio Toluca', async () => {
     const r = await db.query<{ company_id: number; canales: string }>(
       `select company_id, string_agg(canal, ',' order by canal) canales from public.rappi_tiendas group by 1 order by 1`,
     );
     expect(r.rows.map((x) => x.company_id)).toEqual([
-      384, 457, 459, 460, 477, 507, 513, 514, 515, 518, 519, 532, 545, 546, 567, 607, 625, 626, 631, 670,
+      384, 457, 459, 460, 477, 506, 507, 513, 514, 515, 518, 519, 532, 545, 546, 549, 550, 567, 606, 607, 608,
+      610, 611, 625, 626, 631, 642, 643, 646, 670,
     ]);
-    expect(new Set(r.rows.map((x) => x.canales))).toEqual(new Set(['normal,turbo']));
+    const soloNormal = r.rows.filter((x) => x.canales !== 'normal,turbo');
+    expect(soloNormal).toEqual([
+      { company_id: 643, canales: 'normal' },
+      { company_id: 646, canales: 'normal' },
+    ]);
   });
 });
 
