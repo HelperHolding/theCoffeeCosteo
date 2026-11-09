@@ -20,7 +20,9 @@ export function filasPagos(hoy: string): Fila[] {
   return [
     ['CODFPTPVEXT', 'DESCFPTPVEXT', 'CODFPAREAS', 'DESCFAREAS', 'FechaRegistro'],
     ...FORMAS_PAGO.map((f): Fila =>
-      f.codigo === 101 ? [101, f.descripcion, 1, 'EFECTIVO PESOS MX', hoy] : [f.codigo, f.descripcion, null, null, hoy],
+      f.codigo === 101
+        ? [101, f.descripcion, 1, 'EFECTIVO PESOS MX', hoy]
+        : [f.codigo, f.descripcion, null, null, hoy],
     ),
   ];
 }
@@ -30,10 +32,20 @@ const m = (x: number | null) => (x === null ? '—' : x.toFixed(2));
 
 export function reporte(
   e: Exportacion,
-  x: { desde: string; hasta: string; estado: 'completa' | 'parcial' | 'error'; avisos: string[]; nuevos: Articulo[] },
+  x: {
+    desde: string;
+    hasta: string;
+    estado: 'completa' | 'parcial' | 'error';
+    avisos: string[];
+    nuevos: Articulo[];
+  },
 ): string {
   const sinMapeo = [
-    ...new Set(e.descartados.filter((d) => d.motivo.startsWith(SIN_MAPEO)).map((d) => d.motivo.slice(SIN_MAPEO.length))),
+    ...new Set(
+      e.descartados
+        .filter((d) => d.motivo.startsWith(SIN_MAPEO))
+        .map((d) => d.motivo.slice(SIN_MAPEO.length)),
+    ),
   ];
   const l: string[] = [`# Exportación Areas · ${COD_TPV} · ${x.desde} a ${x.hasta}`, ''];
   if (x.estado !== 'completa')
@@ -58,7 +70,13 @@ export function reporte(
       ...e.descartados.map((d) => `| ${d.id} | ${d.fecha} ${d.hora} | ${d.motivo} |`),
     );
   else l.push('Ninguno.');
-  l.push('', '## Formas de pago sin mapeo', '', ...(sinMapeo.length ? sinMapeo.map((s) => `- ${s}`) : ['Ninguna.']), '');
+  l.push(
+    '',
+    '## Formas de pago sin mapeo',
+    '',
+    ...(sinMapeo.length ? sinMapeo.map((s) => `- ${s}`) : ['Ninguna.']),
+    '',
+  );
   l.push('## Artículos nuevos en el catálogo', '');
   if (x.nuevos.length)
     l.push(

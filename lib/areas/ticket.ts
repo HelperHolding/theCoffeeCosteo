@@ -33,7 +33,10 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
   // dif = Σ importe − cobrado: positivo es un descuento de pedido; negativo, líneas que no alcanzan lo cobrado.
   const dif = dtg - lineas.reduce((s, x) => s + x.dto, 0);
   if (dif < -100 || dtg < 0)
-    return { ok: false, motivo: `Las líneas suman $${(-Math.min(dif, dtg) / 100).toFixed(2)} menos que lo cobrado` };
+    return {
+      ok: false,
+      motivo: `Las líneas suman $${(-Math.min(dif, dtg) / 100).toFixed(2)} menos que lo cobrado`,
+    };
 
   const venta = pesos(p.ventaCent);
   return {

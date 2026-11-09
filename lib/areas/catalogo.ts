@@ -36,7 +36,12 @@ export class Catalogo {
       existente.descripcion = descripcion.trim();
       return existente.cod_art;
     }
-    const nuevo: Articulo = { cod_art: this.siguiente++, codigo: c, descripcion: descripcion.trim(), precio: null };
+    const nuevo: Articulo = {
+      cod_art: this.siguiente++,
+      codigo: c,
+      descripcion: descripcion.trim(),
+      precio: null,
+    };
     this.porCodigo.set(c, nuevo);
     this.agregados.push(nuevo);
     return nuevo.cod_art;

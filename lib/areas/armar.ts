@@ -5,8 +5,19 @@ import { aTicket } from './ticket';
 import type { ArqueoCaja, TicketCompleto } from './tipos';
 import { validarArqueo, validarTicket } from './validar';
 
-export interface Descartado { id: number; fecha: string; hora: string; motivo: string }
-export interface Dia { fecha: string; leidos: number; validos: number; descartados: number; monto: number }
+export interface Descartado {
+  id: number;
+  fecha: string;
+  hora: string;
+  motivo: string;
+}
+export interface Dia {
+  fecha: string;
+  leidos: number;
+  validos: number;
+  descartados: number;
+  monto: number;
+}
 export interface Exportacion {
   /** En orden de fecha y hora. */
   tickets: TicketCompleto[];

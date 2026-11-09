@@ -10,3 +10,4 @@ supabase/.branches/
 .next/
 *.tsbuildinfo
 next-env.d.ts
+datos/areas/*/
