@@ -1,1 +1,494 @@
-[]
+[
+  {
+    "cod_art": 1001,
+    "codigo": "CHAI FRAP",
+    "descripcion": "Chai Frap",
+    "precio": 89
+  },
+  {
+    "cod_art": 1002,
+    "codigo": "4TW",
+    "descripcion": "True White",
+    "precio": 68
+  },
+  {
+    "cod_art": 1003,
+    "codigo": "PCFICEAPP",
+    "descripcion": "Isopure Iced Latte",
+    "precio": 109
+  },
+  {
+    "cod_art": 1004,
+    "codigo": "5IL",
+    "descripcion": "Iced Latte",
+    "precio": 70
+  },
+  {
+    "cod_art": 1005,
+    "codigo": "6CM",
+    "descripcion": "Chai Latte",
+    "precio": 68
+  },
+  {
+    "cod_art": 1006,
+    "codigo": "1IC",
+    "descripcion": "Iced Vanilla",
+    "precio": 99
+  },
+  {
+    "cod_art": 1007,
+    "codigo": "3FOOD3",
+    "descripcion": "Pain au Chocolat",
+    "precio": 42
+  },
+  {
+    "cod_art": 1008,
+    "codigo": "BR3",
+    "descripcion": "Grilled Ham Cheese and Tomato Sandwich",
+    "precio": 104
+  },
+  {
+    "cod_art": 1009,
+    "codigo": "2SC",
+    "descripcion": "Salted Caramel",
+    "precio": 94
+  },
+  {
+    "cod_art": 1010,
+    "codigo": "CROSTUAPP",
+    "descripcion": "Croissant filled with cheese and ham",
+    "precio": 73
+  },
+  {
+    "cod_art": 1011,
+    "codigo": "2AM",
+    "descripcion": "Americano",
+    "precio": 52
+  },
+  {
+    "cod_art": 1012,
+    "codigo": "3BG",
+    "descripcion": "Black Ginger",
+    "precio": 94
+  },
+  {
+    "cod_art": 1013,
+    "codigo": "ISOPURE ICED LATTE",
+    "descripcion": "Isopure Iced Latte",
+    "precio": 109
+  },
+  {
+    "cod_art": 1014,
+    "codigo": "BRO13",
+    "descripcion": "Brownie",
+    "precio": 63
+  },
+  {
+    "cod_art": 1015,
+    "codigo": "1FC",
+    "descripcion": "Flat Caramel",
+    "precio": 111
+  },
+  {
+    "cod_art": 1016,
+    "codigo": "FRATARAPP",
+    "descripcion": "Taro Frap",
+    "precio": 122
+  },
+  {
+    "cod_art": 1017,
+    "codigo": "TRUMISAPP",
+    "descripcion": "True White + Grilled Ham & Cheese Sandwich",
+    "precio": 119
+  },
+  {
+    "cod_art": 1018,
+    "codigo": "CPUMICAPP",
+    "descripcion": "Pumpkin Iced Latte",
+    "precio": 110
+  },
+  {
+    "cod_art": 1019,
+    "codigo": "1CBWB",
+    "descripcion": "White bag 250g",
+    "precio": 220
+  },
+  {
+    "cod_art": 1020,
+    "codigo": "ZOETWIAPP",
+    "descripcion": "Zoe Water Twist",
+    "precio": 50
+  },
+  {
+    "cod_art": 1021,
+    "codigo": "WATPERAPP",
+    "descripcion": "Mineral Water Perrier",
+    "precio": 52
+  },
+  {
+    "cod_art": 1022,
+    "codigo": "5CR",
+    "descripcion": "Cinnamon Roll",
+    "precio": 50
+  },
+  {
+    "cod_art": 1023,
+    "codigo": "3MC",
+    "descripcion": "Mad Mocha",
+    "precio": 84
+  },
+  {
+    "cod_art": 1024,
+    "codigo": "2VLT",
+    "descripcion": "Vanilla Latte",
+    "precio": 78
+  },
+  {
+    "cod_art": 1025,
+    "codigo": "CAKLEMAPP",
+    "descripcion": "Lemon Cake",
+    "precio": 72
+  },
+  {
+    "cod_art": 1026,
+    "codigo": "SALFRAAPP",
+    "descripcion": "Salted Caramel Frap",
+    "precio": 89
+  },
+  {
+    "cod_art": 1027,
+    "codigo": "COFFRAAPP",
+    "descripcion": "Coffee Frap",
+    "precio": 89
+  },
+  {
+    "cod_art": 1028,
+    "codigo": "1ICHAI",
+    "descripcion": "Chai Iced Latte",
+    "precio": 70
+  },
+  {
+    "cod_art": 1029,
+    "codigo": "9IMT",
+    "descripcion": "Ichigo Matcha",
+    "precio": 87
+  },
+  {
+    "cod_art": 1030,
+    "codigo": "GRILLED HAM CHEESE AND TOMATO SANDWICH",
+    "descripcion": "Grilled Ham Cheese and Tomato Sandwich",
+    "precio": 104
+  },
+  {
+    "cod_art": 1031,
+    "codigo": "PAN DE MUERTO",
+    "descripcion": "Pan de Muerto",
+    "precio": 65
+  },
+  {
+    "cod_art": 1032,
+    "codigo": "ICED VANILLA",
+    "descripcion": "Iced Vanilla",
+    "precio": 99
+  },
+  {
+    "cod_art": 1033,
+    "codigo": "CPUMFRAPP",
+    "descripcion": "Pumpkin Spice Frap",
+    "precio": 99
+  },
+  {
+    "cod_art": 1034,
+    "codigo": "PCFMATAPP",
+    "descripcion": "Isopure Iced Matcha",
+    "precio": 109
+  },
+  {
+    "cod_art": 1035,
+    "codigo": "KOAMDLAPP",
+    "descripcion": "Kouign Amann Dulce de Leche",
+    "precio": 52
+  },
+  {
+    "cod_art": 1036,
+    "codigo": "6ICB",
+    "descripcion": "Iced Black",
+    "precio": 52
+  },
+  {
+    "cod_art": 1037,
+    "codigo": "PANMUEAPP",
+    "descripcion": "Pan de Muerto",
+    "precio": 65
+  },
+  {
+    "cod_art": 1038,
+    "codigo": "1COLDB",
+    "descripcion": "Cold brew",
+    "precio": 78
+  },
+  {
+    "cod_art": 1039,
+    "codigo": "CPUMLAAPP",
+    "descripcion": "Pumpkin Latte",
+    "precio": 99
+  },
+  {
+    "cod_art": 1040,
+    "codigo": "ACABOWAPP",
+    "descripcion": "Açaí Bowl",
+    "precio": 188
+  },
+  {
+    "cod_art": 1041,
+    "codigo": "MISICEDAPP",
+    "descripcion": "Iced latte + sandwich jamón y queso",
+    "precio": 119
+  },
+  {
+    "cod_art": 1042,
+    "codigo": "1PB",
+    "descripcion": "Pure Black (Double Shot)",
+    "precio": 58
+  },
+  {
+    "cod_art": 1043,
+    "codigo": "SHCO",
+    "descripcion": "Gelato Frappé Coffee",
+    "precio": 94
+  },
+  {
+    "cod_art": 1044,
+    "codigo": "CROISSANT FILLED WITH CHEESE AND HAM",
+    "descripcion": "Croissant filled with cheese and ham",
+    "precio": 73
+  },
+  {
+    "cod_art": 1045,
+    "codigo": "FELSCHAPP",
+    "descripcion": "Félix Schorle",
+    "precio": 63
+  },
+  {
+    "cod_art": 1046,
+    "codigo": "FSOD2",
+    "descripcion": "Fresh Soda Pink Lemonade",
+    "precio": 86
+  },
+  {
+    "cod_art": 1047,
+    "codigo": "2FOOD2",
+    "descripcion": "Croissant Traditional",
+    "precio": 47
+  },
+  {
+    "cod_art": 1048,
+    "codigo": "SOICAUAPP",
+    "descripcion": "Sora Iced Latte (Signature)",
+    "precio": 68
+  },
+  {
+    "cod_art": 1049,
+    "codigo": "BRICE",
+    "descripcion": "Brownie with ice cream",
+    "precio": 89
+  },
+  {
+    "cod_art": 1050,
+    "codigo": "ESPTONAPP",
+    "descripcion": "Espresso Tonic",
+    "precio": 94
+  },
+  {
+    "cod_art": 1051,
+    "codigo": "MQ1",
+    "descripcion": "Grilled Ham & Cheese Sandwich",
+    "precio": 111
+  },
+  {
+    "cod_art": 1052,
+    "codigo": "RAPPI-COMBO:CREA TU THE COFFEE",
+    "descripcion": "Crea Tu The Coffee",
+    "precio": 199
+  },
+  {
+    "cod_art": 1053,
+    "codigo": "COOTRAAPP",
+    "descripcion": "Cookie Traditional",
+    "precio": 52
+  },
+  {
+    "cod_art": 1054,
+    "codigo": "CAKBANAPP",
+    "descripcion": "Banana Cake",
+    "precio": 70
+  },
+  {
+    "cod_art": 1055,
+    "codigo": "HALCRCAPP",
+    "descripcion": "Hazelnut Cream Croissant",
+    "precio": 58
+  },
+  {
+    "cod_art": 1056,
+    "codigo": "ICED BLACK",
+    "descripcion": "Iced Black",
+    "precio": 52
+  },
+  {
+    "cod_art": 1057,
+    "codigo": "4MIL",
+    "descripcion": "Matcha Iced Latte",
+    "precio": 67
+  },
+  {
+    "cod_art": 1058,
+    "codigo": "7IC",
+    "descripcion": "Matcha iced mint",
+    "precio": 105
+  },
+  {
+    "cod_art": 1059,
+    "codigo": "5MC",
+    "descripcion": "Matcha latte",
+    "precio": 68
+  },
+  {
+    "cod_art": 1060,
+    "codigo": "KOAMAVAPP",
+    "descripcion": "Hazelnut Kouign Amann",
+    "precio": 52
+  },
+  {
+    "cod_art": 1061,
+    "codigo": "SHCI",
+    "descripcion": "Gelato Frappé Chai",
+    "precio": 118
+  },
+  {
+    "cod_art": 1062,
+    "codigo": "TRWCROAPP",
+    "descripcion": "True White + Croissant de queso y jamón",
+    "precio": 150
+  },
+  {
+    "cod_art": 1063,
+    "codigo": "1HDV60",
+    "descripcion": "Hot Drip V60",
+    "precio": 94
+  },
+  {
+    "cod_art": 1064,
+    "codigo": "FSOD4",
+    "descripcion": "Fresh Soda Passion fruit",
+    "precio": 81
+  },
+  {
+    "cod_art": 1065,
+    "codigo": "CROGOUAPP",
+    "descripcion": "Croissant Serrano & Gouda",
+    "precio": 94
+  },
+  {
+    "cod_art": 1066,
+    "codigo": "4UC",
+    "descripcion": "Urban Chocolate",
+    "precio": 78
+  },
+  {
+    "cod_art": 1067,
+    "codigo": "RAPPI:SANDWICH JAMÓN, QUESO. TOMATE Y ORÉGANO",
+    "descripcion": "Sandwich Jamón, Queso. Tomate y Orégano.",
+    "precio": 135
+  },
+  {
+    "cod_art": 1068,
+    "codigo": "COOKIE TRADITIONAL",
+    "descripcion": "Cookie Traditional",
+    "precio": 52
+  },
+  {
+    "cod_art": 1069,
+    "codigo": "FRACHAAPP",
+    "descripcion": "Chai Frap",
+    "precio": 110
+  },
+  {
+    "cod_art": 1070,
+    "codigo": "COOMATAPP",
+    "descripcion": "Cookie Matcha & White Chocolate",
+    "precio": 60
+  },
+  {
+    "cod_art": 1071,
+    "codigo": "COOCHOAPP",
+    "descripcion": "Cookie Triple Chocolate",
+    "precio": 58
+  },
+  {
+    "cod_art": 1072,
+    "codigo": "VANILLA LATTE",
+    "descripcion": "Vanilla Latte",
+    "precio": 78
+  },
+  {
+    "cod_art": 1073,
+    "codigo": "ISOPURE ICED MATCHA",
+    "descripcion": "Isopure Iced Matcha",
+    "precio": 109
+  },
+  {
+    "cod_art": 1074,
+    "codigo": "ICECHOAPP",
+    "descripcion": "Iced Chocolate",
+    "precio": 99
+  },
+  {
+    "cod_art": 1075,
+    "codigo": "COLD BREW",
+    "descripcion": "Cold brew",
+    "precio": 78
+  },
+  {
+    "cod_art": 1076,
+    "codigo": "1TB",
+    "descripcion": "Totebags",
+    "precio": 280
+  },
+  {
+    "cod_art": 1077,
+    "codigo": "RAPPI:FRESH SODA PASSION FRUIT",
+    "descripcion": "Fresh Soda Passion Fruit",
+    "precio": 102
+  },
+  {
+    "cod_art": 1078,
+    "codigo": "1CDV60",
+    "descripcion": "Cold Drip V60",
+    "precio": 94
+  },
+  {
+    "cod_art": 1079,
+    "codigo": "SOLAAUAPP",
+    "descripcion": "Sora Latte (Signature)",
+    "precio": 63
+  },
+  {
+    "cod_art": 1080,
+    "codigo": "MATLEMAPP",
+    "descripcion": "Matcha Iced Latte + Lemon Cake",
+    "precio": 108
+  },
+  {
+    "cod_art": 1081,
+    "codigo": "BANANA CAKE",
+    "descripcion": "Banana Cake",
+    "precio": 52
+  },
+  {
+    "cod_art": 1082,
+    "codigo": "FRAMATAPP",
+    "descripcion": "Matcha Frap",
+    "precio": null
+  }
+]

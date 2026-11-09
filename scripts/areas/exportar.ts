@@ -91,8 +91,14 @@ const libro = (filas: Fila[]) => {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(filas), 'Sheet1');
   return wb;
 };
-XLSX.writeFile(libro(filasArt), `${dir}/Carga Art TPVs Externos.xlsx`);
-XLSX.writeFile(libro(filasPag), `${dir}/Formas de Pago y Monedas.xlsx`);
+await writeFile(
+  `${dir}/Carga Art TPVs Externos.xlsx`,
+  XLSX.write(libro(filasArt), { type: 'buffer', bookType: 'xlsx' }),
+);
+await writeFile(
+  `${dir}/Formas de Pago y Monedas.xlsx`,
+  XLSX.write(libro(filasPag), { type: 'buffer', bookType: 'xlsx' }),
+);
 await writeFile(`${dir}/reporte.md`, textoReporte);
 
 console.log(
