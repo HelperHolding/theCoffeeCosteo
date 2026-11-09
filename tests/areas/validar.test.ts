@@ -5,21 +5,60 @@ import type { ArqueoCaja, TicketCompleto } from '../../lib/areas/tipos';
 const PROHIBIDOS = ['Rubén Darío'];
 const ticket = (): TicketCompleto => ({
   Cabecera: {
-    COD_TPV: 'TC01', NUM_SES: 20261109, NUM_TIK: 32235824, TIP_OPE: 'V', MOM_OPE: '2026-11-09 10:15:00',
-    IMP_VEN: 428.5, ID_MVO_DTO: 0, IMP_DTG: 19.5,
+    COD_TPV: 'TC01',
+    NUM_SES: 20261109,
+    NUM_TIK: 32235824,
+    TIP_OPE: 'V',
+    MOM_OPE: '2026-11-09 10:15:00',
+    IMP_VEN: 428.5,
+    ID_MVO_DTO: 0,
+    IMP_DTG: 19.5,
   },
   Detalles: [
-    { NUM_LIN: 1, COD_ART: 1001, DES_ART: 'Latte', UNI_VEN: 1, PRE_UNI: 348, PRE_UNI_SIN_IVA: 300,
-      PRE_UNI_SIN_IEPS: 300, PRE_FIN: 348, IMP_DTO: 20, POR_IVA: 16, BAS_IVA: 300, IMP_IVA: 48, POR_IEPS: 0,
-      BAS_IEPS: 0, IMP_IEPS: 0 },
-    { NUM_LIN: 2, COD_ART: 1002, DES_ART: 'Croissant', UNI_VEN: 1, PRE_UNI: 100, PRE_UNI_SIN_IVA: 86.21,
-      PRE_UNI_SIN_IEPS: 86.21, PRE_FIN: 100, IMP_DTO: 0, POR_IVA: 16, BAS_IVA: 86.21, IMP_IVA: 13.79, POR_IEPS: 0,
-      BAS_IEPS: 0, IMP_IEPS: 0 },
+    {
+      NUM_LIN: 1,
+      COD_ART: 1001,
+      DES_ART: 'Latte',
+      UNI_VEN: 1,
+      PRE_UNI: 348,
+      PRE_UNI_SIN_IVA: 300,
+      PRE_UNI_SIN_IEPS: 300,
+      PRE_FIN: 348,
+      IMP_DTO: 20,
+      POR_IVA: 16,
+      BAS_IVA: 300,
+      IMP_IVA: 48,
+      POR_IEPS: 0,
+      BAS_IEPS: 0,
+      IMP_IEPS: 0,
+    },
+    {
+      NUM_LIN: 2,
+      COD_ART: 1002,
+      DES_ART: 'Croissant',
+      UNI_VEN: 1,
+      PRE_UNI: 100,
+      PRE_UNI_SIN_IVA: 86.21,
+      PRE_UNI_SIN_IEPS: 86.21,
+      PRE_FIN: 100,
+      IMP_DTO: 0,
+      POR_IVA: 16,
+      BAS_IVA: 86.21,
+      IMP_IVA: 13.79,
+      POR_IEPS: 0,
+      BAS_IEPS: 0,
+      IMP_IEPS: 0,
+    },
   ],
   FormasDePago: [{ NUM_ORD: 1, COD_FPG: 102, COD_MON: 1, IMP_FPG: 428.5, IMP_DIV: 428.5, CAM_MON: 1 }],
 });
 const arqueo = (): ArqueoCaja => ({
-  COD_TPV: 'TC01', NUM_SES: 20261109, Fecha: '2026-11-09', Hora: '10:15:00', Monto: 428.5, Descuadres: 0,
+  COD_TPV: 'TC01',
+  NUM_SES: 20261109,
+  Fecha: '2026-11-09',
+  Hora: '10:15:00',
+  Monto: 428.5,
+  Descuadres: 0,
 });
 
 describe('validarTicket', () => {
@@ -78,9 +117,21 @@ describe('validarArqueo', () => {
     expect(validarArqueo(arqueo(), [ticket()], PROHIBIDOS)).toEqual([]);
   });
   it('rechaza un COD_TPV de 5 caracteres', () => {
-    expect(validarArqueo({ ...arqueo(), COD_TPV: 'TC001' }, [ticket()], PROHIBIDOS).join(' ')).toMatch(/COD_TPV/);
+    expect(validarArqueo({ ...arqueo(), COD_TPV: 'TC001' }, [ticket()], PROHIBIDOS).join(' ')).toMatch(
+      /COD_TPV/,
+    );
   });
   it('rechaza un Monto que no es la suma de IMP_VEN', () => {
     expect(validarArqueo({ ...arqueo(), Monto: 500 }, [ticket()], PROHIBIDOS).join(' ')).toMatch(/Monto/);
+  });
+});
+
+describe('validar · anonimato sin citar el texto', () => {
+  it('el motivo dice dónde está el nombre pero no lo repite', () => {
+    const t = ticket();
+    t.Detalles[0].DES_ART = 'Latte Rubén Darío';
+    const m = validarTicket(t, PROHIBIDOS).join(' ');
+    expect(m).toMatch(/Anonimato/);
+    expect(m).not.toMatch(/rub[eé]n|dar[ií]o/i);
   });
 });

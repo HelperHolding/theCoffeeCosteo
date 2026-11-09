@@ -38,8 +38,11 @@ export function reporte(
     estado: 'completa' | 'parcial' | 'error';
     avisos: string[];
     nuevos: Articulo[];
+    /** Días con lectura incompleta. Si falta y la lectura no está completa, se marcan todos. */
+    incompletos?: string[];
   },
 ): string {
+  const incompletos = new Set(x.incompletos ?? (x.estado === 'completa' ? [] : e.dias.map((d) => d.fecha)));
   const sinMapeo = [
     ...new Set(
       e.descartados
@@ -48,15 +51,21 @@ export function reporte(
     ),
   ];
   const l: string[] = [`# Exportación Areas · ${COD_TPV} · ${x.desde} a ${x.hasta}`, ''];
-  if (x.estado !== 'completa')
-    l.push(`> **LECTURA INCOMPLETA (${x.estado}).** No mandar estos días como completos.`, '');
+  if (x.estado !== 'completa' || incompletos.size)
+    l.push(
+      `> **LECTURA INCOMPLETA (${x.estado}).** No mandar como completos estos días: ${[...incompletos].sort().join(', ') || 'sin detalle por día'}.`,
+      '',
+    );
   if (x.avisos.length) l.push('## Avisos de la lectura', '', ...x.avisos.map((a) => `- ${a}`), '');
   l.push(
     '## Por día',
     '',
-    '| Fecha | Leídos | Válidos | Descartados | Monto |',
-    '|---|---|---|---|---|',
-    ...e.dias.map((d) => `| ${d.fecha} | ${d.leidos} | ${d.validos} | ${d.descartados} | ${m(d.monto)} |`),
+    '| Fecha | Leídos | Válidos | Descartados | Monto | Lectura |',
+    '|---|---|---|---|---|---|',
+    ...e.dias.map(
+      (d) =>
+        `| ${d.fecha} | ${d.leidos} | ${d.validos} | ${d.descartados} | ${m(d.monto)} | ${incompletos.has(d.fecha) ? 'INCOMPLETA' : 'completa'} |`,
+    ),
     '',
     `Total: ${e.tickets.length} tickets y ${e.arqueos.length} arqueos.`,
     '',

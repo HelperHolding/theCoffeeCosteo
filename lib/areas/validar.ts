@@ -7,18 +7,25 @@ const suma = (xs: number[]) => xs.reduce((s, x) => s + Math.round(x * 100), 0) /
 const plano = (s: string) =>
   s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 
-function textos(x: unknown): string[] {
-  if (typeof x === 'string') return [x];
-  if (Array.isArray(x)) return x.flatMap(textos);
-  if (x && typeof x === 'object') return Object.values(x).flatMap(textos);
+function textos(x: unknown, ruta = ''): [string, string][] {
+  if (typeof x === 'string') return [[ruta, x]];
+  if (Array.isArray(x)) return x.flatMap((v, i) => textos(v, `${ruta}[${i}]`));
+  if (x && typeof x === 'object')
+    return Object.entries(x).flatMap(([k, v]) => textos(v, ruta ? `${ruta}.${k}` : k));
   return [];
 }
 
-/** Ningún texto puede contener el nombre de la tienda (sin distinguir mayúsculas ni acentos). */
+/** ¿El texto contiene alguno de los nombres prohibidos (sin distinguir mayúsculas ni acentos)? */
+export const contieneNombre = (texto: string, prohibidos: string[]) =>
+  prohibidos.map(plano).some((n) => n !== '' && plano(texto).includes(n));
+
+/**
+ * Ningún texto puede contener el nombre de la tienda. El motivo dice DÓNDE está, nunca repite el texto: el motivo
+ * termina en reporte.md y sería otra fuga.
+ */
 function anonimato(x: unknown, prohibidos: string[]): string[] {
-  const p = prohibidos.map(plano).filter(Boolean);
-  const malos = textos(x).filter((t) => p.some((n) => plano(t).includes(n)));
-  return malos.length ? [`Anonimato: el texto «${malos[0]}» contiene el nombre de la tienda`] : [];
+  const malo = textos(x).find(([, t]) => contieneNombre(t, prohibidos));
+  return malo ? [`Anonimato: ${malo[0]} contiene el nombre de la tienda`] : [];
 }
 
 const forma = (r: z.ZodSafeParseResult<unknown>) =>

@@ -92,7 +92,7 @@ Una línea por `LineaNormal`. Cada línea del POS es una unidad, como en el BI.
 | `COD_ART` | Número del catálogo (§5) para `bi_codigo(codigo)` |
 | `DES_ART` | `nombre` de la línea, el nombre real, recortado a 150 caracteres |
 | `UNI_VEN` | `1` |
-| `PRE_UNI` | Precio con IVA **antes** del descuento de línea: `importeLinea(l) / (1 − descuentoPct/100)`. Si `descuentoPct` es 100, se usa el precio de lista del catálogo |
+| `PRE_UNI` | Precio con IVA **antes** de los descuentos. Cada componente se lleva a lista con su propio porcentaje: la línea `importe/(1 − descuentoPct/100)` y cada modificador igual con el suyo. Una línea al 100% usa el precio de lista del catálogo (§5); un modificador al 100% vale 0 |
 | `PRE_UNI_SIN_IVA` | `PRE_UNI / 1.16` |
 | `PRE_UNI_SIN_IEPS` | `PRE_UNI_SIN_IVA`, porque no hay IEPS. Igual que la línea 1 del ejemplo del documento |
 | `PRE_FIN` | `PRE_UNI × UNI_VEN` |
@@ -156,7 +156,9 @@ agregarla.
   ni se borran**: si un producto deja de venderse, su número queda. El 31 de Areas no se usa.
 - **Primera ejecución:** el script agrega los códigos vistos en el rango y reescribe el archivo. Los productos sin
   `defaultCode` usan el nombre como código, igual que en el BI.
-- **`precio`:** el `PRE_UNI` más frecuente en el rango, que se usa en la columna PRECIO VENTA del Excel.
+- **`precio`:** el precio de lista más frecuente del producto **sin modificadores**, calculado **antes** de armar los tickets con las líneas de descuento menor a 100%. Así una línea al 100% tiene precio aunque el producto sea nuevo. Es la columna PRECIO VENTA del Excel.
+- **Transacción por ticket:** un ticket descartado no deja códigos ni cambia descripciones en el catálogo.
+- **Escritura:** el catálogo se guarda primero y de forma atómica (`.tmp` y luego renombrar), antes de cualquier otro archivo.
 
 ## 6. Arqueo diario (`ArqueoCaja`)
 
@@ -189,7 +191,11 @@ Un arqueo por día que tenga al menos un ticket válido:
 - **Anonimato:** ningún campo de texto contiene el nombre de la sucursal. Se revisa contra el nombre de
   `ConfigSucursal` y contra «Rubén Darío» y «Ruben Dario», sin distinguir mayúsculas ni acentos.
 
-Un ticket que no pasa no se escribe y va al reporte con su motivo. Sus montos no cuentan en el arqueo.
+Un ticket que no pasa no se escribe y va al reporte con su motivo. Sus montos no cuentan en el arqueo. El motivo de anonimato dice **dónde** está el nombre (`Detalles[0].DES_ART`), nunca lo repite.
+
+**Última red:** antes de escribir, el script revisa `reporte.md` y cada celda de los Excel. Si alguno contiene el nombre de la tienda, no escribe nada.
+
+**Días incompletos:** el reporte marca cada día con lectura incompleta en la tabla y en la advertencia. Si falla la lectura de Rappi, se marcan todos. La carpeta del rango se borra y se rehace en cada corrida.
 
 ## 8. Salida
 
@@ -238,4 +244,5 @@ En vitest, sobre `lib/areas/` y con pedidos armados a mano:
 3. ¿El arqueo por día con descuadre 0 les sirve, dado que nuestro POS no tiene corte Z?
 4. ¿Qué tienen que traer `CODIGO DE FAMILIA 3`, `FAMILIA 3` y `TIPO` en el alta de artículos?
 5. ¿`NUM_TIK` acepta enteros de más de 32 bits? Los pedidos de Rappi traen 10 dígitos.
-6. ¿Para producción, los tickets se mandan uno por uno en tiempo real o en lote diario?
+6. ¿Cómo cuadran el ticket: `Σ PRE_FIN − IMP_DTG = IMP_VEN` (como su ejemplo, con `IMP_DTG = Σ IMP_DTO`) o `Σ (PRE_FIN − IMP_DTO) − IMP_DTG`? Mandamos lo primero.
+7. ¿Para producción, los tickets se mandan uno por uno en tiempo real o en lote diario?

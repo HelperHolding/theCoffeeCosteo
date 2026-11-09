@@ -1,4 +1,4 @@
-import { importeLinea, type PedidoNormal } from '../sucursales/normalizar';
+import { importeLinea, type CustomNormal, type PedidoNormal } from '../sucursales/normalizar';
 import type { Catalogo } from './catalogo';
 import { codigoPago } from './pagos';
 import { COD_TPV, type TicketCompleto } from './tipos';
@@ -9,6 +9,11 @@ const IVA = 0.16;
 const pesos = (c: number) => Math.round(c) / 100;
 /** Nuestro POS no tiene corte Z: la sesión es el día (AAAAMMDD). */
 export const sesionDe = (fecha: string) => Number(fecha.replaceAll('-', ''));
+/**
+ * Precio de lista (antes de su descuento) de una línea o modificador, en centavos. Solo para descuentos menores a
+ * 100%; un modificador al 100% vale 0 de lista porque no hay de dónde sacar su precio.
+ */
+export const listaCent = (c: CustomNormal) => Math.round(c.importeCent / (1 - c.descuentoPct / 100));
 
 /**
  * Un pedido del POS (o de Rappi del portal) como TicketCompleto de Areas. Montos en centavos hasta el final. Precio
@@ -22,10 +27,10 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
 
   const lineas = p.lineas.map((l) => {
     const importe = importeLinea(l);
+    // Cada componente (línea y modificadores) trae su propio % de descuento (docs/sucursales/03).
     const preUni =
-      l.descuentoPct >= 100
-        ? Math.round((catalogo.precioDe(l.codigo) ?? 0) * 100)
-        : Math.round(importe / (1 - l.descuentoPct / 100));
+      (l.descuentoPct >= 100 ? Math.round((catalogo.precioDe(l.codigo) ?? 0) * 100) : listaCent(l)) +
+      l.customs.reduce((s, c) => s + (c.descuentoPct >= 100 ? 0 : listaCent(c)), 0);
     const bas = Math.round(preUni / (1 + IVA));
     return { l, preUni, dto: preUni - importe, bas };
   });

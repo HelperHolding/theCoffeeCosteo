@@ -25,22 +25,64 @@ describe('filasPagos', () => {
 
 describe('reporte', () => {
   const e: Exportacion = {
-    tickets: [], arqueos: [], vendidos: [1001],
+    tickets: [],
+    arqueos: [],
+    vendidos: [1001],
     dias: [{ fecha: '2026-11-09', leidos: 3, validos: 2, descartados: 1, monto: 120 }],
-    descartados: [{ id: 7, fecha: '2026-11-09', hora: '10:00:00', motivo: 'Forma de pago sin mapeo: IFOOD / X' }],
+    descartados: [
+      { id: 7, fecha: '2026-11-09', hora: '10:00:00', motivo: 'Forma de pago sin mapeo: IFOOD / X' },
+    ],
   };
   it('lectura parcial va arriba como advertencia', () => {
-    const r = reporte(e, { desde: '2026-11-09', hasta: '2026-11-09', estado: 'parcial', avisos: ['1 de 1 días con lectura incompleta.'], nuevos: [] });
+    const r = reporte(e, {
+      desde: '2026-11-09',
+      hasta: '2026-11-09',
+      estado: 'parcial',
+      avisos: ['1 de 1 días con lectura incompleta.'],
+      nuevos: [],
+    });
     expect(r.split('\n').slice(0, 4).join('\n')).toMatch(/INCOMPLETA/);
     expect(r).toMatch(/1 de 1 días con lectura incompleta/);
   });
   it('tabla por día, descartados, pagos sin mapeo y artículos nuevos', () => {
-    const r = reporte(e, { desde: '2026-11-09', hasta: '2026-11-09', estado: 'completa', avisos: [], nuevos: [{ cod_art: 1001, codigo: 'LAT', descripcion: 'Latte', precio: 60 }] });
+    const r = reporte(e, {
+      desde: '2026-11-09',
+      hasta: '2026-11-09',
+      estado: 'completa',
+      avisos: [],
+      nuevos: [{ cod_art: 1001, codigo: 'LAT', descripcion: 'Latte', precio: 60 }],
+    });
     expect(r).not.toMatch(/INCOMPLETA/);
     expect(r).toMatch(/\| 2026-11-09 \| 3 \| 2 \| 1 \| 120\.00 \|/);
     expect(r).toMatch(/\| 7 \| 2026-11-09 10:00:00 \| Forma de pago sin mapeo: IFOOD \/ X \|/);
     expect(r).toMatch(/- IFOOD \/ X/);
     expect(r).toMatch(/\| 1001 \| LAT \| Latte \| 60\.00 \|/);
     expect(r).toMatch(/TC01/);
+  });
+});
+
+describe('reporte · días incompletos', () => {
+  it('marca cada día con lectura incompleta en la tabla y en la advertencia', () => {
+    const e2: Exportacion = {
+      tickets: [],
+      arqueos: [],
+      vendidos: [],
+      descartados: [],
+      dias: [
+        { fecha: '2026-11-08', leidos: 1, validos: 1, descartados: 0, monto: 60 },
+        { fecha: '2026-11-09', leidos: 1, validos: 1, descartados: 0, monto: 60 },
+      ],
+    };
+    const r = reporte(e2, {
+      desde: '2026-11-08',
+      hasta: '2026-11-09',
+      estado: 'parcial',
+      avisos: [],
+      nuevos: [],
+      incompletos: ['2026-11-09'],
+    });
+    expect(r).toMatch(/\| 2026-11-08 \| 1 \| 1 \| 0 \| 60\.00 \| completa \|/);
+    expect(r).toMatch(/\| 2026-11-09 \| 1 \| 1 \| 0 \| 60\.00 \| INCOMPLETA \|/);
+    expect(r.split('\n').slice(0, 4).join('\n')).toMatch(/2026-11-09/);
   });
 });

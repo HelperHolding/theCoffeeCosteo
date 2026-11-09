@@ -1,14 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import * as XLSX from 'xlsx';
 import { leerEnvLocal } from '../zoho/cliente';
 import { armar } from '../../lib/areas/armar';
 import { filasArticulos, filasPagos, reporte, type Fila } from '../../lib/areas/archivos';
 import { Catalogo, type Articulo } from '../../lib/areas/catalogo';
+import { contieneNombre } from '../../lib/areas/validar';
 import { configDe } from '../../lib/sucursales/config';
 import { rappiServicio } from '../../lib/sucursales/corte-servidor';
-import { conRappi, leerDias } from '../../lib/sucursales/datos';
-import { diasEntre } from '../../lib/sucursales/tiempo';
+import { conRappi, hoyLocal, leerDias, leerVentana } from '../../lib/sucursales/datos';
+import { diasEntre, sumarDias } from '../../lib/sucursales/tiempo';
 
 /**
  * Exporta las ventas de Rubén Darío (532) en los JSON de la API de Areas México, con la tienda anónima (COD_TPV TC01).
@@ -38,37 +39,61 @@ const db = createClient(env.get('NEXT_PUBLIC_SUPABASE_URL')!, env.get('SUPABASE_
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const lectura = await conRappi(await leerDias(cfg, desde, hasta), rappiServicio(db, cfg));
+const pos = await leerDias(cfg, desde, hasta);
+const lectura = await conRappi(pos, rappiServicio(db, cfg));
 if (lectura.estado === 'error') throw new Error(`No se pudo leer el POS: ${lectura.avisos.join(' ')}`);
+
+// Días incompletos: los del POS (leerVentana por día ya está en caché tras leerDias) y, si Rappi falló, todos.
+const fechas = Array.from({ length: diasEntre(desde, hasta) + 1 }, (_, i) => sumarDias(desde, i));
+const rappiFallo = lectura.avisos.length > pos.avisos.length;
+const incompletos: string[] = [];
+for (const f of fechas)
+  if (rappiFallo || (await leerVentana(cfg, f, f)).estado !== 'completa') incompletos.push(f);
 
 const catalogo = new Catalogo(JSON.parse(await readFile(CATALOGO, 'utf8')) as Articulo[]);
 const prohibidos = [cfg.nombre, 'Rubén Darío', 'Ruben Dario'];
 const e = armar(lectura.pedidos, catalogo, prohibidos);
 
+const vendidos = new Set(e.vendidos);
+const filasArt = filasArticulos(catalogo.lista().filter((a) => vendidos.has(a.cod_art)));
+const filasPag = filasPagos(hoyLocal(cfg).fecha);
+const textoReporte = reporte(e, {
+  desde,
+  hasta,
+  estado: lectura.estado,
+  avisos: lectura.avisos,
+  nuevos: catalogo.nuevos(),
+  incompletos,
+});
+
+// Última red de anonimato: nada de lo que se escribe puede llevar el nombre de la tienda.
+const fuga = [textoReporte, ...[...filasArt, ...filasPag].flat().map(String)].some((t) =>
+  contieneNombre(t, prohibidos),
+);
+if (fuga) throw new Error('El reporte o los Excel contienen el nombre de la tienda; no se escribió nada.');
+
+// El catálogo primero y atómico: si algo falla después, los números asignados no se vuelven a repartir.
+await writeFile(`${CATALOGO}.tmp`, JSON.stringify(catalogo.lista(), null, 2) + '\n');
+await rename(`${CATALOGO}.tmp`, CATALOGO);
+
+// La carpeta del rango se rehace completa: sin tickets de una corrida anterior.
 const dir = `datos/areas/${desde}_${hasta}`;
+await rm(dir, { recursive: true, force: true });
 await mkdir(`${dir}/tickets`, { recursive: true });
 await mkdir(`${dir}/arqueos`, { recursive: true });
 for (const t of e.tickets)
   await writeFile(`${dir}/tickets/${t.Cabecera.NUM_TIK}.json`, JSON.stringify(t, null, 2) + '\n');
-for (const a of e.arqueos) await writeFile(`${dir}/arqueos/${a.Fecha}.json`, JSON.stringify(a, null, 2) + '\n');
+for (const a of e.arqueos)
+  await writeFile(`${dir}/arqueos/${a.Fecha}.json`, JSON.stringify(a, null, 2) + '\n');
 
 const libro = (filas: Fila[]) => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(filas), 'Sheet1');
   return wb;
 };
-const vendidos = new Set(e.vendidos);
-XLSX.writeFile(
-  libro(filasArticulos(catalogo.lista().filter((a) => vendidos.has(a.cod_art)))),
-  `${dir}/Carga Art TPVs Externos.xlsx`,
-);
-XLSX.writeFile(libro(filasPagos(new Date().toISOString().slice(0, 10))), `${dir}/Formas de Pago y Monedas.xlsx`);
-
-await writeFile(
-  `${dir}/reporte.md`,
-  reporte(e, { desde, hasta, estado: lectura.estado, avisos: lectura.avisos, nuevos: catalogo.nuevos() }),
-);
-await writeFile(CATALOGO, JSON.stringify(catalogo.lista(), null, 2) + '\n');
+XLSX.writeFile(libro(filasArt), `${dir}/Carga Art TPVs Externos.xlsx`);
+XLSX.writeFile(libro(filasPag), `${dir}/Formas de Pago y Monedas.xlsx`);
+await writeFile(`${dir}/reporte.md`, textoReporte);
 
 console.log(
   `${desde}…${hasta}: ${e.tickets.length} tickets, ${e.arqueos.length} arqueos, ${e.descartados.length} descartados, ` +

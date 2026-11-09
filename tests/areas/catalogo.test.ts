@@ -15,7 +15,9 @@ describe('Catalogo', () => {
     expect(c.nuevos().map((a) => a.cod_art)).toEqual([1001, 1002]);
   });
   it('un código existente conserva su número aunque cambie de escritura', () => {
-    const c = new Catalogo([{ cod_art: 1007, codigo: 'CREA TU THE COFFEE', descripcion: 'Crea tu', precio: 90 }]);
+    const c = new Catalogo([
+      { cod_art: 1007, codigo: 'CREA TU THE COFFEE', descripcion: 'Crea tu', precio: 90 },
+    ]);
     expect(c.codArt('crea tu  the coffee', 'Crea Tu The Coffee')).toBe(1007);
     expect(c.nuevos()).toEqual([]);
   });
