@@ -1,0 +1,71 @@
+import type { Exportacion } from './armar';
+import type { Articulo } from './catalogo';
+import { FORMAS_PAGO } from './pagos';
+import { COD_TPV } from './tipos';
+
+export type Fila = (string | number | null)[];
+
+/** Formato de «Carga Art TPVs Externos.xlsx» de Areas. */
+export function filasArticulos(articulos: Articulo[]): Fila[] {
+  return [
+    ['TIPO DE SOLICITUD', null, 'A', 'ALTA DE CODIGOS', null, null, 'COMENTARIOS'],
+    [null, null, null, null, null, null, 'ALTA DE CODIGOS. ASOCIAR A GAMA Y TARIFA DE PRECIO.'],
+    ['CÓDIGO', 'DESCRIPCIÓN', 'CODIGO DE FAMILIA 3', 'FAMILIA 3', 'IVA', 'TIPO', 'PRECIO VENTA'],
+    ...articulos.map((a): Fila => [a.cod_art, a.descripcion, 0, null, '16%', null, a.precio]),
+  ];
+}
+
+/** Formato de «Formas de Pago y Monedas.xlsx». Areas llena CODFPAREAS; solo 101 → 1 ya existe. */
+export function filasPagos(hoy: string): Fila[] {
+  return [
+    ['CODFPTPVEXT', 'DESCFPTPVEXT', 'CODFPAREAS', 'DESCFAREAS', 'FechaRegistro'],
+    ...FORMAS_PAGO.map((f): Fila =>
+      f.codigo === 101 ? [101, f.descripcion, 1, 'EFECTIVO PESOS MX', hoy] : [f.codigo, f.descripcion, null, null, hoy],
+    ),
+  ];
+}
+
+const SIN_MAPEO = 'Forma de pago sin mapeo: ';
+const m = (x: number | null) => (x === null ? '—' : x.toFixed(2));
+
+export function reporte(
+  e: Exportacion,
+  x: { desde: string; hasta: string; estado: 'completa' | 'parcial' | 'error'; avisos: string[]; nuevos: Articulo[] },
+): string {
+  const sinMapeo = [
+    ...new Set(e.descartados.filter((d) => d.motivo.startsWith(SIN_MAPEO)).map((d) => d.motivo.slice(SIN_MAPEO.length))),
+  ];
+  const l: string[] = [`# Exportación Areas · ${COD_TPV} · ${x.desde} a ${x.hasta}`, ''];
+  if (x.estado !== 'completa')
+    l.push(`> **LECTURA INCOMPLETA (${x.estado}).** No mandar estos días como completos.`, '');
+  if (x.avisos.length) l.push('## Avisos de la lectura', '', ...x.avisos.map((a) => `- ${a}`), '');
+  l.push(
+    '## Por día',
+    '',
+    '| Fecha | Leídos | Válidos | Descartados | Monto |',
+    '|---|---|---|---|---|',
+    ...e.dias.map((d) => `| ${d.fecha} | ${d.leidos} | ${d.validos} | ${d.descartados} | ${m(d.monto)} |`),
+    '',
+    `Total: ${e.tickets.length} tickets y ${e.arqueos.length} arqueos.`,
+    '',
+    '## Descartados',
+    '',
+  );
+  if (e.descartados.length)
+    l.push(
+      '| Pedido | Momento | Motivo |',
+      '|---|---|---|',
+      ...e.descartados.map((d) => `| ${d.id} | ${d.fecha} ${d.hora} | ${d.motivo} |`),
+    );
+  else l.push('Ninguno.');
+  l.push('', '## Formas de pago sin mapeo', '', ...(sinMapeo.length ? sinMapeo.map((s) => `- ${s}`) : ['Ninguna.']), '');
+  l.push('## Artículos nuevos en el catálogo', '');
+  if (x.nuevos.length)
+    l.push(
+      '| COD_ART | Código POS | Descripción | Precio |',
+      '|---|---|---|---|',
+      ...x.nuevos.map((a) => `| ${a.cod_art} | ${a.codigo} | ${a.descripcion} | ${m(a.precio)} |`),
+    );
+  else l.push('Ninguno.');
+  return l.join('\n') + '\n';
+}
