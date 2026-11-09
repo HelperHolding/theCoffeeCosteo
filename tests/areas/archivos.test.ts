@@ -14,12 +14,15 @@ describe('filasArticulos', () => {
 });
 
 describe('filasPagos', () => {
-  it('formato «Formas de Pago y Monedas»: solo 101 trae su código de Areas', () => {
-    const f = filasPagos('2026-11-09');
-    expect(f[0]).toEqual(['CODFPTPVEXT', 'DESCFPTPVEXT', 'CODFPAREAS', 'DESCFAREAS', 'FechaRegistro']);
-    expect(f[1]).toEqual([101, 'Efectivo', 1, 'EFECTIVO PESOS MX', '2026-11-09']);
-    expect(f[2]).toEqual([102, 'Tarjeta', null, null, '2026-11-09']);
-    expect(f).toHaveLength(6);
+  it('formato «Formas de Pago y Monedas»: solo columnas A y B; Areas llena el resto', () => {
+    expect(filasPagos()).toEqual([
+      ['CODFPTPVEXT', 'DESCFPTPVEXT', 'CODFPAREAS', 'DESCFAREAS', 'FechaRegistro'],
+      [101, 'Efectivo', null, null, null],
+      [102, 'Tarjeta', null, null, null],
+      [103, 'App - Tarjeta', null, null, null],
+      [104, 'App - Saldo', null, null, null],
+      [105, 'Rappi', null, null, null],
+    ]);
   });
 });
 

@@ -15,15 +15,14 @@ export function filasArticulos(articulos: Articulo[]): Fila[] {
   ];
 }
 
-/** Formato de «Formas de Pago y Monedas.xlsx». Areas llena CODFPAREAS; solo 101 → 1 ya existe. */
-export function filasPagos(hoy: string): Fila[] {
+/**
+ * Formato de «Formas de Pago y Monedas.xlsx». Solo informamos las columnas A y B (nuestro código y descripción);
+ * Areas relaciona cada una con su forma de pago y llena el resto (correo de Areas, 2026-11-09).
+ */
+export function filasPagos(): Fila[] {
   return [
     ['CODFPTPVEXT', 'DESCFPTPVEXT', 'CODFPAREAS', 'DESCFAREAS', 'FechaRegistro'],
-    ...FORMAS_PAGO.map((f): Fila =>
-      f.codigo === 101
-        ? [101, f.descripcion, 1, 'EFECTIVO PESOS MX', hoy]
-        : [f.codigo, f.descripcion, null, null, hoy],
-    ),
+    ...FORMAS_PAGO.map((f): Fila => [f.codigo, f.descripcion, null, null, null]),
   ];
 }
 

@@ -130,9 +130,9 @@ Un pedido del POS tiene una sola forma de pago, así que va un renglón con `NUM
 
 ## 4. Formas de pago
 
-En `COD_FPG` mandamos **nuestro código externo**. Areas lo traduce con su tabla `CODFPTPVEXT → CODFPAREAS`, que ya trae
-101 Efectivo. Su ejemplo de JSON pone el código de Areas (1); **hay que confirmarlo con ellos**. Si piden el suyo, solo
-cambia la tabla de `pagos.ts`.
+En `COD_FPG` mandamos **nuestro código externo**. **Confirmado por Areas (correo del 2026-11-09):** ellos relacionan
+nuestras formas de pago con las de su POS, y del Excel solo informamos las columnas A y B (código y descripción). Lo
+mismo con los artículos: hacen el match entre nuestros códigos y los suyos.
 
 Los códigos salen de `docs/bi/zoho/pagos.json`, verificado con pedidos de Rubén Darío y Polanco:
 
@@ -206,7 +206,7 @@ En `datos/areas/<desde>_<hasta>/`:
 | `tickets/<NUM_TIK>.json` | Un archivo por ticket válido: el cuerpo exacto del POST |
 | `arqueos/<AAAA-MM-DD>.json` | Un archivo por día |
 | `Carga Art TPVs Externos.xlsx` | Su formato: encabezado «ALTA DE CODIGOS» y columnas CÓDIGO, DESCRIPCIÓN, CODIGO DE FAMILIA 3 (0), FAMILIA 3 (vacío), IVA («16%»), TIPO (vacío) y PRECIO VENTA. Una fila por artículo del catálogo que se vendió en el rango |
-| `Formas de Pago y Monedas.xlsx` | Su formato: CODFPTPVEXT, DESCFPTPVEXT, CODFPAREAS y DESCFAREAS (las dos últimas vacías, salvo 101 → 1 «EFECTIVO PESOS MX») y FechaRegistro (hoy) |
+| `Formas de Pago y Monedas.xlsx` | Su formato, con solo las columnas A y B llenas: CODFPTPVEXT y DESCFPTPVEXT. CODFPAREAS, DESCFAREAS y FechaRegistro van vacías: las llena Areas |
 | `reporte.md` | Por día: tickets leídos, válidos, descartados y monto. La lista de descartados con su motivo. Artículos nuevos en el catálogo. Combinaciones de pago sin mapeo |
 
 Las carpetas de salida se ignoran en `.gitignore` (`datos/areas/*/`). Solo se versiona `datos/areas/articulos.json`.
@@ -239,7 +239,7 @@ En vitest, sobre `lib/areas/` y con pedidos armados a mano:
 
 ## 10. Preguntas para Areas
 
-1. ¿`COD_FPG` lleva nuestro código externo (101…) o el suyo?
+1. ~~¿`COD_FPG` lleva nuestro código externo (101…) o el suyo?~~ Resuelta: el nuestro; Areas hace la relación.
 2. ¿Qué va en `ID_MVO_DTO`? ¿Tienen un catálogo de motivos de descuento?
 3. ¿El arqueo por día con descuadre 0 les sirve, dado que nuestro POS no tiene corte Z?
 4. ¿Qué tienen que traer `CODIGO DE FAMILIA 3`, `FAMILIA 3` y `TIPO` en el alta de artículos?

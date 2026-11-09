@@ -8,7 +8,7 @@ import { Catalogo, type Articulo } from '../../lib/areas/catalogo';
 import { contieneNombre } from '../../lib/areas/validar';
 import { configDe } from '../../lib/sucursales/config';
 import { rappiServicio } from '../../lib/sucursales/corte-servidor';
-import { conRappi, hoyLocal, leerDias, leerVentana } from '../../lib/sucursales/datos';
+import { conRappi, leerDias, leerVentana } from '../../lib/sucursales/datos';
 import { diasEntre, sumarDias } from '../../lib/sucursales/tiempo';
 
 /**
@@ -56,7 +56,7 @@ const e = armar(lectura.pedidos, catalogo, prohibidos);
 
 const vendidos = new Set(e.vendidos);
 const filasArt = filasArticulos(catalogo.lista().filter((a) => vendidos.has(a.cod_art)));
-const filasPag = filasPagos(hoyLocal(cfg).fecha);
+const filasPag = filasPagos();
 const textoReporte = reporte(e, {
   desde,
   hasta,
