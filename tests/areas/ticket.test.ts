@@ -81,16 +81,58 @@ describe('aTicket', () => {
     expect(validarTicket(t, ['Rubén Darío'])).toEqual([]);
   });
 
-  it('el importe de la línea incluye sus modificadores', () => {
+  it('una personalización con costo va como línea propia, después de su bebida', () => {
     const p = pedido({
       lineas: [
         linea('LAT', 6000, {
-          customs: [{ codigo: 'AVENA', nombre: 'Avena', importeCent: 1000, descuentoPct: 0 }],
+          customs: [{ codigo: 'LVG', nombre: 'Oatmilk', importeCent: 1300, descuentoPct: 0 }],
+        }),
+        linea('CRO', 4500),
+      ],
+      ventaCent: 11800,
+    });
+    const t = ok(aTicket(p, new Catalogo()));
+    expect(t.Detalles.map((d) => [d.NUM_LIN, d.COD_ART, d.DES_ART, d.PRE_FIN])).toEqual([
+      [1, 1001, 'Producto LAT', 60],
+      [2, 1002, 'Oatmilk', 13],
+      [3, 1003, 'Producto CRO', 45],
+    ]);
+    expect(t.Cabecera.IMP_DTG).toBe(0);
+    expect(validarTicket(t, [])).toEqual([]);
+  });
+
+  it('las personalizaciones sin costo no se mandan', () => {
+    const p = pedido({
+      lineas: [
+        linea('LAT', 6000, {
+          customs: [
+            { codigo: 'ORCF', nombre: 'Double shot (36ml)', importeCent: 0, descuentoPct: 0 },
+            { codigo: 'TEMP65', nombre: 'Original (60ºC)', importeCent: 0, descuentoPct: 0 },
+          ],
         }),
       ],
-      ventaCent: 7000,
+      ventaCent: 6000,
     });
-    expect(ok(aTicket(p, new Catalogo())).Detalles[0].PRE_FIN).toBe(70);
+    const cat = new Catalogo();
+    expect(ok(aTicket(p, cat)).Detalles).toHaveLength(1);
+    expect(cat.nuevos().map((a) => a.codigo)).toEqual(['LAT']);
+  });
+
+  it('una personalización de Rappi toma su código del nombre', () => {
+    const p = pedido({
+      metodo: 'RAPPI',
+      tipo: 'RAPPI_PORTAL',
+      lineas: [
+        linea('LAT', 6000, {
+          customs: [{ codigo: 'RAPPI', nombre: 'Large - 600ml', importeCent: 1200, descuentoPct: 0 }],
+        }),
+      ],
+      ventaCent: 7200,
+    });
+    const cat = new Catalogo();
+    const t = ok(aTicket(p, cat));
+    expect(t.Detalles[1]).toMatchObject({ COD_ART: 1002, DES_ART: 'Large - 600ml', PRE_FIN: 12 });
+    expect(cat.lista()[1].codigo).toBe('RAPPI:LARGE - 600ML');
   });
 
   it('línea con 100% de descuento usa el precio del catálogo y, sin precio, va en 0', () => {
@@ -167,7 +209,7 @@ describe('aTicket', () => {
 
 describe('aTicket · descuentos de modificadores', () => {
   it('cada componente se lleva a lista con su propio porcentaje', () => {
-    // Línea 50% cobrada $25 (lista $50) + modificador 0% de $13 → lista $63, descuento $25.
+    // Línea 50% cobrada $25 (lista $50, descuento $25) + modificador 0% de $13 (sin descuento).
     const p = pedido({
       lineas: [
         linea('LAT', 2500, {
@@ -177,10 +219,12 @@ describe('aTicket · descuentos de modificadores', () => {
       ],
       ventaCent: 3800,
     });
-    expect(ok(aTicket(p, new Catalogo())).Detalles[0]).toMatchObject({ PRE_UNI: 63, IMP_DTO: 25 });
+    const d = ok(aTicket(p, new Catalogo())).Detalles;
+    expect(d[0]).toMatchObject({ PRE_UNI: 50, IMP_DTO: 25 });
+    expect(d[1]).toMatchObject({ PRE_UNI: 13, IMP_DTO: 0 });
   });
-  it('un modificador con descuento suma su descuento a IMP_DTO', () => {
-    // Línea 0% $50 + modificador 50% cobrado $6.50 (lista $13) → lista $63, descuento $6.50.
+  it('un modificador con descuento lleva su propio IMP_DTO', () => {
+    // Línea 0% $50 + modificador 50% cobrado $6.50 (lista $13, descuento $6.50).
     const p = pedido({
       lineas: [
         linea('LAT', 5000, {
@@ -189,9 +233,34 @@ describe('aTicket · descuentos de modificadores', () => {
       ],
       ventaCent: 5650,
     });
-    expect(ok(aTicket(p, new Catalogo())).Detalles[0]).toMatchObject({ PRE_UNI: 63, IMP_DTO: 6.5 });
+    const d = ok(aTicket(p, new Catalogo())).Detalles;
+    expect(d[0]).toMatchObject({ PRE_UNI: 50, IMP_DTO: 0 });
+    expect(d[1]).toMatchObject({ PRE_UNI: 13, IMP_DTO: 6.5 });
   });
-  it('línea al 100% con modificador pagado: lista del catálogo más el modificador', () => {
+  it('personalización al 100% usa el precio del catálogo; sin precio, no se manda', () => {
+    const cat = new Catalogo([{ cod_art: 1001, codigo: 'LVG', descripcion: 'Oatmilk', precio: 13 }]);
+    const conPrecio = pedido({
+      lineas: [
+        linea('LAT', 6000, {
+          customs: [{ codigo: 'LVG', nombre: 'Oatmilk', importeCent: 0, descuentoPct: 100 }],
+        }),
+      ],
+      ventaCent: 6000,
+    });
+    expect(ok(aTicket(conPrecio, cat)).Detalles[1]).toMatchObject({
+      COD_ART: 1001,
+      PRE_FIN: 13,
+      IMP_DTO: 13,
+    });
+    const sinPrecio = pedido({
+      lineas: [
+        linea('LAT', 6000, { customs: [{ codigo: 'X', nombre: 'X', importeCent: 0, descuentoPct: 100 }] }),
+      ],
+      ventaCent: 6000,
+    });
+    expect(ok(aTicket(sinPrecio, new Catalogo())).Detalles).toHaveLength(1);
+  });
+  it('línea al 100% con modificador pagado: la línea a precio de catálogo y el modificador aparte', () => {
     const cat = new Catalogo([{ cod_art: 1001, codigo: 'LAT', descripcion: 'Latte', precio: 50 }]);
     const p = pedido({
       lineas: [
@@ -202,6 +271,8 @@ describe('aTicket · descuentos de modificadores', () => {
       ],
       ventaCent: 1300,
     });
-    expect(ok(aTicket(p, cat)).Detalles[0]).toMatchObject({ PRE_UNI: 63, IMP_DTO: 50 });
+    const d = ok(aTicket(p, cat)).Detalles;
+    expect(d[0]).toMatchObject({ PRE_UNI: 50, IMP_DTO: 50 });
+    expect(d[1]).toMatchObject({ PRE_UNI: 13, IMP_DTO: 0 });
   });
 });

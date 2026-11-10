@@ -149,3 +149,27 @@ describe('armar · hallazgos de la revisión', () => {
     expect(cat.precioDe('LAT')).toBe(60);
   });
 });
+
+describe('armar · personalizaciones', () => {
+  it('una personalización al 100% toma el precio de lista visto en la misma corrida', () => {
+    const avena = (importeCent: number, descuentoPct: number) => ({
+      codigo: 'LVG',
+      nombre: 'Oatmilk',
+      importeCent,
+      descuentoPct,
+    });
+    const e = armar(
+      [
+        pedido('2026-11-09', 40000, { lineas: [linea('LAT', 6000, { customs: [avena(0, 100)] })] }),
+        pedido('2026-11-09', 40100, {
+          lineas: [linea('LAT', 6000, { customs: [avena(1300, 0)] })],
+          ventaCent: 7300,
+        }),
+      ],
+      new Catalogo(),
+      [],
+    );
+    expect(e.tickets[0].Detalles[1]).toMatchObject({ DES_ART: 'Oatmilk', PRE_FIN: 13, IMP_DTO: 13 });
+    expect(e.arqueos[0].Monto).toBe(133);
+  });
+});

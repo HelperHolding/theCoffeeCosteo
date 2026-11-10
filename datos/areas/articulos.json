@@ -490,5 +490,161 @@
     "codigo": "FRAMATAPP",
     "descripcion": "Matcha Frap",
     "precio": null
+  },
+  {
+    "cod_art": 1083,
+    "codigo": "LARGE - 600ML",
+    "descripcion": "Large - 600ml",
+    "precio": 10
+  },
+  {
+    "cod_art": 1084,
+    "codigo": "1PE",
+    "descripcion": "Lactose free",
+    "precio": 10
+  },
+  {
+    "cod_art": 1085,
+    "codigo": "HOTLARAPP",
+    "descripcion": "Large - 355ml",
+    "precio": 10
+  },
+  {
+    "cod_art": 1086,
+    "codigo": "MILALMAPP",
+    "descripcion": "Almond Milk",
+    "precio": 13
+  },
+  {
+    "cod_art": 1087,
+    "codigo": "RAPPI:LARGE - 600ML",
+    "descripcion": "Large - 600ml",
+    "precio": 12
+  },
+  {
+    "cod_art": 1088,
+    "codigo": "LARGEAPP",
+    "descripcion": "Large - 600ml",
+    "precio": 10
+  },
+  {
+    "cod_art": 1089,
+    "codigo": "LACTOSE FREE",
+    "descripcion": "Lactose free",
+    "precio": 10
+  },
+  {
+    "cod_art": 1090,
+    "codigo": "RAPPI:LACTOSE FREE",
+    "descripcion": "Lactose free",
+    "precio": 13
+  },
+  {
+    "cod_art": 1091,
+    "codigo": "LVG",
+    "descripcion": "Oatmilk",
+    "precio": 13
+  },
+  {
+    "cod_art": 1092,
+    "codigo": "MCOFF",
+    "descripcion": "Extra Double shot (36ml)",
+    "precio": 15
+  },
+  {
+    "cod_art": 1093,
+    "codigo": "EXTRA DOUBLE SHOT (36ML)",
+    "descripcion": "Extra Double shot (36ml)",
+    "precio": 15
+  },
+  {
+    "cod_art": 1094,
+    "codigo": "RAPPI:EXTRA DOUBLE SHOT (36ML)",
+    "descripcion": "Extra Double shot (36ml)",
+    "precio": 16
+  },
+  {
+    "cod_art": 1095,
+    "codigo": "RAPPI:LARGE - 355ML",
+    "descripcion": "Large - 355ml",
+    "precio": 12
+  },
+  {
+    "cod_art": 1096,
+    "codigo": "RAPPI:COCONUT MILK",
+    "descripcion": "Coconut Milk",
+    "precio": 8.5
+  },
+  {
+    "cod_art": 1097,
+    "codigo": "RAPPI:DESLACTOSADA",
+    "descripcion": "Deslactosada",
+    "precio": 13
+  },
+  {
+    "cod_art": 1098,
+    "codigo": "RAPPI:GRANDE",
+    "descripcion": "Grande",
+    "precio": 12
+  },
+  {
+    "cod_art": 1099,
+    "codigo": "RAPPI:ALMOND MILK",
+    "descripcion": "Almond Milk",
+    "precio": 17
+  },
+  {
+    "cod_art": 1100,
+    "codigo": "MSCR+",
+    "descripcion": "More Salted Caramel (cold)",
+    "precio": 10
+  },
+  {
+    "cod_art": 1101,
+    "codigo": "PCM",
+    "descripcion": "With Coffee (Dirty Chai)",
+    "precio": 15
+  },
+  {
+    "cod_art": 1102,
+    "codigo": "RAPPI:LECHE: COCO",
+    "descripcion": "Leche: Coco",
+    "precio": 17
+  },
+  {
+    "cod_art": 1103,
+    "codigo": "LARGE - 355ML",
+    "descripcion": "Large - 355ml",
+    "precio": 10
+  },
+  {
+    "cod_art": 1104,
+    "codigo": "RAPPI:OATMILK",
+    "descripcion": "Oatmilk",
+    "precio": 17
+  },
+  {
+    "cod_art": 1105,
+    "codigo": "1HDV60B",
+    "descripcion": "Hot Drip Black",
+    "precio": 20
+  },
+  {
+    "cod_art": 1106,
+    "codigo": "COCMILAPP",
+    "descripcion": "Coconut Milk",
+    "precio": 13
+  },
+  {
+    "cod_art": 1107,
+    "codigo": "1HDV60K",
+    "descripcion": "Hot Drip Kraft",
+    "precio": 10
+  },
+  {
+    "cod_art": 1108,
+    "codigo": "1CDV60B",
+    "descripcion": "Cold Drip V60 Black",
+    "precio": 20
   }
 ]

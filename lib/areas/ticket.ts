@@ -1,4 +1,4 @@
-import { importeLinea, type CustomNormal, type PedidoNormal } from '../sucursales/normalizar';
+import type { CustomNormal, PedidoNormal } from '../sucursales/normalizar';
 import type { Catalogo } from './catalogo';
 import { codigoPago } from './pagos';
 import { COD_TPV, type TicketCompleto } from './tipos';
@@ -14,6 +14,12 @@ export const sesionDe = (fecha: string) => Number(fecha.replaceAll('-', ''));
  * 100%; un modificador al 100% vale 0 de lista porque no hay de dónde sacar su precio.
  */
 export const listaCent = (c: CustomNormal) => Math.round(c.importeCent / (1 - c.descuentoPct / 100));
+/**
+ * Código de catálogo de una personalización. Las de Rappi llegan todas con el código «RAPPI» (rappi-pos.ts) y se
+ * distinguen por el nombre.
+ */
+export const codigoPersonalizacion = (c: CustomNormal) =>
+  c.codigo === 'RAPPI' ? `RAPPI:${c.nombre}` : c.codigo;
 
 /**
  * Un pedido del POS (o de Rappi del portal) como TicketCompleto de Areas. Montos en centavos hasta el final. Precio
@@ -25,15 +31,23 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
   if (fpg === null) return { ok: false, motivo: `Forma de pago sin mapeo: ${p.metodo} / ${p.tipo}` };
   if (!p.lineas.length) return { ok: false, motivo: 'Sin líneas' };
 
-  const lineas = p.lineas.map((l) => {
-    const importe = importeLinea(l);
-    // Cada componente (línea y modificadores) trae su propio % de descuento (docs/sucursales/03).
-    const preUni =
-      (l.descuentoPct >= 100 ? Math.round((catalogo.precioDe(l.codigo) ?? 0) * 100) : listaCent(l)) +
-      l.customs.reduce((s, c) => s + (c.descuentoPct >= 100 ? 0 : listaCent(c)), 0);
-    const bas = Math.round(preUni / (1 + IVA));
-    return { l, preUni, dto: preUni - importe, bas };
-  });
+  // Precio de lista de un componente: con descuento de 100% no hay de dónde sacarlo y se usa el del catálogo.
+  const lista = (c: CustomNormal, codigo: string) =>
+    c.descuentoPct >= 100 ? Math.round((catalogo.precioDe(codigo) ?? 0) * 100) : listaCent(c);
+  // Cada producto es una línea y cada personalización con costo, otra línea justo después, con su propio código y su
+  // propio % de descuento (docs/sucursales/03). Las personalizaciones sin costo (lista e importe en 0) no se mandan.
+  const lineas = p.lineas
+    .flatMap((l) => [
+      { codigo: l.codigo, nombre: l.nombre, preUni: lista(l, l.codigo), importe: l.importeCent },
+      ...l.customs.flatMap((c) => {
+        const codigo = codigoPersonalizacion(c);
+        const preUni = lista(c, codigo);
+        return preUni === 0 && c.importeCent === 0
+          ? []
+          : [{ codigo, nombre: c.nombre, preUni, importe: c.importeCent }];
+      }),
+    ])
+    .map((x) => ({ ...x, dto: x.preUni - x.importe, bas: Math.round(x.preUni / (1 + IVA)) }));
   const dtg = lineas.reduce((s, x) => s + x.preUni, 0) - p.ventaCent;
   // dif = Σ importe − cobrado: positivo es un descuento de pedido; negativo, líneas que no alcanzan lo cobrado.
   const dif = dtg - lineas.reduce((s, x) => s + x.dto, 0);
@@ -59,8 +73,8 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
       },
       Detalles: lineas.map((x, i) => ({
         NUM_LIN: i + 1,
-        COD_ART: catalogo.codArt(x.l.codigo, x.l.nombre),
-        DES_ART: x.l.nombre.trim().slice(0, 150),
+        COD_ART: catalogo.codArt(x.codigo, x.nombre),
+        DES_ART: x.nombre.trim().slice(0, 150),
         UNI_VEN: 1,
         PRE_UNI: pesos(x.preUni),
         PRE_UNI_SIN_IVA: pesos(x.bas),
