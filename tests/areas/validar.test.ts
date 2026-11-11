@@ -6,12 +6,11 @@ const PROHIBIDOS = ['Rubén Darío'];
 const ticket = (): TicketCompleto => ({
   Cabecera: {
     COD_TPV: 'TC01',
-    NUM_SES: 20261109,
+    NUM_SES: 0,
     NUM_TIK: 32235824,
     TIP_OPE: 'V',
     MOM_OPE: '2026-11-09 10:15:00',
     IMP_VEN: 428.5,
-    ID_MVO_DTO: 0,
     IMP_DTG: 19.5,
   },
   Detalles: [
@@ -54,9 +53,9 @@ const ticket = (): TicketCompleto => ({
 });
 const arqueo = (): ArqueoCaja => ({
   COD_TPV: 'TC01',
-  NUM_SES: 20261109,
+  NUM_SES: 0,
   Fecha: '2026-11-09',
-  Hora: '10:15:00',
+  Hora: '2026-11-09T10:15:00',
   Monto: 428.5,
   Descuadres: 0,
 });
@@ -133,5 +132,25 @@ describe('validar · anonimato sin citar el texto', () => {
     const m = validarTicket(t, PROHIBIDOS).join(' ');
     expect(m).toMatch(/Anonimato/);
     expect(m).not.toMatch(/rub[eé]n|dar[ií]o/i);
+  });
+});
+
+describe('validar · formato confirmado por Areas (2026-11-11)', () => {
+  it('la cabecera ya no lleva ID_MVO_DTO', () => {
+    const t = ticket();
+    (t.Cabecera as Record<string, unknown>).ID_MVO_DTO = 0;
+    expect(validarTicket(t, PROHIBIDOS).join(' ')).toMatch(/ID_MVO_DTO/);
+  });
+  it('NUM_SES va en 0 en ticket y arqueo', () => {
+    const t = ticket();
+    (t.Cabecera as { NUM_SES: number }).NUM_SES = 20261109;
+    expect(validarTicket(t, PROHIBIDOS).join(' ')).toMatch(/NUM_SES/);
+    const conFecha = { ...arqueo(), NUM_SES: 20261109 } as unknown as ArqueoCaja;
+    expect(validarArqueo(conFecha, [ticket()], PROHIBIDOS).join(' ')).toMatch(/NUM_SES/);
+  });
+  it('la Hora del arqueo lleva fecha y hora (yyyy-MM-ddTHH:mm:ss)', () => {
+    expect(validarArqueo({ ...arqueo(), Hora: '10:15:00' }, [ticket()], PROHIBIDOS).join(' ')).toMatch(
+      /Hora/,
+    );
   });
 });

@@ -42,8 +42,8 @@ describe('armar', () => {
       '2026-11-10 08:20:00',
     ]);
     expect(e.arqueos.map((a) => [a.Fecha, a.Hora, a.Monto])).toEqual([
-      ['2026-11-09', '13:53:20', 120],
-      ['2026-11-10', '08:20:00', 60],
+      ['2026-11-09', '2026-11-09T13:53:20', 120],
+      ['2026-11-10', '2026-11-10T08:20:00', 60],
     ]);
     expect(e.dias).toEqual([
       { fecha: '2026-11-09', leidos: 2, validos: 2, descartados: 0, monto: 120 },

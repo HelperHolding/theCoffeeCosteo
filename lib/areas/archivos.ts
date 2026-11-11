@@ -11,7 +11,7 @@ export function filasArticulos(articulos: Articulo[]): Fila[] {
     ['TIPO DE SOLICITUD', null, 'A', 'ALTA DE CODIGOS', null, null, 'COMENTARIOS'],
     [null, null, null, null, null, null, 'ALTA DE CODIGOS. ASOCIAR A GAMA Y TARIFA DE PRECIO.'],
     ['CÓDIGO', 'DESCRIPCIÓN', 'CODIGO DE FAMILIA 3', 'FAMILIA 3', 'IVA', 'TIPO', 'PRECIO VENTA'],
-    ...articulos.map((a): Fila => [a.cod_art, a.descripcion, 0, null, '16%', null, a.precio]),
+    ...articulos.map((a): Fila => [a.cod_art, a.descripcion, null, null, '16%', null, a.precio]),
   ];
 }
 
