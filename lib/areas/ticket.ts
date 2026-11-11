@@ -15,14 +15,7 @@ export const sesionDe = (fecha: string) => Number(fecha.replaceAll('-', ''));
  */
 export const listaCent = (c: CustomNormal) => Math.round(c.importeCent / (1 - c.descuentoPct / 100));
 /**
- * Código de catálogo de una personalización. Las de Rappi llegan todas con el código «RAPPI» (rappi-pos.ts) y se
- * distinguen por el nombre.
- */
-export const codigoPersonalizacion = (c: CustomNormal) =>
-  c.codigo === 'RAPPI' ? `RAPPI:${c.nombre}` : c.codigo;
-
-/**
- * Un pedido del POS (o de Rappi del portal) como TicketCompleto de Areas. Montos en centavos hasta el final. Precio
+ * Un pedido del POS como TicketCompleto de Areas (Rappi no se maneja con Areas: lo excluye `armar`). Montos en centavos hasta el final. Precio
  * antes del descuento de línea e IVA sobre ese precio, como el ejemplo del Doc Técnico (BAS_IVA 600 = 2 × 300 con
  * IMP_DTO aparte). Spec: docs/superpowers/specs/2026-11-09-areas-api-ventas-design.md §3.
  */
@@ -40,11 +33,10 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
     .flatMap((l) => [
       { codigo: l.codigo, nombre: l.nombre, preUni: lista(l, l.codigo), importe: l.importeCent },
       ...l.customs.flatMap((c) => {
-        const codigo = codigoPersonalizacion(c);
-        const preUni = lista(c, codigo);
+        const preUni = lista(c, c.codigo);
         return preUni === 0 && c.importeCent === 0
           ? []
-          : [{ codigo, nombre: c.nombre, preUni, importe: c.importeCent }];
+          : [{ codigo: c.codigo, nombre: c.nombre, preUni, importe: c.importeCent }];
       }),
     ])
     .map((x) => ({ ...x, dto: x.preUni - x.importe, bas: Math.round(x.preUni / (1 + IVA)) }));

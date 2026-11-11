@@ -21,7 +21,6 @@ describe('filasPagos', () => {
       [102, 'Tarjeta', null, null, null],
       [103, 'App - Tarjeta', null, null, null],
       [104, 'App - Saldo', null, null, null],
-      [105, 'Rappi', null, null, null],
     ]);
   });
 });
@@ -31,6 +30,7 @@ describe('reporte', () => {
     tickets: [],
     arqueos: [],
     vendidos: [1001],
+    rappiExcluidos: 0,
     dias: [{ fecha: '2026-11-09', leidos: 3, validos: 2, descartados: 1, monto: 120 }],
     descartados: [
       { id: 7, fecha: '2026-11-09', hora: '10:00:00', motivo: 'Forma de pago sin mapeo: IFOOD / X' },
@@ -70,6 +70,7 @@ describe('reporte · días incompletos', () => {
       tickets: [],
       arqueos: [],
       vendidos: [],
+      rappiExcluidos: 0,
       descartados: [],
       dias: [
         { fecha: '2026-11-08', leidos: 1, validos: 1, descartados: 0, monto: 60 },
@@ -87,5 +88,26 @@ describe('reporte · días incompletos', () => {
     expect(r).toMatch(/\| 2026-11-08 \| 1 \| 1 \| 0 \| 60\.00 \| completa \|/);
     expect(r).toMatch(/\| 2026-11-09 \| 1 \| 1 \| 0 \| 60\.00 \| INCOMPLETA \|/);
     expect(r.split('\n').slice(0, 4).join('\n')).toMatch(/2026-11-09/);
+  });
+});
+
+describe('reporte · Rappi', () => {
+  it('dice cuántos pedidos de Rappi se excluyeron', () => {
+    const e3: Exportacion = {
+      tickets: [],
+      arqueos: [],
+      vendidos: [],
+      descartados: [],
+      dias: [],
+      rappiExcluidos: 61,
+    };
+    const r = reporte(e3, {
+      desde: '2026-11-02',
+      hasta: '2026-11-08',
+      estado: 'completa',
+      avisos: [],
+      nuevos: [],
+    });
+    expect(r).toMatch(/Rappi no se manda a Areas: 61 pedidos excluidos/);
   });
 });

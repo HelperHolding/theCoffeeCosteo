@@ -18,6 +18,8 @@ Su API todavía no existe. El documento dice que la URL y la llave se darán cua
 - **Solo el nombre de la tienda** va anónimo. Los productos van con su nombre real.
 - La entrega son **archivos JSON** generados y validados. No hay envío ni servidor de prueba.
 - Los artículos llevan un **catálogo numérico** propio, que Areas da de alta con su formato.
+- **Rappi no se maneja con Areas** (decisión del 2026-11-11): ni los pedidos pagados con RAPPI en el POS ni los del portal
+  de Partners. `armar` los excluye y el reporte dice cuántos.
 
 ## 1. Alcance
 
@@ -42,16 +44,16 @@ Su API todavía no existe. El documento dice que la URL y la llave se darán cua
 
 ```
 scripts/areas/exportar.ts --desde AAAA-MM-DD --hasta AAAA-MM-DD
-  └─ leerDias(cfg 532) + conRappi           (lib/sucursales/datos.ts, la misma lectura del corte)
+  └─ leerDias(cfg 532)                      (lib/sucursales/datos.ts, la misma lectura del corte; sin Rappi del portal)
       └─ por pedido:  aTicket(pedido, catálogo, pagos) → TicketCompleto
       └─ por día:     aArqueo(día, tickets)            → ArqueoCaja
       └─ validar(cada JSON)                            → válido | descartado con motivo
   └─ escribe datos/areas/<desde>_<hasta>/...
 ```
 
-- **Lectura.** Usa `leerDias` y `conRappi`, igual que el corte del Tablero. Así el Rappi del portal no se cuenta dos
-  veces. **No escribe en la base.** La lectura necesita las variables de `.env.local` del POS, como
-  `scripts/sucursales/corte.ts`.
+- **Lectura.** Usa `leerDias`, igual que el corte del Tablero, sin el Rappi del portal. **No toca la base.** La lectura
+  necesita el token del POS de `.env.local`, como `scripts/sucursales/corte.ts`. Los pedidos pagados con RAPPI en el POS
+  se excluyen en `armar`.
 - **Lógica pura en `lib/areas/`.** Son funciones sin red ni disco, con pruebas en vitest. Hay un archivo por cosa:
 
 | Archivo | Qué hace |
@@ -75,7 +77,7 @@ Montos en pesos con 2 decimales y punto decimal. Fechas en hora local de la CDMX
 |---|---|
 | `COD_TPV` | `"TC01"`: código neutro de 4 caracteres, sin nombre de tienda. Cabe en el `nvarchar(4)` del arqueo |
 | `NUM_SES` | El día del ticket como entero `AAAAMMDD` (por ejemplo `20261109`). Nuestro POS no tiene corte Z, así que la sesión es el día |
-| `NUM_TIK` | `PedidoNormal.id` como **entero** (hoja 1.1). El POS usa 8 dígitos. El Rappi del portal usa el número de Rappi de 10 dígitos (`2485…`), que **no cabe en un int de 32 bits** (máximo 2,147,483,647); su hoja anterior decía «máximo 29 dígitos». Se manda igual y se pregunta (§10) |
+| `NUM_TIK` | `PedidoNormal.id` como **entero** (hoja 1.1). El POS usa 8 dígitos (sin Rappi ya no hay números de 10 dígitos) |
 | `TIP_OPE` | `"V"` |
 | `MOM_OPE` | `fecha` + `hora` del pedido, formato `yyyy-MM-dd HH:mm:ss` |
 | `IMP_VEN` | `ventaCent / 100`: lo cobrado, con impuestos y ya con descuentos |
@@ -109,7 +111,7 @@ Los impuestos van sobre el precio antes del descuento, como en el ejemplo del do
 etc.) va como **línea propia** justo después de su bebida, con su propio `COD_ART` y su propio descuento. La bebida queda
 a su precio de lista, estable para la tarifa de Areas, y el total del ticket no cambia. Las personalizaciones **sin costo**
 (lista e importe en 0: temperatura, «sin miel», shot doble incluido, etc.) **no se mandan**. Su código es el del POS
-normalizado; las de Rappi llegan todas con el código «RAPPI» y usan `RAPPI:` + su nombre. Una personalización al 100% toma
+normalizado. Una personalización al 100% toma
 su precio de lista de la corrida o del catálogo; si no tiene, no se manda. En la semana del 2 al 8 de noviembre de 2026
 hubo 73 personalizaciones distintas, 17 con costo, y se dieron de alta 26 artículos de personalización (1083 a 1108).
 
@@ -150,7 +152,6 @@ Los códigos salen de `docs/bi/zoho/pagos.json`, verificado con pedidos de Rubé
 | 102 | Tarjeta | `CARTAO` con `EMV`, `CONTACTLESS_EMV` o `CONTINGENCY`, fuera de la app |
 | 103 | App - Tarjeta | `CARTAO` o `VIRTUAL_WALLET` con `WALLET` desde la app |
 | 104 | App - Saldo | `WALLET_BALANCE` |
-| 105 | Rappi | `RAPPI` (cualquier tipo: `CREDIT`, `RAPPI_PORTAL` o `RAPPI_TURBO`) |
 
 Una combinación que no esté en la tabla **descarta el ticket** y sale en el reporte con su método y tipo crudos, para
 agregarla.
@@ -203,7 +204,7 @@ Un ticket que no pasa no se escribe y va al reporte con su motivo. Sus montos no
 
 **Última red:** antes de escribir, el script revisa `reporte.md` y cada celda de los Excel. Si alguno contiene el nombre de la tienda, no escribe nada.
 
-**Días incompletos:** el reporte marca cada día con lectura incompleta en la tabla y en la advertencia. Si falla la lectura de Rappi, se marcan todos. La carpeta del rango se borra y se rehace en cada corrida.
+**Días incompletos:** el reporte marca cada día con lectura incompleta en la tabla y en la advertencia. La carpeta del rango se borra y se rehace en cada corrida.
 
 ## 8. Salida
 
@@ -251,9 +252,8 @@ En vitest, sobre `lib/areas/` y con pedidos armados a mano:
 2. ¿Qué va en `ID_MVO_DTO`? ¿Tienen un catálogo de motivos de descuento?
 3. ¿El arqueo por día con descuadre 0 les sirve, dado que nuestro POS no tiene corte Z?
 4. ¿Qué tienen que traer `CODIGO DE FAMILIA 3`, `FAMILIA 3` y `TIPO` en el alta de artículos?
-5. ¿`NUM_TIK` acepta enteros de más de 32 bits? Los pedidos de Rappi traen 10 dígitos.
+5. ~~¿`NUM_TIK` acepta enteros de más de 32 bits?~~ Ya no aplica: sin Rappi, el POS usa 8 dígitos.
 6. ¿Cómo cuadran el ticket: `Σ PRE_FIN − IMP_DTG = IMP_VEN` (como su ejemplo, con `IMP_DTG = Σ IMP_DTO`) o `Σ (PRE_FIN − IMP_DTO) − IMP_DTG`? Mandamos lo primero.
 7. ¿Para producción, los tickets se mandan uno por uno en tiempo real o en lote diario?
-8. Rappi tiene precios propios, más altos que en mostrador (Salted caramel $94 en mostrador y $129 en Rappi). ¿Aceptan el
-   mismo `COD_ART` con otro precio o prefieren artículos separados para Rappi?
+8. ~~Precios de Rappi~~ Ya no aplica: Rappi no se maneja con Areas.
 9. ¿Les sirve que las personalizaciones con costo lleguen como líneas propias y que las sin costo no se manden?

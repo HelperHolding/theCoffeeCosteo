@@ -7,7 +7,6 @@ export const FORMAS_PAGO = [
   { codigo: 102, descripcion: 'Tarjeta' },
   { codigo: 103, descripcion: 'App - Tarjeta' },
   { codigo: 104, descripcion: 'App - Saldo' },
-  { codigo: 105, descripcion: 'Rappi' },
 ];
 
 const TARJETA_FISICA = new Set(['EMV', 'CONTACTLESS_EMV', 'CONTINGENCY']);
@@ -23,8 +22,6 @@ export function codigoPago(p: { metodo: string; tipo: string }): number | null {
       return p.tipo === 'WALLET' ? 103 : null;
     case 'WALLET_BALANCE':
       return 104;
-    case 'RAPPI':
-      return 105;
     default:
       return null;
   }

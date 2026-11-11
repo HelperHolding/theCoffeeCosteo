@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import * as XLSX from 'xlsx';
 import { leerEnvLocal } from '../zoho/cliente';
@@ -7,13 +6,13 @@ import { filasArticulos, filasPagos, reporte, type Fila } from '../../lib/areas/
 import { Catalogo, type Articulo } from '../../lib/areas/catalogo';
 import { contieneNombre } from '../../lib/areas/validar';
 import { configDe } from '../../lib/sucursales/config';
-import { rappiServicio } from '../../lib/sucursales/corte-servidor';
-import { conRappi, leerDias, leerVentana } from '../../lib/sucursales/datos';
+import { leerDias, leerVentana } from '../../lib/sucursales/datos';
 import { diasEntre, sumarDias } from '../../lib/sucursales/tiempo';
 
 /**
  * Exporta las ventas de Rubén Darío (532) en los JSON de la API de Areas México, con la tienda anónima (COD_TPV TC01).
- * SOLO LECTURA: lee el POS con THECOFFEE_API_TOKEN y Rappi del portal con la base de .env.local; no escribe en la base.
+ * SOLO LECTURA: lee el POS con THECOFFEE_API_TOKEN de .env.local; no toca la base. Rappi no se maneja con Areas: no se
+ * lee el portal y los pedidos pagados con RAPPI en el POS se excluyen (armar).
  * Escribe datos/areas/<desde>_<hasta>/ y actualiza datos/areas/articulos.json (el único archivo versionado).
  * Spec: docs/superpowers/specs/2026-11-09-areas-api-ventas-design.md
  *
@@ -35,20 +34,14 @@ if (!cfg) throw new Error(`La sucursal ${COMPANIA} no está configurada`);
 
 const env = await leerEnvLocal();
 process.env.THECOFFEE_API_TOKEN = env.get('THECOFFEE_API_TOKEN');
-const db = createClient(env.get('NEXT_PUBLIC_SUPABASE_URL')!, env.get('SUPABASE_SECRET_KEY')!, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
 
-const pos = await leerDias(cfg, desde, hasta);
-const lectura = await conRappi(pos, rappiServicio(db, cfg));
+const lectura = await leerDias(cfg, desde, hasta);
 if (lectura.estado === 'error') throw new Error(`No se pudo leer el POS: ${lectura.avisos.join(' ')}`);
 
-// Días incompletos: los del POS (leerVentana por día ya está en caché tras leerDias) y, si Rappi falló, todos.
+// Días incompletos del POS (leerVentana por día ya está en caché tras leerDias).
 const fechas = Array.from({ length: diasEntre(desde, hasta) + 1 }, (_, i) => sumarDias(desde, i));
-const rappiFallo = lectura.avisos.length > pos.avisos.length;
 const incompletos: string[] = [];
-for (const f of fechas)
-  if (rappiFallo || (await leerVentana(cfg, f, f)).estado !== 'completa') incompletos.push(f);
+for (const f of fechas) if ((await leerVentana(cfg, f, f)).estado !== 'completa') incompletos.push(f);
 
 const catalogo = new Catalogo(JSON.parse(await readFile(CATALOGO, 'utf8')) as Articulo[]);
 const prohibidos = [cfg.nombre, 'Rubén Darío', 'Ruben Dario'];
