@@ -102,8 +102,16 @@ Una línea por `LineaNormal`. Cada línea del POS es una unidad, como en el BI.
 | `IMP_IVA` | `PRE_FIN − BAS_IVA` |
 | `POR_IEPS`, `BAS_IEPS`, `IMP_IEPS` | `0` |
 
-`importeLinea(l)` incluye los modificadores, igual que el BI. Los impuestos van sobre el precio antes del descuento,
-como en el ejemplo del documento: `BAS_IVA` 600 = 2 × 300, con `IMP_DTO` aparte.
+Los impuestos van sobre el precio antes del descuento, como en el ejemplo del documento: `BAS_IVA` 600 = 2 × 300, con
+`IMP_DTO` aparte.
+
+**Personalizaciones (decisión del 2026-11-10).** Cada personalización **con costo** (tamaño grande, leches, shot extra,
+etc.) va como **línea propia** justo después de su bebida, con su propio `COD_ART` y su propio descuento. La bebida queda
+a su precio de lista, estable para la tarifa de Areas, y el total del ticket no cambia. Las personalizaciones **sin costo**
+(lista e importe en 0: temperatura, «sin miel», shot doble incluido, etc.) **no se mandan**. Su código es el del POS
+normalizado; las de Rappi llegan todas con el código «RAPPI» y usan `RAPPI:` + su nombre. Una personalización al 100% toma
+su precio de lista de la corrida o del catálogo; si no tiene, no se manda. En la semana del 2 al 8 de noviembre de 2026
+hubo 73 personalizaciones distintas, 17 con costo, y se dieron de alta 26 artículos de personalización (1083 a 1108).
 
 **IVA 16%.** Rubén Darío está en Guadalajara, que no es zona fronteriza. El IVA se calcula desde el precio porque la
 API del POS no lo separa.
@@ -246,3 +254,6 @@ En vitest, sobre `lib/areas/` y con pedidos armados a mano:
 5. ¿`NUM_TIK` acepta enteros de más de 32 bits? Los pedidos de Rappi traen 10 dígitos.
 6. ¿Cómo cuadran el ticket: `Σ PRE_FIN − IMP_DTG = IMP_VEN` (como su ejemplo, con `IMP_DTG = Σ IMP_DTO`) o `Σ (PRE_FIN − IMP_DTO) − IMP_DTG`? Mandamos lo primero.
 7. ¿Para producción, los tickets se mandan uno por uno en tiempo real o en lote diario?
+8. Rappi tiene precios propios, más altos que en mostrador (Salted caramel $94 en mostrador y $129 en Rappi). ¿Aceptan el
+   mismo `COD_ART` con otro precio o prefieren artículos separados para Rappi?
+9. ¿Les sirve que las personalizaciones con costo lleguen como líneas propias y que las sin costo no se manden?

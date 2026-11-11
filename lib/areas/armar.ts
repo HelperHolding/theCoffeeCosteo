@@ -1,7 +1,7 @@
-import type { PedidoNormal } from '../sucursales/normalizar';
+import type { CustomNormal, PedidoNormal } from '../sucursales/normalizar';
 import { aArqueo } from './arqueo';
 import { codigoNormal, type Catalogo } from './catalogo';
-import { aTicket, listaCent } from './ticket';
+import { aTicket, codigoPersonalizacion, listaCent } from './ticket';
 import type { ArqueoCaja, TicketCompleto } from './tipos';
 import { validarArqueo, validarTicket } from './validar';
 
@@ -82,18 +82,23 @@ export function armar(pedidos: PedidoNormal[], catalogo: Catalogo, prohibidos: s
 }
 
 /**
- * Precio de lista de cada producto, en pesos: el más frecuente de sus líneas con descuento menor a 100%, sin
- * modificadores (empate: el mayor).
+ * Precio de lista de cada producto y de cada personalización con costo, en pesos: el más frecuente de sus apariciones
+ * con descuento menor a 100% (empate: el mayor).
  */
 function preciosDeLista(pedidos: PedidoNormal[]): Map<string, number> {
   const conteo = new Map<string, Map<number, number>>();
+  const contar = (x: CustomNormal, codigo: string) => {
+    if (x.descuentoPct < 0 || x.descuentoPct >= 100) return;
+    const c = codigoNormal(codigo);
+    const m = conteo.get(c) ?? new Map<number, number>();
+    const cent = listaCent(x);
+    conteo.set(c, m.set(cent, (m.get(cent) ?? 0) + 1));
+  };
   for (const p of pedidos)
     for (const l of p.lineas) {
-      if (l.descuentoPct < 0 || l.descuentoPct >= 100) continue;
-      const c = codigoNormal(l.codigo);
-      const m = conteo.get(c) ?? new Map<number, number>();
-      const cent = listaCent(l);
-      conteo.set(c, m.set(cent, (m.get(cent) ?? 0) + 1));
+      contar(l, l.codigo);
+      // Las personalizaciones sin costo no son artículos: no se les da precio.
+      for (const c of l.customs) if (c.importeCent > 0) contar(c, codigoPersonalizacion(c));
     }
   return new Map(
     [...conteo].map(([c, m]) => [c, [...m].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0] / 100]),
