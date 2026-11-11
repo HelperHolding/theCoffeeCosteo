@@ -173,3 +173,34 @@ describe('armar · personalizaciones', () => {
     expect(e.arqueos[0].Monto).toBe(133);
   });
 });
+
+describe('armar · sin Rappi', () => {
+  it('los pedidos de Rappi no se mandan ni cuentan en el resumen: solo se reportan como excluidos', () => {
+    const e = armar(
+      [
+        pedido('2026-11-09', 40000),
+        pedido('2026-11-09', 40100, {
+          origen: 'rappi',
+          metodo: 'RAPPI',
+          tipo: 'CREDIT',
+          ventaCent: 9900,
+          lineas: [linea('LAT', 9900)],
+        }),
+        pedido('2026-11-10', 40200, {
+          origen: 'rappi',
+          metodo: 'RAPPI',
+          tipo: 'RAPPI_PORTAL',
+          ventaCent: 5000,
+          lineas: [linea('X', 5000)],
+        }),
+      ],
+      new Catalogo(),
+      [],
+    );
+    expect(e.tickets).toHaveLength(1);
+    expect(e.descartados).toEqual([]);
+    expect(e.dias).toEqual([{ fecha: '2026-11-09', leidos: 1, validos: 1, descartados: 0, monto: 60 }]);
+    expect(e.arqueos.map((a) => a.Monto)).toEqual([60]);
+    expect(e.rappiExcluidos).toBe(2);
+  });
+});

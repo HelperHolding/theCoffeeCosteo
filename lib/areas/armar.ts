@@ -1,7 +1,7 @@
 import type { CustomNormal, PedidoNormal } from '../sucursales/normalizar';
 import { aArqueo } from './arqueo';
 import { codigoNormal, type Catalogo } from './catalogo';
-import { aTicket, codigoPersonalizacion, listaCent } from './ticket';
+import { aTicket, listaCent } from './ticket';
 import type { ArqueoCaja, TicketCompleto } from './tipos';
 import { validarArqueo, validarTicket } from './validar';
 
@@ -28,12 +28,20 @@ export interface Exportacion {
   dias: Dia[];
   /** COD_ART de los tickets válidos, sin repetir, ordenados. */
   vendidos: number[];
+  /** Pedidos de Rappi que no se mandan: Rappi no se maneja con Areas (decisión del 2026-11-11). */
+  rappiExcluidos: number;
 }
+
+/** Rappi por cualquier camino: pagado con RAPPI en el POS o del portal de Partners. */
+const esRappi = (p: PedidoNormal) => p.origen === 'rappi' || p.metodo === 'RAPPI';
 
 /** Pedidos leídos → lo que se manda a Areas, lo que no y por qué. Fija el precio de lista del catálogo. */
 export function armar(pedidos: PedidoNormal[], catalogo: Catalogo, prohibidos: string[]): Exportacion {
   // De menor a mayor, para que la descripción del catálogo quede con el nombre más reciente.
-  const orden = [...pedidos].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.segundo - b.segundo);
+  const orden = pedidos
+    .filter((p) => !esRappi(p))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.segundo - b.segundo);
+  const rappiExcluidos = pedidos.length - orden.length;
   const tickets: TicketCompleto[] = [];
   const descartados: Descartado[] = [];
   const dias = new Map<string, Dia>();
@@ -77,6 +85,7 @@ export function armar(pedidos: PedidoNormal[], catalogo: Catalogo, prohibidos: s
     arqueos,
     descartados,
     dias: [...dias.values()],
+    rappiExcluidos,
     vendidos: [...new Set(tickets.flatMap((t) => t.Detalles.map((d) => d.COD_ART)))].sort((a, b) => a - b),
   };
 }
@@ -98,7 +107,7 @@ function preciosDeLista(pedidos: PedidoNormal[]): Map<string, number> {
     for (const l of p.lineas) {
       contar(l, l.codigo);
       // Las personalizaciones sin costo no son artículos: no se les da precio.
-      for (const c of l.customs) if (c.importeCent > 0) contar(c, codigoPersonalizacion(c));
+      for (const c of l.customs) if (c.importeCent > 0) contar(c, c.codigo);
     }
   return new Map(
     [...conteo].map(([c, m]) => [c, [...m].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0] / 100]),

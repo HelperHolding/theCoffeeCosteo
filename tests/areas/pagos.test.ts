@@ -11,11 +11,12 @@ describe('codigoPago', () => {
     ['CARTAO', 'WALLET', 103],
     ['VIRTUAL_WALLET', 'WALLET', 103],
     ['WALLET_BALANCE', 'WALLET', 104],
-    ['RAPPI', 'CREDIT', 105],
-    ['RAPPI', 'RAPPI_PORTAL', 105],
-    ['RAPPI', 'RAPPI_TURBO', 105],
   ])('%s / %s → %i', (metodo, tipo, codigo) => {
     expect(codigoPago({ metodo, tipo })).toBe(codigo);
+  });
+  it('Rappi no se maneja con Areas: no tiene código', () => {
+    for (const tipo of ['CREDIT', 'RAPPI_PORTAL', 'RAPPI_TURBO'])
+      expect(codigoPago({ metodo: 'RAPPI', tipo })).toBeNull();
   });
   it('una combinación desconocida no tiene código', () => {
     expect(codigoPago({ metodo: 'IFOOD', tipo: 'CONTINGENCY' })).toBeNull();
@@ -23,6 +24,6 @@ describe('codigoPago', () => {
     expect(codigoPago({ metodo: '', tipo: '' })).toBeNull();
   });
   it('cada código que devuelve existe en FORMAS_PAGO', () => {
-    expect(FORMAS_PAGO.map((f) => f.codigo)).toEqual([101, 102, 103, 104, 105]);
+    expect(FORMAS_PAGO.map((f) => f.codigo)).toEqual([101, 102, 103, 104]);
   });
 });

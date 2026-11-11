@@ -118,23 +118,6 @@ describe('aTicket', () => {
     expect(cat.nuevos().map((a) => a.codigo)).toEqual(['LAT']);
   });
 
-  it('una personalización de Rappi toma su código del nombre', () => {
-    const p = pedido({
-      metodo: 'RAPPI',
-      tipo: 'RAPPI_PORTAL',
-      lineas: [
-        linea('LAT', 6000, {
-          customs: [{ codigo: 'RAPPI', nombre: 'Large - 600ml', importeCent: 1200, descuentoPct: 0 }],
-        }),
-      ],
-      ventaCent: 7200,
-    });
-    const cat = new Catalogo();
-    const t = ok(aTicket(p, cat));
-    expect(t.Detalles[1]).toMatchObject({ COD_ART: 1002, DES_ART: 'Large - 600ml', PRE_FIN: 12 });
-    expect(cat.lista()[1].codigo).toBe('RAPPI:LARGE - 600ML');
-  });
-
   it('línea con 100% de descuento usa el precio del catálogo y, sin precio, va en 0', () => {
     const cat = new Catalogo([{ cod_art: 1001, codigo: 'LAT', descripcion: 'Latte', precio: 65 }]);
     const p = pedido({
@@ -188,17 +171,12 @@ describe('aTicket', () => {
     expect(validarTicket(ok(aTicket(p, new Catalogo())), [])).toEqual([]);
   });
 
-  it('un número de Rappi de 10 dígitos se conserva en NUM_TIK', () => {
-    const p = pedido({
-      id: 2485123456,
-      metodo: 'RAPPI',
-      tipo: 'RAPPI_PORTAL',
-      lineas: [linea('LAT', 6000)],
-      ventaCent: 6000,
+  it('un pedido de Rappi que llegara hasta aquí se descarta por forma de pago', () => {
+    const p = pedido({ metodo: 'RAPPI', tipo: 'CREDIT', lineas: [linea('LAT', 6000)], ventaCent: 6000 });
+    expect(aTicket(p, new Catalogo())).toEqual({
+      ok: false,
+      motivo: 'Forma de pago sin mapeo: RAPPI / CREDIT',
     });
-    const t = ok(aTicket(p, new Catalogo()));
-    expect(t.Cabecera.NUM_TIK).toBe(2485123456);
-    expect(t.FormasDePago[0].COD_FPG).toBe(105);
   });
 
   it('DES_ART se recorta a 150 caracteres', () => {

@@ -68,6 +68,8 @@ export function reporte(
     '',
     `Total: ${e.tickets.length} tickets y ${e.arqueos.length} arqueos.`,
     '',
+    `Rappi no se manda a Areas: ${e.rappiExcluidos} pedidos excluidos.`,
+    '',
     '## Descartados',
     '',
   );
