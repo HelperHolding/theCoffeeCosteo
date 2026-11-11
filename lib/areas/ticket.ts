@@ -7,15 +7,13 @@ export type ResultadoTicket = { ok: true; ticket: TicketCompleto } | { ok: false
 
 const IVA = 0.16;
 const pesos = (c: number) => Math.round(c) / 100;
-/** Nuestro POS no tiene corte Z: la sesión es el día (AAAAMMDD). */
-export const sesionDe = (fecha: string) => Number(fecha.replaceAll('-', ''));
 /**
  * Precio de lista (antes de su descuento) de una línea o modificador, en centavos. Solo para descuentos menores a
  * 100%; un modificador al 100% vale 0 de lista porque no hay de dónde sacar su precio.
  */
 export const listaCent = (c: CustomNormal) => Math.round(c.importeCent / (1 - c.descuentoPct / 100));
 /**
- * Un pedido del POS como TicketCompleto de Areas (Rappi no se maneja con Areas: lo excluye `armar`). Montos en centavos hasta el final. Precio
+ * Un pedido del POS como TicketCompleto de Areas (Rappi lo excluye `armar`). Montos en centavos hasta el final. Precio
  * antes del descuento de línea e IVA sobre ese precio, como el ejemplo del Doc Técnico (BAS_IVA 600 = 2 × 300 con
  * IMP_DTO aparte). Spec: docs/superpowers/specs/2026-11-09-areas-api-ventas-design.md §3.
  */
@@ -55,12 +53,12 @@ export function aTicket(p: PedidoNormal, catalogo: Catalogo): ResultadoTicket {
     ticket: {
       Cabecera: {
         COD_TPV,
-        NUM_SES: sesionDe(p.fecha),
+        // Areas asigna sus consecutivos de sesión y no usa ID_MVO_DTO (correo de Areas, 2026-11-11).
+        NUM_SES: 0,
         NUM_TIK: p.id,
         TIP_OPE: 'V',
         MOM_OPE: `${p.fecha} ${p.hora}`,
         IMP_VEN: venta,
-        ID_MVO_DTO: 0,
         IMP_DTG: pesos(dtg),
       },
       Detalles: lineas.map((x, i) => ({

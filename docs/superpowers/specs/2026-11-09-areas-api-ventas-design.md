@@ -76,12 +76,12 @@ Montos en pesos con 2 decimales y punto decimal. Fechas en hora local de la CDMX
 | Campo | Valor |
 |---|---|
 | `COD_TPV` | `"TC01"`: código neutro de 4 caracteres, sin nombre de tienda. Cabe en el `nvarchar(4)` del arqueo |
-| `NUM_SES` | El día del ticket como entero `AAAAMMDD` (por ejemplo `20261109`). Nuestro POS no tiene corte Z, así que la sesión es el día |
+| `NUM_SES` | `0`. Areas asigna sus propios consecutivos de sesión (correo de Areas, 2026-11-11) |
 | `NUM_TIK` | `PedidoNormal.id` como **entero** (hoja 1.1). El POS usa 8 dígitos (sin Rappi ya no hay números de 10 dígitos) |
 | `TIP_OPE` | `"V"` |
 | `MOM_OPE` | `fecha` + `hora` del pedido, formato `yyyy-MM-dd HH:mm:ss` |
 | `IMP_VEN` | `ventaCent / 100`: lo cobrado, con impuestos y ya con descuentos |
-| `ID_MVO_DTO` | `0`. El campo es nuevo en la hoja 1.1, no está en el PDF y no hay catálogo de descuentos. Se pide a Areas |
+| `ID_MVO_DTO` | **No se envía**: Areas lo omite (correo de Areas, 2026-11-11). La cabecera se valida estricta para que no se cuele |
 | `IMP_DTG` | Suma de los `IMP_DTO` de las líneas más la diferencia que quede, de modo que `Σ PRE_FIN − IMP_DTG = IMP_VEN` (ver 3.4) |
 
 ### 3.2 Detalle
@@ -176,9 +176,9 @@ Un arqueo por día que tenga al menos un ticket válido:
 | Campo | Valor |
 |---|---|
 | `COD_TPV` | `"TC01"` |
-| `NUM_SES` | `AAAAMMDD` del día |
+| `NUM_SES` | `0` (Areas asigna sus consecutivos) |
 | `Fecha` | `yyyy-MM-dd` |
-| `Hora` | `HH:mm:ss` del último ticket del día |
+| `Hora` | Fecha y hora del último ticket del día, `yyyy-MM-ddTHH:mm:ss`, como el ejemplo de Areas (`2025-07-03T23:10:00`) |
 | `Monto` | Suma de `IMP_VEN` de los tickets válidos del día |
 | `Descuadres` | `0`: no hay conteo físico de caja |
 
@@ -214,7 +214,7 @@ En `datos/areas/<desde>_<hasta>/`:
 |---|---|
 | `tickets/<NUM_TIK>.json` | Un archivo por ticket válido: el cuerpo exacto del POST |
 | `arqueos/<AAAA-MM-DD>.json` | Un archivo por día |
-| `Carga Art TPVs Externos.xlsx` | Su formato: encabezado «ALTA DE CODIGOS» y columnas CÓDIGO, DESCRIPCIÓN, CODIGO DE FAMILIA 3 (0), FAMILIA 3 (vacío), IVA («16%»), TIPO (vacío) y PRECIO VENTA. Una fila por artículo del catálogo que se vendió en el rango |
+| `Carga Art TPVs Externos.xlsx` | Su formato: encabezado «ALTA DE CODIGOS» y columnas CÓDIGO, DESCRIPCIÓN, CODIGO DE FAMILIA 3 y FAMILIA 3 (vacías: Areas no las necesita), IVA («16%»), TIPO (vacío) y PRECIO VENTA. Una fila por artículo del catálogo que se vendió en el rango |
 | `Formas de Pago y Monedas.xlsx` | Su formato, con solo las columnas A y B llenas: CODFPTPVEXT y DESCFPTPVEXT. CODFPAREAS, DESCFAREAS y FechaRegistro van vacías: las llena Areas |
 | `reporte.md` | Por día: tickets leídos, válidos, descartados y monto. La lista de descartados con su motivo. Artículos nuevos en el catálogo. Combinaciones de pago sin mapeo |
 
@@ -249,11 +249,13 @@ En vitest, sobre `lib/areas/` y con pedidos armados a mano:
 ## 10. Preguntas para Areas
 
 1. ~~¿`COD_FPG` lleva nuestro código externo (101…) o el suyo?~~ Resuelta: el nuestro; Areas hace la relación.
-2. ¿Qué va en `ID_MVO_DTO`? ¿Tienen un catálogo de motivos de descuento?
-3. ¿El arqueo por día con descuadre 0 les sirve, dado que nuestro POS no tiene corte Z?
-4. ¿Qué tienen que traer `CODIGO DE FAMILIA 3`, `FAMILIA 3` y `TIPO` en el alta de artículos?
+2. ~~¿Qué va en `ID_MVO_DTO`?~~ Resuelta: no se envía. En las pruebas deben ir ventas con descuento.
+3. ~~¿El arqueo por día con descuadre 0 les sirve?~~ Resuelta: sí, con `NUM_SES` = 0 y la `Hora` con fecha.
+4. ~~¿Qué llevan las familias y el tipo en el alta?~~ Resuelta: no hacen falta.
 5. ~~¿`NUM_TIK` acepta enteros de más de 32 bits?~~ Ya no aplica: sin Rappi, el POS usa 8 dígitos.
-6. ¿Cómo cuadran el ticket: `Σ PRE_FIN − IMP_DTG = IMP_VEN` (como su ejemplo, con `IMP_DTG = Σ IMP_DTO`) o `Σ (PRE_FIN − IMP_DTO) − IMP_DTG`? Mandamos lo primero.
-7. ¿Para producción, los tickets se mandan uno por uno en tiempo real o en lote diario?
+6. ~~¿Cómo cuadran el ticket?~~ Resuelta: con el descuento por línea o, si no, el global; mandamos los dos.
+7. ~~¿Tiempo real o lote?~~ Resuelta: ticket a ticket o paquetes cada 10 a 30 minutos (fase de envío).
 8. ~~Precios de Rappi~~ Ya no aplica: Rappi no se maneja con Areas.
-9. ¿Les sirve que las personalizaciones con costo lleguen como líneas propias y que las sin costo no se manden?
+9. ¿Les sirve que las personalizaciones con costo lleguen como líneas propias? Pidieron más detalle (2026-11-11).
+10. **Devoluciones:** Areas las maneja abonando el ticket (positivo y negativo). La API de nuestro POS no trae
+    devoluciones (sin estado, montos negativos ni marca de cancelación): hoy no se pueden informar.

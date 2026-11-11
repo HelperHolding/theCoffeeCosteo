@@ -15,9 +15,9 @@ describe('aArqueo', () => {
       ]),
     ).toEqual({
       COD_TPV: 'TC01',
-      NUM_SES: 20261109,
+      NUM_SES: 0,
       Fecha: '2026-11-09',
-      Hora: '18:40:05',
+      Hora: '2026-11-09T18:40:05',
       Monto: 165.3,
       Descuadres: 0,
     });

@@ -8,7 +8,7 @@ describe('filasArticulos', () => {
       ['TIPO DE SOLICITUD', null, 'A', 'ALTA DE CODIGOS', null, null, 'COMENTARIOS'],
       [null, null, null, null, null, null, 'ALTA DE CODIGOS. ASOCIAR A GAMA Y TARIFA DE PRECIO.'],
       ['CÓDIGO', 'DESCRIPCIÓN', 'CODIGO DE FAMILIA 3', 'FAMILIA 3', 'IVA', 'TIPO', 'PRECIO VENTA'],
-      [1001, 'Latte', 0, null, '16%', null, 65],
+      [1001, 'Latte', null, null, '16%', null, 65],
     ]);
   });
 });

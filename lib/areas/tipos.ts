@@ -9,14 +9,17 @@ export const COD_TPV = 'TC01';
 const monto = z.number().finite();
 const entero = z.number().int();
 
-export const CabeceraEsquema = z.object({
+/** Areas asigna sus propios consecutivos de sesión: nosotros mandamos 0 (correo de Areas, 2026-11-11). */
+const SIN_SESION = z.literal(0);
+
+// Estricta: ID_MVO_DTO ya no se envía (correo de Areas, 2026-11-11) y un campo de más debe fallar, no colarse.
+export const CabeceraEsquema = z.strictObject({
   COD_TPV: z.string().min(1).max(20),
-  NUM_SES: entero.positive(),
+  NUM_SES: SIN_SESION,
   NUM_TIK: entero.positive(),
   TIP_OPE: z.enum(['V', 'D']),
   MOM_OPE: z.string().regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/),
   IMP_VEN: monto.min(0),
-  ID_MVO_DTO: entero,
   IMP_DTG: monto.min(0),
 });
 export const DetalleEsquema = z.object({
@@ -51,9 +54,10 @@ export const TicketCompletoEsquema = z.object({
 });
 export const ArqueoCajaEsquema = z.object({
   COD_TPV: z.string().min(1).max(4),
-  NUM_SES: entero.positive(),
+  NUM_SES: SIN_SESION,
   Fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  Hora: z.string().regex(/^\d{2}:\d{2}:\d{2}$/),
+  // Fecha y hora, como el ejemplo de Areas: "2025-07-03T23:10:00".
+  Hora: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/),
   Monto: monto,
   Descuadres: monto,
 });

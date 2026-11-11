@@ -43,12 +43,11 @@ describe('aTicket', () => {
     const t = ok(aTicket(p, new Catalogo()));
     expect(t.Cabecera).toEqual({
       COD_TPV: 'TC01',
-      NUM_SES: 20261109,
+      NUM_SES: 0,
       NUM_TIK: 32235824,
       TIP_OPE: 'V',
       MOM_OPE: '2026-11-09 10:15:00',
       IMP_VEN: 428,
-      ID_MVO_DTO: 0,
       IMP_DTG: 20,
     });
     expect(t.Detalles[0]).toEqual({
