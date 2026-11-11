@@ -87,13 +87,13 @@
     "cod_art": 1015,
     "codigo": "1FC",
     "descripcion": "Flat Caramel",
-    "precio": 111
+    "precio": 77
   },
   {
     "cod_art": 1016,
     "codigo": "FRATARAPP",
     "descripcion": "Taro Frap",
-    "precio": 122
+    "precio": 89
   },
   {
     "cod_art": 1017,
@@ -105,7 +105,7 @@
     "cod_art": 1018,
     "codigo": "CPUMICAPP",
     "descripcion": "Pumpkin Iced Latte",
-    "precio": 110
+    "precio": 99
   },
   {
     "cod_art": 1019,
@@ -147,7 +147,7 @@
     "cod_art": 1025,
     "codigo": "CAKLEMAPP",
     "descripcion": "Lemon Cake",
-    "precio": 72
+    "precio": 45
   },
   {
     "cod_art": 1026,
@@ -237,12 +237,12 @@
     "cod_art": 1040,
     "codigo": "ACABOWAPP",
     "descripcion": "Açaí Bowl",
-    "precio": 188
+    "precio": 149
   },
   {
     "cod_art": 1041,
     "codigo": "MISICEDAPP",
-    "descripcion": "Iced latte + sandwich jamón y queso",
+    "descripcion": "Iced Latte +  Ham & Cheese Sandwich",
     "precio": 119
   },
   {
@@ -303,7 +303,7 @@
     "cod_art": 1051,
     "codigo": "MQ1",
     "descripcion": "Grilled Ham & Cheese Sandwich",
-    "precio": 111
+    "precio": 89
   },
   {
     "cod_art": 1052,
@@ -321,7 +321,7 @@
     "cod_art": 1054,
     "codigo": "CAKBANAPP",
     "descripcion": "Banana Cake",
-    "precio": 70
+    "precio": 52
   },
   {
     "cod_art": 1055,
@@ -344,13 +344,13 @@
   {
     "cod_art": 1058,
     "codigo": "7IC",
-    "descripcion": "Matcha iced mint",
-    "precio": 105
+    "descripcion": "Matcha Iced Mint",
+    "precio": 87
   },
   {
     "cod_art": 1059,
     "codigo": "5MC",
-    "descripcion": "Matcha latte",
+    "descripcion": "Matcha Latte",
     "precio": 68
   },
   {
@@ -411,7 +411,7 @@
     "cod_art": 1069,
     "codigo": "FRACHAAPP",
     "descripcion": "Chai Frap",
-    "precio": 110
+    "precio": 89
   },
   {
     "cod_art": 1070,
