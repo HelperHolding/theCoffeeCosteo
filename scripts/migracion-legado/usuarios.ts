@@ -10,6 +10,12 @@ import { planUsuarios, resumenPlan, type UsuarioLegado } from './usuarios-lib';
  */
 const aplicar = process.argv.includes('--aplicar');
 
+// Usuarios que nunca se importan ni vinculan (cuentas de prueba del sitio viejo). Si alguno ya quedó vinculado,
+// su fila de migracion_legado.usuarios se borra a mano.
+const EXCLUIDOS = new Set([
+  'prueba_cvalencia_aperturas', // proveedor de prueba con el mismo correo que un admin del portal
+]);
+
 class SimulacionTerminada extends Error {}
 
 /** Lee el estado del portal en una transacción que se revierte siempre (la simulación no escribe). */
@@ -49,13 +55,13 @@ const { legado, auth } = await conLegado(async (db) => {
 
 if (!aplicar) {
   const { cuentas, vinculos } = await leerPortalSinEscribir();
-  console.log(resumenPlan(planUsuarios(legado, cuentas, vinculos)));
+  console.log(resumenPlan(planUsuarios(legado, cuentas, vinculos, EXCLUIDOS)));
   console.log('\nSimulación: no se escribió nada. Corre con --aplicar para escribir.');
 } else {
   // El plan se recalcula dentro de la transacción de escritura para no actuar sobre un estado viejo.
   const resumen = await enPortal(async (db) => {
     const { cuentas, vinculos } = await leerEstadoPortal(db);
-    const plan = planUsuarios(legado, cuentas, vinculos);
+    const plan = planUsuarios(legado, cuentas, vinculos, EXCLUIDOS);
     const { clavesConservadas } = await aplicarPlan(db, plan, auth);
     return [
       resumenPlan(plan),

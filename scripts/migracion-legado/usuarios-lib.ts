@@ -30,7 +30,7 @@ export type Accion =
   | { tipo: 'vincular'; usuario: UsuarioLegado; userId: string }
   | { tipo: 'actualizar_clave'; usuario: UsuarioLegado; userId: string }
   | { tipo: 'sin_cambios'; usuario: UsuarioLegado; userId: string }
-  | { tipo: 'omitir'; usuario: UsuarioLegado; motivo: 'sin_cuenta_auth' | 'id_ocupado' | 'correo_repetido' };
+  | { tipo: 'omitir'; usuario: UsuarioLegado; motivo: 'sin_cuenta_auth' | 'id_ocupado' | 'correo_repetido' | 'excluido' };
 
 /** El portal no hereda roles internos del sitio viejo: el admin asigna roles de Costeo y módulos. */
 export const rolPortal = (rolLegado: string): RolPortal =>
@@ -38,6 +38,7 @@ export const rolPortal = (rolLegado: string): RolPortal =>
 
 /**
  * Qué hacer con cada usuario del sitio viejo, en este orden:
+ * 0. En `excluidos` (usernames, p. ej. cuentas de prueba): se omite siempre.
  * 1. Ya vinculado: si la cuenta la creó el importador, se actualiza la clave; si se vinculó a una cuenta previa, nada.
  * 2. Su correo, o el de su cuenta de Auth, ya es cuenta del portal: se vincula (una sola vez por cuenta). Así no
  *    choca con una cuenta `<usuario>@thecoffee.internal` creada a mano en el portal.
@@ -49,12 +50,14 @@ export function planUsuarios(
   legado: UsuarioLegado[],
   portal: CuentaPortal[],
   vinculos: VinculoExistente[],
+  excluidos: ReadonlySet<string> = new Set(),
 ): Accion[] {
   const porCorreo = new Map(portal.map((c) => [c.email.trim().toLowerCase(), c.id]));
   const ids = new Set(portal.map((c) => c.id));
   const vinculados = new Map(vinculos.map((v) => [v.legado_id, v]));
   const usados = new Set(vinculos.map((v) => v.user_id));
   return legado.map((usuario): Accion => {
+    if (excluidos.has(usuario.username)) return { tipo: 'omitir', usuario, motivo: 'excluido' };
     const v = vinculados.get(usuario.id);
     if (v)
       return v.origen === 'creado'

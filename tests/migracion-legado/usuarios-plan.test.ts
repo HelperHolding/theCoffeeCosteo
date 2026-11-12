@@ -39,6 +39,22 @@ describe('planUsuarios', () => {
     expect(plan).toEqual([{ tipo: 'crear', usuario: expect.objectContaining({ id: '1' }), rol: 'franquiciado' }]);
   });
 
+  it('omite los usuarios excluidos aunque su correo coincida o ya estén vinculados', () => {
+    const plan = planUsuarios(
+      [
+        u({ id: '7', username: 'prueba_x', auth_uid: UID(7), correo: 'admin@ejemplo.mx' }),
+        u({ id: '8', username: 'prueba_y', auth_uid: UID(8) }),
+      ],
+      [{ id: UID(90), email: 'admin@ejemplo.mx' }],
+      [{ legado_id: '8', user_id: UID(8), origen: 'creado' }],
+      new Set(['prueba_x', 'prueba_y']),
+    );
+    expect(plan.map((a) => [a.tipo, a.tipo === 'omitir' && a.motivo])).toEqual([
+      ['omitir', 'excluido'],
+      ['omitir', 'excluido'],
+    ]);
+  });
+
   it('vincula por correo sin importar mayúsculas, aunque el admin del sitio viejo sea admin', () => {
     const plan = planUsuarios(
       [u({ id: '2', username: 'sebas', auth_uid: UID(2), rol: 'admin', correo: ' Sebastian@Ejemplo.MX ' })],
