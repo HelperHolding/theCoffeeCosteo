@@ -34,21 +34,28 @@ Las demás áreas (pedidos, aperturas, regalías, incidencias, chat, comunicados
 
 ### 0.1 Esquema real de bliocjvq
 
-- Correr `pg_dump --schema-only` de `public` en bliocjvq y guardarlo en `docs/migracion/esquema-legado.sql` como referencia. **No** se aplica como migración.
+- Extraer el esquema de `public` en bliocjvq (columnas, restricciones, índices, políticas, funciones y jobs de cron) consultando el catálogo con una conexión de solo lectura, igual que `scripts/conciliacion/esquema-db.ts` (así no hace falta el binario `pg_dump`). El resultado se guarda en `docs/migracion/esquema-legado.json` como referencia. **No** se aplica como migración.
 - Hacer un inventario en `docs/migracion/inventario-tablas.md`: las 73 tablas con su área, número de filas, quién escribe (pantalla, función, cron o integración externa) y si se cruza con algo de costeos (`crm_*`, aperturas y tiendas, `proveedores`, Zoho).
 
 ### 0.2 Acceso externo
 
-- `perfiles` gana `tipo text not null default 'interno' check (tipo in ('interno','franquiciado','proveedor'))` y una referencia opcional a la entidad: `franquicia_id` / `proveedor_id`. Las tablas de entidad llegan con su módulo; mientras tanto la columna queda nula y sin FK.
-- Función `public.es_interno()`: el perfil está activo, es `tipo = 'interno'` y la sesión no es OAuth.
-- **Todas las políticas de lectura actuales** que hoy aceptan "cualquier perfil activo" (costeo, vistas de resumen, catálogos) pasan a exigir `es_interno()`. Una migración las reescribe y una prueba PGlite recorre `pg_policies` para comprobar que ninguna política `select` de `public` queda abierta a externos sin un predicado explícito.
-- La navegación de inicio muestra solo los módulos que permite `perfil_modulos`. Un externo sin módulos ve una pantalla vacía con un mensaje, no costeo.
+*Revisado al planear (2026-11-12):* la migración 24 ya cerró la lectura de Costeo a `tiene_rol('compras','operaciones','finanzas','admin')`, con `sucursales` como precedente de "perfil sin Costeo", y hoy no queda ninguna política abierta a cualquier perfil activo. No hace falta una columna `tipo` ni reescribir políticas. Lo que sí se hace:
+
+- `perfiles.rol` agrega los roles **sin Costeo** `interno`, `franquiciado` y `proveedor`, por el mismo camino que `sucursales`.
+- En la app, `tieneCosteo(rol)` sustituye la comparación `rol === 'sucursales'` y **falla cerrado**: cualquier rol que no sea de Costeo queda fuera de Costeo.
+- Una prueba de guardia recorre `pg_policies` y las vistas: toda lectura debe pasar por un predicado de rol o módulo, ninguna `tiene_rol` puede incluir roles externos y toda vista debe ser `security_invoker`.
+- La referencia a franquicia o proveedor se guarda en la tabla de vínculo de 0.3 (`supplier_key`, `parent_id`, `subtipo`) y pasa a FK cuando llegue su módulo.
+- Inicio ya muestra solo los módulos permitidos y un estado vacío cuando no hay ninguno.
 
 ### 0.3 Usuarios existentes
 
-- Copiar las cuentas de `auth.users` de bliocjvq al Supabase de costeos **conservando `id` y `encrypted_password`** (bcrypt, compatible), para que entren con la misma contraseña. Lo hace un script en `scripts/migracion-legado/usuarios.ts` con `DATABASE_URL` de ambos lados. Es idempotente: omite los correos que ya existen y **no pisa cuentas de costeos que ya existen**. Si un correo ya existe con otro `id`, se reporta para resolverlo a mano.
-- Desde `usuarios.rol` se genera `perfiles` + `perfil_modulos` con una tabla de mapeo que se revisa en el PR. En Fase 1 solo se dan módulos `comercializadora`; los demás roles quedan con perfil pero sin módulo hasta que llegue su área.
-- Conservar el mismo `id` permite que las FKs a usuarios (`creado_por`, etc.) se copien tal cual en cada módulo.
+*Revisado al planear:* en el sitio viejo se entra con **usuario**; la cuenta de Auth es `<usuario>@thecoffee.internal` y `usuarios.auth_uid` apunta a ella. Algunos usuarios todavía no tienen cuenta de Auth: el sitio los migra al vuelo con `authenticate_and_migrate`.
+
+- El login del portal acepta **correo o usuario**. Un usuario sin `@` se convierte en `<usuario>@thecoffee.internal`.
+- El script `scripts/migracion-legado/usuarios.ts` (simulación por omisión; `--aplicar` para escribir) copia `auth.users` + `auth.identities` **conservando `id` y `encrypted_password`**, así que entran con la misma contraseña. También crea el perfil con rol `interno`/`franquiciado`/`proveedor` y **sin módulos**. Los roles de Costeo y los módulos los asigna el admin.
+- Si el `correo` del usuario viejo ya es una cuenta del portal, **se vincula** a esa cuenta y no se crea otra. Si el `id` ya está ocupado, se reporta. Los que no tienen cuenta de Auth se reportan para restablecerles la contraseña.
+- La tabla privada `migracion_legado.usuarios` guarda el vínculo `legado_id` → `user_id` del portal. Cada módulo reasigna con ella sus FKs a usuarios; no se asume que el id sea el mismo.
+- Se puede volver a correr: actualiza la contraseña de las cuentas que creó el script. Se vuelve a correr en cada cutover de módulo.
 
 ## Fase 1: Comercializadora
 
@@ -126,7 +133,7 @@ Reversa: mientras el viejo siga en solo lectura, revertir es apagar el cron nuev
 | Riesgo | Mitigación |
 | --- | --- |
 | Dos crons crean OCs reales | Orden fijo del cutover, índice único por proveedor y día en el nuevo, y verificación de `cron.job` en el viejo antes de pasar a Real |
-| Abrir costeo a externos por una política olvidada | Prueba automática sobre `pg_policies` + `es_interno()` |
+| Abrir costeo a externos por una política olvidada | Prueba de guardia sobre `pg_policies` y vistas, más `tieneCosteo()` que falla cerrado en la app |
 | bliocjvq caído rompe el mín/máx | Falla controlada, se conserva el cálculo anterior y se reintenta |
 | Ediciones en el sitio viejo después de la copia | Pestaña reemplazada y tablas de solo lectura el día del cambio |
 | Esquema legado incompleto | Fase 0.1 sale del `pg_dump` real, no de las migraciones del repo |
