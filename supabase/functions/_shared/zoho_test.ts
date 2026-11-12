@@ -90,3 +90,12 @@ Deno.test("PUT con 500 lanza sin reintentar y con 429 reintenta", async () => {
   const z2 = new ZohoClient(cfg([tok, { status: 429, body: {} }, { status: 200, body: { code: 0, ok: 1 } }], log2));
   assertEquals((await z2.put<{ ok: number }>("/contacts/1", {})).ok, 1);
 });
+
+Deno.test("soloLectura: GET pasa; POST y PUT se bloquean sin llamar a Zoho", async () => {
+  const log: string[] = [];
+  const z = new ZohoClient({ ...cfg([tok, { status: 200, body: { code: 0, contacts: [] } }], log), soloLectura: true });
+  await z.get("/contacts");
+  await assertRejects(() => z.post("/purchaseorders", {}), ZohoError, "sin efectos externos");
+  await assertRejects(() => z.put("/contacts/1", {}), ZohoError, "sin efectos externos");
+  assertEquals(log.filter((l) => !l.includes("/oauth/")).map((l) => l.split(" ")[0]), ["GET"]);
+});

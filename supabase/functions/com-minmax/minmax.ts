@@ -87,18 +87,18 @@ export async function cargarEntradas(db: SupabaseClient, hoy: string): Promise<E
       db.from("com_catalogo").select("sku,estatus,created_at,zoho_lead_time,cantidad_por_apertura,dias_seguridad").neq("estatus", "Inactivo").order("sku").range(a, b)),
     todo<{ sku: string; dias: number }>((a, b) => db.from("com_lead_times").select("sku,dias").order("sku").range(a, b)),
     todo<{ shopify_nombre: string; sku: string }>((a, b) => db.from("com_sku_mapping").select("shopify_nombre,sku").order("shopify_nombre").range(a, b)),
-    todo<{ pedido_id: string }>((a, b) => db.from("pedidos_apertura").select("pedido_id").not("pedido_id", "is", null).order("pedido_id").range(a, b)),
-    todo<{ id: string; estatus: string | null; fecha: string | null }>((a, b) => db.from("aperturas").select("id,estatus,fecha").order("id").range(a, b)),
+    todo<{ pedido_id: string }>((a, b) => db.from("com_legado_pedidos_apertura").select("pedido_id").not("pedido_id", "is", null).order("pedido_id").range(a, b)),
+    todo<{ id: string; estatus: string | null; fecha: string | null }>((a, b) => db.from("com_legado_aperturas").select("id,estatus,fecha").order("id").range(a, b)),
     todo<{ sku: string; manual: number | null }>((a, b) => db.from("com_kit_apertura").select("sku,manual").order("sku").range(a, b)),
     // Primer pedido de la base (como el Plan: si la consulta falla se asume que la historia alcanza la ventana).
-    db.from("pedidos").select("fecha_pedido").order("fecha_pedido", { ascending: true }).limit(1),
+    db.from("com_legado_pedidos").select("fecha_pedido").order("fecha_pedido", { ascending: true }).limit(1),
   ]);
   const idsApertura = pedApe.map((p) => String(p.pedido_id));
   const cols = "id,apertura_id,fecha_pedido,status,items,items_editados,franquiciatario_email,notas_shopify,es_llenado_canal,marketing_proyecto_id";
-  const recientes = await todo<Pedido>((a, b) => db.from("pedidos").select(cols).gte("fecha_pedido", corte).order("id").range(a, b));
+  const recientes = await todo<Pedido>((a, b) => db.from("com_legado_pedidos").select(cols).gte("fecha_pedido", corte).order("id").range(a, b));
   const deApertura: Pedido[] = [];
   for (let i = 0; i < idsApertura.length; i += 100) {
-    const { data, error } = await db.from("pedidos").select(cols).in("id", idsApertura.slice(i, i + 100));
+    const { data, error } = await db.from("com_legado_pedidos").select(cols).in("id", idsApertura.slice(i, i + 100));
     if (error) throw error;
     deApertura.push(...((data ?? []) as Pedido[]));
   }
@@ -110,7 +110,7 @@ export async function cargarEntradas(db: SupabaseClient, hoy: string): Promise<E
   // Paginado: las aperturas ya abiertas acumulan cientos de pedidos y un solo request se corta en 1000 filas.
   for (let i = 0; i < enPipeline.length; i += 100) {
     const lote = enPipeline.slice(i, i + 100);
-    const data = await todo<{ apertura_id: string }>((a, b) => db.from("pedidos").select("apertura_id")
+    const data = await todo<{ apertura_id: string }>((a, b) => db.from("com_legado_pedidos").select("apertura_id")
       .in("apertura_id", lote).not("status", "in", '("cancelado","cancelacion_pendiente")').order("id").range(a, b));
     for (const p of data) conPedido.add(String(p.apertura_id));
   }

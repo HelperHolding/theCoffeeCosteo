@@ -526,6 +526,7 @@ Deno.test("sincronizar: tope con el mismo conjunto retenido que la corrida anter
   const enviados: unknown[] = [];
   const fetchOrig = globalThis.fetch;
   globalThis.fetch = (_u: unknown, i?: RequestInit) => { enviados.push(JSON.parse(String(i?.body))); return Promise.resolve(new Response("{}")); };
+  Deno.env.set("COM_EFECTOS_EXTERNOS", "si"); // portal (plan 2): el aviso por correo requiere efectos externos
   try {
     const f1 = dbEscenario({ catalogo: [catA], movs, config: { auto: { correos: ["a@x.com"] } } });
     const r1 = await sincronizar(f1.db, zohoItems([item]).z, AHORA);
@@ -540,7 +541,7 @@ Deno.test("sincronizar: tope con el mismo conjunto retenido que la corrida anter
     const f3 = dbEscenario({ catalogo: [catA], movs: [...movs, mov(7, "OC-7", 5, 0)], config: { auto: { correos: ["a@x.com"] } }, log: [{ resumen: r1 }] });
     await sincronizar(f3.db, zohoItems([item]).z, AHORA);
     assertEquals(enviados.length, 2);
-  } finally { globalThis.fetch = fetchOrig; }
+  } finally { globalThis.fetch = fetchOrig; Deno.env.delete("COM_EFECTOS_EXTERNOS"); }
 });
 
 Deno.test("sincronizar: en modo registrar una propuesta ya registrada no se vuelve a registrar", async () => {
@@ -581,7 +582,8 @@ Deno.test("sincronizar: si la conciliación excede el tope no cierra nada, regis
   const fetchOrig = globalThis.fetch;
   globalThis.fetch = (_u: unknown, i?: RequestInit) => { enviados.push(JSON.parse(String(i?.body))); return Promise.resolve(new Response("{}")); };
   let r;
-  try { r = await sincronizar(f.db, zohoItems([item]).z, AHORA); } finally { globalThis.fetch = fetchOrig; }
+  Deno.env.set("COM_EFECTOS_EXTERNOS", "si"); // portal (plan 2): el aviso por correo requiere efectos externos
+  try { r = await sincronizar(f.db, zohoItems([item]).z, AHORA); } finally { globalThis.fetch = fetchOrig; Deno.env.delete("COM_EFECTOS_EXTERNOS"); }
   assertEquals([r.ocRetenidas, r.ocCerradas, r.ocAgregadas], [16, 0, 0]);
   assertEquals(f.log.some((o) => o.tabla === "com_movimientos" && o.accion !== "select"), false);
   const c = cambios(f.log).filter((x) => x.tabla === "com_movimientos");

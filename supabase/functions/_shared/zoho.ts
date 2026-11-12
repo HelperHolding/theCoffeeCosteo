@@ -1,6 +1,9 @@
+import { efectosExternos } from "./acceso.ts";
 export type ZohoCfg = {
   clientId: string; clientSecret: string; refreshToken: string; orgId: string;
   accountsUrl?: string; apiUrl?: string; fetchFn?: typeof fetch; sleep?: (ms: number) => Promise<void>;
+  /** Sin efectos externos: solo GET; POST y PUT lanzan sin llamar a Zoho (plan 2, decisión 4). */
+  soloLectura?: boolean;
 };
 
 export class ZohoError extends Error {
@@ -40,6 +43,9 @@ export class ZohoClient {
   }
 
   private async pedir<T>(method: string, path: string, params: Record<string, string>, body?: unknown): Promise<T> {
+    if (this.cfg.soloLectura && method !== "GET") {
+      throw new ZohoError(`Zoho en modo sin efectos externos: ${method} ${path} no se envió`, 0);
+    }
     const q = new URLSearchParams({ organization_id: this.cfg.orgId, ...params });
     const url = `${this.api}${path}?${q}`;
     let refrescado = false;
@@ -100,5 +106,6 @@ export function zohoDesdeEnv(): ZohoClient {
   return new ZohoClient({
     clientId: v("ZOHO_CLIENT_ID"), clientSecret: v("ZOHO_CLIENT_SECRET"),
     refreshToken: v("ZOHO_REFRESH_TOKEN"), orgId: v("ZOHO_ORG_ID"),
+    soloLectura: !efectosExternos(),
   });
 }

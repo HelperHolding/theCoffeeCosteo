@@ -288,7 +288,9 @@ async function conFetch<T>(f: typeof fetch, fn: (logs: string[]) => Promise<T>):
   const logs: string[] = [];
   globalThis.fetch = f;
   console.error = (...a: unknown[]) => { logs.push(a.join(" ")); };
-  try { return await fn(logs); } finally { globalThis.fetch = fetchOrig; console.error = errOrig; }
+  // Portal (plan 2): sin COM_EFECTOS_EXTERNOS=si no hay correos; estas pruebas ejercen el envío con efectos.
+  Deno.env.set("COM_EFECTOS_EXTERNOS", "si");
+  try { return await fn(logs); } finally { globalThis.fetch = fetchOrig; console.error = errOrig; Deno.env.delete("COM_EFECTOS_EXTERNOS"); }
 }
 
 Deno.test("enviarCorreo: respuesta no-ok o excepción registran el error y devuelven false sin lanzar", async () => {
