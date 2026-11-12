@@ -4,6 +4,8 @@ export type RolPortal = 'interno' | 'franquiciado' | 'proveedor';
 export interface UsuarioLegado {
   id: string;
   auth_uid: string | null;
+  /** Correo de su cuenta de Auth en el sitio viejo (`<usuario>@thecoffee.internal`), si tiene. */
+  auth_email: string | null;
   username: string;
   nombre: string;
   correo: string | null;
@@ -37,7 +39,8 @@ export const rolPortal = (rolLegado: string): RolPortal =>
 /**
  * Qué hacer con cada usuario del sitio viejo, en este orden:
  * 1. Ya vinculado: si la cuenta la creó el importador, se actualiza la clave; si se vinculó a una cuenta previa, nada.
- * 2. Su correo ya es cuenta del portal: se vincula (una sola vez por cuenta).
+ * 2. Su correo, o el de su cuenta de Auth, ya es cuenta del portal: se vincula (una sola vez por cuenta). Así no
+ *    choca con una cuenta `<usuario>@thecoffee.internal` creada a mano en el portal.
  * 3. Sin cuenta de Auth en el sitio viejo: se omite (hay que restablecerle la contraseña).
  * 4. Su id de Auth ya existe en el portal: se omite y se revisa a mano.
  * 5. Si no: se crea con el mismo id y hash de contraseña.
@@ -57,7 +60,8 @@ export function planUsuarios(
       return v.origen === 'creado'
         ? { tipo: 'actualizar_clave', usuario, userId: v.user_id }
         : { tipo: 'sin_cambios', usuario, userId: v.user_id };
-    const porMail = usuario.correo ? porCorreo.get(usuario.correo.trim().toLowerCase()) : undefined;
+    const coincide = (c: string | null) => (c ? porCorreo.get(c.trim().toLowerCase()) : undefined);
+    const porMail = coincide(usuario.correo) ?? coincide(usuario.auth_email);
     if (porMail) {
       if (usados.has(porMail)) return { tipo: 'omitir', usuario, motivo: 'correo_repetido' };
       usados.add(porMail);

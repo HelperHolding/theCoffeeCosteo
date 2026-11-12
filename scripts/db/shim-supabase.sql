@@ -3,7 +3,12 @@ create role anon nologin;
 create role authenticated nologin;
 create role service_role nologin bypassrls;
 create schema auth;
-create table auth.users (id uuid primary key, email text, encrypted_password text, raw_user_meta_data jsonb);
+create table auth.users (
+  id uuid primary key, email text, encrypted_password text, raw_user_meta_data jsonb,
+  aud text, role text, is_super_admin boolean, recovery_token text, confirmation_token text
+);
+-- Como GoTrue (users_email_partial_key): un correo por cuenta.
+create unique index users_email_key on auth.users (email);
 -- Como en GoTrue: una identidad 'email' por cuenta; `email` es generada (el importador no debe escribirla).
 create table auth.identities (
   id uuid primary key,

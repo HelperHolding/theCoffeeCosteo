@@ -8,6 +8,7 @@ import {
 
 const u = (o: Partial<UsuarioLegado> & Pick<UsuarioLegado, 'id' | 'username'>): UsuarioLegado => ({
   auth_uid: null,
+  auth_email: null,
   nombre: o.username,
   correo: null,
   rol: 'comercial',
@@ -58,6 +59,15 @@ describe('planUsuarios', () => {
     );
     expect(plan.map((a) => a.tipo)).toEqual(['vincular', 'omitir']);
     expect(plan[1]).toMatchObject({ motivo: 'correo_repetido' });
+  });
+
+  it('si el correo de su cuenta de Auth ya existe en el portal (creada a mano), se vincula en vez de chocar', () => {
+    const plan = planUsuarios(
+      [u({ id: '9', username: 'ana', auth_uid: UID(9), auth_email: 'Ana@thecoffee.internal' })],
+      [{ id: UID(95), email: 'ana@thecoffee.internal' }],
+      [],
+    );
+    expect(plan).toEqual([{ tipo: 'vincular', usuario: expect.objectContaining({ id: '9' }), userId: UID(95) }]);
   });
 
   it('sin cuenta de Auth en el sitio viejo y sin correo del portal: se omite', () => {

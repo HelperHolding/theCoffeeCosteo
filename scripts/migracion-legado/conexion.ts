@@ -11,7 +11,13 @@ export interface Consultor {
 
 /** Corta antes de conectar si la URL no es del proyecto esperado. Nunca imprime la URL. */
 export function verificarProyecto(url: string, proyecto: string): void {
-  const u = new URL(url);
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    // El error de Node incluye la URL completa (con contraseña): se sustituye por uno sin datos.
+    throw new Error('La URL de conexión no es válida (revisa caracteres como # o @ en la contraseña)');
+  }
   if (!(u.username.endsWith(`.${proyecto}`) || u.hostname.includes(proyecto)))
     throw new Error(`La URL no corresponde al proyecto ${proyecto}; no se conecta`);
 }

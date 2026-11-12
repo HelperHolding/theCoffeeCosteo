@@ -17,6 +17,7 @@ const legado: UsuarioLegado[] = [
   {
     id: '10',
     auth_uid: ANA,
+    auth_email: 'ana@thecoffee.internal',
     username: 'ana',
     nombre: 'Ana López',
     correo: null,
@@ -30,6 +31,7 @@ const legado: UsuarioLegado[] = [
   {
     id: '12',
     auth_uid: UID(2),
+    auth_email: 'sebas@thecoffee.internal',
     username: 'sebas',
     nombre: 'Sebastián',
     correo: 'Sebastian@Ejemplo.mx',
@@ -48,6 +50,11 @@ const cuentaAna = (hash: string): CuentaAuthLegado => ({
     email: 'ana@thecoffee.internal',
     encrypted_password: hash,
     raw_user_meta_data: { username: 'ana' },
+    role: 'service_role',
+    aud: 'otra',
+    is_super_admin: true,
+    recovery_token: 'token-vivo',
+    confirmation_token: 'otro-token',
     columna_que_el_portal_no_tiene: 'x',
   },
   identidades: [
@@ -105,6 +112,37 @@ it('una segunda corrida actualiza la contraseña sin duplicar nada', async () =>
     select (select count(*) from auth.users)::int as cuentas, (select count(*) from auth.identities)::int as identidades,
            (select count(*) from perfiles)::int as perfiles, (select count(*) from migracion_legado.usuarios)::int as vinculos`);
   expect(n.rows[0]).toEqual({ cuentas: 2, identidades: 1, perfiles: 2, vinculos: 2 });
+});
+
+it('la cuenta copiada entra como authenticated, sin superadmin ni tokens vivos', async () => {
+  await correr('$2a$10$hashA');
+  const r = await db.query(
+    `select role, aud, is_super_admin, recovery_token, confirmation_token from auth.users where id = $1`,
+    [ANA],
+  );
+  expect(r.rows).toEqual([
+    { role: 'authenticated', aud: 'authenticated', is_super_admin: null, recovery_token: '', confirmation_token: '' },
+  ]);
+});
+
+it('no pisa una contraseña que se cambió en el portal y lo reporta', async () => {
+  await correr('$2a$10$hashA');
+  await db.query(`update auth.users set encrypted_password = '$2a$10$delPortal' where id = $1`, [ANA]);
+  const { cuentas, vinculos } = await leerEstadoPortal(c());
+  const r = await aplicarPlan(c(), planUsuarios(legado, cuentas, vinculos), new Map([[ANA, cuentaAna('$2a$10$hashB')]]));
+  expect(r.clavesConservadas).toEqual(['ana']);
+  const ana = await db.query(`select encrypted_password from auth.users where id = $1`, [ANA]);
+  expect(ana.rows).toEqual([{ encrypted_password: '$2a$10$delPortal' }]);
+});
+
+it('un error de la base no expone correos ni hashes en el mensaje', async () => {
+  const conNombreVacio = legado.map((x) => (x.id === '10' ? { ...x, nombre: ' ' } : x));
+  const { cuentas, vinculos } = await leerEstadoPortal(c());
+  const error = await aplicarPlan(c(), planUsuarios(conNombreVacio, cuentas, vinculos), new Map([[ANA, cuentaAna('$2a$10$hashA')]]))
+    .then(() => null, (e: Error) => e);
+  expect(error?.message).toMatch(/crear de ana/);
+  expect(error?.message).not.toMatch(/hashA|thecoffee\.internal/);
+  expect(JSON.stringify(error)).not.toMatch(/hashA|thecoffee\.internal/);
 });
 
 it('si falta la cuenta de Auth de un usuario a crear, falla sin dejar nada a medias', async () => {

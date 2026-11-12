@@ -12,3 +12,14 @@ it('acepta la conexión directa db.<proyecto>.supabase.co', () => {
     verificarProyecto(`postgresql://postgres:x@db.${PROYECTO_PORTAL}.supabase.co:5432/postgres`, PROYECTO_PORTAL),
   ).not.toThrow();
 });
+
+it('una URL mal formada falla sin mostrar la contraseña', () => {
+  let mensaje = '';
+  try {
+    verificarProyecto('postgresql://usuario:pa#ss@host:5432/postgres', PROYECTO_LEGADO);
+  } catch (e) {
+    mensaje = `${(e as Error).message} ${JSON.stringify(e)}`;
+  }
+  expect(mensaje).toMatch(/no es válida/);
+  expect(mensaje).not.toMatch(/pa#ss|usuario:pa/);
+});

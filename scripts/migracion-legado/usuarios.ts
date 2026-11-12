@@ -27,9 +27,11 @@ async function leerPortalSinEscribir() {
 const { legado, auth } = await conLegado(async (db) => {
   const usuarios = (
     await db.query<UsuarioLegado>(`
-      select id::text as id, auth_uid::text as auth_uid, username, nombre, correo, rol, subtipo, supplier_key,
-             parent_id::text as parent_id, permisos, coalesce(activo, false) as activo
-      from public.usuarios order by username`)
+      select u.id::text as id, u.auth_uid::text as auth_uid, a.email as auth_email, u.username, u.nombre, u.correo,
+             u.rol, u.subtipo, u.supplier_key, u.parent_id::text as parent_id, u.permisos,
+             coalesce(u.activo, false) as activo
+      from public.usuarios u left join auth.users a on a.id::text = u.auth_uid::text
+      order by u.username`)
   ).rows;
   const uids = usuarios.map((u) => u.auth_uid).filter((x): x is string => !!x);
   const cuentas = (await db.query(`select * from auth.users where id = any($1::uuid[])`, [uids])).rows;
@@ -52,8 +54,13 @@ if (!aplicar) {
   const resumen = await enPortal(async (db) => {
     const { cuentas, vinculos } = await leerEstadoPortal(db);
     const plan = planUsuarios(legado, cuentas, vinculos);
-    await aplicarPlan(db, plan, auth);
-    return resumenPlan(plan);
+    const { clavesConservadas } = await aplicarPlan(db, plan, auth);
+    return [
+      resumenPlan(plan),
+      ...(clavesConservadas.length
+        ? ['Contraseña cambiada en el portal (no se pisó):', ...clavesConservadas.map((u) => `  - ${u}`)]
+        : []),
+    ].join('\n');
   });
   console.log(resumen);
   console.log('\nAplicado.');

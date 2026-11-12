@@ -25,6 +25,9 @@ create table migracion_legado.usuarios (
   permisos jsonb,
   activo_legado boolean not null,
   origen text not null check (origen in ('creado', 'vinculado')),
+  -- sha256 del último hash de contraseña que escribió el importador: si el del portal ya es otro (la persona o un
+  -- admin la cambió en el portal), una nueva corrida no lo pisa.
+  clave_huella text,
   importado_en timestamptz not null default now(),
   actualizado_en timestamptz not null default now()
 );
