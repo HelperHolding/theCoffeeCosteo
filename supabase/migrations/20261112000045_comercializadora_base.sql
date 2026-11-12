@@ -302,3 +302,9 @@ begin
       'when (auth.uid() is not null) execute function public.registrar_bitacora()', t || '_bitacora', t);
   end loop;
 end $$;
+
+-- 6. La bitácora de com_* la lee quien tiene Comercializadora; la del resto, Costeo como siempre (migración 24).
+alter policy lectura on public.bitacora using (
+  (tabla not like 'com\_%' and (select public.tiene_rol('compras', 'operaciones', 'finanzas', 'admin')))
+  or (tabla like 'com\_%' and (select public.com_puede_leer()))
+);

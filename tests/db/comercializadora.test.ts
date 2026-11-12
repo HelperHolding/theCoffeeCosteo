@@ -85,6 +85,25 @@ describe('Comercializadora: tablas y acceso (migración 45)', () => {
     expect(b.rows).toEqual([{ registro_id: 'CAF-001', valor_nuevo: '12' }]);
   });
 
+  it('la bitácora de com_* solo la ve quien tiene el módulo; Costeo sigue viendo la suya', async () => {
+    const comprasSinModulo = await crearUsuario(db, 'compras');
+    const internoConModulo = await crearUsuario(db, 'interno');
+    await darModulo(db, internoConModulo, 'comercializadora', 'lectura');
+    const editor = await crearUsuario(db, 'interno');
+    await darModulo(db, editor, 'comercializadora', 'edicion');
+    await comoUsuario(db, editor, () => db.query(`update com_lead_times set dias = 21 where sku = 'CAF-001'`));
+    await db.query(`insert into bitacora (tabla, registro_id, campo) values ('insumos', 'x', '*')`);
+    const ver = (id: string) =>
+      comoUsuario(db, id, async () => ({
+        com: await cuenta(db, `bitacora where tabla like 'com\\_%'`),
+        costeo: await cuenta(db, `bitacora where tabla = 'insumos'`),
+      }));
+    expect((await ver(comprasSinModulo)).com).toBe(0);
+    expect((await ver(comprasSinModulo)).costeo).toBeGreaterThan(0);
+    expect(await ver(internoConModulo)).toEqual({ com: expect.any(Number), costeo: 0 });
+    expect((await ver(internoConModulo)).com).toBeGreaterThan(0);
+  });
+
   it('una sola OC real de cron por proveedor y día', async () => {
     const fila = `(gen_random_uuid(), 'cron', 'real', 'v9', '[]', 'creada', date '2026-11-12')`;
     const sql = `insert into com_oc_auto (corrida_id, origen, modo, vendor_id, lineas, estado, fecha) values ${fila}`;
