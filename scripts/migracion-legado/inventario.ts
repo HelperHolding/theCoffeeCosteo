@@ -1,7 +1,14 @@
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
 import { conLegado } from './conexion';
-import { inventarioMarkdown, redactar, registrarUsos, type TablaLegado, type Usos } from './inventario-lib';
+import {
+  inventarioMarkdown,
+  redactar,
+  redactarProfundo,
+  registrarUsos,
+  type TablaLegado,
+  type Usos,
+} from './inventario-lib';
 
 /**
  * Fase 0.1 · Esquema real de bliocjvq (solo catálogo, ninguna fila) e inventario de tablas con quién las usa.
@@ -81,6 +88,10 @@ const tablas: TablaLegado[] = esquema.tablas
   .filter((t) => t.tipo === 'r' || t.tipo === 'p')
   .map((t) => ({ tabla: t.tabla, filas: esquema.conteos[t.tabla] ?? 0, rls: t.rls }));
 await mkdir('docs/migracion', { recursive: true });
-await writeFile('docs/migracion/esquema-legado.json', `${JSON.stringify({ fecha, ...esquema }, null, 2)}\n`);
+// Redacción sobre TODO el esquema (defaults, políticas, triggers, funciones, cron), no solo algunos campos.
+await writeFile(
+  'docs/migracion/esquema-legado.json',
+  `${JSON.stringify(redactarProfundo({ fecha, ...esquema }), null, 2)}\n`,
+);
 await writeFile('docs/migracion/inventario-tablas.md', inventarioMarkdown(tablas, usos, fecha));
 console.log(`Inventario: ${tablas.length} tablas, ${usos.size} referenciadas en código. Revisa el JSON antes de commitear.`);

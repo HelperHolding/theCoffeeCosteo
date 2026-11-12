@@ -3,6 +3,7 @@ import {
   areaDe,
   inventarioMarkdown,
   redactar,
+  redactarProfundo,
   registrarUsos,
   type Usos,
 } from '../../scripts/migracion-legado/inventario-lib';
@@ -60,5 +61,38 @@ describe('redactar', () => {
   });
   it('no toca texto normal', () => {
     expect(redactar('select * from com_catalogo')).toBe('select * from com_catalogo');
+  });
+});
+
+describe('redactar: más formatos de secretos', () => {
+  it.each([
+    ['llave nueva de Supabase', `k := 'sb_secret_AbCdEf1234567890xyz'`, 'sb_secret_AbCdEf1234567890xyz'],
+    ['contraseña en cadena de conexión', `dblink('postgresql://lector:Muy$ecreta9@db.host:5432/x')`, 'Muy$ecreta9'],
+    ['token de Zoho', `t := '1000.0123456789abcdef0123.fedcba9876543210fedc'`, '0123456789abcdef0123'],
+    ['encabezado Zoho-oauthtoken', `'Authorization: Zoho-oauthtoken abcDEF123456'`, 'abcDEF123456'],
+    ['apikey en encabezados JSON', `headers := '{"apikey":"cualquier-valor-secreto"}'`, 'cualquier-valor-secreto'],
+    ['literal largo aleatorio', `s := 'Qm9vbGVhbjEyMzQ1Njc4OTBhYmNkZWZnaGlqa2xtbm9w'`, 'Qm9vbGVhbjEyMzQ1Njc4OTBhYmNkZWZnaGlqa2xtbm9w'],
+  ])('%s', (_n, texto, secreto) => {
+    const r = redactar(texto);
+    expect(r).not.toContain(secreto);
+    expect(r).toContain('[REDACTADO]');
+  });
+
+  it('no toca nombres largos de columnas ni índices', () => {
+    const t = `create index com_movimientos_fecha_proveedor_confirmada_idx on com_movimientos (fecha)`;
+    expect(redactar(t)).toBe(t);
+  });
+});
+
+describe('redactarProfundo', () => {
+  it('redacta todos los textos de un objeto anidado (defaults, políticas, triggers)', () => {
+    const r = redactarProfundo({
+      columnas: [{ defecto: `'sb_secret_AbCdEf1234567890xyz'::text` }],
+      politicas: [{ qual: `x = 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.c2lnbmF0dXJh'` }],
+      conteos: { com_catalogo: 3 },
+      rls: true,
+    });
+    expect(JSON.stringify(r)).not.toMatch(/sb_secret_AbCd|eyJhbGci/);
+    expect(r).toMatchObject({ conteos: { com_catalogo: 3 }, rls: true });
   });
 });

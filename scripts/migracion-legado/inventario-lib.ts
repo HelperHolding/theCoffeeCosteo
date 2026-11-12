@@ -58,19 +58,30 @@ export function inventarioMarkdown(tablas: TablaLegado[], usos: Usos, fecha: str
   ].join('\n');
 }
 
-const SECRETOS: RegExp[] = [
-  /eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, // JWT
-  /\b(sk|pk|rk)_(live|test)_[A-Za-z0-9]{6,}/g, // llaves con prefijo
-  /(Bearer\s+)[A-Za-z0-9._~+/=-]{6,}/g, // encabezados Authorization
+const R = '[REDACTADO]';
+// [patrón, reemplazo]: los grupos que se conservan (prefijos, comillas) van en el reemplazo como $1, $2.
+const SECRETOS: [RegExp, string][] = [
+  [/eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, R], // JWT
+  [/\b(?:sk|pk|rk)_(?:live|test)_[A-Za-z0-9]{6,}/g, R], // llaves con prefijo (Stripe y similares)
+  [/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]{10,}/g, R], // llaves nuevas de Supabase
+  [/\b1000\.[a-f0-9]{16,}\.[a-f0-9]{16,}/g, R], // tokens de Zoho
+  [/(Bearer\s+|Zoho-oauthtoken\s+)[^\s'"\\]{6,}/g, `$1${R}`], // encabezados Authorization
+  [/(\bpostgres(?:ql)?:\/\/[^:@\s'"/]+:)[^@\s'"]+@/g, `$1${R}@`], // contraseña en cadenas de conexión
+  [/((?:apikey|x-api-key|api_key|secret|token|password)\\?["']?\s*[:=]\s*\\?["'])[^"'\\]{6,}/gi, `$1${R}`],
+  // Literales SQL largos con letras y dígitos: aspecto de llave aleatoria (los nombres de objetos no van entre '').
+  [/'(?=[A-Za-z0-9+/=_.-]*\d)(?=[A-Za-z0-9+/=_.-]*[A-Za-z])[A-Za-z0-9+/=_.-]{32,}'/g, `'${R}'`],
 ];
 
-/** Quita secretos incrustados en definiciones de funciones antes de guardarlas en el repo. */
+/** Quita secretos incrustados (en definiciones, defaults, políticas, cron) antes de guardarlos en el repo. */
 export function redactar(texto: string): string {
-  return SECRETOS.reduce(
-    (t, re) =>
-      t.replace(re, (_m, g1) =>
-        typeof g1 === 'string' && /^Bearer/.test(g1) ? `${g1}[REDACTADO]` : '[REDACTADO]',
-      ),
-    texto,
-  );
+  return SECRETOS.reduce((t, [re, reemplazo]) => t.replace(re, reemplazo), texto);
+}
+
+/** Aplica `redactar` a todos los textos de un valor anidado; números, booleanos y null quedan igual. */
+export function redactarProfundo<T>(valor: T): T {
+  if (typeof valor === 'string') return redactar(valor) as T;
+  if (Array.isArray(valor)) return valor.map((v) => redactarProfundo(v)) as T;
+  if (valor && typeof valor === 'object')
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, redactarProfundo(v)])) as T;
+  return valor;
 }
