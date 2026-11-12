@@ -81,3 +81,29 @@ describe('rol sucursales (migración 24): sin Costeo', () => {
     await expect(sesionCrm()).rejects.toThrow('REDIRECT:/');
   });
 });
+
+it('los roles sin Costeo no ven Costeo; un rol desconocido tampoco (falla cerrado)', () => {
+  for (const rol of ['sucursales', 'interno', 'franquiciado', 'proveedor', 'desconocido'])
+    expect(modulosVisibles({}, rol)).toEqual([]);
+  expect(modulosVisibles({ crm: 'lectura' }, 'franquiciado')).toEqual(['crm']);
+});
+
+it('un perfil externo que entra a Costeo va a Inicio', async () => {
+  mocks.perfil.mockResolvedValue({
+    data: { user_id: 'u', nombre: 'Ana', rol: 'franquiciado', activo: true },
+    error: null,
+  });
+  await expect(sesion()).rejects.toThrow(/^REDIRECT:\/$/);
+  await expect(sesion(undefined, false)).rejects.toThrow('Tu perfil no tiene acceso a Costeo.');
+  await expect(sesion(undefined, true, { sinCosteo: true })).resolves.toMatchObject({
+    perfil: { rol: 'franquiciado' },
+  });
+});
+
+it('el rol sucursales sigue yendo a /sucursales al entrar a Costeo', async () => {
+  mocks.perfil.mockResolvedValue({
+    data: { user_id: 'u', nombre: 'Ana', rol: 'sucursales', activo: true },
+    error: null,
+  });
+  await expect(sesion()).rejects.toThrow(/^REDIRECT:\/sucursales$/);
+});
