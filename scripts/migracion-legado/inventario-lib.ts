@@ -68,6 +68,7 @@ const SECRETOS: [RegExp, string][] = [
   [/(Bearer\s+|Zoho-oauthtoken\s+)[^\s'"\\]{6,}/g, `$1${R}`], // encabezados Authorization
   [/(\bpostgres(?:ql)?:\/\/[^:@\s'"/]+:)[^@\s'"]+@/g, `$1${R}@`], // contraseña en cadenas de conexión
   [/((?:apikey|x-api-key|api_key|secret|token|password)\\?["']?\s*[:=]\s*\\?["'])[^"'\\]{6,}/gi, `$1${R}`],
+  [/(\bcrypt\(\s*')[^']+(')/gi, `$1${R}$2`], // contraseña fija hasheada en SQL (p. ej. la clave inicial de un trigger)
   // Literales SQL largos con letras y dígitos: aspecto de llave aleatoria (los nombres de objetos no van entre '').
   [/'(?=[A-Za-z0-9+/=_.-]*\d)(?=[A-Za-z0-9+/=_.-]*[A-Za-z])[A-Za-z0-9+/=_.-]{32,}'/g, `'${R}'`],
 ];

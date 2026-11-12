@@ -72,6 +72,8 @@ describe('redactar: más formatos de secretos', () => {
     ['encabezado Zoho-oauthtoken', `'Authorization: Zoho-oauthtoken abcDEF123456'`, 'abcDEF123456'],
     ['apikey en encabezados JSON', `headers := '{"apikey":"cualquier-valor-secreto"}'`, 'cualquier-valor-secreto'],
     ['literal largo aleatorio', `s := 'Qm9vbGVhbjEyMzQ1Njc4OTBhYmNkZWZnaGlqa2xtbm9w'`, 'Qm9vbGVhbjEyMzQ1Njc4OTBhYmNkZWZnaGlqa2xtbm9w'],
+    ['contraseña fija en crypt()', `encrypted_password := crypt('Clave2024!', gen_salt('bf', 10))`, 'Clave2024!'],
+    ['contraseña fija en crypt() con espacios', `crypt( 'otra clave' , gen_salt('bf'))`, 'otra clave'],
   ])('%s', (_n, texto, secreto) => {
     const r = redactar(texto);
     expect(r).not.toContain(secreto);
