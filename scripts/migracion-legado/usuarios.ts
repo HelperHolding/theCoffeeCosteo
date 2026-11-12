@@ -24,18 +24,20 @@ async function leerPortalSinEscribir() {
   return estado!;
 }
 
+// En bliocjvq, `postgres` no puede dar acceso al esquema auth: migracion_auth son vistas (de su dueño) sobre
+// auth.users y auth.identities, legibles solo por el rol migracion_lectura (docs/migracion/fase-0.md).
 const { legado, auth } = await conLegado(async (db) => {
   const usuarios = (
     await db.query<UsuarioLegado>(`
       select u.id::text as id, u.auth_uid::text as auth_uid, a.email as auth_email, u.username, u.nombre, u.correo,
              u.rol, u.subtipo, u.supplier_key, u.parent_id::text as parent_id, u.permisos,
              coalesce(u.activo, false) as activo
-      from public.usuarios u left join auth.users a on a.id::text = u.auth_uid::text
+      from public.usuarios u left join migracion_auth.users a on a.id::text = u.auth_uid::text
       order by u.username`)
   ).rows;
   const uids = usuarios.map((u) => u.auth_uid).filter((x): x is string => !!x);
-  const cuentas = (await db.query(`select * from auth.users where id = any($1::uuid[])`, [uids])).rows;
-  const identidades = (await db.query(`select * from auth.identities where user_id = any($1::uuid[])`, [uids])).rows;
+  const cuentas = (await db.query(`select * from migracion_auth.users where id = any($1::uuid[])`, [uids])).rows;
+  const identidades = (await db.query(`select * from migracion_auth.identities where user_id = any($1::uuid[])`, [uids])).rows;
   const auth = new Map<string, CuentaAuthLegado>(
     cuentas.map((c) => [
       String(c.id),

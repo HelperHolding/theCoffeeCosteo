@@ -4,11 +4,36 @@ Spec: `docs/superpowers/specs/2026-11-12-migracion-comercializadora-design.md`.
 
 ## Antes de empezar
 
-1. Aplicar la migración `20261112000044_legado_acceso.sql` en el Supabase del portal (como las demás).
-2. En `.env.local` del portal:
-   - `DATABASE_URL`: la conexión postgres del portal (la que ya usan los scripts de conciliación).
-   - `DATABASE_URL_LEGADO`: la conexión postgres de **bliocjvq**, desde Supabase → Project Settings → Database → Connection string (Session pooler).
-   Ninguna de las dos va en variables `NEXT_PUBLIC_*` ni se commitea.
+1. Aplicar la migración `20261112000044_legado_acceso.sql` en el Supabase del portal. Aplicada el 2026-11-12
+   directo por `DATABASE_URL` en una transacción y registrada en `supabase_migrations.schema_migrations`: no con
+   `supabase db push`, porque la 42 (`bi_neto`) está en la base pero no en el historial y `db push` la repetiría.
+   Pendiente: `npx supabase migration repair --status applied 20261106000042` tras confirmar que la 42 está completa.
+2. En **bliocjvq** (SQL Editor) se creó un rol de solo lectura, para no usar ni resetear la clave de `postgres`
+   (la usa el sitio viejo con Zoho y n8n):
+
+   ```sql
+   create role migracion_lectura with login password '<clave>';
+   alter role migracion_lectura set default_transaction_read_only = on;
+   alter role migracion_lectura bypassrls;
+   grant select on all tables in schema public to migracion_lectura;
+   -- postgres no puede dar acceso al esquema auth: vistas de su dueño en un esquema privado.
+   create schema if not exists migracion_auth;
+   revoke all on schema migracion_auth from public, anon, authenticated;
+   create or replace view migracion_auth.users as select * from auth.users;
+   create or replace view migracion_auth.identities as select * from auth.identities;
+   revoke all on all tables in schema migracion_auth from public, anon, authenticated;
+   grant usage on schema migracion_auth to migracion_lectura;
+   grant select on all tables in schema migracion_auth to migracion_lectura;
+   grant usage on schema cron to migracion_lectura;
+   grant select on cron.job to migracion_lectura;
+   ```
+
+   Al terminar la migración: `drop schema migracion_auth cascade; drop role migracion_lectura;`.
+3. En `.env.local` del portal:
+   - `DATABASE_URL`: la conexión postgres del portal (Session pooler, usuario `postgres.jpqkmnfjwzniptszjuli`).
+   - `DATABASE_URL_LEGADO`: la conexión de **bliocjvq** con el rol `migracion_lectura` (conexión directa:
+     usuario `migracion_lectura`; por el pooler: `migracion_lectura.bliocjvqwskvoxrumqby`).
+   Ninguna de las dos va en variables `NEXT_PUBLIC_*` ni se commitea. Sin espacios después de la comilla final.
 
 ## 1. Inventario (solo lectura)
 

@@ -9,6 +9,11 @@ describe('correoDeAcceso', () => {
     expect(correoDeAcceso('  Ana.Lopez ')).toBe('ana.lopez@thecoffee.internal');
     expect(correoDeAcceso('prov_01-gdl')).toBe('prov_01-gdl@thecoffee.internal');
   });
+  it('acepta usuarios con acentos o ñ, como en el sitio viejo, en la forma compuesta (NFC)', () => {
+    expect(correoDeAcceso('CSánchez')).toBe('csánchez@thecoffee.internal');
+    expect(correoDeAcceso('csánchez')).toBe('csánchez@thecoffee.internal');
+    expect(correoDeAcceso('nuñez')).toBe('nuñez@thecoffee.internal');
+  });
   it('rechaza vacíos y usuarios con caracteres inválidos', () => {
     expect(correoDeAcceso('   ')).toBeNull();
     expect(correoDeAcceso('ana lopez')).toBeNull();

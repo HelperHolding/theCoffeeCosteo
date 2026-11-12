@@ -6,8 +6,9 @@ export const DOMINIO_USUARIOS = 'thecoffee.internal';
  * (`Ana.Lopez` → `ana.lopez@thecoffee.internal`). Null si no es ninguno de los dos.
  */
 export function correoDeAcceso(entrada: string): string | null {
-  const t = entrada.trim();
+  const t = entrada.trim().normalize('NFC');
   if (!t) return null;
   if (t.includes('@')) return t;
-  return /^[A-Za-z0-9._-]+$/.test(t) ? `${t.toLowerCase()}@${DOMINIO_USUARIOS}` : null;
+  // Letras con acento o ñ: el sitio viejo las aceptaba en el usuario (p. ej. csánchez).
+  return /^[\p{L}\p{N}._-]+$/u.test(t) ? `${t.toLowerCase()}@${DOMINIO_USUARIOS}` : null;
 }
