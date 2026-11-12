@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Consultor } from './conexion';
-import type { Accion, CuentaPortal, UsuarioLegado, VinculoExistente } from './usuarios-lib';
+import { claveVigente, type Accion, type ClaveVigente, type CuentaPortal, type UsuarioLegado, type VinculoExistente } from './usuarios-lib';
 
 /** Fila de auth.users del sitio viejo y sus auth.identities, tal como vienen de la base. */
 export interface CuentaAuthLegado {
@@ -171,4 +171,36 @@ export async function aplicarPlan(
     }
   }
   return { clavesConservadas };
+}
+
+/**
+ * Pone en cada cuenta de `auth` el hash de su contraseña vigente (ver claveVigente). Usa pgcrypto del portal en la
+ * transacción de `db`; las claves solo viven en memoria y nunca se imprimen. Devuelve cuántas cuentas tomó de cada
+ * fuente. `claveInicial` es la clave fija del trigger del sitio viejo (se lee de su definición, no del repo).
+ */
+export async function resolverClaves(
+  db: Consultor,
+  auth: Map<string, CuentaAuthLegado>,
+  passwordUsuarios: Map<string, string | null>,
+  claveInicial: string,
+): Promise<Record<ClaveVigente['fuente'], number>> {
+  const conteo: Record<ClaveVigente['fuente'], number> = { auth: 0, hash: 0, texto: 0, ninguna: 0 };
+  for (const [uid, cuenta] of auth) {
+    const hashAuth = cuenta.usuario.encrypted_password;
+    const inicial =
+      typeof hashAuth === 'string' && hashAuth.startsWith('$2')
+        ? (await db.query<{ ok: boolean }>(`select extensions.crypt($1, $2) = $2 as ok`, [claveInicial, hashAuth]))
+            .rows[0].ok
+        : false;
+    const c = claveVigente(passwordUsuarios.get(uid) ?? null, inicial);
+    conteo[c.fuente]++;
+    if (c.fuente === 'hash') cuenta.usuario.encrypted_password = c.hash;
+    else if (c.fuente === 'texto')
+      cuenta.usuario.encrypted_password = (
+        await db.query<{ h: string }>(`select extensions.crypt($1, extensions.gen_salt('bf', 10)) as h`, [c.texto])
+      ).rows[0].h;
+    // Sin clave utilizable: hash vacío (GoTrue no deja entrar); se le restablece desde el portal.
+    else if (c.fuente === 'ninguna') cuenta.usuario.encrypted_password = '';
+  }
+  return conteo;
 }

@@ -88,3 +88,23 @@ export function resumenPlan(acciones: Accion[]): string {
     ...(omitidos.length ? ['Omitidos:', ...omitidos] : []),
   ].join('\n');
 }
+
+export type ClaveVigente =
+  | { fuente: 'auth' }
+  | { fuente: 'hash'; hash: string }
+  | { fuente: 'texto'; texto: string }
+  | { fuente: 'ninguna' };
+
+/**
+ * Qué contraseña vale para cada usuario del sitio viejo. Allá hay dos fuentes: el hash de Auth y usuarios.password.
+ * Al crear un usuario, un trigger le pone a Auth una clave inicial fija y la real queda en usuarios.password; solo
+ * se copia a Auth cuando la persona entra (authenticate_and_migrate). Los restablecimientos y cambios de clave van
+ * a Auth. Por eso: si Auth aún tiene la clave inicial, vale usuarios.password (bcrypt o, en cuentas antiguas, texto);
+ * si no, vale Auth. La clave inicial nunca se hereda: con ella cualquiera entraría a esas cuentas.
+ */
+export function claveVigente(passwordUsuarios: string | null, authTieneClaveInicial: boolean): ClaveVigente {
+  if (!authTieneClaveInicial) return { fuente: 'auth' };
+  const p = passwordUsuarios ?? '';
+  if (!p || p.startsWith('pbkdf2:')) return { fuente: 'ninguna' };
+  return p.startsWith('$2') ? { fuente: 'hash', hash: p } : { fuente: 'texto', texto: p };
+}

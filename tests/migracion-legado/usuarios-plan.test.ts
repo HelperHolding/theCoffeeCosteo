@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  claveVigente,
   planUsuarios,
   resumenPlan,
   rolPortal,
@@ -130,5 +131,19 @@ describe('resumenPlan', () => {
     expect(texto).toContain('omitir: 1');
     expect(texto).toContain('c (sin_cuenta_auth)');
     expect(texto).not.toContain('c@ejemplo.mx');
+  });
+});
+
+describe('claveVigente', () => {
+  it('si Auth conserva la clave inicial del trigger, la vigente es la de usuarios.password', () => {
+    expect(claveVigente('$2a$12$abcdefghijklmnopqrstuv', true)).toEqual({ fuente: 'hash', hash: '$2a$12$abcdefghijklmnopqrstuv' });
+    expect(claveVigente('miClave123', true)).toEqual({ fuente: 'texto', texto: 'miClave123' });
+  });
+  it('si Auth ya tiene otra clave (entró, se la cambió o un admin la restableció), manda Auth', () => {
+    expect(claveVigente('$2a$12$abcdefghijklmnopqrstuv', false)).toEqual({ fuente: 'auth' });
+    expect(claveVigente('miClave123', false)).toEqual({ fuente: 'auth' });
+  });
+  it('clave inicial en Auth y nada utilizable en usuarios: sin clave (no se hereda la inicial)', () => {
+    for (const p of [null, '', 'pbkdf2:sha256:260000$x$y']) expect(claveVigente(p, true)).toEqual({ fuente: 'ninguna' });
   });
 });
