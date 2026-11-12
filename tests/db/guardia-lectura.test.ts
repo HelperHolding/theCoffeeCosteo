@@ -6,6 +6,7 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 const PREDICADOS = [
   /tiene_rol\(/,
   /crm_puede_leer\(\)/,
+  /com_puede_leer\(\)/,
   /sucursales_[a-z_]+\(/,
   /bi_[a-z_]+\(/,
   /user_id = (\( SELECT )?auth\.uid\(\)/,
