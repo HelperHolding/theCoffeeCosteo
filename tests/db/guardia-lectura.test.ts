@@ -27,8 +27,58 @@ async function politicasLectura(db: PGlite): Promise<Politica[]> {
   return r.rows;
 }
 
+/** ¿El paréntesis inicial cierra justo al final? Entonces envuelve toda la expresión. */
+function envuelta(e: string): boolean {
+  if (!e.startsWith('(') || !e.endsWith(')')) return false;
+  let d = 0;
+  for (let i = 0; i < e.length; i++) {
+    if (e[i] === '(') d++;
+    else if (e[i] === ')' && --d === 0 && i < e.length - 1) return false;
+  }
+  return true;
+}
+
+/** Ramas de un OR al nivel superior (como lo deparsea Postgres): cada una debe abrir solo con un predicado. */
+function ramasOr(expr: string): string[] {
+  let e = expr.trim();
+  while (envuelta(e)) e = e.slice(1, -1).trim();
+  const ramas: string[] = [];
+  let d = 0;
+  let inicio = 0;
+  for (let i = 0; i < e.length; i++) {
+    if (e[i] === '(') d++;
+    else if (e[i] === ')') d--;
+    else if (d === 0 && e.startsWith(' OR ', i)) {
+      ramas.push(e.slice(inicio, i));
+      inicio = i + 4;
+    }
+  }
+  ramas.push(e.slice(inicio));
+  return ramas.length > 1 ? ramas.flatMap(ramasOr) : ramas;
+}
+
 const abiertas = (ps: Politica[]) =>
-  ps.filter((p) => !p.qual || !PREDICADOS.some((re) => re.test(p.qual!))).map((p) => p.objeto);
+  ps
+    .filter((p) => !p.qual || ramasOr(p.qual).some((rama) => !PREDICADOS.some((re) => re.test(rama))))
+    .map((p) => p.objeto);
+const abiertasEn = async (db: PGlite) => abiertas(await politicasLectura(db));
+
+async function tablasSinRls(db: PGlite): Promise<string[]> {
+  const r = await db.query<{ tabla: string }>(`
+    select c.relname as tabla from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity order by 1`);
+  return r.rows.map((f) => f.tabla);
+}
+
+/** Las vistas materializadas no tienen RLS: ninguna puede ser legible por usuarios. */
+async function matviewsLegibles(db: PGlite): Promise<string[]> {
+  const r = await db.query<{ vista: string }>(`
+    select c.relname as vista from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'm'
+      and (has_table_privilege('authenticated', c.oid, 'SELECT') or has_table_privilege('anon', c.oid, 'SELECT'))
+    order by 1`);
+  return r.rows.map((f) => f.vista);
+}
 
 describe('guardia de lecturas', () => {
   let db: PGlite;
@@ -53,6 +103,14 @@ describe('guardia de lecturas', () => {
       where n.nspname = 'public' and c.relkind = 'v'
         and not coalesce('security_invoker=true' = any (c.reloptions), false)`);
     expect(r.rows.map((f) => f.vista)).toEqual([]);
+  });
+
+  it('toda tabla de public tiene RLS', async () => {
+    expect(await tablasSinRls(db)).toEqual([]);
+  });
+
+  it('ninguna vista materializada de public es legible por usuarios', async () => {
+    expect(await matviewsLegibles(db)).toEqual([]);
   });
 
   it('los esquemas privados no se exponen a usuarios', async () => {
@@ -83,5 +141,32 @@ describe('la guardia detecta', () => {
         using (public.tiene_rol('admin', 'franquiciado'));`);
     const malas = (await politicasLectura(db)).filter((p) => TIENE_ROL_EXTERNO.test(p.qual ?? ''));
     expect(malas.map((p) => p.objeto)).toEqual(['public.prueba_externa:lectura']);
+  });
+});
+
+describe('la guardia también detecta', () => {
+  it('una rama OR sin predicado escondida junto a uno válido', async () => {
+    const db = await crearDbLocal();
+    await db.exec(`
+      create table public.prueba_or (id int, user_id uuid);
+      alter table public.prueba_or enable row level security;
+      create policy lectura on public.prueba_or for select to authenticated
+        using (public.tiene_rol('admin') or true);
+      create policy propia on public.prueba_or for select to authenticated
+        using (user_id = (select auth.uid()) or public.rol_actual() is not null);`);
+    expect((await abiertasEn(db)).sort()).toEqual(['public.prueba_or:lectura', 'public.prueba_or:propia']);
+  });
+
+  it('una tabla nueva sin RLS (queda abierta por los permisos por defecto de Supabase)', async () => {
+    const db = await crearDbLocal();
+    await db.exec(`create table public.prueba_sin_rls (id int);`);
+    expect(await tablasSinRls(db)).toEqual(['prueba_sin_rls']);
+  });
+
+  it('una vista materializada legible por usuarios', async () => {
+    const db = await crearDbLocal();
+    await db.exec(`create materialized view public.prueba_mv as select 1 as x;
+      grant select on public.prueba_mv to authenticated;`);
+    expect(await matviewsLegibles(db)).toEqual(['prueba_mv']);
   });
 });
