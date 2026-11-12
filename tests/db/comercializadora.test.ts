@@ -118,4 +118,18 @@ describe('Comercializadora: tablas y acceso (migración 45)', () => {
     const r = await db.query<{ id: number }>(`insert into com_sync_log (proceso) values ('nuevo') returning id`);
     expect(num(r.rows[0].id)).toBe(1001);
   });
+  it('com_invocar existe y ningún usuario puede ejecutarla', async () => {
+    const r = await db.query<{ auth: boolean; anon: boolean }>(`
+      select has_function_privilege('authenticated', 'public.com_invocar(text, jsonb)', 'EXECUTE') auth,
+             has_function_privilege('anon', 'public.com_invocar(text, jsonb)', 'EXECUTE') anon`);
+    expect(r.rows[0]).toEqual({ auth: false, anon: false });
+  });
+
+  it('com_invocar manda el secreto en x-com-secreto, no la llave anon', async () => {
+    const r = await db.query<{ d: string }>(`select pg_get_functiondef('public.com_invocar(text, jsonb)'::regprocedure) d`);
+    expect(r.rows[0].d).toContain("'x-com-secreto'");
+    expect(r.rows[0].d).toContain("name = 'com_secreto'");
+    expect(r.rows[0].d).not.toContain('anon_key');
+  });
 });
+
