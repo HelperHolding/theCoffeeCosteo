@@ -9,8 +9,16 @@ export function FormularioAcceso({ nueva = false, next = '' }: { nueva?: boolean
       {!nueva && <input type="hidden" name="next" value={next} />}
       {!nueva && (
         <label>
-          Correo
-          <input name="email" type="email" autoComplete="username" required />
+          Correo o usuario
+          <input
+            name="email"
+            type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            required
+          />
         </label>
       )}
       <label>

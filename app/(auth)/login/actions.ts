@@ -2,13 +2,14 @@
 import { servidor } from '@/lib/supabase/servidor';
 import { redirect } from 'next/navigation';
 import { rutaInterna } from '@/lib/portal/redireccion';
+import { correoDeAcceso } from '@/lib/portal/acceso';
 export async function entrar(_: string, form: FormData) {
-  const db = await servidor();
-  const email = String(form.get('email') ?? '').trim(),
+  const email = correoDeAcceso(String(form.get('email') ?? '')),
     password = String(form.get('password') ?? '');
-  if (!email || !password) return 'Escribe tu correo y contraseña.';
+  if (!email || !password) return 'Escribe tu correo o usuario y tu contraseña.';
+  const db = await servidor();
   const r = await db.auth.signInWithPassword({ email, password });
-  if (r.error) return 'No pudimos iniciar sesión. Revisa tu correo y contraseña.';
+  if (r.error) return 'No pudimos iniciar sesión. Revisa tu correo o usuario y tu contraseña.';
   redirect(rutaInterna(String(form.get('next') ?? '')));
 }
 export async function salir() {
