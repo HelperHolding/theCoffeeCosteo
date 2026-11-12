@@ -35,11 +35,44 @@ describe('copia de Comercializadora', () => {
 
   it('inserta, y en una segunda corrida actualiza sin duplicar', async () => {
     const filas = [{ sku: 'A', dias: 3 }, { sku: 'B', dias: 4 }];
-    expect(await enMigracion(db, () => copiarTabla(db, t('com_lead_times'), filas))).toEqual({ nuevas: 2, actualizadas: 0 });
+    expect(await enMigracion(db, () => copiarTabla(db, t('com_lead_times'), filas))).toEqual({ nuevas: 2, actualizadas: 0, borradas: 0 });
     const r = await enMigracion(db, () => copiarTabla(db, t('com_lead_times'), [{ sku: 'A', dias: 9 }, { sku: 'B', dias: 4 }]));
-    expect(r).toEqual({ nuevas: 0, actualizadas: 2 });
+    expect(r).toEqual({ nuevas: 0, actualizadas: 2, borradas: 0 });
     expect((await db.query(`select sku, dias from com_lead_times order by sku`)).rows).toEqual([
       { sku: 'A', dias: 9 }, { sku: 'B', dias: 4 },
+    ]);
+  });
+
+  it('espejo: lo que ya no está en el sitio viejo se borra del portal (llave simple y compuesta)', async () => {
+    await enMigracion(db, () => copiarTabla(db, t('com_lead_times'), [{ sku: 'A', dias: 3 }, { sku: 'B', dias: 4 }]));
+    expect(await enMigracion(db, () => copiarTabla(db, t('com_lead_times'), [{ sku: 'B', dias: 4 }]))).toEqual({
+      nuevas: 0, actualizadas: 1, borradas: 1,
+    });
+    const linea = (po: string, sku: string) => ({ zoho_po_id: po, po_number: po, status: 'open', sku, cantidad: 1 });
+    await enMigracion(db, () => copiarTabla(db, t('com_zoho_oc_lineas'), [linea('P1', 'A'), linea('P1', 'B')]));
+    const r = await enMigracion(db, () => copiarTabla(db, t('com_zoho_oc_lineas'), [linea('P1', 'B')]));
+    expect(r.borradas).toBe(1);
+    expect((await db.query(`select zoho_po_id, sku from com_zoho_oc_lineas`)).rows).toEqual([{ zoho_po_id: 'P1', sku: 'B' }]);
+    expect((await enMigracion(db, () => copiarTabla(db, t('com_zoho_oc_lineas'), []))).borradas).toBe(1);
+  });
+
+  it('espejo: una fila creada en el portal con el mismo id que una del viejo queda igual a la del viejo', async () => {
+    await enMigracion(db, () => copiarTabla(db, t('com_sync_log'), [{ id: 10, proceso: 'zoho-sync', ok: true }]));
+    await db.query(`insert into com_sync_log (proceso, error) values ('portal', 'falló en el portal')`); // toma el id 11
+    await enMigracion(db, () => copiarTabla(db, t('com_sync_log'), [
+      { id: 10, proceso: 'zoho-sync', ok: true, error: null },
+      { id: 11, proceso: 'com-minmax', ok: true, error: null },
+    ]));
+    expect((await db.query(`select id, proceso, error from com_sync_log order by id`)).rows).toEqual([
+      { id: 10, proceso: 'zoho-sync', error: null }, { id: 11, proceso: 'com-minmax', error: null },
+    ]);
+  });
+
+  it('espejo: un nombre único que el viejo recreó con otro id no aborta la copia', async () => {
+    await enMigracion(db, () => copiarTabla(db, t('com_sku_mapping'), [{ id: 5, shopify_nombre: 'X', sku: 'A' }]));
+    await enMigracion(db, () => copiarTabla(db, t('com_sku_mapping'), [{ id: 9, shopify_nombre: 'X', sku: 'B' }]));
+    expect((await db.query(`select id, shopify_nombre, sku from com_sku_mapping`)).rows).toEqual([
+      { id: 9, shopify_nombre: 'X', sku: 'B' },
     ]);
   });
 
@@ -86,8 +119,8 @@ describe('copia de Comercializadora', () => {
   });
 
   it('el reporte trae conteos por tabla, sin datos', () => {
-    const txt = reporteCopia([{ tabla: 'com_lead_times', origen: 2, nuevas: 1, actualizadas: 1, destino: 2 }]);
+    const txt = reporteCopia([{ tabla: 'com_lead_times', origen: 2, nuevas: 1, actualizadas: 1, borradas: 0, destino: 2 }]);
     expect(txt).toContain('com_lead_times');
-    expect(txt).toMatch(/origen 2 · nuevas 1 · actualizadas 1 · destino 2/);
+    expect(txt).toMatch(/origen 2 · nuevas 1 · actualizadas 1 · borradas 0 · destino 2/);
   });
 });

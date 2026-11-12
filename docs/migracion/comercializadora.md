@@ -65,6 +65,8 @@ npx tsx scripts/migracion-legado/comercializadora.ts --aplicar
 
 La primera es simulación. La segunda escribe. Al final, `auto.modo` queda en `simulacion`.
 
+La copia es un **espejo**: hasta el cutover manda el sitio viejo, así que en cada tabla copiada el portal queda igual al viejo. Lo que el portal haya creado o cambiado en esas tablas (por ejemplo, las corridas manuales del paso 7) se reemplaza o se borra. El reporte cuenta las filas `borradas`.
+
 ## 7. Prueba manual (sin cron, sin efectos)
 
 En el SQL Editor del portal, una a la vez y revisando `com_sync_log` entre cada una:

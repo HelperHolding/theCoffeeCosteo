@@ -35,6 +35,7 @@ export interface ResultadoCopia {
   origen: number;
   nuevas: number;
   actualizadas: number;
+  borradas: number;
   destino: number;
 }
 
@@ -51,17 +52,31 @@ async function columnasPortal(db: Consultor, tabla: string): Promise<string[]> {
 }
 
 /**
- * Upsert por llave dentro de la transacción de `db` (con app.origen = 'migracion': sin bitácora ni sellos).
+ * Espejo por llave dentro de la transacción de `db` (con app.origen = 'migracion': sin bitácora ni sellos): hasta el
+ * cutover manda el sitio viejo, así que primero se borra del portal lo que ya no está allá (también lo que el portal
+ * haya creado) y luego se hace upsert. Borrar antes evita choques con únicos que el viejo recreó con otro id.
  * Solo copia columnas que existen en ambos lados; los tipos los resuelve jsonb_populate_recordset.
  */
 export async function copiarTabla(
   db: Consultor,
   t: TablaCom,
   filas: Record<string, unknown>[],
-): Promise<{ nuevas: number; actualizadas: number }> {
+): Promise<{ nuevas: number; actualizadas: number; borradas: number }> {
   const enPortal = await columnasPortal(db, t.tabla);
   const cols = enPortal.filter((c) => filas.some((f) => c in f));
   const resto = cols.filter((c) => !t.llave.includes(c));
+  const llaves = filas.map((f) => Object.fromEntries(t.llave.map((k) => [k, f[k] == null ? null : String(f[k])])));
+  const borrado = await db.query<{ n: string }>(
+    `with b as (
+       delete from public.${id(t.tabla)} x
+       where not exists (
+         select 1 from jsonb_array_elements($1::jsonb) e
+         where ${t.llave.map((k) => `e ->> '${k.replace(/'/g, "''")}' = x.${id(k)}::text`).join(' and ')})
+       returning 1)
+     select count(*)::text n from b`,
+    [JSON.stringify(llaves)],
+  );
+  const borradas = Number(borrado.rows[0].n);
   let nuevas = 0;
   let actualizadas = 0;
   for (let i = 0; i < filas.length; i += LOTE) {
@@ -80,7 +95,7 @@ export async function copiarTabla(
       `select setval(pg_get_serial_sequence('public.${t.tabla}', '${t.secuencia}'), m)
        from (select max(${id(t.secuencia)}) m from public.${id(t.tabla)}) x where m is not null`,
     );
-  return { nuevas, actualizadas };
+  return { nuevas, actualizadas, borradas };
 }
 
 /** Plan 2, decisión 3: en el portal las OCs automáticas quedan en simulación hasta el cutover. */
@@ -96,6 +111,6 @@ export async function forzarSimulacion(db: Consultor): Promise<boolean> {
 
 export function reporteCopia(r: ResultadoCopia[]): string {
   return r
-    .map((x) => `${x.tabla.padEnd(30)} origen ${x.origen} · nuevas ${x.nuevas} · actualizadas ${x.actualizadas} · destino ${x.destino}`)
+    .map((x) => `${x.tabla.padEnd(30)} origen ${x.origen} · nuevas ${x.nuevas} · actualizadas ${x.actualizadas} · borradas ${x.borradas} · destino ${x.destino}`)
     .join('\n');
 }

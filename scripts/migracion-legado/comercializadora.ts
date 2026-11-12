@@ -26,9 +26,9 @@ let modoForzado = false;
 await enPortal(async (db) => {
   for (const t of tablas) {
     const filas = origen.get(t.tabla)!;
-    const { nuevas, actualizadas } = await copiarTabla(db, t, filas);
+    const { nuevas, actualizadas, borradas } = await copiarTabla(db, t, filas);
     const destino = Number((await db.query<{ n: string }>(`select count(*) n from public.${t.tabla}`)).rows[0].n);
-    resultados.push({ tabla: t.tabla, origen: filas.length, nuevas, actualizadas, destino });
+    resultados.push({ tabla: t.tabla, origen: filas.length, nuevas, actualizadas, borradas, destino });
   }
   modoForzado = await forzarSimulacion(db);
   if (!aplicar) throw new Simulacion();
