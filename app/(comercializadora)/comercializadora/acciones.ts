@@ -260,3 +260,42 @@ export async function guardarMinimo(
   revalidatePath('/comercializadora', 'layout');
   return d.enviado ? { ok: true, enviado: true } : { ok: true, enviado: false, aviso: d.error };
 }
+
+export interface FormAjuste3pl {
+  realizado: string;
+  autorizado: string;
+  fecha_conteo: string;
+  motivo: string;
+  lineas: { sku: string; actual: number | null; nuevo: number; costo: number | null }[];
+}
+
+const MOTIVOS_AJUSTE = ['Conteo físico', 'Merma', 'Reposición', 'Corrección de error', 'Ingreso 3PL', 'Otro'];
+
+/** Ajuste/conteo de 3PL (plan 3b, decisiones 2 y 3): valida como _comGuardarAjuste/_planConteoGuardar y aplica todo o nada. */
+export async function ajustar3pl(f: FormAjuste3pl): Promise<Resultado<{ aplicadas: number }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    if (!f.autorizado?.trim()) return { error: 'Selecciona quién autoriza este ajuste' };
+    if (f.fecha_conteo && f.fecha_conteo > hoyCdmx())
+      return { error: 'La fecha del conteo no puede ser futura' };
+    if (!MOTIVOS_AJUSTE.includes(f.motivo)) return { error: 'Elige el motivo del ajuste' };
+    if (!f.lineas.length) return { error: 'Agrega al menos una línea' };
+    for (const l of f.lineas) {
+      if (!(Number.isFinite(l.nuevo) && l.nuevo >= 0))
+        return { error: `${l.sku}: el ajuste dejaría el saldo en ${l.nuevo} — no puede ser negativo` };
+    }
+    const r = await com(s.db).rpc('com_ajustar_3pl', {
+      p_lineas: f.lineas,
+      p_realizado: f.realizado?.trim() || s.perfil.nombre,
+      p_autorizado: f.autorizado.trim(),
+      p_fecha_conteo: f.fecha_conteo || null,
+      p_motivo: f.motivo,
+    });
+    if (r.error) return r.error.code === 'P0001' ? { error: String(r.error.message) } : fallo(r.error);
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, aplicadas: Number(r.data) || 0 };
+  } catch (e) {
+    return fallo(e);
+  }
+}

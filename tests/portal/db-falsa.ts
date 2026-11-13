@@ -8,6 +8,7 @@ type Fila = Record<string, unknown>;
 export function dbFalsa(
   tablas: Record<string, Fila[]>,
   fallar: { tabla: string; op: string; veces?: number }[] = [],
+  rpc?: (fn: string, args: unknown) => { data: unknown; error: unknown },
 ) {
   let sec = 1000;
   const consultas: { tabla: string; op: string; datos?: unknown }[] = [];
@@ -65,5 +66,12 @@ export function dbFalsa(
     };
     return q;
   };
-  return { db: { from }, tablas, consultas };
+  return {
+    db: {
+      from,
+      rpc: async (fn: string, args: unknown) => (rpc ? rpc(fn, args) : { data: null, error: null }),
+    },
+    tablas,
+    consultas,
+  };
 }

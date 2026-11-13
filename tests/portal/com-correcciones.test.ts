@@ -19,7 +19,12 @@ vi.mock('../../lib/supabase/sesion', () => ({
     db: m.db,
   }),
 }));
-import { guardarCierre, guardarOc, recibirOc } from '../../app/(comercializadora)/comercializadora/acciones';
+import {
+  guardarCierre,
+  guardarOc,
+  recibirOc,
+  ajustar3pl,
+} from '../../app/(comercializadora)/comercializadora/acciones';
 import { cierresVigentes } from '../../lib/comercializadora/consultas';
 import { alcanceCambio, fechasCambiaron } from '../../lib/comercializadora/cierres';
 import { textoDestino } from '../../lib/comercializadora/ordenes';
@@ -290,5 +295,63 @@ describe('OC nueva (antes en com-acciones.test.ts)', () => {
       ['A', 500, 'compra', 'emitida', 0],
       ['B', null, 'compra', 'emitida', 0],
     ]);
+  });
+});
+
+describe('plan 3b · ajuste de 3PL', () => {
+  const form = {
+    realizado: 'Ana',
+    autorizado: 'Luis',
+    fecha_conteo: '2026-11-01',
+    motivo: 'Conteo físico',
+    lineas: [{ sku: 'A', actual: 10, nuevo: 12, costo: 50 }],
+  };
+  it('valida antes de llamar: autorizador, fecha futura, motivo y negativos', async () => {
+    const llamadas: unknown[] = [];
+    m.db = {
+      ...dbFalsa({}).db,
+      rpc: async (...a: unknown[]) => (llamadas.push(a), { data: 1, error: null }),
+    };
+    expect(await ajustar3pl({ ...form, autorizado: '' })).toEqual({
+      error: 'Selecciona quién autoriza este ajuste',
+    });
+    expect(await ajustar3pl({ ...form, fecha_conteo: '2999-01-01' })).toEqual({
+      error: 'La fecha del conteo no puede ser futura',
+    });
+    expect(await ajustar3pl({ ...form, lineas: [{ sku: 'A', actual: 10, nuevo: -1, costo: null }] })).toEqual(
+      { error: 'A: el ajuste dejaría el saldo en -1 — no puede ser negativo' },
+    );
+    expect(llamadas).toEqual([]);
+  });
+  it('llama com_ajustar_3pl con el lote y devuelve las aplicadas; el error de la base llega claro', async () => {
+    let args: unknown;
+    m.db = {
+      ...dbFalsa({}).db,
+      rpc: async (fn: string, a: unknown) => ((args = [fn, a]), { data: 1, error: null }),
+    };
+    expect(await ajustar3pl(form)).toEqual({ ok: true, aplicadas: 1 });
+    expect(args).toEqual([
+      'com_ajustar_3pl',
+      {
+        p_lineas: form.lineas,
+        p_realizado: 'Ana',
+        p_autorizado: 'Luis',
+        p_fecha_conteo: '2026-11-01',
+        p_motivo: 'Conteo físico',
+      },
+    ]);
+    m.db = {
+      ...dbFalsa({}).db,
+      rpc: async () => ({
+        data: null,
+        error: {
+          code: 'P0001',
+          message: 'El saldo de A cambió desde que lo viste; revisa y vuelve a guardar',
+        },
+      }),
+    };
+    expect(await ajustar3pl(form)).toEqual({
+      error: 'El saldo de A cambió desde que lo viste; revisa y vuelve a guardar',
+    });
   });
 });
