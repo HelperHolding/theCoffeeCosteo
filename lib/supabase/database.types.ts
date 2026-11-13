@@ -1,6 +1,7 @@
 // Contrato basado en las migraciones locales. numeric llega como número vía PostgREST.
 import type * as Crm from '../crm/tipos';
-export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales';
+export type Rol =
+  'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales' | 'interno' | 'franquiciado' | 'proveedor';
 export type Unidad = 'gr' | 'ml' | 'pza';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
 export interface Catalogo {
@@ -289,7 +290,10 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
-      sucursales_consumo_desglose: { Args: { p_mes: string; p_companias: number[]; p_insumo: string | null }; Returns: Json };
+      sucursales_consumo_desglose: {
+        Args: { p_mes: string; p_companias: number[]; p_insumo: string | null };
+        Returns: Json;
+      };
       sucursales_consumo_nacional: { Args: { p_mes: string; p_companias: number[] }; Returns: Json };
       sucursales_tablero_hoy: { Args: { p_companias: number[]; p_hoys: string[] }; Returns: Json };
       sucursales_tablero_periodo: {

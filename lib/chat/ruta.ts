@@ -4,6 +4,7 @@ import { servidor } from '@/lib/supabase/servidor';
 import { mensajesModelo } from '@/lib/chat/entrada';
 import { herramientasChat } from '@/lib/chat/herramientas';
 import { agentes, type IdAgente } from '@/lib/chat/agentes';
+import { tieneCosteo } from '@/lib/portal/roles';
 
 const fallo = (error: string, status: number) =>
   Response.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -13,9 +14,12 @@ export async function atender(req: Request, agente: IdAgente) {
   const db = await servidor();
   const { data, error } = await db.auth.getUser();
   if (error || !data.user) return fallo('Tu sesión venció. Vuelve a iniciar sesión.', 401);
-  const perfil = await db.from('perfiles').select('activo').eq('user_id', data.user.id).maybeSingle();
+  const perfil = await db.from('perfiles').select('activo,rol').eq('user_id', data.user.id).maybeSingle();
   if (perfil.error) return fallo('No se pudo verificar tu cuenta.', 503);
   if (!perfil.data?.activo) return fallo('Se requiere una cuenta activa.', 403);
+  // Costeo falla cerrado (como sesion()): sin rol de Costeo no se gasta cuota ni se llama al modelo.
+  if (agente === 'costeo' && !tieneCosteo(String(perfil.data.rol ?? '')))
+    return fallo('Tu perfil no tiene acceso a Costeo.', 403);
   if (agente === 'crm') {
     // Mismo criterio que sesionCrm; la RLS lo vuelve a exigir en cada consulta.
     const acceso = await db
