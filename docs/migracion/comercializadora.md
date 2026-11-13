@@ -79,3 +79,9 @@ select proceso, ok, error, inicio from public.com_sync_log order by inicio desc 
 ```
 
 El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los tres jobs con `active = false`.
+
+## 8. Pantallas del portal (plan 3)
+
+- Ruta: `/comercializadora`. Acceso: el admin da el módulo `comercializadora` en `perfil_modulos` (`lectura` ve; `edicion`/`desarrollador` editan).
+- Vercel (Production y Preview) necesita `COM_SECRETO` con el mismo valor que el secreto de las funciones; sin él, los botones que recalculan o envían a Zoho muestran "no está configurado".
+- Mientras el sitio viejo siga en Real, en el portal no se capturan OCs, mínimos ni cierres de verdad: el espejo de la copia los borraría y el viejo sigue siendo la fuente.
