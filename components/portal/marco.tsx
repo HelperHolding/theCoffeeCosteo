@@ -30,6 +30,11 @@ export type ItemBusqueda = {
   icono: keyof typeof iconos;
 };
 const textos: Record<Seccion, { marca: [string, string]; buscar: string; registros: string }> = {
+  comercializadora: {
+    marca: ['The Coffee', 'comercializadora'],
+    buscar: 'Buscar pantalla…',
+    registros: 'Registros',
+  },
   inicio: { marca: ['The Coffee', 'portal'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
   costeo: {
     marca: ['Portal de', 'costeos'],

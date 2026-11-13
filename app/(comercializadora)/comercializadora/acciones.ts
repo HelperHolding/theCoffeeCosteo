@@ -1,0 +1,262 @@
+'use server';
+import { revalidatePath } from 'next/cache';
+import { sesionComercializadora } from '@/lib/supabase/sesion';
+import { puedeEditarCom } from '@/lib/portal/modulos';
+import { invocarFuncion } from '@/lib/comercializadora/funciones';
+import {
+  alcanceCambio,
+  fechasCambiaron,
+  validarCierre,
+  type FormCierre,
+} from '@/lib/comercializadora/cierres';
+import { com } from '@/lib/comercializadora/consultas';
+import { hoyCdmx } from '@/lib/comercializadora/fechas';
+import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
+import { validarMonto } from '@/lib/comercializadora/minimos';
+
+export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
+
+const SOLO_LECTURA = 'Tu acceso a Comercializadora es de solo lectura.';
+// El recálculo tras guardar un cierre no debe colgar la acción: si tarda más, se informa y lo hace la corrida diaria.
+const RECALCULO_MS = 25_000;
+
+/** Sesión con permiso de escritura; sin él, null (la acción responde SOLO_LECTURA sin tocar la base). */
+export async function editorCom() {
+  const s = await sesionComercializadora(false);
+  return puedeEditarCom(s.accesos) ? s : null;
+}
+
+const fallo = (e: unknown): { error: string } => {
+  const code = (e as { code?: string } | null)?.code;
+  if (code === '42501') return { error: SOLO_LECTURA };
+  return { error: 'No se pudo guardar. Intenta de nuevo.' };
+};
+
+export async function guardarCierre(f: FormCierre): Promise<Resultado<{ recalculo: boolean }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const error = validarCierre(f, hoyCdmx(), !f.id);
+    if (error) return { error };
+    const datos = {
+      vendor_id: f.vendor_id,
+      vendor_name: f.vendor_name,
+      ini: f.ini,
+      fin: f.fin,
+      motivo: f.motivo,
+      skus: f.todo ? null : f.skus,
+      notas: f.notas.trim() || null,
+      actualizado_at: new Date().toISOString(),
+    };
+    let r;
+    if (f.id) {
+      const antes = await com(s.db)
+        .from('com_proveedor_cierre')
+        .select('ini,fin,vendor_id,skus')
+        .eq('id', f.id)
+        .maybeSingle();
+      if (antes.error) return fallo(antes.error);
+      if (!antes.data) return { error: 'Ese periodo ya no existe; recarga la página' };
+      // _cieGuardar: los avisos vuelven a mandarse solo si cambian las fechas o el alcance (proveedor o artículos).
+      const reiniciar =
+        fechasCambiaron(antes.data, f) ||
+        alcanceCambio(antes.data, { vendor_id: f.vendor_id, skus: datos.skus });
+      r = await com(s.db)
+        .from('com_proveedor_cierre')
+        .update(reiniciar ? { ...datos, aviso7_at: null, aviso0_at: null } : datos)
+        .eq('id', f.id)
+        .select('id');
+    } else {
+      r = await com(s.db)
+        .from('com_proveedor_cierre')
+        .insert({ ...datos, creado_por: s.perfil.nombre })
+        .select('id');
+    }
+    if (r.error) return fallo(r.error);
+    const re = await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS });
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, recalculo: re.ok };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+export async function cancelarCierre(id: number): Promise<Resultado<{ recalculo: boolean }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await s.db
+      .from('com_proveedor_cierre' as never)
+      .update({ cancelado: true, actualizado_at: new Date().toISOString() } as never)
+      .eq('id' as never, id as never)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    const re = await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS });
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, recalculo: re.ok };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+export async function correrOcAuto(
+  modo: 'simulacion' | 'real',
+): Promise<Resultado<{ ocs: number; modo: string }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const r = await invocarFuncion('zoho-generar-oc', {
+    origen: 'manual',
+    modo: modo === 'real' ? 'real' : 'simulacion',
+  });
+  if (!r.ok) return { error: r.error };
+  const d = r.datos as { ocs?: number; modo?: string };
+  revalidatePath('/comercializadora', 'layout');
+  return { ok: true, ocs: Number(d.ocs) || 0, modo: String(d.modo ?? modo) };
+}
+
+/** OC de plataforma (_comGuardarOC): una fila tipo compra por artículo; el monto total va en la primera. */
+export async function guardarOc(f: FormOc, folioAnterior?: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const error = validarOc(f);
+    if (error) return { error };
+    const folio = f.folio.trim();
+    const t = () => com(s.db).from('com_movimientos');
+    // _comGuardarOC: un folio no se repite (ni al crear ni al renombrar en una edición).
+    if (folio !== folioAnterior) {
+      const ya = await t().select('id').eq('tipo', 'compra').eq('folio', folio).limit(1);
+      if (ya.error) return fallo(ya.error);
+      if (ya.data?.length) return { error: `Ya existe una OC con el folio ${folio}` };
+    }
+    // Editar (_comGuardarEditOC): cada línea conserva sus columnas y lo recibido, acotado a la nueva cantidad.
+    let viejas: Record<string, unknown>[] = [];
+    if (folioAnterior) {
+      const r = await t().select('*').eq('tipo', 'compra').eq('folio', folioAnterior);
+      if (r.error) return fallo(r.error);
+      viejas = r.data ?? [];
+    }
+    const porSku = new Map(viejas.map((v) => [String(v.sku), v]));
+    const filas = f.lineas
+      .filter((l) => l.sku && Number(l.cantidad) > 0)
+      .map((l, i) => {
+        const cantidad = Number(l.cantidad);
+        const { id: _id, ...antes } = porSku.get(l.sku) ?? {};
+        const recibido = Math.min(Number(antes.cantidad_recibida) || 0, cantidad);
+        return {
+          ...antes,
+          tipo: 'compra',
+          folio,
+          sku: l.sku,
+          cantidad,
+          cantidad_recibida: recibido,
+          estado: recibido <= 0 ? 'emitida' : recibido >= cantidad ? 'recibida' : 'parcial',
+          fecha: f.fecha,
+          fecha_arribo: f.fecha_arribo || null,
+          destino: f.destino,
+          monto: i === 0 ? Number(f.monto) : null,
+          proveedor: f.proveedor,
+        };
+      });
+    const ins = await t().insert(filas).select('id');
+    if (ins.error) return fallo(ins.error);
+    if (viejas.length) {
+      const borrado = await t()
+        .delete()
+        .in(
+          'id',
+          viejas.map((v) => v.id),
+        )
+        .select('id');
+      if (borrado.error) {
+        // Sin las anteriores borradas la OC quedaría duplicada: se deshace el alta.
+        await t()
+          .delete()
+          .in(
+            'id',
+            (ins.data as { id: string }[]).map((x) => x.id),
+          );
+        return fallo(borrado.error);
+      }
+    }
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comGuardarRecepcion: actualiza cantidad_recibida por fila (Zoho manda en el saldo: no toca com_catalogo). */
+export async function recibirOc(folio: string, recibido: Record<string, number>): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const ids = Object.keys(recibido);
+    const lineas = await com(s.db)
+      .from('com_movimientos')
+      .select('id,sku,cantidad')
+      .eq('tipo', 'compra')
+      .eq('folio', folio)
+      .in('id', ids);
+    if (lineas.error) return fallo(lineas.error);
+    const porId = new Map(
+      (lineas.data as { id: string; sku: string; cantidad: number }[]).map((x) => [String(x.id), x]),
+    );
+    // Todo se valida antes de escribir: una línea inválida no deja la OC a medias.
+    for (const id of ids) {
+      const l = porId.get(id);
+      const cant = Number(recibido[id]);
+      if (!l) return { error: 'Una línea ya no existe en esta OC; recarga la página' };
+      if (!(cant >= 0)) return { error: `${l.sku}: la cantidad recibida no es válida` };
+      if (cant > Number(l.cantidad))
+        return { error: `${l.sku}: no puedes recibir más de lo pedido (${l.cantidad})` };
+    }
+    for (const id of ids) {
+      const r = await com(s.db)
+        .from('com_movimientos')
+        .update({ cantidad_recibida: Number(recibido[id]) })
+        .eq('id', id)
+        .eq('folio', folio)
+        .select('id');
+      if (r.error) return fallo(r.error);
+    }
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+export async function eliminarOc(folio: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await s.db
+      .from('com_movimientos' as never)
+      .delete()
+      .eq('tipo' as never, 'compra' as never)
+      .eq('folio' as never, folio as never)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _minGuardar: la función guarda en la plataforma y envía a Zoho; lo guardado queda aunque Zoho falle. */
+export async function guardarMinimo(
+  vendor_id: string,
+  monto: string,
+): Promise<Resultado<{ enviado: boolean; aviso?: string }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const valor = validarMonto(monto);
+  if (valor === null) return { error: 'Monto inválido: usa pesos con hasta 2 decimales' };
+  const r = await invocarFuncion('zoho-proveedor-minimo', { vendor_id, monto: valor, por: s.perfil.nombre });
+  if (!r.ok) return { error: r.error };
+  const d = r.datos as { enviado?: boolean; error?: string };
+  revalidatePath('/comercializadora', 'layout');
+  return d.enviado ? { ok: true, enviado: true } : { ok: true, enviado: false, aviso: d.error };
+}

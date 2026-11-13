@@ -2,12 +2,14 @@ import type { NivelModulo } from '../supabase/database.types';
 import { tieneCosteo } from './roles';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
-export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi';
+export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi' | 'comercializadora';
 /**
  * Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita (sale de perfiles.rol).
  * 'sucursales_costeo': ver el Costeo de sus sucursales dentro de Sucursales, sin entrar al módulo Costeo.
  */
-export type Accesos = Partial<Record<'crm' | 'sucursales' | 'sucursales_costeo' | 'bi', NivelModulo>>;
+export type Accesos = Partial<
+  Record<'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora', NivelModulo>
+>;
 
 export interface Modulo {
   id: IdModulo;
@@ -49,6 +51,13 @@ export const modulos: Modulo[] = [
     // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales); lo exige bi_acceso.
     acceso: (a) => a.bi !== undefined,
   },
+  {
+    id: 'comercializadora',
+    nombre: 'Comercializadora',
+    descripcion: 'Qué pedir, órdenes de compra, mínimos, proveedores sin stock y pagos.',
+    href: '/comercializadora',
+    acceso: (a) => a.comercializadora !== undefined,
+  },
 ];
 
 export const modulosVisibles = (accesos: Accesos, rol: string): IdModulo[] =>
@@ -56,3 +65,6 @@ export const modulosVisibles = (accesos: Accesos, rol: string): IdModulo[] =>
 
 export const puedeEditarCrm = (accesos: Accesos) =>
   accesos.crm === 'desarrollador' || accesos.crm === 'edicion';
+
+export const puedeEditarCom = (accesos: Accesos) =>
+  accesos.comercializadora === 'desarrollador' || accesos.comercializadora === 'edicion';
