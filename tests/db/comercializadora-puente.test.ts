@@ -5,7 +5,7 @@ import { comoUsuario, crearUsuario, darModulo, num } from './utilidades';
 const VISTAS = ['com_legado_pedidos', 'com_legado_pedidos_apertura', 'com_legado_aperturas'];
 
 describe('puente legado (migración 46)', () => {
-  it('service_role lee los pedidos del sitio viejo por las vistas, con solo las columnas de minmax', async () => {
+  it('service_role lee los pedidos del sitio viejo por las vistas, con las columnas de minmax e Inicio', async () => {
     const db = await crearDbLocal();
     await db.exec(`
       insert into legado.aperturas (id, estatus, fecha) values ('A1', 'en_proceso', '2026-12-01');
@@ -20,7 +20,7 @@ describe('puente legado (migración 46)', () => {
     expect(num(n.rows[0].n)).toBe(1);
     expect(cols.rows.map((f) => f.c)).toEqual([
       'id', 'apertura_id', 'fecha_pedido', 'status', 'items', 'items_editados', 'franquiciatario_email',
-      'notas_shopify', 'es_llenado_canal', 'marketing_proyecto_id',
+      'notas_shopify', 'es_llenado_canal', 'marketing_proyecto_id', 'monto', 'shopify_order_number',
     ]);
   });
 
