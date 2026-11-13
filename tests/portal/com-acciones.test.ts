@@ -116,3 +116,39 @@ describe('correr OC automática', () => {
     expect(await correrOcAuto('real')).toEqual({ error: 'Las OCs automáticas están en modo simulación' });
   });
 });
+
+import { eliminarOc, guardarOc } from '../../app/(comercializadora)/comercializadora/acciones';
+
+describe('acciones de órdenes', () => {
+  beforeEach(() => {
+    m.nivel = 'edicion';
+    m.escrito = [];
+    m.error = null;
+  });
+  it('lectura no escribe', async () => {
+    m.nivel = 'lectura';
+    expect(await eliminarOc('OC-1')).toEqual({ error: 'Tu acceso a Comercializadora es de solo lectura.' });
+    expect(m.escrito).toEqual([]);
+  });
+  it('OC nueva: una fila compra por artículo, el monto solo en la primera, estado emitida', async () => {
+    const r = await guardarOc({
+      folio: 'OC-9',
+      proveedor: 'Prov',
+      fecha: '2026-11-13',
+      fecha_arribo: '2026-11-20',
+      destino: 'CEDIS',
+      monto: 100,
+      lineas: [
+        { sku: 'A', cantidad: 5 },
+        { sku: 'B', cantidad: 2 },
+      ],
+    });
+    expect(r).toEqual({ ok: true });
+    expect(m.escrito[0]).toMatchObject({ tabla: 'com_movimientos', op: 'insert' });
+    const filas = m.escrito[0].datos as Record<string, unknown>[];
+    expect(filas.map((f) => [f.sku, f.monto, f.tipo, f.estado])).toEqual([
+      ['A', 100, 'compra', 'emitida'],
+      ['B', null, 'compra', 'emitida'],
+    ]);
+  });
+});

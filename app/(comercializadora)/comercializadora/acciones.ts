@@ -5,6 +5,7 @@ import { puedeEditarCom } from '@/lib/portal/modulos';
 import { invocarFuncion } from '@/lib/comercializadora/funciones';
 import { validarCierre, type FormCierre } from '@/lib/comercializadora/cierres';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
+import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
 
 export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
@@ -89,4 +90,93 @@ export async function correrOcAuto(
   const d = r.datos as { ocs?: number; modo?: string };
   revalidatePath('/comercializadora', 'layout');
   return { ok: true, ocs: Number(d.ocs) || 0, modo: String(d.modo ?? modo) };
+}
+
+/** OC de plataforma (_comGuardarOC): una fila tipo compra por artículo; el monto total va en la primera. */
+export async function guardarOc(f: FormOc, folioAnterior?: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const error = validarOc(f);
+    if (error) return { error };
+    const filas = f.lineas
+      .filter((l) => l.sku && Number(l.cantidad) > 0)
+      .map((l, i) => ({
+        tipo: 'compra',
+        folio: f.folio.trim(),
+        sku: l.sku,
+        cantidad: Number(l.cantidad),
+        cantidad_recibida: 0,
+        fecha: f.fecha,
+        fecha_arribo: f.fecha_arribo || null,
+        destino: f.destino,
+        estado: 'emitida',
+        monto: i === 0 ? Number(f.monto) : null,
+        proveedor: f.proveedor,
+      }));
+    const ins = await s.db
+      .from('com_movimientos' as never)
+      .insert(filas as never)
+      .select('id');
+    if (ins.error) return fallo(ins.error);
+    // Editar = insertar las nuevas y borrar las anteriores (_comEditarOC), solo si el alta salió bien.
+    if (folioAnterior) {
+      const ids = new Set((ins.data as { id: string }[]).map((x) => x.id));
+      const viejas = await s.db
+        .from('com_movimientos' as never)
+        .select('id')
+        .eq('tipo' as never, 'compra' as never)
+        .eq('folio' as never, folioAnterior as never);
+      const borrar = ((viejas.data ?? []) as { id: string }[]).map((x) => x.id).filter((id) => !ids.has(id));
+      if (borrar.length)
+        await s.db
+          .from('com_movimientos' as never)
+          .delete()
+          .in('id' as never, borrar as never);
+    }
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comGuardarRecepcion: actualiza cantidad_recibida por fila (Zoho manda en el saldo: no toca com_catalogo). */
+export async function recibirOc(folio: string, recibido: Record<string, number>): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    for (const [id, cant] of Object.entries(recibido)) {
+      if (!(Number(cant) >= 0)) return { error: 'La cantidad recibida no es válida' };
+      const r = await s.db
+        .from('com_movimientos' as never)
+        .update({ cantidad_recibida: Number(cant) } as never)
+        .eq('id' as never, id as never)
+        .eq('folio' as never, folio as never)
+        .select('id');
+      if (r.error) return fallo(r.error);
+    }
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+export async function eliminarOc(folio: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await s.db
+      .from('com_movimientos' as never)
+      .delete()
+      .eq('tipo' as never, 'compra' as never)
+      .eq('folio' as never, folio as never)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
 }
