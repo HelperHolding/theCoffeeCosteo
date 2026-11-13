@@ -12,6 +12,8 @@ import {
 import { com } from '@/lib/comercializadora/consultas';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
+import { cantidadConteo } from '@/lib/comercializadora/inventario';
+import { validarTraspaso, type FormTraspaso } from '@/lib/comercializadora/traspasos';
 import { validarMonto } from '@/lib/comercializadora/minimos';
 import {
   CAMPOS_CATALOGO,
@@ -510,6 +512,99 @@ export async function marcarEnviado(folio: string): Promise<Resultado<{ lineas: 
     if (!r.data?.length) return { error: 'Ese pedido ya no tiene líneas por enviar; recarga la página' };
     revalidatePath('/comercializadora', 'layout');
     return { ok: true, lineas: r.data.length };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comGuardarTraspaso, con las validaciones de la decisión 6 (catálogo y referencia única). */
+export async function crearTraspaso(f: FormTraspaso): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const pedidos = f.lineas.map((l) => l.sku.trim()).filter(Boolean);
+    const cat = await com(s.db).from('com_catalogo').select('sku').in('sku', pedidos);
+    if (cat.error) return fallo(cat.error);
+    const error = validarTraspaso(f, new Set((cat.data ?? []).map((c: { sku: string }) => c.sku)));
+    if (error) return { error };
+    const folio = f.folio.trim();
+    const ya = await com(s.db)
+      .from('com_movimientos')
+      .select('id')
+      .eq('tipo', 'traspaso')
+      .eq('folio', folio)
+      .limit(1);
+    if (ya.error) return fallo(ya.error);
+    if (ya.data?.length) return { error: `Ya existe un traspaso con la referencia ${folio}` };
+    const filas = f.lineas
+      .filter((l) => l.sku.trim() && Number(l.cantidad) > 0)
+      .map((l) => ({
+        tipo: 'traspaso',
+        folio,
+        sku: l.sku.trim(),
+        cantidad: Number(l.cantidad),
+        cantidad_original: Number(l.cantidad),
+        fecha: f.fecha,
+        origen: f.origen,
+        destino: f.destino,
+        estado: 'ordenado',
+      }));
+    const r = await com(s.db).from('com_movimientos').insert(filas).select('id');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/traspasos');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comGuardarIngreso en una transacción (com_ingresar_traspaso). `recibido`: id de la línea → texto capturado. */
+export async function ingresarTraspaso(
+  folio: string,
+  recibido: Record<string, string>,
+): Promise<Resultado<{ lineas: number }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const cantidades: Record<string, number> = {};
+    for (const [id, txt] of Object.entries(recibido)) {
+      const c = cantidadConteo(txt);
+      if (c == null) return { error: 'Revisa las cantidades recibidas: usa números de 0 en adelante' };
+      cantidades[id] = c;
+    }
+    const r = await com(s.db).rpc('com_ingresar_traspaso', { p_folio: folio, p_recibido: cantidades });
+    if (r.error) return r.error.code === 'P0001' ? { error: String(r.error.message) } : fallo(r.error);
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, lineas: Number(r.data) || 0 };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** Decisión 6: solo se elimina lo que no se ha ingresado (borrar uno ingresado dejaría el 3PL sumado). */
+export async function eliminarTraspaso(folio: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const ing = await com(s.db)
+      .from('com_movimientos')
+      .select('id')
+      .eq('tipo', 'traspaso')
+      .eq('folio', folio)
+      .eq('estado', 'ingresado')
+      .limit(1);
+    if (ing.error) return fallo(ing.error);
+    if (ing.data?.length) return { error: 'Solo se puede eliminar un traspaso que aún no se ingresa' };
+    const r = await com(s.db)
+      .from('com_movimientos')
+      .delete()
+      .eq('tipo', 'traspaso')
+      .eq('folio', folio)
+      .eq('estado', 'ordenado')
+      .select('id');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/traspasos');
+    return { ok: true };
   } catch (e) {
     return fallo(e);
   }
