@@ -137,6 +137,7 @@ const gruposComercializadora: Grupo[] = [
       { href: '/comercializadora/inventario', nombre: 'Inventario', icono: Boxes },
       { href: '/comercializadora/catalogo', nombre: 'Catálogo', icono: Tags },
       { href: '/comercializadora/kit', nombre: 'Kit de apertura', icono: Package },
+      { href: '/comercializadora/configuracion', nombre: 'Configuración', icono: Settings2 },
     ],
   },
 ];

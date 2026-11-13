@@ -19,6 +19,15 @@ import {
   validarMinMax,
   type CampoCatalogo,
 } from '@/lib/comercializadora/catalogo';
+import {
+  CAMPOS_CONFIG,
+  claveServidor,
+  difConfig,
+  leerRuta,
+  normalizarConfig,
+  ponerRuta,
+  type Config,
+} from '@/lib/comercializadora/config';
 
 export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
@@ -421,4 +430,66 @@ export async function recalcularKit(): Promise<Resultado<{ skus: number }>> {
   if (!r.ok) return { error: r.error };
   revalidatePath('/comercializadora', 'layout');
   return { ok: true, skus: Number((r.datos as { skus?: number }).skus) || 0 };
+}
+
+/**
+ * _planCfgGuardar: solo los campos editables del portal se toman del borrador (lo demás se conserva tal cual de la
+ * base, incluido auto.modo: plan 3b, decisiones 7 y 8). Update condicionado a la misma versión; historial por cambio;
+ * recalcula com-minmax si algún cambio toca el servidor.
+ */
+export async function guardarConfig(
+  borrador: Config,
+  version: number,
+): Promise<Resultado<{ version: number; cambios: number; recalculo: boolean | null }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const actual = await com(s.db).from('com_plan_config').select('config,version').eq('id', 1).maybeSingle();
+    if (actual.error) return fallo(actual.error);
+    if (!actual.data) return { error: 'No hay configuración guardada todavía' };
+    if (Number(actual.data.version) !== Number(version))
+      return {
+        error:
+          'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.',
+      };
+    const antes = normalizarConfig(actual.data.config);
+    let nuevo: Config = actual.data.config ?? {};
+    const normal = normalizarConfig(borrador);
+    for (const c of CAMPOS_CONFIG) nuevo = ponerRuta(nuevo, c.ruta, leerRuta(normal, c.ruta));
+    nuevo = ponerRuta(nuevo, 'temp.mes', leerRuta(normal, 'temp.mes'));
+    nuevo = ponerRuta(nuevo, 'eventos', leerRuta(normal, 'eventos'));
+    nuevo = ponerRuta(nuevo, 'auto.correos', leerRuta(normal, 'auto.correos'));
+    const despues = normalizarConfig(nuevo);
+    const cambios = difConfig(antes, despues);
+    if (!cambios.length) return { error: 'No hay cambios que guardar' };
+    const r = await com(s.db)
+      .from('com_plan_config')
+      .update({ config: nuevo, version: Number(version) + 1 })
+      .eq('id', 1)
+      .eq('version', version)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length)
+      return {
+        error:
+          'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.',
+      };
+    await com(s.db)
+      .from('com_plan_config_historial')
+      .insert(
+        cambios.map((c) => ({
+          ambito: 'config',
+          clave: c.clave,
+          valor_anterior: c.antes,
+          valor_nuevo: c.despues,
+        })),
+      );
+    const re = cambios.some((c) => claveServidor(c.clave))
+      ? await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS })
+      : null;
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, version: Number(version) + 1, cambios: cambios.length, recalculo: re ? re.ok : null };
+  } catch (e) {
+    return fallo(e);
+  }
 }

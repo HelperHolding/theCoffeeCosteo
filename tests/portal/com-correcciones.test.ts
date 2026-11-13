@@ -28,11 +28,13 @@ import {
   guardarMinMaxManual,
   guardarKitManual,
   recalcularKit,
+  guardarConfig,
 } from '../../app/(comercializadora)/comercializadora/acciones';
 import { cierresVigentes } from '../../lib/comercializadora/consultas';
 import { alcanceCambio, fechasCambiaron } from '../../lib/comercializadora/cierres';
 import { textoDestino } from '../../lib/comercializadora/ordenes';
 import { kpisPagos } from '../../lib/comercializadora/pagos';
+import { configPorDefecto, ponerRuta } from '../../lib/comercializadora/config';
 
 const compra = (o: Record<string, unknown>) => ({
   tipo: 'compra',
@@ -418,5 +420,60 @@ describe('plan 3b · kit de apertura', () => {
     m.invocar.mockResolvedValueOnce({ ok: true, datos: { ok: true, skus: 159 } });
     expect(await recalcularKit()).toEqual({ ok: true, skus: 159 });
     expect(m.invocar).toHaveBeenCalledWith('com-minmax', {}, { timeoutMs: 25_000 });
+  });
+});
+
+describe('plan 3b · guardar configuración', () => {
+  const base = () => ({ id: 1, version: 3, config: configPorDefecto() });
+  beforeEach(() => m.invocar.mockClear());
+  it('sin cambios no escribe', async () => {
+    const f = dbFalsa({ com_plan_config: [base()] });
+    m.db = f.db;
+    expect(await guardarConfig(configPorDefecto(), 3)).toEqual({ error: 'No hay cambios que guardar' });
+  });
+  it('guarda con versión + 1, registra cada cambio y recalcula si toca el servidor', async () => {
+    const f = dbFalsa({ com_plan_config: [base()] });
+    m.db = f.db;
+    const r = await guardarConfig(ponerRuta(configPorDefecto(), 'seg.dias', 12), 3);
+    expect(r).toEqual({ ok: true, version: 4, cambios: 1, recalculo: true });
+    expect(f.tablas.com_plan_config[0]).toMatchObject({ version: 4 });
+    expect((f.tablas.com_plan_config[0].config as Record<string, Record<string, unknown>>).seg.dias).toBe(12);
+    expect(f.tablas.com_plan_config_historial[0]).toMatchObject({
+      ambito: 'config',
+      clave: 'seg.dias',
+      valor_anterior: 10,
+      valor_nuevo: 12,
+    });
+    expect(m.invocar).toHaveBeenCalledWith('com-minmax', {}, { timeoutMs: 25_000 });
+  });
+  it('si otra persona guardó antes (versión distinta), no pisa', async () => {
+    const f = dbFalsa({ com_plan_config: [{ ...base(), version: 5 }] });
+    m.db = f.db;
+    expect(await guardarConfig(ponerRuta(configPorDefecto(), 'seg.dias', 12), 3)).toEqual({
+      error:
+        'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.',
+    });
+    expect((f.tablas.com_plan_config[0].config as Record<string, Record<string, unknown>>).seg.dias).toBe(10);
+  });
+  it('auto.modo no cambia desde el portal aunque venga en el borrador', async () => {
+    const f = dbFalsa({ com_plan_config: [base()] });
+    m.db = f.db;
+    const r = await guardarConfig(
+      ponerRuta(ponerRuta(configPorDefecto(), 'auto.modo', 'real'), 'seg.dias', 11),
+      3,
+    );
+    expect(r).toMatchObject({ ok: true, cambios: 1 });
+    expect((f.tablas.com_plan_config[0].config as Record<string, Record<string, unknown>>).auto.modo).toBe(
+      'simulacion',
+    );
+  });
+  it('conserva sin tocar lo que no se edita aquí (imp, prefijos, ajustes de aperturas)', async () => {
+    const guardada = ponerRuta(ponerRuta(configPorDefecto(), 'imp', { red: 7 }), 'seg.prefijo', { CAF: 20 });
+    const f = dbFalsa({ com_plan_config: [{ id: 1, version: 3, config: guardada }] });
+    m.db = f.db;
+    await guardarConfig(ponerRuta(ponerRuta(configPorDefecto(), 'seg.dias', 11), 'imp', null), 3);
+    const c = f.tablas.com_plan_config[0].config as Record<string, unknown>;
+    expect(c.imp).toEqual({ red: 7 });
+    expect((c.seg as Record<string, unknown>).prefijo).toEqual({ CAF: 20 });
   });
 });
