@@ -67,7 +67,7 @@ export function dbFalsa(
       return { data: unico ? (c[0] ?? null) : c, error: null };
     };
     const q = {
-      select: () => q,
+      select: (_columnas?: string) => q,
       insert: (d: unknown) => ((op = 'insert'), (datos = d), q),
       update: (d: unknown) => ((op = 'update'), (datos = d), q),
       delete: () => ((op = 'delete'), q),
