@@ -25,6 +25,7 @@ import {
   Settings2,
   BarChart3,
   ShoppingCart,
+  Boxes,
   Bot,
   ClipboardList,
   Scale,
@@ -133,6 +134,10 @@ const gruposComercializadora: Grupo[] = [
     enlaces: [
       { href: '/comercializadora/proveedores-sin-stock', nombre: 'Proveedores sin stock', icono: CalendarX2 },
       { href: '/comercializadora/pagos', nombre: 'Pagos proyectados', icono: Wallet },
+      { href: '/comercializadora/inventario', nombre: 'Inventario', icono: Boxes },
+      { href: '/comercializadora/catalogo', nombre: 'Catálogo', icono: Tags },
+      { href: '/comercializadora/kit', nombre: 'Kit de apertura', icono: Package },
+      { href: '/comercializadora/configuracion', nombre: 'Configuración', icono: Settings2 },
     ],
   },
 ];

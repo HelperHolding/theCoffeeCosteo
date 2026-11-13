@@ -85,3 +85,10 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Ruta: `/comercializadora`. Acceso: el admin da el módulo `comercializadora` en `perfil_modulos` (`lectura` ve; `edicion`/`desarrollador` editan).
 - Vercel (Production y Preview) necesita `COM_SECRETO` con el mismo valor que el secreto de las funciones; sin él, los botones que recalculan o envían a Zoho muestran "no está configurado".
 - Mientras el sitio viejo siga en Real, en el portal no se capturan OCs, mínimos ni cierres de verdad: el espejo de la copia los borraría y el viejo sigue siendo la fuente.
+
+## 9. Inventario, catálogo, kit y configuración (plan 3b)
+
+- El CEDIS se ajusta en Zoho Books; en el portal solo se ajusta y cuenta el 3PL (`com_ajustar_3pl`, todo o nada).
+- Quién autoriza un ajuste: perfiles con Comercializadora `edicion` o `desarrollador`.
+- `auto.modo` no se cambia desde la pantalla de configuración: se pasa a Real en el cutover (plan 4).
+- Días de crédito: se editan en Zoho (términos de pago); el portal los muestra.

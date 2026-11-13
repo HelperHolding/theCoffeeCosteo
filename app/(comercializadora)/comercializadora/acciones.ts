@@ -13,6 +13,21 @@ import { com } from '@/lib/comercializadora/consultas';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
 import { validarMonto } from '@/lib/comercializadora/minimos';
+import {
+  CAMPOS_CATALOGO,
+  validarCampo,
+  validarMinMax,
+  type CampoCatalogo,
+} from '@/lib/comercializadora/catalogo';
+import {
+  CAMPOS_CONFIG,
+  claveServidor,
+  difConfig,
+  leerRuta,
+  normalizarConfig,
+  ponerRuta,
+  type Config,
+} from '@/lib/comercializadora/config';
 
 export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
@@ -259,4 +274,222 @@ export async function guardarMinimo(
   const d = r.datos as { enviado?: boolean; error?: string };
   revalidatePath('/comercializadora', 'layout');
   return d.enviado ? { ok: true, enviado: true } : { ok: true, enviado: false, aviso: d.error };
+}
+
+export interface FormAjuste3pl {
+  realizado: string;
+  autorizado: string;
+  fecha_conteo: string;
+  motivo: string;
+  lineas: { sku: string; actual: number | null; nuevo: number; costo: number | null }[];
+}
+
+const MOTIVOS_AJUSTE = ['Conteo físico', 'Merma', 'Reposición', 'Corrección de error', 'Ingreso 3PL', 'Otro'];
+
+/** Ajuste/conteo de 3PL (plan 3b, decisiones 2 y 3): valida como _comGuardarAjuste/_planConteoGuardar y aplica todo o nada. */
+export async function ajustar3pl(f: FormAjuste3pl): Promise<Resultado<{ aplicadas: number }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    if (!f.autorizado?.trim()) return { error: 'Selecciona quién autoriza este ajuste' };
+    if (f.fecha_conteo && f.fecha_conteo > hoyCdmx())
+      return { error: 'La fecha del conteo no puede ser futura' };
+    if (!MOTIVOS_AJUSTE.includes(f.motivo)) return { error: 'Elige el motivo del ajuste' };
+    if (!f.lineas.length) return { error: 'Agrega al menos una línea' };
+    for (const l of f.lineas) {
+      if (!(Number.isFinite(l.nuevo) && l.nuevo >= 0))
+        return { error: `${l.sku}: el ajuste dejaría el saldo en ${l.nuevo} — no puede ser negativo` };
+    }
+    const r = await com(s.db).rpc('com_ajustar_3pl', {
+      p_lineas: f.lineas,
+      p_realizado: f.realizado?.trim() || s.perfil.nombre,
+      p_autorizado: f.autorizado.trim(),
+      p_fecha_conteo: f.fecha_conteo || null,
+      p_motivo: f.motivo,
+    });
+    if (r.error) return r.error.code === 'P0001' ? { error: String(r.error.message) } : fallo(r.error);
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, aplicadas: Number(r.data) || 0 };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** Historial del plan (_planCfgLog): autor y hora los pone el trigger com_plan_sello_usuario. */
+async function registrarHistorial(
+  db: unknown,
+  ambito: string,
+  clave: string,
+  antes: unknown,
+  despues: unknown,
+) {
+  await com(db)
+    .from('com_plan_config_historial')
+    .insert({ ambito, clave, valor_anterior: antes ?? null, valor_nuevo: despues ?? null });
+}
+
+/** _planEditarCampo: lead time en com_lead_times (upsert); el resto en com_catalogo. Registra historial ambito 'sku'. */
+export async function guardarCampoCatalogo(
+  sku: string,
+  campo: CampoCatalogo,
+  txt: string,
+): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    if (!(campo in CAMPOS_CATALOGO)) return { error: 'Campo no válido' };
+    const v = validarCampo(campo, txt);
+    if ('error' in v) return v;
+    if (campo === 'lt') {
+      const antes = await com(s.db).from('com_lead_times').select('dias').eq('sku', sku).maybeSingle();
+      if (antes.error) return fallo(antes.error);
+      const r = antes.data
+        ? await com(s.db).from('com_lead_times').update({ dias: v.valor }).eq('sku', sku).select('sku')
+        : await com(s.db).from('com_lead_times').insert({ sku, dias: v.valor }).select('sku');
+      if (r.error) return fallo(r.error);
+      await registrarHistorial(s.db, 'sku', `${sku}:lead_time`, antes.data?.dias ?? null, v.valor);
+    } else {
+      const col = CAMPOS_CATALOGO[campo].columna;
+      const antes = await com(s.db).from('com_catalogo').select(col).eq('sku', sku).maybeSingle();
+      if (antes.error) return fallo(antes.error);
+      if (!antes.data) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+      const r = await com(s.db)
+        .from('com_catalogo')
+        .update({ [col]: v.valor })
+        .eq('sku', sku)
+        .select('sku');
+      if (r.error) return fallo(r.error);
+      if (!r.data?.length)
+        return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+      await registrarHistorial(s.db, 'sku', `${sku}:${col}`, antes.data[col] ?? null, v.valor);
+    }
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comEditarMinMax: mínimo/máximo manual (vacío = calculado); minimo/maximo se recalculan solos (columnas generadas). */
+export async function guardarMinMaxManual(sku: string, minTxt: string, maxTxt: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const v = validarMinMax(minTxt, maxTxt);
+    if ('error' in v) return v;
+    const antes = await com(s.db)
+      .from('com_minmax')
+      .select('minimo_manual,maximo_manual')
+      .eq('sku', sku)
+      .maybeSingle();
+    if (antes.error) return fallo(antes.error);
+    if (!antes.data) return { error: 'Ese artículo no tiene mín/máx calculado todavía' };
+    const nuevo = { minimo_manual: v.min, maximo_manual: v.max };
+    const r = await com(s.db).from('com_minmax').update(nuevo).eq('sku', sku).select('sku');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+    await registrarHistorial(s.db, 'minmax', sku, antes.data, nuevo);
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comKitEditar: kit manual ≥ 0 o vacío (= usar el promedio calculado; kit es columna generada). */
+export async function guardarKitManual(sku: string, txt: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const t = String(txt ?? '')
+      .trim()
+      .replace(',', '.');
+    const manual = t === '' ? null : Number(t);
+    if (manual !== null && !(Number.isFinite(manual) && manual >= 0))
+      return {
+        error: 'Valor inválido: usa un número mayor o igual a 0, o déjalo vacío para usar el calculado',
+      };
+    const antes = await com(s.db).from('com_kit_apertura').select('manual').eq('sku', sku).maybeSingle();
+    if (antes.error) return fallo(antes.error);
+    const r = await com(s.db).from('com_kit_apertura').update({ manual }).eq('sku', sku).select('sku');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+    await registrarHistorial(s.db, 'kit_apertura', sku, antes.data?.manual ?? null, manual);
+    revalidatePath('/comercializadora/kit');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comKitRecalcular: com-minmax recalcula el kit, el mín/máx y la proyección. */
+export async function recalcularKit(): Promise<Resultado<{ skus: number }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const r = await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS });
+  if (!r.ok) return { error: r.error };
+  revalidatePath('/comercializadora', 'layout');
+  return { ok: true, skus: Number((r.datos as { skus?: number }).skus) || 0 };
+}
+
+/**
+ * _planCfgGuardar: solo los campos editables del portal se toman del borrador (lo demás se conserva tal cual de la
+ * base, incluido auto.modo: plan 3b, decisiones 7 y 8). Update condicionado a la misma versión; historial por cambio;
+ * recalcula com-minmax si algún cambio toca el servidor.
+ */
+export async function guardarConfig(
+  borrador: Config,
+  version: number,
+): Promise<Resultado<{ version: number; cambios: number; recalculo: boolean | null }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const actual = await com(s.db).from('com_plan_config').select('config,version').eq('id', 1).maybeSingle();
+    if (actual.error) return fallo(actual.error);
+    if (!actual.data) return { error: 'No hay configuración guardada todavía' };
+    if (Number(actual.data.version) !== Number(version))
+      return {
+        error:
+          'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.',
+      };
+    const antes = normalizarConfig(actual.data.config);
+    let nuevo: Config = actual.data.config ?? {};
+    const normal = normalizarConfig(borrador);
+    for (const c of CAMPOS_CONFIG) nuevo = ponerRuta(nuevo, c.ruta, leerRuta(normal, c.ruta));
+    nuevo = ponerRuta(nuevo, 'temp.mes', leerRuta(normal, 'temp.mes'));
+    nuevo = ponerRuta(nuevo, 'eventos', leerRuta(normal, 'eventos'));
+    nuevo = ponerRuta(nuevo, 'auto.correos', leerRuta(normal, 'auto.correos'));
+    const despues = normalizarConfig(nuevo);
+    const cambios = difConfig(antes, despues);
+    if (!cambios.length) return { error: 'No hay cambios que guardar' };
+    const r = await com(s.db)
+      .from('com_plan_config')
+      .update({ config: nuevo, version: Number(version) + 1 })
+      .eq('id', 1)
+      .eq('version', version)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length)
+      return {
+        error:
+          'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.',
+      };
+    await com(s.db)
+      .from('com_plan_config_historial')
+      .insert(
+        cambios.map((c) => ({
+          ambito: 'config',
+          clave: c.clave,
+          valor_anterior: c.antes,
+          valor_nuevo: c.despues,
+        })),
+      );
+    const re = cambios.some((c) => claveServidor(c.clave))
+      ? await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS })
+      : null;
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, version: Number(version) + 1, cambios: cambios.length, recalculo: re ? re.ok : null };
+  } catch (e) {
+    return fallo(e);
+  }
 }

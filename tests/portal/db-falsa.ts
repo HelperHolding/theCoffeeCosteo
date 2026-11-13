@@ -8,6 +8,7 @@ type Fila = Record<string, unknown>;
 export function dbFalsa(
   tablas: Record<string, Fila[]>,
   fallar: { tabla: string; op: string; veces?: number }[] = [],
+  rpc?: (fn: string, args: unknown) => { data: unknown; error: unknown },
 ) {
   let sec = 1000;
   const consultas: { tabla: string; op: string; datos?: unknown }[] = [];
@@ -46,7 +47,10 @@ export function dbFalsa(
         tablas[tabla] = t.filter((f) => !c.includes(f));
         return { data: c, error: null };
       }
-      const c = coinciden().slice(0, tope);
+      // Copias, como PostgREST: un update posterior no debe cambiar lo que ya se leyó.
+      const c = coinciden()
+        .slice(0, tope)
+        .map((f) => structuredClone(f));
       return { data: unico ? (c[0] ?? null) : c, error: null };
     };
     const q = {
@@ -65,5 +69,12 @@ export function dbFalsa(
     };
     return q;
   };
-  return { db: { from }, tablas, consultas };
+  return {
+    db: {
+      from,
+      rpc: async (fn: string, args: unknown) => (rpc ? rpc(fn, args) : { data: null, error: null }),
+    },
+    tablas,
+    consultas,
+  };
 }
