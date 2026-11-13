@@ -75,3 +75,18 @@ export async function cancelarCierre(id: number): Promise<Resultado<{ recalculo:
     return fallo(e);
   }
 }
+
+export async function correrOcAuto(
+  modo: 'simulacion' | 'real',
+): Promise<Resultado<{ ocs: number; modo: string }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const r = await invocarFuncion('zoho-generar-oc', {
+    origen: 'manual',
+    modo: modo === 'real' ? 'real' : 'simulacion',
+  });
+  if (!r.ok) return { error: r.error };
+  const d = r.datos as { ocs?: number; modo?: string };
+  revalidatePath('/comercializadora', 'layout');
+  return { ok: true, ocs: Number(d.ocs) || 0, modo: String(d.modo ?? modo) };
+}

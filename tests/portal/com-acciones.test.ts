@@ -34,7 +34,11 @@ vi.mock('../../lib/supabase/sesion', () => ({
     };
   },
 }));
-import { cancelarCierre, guardarCierre } from '../../app/(comercializadora)/comercializadora/acciones';
+import {
+  cancelarCierre,
+  correrOcAuto,
+  guardarCierre,
+} from '../../app/(comercializadora)/comercializadora/acciones';
 
 const form = {
   vendor_id: 'v1',
@@ -84,5 +88,31 @@ describe('acciones de cierres', () => {
     m.invocar.mockResolvedValueOnce({ ok: false, error: 'Zoho caído' } as never);
     expect(await cancelarCierre(3)).toEqual({ ok: true, recalculo: false });
     expect(m.escrito[0]).toMatchObject({ op: 'update', datos: { cancelado: true } });
+  });
+});
+
+describe('correr OC automática', () => {
+  beforeEach(() => {
+    m.nivel = 'edicion';
+    m.invocar.mockReset();
+  });
+  it('lectura no corre', async () => {
+    m.nivel = 'lectura';
+    expect(await correrOcAuto('simulacion')).toEqual({
+      error: 'Tu acceso a Comercializadora es de solo lectura.',
+    });
+    expect(m.invocar).not.toHaveBeenCalled();
+  });
+  it('simulación llama zoho-generar-oc manual y regresa el resumen', async () => {
+    m.invocar.mockResolvedValueOnce({ ok: true, datos: { ok: true, ocs: 5, modo: 'simulacion' } } as never);
+    expect(await correrOcAuto('simulacion')).toEqual({ ok: true, ocs: 5, modo: 'simulacion' });
+    expect(m.invocar).toHaveBeenCalledWith('zoho-generar-oc', { origen: 'manual', modo: 'simulacion' });
+  });
+  it('el error de la función llega tal cual', async () => {
+    m.invocar.mockResolvedValueOnce({
+      ok: false,
+      error: 'Las OCs automáticas están en modo simulación',
+    } as never);
+    expect(await correrOcAuto('real')).toEqual({ error: 'Las OCs automáticas están en modo simulación' });
   });
 });
