@@ -6,6 +6,7 @@ import { invocarFuncion } from '@/lib/comercializadora/funciones';
 import { validarCierre, type FormCierre } from '@/lib/comercializadora/cierres';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
+import { validarMonto } from '@/lib/comercializadora/minimos';
 
 export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
@@ -179,4 +180,20 @@ export async function eliminarOc(folio: string): Promise<Resultado> {
   } catch (e) {
     return fallo(e);
   }
+}
+
+/** _minGuardar: la función guarda en la plataforma y envía a Zoho; lo guardado queda aunque Zoho falle. */
+export async function guardarMinimo(
+  vendor_id: string,
+  monto: string,
+): Promise<Resultado<{ enviado: boolean; aviso?: string }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const valor = validarMonto(monto);
+  if (valor === null) return { error: 'Monto inválido: usa pesos con hasta 2 decimales' };
+  const r = await invocarFuncion('zoho-proveedor-minimo', { vendor_id, monto: valor, por: s.perfil.nombre });
+  if (!r.ok) return { error: r.error };
+  const d = r.datos as { enviado?: boolean; error?: string };
+  revalidatePath('/comercializadora', 'layout');
+  return d.enviado ? { ok: true, enviado: true } : { ok: true, enviado: false, aviso: d.error };
 }

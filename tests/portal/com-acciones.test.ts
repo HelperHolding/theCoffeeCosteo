@@ -152,3 +152,41 @@ describe('acciones de órdenes', () => {
     ]);
   });
 });
+
+import { guardarMinimo } from '../../app/(comercializadora)/comercializadora/acciones';
+
+describe('guardar mínimo', () => {
+  beforeEach(() => {
+    m.nivel = 'edicion';
+    m.invocar.mockReset();
+  });
+  it('lectura no llama la función', async () => {
+    m.nivel = 'lectura';
+    expect(await guardarMinimo('v1', '1000')).toEqual({
+      error: 'Tu acceso a Comercializadora es de solo lectura.',
+    });
+    expect(m.invocar).not.toHaveBeenCalled();
+  });
+  it('monto inválido no llama la función', async () => {
+    expect(await guardarMinimo('v1', '1,5')).toEqual({
+      error: 'Monto inválido: usa pesos con hasta 2 decimales',
+    });
+    expect(m.invocar).not.toHaveBeenCalled();
+  });
+  it('llama zoho-proveedor-minimo con autor; si Zoho falla queda guardado y pendiente', async () => {
+    m.invocar.mockResolvedValueOnce({
+      ok: true,
+      datos: { ok: true, enviado: false, error: 'Zoho en modo sin efectos externos' },
+    } as never);
+    expect(await guardarMinimo('v1', '$2,500')).toEqual({
+      ok: true,
+      enviado: false,
+      aviso: 'Zoho en modo sin efectos externos',
+    });
+    expect(m.invocar).toHaveBeenCalledWith('zoho-proveedor-minimo', {
+      vendor_id: 'v1',
+      monto: 2500,
+      por: 'Ana',
+    });
+  });
+});
