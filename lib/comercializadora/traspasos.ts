@@ -51,9 +51,10 @@ export function agruparTraspasos(filas: MovTraspaso[]): GrupoTraspaso[] {
     .sort((a, b) => String(b.fecha ?? '').localeCompare(String(a.fecha ?? '')));
 }
 
-/** Detalle del viejo: ordenado = original; ingresado = cantidad solo si ya hay original guardado. */
-export function detalleTraspaso(r: MovTraspaso) {
+/** _comDetTraspaso: ordenado = original; ingresado y diferencia solo cuando la línea ya se ingresó (si no, vacíos). */
+export function detalleTraspaso(r: MovTraspaso): { ord: number; ing: number | null; dif: number | null } {
   const ord = n(r.cantidad_original ?? r.cantidad);
+  if (r.estado !== 'ingresado') return { ord, ing: null, dif: null };
   const ing = r.cantidad_original != null ? n(r.cantidad) : ord;
   return { ord, ing, dif: ing - ord };
 }
@@ -65,6 +66,11 @@ export function validarTraspaso(f: FormTraspaso, skus: Set<string>): string | nu
   const lugar = (x: string) => (LUGARES as readonly string[]).includes(x);
   if (!lugar(f.origen) || !lugar(f.destino)) return 'Elige el origen y el destino';
   if (f.origen === f.destino) return 'El origen y el destino deben ser distintos';
+  // Una línea con SKU y cantidad no numérica, infinita o negativa es un error; 0 o vacía se descarta (como el viejo).
+  const mala = f.lineas.find(
+    (l) => l.sku.trim() && !(Number.isFinite(Number(l.cantidad)) && Number(l.cantidad) >= 0),
+  );
+  if (mala) return `${mala.sku.trim()}: cantidad inválida (usa un número)`;
   const lineas = f.lineas.filter((l) => l.sku.trim() && Number(l.cantidad) > 0);
   if (!lineas.length) return 'Agrega al menos un artículo con cantidad';
   const malo = lineas.find((l) => !skus.has(l.sku.trim()));

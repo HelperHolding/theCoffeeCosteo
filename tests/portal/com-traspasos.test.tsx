@@ -73,11 +73,9 @@ describe('Traspasos (port de renderComTraspasos)', () => {
       ing: 4,
       dif: -1,
     });
-    expect(detalleTraspaso(t({ cantidad: 5, cantidad_original: null }) as never)).toEqual({
-      ord: 5,
-      ing: 5,
-      dif: 0,
-    });
+    expect(
+      detalleTraspaso(t({ cantidad: 5, cantidad_original: null, estado: 'ingresado' }) as never),
+    ).toEqual({ ord: 5, ing: 5, dif: 0 });
   });
 
   it('validación: referencia, fecha, origen ≠ destino, al menos una línea y SKUs del catálogo', () => {

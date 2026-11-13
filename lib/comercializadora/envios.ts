@@ -58,9 +58,11 @@ export function agruparVentas(filas: MovVenta[]): GrupoVenta[] {
     .sort((a, b) => String(a.fecha_envio ?? '').localeCompare(String(b.fecha_envio ?? '')));
 }
 
+/** Por enviar es una cola (lo más antiguo primero); Enviados y Todos muestran primero lo más reciente. */
 export function filtrarEnvios(g: GrupoVenta[], v: VistaEnvios): GrupoVenta[] {
-  if (v === 'todos') return g;
-  return g.filter((x) => x.estado === (v === 'enviados' ? 'enviado' : 'por_enviar'));
+  if (v === 'por_enviar') return g.filter((x) => x.estado === 'por_enviar');
+  const r = v === 'todos' ? [...g] : g.filter((x) => x.estado === 'enviado');
+  return r.sort((a, b) => String(b.fecha_envio ?? '').localeCompare(String(a.fecha_envio ?? '')));
 }
 
 export function conteoEnvios(g: GrupoVenta[]): Record<VistaEnvios, number> {

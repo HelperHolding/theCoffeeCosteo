@@ -6,6 +6,7 @@ import { claseCampo } from '@/lib/crm/formato';
 import { numero } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
 import { textoDestino } from '@/lib/comercializadora/ordenes';
+import { cantidadConteo } from '@/lib/comercializadora/inventario';
 import {
   detalleTraspaso,
   folioTraspaso,
@@ -57,7 +58,11 @@ export function Traspasos(p: {
       fecha,
       origen,
       destino,
-      lineas: lineas.map((l) => ({ sku: l.sku, cantidad: Number(l.cantidad.replace(',', '.')) || 0 })),
+      // Igual que al ingresar: "1,500" son 1500 piezas; vacío = 0 (se descarta); texto = NaN (error de validación).
+      lineas: lineas.map((l) => ({
+        sku: l.sku,
+        cantidad: l.cantidad.trim() === '' ? 0 : (cantidadConteo(l.cantidad) ?? NaN),
+      })),
     };
     const error = validarTraspaso(f, skus);
     if (error) return setMsg({ ok: false, t: error });
@@ -252,10 +257,15 @@ export function Traspasos(p: {
                               <tr key={i.id}>
                                 <td className="pr-3">{i.sku}</td>
                                 <td className="pr-3 text-right">ordenado {numero(d.ord)}</td>
-                                <td className="pr-3 text-right">ingresado {numero(d.ing)}</td>
-                                <td className={d.dif < 0 ? 'text-bad' : d.dif > 0 ? 'text-ok' : ''}>
-                                  {d.dif > 0 ? '+' : ''}
-                                  {numero(d.dif)}
+                                <td className="pr-3 text-right">
+                                  ingresado {d.ing == null ? '—' : numero(d.ing)}
+                                </td>
+                                <td
+                                  className={
+                                    d.dif == null ? '' : d.dif < 0 ? 'text-bad' : d.dif > 0 ? 'text-ok' : ''
+                                  }
+                                >
+                                  {d.dif == null ? '—' : `${d.dif > 0 ? '+' : ''}${numero(d.dif)}`}
                                 </td>
                               </tr>
                             );
