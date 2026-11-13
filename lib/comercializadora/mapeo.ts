@@ -57,7 +57,11 @@ export function filasMapeo(
 }
 
 /** norm() del viejo: sin acentos y en minúsculas. */
-export const sinAcentos = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+export const sinAcentos = (t: string) =>
+  t
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
 export function filtrarMapeo(
   filas: FilaMapeo[],
