@@ -1,6 +1,6 @@
 /**
  * Base en memoria con la parte de la API de supabase-js que usan las acciones de Comercializadora:
- * from(t).select/insert/update/delete + eq/in/limit/maybeSingle, y await sobre la consulta.
+ * from(t).select/insert/update/upsert/delete + eq/neq/in/limit/range/maybeSingle, y await sobre la consulta.
  * `fallar` hace que una operación sobre una tabla devuelva error (para probar compensaciones).
  */
 type Fila = Record<string, unknown>;
@@ -17,6 +17,8 @@ export function dbFalsa(
     let datos: unknown;
     let unico = false;
     let tope = Infinity;
+    let desde = 0;
+    let conflicto = 'id';
     const filtros: ((f: Fila) => boolean)[] = [];
     const ejecutar = () => {
       consultas.push({ tabla, op: op || 'select', datos });
@@ -37,6 +39,17 @@ export function dbFalsa(
         t.push(...nuevas);
         return { data: nuevas, error: null };
       }
+      if (op === 'upsert') {
+        const filas = (Array.isArray(datos) ? datos : [datos]) as Fila[];
+        const res = filas.map((d) => {
+          const ya = t.find((f) => String(f[conflicto]) === String(d[conflicto]));
+          if (ya) return Object.assign(ya, d);
+          const nueva = { id: String(sec++), ...d };
+          t.push(nueva);
+          return nueva;
+        });
+        return { data: res, error: null };
+      }
       if (op === 'update') {
         const c = coinciden();
         c.forEach((f) => Object.assign(f, datos as Fila));
@@ -49,7 +62,7 @@ export function dbFalsa(
       }
       // Copias, como PostgREST: un update posterior no debe cambiar lo que ya se leyó.
       const c = coinciden()
-        .slice(0, tope)
+        .slice(desde, desde + tope)
         .map((f) => structuredClone(f));
       return { data: unico ? (c[0] ?? null) : c, error: null };
     };
@@ -58,6 +71,14 @@ export function dbFalsa(
       insert: (d: unknown) => ((op = 'insert'), (datos = d), q),
       update: (d: unknown) => ((op = 'update'), (datos = d), q),
       delete: () => ((op = 'delete'), q),
+      upsert: (d: unknown, o?: { onConflict?: string }) => (
+        (op = 'upsert'),
+        (datos = d),
+        (conflicto = o?.onConflict ?? 'id'),
+        q
+      ),
+      neq: (k: string, v: unknown) => (filtros.push((f) => String(f[k]) !== String(v)), q),
+      range: (a: number, b: number) => ((desde = a), (tope = b - a + 1), q),
       eq: (k: string, v: unknown) => (filtros.push((f) => String(f[k]) === String(v)), q),
       in: (k: string, vs: unknown[]) => (filtros.push((f) => vs.map(String).includes(String(f[k]))), q),
       gte: (k: string, v: unknown) => (filtros.push((f) => String(f[k]) >= String(v)), q),
