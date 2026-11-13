@@ -24,6 +24,8 @@ import {
   guardarOc,
   recibirOc,
   ajustar3pl,
+  guardarCampoCatalogo,
+  guardarMinMaxManual,
 } from '../../app/(comercializadora)/comercializadora/acciones';
 import { cierresVigentes } from '../../lib/comercializadora/consultas';
 import { alcanceCambio, fechasCambiaron } from '../../lib/comercializadora/cierres';
@@ -352,6 +354,40 @@ describe('plan 3b · ajuste de 3PL', () => {
     };
     expect(await ajustar3pl(form)).toEqual({
       error: 'El saldo de A cambió desde que lo viste; revisa y vuelve a guardar',
+    });
+  });
+});
+
+describe('plan 3b · catálogo', () => {
+  it('lead time hace upsert en com_lead_times y registra historial con el valor anterior', async () => {
+    const f = dbFalsa({ com_lead_times: [{ sku: 'A', dias: 5 }], com_catalogo: [{ sku: 'A' }] });
+    m.db = f.db;
+    expect(await guardarCampoCatalogo('A', 'lt', '9')).toEqual({ ok: true });
+    expect(f.tablas.com_lead_times).toEqual([{ sku: 'A', dias: 9 }]);
+    expect(f.tablas.com_plan_config_historial[0]).toMatchObject({
+      ambito: 'sku',
+      clave: 'A:lead_time',
+      valor_anterior: 5,
+      valor_nuevo: 9,
+    });
+    expect(await guardarCampoCatalogo('B', 'lt', '3')).toEqual({ ok: true });
+    expect(f.tablas.com_lead_times).toContainEqual(expect.objectContaining({ sku: 'B', dias: 3 }));
+  });
+  it('campo de com_catalogo inexistente: "el artículo ya no existe"', async () => {
+    m.db = dbFalsa({ com_catalogo: [] }).db;
+    expect(await guardarCampoCatalogo('Z', 'multiplo', '2')).toEqual({
+      error: 'Sin permiso para modificar este dato o el artículo ya no existe',
+    });
+  });
+  it('mín/máx manual: actualiza com_minmax y registra ambito minmax', async () => {
+    const f = dbFalsa({ com_minmax: [{ sku: 'A', minimo_manual: null, maximo_manual: null }] });
+    m.db = f.db;
+    expect(await guardarMinMaxManual('A', '10', '20')).toEqual({ ok: true });
+    expect(f.tablas.com_minmax[0]).toMatchObject({ minimo_manual: 10, maximo_manual: 20 });
+    expect(f.tablas.com_plan_config_historial[0]).toMatchObject({
+      ambito: 'minmax',
+      clave: 'A',
+      valor_nuevo: { minimo_manual: 10, maximo_manual: 20 },
     });
   });
 });

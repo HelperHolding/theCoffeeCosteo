@@ -47,7 +47,10 @@ export function dbFalsa(
         tablas[tabla] = t.filter((f) => !c.includes(f));
         return { data: c, error: null };
       }
-      const c = coinciden().slice(0, tope);
+      // Copias, como PostgREST: un update posterior no debe cambiar lo que ya se leyó.
+      const c = coinciden()
+        .slice(0, tope)
+        .map((f) => structuredClone(f));
       return { data: unico ? (c[0] ?? null) : c, error: null };
     };
     const q = {

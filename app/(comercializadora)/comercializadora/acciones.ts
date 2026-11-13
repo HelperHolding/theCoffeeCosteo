@@ -13,6 +13,12 @@ import { com } from '@/lib/comercializadora/consultas';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
 import { validarMonto } from '@/lib/comercializadora/minimos';
+import {
+  CAMPOS_CATALOGO,
+  validarCampo,
+  validarMinMax,
+  type CampoCatalogo,
+} from '@/lib/comercializadora/catalogo';
 
 export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
@@ -295,6 +301,87 @@ export async function ajustar3pl(f: FormAjuste3pl): Promise<Resultado<{ aplicada
     if (r.error) return r.error.code === 'P0001' ? { error: String(r.error.message) } : fallo(r.error);
     revalidatePath('/comercializadora', 'layout');
     return { ok: true, aplicadas: Number(r.data) || 0 };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** Historial del plan (_planCfgLog): autor y hora los pone el trigger com_plan_sello_usuario. */
+async function registrarHistorial(
+  db: unknown,
+  ambito: string,
+  clave: string,
+  antes: unknown,
+  despues: unknown,
+) {
+  await com(db)
+    .from('com_plan_config_historial')
+    .insert({ ambito, clave, valor_anterior: antes ?? null, valor_nuevo: despues ?? null });
+}
+
+/** _planEditarCampo: lead time en com_lead_times (upsert); el resto en com_catalogo. Registra historial ambito 'sku'. */
+export async function guardarCampoCatalogo(
+  sku: string,
+  campo: CampoCatalogo,
+  txt: string,
+): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    if (!(campo in CAMPOS_CATALOGO)) return { error: 'Campo no válido' };
+    const v = validarCampo(campo, txt);
+    if ('error' in v) return v;
+    if (campo === 'lt') {
+      const antes = await com(s.db).from('com_lead_times').select('dias').eq('sku', sku).maybeSingle();
+      if (antes.error) return fallo(antes.error);
+      const r = antes.data
+        ? await com(s.db).from('com_lead_times').update({ dias: v.valor }).eq('sku', sku).select('sku')
+        : await com(s.db).from('com_lead_times').insert({ sku, dias: v.valor }).select('sku');
+      if (r.error) return fallo(r.error);
+      await registrarHistorial(s.db, 'sku', `${sku}:lead_time`, antes.data?.dias ?? null, v.valor);
+    } else {
+      const col = CAMPOS_CATALOGO[campo].columna;
+      const antes = await com(s.db).from('com_catalogo').select(col).eq('sku', sku).maybeSingle();
+      if (antes.error) return fallo(antes.error);
+      if (!antes.data) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+      const r = await com(s.db)
+        .from('com_catalogo')
+        .update({ [col]: v.valor })
+        .eq('sku', sku)
+        .select('sku');
+      if (r.error) return fallo(r.error);
+      if (!r.data?.length)
+        return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+      await registrarHistorial(s.db, 'sku', `${sku}:${col}`, antes.data[col] ?? null, v.valor);
+    }
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comEditarMinMax: mínimo/máximo manual (vacío = calculado); minimo/maximo se recalculan solos (columnas generadas). */
+export async function guardarMinMaxManual(sku: string, minTxt: string, maxTxt: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const v = validarMinMax(minTxt, maxTxt);
+    if ('error' in v) return v;
+    const antes = await com(s.db)
+      .from('com_minmax')
+      .select('minimo_manual,maximo_manual')
+      .eq('sku', sku)
+      .maybeSingle();
+    if (antes.error) return fallo(antes.error);
+    if (!antes.data) return { error: 'Ese artículo no tiene mín/máx calculado todavía' };
+    const nuevo = { minimo_manual: v.min, maximo_manual: v.max };
+    const r = await com(s.db).from('com_minmax').update(nuevo).eq('sku', sku).select('sku');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+    await registrarHistorial(s.db, 'minmax', sku, antes.data, nuevo);
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true };
   } catch (e) {
     return fallo(e);
   }
