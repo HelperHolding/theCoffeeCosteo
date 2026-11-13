@@ -76,7 +76,9 @@ describe('migración 49', () => {
         db.query(`select com_ingresar_traspaso('T-1', $1::jsonb)`, [JSON.stringify({ t1: 5, t2: 3 })]),
       ),
     ).rejects.toThrow(/ya se ingresó/);
-    const s = await db.query<{ y: number }>(`select saldo_yulius::float8 y from com_catalogo where sku = 'A'`);
+    const s = await db.query<{ y: number }>(
+      `select saldo_yulius::float8 y from com_catalogo where sku = 'A'`,
+    );
     expect(s.rows[0].y).toBe(15);
   });
 
@@ -92,9 +94,13 @@ describe('migración 49', () => {
         db.query(`select com_ingresar_traspaso('T-1', $1::jsonb)`, [JSON.stringify({ t1: -1, t2: 3 })]),
       ),
     ).rejects.toThrow(/Falta la cantidad recibida de A/);
-    const m = await db.query<{ estado: string }>(`select distinct estado from com_movimientos where folio = 'T-1'`);
+    const m = await db.query<{ estado: string }>(
+      `select distinct estado from com_movimientos where folio = 'T-1'`,
+    );
     expect(m.rows).toEqual([{ estado: 'ordenado' }]);
-    const s = await db.query<{ y: number }>(`select saldo_yulius::float8 y from com_catalogo where sku = 'A'`);
+    const s = await db.query<{ y: number }>(
+      `select saldo_yulius::float8 y from com_catalogo where sku = 'A'`,
+    );
     expect(s.rows[0].y).toBe(10);
   });
 
@@ -119,7 +125,9 @@ describe('migración 49', () => {
         db.query(`select com_ingresar_traspaso('T-1', $1::jsonb)`, [JSON.stringify({ t1: 5, t2: 3 })]),
       ),
     ).rejects.toThrow();
-    const s = await db.query<{ y: number }>(`select saldo_yulius::float8 y from com_catalogo where sku = 'A'`);
+    const s = await db.query<{ y: number }>(
+      `select saldo_yulius::float8 y from com_catalogo where sku = 'A'`,
+    );
     expect(s.rows[0].y).toBe(10);
   });
 });
