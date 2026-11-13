@@ -35,7 +35,9 @@ export function Catalogo(p: {
   const [q, setQ] = useState('');
   const [ver, setVer] = useState(POR_PAGINA);
   const [msg, setMsg] = useState<Record<string, { ok: boolean; t: string }>>({});
-  const [pendiente, iniciar] = useTransition();
+  const [, iniciar] = useTransition();
+  // Solo se bloquea la celda que se está guardando: pasar con Tab a la siguiente no pierde lo que se escribe.
+  const [guardando, setGuardando] = useState<Record<string, boolean>>({});
   const texto = q.trim().toLowerCase();
   const visibles = p.filas.filter(
     (f) =>
@@ -51,7 +53,9 @@ export function Catalogo(p: {
 
   const correr = (clave: string, fn: () => Promise<{ error: string } | { ok: true }>) =>
     iniciar(async () => {
+      setGuardando((g) => ({ ...g, [clave]: true }));
       const r = await fn();
+      setGuardando((g) => ({ ...g, [clave]: false }));
       setMsg((m) => ({
         ...m,
         [clave]: 'error' in r ? { ok: false, t: r.error } : { ok: true, t: 'Guardado' },
@@ -66,6 +70,8 @@ export function Catalogo(p: {
       <td key={campo} className="min-w-28 text-right">
         {p.editable ? (
           <input
+            // La llave incluye el valor: tras guardar, la celda muestra el valor normalizado y no se vuelve a guardar.
+            key={`${clave}:${valor ?? ''}`}
             aria-label={`${CAMPOS_CATALOGO[campo].etiqueta} de ${f.sku}`}
             inputMode="decimal"
             defaultValue={valor == null ? '' : String(valor)}
@@ -74,7 +80,7 @@ export function Catalogo(p: {
                 correr(clave, () => guardarCampoCatalogo(f.sku, campo, e.target.value));
             }}
             className={`${claseCampo} h-9 text-right`}
-            disabled={pendiente}
+            disabled={!!guardando[clave]}
           />
         ) : (
           <span className="tabular-nums">{valor == null ? '—' : numero(Number(valor))}</span>
@@ -151,6 +157,7 @@ export function Catalogo(p: {
                             }}
                           >
                             <input
+                              key={`min:${mm.minimo_manual ?? ''}`}
                               name="min"
                               aria-label={`Mínimo manual de ${f.sku}`}
                               placeholder={numero(mm.minimo_calc)}
@@ -158,6 +165,7 @@ export function Catalogo(p: {
                               className={`${claseCampo} h-9 max-w-20 text-right`}
                             />
                             <input
+                              key={`max:${mm.maximo_manual ?? ''}`}
                               name="max"
                               aria-label={`Máximo manual de ${f.sku}`}
                               placeholder={numero(mm.maximo_calc)}
@@ -166,7 +174,7 @@ export function Catalogo(p: {
                             />
                             <button
                               type="submit"
-                              disabled={pendiente}
+                              disabled={!!guardando[clave]}
                               className="h-9 rounded-[10px] border border-line-strong px-2 text-xs font-semibold"
                             >
                               Guardar

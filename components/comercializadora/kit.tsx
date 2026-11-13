@@ -75,6 +75,8 @@ export function Kit({
                 <td className="min-w-28 text-right">
                   {editable ? (
                     <input
+                      // La llave incluye el valor: tras guardar, muestra el normalizado y no se vuelve a guardar.
+                      key={`${k.sku}:${k.manual ?? ''}`}
                       aria-label={`Kit manual de ${k.sku}`}
                       inputMode="decimal"
                       defaultValue={k.manual ?? ''}

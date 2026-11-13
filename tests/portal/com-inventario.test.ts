@@ -104,3 +104,20 @@ describe('conteo (port de _planConteoCantidad y _planConteoPegar)', () => {
     ]);
   });
 });
+
+describe('revisión final · números del conteo y del ajuste', () => {
+  it('punto con tres decimales NO son miles si no hay coma decimal (como _planConteoCantidad)', async () => {
+    expect(cantidadConteo('0.250')).toBe(0.25);
+    expect(cantidadConteo('12.125')).toBe(12.125);
+    expect(cantidadConteo('1.500')).toBe(1.5);
+    expect(cantidadConteo('1.200,50')).toBe(1200.5);
+  });
+  it('sumar/restar: signo aparte, miles con coma, vacío inválido', async () => {
+    const { cantidadAjuste } = await import('../../lib/comercializadora/inventario');
+    expect(cantidadAjuste('1,200')).toBe(1200);
+    expect(cantidadAjuste('-1,200')).toBe(-1200);
+    expect(cantidadAjuste('-0.5')).toBe(-0.5);
+    expect(cantidadAjuste('')).toBeNull();
+    expect(cantidadAjuste('1,200,5')).toBeNull();
+  });
+});

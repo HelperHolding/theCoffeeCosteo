@@ -63,3 +63,25 @@ describe('configuración del cálculo', () => {
     expect(validarCorreos('')).toEqual({ correos: [] });
   });
 });
+
+describe('revisión final · edición de números y activaciones', () => {
+  it('numeroConfig: vacío o inválido conserva el valor previo; fuera de rango se acota; enteros se redondean', async () => {
+    const { numeroConfig } = await import('../../lib/comercializadora/config');
+    const lt = { min: 1, max: 365, entero: true };
+    expect(numeroConfig('', lt, 15)).toBe(15);
+    expect(numeroConfig('abc', lt, 15)).toBe(15);
+    expect(numeroConfig('500', lt, 15)).toBe(365);
+    expect(numeroConfig('7.6', lt, 15)).toBe(8);
+    expect(numeroConfig('0,5', { min: 0, max: 1 }, 0.1)).toBe(0.5);
+  });
+  it('validarEventos: nombre opcional, fechas obligatorias y fin ≥ inicio', async () => {
+    const { validarEventos } = await import('../../lib/comercializadora/config');
+    expect(validarEventos([{ nombre: 'Buen Fin', ini: '2026-11-13', fin: '2026-11-17' }])).toBeNull();
+    expect(validarEventos([{ nombre: 'Sin fechas', ini: '', fin: '' }])).toBe(
+      'La activación «Sin fechas» necesita fecha de inicio y de fin',
+    );
+    expect(validarEventos([{ nombre: '', ini: '2026-11-20', fin: '2026-11-10' }])).toBe(
+      'La activación 1 termina antes de empezar',
+    );
+  });
+});

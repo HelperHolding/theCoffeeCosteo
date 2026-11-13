@@ -187,3 +187,33 @@ export function validarCorreos(txt: string): { correos: string[] } | { error: st
       return { error: `Correo no válido: ${p}. Debe tener la forma nombre@dominio.com` };
   return { correos: [...new Set(partes.map((p) => p.toLowerCase()))].slice(0, 20) };
 }
+
+/**
+ * _planCfgNum con el valor previo como respaldo (_planCfgEdit): vacío o inválido conserva lo que había; fuera de rango
+ * se acota; los enteros se redondean. Acepta coma decimal.
+ */
+export function numeroConfig(
+  txt: string,
+  r: { min: number; max: number; entero?: boolean },
+  previo: number,
+): number {
+  const t = String(txt ?? '')
+    .trim()
+    .replace(',', '.');
+  const v = t === '' ? NaN : Number(t);
+  if (!Number.isFinite(v)) return previo;
+  const acotado = Math.min(r.max, Math.max(r.min, v));
+  return r.entero ? Math.round(acotado) : acotado;
+}
+
+/** Las activaciones sin fechas válidas se perderían al normalizar: se avisan antes de guardar. */
+export function validarEventos(eventos: { nombre?: string; ini?: string; fin?: string }[]): string | null {
+  for (const [i, ev] of eventos.entries()) {
+    const nombre = ev.nombre?.trim() ? `«${ev.nombre.trim()}»` : String(i + 1);
+    const fecha = /^20\d\d-\d\d-\d\d$/;
+    if (!fecha.test(ev.ini ?? '') || !fecha.test(ev.fin ?? ''))
+      return `La activación ${nombre} necesita fecha de inicio y de fin`;
+    if ((ev.fin ?? '') < (ev.ini ?? '')) return `La activación ${nombre} termina antes de empezar`;
+  }
+  return null;
+}

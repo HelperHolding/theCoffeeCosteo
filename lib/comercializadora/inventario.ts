@@ -127,12 +127,21 @@ export function cantidadConteo(txt: string): number | null {
     .trim()
     .replace(/\s/g, '');
   if (!t) return null;
-  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');
+  // Puntos de miles solo con coma decimal ("1.200,50"): "1.500" sin coma es 1.5, como en _planConteoCantidad.
+  if (/^\d{1,3}(\.\d{3})+,\d+$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');
   else if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, '');
-  else if (/^\d+,\d+$/.test(t)) t = t.replace(',', '.');
+  else if (/^\d+,\d{1,2}$/.test(t)) t = t.replace(',', '.');
   if (!/^\d+(\.\d+)?$/.test(t)) return null;
   const v = Number(t);
   return Number.isFinite(v) ? v : null;
+}
+
+/** Cantidad de "sumar / restar": el signo aparte y el resto como un conteo (miles con coma). Vacío → null. */
+export function cantidadAjuste(txt: string): number | null {
+  const t = String(txt ?? '').trim();
+  const neg = /^-/.test(t);
+  const c = cantidadConteo(t.replace(/^[-+]/, ''));
+  return c == null ? null : neg ? -c : c;
 }
 
 /** _planConteoPegar: líneas "SKU<sep>cantidad" (tab, ;, coma o espacio); suma repetidos; ignora encabezado y vacías. */

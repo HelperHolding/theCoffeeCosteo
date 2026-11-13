@@ -4,6 +4,7 @@ import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { com, leerTodoCom } from '@/lib/comercializadora/consultas';
 import { normalizarConfig } from '@/lib/comercializadora/config';
+import { hoyCdmx } from '@/lib/comercializadora/fechas';
 
 export interface HistorialFila {
   id: number;
@@ -51,6 +52,9 @@ export default async function ConfiguracionPagina() {
     <>
       {encabezado}
       <Configuracion
+        // Tras guardar, la versión cambia y el borrador vuelve a salir de lo guardado (ya normalizado).
+        key={Number(cfg.data.version)}
+        hoy={hoyCdmx()}
         config={normalizarConfig(cfg.data.config)}
         version={Number(cfg.data.version)}
         actualizadoPor={cfg.data.actualizado_por}

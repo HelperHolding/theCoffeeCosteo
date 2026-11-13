@@ -4,7 +4,12 @@ import { useRouter } from 'next/navigation';
 import { Tarjeta } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { pesos } from '@/lib/comercializadora/formato';
-import { cantidadConteo, pegarConteo, type FilaInventario } from '@/lib/comercializadora/inventario';
+import {
+  cantidadAjuste,
+  cantidadConteo,
+  pegarConteo,
+  type FilaInventario,
+} from '@/lib/comercializadora/inventario';
 import { ajustar3pl } from '@/app/(comercializadora)/comercializadora/acciones';
 
 const MOTIVOS = ['Conteo físico', 'Merma', 'Reposición', 'Corrección de error', 'Ingreso 3PL', 'Otro'];
@@ -28,7 +33,7 @@ export function Ajuste3pl(p: {
   const porSku = new Map(p.filas.map((f) => [f.sku, f]));
   const calc = (l: Linea) => {
     const actual = p.saldos[l.sku] ?? null;
-    const c = l.modo === 'diff' ? Number(String(l.cantidad).replace(',', '.')) : cantidadConteo(l.cantidad);
+    const c = l.modo === 'diff' ? cantidadAjuste(l.cantidad) : cantidadConteo(l.cantidad);
     if (!l.sku || c == null || !Number.isFinite(c)) return null;
     const nuevo = l.modo === 'set' ? c : (actual ?? 0) + c;
     return { actual, nuevo, costo: porSku.get(l.sku)?.costo ?? null };
@@ -48,7 +53,11 @@ export function Ajuste3pl(p: {
         lote.push({ sku: l.sku, actual: r.actual, nuevo: Math.round(r.nuevo * 1e4) / 1e4, costo: r.costo });
       }
       const res = await ajustar3pl({ realizado: '', autorizado, fecha_conteo: fecha, motivo, lineas: lote });
-      if ('error' in res) return setError(res.error);
+      if ('error' in res) {
+        setError(res.error);
+        // Trae los saldos actuales (el "antes" de cada línea) sin perder lo capturado, como _planConteoRefrescar.
+        return router.refresh();
+      }
       p.alCerrar();
       router.refresh();
     });

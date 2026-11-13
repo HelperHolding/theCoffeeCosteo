@@ -9,8 +9,10 @@ import {
   SECCIONES,
   difConfig,
   leerRuta,
+  numeroConfig,
   ponerRuta,
   validarCorreos,
+  validarEventos,
   type CampoConfig,
   type Config,
 } from '@/lib/comercializadora/config';
@@ -28,6 +30,7 @@ export function Configuracion(p: {
   historial: HistorialFila[];
   credito: { vendor_id: string; nombre: string | null; dias_credito: number }[];
   editable: boolean;
+  hoy: string;
 }) {
   const router = useRouter();
   const [borrador, setBorrador] = useState<Config>(p.config);
@@ -82,7 +85,8 @@ export function Configuracion(p: {
             step={c.entero ? 1 : 'any'}
             className={claseCampo}
             value={String(v ?? '')}
-            onChange={(e) => poner(c.ruta, e.target.value === '' ? null : Number(e.target.value))}
+            // _planCfgEdit: vacío o inválido conserva el valor; fuera de rango se acota a la vista.
+            onChange={(e) => poner(c.ruta, numeroConfig(e.target.value, c, Number(v)))}
           />
         )}
         {c.ayuda ? <span className="block text-xs text-muted-foreground">{c.ayuda}</span> : null}
@@ -92,6 +96,8 @@ export function Configuracion(p: {
 
   const guardar = () =>
     iniciar(async () => {
+      const ev = validarEventos((leerRuta(borrador, 'eventos') as Config[]) ?? []);
+      if (ev) return setMsg({ ok: false, t: ev });
       const v = validarCorreos(correos);
       if ('error' in v) return setMsg({ ok: false, t: v.error });
       const r = await guardarConfig(ponerRuta(borrador, 'auto.correos', v.correos), p.version);
@@ -150,7 +156,9 @@ export function Configuracion(p: {
                       onChange={(e) =>
                         poner(
                           'temp.mes',
-                          mes.map((x, j) => (j === i ? Number(e.target.value) : x)),
+                          mes.map((x, j) =>
+                            j === i ? numeroConfig(e.target.value, { min: 0.1, max: 5 }, x) : x,
+                          ),
                         )
                       }
                     />
@@ -225,7 +233,17 @@ export function Configuracion(p: {
                       'eventos',
                       eventos.map((x, j) =>
                         j === i
-                          ? { ...x, factor: Math.min(10, Math.max(0.1, 1 + Number(e.target.value) / 100)) }
+                          ? {
+                              ...x,
+                              factor:
+                                1 +
+                                numeroConfig(
+                                  e.target.value,
+                                  { min: -90, max: 900 },
+                                  Math.round((Number(x.factor ?? 1) - 1) * 100),
+                                ) /
+                                  100,
+                            }
                           : x,
                       ),
                     )
@@ -271,11 +289,11 @@ export function Configuracion(p: {
                   {
                     id: `ev${Date.now()}`,
                     nombre: '',
-                    ini: '',
-                    fin: '',
+                    ini: p.hoy,
+                    fin: p.hoy,
                     factor: 1.3,
                     alcance: 'todos',
-                    valores: '',
+                    valores: [],
                     activo: true,
                   },
                 ])
