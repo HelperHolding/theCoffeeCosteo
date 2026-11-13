@@ -46,7 +46,7 @@ Siguen el plan 3e (Importaciones y Café) y el 3f (Plan de abastos y Esta semana
    - **y además** las líneas de `com_zoho_oc_lineas` con `status = 'draft'` (las trae `zoho-sync`), con la misma llave `zocKey(folio)|SKU`.
 
    Un borrador nunca cuenta como "en camino" ni como compra emitida, y la revisión "Borradores de OC" los cuenta.
-7. **Lead time: se conserva la regla del viejo.** El plan del viejo usa solo `com_lead_times` (ignora `zoho_lead_time`); `com-minmax` usa `zoho_lead_time ?? com_lead_times`. Por paridad, DOH e Indicadores siguen al viejo. La diferencia se anota en la guía y queda como pregunta para el usuario.
+7. **Lead time: se conserva la regla del viejo (lo eligió el usuario).** El plan del viejo usa solo `com_lead_times` (ignora `zoho_lead_time`); `com-minmax` usa `zoho_lead_time ?? com_lead_times`. DOH e Indicadores siguen al viejo para poder compararlos con él; se puede alinear en el cutover. La diferencia se anota en la guía.
 8. **Historia que se lee:** `_planHistNecesaria` con la ventana de Importaciones normalizada como `_impCfgNorm` (90 días si falta, acotada a 30–365). Sin ella el backtest de la 8.ª semana cambia. Se calcula con la configuración **guardada**: el portal no tiene borrador compartido.
 9. **Pedidos vigentes como en el viejo:** `.not('status','in','(cancelado,cancelacion_pendiente)')` deja fuera también el status nulo (SQL `NOT IN`). Se filtra en JS con esa misma regla. Si falla la lectura de kits, el viejo conservaba los lotes ya leídos; aquí se avisa ("kits") y no se marca ningún kit.
 10. **Metas de Indicadores:** acción propia `guardarMetasKpi`. Solo escribe `config.kpi.*`, con la versión que vio la pantalla (como `guardarConfig`; el viejo comparaba contra la versión del momento de guardar), y deja una fila de historial por meta (ámbito `config`, clave `kpi.<meta>`). `CAMPOS_CONFIG` y la pantalla de Configuración no cambian. Las metas no mueven el cálculo del servidor: no se recalcula. Solo `exc_margen` cambia una cuenta (Capital en exceso).
@@ -57,7 +57,7 @@ Siguen el plan 3e (Importaciones y Café) y el 3f (Plan de abastos y Esta semana
    - Envíos, Catálogo y Mapeo → sus pantallas;
    - "Sugerir piezas" → `/comercializadora/catalogo/piezas-apertura`.
 
-   "OCs en camino al día con Zoho" sigue leyendo `cfg.zoho_oc.conciliado` (la conciliación por archivo del viejo), por paridad. Queda como pregunta para el usuario.
+   **"OCs en camino al día con Zoho" usa la frescura de `zoho-sync` (lo eligió el usuario).** El viejo la medía con la conciliación por archivo (`cfg.zoho_oc.conciliado`), que el portal no tiene: siempre saldría "sin poner al día". `kpiAbCalc` sigue siendo el port literal (la paridad no cambia) y la capa del portal reemplaza solo esa revisión con `conRevisionOcSync` (Tarea 7, Step 0): verde si la última corrida buena de `zoho-sync` tiene ≤ 3 días, ámbar ≤ 7, rojo si es más vieja o no hay; recalcula `datos.ok`. Devuelve una copia, porque `K` vive en la caché compartida.
 13. **Inicio:** panel "Riesgo de quiebre" (`_kpiForecastRiesgo` 41543: conteos y los primeros 7 por pedir o por confirmar) con enlace a `/comercializadora/doh?estado=pedir`, y "Ver DOH" en los paneles Sin stock e Inventario crítico (el viejo los ligaba a `com-doh`). El filtro `?estado=` acepta el `urgente` del viejo como `pedir`.
 14. **Piezas por apertura:** subpágina `/comercializadora/catalogo/piezas-apertura?n=20` (muestra de 3 a 200 aperturas). Lee **todo** el historial de pedidos vigentes por el puente, como el viejo. "Aplicar" hace, por artículo, un update condicional al valor que se vio y deja historial con ámbito `sku`, igual que Catálogo.
 15. **Rarezas del viejo que se conservan, con prueba:**
@@ -3057,6 +3057,7 @@ git commit -m "feat(comercializadora): DOH con riesgo de quiebre y su panel en I
 - Consumes: `motorPlan`, `memoMotor`, `indicadoresMotor`, `limpiarMotor` (Tareas 4 y 6); `kpiAbCalc`, `kpiAbEstados`, `kpiAbMetas`, `kpiAbTraza`, `kpiAbVentanas`, `planMoneyCorto`, `type CheckDatos`, `type Traza` (Tarea 5); `KPI_AB_CAMPOS`, `KPI_AB_DEF`, `normalizarCfgMotor` (Tarea 2); `editorCom`, `fallo`, `SOLO_LECTURA`, `Resultado`, `type Config` (`acciones.ts`).
 - Produces:
   - `lib/comercializadora/indicadores.ts`:
+    - `conRevisionOcSync(K, ultimoSync: string | null, ahora: number): K` (decisión 12; devuelve una copia)
     - `type DetalleKpi = 'fc' | 'cv' | 'inv' | 'exc' | 'disp' | 'datos'`, `esDetalle(x?): x is DetalleKpi`
     - `tonoKpi(e): Tono`, `dineroCorto(x)`, `pctTxt(x, dec?)`, `semanaTxt(ini, fin)`
     - `validarMetas(txt: Record<string, string>): { vals: Record<string, number> } | { error: string }`
@@ -3065,6 +3066,98 @@ git commit -m "feat(comercializadora): DOH con riesgo de quiebre y su panel en I
   - `MetasKpi({ metas, version, editable })`, `ActualizarMotor()`
   - `guardarMetasKpi(txt: Record<string, string>, version: number): Promise<Resultado<{ version: number; cambios: number }>>`
   - `actualizarMotor(): Promise<Resultado>`
+
+- [ ] **Step 0: Revisión "OCs en camino al día con Zoho" con la frescura de `zoho-sync` (decisión 12)**
+
+Crear `tests/portal/com-revision-oc-zoho.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest';
+import { conRevisionOcSync } from '../../lib/comercializadora/indicadores';
+
+const AHORA = Date.parse('2026-11-13T18:00:00Z');
+const K = () => ({
+  datos: {
+    checks: [
+      { id: 'inv', corto: 'inventario', titulo: 'Inventario', valor: 'hace 0 días', est: 'ok', detalle: '', acc: '', lnk: '' },
+      {
+        id: 'oc',
+        corto: 'OCs sin poner al día',
+        titulo: 'OCs en camino al día con Zoho',
+        valor: 'sin poner al día',
+        est: 'mal',
+        detalle: 'x',
+        acc: 'Ver órdenes de compra',
+        lnk: '/comercializadora/ordenes',
+      },
+    ],
+    ok: 1,
+    total: 2,
+  },
+});
+
+describe('decisión 12: OCs al día con zoho-sync', () => {
+  it('≤ 3 días verde, ≤ 7 ámbar, más viejo o sin corrida rojo; recalcula datos.ok', () => {
+    const ok = conRevisionOcSync(K() as never, '2026-11-12T18:00:00Z', AHORA);
+    expect(ok.datos.checks[1]).toMatchObject({ est: 'ok', valor: 'sincronizadas hace 1 día' });
+    expect(ok.datos.ok).toBe(2);
+    expect(conRevisionOcSync(K() as never, '2026-11-08T18:00:00Z', AHORA).datos.checks[1].est).toBe('aviso');
+    expect(conRevisionOcSync(K() as never, '2026-11-01T18:00:00Z', AHORA).datos.checks[1].est).toBe('mal');
+    const nada = conRevisionOcSync(K() as never, null, AHORA);
+    expect(nada.datos.checks[1]).toMatchObject({ est: 'mal', valor: 'sin sincronizar' });
+    expect(nada.datos.ok).toBe(1);
+  });
+  it('no toca el K original (vive en la caché compartida)', () => {
+    const k = K();
+    conRevisionOcSync(k as never, '2026-11-12T18:00:00Z', AHORA);
+    expect(k.datos.checks[1].est).toBe('mal');
+    expect(k.datos.ok).toBe(1);
+  });
+  it('sin la revisión oc devuelve K igual', () => {
+    const k = { datos: { checks: [], ok: 0, total: 0 } };
+    expect(conRevisionOcSync(k as never, null, AHORA)).toEqual(k);
+  });
+});
+```
+
+Run: `npx vitest run tests/portal/com-revision-oc-zoho.test.ts`
+Expected: FAIL (`conRevisionOcSync` no existe).
+
+Agregar a `lib/comercializadora/indicadores.ts`. Si el archivo aún no existe, se crea aquí con esta función y el Step 3 agrega lo demás:
+
+```ts
+/**
+ * Decisión 12: "OCs en camino al día con Zoho" con la última corrida buena de zoho-sync (el viejo usaba la conciliación
+ * por archivo, que el portal no tiene). Mismos umbrales que la revisión de inventario: ≤ 3 días ok, ≤ 7 aviso, si no mal.
+ * Devuelve una copia: K es el resultado en memoria de la caché compartida.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function conRevisionOcSync<T extends { datos?: { checks: any[]; ok: number; total: number } }>(
+  K: T,
+  ultimoSync: string | null,
+  ahora: number,
+): T {
+  const i = K.datos?.checks.findIndex((c) => c.id === 'oc') ?? -1;
+  if (!K.datos || i < 0) return K;
+  const d = ultimoSync ? Math.round((ahora - new Date(ultimoSync).getTime()) / 864e5) : null;
+  const est = d == null || d > 7 ? 'mal' : d > 3 ? 'aviso' : 'ok';
+  const checks = K.datos.checks.map((c, j) =>
+    j === i
+      ? {
+          ...c,
+          valor: d == null ? 'sin sincronizar' : `sincronizadas hace ${d} día${d === 1 ? '' : 's'}`,
+          est,
+          detalle:
+            'Zoho se sincroniza cada 30 minutos. Lo que está "en camino" reduce lo que hay que pedir: si la sincronización está vieja, el plan pide de menos o de más.',
+        }
+      : c,
+  );
+  return { ...K, datos: { ...K.datos, checks, ok: checks.filter((c) => c.est === 'ok').length } };
+}
+```
+
+Run: `npx vitest run tests/portal/com-revision-oc-zoho.test.ts`
+Expected: PASS (3). La página de Indicadores (Step 3) aplica `conRevisionOcSync` antes de `kpiAbEstados`.
 
 - [ ] **Step 1: Pruebas que fallan**
 
@@ -4193,7 +4286,9 @@ import { ActualizarMotor } from '@/components/comercializadora/actualizar-motor'
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { indicadoresMotor, memoMotor, motorPlan } from '@/lib/comercializadora/motor';
+import { com } from '@/lib/comercializadora/consultas';
 import {
+  conRevisionOcSync,
   esDetalle,
   kpiAbCalc,
   kpiAbEstados,
@@ -4227,7 +4322,15 @@ export default async function IndicadoresPagina({
         </p>
       </>
     );
-  const K = indicadoresMotor(m);
+  // Decisión 12: la revisión de OCs usa la última corrida buena de zoho-sync (copia: K vive en la caché compartida).
+  const sync = await com(db)
+    .from('com_sync_log')
+    .select('inicio')
+    .eq('proceso', 'zoho-sync')
+    .eq('ok', true)
+    .order('inicio', { ascending: false })
+    .limit(1);
+  const K = conRevisionOcSync(indicadoresMotor(m), sync.data?.[0]?.inicio ?? null, Date.now());
   const E = kpiAbEstados(K);
   const detalle = esDetalle(sp.detalle) ? sp.detalle : null;
   // Las otras ventanas (14 y 21 días) son dos cálculos completos más: solo cuando se abre el detalle del forecast.
@@ -5035,7 +5138,7 @@ git commit -m "docs(comercializadora): guía del motor, DOH e Indicadores"
 
 Push de `feat/comercializadora-motor` y PR con base `feat/comercializadora-operacion` (encima del #115). En la descripción van:
 - las decisiones 6, 7, 9, 10 y 12;
-- las dos preguntas abiertas (lead time de Zoho y la revisión "OCs al día con Zoho");
+- las dos preguntas que contestó el usuario (lead time como el viejo; "OCs al día con Zoho" con la frescura de `zoho-sync`);
 - el resultado de la corrida con `COM_APP_VIEJA`.
 
 ---
