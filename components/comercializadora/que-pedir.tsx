@@ -28,7 +28,7 @@ export function QuePedir({
   edadHoras: number;
   avisos: AvisoFranja[];
 }) {
-  const [dias, setDias] = useState(15);
+  const [dias, setDias] = useState(7);
   const [vista, setVista] = useState<'sku' | 'proveedor'>('sku');
   const [q, setQ] = useState('');
   const [prov, setProv] = useState('');
@@ -36,7 +36,6 @@ export function QuePedir({
   const [ver, setVer] = useState(POR_PAGINA);
 
   const filas = useMemo(() => filasQuePedir(datos, dias, hoy), [datos, dias, hoy]);
-  const k = kpisQuePedir(filas, 7);
   const proveedores = useMemo(
     () =>
       [...new Map(filas.map((f) => [f.vendor, f.vendorNombre])).entries()].sort((a, b) =>
@@ -45,11 +44,16 @@ export function QuePedir({
     [filas],
   );
   const texto = q.trim().toLowerCase();
-  const visibles = filas
-    .filter((f) => (!soloPedir || f.pedir) && (!prov || f.vendor === prov))
-    .filter((f) => !texto || f.sku.toLowerCase().includes(texto) || f.nombre.toLowerCase().includes(texto))
+  // Como el sitio viejo: KPIs y grupos salen de lo filtrado por proveedor y búsqueda; "solo lo que hay que pedir"
+  // solo oculta filas (y proveedores sin nada que pedir), no cambia los totales del proveedor.
+  const base = filas
+    .filter((f) => !prov || f.vendor === prov)
+    .filter((f) => !texto || f.sku.toLowerCase().includes(texto) || f.nombre.toLowerCase().includes(texto));
+  const k = kpisQuePedir(base, dias);
+  const visibles = base.filter((f) => !soloPedir || f.pedir).sort(ordenQuePedir);
+  const grupos = proveedoresQuePedir(base)
+    .filter((p) => !soloPedir || p.pedir)
     .sort(ordenQuePedir);
-  const grupos = proveedoresQuePedir(visibles).sort(ordenQuePedir);
 
   return (
     <div className="space-y-5">
@@ -68,7 +72,7 @@ export function QuePedir({
         <Kpi etiqueta="Monto a comprar (sin IVA)" valor={pesos(k.monto)} icono={Wallet} />
         <Kpi etiqueta="Proveedores con pedido" valor={k.proveedores} icono={Truck} />
         <Kpi
-          etiqueta="Con menos de 7 días"
+          etiqueta={`Con menos de ${dias} días`}
           valor={k.cortos}
           icono={CalendarDays}
           tono={k.cortos ? 'bajo' : 'neutro'}

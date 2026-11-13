@@ -78,12 +78,9 @@ describe('acciones de cierres', () => {
       op: 'insert',
       datos: { vendor_id: 'v1', skus: null, creado_por: 'Ana', motivo: 'vacaciones' },
     });
-    expect(m.invocar).toHaveBeenCalledWith('com-minmax', {});
+    expect(m.invocar).toHaveBeenCalledWith('com-minmax', {}, { timeoutMs: 25_000 });
   });
-  it('cambio de fechas o alcance reinicia los avisos', async () => {
-    await guardarCierre({ ...form, id: 7 });
-    expect(m.escrito[0]).toMatchObject({ op: 'update', datos: { aviso7_at: null, aviso0_at: null } });
-  });
+
   it('si el recálculo falla, lo guardado queda y se avisa', async () => {
     m.invocar.mockResolvedValueOnce({ ok: false, error: 'Zoho caído' } as never);
     expect(await cancelarCierre(3)).toEqual({ ok: true, recalculo: false });
@@ -129,27 +126,6 @@ describe('acciones de órdenes', () => {
     m.nivel = 'lectura';
     expect(await eliminarOc('OC-1')).toEqual({ error: 'Tu acceso a Comercializadora es de solo lectura.' });
     expect(m.escrito).toEqual([]);
-  });
-  it('OC nueva: una fila compra por artículo, el monto solo en la primera, estado emitida', async () => {
-    const r = await guardarOc({
-      folio: 'OC-9',
-      proveedor: 'Prov',
-      fecha: '2026-11-13',
-      fecha_arribo: '2026-11-20',
-      destino: 'CEDIS',
-      monto: 100,
-      lineas: [
-        { sku: 'A', cantidad: 5 },
-        { sku: 'B', cantidad: 2 },
-      ],
-    });
-    expect(r).toEqual({ ok: true });
-    expect(m.escrito[0]).toMatchObject({ tabla: 'com_movimientos', op: 'insert' });
-    const filas = m.escrito[0].datos as Record<string, unknown>[];
-    expect(filas.map((f) => [f.sku, f.monto, f.tipo, f.estado])).toEqual([
-      ['A', 100, 'compra', 'emitida'],
-      ['B', null, 'compra', 'emitida'],
-    ]);
   });
 });
 

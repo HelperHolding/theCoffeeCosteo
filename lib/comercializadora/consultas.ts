@@ -1,4 +1,5 @@
 import 'server-only';
+import { difDias, masDias } from './fechas';
 import type { ResumenProyeccion } from './tipos';
 
 // Plan 3, decisión 8: las tablas com_* no están en database.types; se leen sin tipos y se tipan por pantalla.
@@ -69,8 +70,10 @@ export async function cierresVigentes(
   const porId = new Map((resumen?.cierres ?? []).map((c) => [c.id, c]));
   return (r.data as Omit<AvisoCierre, 'u'>[]).map((c) => {
     const s = porId.get(c.id);
-    const misma =
-      s && s.ini?.slice(0, 10) === c.ini.slice(0, 10) && s.fin?.slice(0, 10) === c.fin.slice(0, 10);
-    return { ...c, u: misma ? (s!.u ?? null) : null };
+    let u = s?.u ? String(s.u).slice(0, 10) : null;
+    // _cieAvisos: si las fechas se movieron después de la última corrida, el último día se recorre igual que ini.
+    if (u && s?.ini && s.ini.slice(0, 10) !== c.ini.slice(0, 10))
+      u = masDias(u, difDias(s.ini.slice(0, 10), c.ini.slice(0, 10)));
+    return { ...c, u };
   });
 }

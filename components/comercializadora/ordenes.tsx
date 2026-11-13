@@ -6,7 +6,7 @@ import { Pill, Tarjeta, Vacio, type Estado } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { pesos } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
-import { validarOc, type FormOc, type OcGrupo } from '@/lib/comercializadora/ordenes';
+import { textoDestino, validarOc, type FormOc, type OcGrupo } from '@/lib/comercializadora/ordenes';
 import { eliminarOc, guardarOc, recibirOc } from '@/app/(comercializadora)/comercializadora/acciones';
 
 const TONO: Record<OcGrupo['estado'], Estado> = { emitida: 'neutro', parcial: 'bajo', recibida: 'ok' };
@@ -139,7 +139,7 @@ export function Ordenes(p: {
                 onChange={(e) => setForm({ ...form, destino: e.target.value })}
               >
                 <option value="CEDIS">CEDIS</option>
-                <option value="3PL">3PL</option>
+                <option value="Yulius">3PL</option>
               </select>
             </label>
             <label className="text-sm">
@@ -358,7 +358,7 @@ export function Ordenes(p: {
                   <td className="text-right tabular-nums">{g.skus}</td>
                   <td className="text-right tabular-nums">{g.uds}</td>
                   <td className="text-right tabular-nums">{pesos(g.monto)}</td>
-                  <td>{g.destino ?? '—'}</td>
+                  <td>{textoDestino(g.destino)}</td>
                   <td>{g.fecha_arribo ? fechaCorta(g.fecha_arribo) : '—'}</td>
                   <td>
                     <Pill estado={TONO[g.estado]}>{NOMBRE[g.estado]}</Pill>

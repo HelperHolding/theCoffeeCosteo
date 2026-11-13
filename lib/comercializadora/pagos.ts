@@ -107,26 +107,40 @@ export function agruparPagos(
   return { periodos, provs, tot };
 }
 
-/** KPIs de renderComPagos: esta semana (hasta el domingo; lo vencido cuenta), 30 días, periodo semanal más pesado y comprometido. */
-export function kpisPagos(filas: PagoFila[], hoy: string) {
+/**
+ * KPIs de renderComPagos con los filtros de la pantalla: esta semana (hasta el domingo; lo vencido cuenta) y 30 días
+ * respetan "incluir comprometido"; el periodo más pesado usa el modo y el campo de fecha elegidos.
+ */
+export function kpisPagos(
+  filas: PagoFila[],
+  hoy: string,
+  o: { comp: boolean; modo: ModoPeriodo; campoFecha: 'fecha_pago' | 'fecha_oc' } = {
+    comp: true,
+    modo: 'semana',
+    campoFecha: 'fecha_pago',
+  },
+) {
   const domingo = periodoPago(hoy, 'semana').fin;
   const en30 = masDias(hoy, 30);
   let estaSemana = 0,
     proximos30 = 0,
     comprometido = 0;
   for (const r of filas) {
-    const f = r.fecha_pago.slice(0, 10);
     const monto = Number(r.monto) || 0;
+    const esComp = r.tipo === 'comprometido';
+    if (esComp) comprometido += monto;
+    if (esComp && !o.comp) continue;
+    const f = String(r.fecha_pago ?? '').slice(0, 10);
+    if (!f) continue;
     if (f <= domingo) estaSemana += monto;
     if (f <= en30) proximos30 += monto;
-    if (r.tipo === 'comprometido') comprometido += monto;
   }
-  const g = agruparPagos(filas, 'semana', 'fecha_pago', true, hoy);
+  const g = agruparPagos(filas, o.modo, o.campoFecha, o.comp, hoy);
   let pesado: { etiqueta: string; monto: number } | null = null;
-  for (const p of g.periodos) {
-    const c = g.tot[p.clave];
+  for (const per of g.periodos) {
+    const c = g.tot[per.clave];
     const m = c ? c.proy + c.comp : 0;
-    if (m > 0 && (!pesado || m > pesado.monto)) pesado = { etiqueta: p.etiqueta, monto: m };
+    if (m > 0 && (!pesado || m > pesado.monto)) pesado = { etiqueta: per.etiqueta, monto: m };
   }
   return { estaSemana, proximos30, pesado, comprometido };
 }

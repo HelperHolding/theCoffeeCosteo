@@ -63,3 +63,44 @@ describe('Qué pedir', () => {
     expect(screen.getByRole('cell', { name: /Prov Uno/ })).toBeInTheDocument(); // también está en el selector de proveedor
   });
 });
+
+describe('Qué pedir: correcciones I5 e I6', () => {
+  const conTres = {
+    ...datos,
+    catalogo: [
+      ...datos.catalogo,
+      {
+        sku: 'C',
+        nombre: 'Azúcar',
+        zoho_stock: 1,
+        zoho_stock_fisico: null,
+        zoho_sync_at: 'x',
+        saldo_cedis: 0,
+        saldo_yulius: 0,
+        costo_unitario: 10,
+        zoho_vendor_id: 'v1',
+        zoho_vendor_name: 'Prov Uno',
+      },
+    ],
+    minmax: [...datos.minmax, { sku: 'C', venta_diaria: 1 }],
+  };
+  it('la vista por proveedor cuenta todos sus artículos aunque solo muestre a quien hay que pedirle', async () => {
+    render(<QuePedir datos={conTres} hoy="2026-11-13" edadHoras={2} avisos={[]} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Por proveedor' }));
+    expect(screen.getByRole('row', { name: /Prov Uno/ })).toHaveTextContent('1 de 2');
+    expect(screen.queryByRole('row', { name: /Prov Dos/ })).not.toBeInTheDocument();
+  });
+  it('los KPIs siguen al filtro de proveedor; el horizonte inicial es 7 días', async () => {
+    render(<QuePedir datos={conTres} hoy="2026-11-13" edadHoras={2} avisos={[]} />);
+    expect(screen.getByRole('button', { name: '7 días' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.selectOptions(screen.getByLabelText('Proveedor'), 'v2');
+    expect(screen.getByText('Artículos a pedir').parentElement!.parentElement).toHaveTextContent('0');
+  });
+  it('"Con menos de N días" usa el horizonte elegido', async () => {
+    render(<QuePedir datos={conTres} hoy="2026-11-13" edadHoras={2} avisos={[]} />);
+    // A: 10/2 = 5 días; C: 1/1 = 1 día; B: 500/5 = 100 días.
+    expect(screen.getByText(/Con menos de 7 días/).parentElement!.parentElement).toHaveTextContent('2');
+    await userEvent.click(screen.getByRole('button', { name: '30 días' }));
+    expect(screen.getByText(/Con menos de 30 días/).parentElement!.parentElement).toHaveTextContent('2');
+  });
+});

@@ -111,3 +111,7 @@ export function validarOc(f: FormOc): string | null {
   if (!(Number(f.monto) > 0)) return 'Pon el monto total de la OC';
   return null;
 }
+
+/** _ubTxt: el destino 'Yulius' es el 3PL. */
+export const textoDestino = (d: string | null | undefined) =>
+  d == null || d === '' ? '—' : d === 'Yulius' ? '3PL' : d;

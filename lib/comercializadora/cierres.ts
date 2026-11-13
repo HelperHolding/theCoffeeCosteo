@@ -87,3 +87,22 @@ export const MOTIVOS: [string, string][] = [
   ['agotado', 'Agotado en fábrica'],
   ['otro', 'Otro'],
 ];
+
+/** _cieFechasCambiaron: ¿cambió ini o fin (comparando solo la fecha)? */
+export function fechasCambiaron(
+  antes: { ini: string; fin: string },
+  f: { ini: string; fin: string },
+): boolean {
+  const d10 = (x: string | null | undefined) => String(x ?? '').slice(0, 10);
+  return d10(antes.ini) !== d10(f.ini) || d10(antes.fin) !== d10(f.fin);
+}
+
+/** _cieAlcanceCambio: ¿cambió el proveedor o el conjunto de artículos? (sin orden ni repetidos; null = lista vacía). */
+export function alcanceCambio(
+  antes: { vendor_id: string | null; skus: string[] | null },
+  f: { vendor_id: string | null; skus: string[] | null },
+): boolean {
+  const v = (x: { vendor_id: string | null }) => String(x.vendor_id ?? '');
+  const s = (x: { skus: string[] | null }) => [...new Set((x.skus ?? []).map(String))].sort().join('\u0001');
+  return v(antes) !== v(f) || s(antes) !== s(f);
+}

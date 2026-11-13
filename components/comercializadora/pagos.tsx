@@ -23,7 +23,7 @@ export function Pagos({
   const [comp, setComp] = useState(true);
   const [prov, setProv] = useState('');
   const [abierto, setAbierto] = useState<string | null>(null);
-  const k = kpisPagos(filas, hoy);
+
   const filtradas = useMemo(
     () => filas.filter((f) => !prov || String(f.vendor_id || f.vendor_name) === prov),
     [filas, prov],
@@ -32,6 +32,8 @@ export function Pagos({
     () => agruparPagos(filtradas, modo, fecha, comp, hoy),
     [filtradas, modo, fecha, comp, hoy],
   );
+  // KPIs con los filtros de la pantalla (proveedor, comprometido, periodo y fecha), como en el sitio viejo.
+  const k = kpisPagos(filtradas, hoy, { comp, modo, campoFecha: fecha });
   const proveedores = [
     ...new Map(
       filas.map((f) => [String(f.vendor_id || f.vendor_name), f.vendor_name || '(sin proveedor)']),
@@ -53,7 +55,7 @@ export function Pagos({
         <Kpi
           etiqueta="Periodo más pesado"
           valor={k.pesado ? pesos(k.pesado.monto) : '—'}
-          nota={k.pesado ? `Semana del ${k.pesado.etiqueta}` : undefined}
+          nota={k.pesado ? `Periodo: ${k.pesado.etiqueta}` : undefined}
           icono={Flame}
         />
         <Kpi
