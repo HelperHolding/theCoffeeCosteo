@@ -26,6 +26,8 @@ import {
   ajustar3pl,
   guardarCampoCatalogo,
   guardarMinMaxManual,
+  guardarKitManual,
+  recalcularKit,
 } from '../../app/(comercializadora)/comercializadora/acciones';
 import { cierresVigentes } from '../../lib/comercializadora/consultas';
 import { alcanceCambio, fechasCambiaron } from '../../lib/comercializadora/cierres';
@@ -389,5 +391,32 @@ describe('plan 3b · catálogo', () => {
       clave: 'A',
       valor_nuevo: { minimo_manual: 10, maximo_manual: 20 },
     });
+  });
+});
+
+describe('plan 3b · kit de apertura', () => {
+  it('manual ≥ 0 o vacío (= calculado); registra historial; 0 filas = error', async () => {
+    const f = dbFalsa({ com_kit_apertura: [{ sku: 'A', manual: null, promedio_calc: 3 }] });
+    m.db = f.db;
+    expect(await guardarKitManual('A', '-2')).toEqual({
+      error: 'Valor inválido: usa un número mayor o igual a 0, o déjalo vacío para usar el calculado',
+    });
+    expect(await guardarKitManual('A', '5')).toEqual({ ok: true });
+    expect(f.tablas.com_kit_apertura[0].manual).toBe(5);
+    expect(f.tablas.com_plan_config_historial[0]).toMatchObject({
+      ambito: 'kit_apertura',
+      clave: 'A',
+      valor_anterior: null,
+      valor_nuevo: 5,
+    });
+    expect(await guardarKitManual('Z', '1')).toEqual({
+      error: 'Sin permiso para modificar este dato o el artículo ya no existe',
+    });
+  });
+  it('recalcular llama com-minmax con tiempo corto', async () => {
+    m.invocar.mockClear();
+    m.invocar.mockResolvedValueOnce({ ok: true, datos: { ok: true, skus: 159 } });
+    expect(await recalcularKit()).toEqual({ ok: true, skus: 159 });
+    expect(m.invocar).toHaveBeenCalledWith('com-minmax', {}, { timeoutMs: 25_000 });
   });
 });

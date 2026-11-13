@@ -386,3 +386,39 @@ export async function guardarMinMaxManual(sku: string, minTxt: string, maxTxt: s
     return fallo(e);
   }
 }
+
+/** _comKitEditar: kit manual ≥ 0 o vacío (= usar el promedio calculado; kit es columna generada). */
+export async function guardarKitManual(sku: string, txt: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const t = String(txt ?? '')
+      .trim()
+      .replace(',', '.');
+    const manual = t === '' ? null : Number(t);
+    if (manual !== null && !(Number.isFinite(manual) && manual >= 0))
+      return {
+        error: 'Valor inválido: usa un número mayor o igual a 0, o déjalo vacío para usar el calculado',
+      };
+    const antes = await com(s.db).from('com_kit_apertura').select('manual').eq('sku', sku).maybeSingle();
+    if (antes.error) return fallo(antes.error);
+    const r = await com(s.db).from('com_kit_apertura').update({ manual }).eq('sku', sku).select('sku');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Sin permiso para modificar este dato o el artículo ya no existe' };
+    await registrarHistorial(s.db, 'kit_apertura', sku, antes.data?.manual ?? null, manual);
+    revalidatePath('/comercializadora/kit');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** _comKitRecalcular: com-minmax recalcula el kit, el mín/máx y la proyección. */
+export async function recalcularKit(): Promise<Resultado<{ skus: number }>> {
+  const s = await editorCom().catch(() => null);
+  if (!s) return { error: SOLO_LECTURA };
+  const r = await invocarFuncion('com-minmax', {}, { timeoutMs: RECALCULO_MS });
+  if (!r.ok) return { error: r.error };
+  revalidatePath('/comercializadora', 'layout');
+  return { ok: true, skus: Number((r.datos as { skus?: number }).skus) || 0 };
+}
