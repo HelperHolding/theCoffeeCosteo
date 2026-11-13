@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { modulosVisibles, puedeEditarCrm } from '../../lib/portal/modulos';
+import { modulosVisibles, puedeEditarCom, puedeEditarCrm } from '../../lib/portal/modulos';
 
 const mocks = vi.hoisted(() => ({
   user: vi.fn(),
@@ -106,4 +106,18 @@ it('el rol sucursales sigue yendo a /sucursales al entrar a Costeo', async () =>
     error: null,
   });
   await expect(sesion()).rejects.toThrow(/^REDIRECT:\/sucursales$/);
+});
+
+describe('módulo Comercializadora', () => {
+  it('se ve con el acceso, con cualquier rol, y no sin él', () => {
+    expect(modulosVisibles({ comercializadora: 'lectura' }, 'interno')).toContain('comercializadora');
+    expect(modulosVisibles({ comercializadora: 'edicion' }, 'proveedor')).toContain('comercializadora');
+    expect(modulosVisibles({}, 'admin')).not.toContain('comercializadora');
+  });
+  it('solo edición y desarrollador editan', () => {
+    expect(puedeEditarCom({ comercializadora: 'lectura' })).toBe(false);
+    expect(puedeEditarCom({ comercializadora: 'edicion' })).toBe(true);
+    expect(puedeEditarCom({ comercializadora: 'desarrollador' })).toBe(true);
+    expect(puedeEditarCom({})).toBe(false);
+  });
 });

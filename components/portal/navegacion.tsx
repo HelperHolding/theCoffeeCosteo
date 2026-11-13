@@ -24,6 +24,12 @@ import {
   ScrollText,
   Settings2,
   BarChart3,
+  ShoppingCart,
+  Bot,
+  ClipboardList,
+  Scale,
+  CalendarX2,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
@@ -37,6 +43,7 @@ const entradaModulo: Record<IdModulo, Enlace> = {
   crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
   sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
   bi: { href: '/bi', nombre: 'BI', icono: BarChart3 },
+  comercializadora: { href: '/comercializadora', nombre: 'Comercializadora', icono: ShoppingCart },
 };
 
 export const grupos: Grupo[] = [
@@ -111,12 +118,32 @@ const gruposBi: Grupo[] = [
   },
 ];
 
+const gruposComercializadora: Grupo[] = [
+  {
+    titulo: 'Comprar',
+    enlaces: [
+      { href: '/comercializadora', nombre: 'Qué pedir', icono: ShoppingCart, exacto: true },
+      { href: '/comercializadora/oc-automaticas', nombre: 'OC automáticas', icono: Bot },
+      { href: '/comercializadora/ordenes', nombre: 'Órdenes de compra', icono: ClipboardList },
+      { href: '/comercializadora/minimos', nombre: 'Mínimos de proveedor', icono: Scale },
+    ],
+  },
+  {
+    titulo: 'Planear y pagar',
+    enlaces: [
+      { href: '/comercializadora/proveedores-sin-stock', nombre: 'Proveedores sin stock', icono: CalendarX2 },
+      { href: '/comercializadora/pagos', nombre: 'Pagos proyectados', icono: Wallet },
+    ],
+  },
+];
+
 const gruposPorSeccion: Record<Seccion, Grupo[]> = {
   inicio: [],
   costeo: grupos,
   crm: gruposCrm,
   sucursales: gruposSucursales,
   bi: gruposBi,
+  comercializadora: gruposComercializadora,
 };
 
 /**
