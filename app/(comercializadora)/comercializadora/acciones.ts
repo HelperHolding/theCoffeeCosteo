@@ -493,3 +493,24 @@ export async function guardarConfig(
     return fallo(e);
   }
 }
+
+/** Marcar enviado (renderComEnvios): solo las líneas 'por_enviar' del folio; el CEDIS lo descuenta Zoho. */
+export async function marcarEnviado(folio: string): Promise<Resultado<{ lineas: number }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await com(s.db)
+      .from('com_movimientos')
+      .update({ estado: 'enviado' })
+      .eq('tipo', 'venta')
+      .eq('folio', folio)
+      .eq('estado', 'por_enviar')
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Ese pedido ya no tiene líneas por enviar; recarga la página' };
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, lineas: r.data.length };
+  } catch (e) {
+    return fallo(e);
+  }
+}
