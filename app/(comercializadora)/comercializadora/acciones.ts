@@ -609,3 +609,41 @@ export async function eliminarTraspaso(folio: string): Promise<Resultado> {
     return fallo(e);
   }
 }
+
+/** _comGuardarMapeo: upsert por nombre exacto de Shopify (decisión 9); el SKU tiene que existir en el catálogo. */
+export async function guardarMapeo(nombre: string, sku: string, notas: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    if (!nombre) return { error: 'Falta el nombre del producto' };
+    const art = await com(s.db).from('com_catalogo').select('sku').eq('sku', sku).maybeSingle();
+    if (art.error) return fallo(art.error);
+    if (!art.data) return { error: 'Elige un SKU del catálogo' };
+    const r = await com(s.db)
+      .from('com_sku_mapping')
+      .upsert({ shopify_nombre: nombre, sku, notas: notas.trim() || null }, { onConflict: 'shopify_nombre' })
+      .select('shopify_nombre');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/mapeo');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+export async function borrarMapeo(nombre: string): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await com(s.db)
+      .from('com_sku_mapping')
+      .delete()
+      .eq('shopify_nombre', nombre)
+      .select('shopify_nombre');
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/mapeo');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
