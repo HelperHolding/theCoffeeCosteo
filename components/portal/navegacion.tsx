@@ -36,6 +36,7 @@ import {
   Link2,
   Send,
   Gauge,
+  Ship,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
 
@@ -149,6 +150,8 @@ const gruposComercializadora: Grupo[] = [
       { href: '/comercializadora/pagos', nombre: 'Pagos proyectados', icono: Wallet },
       { href: '/comercializadora/doh', nombre: 'DOH', icono: Gauge },
       { href: '/comercializadora/indicadores', nombre: 'Indicadores', icono: Activity },
+      { href: '/comercializadora/importaciones', nombre: 'Importaciones', icono: Ship },
+      { href: '/comercializadora/cafe', nombre: 'Café', icono: Coffee },
       { href: '/comercializadora/inventario', nombre: 'Inventario', icono: Boxes },
       { href: '/comercializadora/catalogo', nombre: 'Catálogo', icono: Tags },
       { href: '/comercializadora/kit', nombre: 'Kit de apertura', icono: Package },
