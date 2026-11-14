@@ -25,6 +25,7 @@ import {
   type Servidor,
 } from '../../supabase/functions/_shared/planDatos.ts';
 import { kpiAbCalc } from '../../supabase/functions/_shared/planKpi.ts';
+import { impCorrer, type CorridaImp } from '../../supabase/functions/_shared/planImp.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Fila = Record<string, any>;
@@ -288,3 +289,7 @@ export type MotorListo = Extract<Motor, { ok: true }>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const indicadoresMotor = (m: MotorListo): any =>
   memoMotor(m, 'kpi', () => kpiAbCalc(m.R, m.cfg, Date.now()));
+
+/** Importaciones (plan 3e): la corrida del modelo de la Sheet con el escenario de la vista, una vez por datos + configuración. */
+export const importacionesMotor = (m: MotorListo, esc?: string | null): CorridaImp =>
+  memoMotor(m, `imp|${esc ?? ''}`, () => impCorrer(m.R, m.cfg, esc));
