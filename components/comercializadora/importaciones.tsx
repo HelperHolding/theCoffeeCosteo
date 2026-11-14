@@ -160,6 +160,9 @@ export function QuePedirImp(p: {
           >
             Crear OC
           </Link>
+        ) : oc && 'error' in oc ? (
+          // Revisión 3e (I1): el viejo explicaba por qué no se podía crear la OC; aquí se muestra en lugar del botón.
+          <span className="text-xs text-muted-foreground">{oc.error}</span>
         ) : null,
       filas: g.filas.map((f) => {
         const q = f.q;

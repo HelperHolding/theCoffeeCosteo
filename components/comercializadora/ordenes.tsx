@@ -49,6 +49,12 @@ export function Ordenes(p: {
       alTerminar?.();
       router.refresh();
     });
+  // Revisión 3e (I3): al cerrar o guardar una OC sugerida, la URL pierde el prellenado; si no, recargar la reabría
+  // (riesgo de capturar dos veces la misma OC).
+  const cerrarForm = () => {
+    if (form?.origen) router.replace('/comercializadora/ordenes');
+    setForm(null);
+  };
   const nueva = (): FormOc => ({
     folio: '',
     proveedor: '',
@@ -257,7 +263,7 @@ export function Ordenes(p: {
                 const { anterior, origen: _origen, omitidos: _omitidos, ...datos } = form;
                 correr(
                   () => guardarOc(datos, anterior),
-                  () => setForm(null),
+                  () => cerrarForm(),
                 );
               }}
               className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white"
@@ -266,7 +272,7 @@ export function Ordenes(p: {
             </button>
             <button
               type="button"
-              onClick={() => setForm(null)}
+              onClick={() => cerrarForm()}
               className="h-10 rounded-[10px] border border-line-strong px-4 text-sm font-semibold"
             >
               Cerrar

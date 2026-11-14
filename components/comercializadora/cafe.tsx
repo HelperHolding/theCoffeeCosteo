@@ -161,6 +161,9 @@ export function QuePedirCafe(p: {
         >
           Crear OC
         </Link>
+      ) : oc && 'error' in oc ? (
+        // Revisión 3e (I1): el viejo explicaba por qué no se podía crear la OC; aquí se muestra en lugar del botón.
+        <span className="text-xs text-muted-foreground">{oc.error}</span>
       ) : null,
       filas: filas.map((f) => {
         const r = f.r,

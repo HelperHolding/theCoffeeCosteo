@@ -125,6 +125,24 @@ describe('Qué pedir de café', () => {
     expect(screen.getAllByText(/≈ [\d.,]+ kg/).length).toBeGreaterThan(0);
   });
 
+  it('revisión 3e (I1): si hoy no hay nada que pedir, dice por qué en lugar de quitar el botón', () => {
+    const o2 = structuredClone(o);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = o2.provs.find((x: any) => x.real && x.nEsta > 0)!;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    g.rows.forEach((r: any) => {
+      r.calc.fuente = 'servidor';
+      r.calc.pedirHoy = 0;
+    });
+    render(
+      <QuePedirCafe c={o2} cuando="" soloAcc simple={false} editable mm={null} srvCalc={null} params={{}} />,
+    );
+    expect(screen.getAllByRole('link', { name: 'Crear OC' }).length).toBe(1);
+    expect(
+      screen.getByText('Nada que pedir hoy a este proveedor: lo de esta semana toca en los próximos días'),
+    ).toBeTruthy();
+  });
+
   it('sin artículos de café lo dice', () => {
     const vacio = cafeOrdenes(
       datosImp({ cat: R.cat.filter((x) => !/caf/i.test(String(x.nombre))) }),

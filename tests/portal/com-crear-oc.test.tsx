@@ -2,8 +2,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-const m = vi.hoisted(() => ({ refresh: vi.fn(), guardar: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: m.refresh }) }));
+const m = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn(), guardar: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: m.refresh, replace: m.replace }) }));
 vi.mock('../../app/(comercializadora)/comercializadora/acciones', () => ({
   guardarOc: m.guardar,
   recibirOc: vi.fn(),
@@ -160,6 +160,20 @@ describe('Órdenes con el formulario prellenado', () => {
       monto: 26182,
       lineas: [{ sku: 'INS-CAF-002', cantidad: 53 }],
     });
+  });
+
+  it('revisión 3e (I3): al guardar o cerrar la OC sugerida, la URL pierde el prellenado (recargar no la vuelve a abrir)', async () => {
+    m.guardar.mockResolvedValue({ ok: true });
+    m.replace.mockClear();
+    const { unmount } = render(<Ordenes {...base} editable prellenado={pre} />);
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'OC-78' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(m.replace).toHaveBeenCalledWith('/comercializadora/ordenes'));
+    unmount();
+    m.replace.mockClear();
+    render(<Ordenes {...base} editable prellenado={pre} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(m.replace).toHaveBeenCalledWith('/comercializadora/ordenes');
   });
 
   it('solo lectura: no abre el formulario', () => {

@@ -62,7 +62,11 @@ function useBorrador(ambito: 'imp' | 'cafe', guardado: X, version: number) {
   const [b, setB] = useState<X>(guardado);
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   const [pendiente, iniciar] = useTransition();
-  useEffect(() => setB(guardado), [guardado]);
+  // Revisión 3e (I2): solo se reinicia si lo guardado cambió de verdad; un render del servidor con los mismos datos
+  // (Actualizar, cambiar de escenario) ya no borra lo que la persona estaba escribiendo.
+  const claveGuardado = JSON.stringify(guardado);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setB(guardado), [claveGuardado]);
   const sucio = JSON.stringify(b) !== JSON.stringify(guardado);
   return {
     b,

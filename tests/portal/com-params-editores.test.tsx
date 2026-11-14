@@ -45,6 +45,19 @@ describe('ParametrosImp', () => {
     expect(m.refresh).toHaveBeenCalled();
   });
 
+  it('revisión 3e (I2): un render del servidor con los mismos datos (Actualizar) no borra el borrador', () => {
+    const { rerender } = render(
+      <ParametrosImp imp={imp.cfg.imp} version={4} editable esc="Base" ctx={ctxImp} />,
+    );
+    escribir('Venta INS-DES-021', '0.95');
+    expect(screen.getByText('Hay cambios sin guardar.')).toBeTruthy();
+    rerender(
+      <ParametrosImp imp={structuredClone(imp.cfg.imp)} version={4} editable esc="Base" ctx={ctxImp} />,
+    );
+    expect(screen.getByText('Hay cambios sin guardar.')).toBeTruthy();
+    expect((screen.getByLabelText('Venta INS-DES-021') as HTMLInputElement).value).toBe('0.95');
+  });
+
   it('la tabla de la red se recalcula con el borrador; "usar" toma la venta de la plataforma; agregar y descartar', () => {
     render(<ParametrosImp imp={imp.cfg.imp} version={4} editable esc="Base" ctx={ctxImp} />);
     escribir('Meses en los que manda el pipeline', '0');
