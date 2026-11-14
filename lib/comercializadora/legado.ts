@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { leerTodoCom } from './consultas';
+import type { PedidoPlan } from '../../supabase/functions/_shared/planEngine.ts';
 
 /**
  * Las vistas com_legado_* (puente a bliocjvq, plan 2 decisión 2) solo las lee service_role: se leen aquí, en el
@@ -82,4 +83,90 @@ export async function aperturasLegado(ids: string[]): Promise<Lectura<AperturaLe
   } catch {
     return { ok: false, error: SIN_PUENTE };
   }
+}
+
+// ── Plan 3d: lo que lee el motor de planeación (_planDatCargar) ──────────────────────────────────────────────────
+
+const COLUMNAS_PLAN =
+  'id,apertura_id,franquiciatario_email,fecha_pedido,status,items,items_editados,notas_shopify,es_llenado_canal,marketing_proyecto_id';
+const CANCELADOS = ['cancelado', 'cancelacion_pendiente'];
+/** `.not('status','in','("cancelado","cancelacion_pendiente")')` del viejo: en SQL, un status nulo tampoco pasa. */
+export const pedidoVigente = (p: { status?: string | null }) =>
+  p.status != null && !CANCELADOS.includes(p.status);
+
+async function leerPuente<T>(fn: (db: SupabaseClient) => Promise<T>): Promise<Lectura<T>> {
+  const db = servicioLegado();
+  if (!db) return { ok: false, error: SIN_PUENTE };
+  try {
+    return { ok: true, datos: await fn(db) };
+  } catch {
+    return { ok: false, error: SIN_PUENTE };
+  }
+}
+
+/** Pedidos vigentes (sin cancelados ni status nulo) con las columnas del plan, paginados. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function pedidosPlanLegado(filtro?: (q: any) => any): Promise<Lectura<PedidoPlan[]>> {
+  return leerPuente(async (db) =>
+    (await leerTodoCom<PedidoPlan>(db, 'com_legado_pedidos', COLUMNAS_PLAN, 'id', filtro)).filter(
+      pedidoVigente,
+    ),
+  );
+}
+
+/** Fecha del primer pedido de la base: el motor nunca ve más historia que la que existe. */
+export function primerPedidoLegado(): Promise<Lectura<string | null>> {
+  return leerPuente(async (db) => {
+    const r = await db
+      .from('com_legado_pedidos')
+      .select('fecha_pedido')
+      .order('fecha_pedido', { ascending: true })
+      .limit(1);
+    if (r.error) throw r.error;
+    return ((r.data?.[0] as { fecha_pedido?: string } | undefined)?.fecha_pedido ?? null) as string | null;
+  });
+}
+
+export interface AperturaPlan {
+  id: string;
+  estatus: string | null;
+  fecha: string | null;
+  sucursal: string | null;
+}
+export function aperturasPlanLegado(): Promise<Lectura<AperturaPlan[]>> {
+  return leerPuente((db) =>
+    leerTodoCom<AperturaPlan>(db, 'com_legado_aperturas', 'id,estatus,fecha,sucursal', 'id'),
+  );
+}
+
+export function pedidosAperturaLegado(): Promise<Lectura<{ pedido_id: string }[]>> {
+  return leerPuente(async (db) =>
+    (
+      await leerTodoCom<{ pedido_id: string | null }>(
+        db,
+        'com_legado_pedidos_apertura',
+        'pedido_id',
+        'pedido_id',
+      )
+    ).filter((p): p is { pedido_id: string } => p.pedido_id != null),
+  );
+}
+
+/** De `ids`, las aperturas que ya tienen algún pedido vigente (ya hicieron su kit). En lotes de 80, como el viejo. */
+export function aperturasConPedidoLegado(ids: string[]): Promise<Lectura<string[]>> {
+  return leerPuente(async (db) => {
+    const con = new Set<string>();
+    for (let i = 0; i < ids.length; i += 80) {
+      const lote = ids.slice(i, i + 80);
+      const filas = await leerTodoCom<{ apertura_id: string; status: string | null }>(
+        db,
+        'com_legado_pedidos',
+        'id,apertura_id,status',
+        'id',
+        (q) => q.in('apertura_id', lote),
+      );
+      filas.filter(pedidoVigente).forEach((p) => con.add(p.apertura_id));
+    }
+    return [...con];
+  });
 }
