@@ -121,3 +121,14 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Exportar Excel: `.xlsx` en el navegador con SheetJS 0.20.3 (la CDN oficial que ya usa el portal), con las hojas del viejo (7 y 4).
 - Crear OC: abre Órdenes con el formulario prellenado (`?nueva=importaciones|cafe&proveedor=…&l=SKU:cantidad…`). Solo entran SKUs del catálogo; nada se guarda hasta pulsar Guardar.
 - Diferencias conocidas con el viejo: un borrador real de Zoho no cuenta como en camino en Importaciones; Proyección mensual nombra el escenario que se ve; no se portan el chip de pago, el aviso de activaciones ni el "impacto" en vivo del borrador de parámetros.
+
+## 13. Plan de abastos y Esta semana (plan 3f)
+
+- Pantallas `/comercializadora/plan-abastos` ("Planear y pagar") y `/comercializadora/esta-semana` ("Comprar"). Solo leen: "Crear OC" abre Órdenes prellenado (`?nueva=plan` para lo local; Café e Importaciones con sus enlaces del 3e) y "Copiar pedido" usa el portapapeles.
+- Plan de abastos: categorías incluidas por `?sin=cafe,imp`, semanas por `?sem=4|8|12`, `?vista=articulo`, búsqueda `?q=`/`?prov=` y "Ver todo" (`?det=1`). La gráfica es "Compras por semana"; los pagos por viernes están en Pagos proyectados. Exportar Excel lleva las seis hojas del viejo (sin la carga de Zoho en Configuración).
+- Esta semana: `?sem=1` para la próxima; "Ver todo" (`?det=1`).
+- Cálculo: ports con paridad en `supabase/functions/_shared/{planSem,planHoy}.ts` y `planLocal` en `planProv.ts` (`COM_APP_VIEJA="$TEMP/app-vieja-a9e4a22.html" npm run test:funciones`). Lo local usa la simulación del servidor (`com_pago_proyectado`) si la corrida de `com-proyeccion` tiene ≤ 36 h y está completa; si no, el cálculo local, y el aviso de arriba lo dice.
+- Viernes de pago: pedido el lunes de la semana (o hoy), contado = el viernes con al menos 3 días; con crédito, el viernes anterior al vencimiento. Los días de crédito salen de `com_zoho_proveedor.dias_credito`, por el vendor del grupo y, si no hay, por nombre (sin el paréntesis final); sin coincidencia, contado ("sin proveedor de Zoho").
+- Borradores por resolver: los `draft` de zoho-sync (`com_zoho_oc_lineas`); emitir, ajustar o borrar con las reglas del viejo. Un borrador no cuenta como en camino ni como compra emitida.
+- La carga del motor lee además `com_catalogo.clasificacion_detallada`, `com_zoho_oc_lineas.synced_at` y `com_zoho_proveedor.dias_credito`.
+- Diferencias conocidas con el viejo: crédito desde Zoho y no desde `com_proveedores`; borradores de zoho-sync en lugar de la carga de la configuración; el error de una categoría se ve también en la vista simple; Importaciones usa el escenario guardado; no se portan "Pagos por viernes", el historial de 60 días por proveedor ni los avisos de `_planBannersHtml` (salvo el de la fuente de las cantidades).
