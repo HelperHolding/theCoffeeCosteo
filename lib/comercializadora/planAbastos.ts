@@ -69,6 +69,12 @@ export function sinCon(inc: Inc, id: CatId): string | undefined {
 export const vistaSemDe = (v: string | undefined): 'proveedor' | 'articulo' =>
   v === 'articulo' ? 'articulo' : 'proveedor';
 /** Semanas que se pueden elegir: 4, 8 y 12 si caben, y las del plan (_planSemToolbarHtml). */
+/** Revisión 3f (I1): ?sem= solo acepta las opciones del selector; lo demás (1.5, 7, texto) cae al horizonte por omisión. */
+export function semanasValidas(c: { W: number }, txt: string | string[] | undefined): number {
+  const v = Number(Array.isArray(txt) ? txt[0] : txt);
+  return opcionesSemanas(c).includes(v) ? v : planSemW(c, 0);
+}
+
 export function opcionesSemanas(c: { W: number }): number[] {
   const o = [4, 8, 12].filter((n) => n <= c.W);
   if (o.indexOf(c.W) < 0) o.push(c.W);

@@ -48,6 +48,7 @@ import {
   tablaProvs,
   tarjetasCat,
   vistaSemDe,
+  semanasValidas,
 } from '@/lib/comercializadora/planAbastos';
 
 type Sp = Record<string, string | undefined>;
@@ -82,7 +83,7 @@ export default async function PlanAbastosPagina({ searchParams }: { searchParams
     );
   const c = planLocalMotor(m);
   const inc = incDe(sp.sin),
-    Wv = planSemW(c, Number(sp.sem) || 0),
+    Wv = semanasValidas(c, sp.sem),
     vista = vistaSemDe(sp.vista);
   const f: FuentesPlan = { cafe: null, imp: null };
   const S = planSemCalc(c, inc, Wv, {
@@ -94,7 +95,8 @@ export default async function PlanAbastosPagina({ searchParams }: { searchParams
   const params: Sp = {
     det: det ? '1' : undefined,
     sin: sp.sin || undefined,
-    sem: sp.sem || undefined,
+    // Solo el valor aceptado viaja en los enlaces (revisión 3f, I1).
+    sem: Wv !== planSemW(c, 0) ? String(Wv) : undefined,
     vista: vista === 'articulo' ? vista : undefined,
     q: q || undefined,
     prov: prov || undefined,

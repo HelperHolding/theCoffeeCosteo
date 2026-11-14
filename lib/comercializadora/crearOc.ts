@@ -144,6 +144,11 @@ export function ocPlan(
         ? 'Nada que pedir hoy a este proveedor: lo de esta semana toca en los próximos días'
         : 'Nada que pedir esta semana a este proveedor',
     };
+  // Revisión 3f (I2): el enlace lleva hasta MAX_LINEAS_OC; antes se recortaba en silencio y el monto contaba todo.
+  if (items.length > MAX_LINEAS_OC)
+    return {
+      error: `Son ${items.length} artículos y una OC prellenada lleva hasta ${MAX_LINEAS_OC}: créala desde Órdenes de compra.`,
+    };
   let mOC = 0,
     sinC = 0;
   items.forEach((r) => (r.costo > 0 ? (mOC += planCantOC(r) * r.costo) : sinC++));
