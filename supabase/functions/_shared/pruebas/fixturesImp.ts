@@ -152,3 +152,17 @@ export function datosImp(extra: Partial<DatosPlan> = {}): DatosPlan {
     aperturas: aperturasNorm(APERTURAS_IMP), pedAper: [], kit: { e1: true }, conteoUlt: { cedis: {}, yulius: {} }, ocZohoBorr: [],
     srv: null, avisos: [], cargadoEn: 1, ...extra };
 }
+
+// ═══ Café (Tarea 4) ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/** Lo que portan planCafe.ts y planProv.ts: el armado del plan con proveedores (_planBuild) y el adaptador de café. */
+export const NOMBRES_CAFE = [
+  "_planBuild", "_planBacktestAgg", "_planAplicarServidor", "_planCalcMontos", "_planAgruparProv", "_planConsolidar", "_minVendorDeGrupo",
+  "_planEsCafe", "_planKey", "_planDiaAtras", "_planSinSrv", "_planCafeFueraLocal", "_planResumen", "_planCantOC", "_cafeKgDe",
+  "_cafeRed", "_cafeArmar", "_cafeCorrer", "_cafeMemo", "_cafeEngine",
+];
+/** Mínimos de proveedor de Zoho (com_zoho_proveedor). */
+export const ZPROV = [
+  { vendor_id: "v1", nombre: "CAFICULTORES OMAC", minimo_compra: 40000 },
+  { vendor_id: "v2", nombre: "Tostador Local", minimo_compra: 0 },
+];

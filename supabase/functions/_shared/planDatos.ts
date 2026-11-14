@@ -137,6 +137,8 @@ export interface DatosPlan {
   pedAper: { pedido_id: any }[]; kit: Record<string, boolean>;
   conteoUlt: { cedis: Record<string, string>; yulius: Record<string, string> };
   ocZohoBorr?: LineaBorrador[] | null;
+  /** Mínimos de proveedor de Zoho (com_zoho_proveedor): los usa la agrupación por proveedor (plan 3e, Café). */
+  zprov?: { vendor_id: any; nombre: string | null; minimo_compra: number | null }[] | null;
   srv: Servidor | null; avisos: string[]; cargadoEn: number;
 }
 
