@@ -139,6 +139,7 @@ const gruposComercializadora: Grupo[] = [
     titulo: 'Comprar',
     enlaces: [
       { href: '/comercializadora', nombre: 'Qué pedir', icono: ShoppingCart, exacto: true },
+      { href: '/comercializadora/esta-semana', nombre: 'Esta semana', icono: CalendarCheck },
       { href: '/comercializadora/oc-automaticas', nombre: 'OC automáticas', icono: Bot },
       { href: '/comercializadora/ordenes', nombre: 'Órdenes de compra', icono: ClipboardList },
       { href: '/comercializadora/minimos', nombre: 'Mínimos de proveedor', icono: Scale },
