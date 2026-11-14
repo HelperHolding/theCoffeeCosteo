@@ -17,6 +17,7 @@ import { validarTraspaso, type FormTraspaso } from '@/lib/comercializadora/trasp
 import { validarMonto } from '@/lib/comercializadora/minimos';
 import { kpiAbMetas, normalizarCfgMotor, validarMetas } from '@/lib/comercializadora/indicadores';
 import { limpiarMotor } from '@/lib/comercializadora/motor';
+import { cafeCfgNorm, impCfgNorm } from '@/lib/comercializadora/paramsImpCafe';
 
 import {
   CAMPOS_CATALOGO,
@@ -761,6 +762,58 @@ export async function aplicarPiezasApertura(
       revalidatePath('/comercializadora', 'layout');
     }
     return { ok: true, guardados, fallas };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+// ── Plan 3e: parámetros de Importaciones y Café ────────────────────────────────────────────────────────────────
+
+/**
+ * _planCfgGuardar('imp' | 'cafe') (decisión 7): solo escribe config.imp o config.cafe, normalizada con _impCfgNorm o
+ * _cafeCfgNorm; lo demás de la configuración se conserva tal cual. Update condicionado a la versión que vio la pantalla y
+ * una fila de historial por cambio (ámbito 'config', claves como 'imp.items.SKU.venta' o 'cafe.prod.white_1kg.precio').
+ * No recalcula com-minmax: el servidor no lee estas secciones.
+ */
+export async function guardarParamsImpCafe(
+  ambito: 'imp' | 'cafe',
+  borrador: unknown,
+  version: number,
+): Promise<Resultado<{ version: number; cambios: number }>> {
+  try {
+    if (ambito !== 'imp' && ambito !== 'cafe') return { error: 'Sección desconocida' };
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const actual = await com(s.db).from('com_plan_config').select('config,version').eq('id', 1).maybeSingle();
+    if (actual.error) return fallo(actual.error);
+    if (!actual.data) return { error: 'No hay configuración guardada todavía' };
+    if (Number(actual.data.version) !== Number(version)) return { error: CONFIG_OCUPADA };
+    const norm = ambito === 'imp' ? impCfgNorm : cafeCfgNorm;
+    const raw: Config = actual.data.config ?? {};
+    const antes = norm(raw[ambito]);
+    const despues = norm(borrador);
+    const cambios = difConfig({ [ambito]: antes }, { [ambito]: despues });
+    if (!cambios.length) return { error: 'No hay cambios que guardar' };
+    const r = await com(s.db)
+      .from('com_plan_config')
+      .update({ config: { ...raw, [ambito]: despues }, version: Number(version) + 1 })
+      .eq('id', 1)
+      .eq('version', version)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: CONFIG_OCUPADA };
+    await com(s.db)
+      .from('com_plan_config_historial')
+      .insert(
+        cambios.map((c) => ({
+          ambito: 'config',
+          clave: c.clave,
+          valor_anterior: c.antes,
+          valor_nuevo: c.despues,
+        })),
+      );
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, version: Number(version) + 1, cambios: cambios.length };
   } catch (e) {
     return fallo(e);
   }
