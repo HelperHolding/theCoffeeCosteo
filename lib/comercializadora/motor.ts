@@ -24,6 +24,7 @@ import {
   type LineaBorrador,
   type Servidor,
 } from '../../supabase/functions/_shared/planDatos.ts';
+import { kpiAbCalc } from '../../supabase/functions/_shared/planKpi.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Fila = Record<string, any>;
@@ -269,3 +270,9 @@ export function memoMotor<T>(m: { R: DatosPlan; cfg: Config }, tipo: string, fn:
   memo.set(k, v);
   return v;
 }
+
+export type MotorListo = Extract<Motor, { ok: true }>;
+/** Indicadores de abasto y riesgo de quiebre (_kpiAbCalc) del motor: una vez por datos + configuración. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const indicadoresMotor = (m: MotorListo): any =>
+  memoMotor(m, 'kpi', () => kpiAbCalc(m.R, m.cfg, Date.now()));
