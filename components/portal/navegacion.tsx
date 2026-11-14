@@ -37,6 +37,7 @@ import {
   Send,
   Gauge,
   Ship,
+  CalendarRange,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
 
@@ -138,6 +139,7 @@ const gruposComercializadora: Grupo[] = [
     titulo: 'Comprar',
     enlaces: [
       { href: '/comercializadora', nombre: 'Qué pedir', icono: ShoppingCart, exacto: true },
+      { href: '/comercializadora/esta-semana', nombre: 'Esta semana', icono: CalendarCheck },
       { href: '/comercializadora/oc-automaticas', nombre: 'OC automáticas', icono: Bot },
       { href: '/comercializadora/ordenes', nombre: 'Órdenes de compra', icono: ClipboardList },
       { href: '/comercializadora/minimos', nombre: 'Mínimos de proveedor', icono: Scale },
@@ -146,6 +148,7 @@ const gruposComercializadora: Grupo[] = [
   {
     titulo: 'Planear y pagar',
     enlaces: [
+      { href: '/comercializadora/plan-abastos', nombre: 'Plan de abastos', icono: CalendarRange },
       { href: '/comercializadora/proveedores-sin-stock', nombre: 'Proveedores sin stock', icono: CalendarX2 },
       { href: '/comercializadora/pagos', nombre: 'Pagos proyectados', icono: Wallet },
       { href: '/comercializadora/doh', nombre: 'DOH', icono: Gauge },

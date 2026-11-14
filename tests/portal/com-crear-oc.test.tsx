@@ -10,11 +10,21 @@ vi.mock('../../app/(comercializadora)/comercializadora/acciones', () => ({
   eliminarOc: vi.fn(),
 }));
 import { Ordenes } from '../../components/comercializadora/ordenes';
-import { enlaceOc, ocCafe, ocImportaciones, prellenadoOc } from '../../lib/comercializadora/crearOc';
+import {
+  enlaceOc,
+  ocCafe,
+  ocGrupoSem,
+  ocImportaciones,
+  ocLocal,
+  prellenadoOc,
+} from '../../lib/comercializadora/crearOc';
 import { normalizarCfgMotor } from '../../supabase/functions/_shared/planDatos.ts';
 import { impCorrer } from '../../supabase/functions/_shared/planImp.ts';
 import { cafeOrdenes } from '../../supabase/functions/_shared/planCafe.ts';
+import { planLocal } from '../../supabase/functions/_shared/planProv.ts';
+import { planSemCalc } from '../../supabase/functions/_shared/planSem.ts';
 import { datosImp, ZPROV } from '../../supabase/functions/_shared/pruebas/fixturesImp.ts';
+import { datosSem, SRV_SEM } from '../../supabase/functions/_shared/pruebas/fixturesSem.ts';
 
 const CAT = ['INS-DES-021', 'ins-des-005', 'INS-CAF-002'];
 /** Los parámetros como los entrega Next (un valor repetido llega como arreglo). */
@@ -179,5 +189,70 @@ describe('Órdenes con el formulario prellenado', () => {
   it('solo lectura: no abre el formulario', () => {
     render(<Ordenes {...base} editable={false} prellenado={pre} />);
     expect(screen.queryByText('Nueva orden de compra')).toBeNull();
+  });
+});
+
+describe('Crear OC desde el Plan de abastos y Esta semana (plan 3f)', () => {
+  const cfg = normalizarCfgMotor({});
+
+  it('proveedor local: lo de esta semana (con lo adelantado por el mínimo), monto y arribo con el lead time más largo', () => {
+    const c = planLocal(datosSem(), cfg);
+    expect(ocLocal(c, 'jarabes mx')).toEqual({
+      origen: 'Plan de abastos',
+      proveedor: 'Jarabes MX',
+      lineas: [
+        { sku: 'LOC-JAR-001', cantidad: 31 },
+        { sku: 'LOC-JAR-002', cantidad: 23 },
+      ],
+      monto: 5130,
+      arribo: '2026-11-20',
+    });
+    expect(ocLocal(c, '__sin__')).toEqual({
+      error: 'Asigna un proveedor a estos artículos antes de crear la OC',
+    });
+  });
+
+  it('con la simulación del servidor va solo lo de HOY (pedirHoy); si lo de la semana toca otro día, lo dice', () => {
+    const c = planLocal(datosSem({ srv: SRV_SEM }), cfg);
+    const oc = ocLocal(c, 'jarabes mx');
+    expect('error' in oc ? oc.error : oc.lineas).toEqual([{ sku: 'LOC-JAR-001', cantidad: 36 }]);
+    expect(ocLocal(c, 'polvos y bases')).toEqual({
+      error: 'Nada que pedir hoy a este proveedor: lo de esta semana toca en los próximos días',
+    });
+  });
+
+  it('cada grupo del plan abre la OC de su categoría; el enlace lleva nueva=plan y Órdenes lo acepta', () => {
+    const R = datosSem(),
+      c = planLocal(R, cfg),
+      cafe = cafeOrdenes(R, cfg),
+      imp = impCorrer(R, cfg);
+    const S = planSemCalc(c, { local: true, cafe: true, imp: true }, 12, {
+      cafe: () => cafe,
+      imp: () => imp,
+    });
+    const de = (cat: string) => S.provs.find((g) => g.cat === cat && g.n[0] > 0)!;
+    const o = (cat: string) => ocGrupoSem(de(cat), { local: c, cafe, imp });
+    expect(
+      ['local', 'cafe', 'imp'].map((k) => {
+        const x = o(k);
+        return 'error' in x ? x.error : x.origen;
+      }),
+    ).toEqual(['Plan de abastos', 'Café', 'Importaciones']);
+    expect(ocGrupoSem({ fuente: 'imp', pk: 'Green Packaging' }, { local: c, cafe: null, imp: null })).toEqual(
+      {
+        error: 'No hay un cálculo de importaciones.',
+      },
+    );
+    const loc = o('local');
+    if ('error' in loc) throw new Error(loc.error);
+    const url = enlaceOc(loc);
+    expect(url).toContain('nueva=plan&');
+    expect(
+      prellenadoOc(
+        sp(url),
+        R.cat.map((x) => x.sku),
+        '2026-11-13',
+      )?.origen,
+    ).toBe('Plan de abastos');
   });
 });

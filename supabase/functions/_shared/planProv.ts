@@ -1,10 +1,11 @@
 // deno-lint-ignore-file no-explicit-any no-var prefer-const
 // Port LITERAL de la agrupación por proveedor del Plan de abasto del sitio viejo (app/index.html a9e4a22): el mínimo de
 // Zoho de cada grupo (_minVendorDeGrupo 27586 y el bloque de _planBuild 33413–33416), _planConsolidar (32957) y
-// _planAgruparProv (33529) sin el historial de 60 días (`hist`, que solo pinta el panel de proveedores del plan 3f).
-// Lo usa el "Qué pedir" de Café (plan 3e) y lo reutilizará el 3f. planProv_parity_test.ts compara contra la app.
+// _planAgruparProv (33529) sin el historial de 60 días (`hist`: solo lo pinta el panel de proveedores de "Todo lo demás",
+// que no se porta). Lo usan el "Qué pedir" de Café (plan 3e) y el plan local completo del Plan de abastos y Esta semana
+// (planLocal, plan 3f). planCafe_parity_test.ts y planProv_parity_test.ts comparan contra la app.
 import type { DatosPlan } from "./planDatos.ts";
-import type { Plan } from "./planBuild.ts";
+import { type Plan, planBuild } from "./planBuild.ts";
 
 /** Fila de com_zoho_proveedor que lee el plan (R.zprov). */
 export type ZohoProveedor = NonNullable<DatosPlan["zprov"]>[number];
@@ -104,4 +105,18 @@ export function planProvs(c: Plan, R: DatosPlan): { provs: GrupoProv[]; minManua
     return x as GrupoProv;
   }).sort(function (a, b) { return b.montoEsta - a.montoEsta || b.nEsta - a.nEsta || a.nombre.localeCompare(b.nombre); });
   return { provs: provs, minManual: minManual, vendorDe: vendorDe };
+}
+
+/** Plan con sus proveedores (c.provs, c.minManual y c.vendorDe de _planBuild). */
+export type PlanProv = Plan & { provs: GrupoProv[]; minManual: Record<string, number>; vendorDe: Record<string, string> };
+
+/**
+ * _planBuild(R, cfg) completo para el plan local (plan 3f): el armado del 3d, con la simulación del servidor si está
+ * vigente (planAplicarServidor), más la agrupación por proveedor con sus mínimos, que puede adelantar pedidos.
+ */
+export function planLocal(R: DatosPlan, cfg: any): PlanProv {
+  var c = planBuild(R, cfg) as PlanProv;
+  var pv = planProvs(c, R);
+  c.provs = pv.provs; c.minManual = pv.minManual; c.vendorDe = pv.vendorDe;
+  return c;
 }
