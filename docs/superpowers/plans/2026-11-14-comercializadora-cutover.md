@@ -108,6 +108,13 @@ La guía de operación es `docs/migracion/comercializadora.md`, secciones 1–13
 
     Cada paso marcado "OK" espera un sí explícito, aunque el anterior se haya aprobado.
 
+**Respuestas del usuario (2026-11-14, al revisar el plan):**
+
+- **Dominio del portal en el aviso:** `https://the-coffee-costeo.vercel.app` (confirmado).
+- **Base de las Tareas 5 y 6 (repo viejo):** primero se mergean en `main` los PRs #17 y #18 (seguridad del login) y la rama `feat/proveedores-sin-stock`; la rama del cutover sale de ese `main`. Si al aplicar los cambios del HTML hay conflictos con esos merges, se resuelven en la Tarea 5 conservando lo de `main` y se vuelve a correr su prueba (`node:test`).
+- **Secretos `ZOHO_*` del proyecto viejo:** el usuario los tiene guardados en un lugar seguro; la reversa (Tarea 12) puede volver a ponerlos.
+- **Quedan para el día del cambio (Tareas 8 a 10):** fecha y ventana, quién corre cada paso de producción, un OK por día o uno para toda la rutina de la ventana, y los límites diarios de la API de Zoho con dos sistemas sincronizando.
+
 ## Mapa de dependencias del sitio viejo (verificado en `ee23758`)
 
 | | Qué | Dónde (`app/index.html` salvo que se diga) | En este plan |
