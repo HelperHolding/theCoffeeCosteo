@@ -111,3 +111,13 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Las metas de Indicadores se guardan en `com_plan_config.config.kpi` con historial (`kpi.<meta>`). Mientras el viejo siga en Real, no se editan desde el portal.
 - Piezas por apertura: Catálogo → "Sugerir piezas por apertura". Aplicar guarda solo lo marcado y deja historial por artículo.
 - "OCs en camino al día con Zoho" (Indicadores › Datos del plan) mide la frescura de la última corrida buena de `zoho-sync` (≤ 3 días verde, ≤ 7 ámbar), no la conciliación por archivo del viejo.
+
+## 12. Importaciones y Café (plan 3e)
+
+- Pantallas `/comercializadora/importaciones` y `/comercializadora/cafe` ("Planear y pagar"), con vistas por `?vista=`, escenario por `?esc=` (solo cambia lo que se ve) y "Ver todo" (`?det=1`).
+- Los motores de las Sheets (`_impEngine`, `_cafeEngine`) son copias exactas del HTML viejo en `supabase/functions/_shared/{impEngine,cafeEngine}.ts`, generadas con `node scripts/comercializadora/portar-motores-hoja.mjs <html viejo> .`; no se editan a mano. El adaptador (`planImp.ts`), la configuración (`impCafeCfg.ts`), el café (`planCafe.ts`) y la agrupación por proveedor (`planProv.ts`) son ports con paridad: `COM_APP_VIEJA="$TEMP/app-vieja-a9e4a22.html" npm run test:funciones`.
+- Todo corre sobre los datos del motor del plan (caché de 10 minutos compartida). Se agregó una lectura opcional de `com_zoho_proveedor` (mínimos de proveedor) para el Qué pedir de café; si falla, aviso "mínimos de proveedor".
+- Parámetros: se guardan solo en `com_plan_config.config.imp` / `.cafe`, normalizados, con la versión que se vio e historial por clave (`imp.items.SKU.venta`, `cafe.prod.white_1kg.precio`…). No recalculan `com-minmax`. Mientras el viejo siga en Real, no se editan desde el portal.
+- Exportar Excel: `.xlsx` en el navegador con SheetJS 0.20.3 (la CDN oficial que ya usa el portal), con las hojas del viejo (7 y 4).
+- Crear OC: abre Órdenes con el formulario prellenado (`?nueva=importaciones|cafe&proveedor=…&l=SKU:cantidad…`). Solo entran SKUs del catálogo; nada se guarda hasta pulsar Guardar.
+- Diferencias conocidas con el viejo: un borrador real de Zoho no cuenta como en camino en Importaciones; Proyección mensual nombra el escenario que se ve; no se portan el chip de pago, el aviso de activaciones ni el "impacto" en vivo del borrador de parámetros.
