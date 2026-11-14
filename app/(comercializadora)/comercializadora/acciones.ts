@@ -17,6 +17,7 @@ import { validarTraspaso, type FormTraspaso } from '@/lib/comercializadora/trasp
 import { validarMonto } from '@/lib/comercializadora/minimos';
 import { kpiAbMetas, normalizarCfgMotor, validarMetas } from '@/lib/comercializadora/indicadores';
 import { limpiarMotor } from '@/lib/comercializadora/motor';
+
 import {
   CAMPOS_CATALOGO,
   validarCampo,
@@ -711,5 +712,49 @@ export async function actualizarMotor(): Promise<Resultado> {
     return { ok: true };
   } catch {
     return { error: 'No se pudo actualizar. Intenta de nuevo.' };
+  }
+}
+
+/**
+ * _planPzasApAplicar: guarda las piezas por apertura marcadas. Cada artículo es un update condicional al valor que se vio
+ * (si otra persona lo cambió mientras se revisaba, no se pisa) y deja su historial como el Catálogo.
+ */
+export async function aplicarPiezasApertura(
+  cambios: { sku: string; valor: string; antes: number }[],
+): Promise<Resultado<{ guardados: number; fallas: string[] }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const validos = cambios
+      .map((c) => ({ ...c, v: Number(String(c.valor).trim().replace(',', '.')) }))
+      .filter((c) => String(c.valor).trim() !== '' && Number.isFinite(c.v) && c.v >= 0)
+      .map((c) => ({ ...c, v: Math.round(c.v * 100) / 100 }));
+    if (!validos.length) return { error: 'No hay filas marcadas con un valor válido' };
+    let guardados = 0;
+    const fallas: string[] = [];
+    for (const c of validos) {
+      const r = await com(s.db)
+        .from('com_catalogo')
+        .update({ cantidad_por_apertura: c.v })
+        .eq('sku', c.sku)
+        .eq('cantidad_por_apertura', c.antes)
+        .select('sku');
+      if (r.error) {
+        fallas.push(`${c.sku}: ${fallo(r.error).error}`);
+        continue;
+      }
+      if (!r.data?.length) {
+        fallas.push(
+          `${c.sku}: el valor cambió mientras revisabas (o no tienes permiso); recarga y vuelve a revisar`,
+        );
+        continue;
+      }
+      await registrarHistorial(s.db, 'sku', `${c.sku}:cantidad_por_apertura`, c.antes, c.v);
+      guardados++;
+    }
+    if (guardados) revalidatePath('/comercializadora', 'layout');
+    return { ok: true, guardados, fallas };
+  } catch (e) {
+    return fallo(e);
   }
 }
