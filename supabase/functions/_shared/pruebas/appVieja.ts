@@ -5,10 +5,14 @@ export const RUTA_APP = Deno.env.get("COM_APP_VIEJA");
 export const SIN_APP = !RUTA_APP;
 const APP = RUTA_APP ? await Deno.readTextFile(RUTA_APP) : "";
 
-/** Código fuente de una declaración top-level de la app (function / var / const) por nombre, con balanceo de llaves. */
+/**
+ * Código fuente de una declaración top-level de la app (function / var / const) por nombre, con balanceo de llaves. Si el
+ * nombre se declara dos veces vale la ÚLTIMA, como en el navegador (el Plan de abastos redefine sus _planSem* en 39807).
+ */
 export function fuente(nombre: string): string {
-  const re = new RegExp(`(?:^|\\n)((?:async )?function ${nombre}\\(|(?:var|const) ${nombre}\\s*=)`);
-  const m = re.exec(APP);
+  const re = new RegExp(`(?:^|\\n)((?:async )?function ${nombre}\\(|(?:var|const) ${nombre}\\s*=)`, "g");
+  let m: RegExpExecArray | null = null;
+  for (let x = re.exec(APP); x; x = re.exec(APP)) m = x;
   if (!m) throw new Error("No encontré " + nombre + " en app/index.html");
   const ini = m.index + m[0].indexOf(m[1]);
   const esFn = m[1].includes("function");
@@ -46,6 +50,10 @@ export function claseFecha(ahora: number) {
     override getMonth() { return this.l().getUTCMonth(); }
     override getDate() { return this.l().getUTCDate(); }
     override getHours() { return this.l().getUTCHours(); }
+    override getDay() { return this.l().getUTCDay(); }
+    override setDate(d: number) {
+      const l = this.l(); l.setUTCDate(d); return this.setTime(l.getTime() + OFF);
+    }
     override setHours(h: number, m = 0, s = 0, ms = 0) {
       const l = this.l(); l.setUTCHours(h, m, s, ms); return this.setTime(l.getTime() + OFF);
     }

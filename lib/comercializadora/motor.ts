@@ -32,6 +32,7 @@ import {
   type CorridaCafe,
   type PlanCafe,
 } from '../../supabase/functions/_shared/planCafe.ts';
+import { planLocal, type PlanProv } from '../../supabase/functions/_shared/planProv.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Fila = Record<string, any>;
@@ -44,7 +45,7 @@ const VIDA_MS = 10 * 60 * 1000; // como _planAsegurar: los datos crudos se reuti
 const CATALOGO =
   'sku,nombre,estatus,categoria,costo_unitario,saldo_cedis,saldo_yulius,zoho_stock,zoho_stock_fisico,zoho_sync_at,' +
   'zoho_actualizado,cantidad_por_apertura,minimo_compra_pzas,multiplo_compra,dias_seguridad,created_at,' +
-  'proveedor_preferido,origen,zoho_vendor_id';
+  'proveedor_preferido,origen,zoho_vendor_id,clasificacion_detallada';
 
 /** _planSrvMotivo: corrida vacía o con distinto número de filas que las que el log dice que guardó. */
 export function planSrvMotivo(resumen: { filas?: unknown } | null, n: number): string | null {
@@ -178,20 +179,21 @@ export async function cargarDatosPlan(
       leerTodoCom<LineaBorrador>(
         db,
         'com_zoho_oc_lineas',
-        'zoho_po_id,po_number,sku,vendor_name,fecha_oc,cantidad,cantidad_recibida,precio',
+        'zoho_po_id,po_number,sku,vendor_name,fecha_oc,cantidad,cantidad_recibida,precio,synced_at',
         'zoho_po_id',
         (q) => q.eq('status', 'draft').order('sku'),
       ),
     ),
     servidorPlan(db, ahora),
     // Plan 3e: mínimos de proveedor de Zoho para la agrupación por proveedor (Qué pedir de café), como R.zprov del viejo.
+    // Plan 3f: también los días de crédito, para el viernes de pago de Esta semana.
     opcional(
-      leerTodoCom<{ vendor_id: string; nombre: string | null; minimo_compra: number | null }>(
-        db,
-        'com_zoho_proveedor',
-        'vendor_id,nombre,minimo_compra',
-        'vendor_id',
-      ),
+      leerTodoCom<{
+        vendor_id: string;
+        nombre: string | null;
+        minimo_compra: number | null;
+        dias_credito: number | null;
+      }>(db, 'com_zoho_proveedor', 'vendor_id,nombre,minimo_compra,dias_credito', 'vendor_id'),
     ),
   ]);
   if (!pedidos.ok) return { ok: false, error: pedidos.error };
@@ -316,3 +318,9 @@ export const cafeMotor = (m: MotorListo, esc?: string | null): CorridaCafe =>
 /** Qué pedir de café (plan 3e): el plan de abasto solo con café tostado, agrupado por proveedor. */
 export const cafeOrdenesMotor = (m: MotorListo): PlanCafe =>
   memoMotor(m, 'cafe-ordenes', () => cafeOrdenes(m.R, m.cfg));
+/**
+ * Plan local completo (plan 3f, Plan de abastos y Esta semana): con la simulación del servidor si está vigente (≤ 36 h y
+ * completa) y agrupado por proveedor. A diferencia de DOH e Indicadores (decisión 5 del 3d), no usa planSinSrv.
+ */
+export const planLocalMotor = (m: MotorListo): PlanProv =>
+  memoMotor(m, 'plan-local', () => planLocal(m.R, m.cfg));
