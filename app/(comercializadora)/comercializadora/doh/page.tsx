@@ -1,5 +1,6 @@
 import { Encabezado } from '@/components/portal/piezas';
 import { Doh } from '@/components/comercializadora/doh';
+import { ActualizarMotor } from '@/components/comercializadora/actualizar-motor';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { indicadoresMotor, motorPlan } from '@/lib/comercializadora/motor';
 import { estadoInicial } from '@/lib/comercializadora/doh';
@@ -13,7 +14,9 @@ export default async function DohPagina({ searchParams }: { searchParams: Promis
       area="Comercializadora"
       titulo="DOH — días de inventario"
       descripcion="¿Alcanza el inventario hasta que llegue una compra nueva? Con las OCs en camino."
-    />
+    >
+      <ActualizarMotor />
+    </Encabezado>
   );
   if (!m.ok)
     return (

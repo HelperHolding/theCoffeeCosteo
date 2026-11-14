@@ -15,6 +15,8 @@ import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
 import { cantidadConteo } from '@/lib/comercializadora/inventario';
 import { validarTraspaso, type FormTraspaso } from '@/lib/comercializadora/traspasos';
 import { validarMonto } from '@/lib/comercializadora/minimos';
+import { kpiAbMetas, normalizarCfgMotor, validarMetas } from '@/lib/comercializadora/indicadores';
+import { limpiarMotor } from '@/lib/comercializadora/motor';
 import {
   CAMPOS_CATALOGO,
   validarCampo,
@@ -645,5 +647,69 @@ export async function borrarMapeo(nombre: string): Promise<Resultado> {
     return { ok: true };
   } catch (e) {
     return fallo(e);
+  }
+}
+
+// ── Plan 3d: Indicadores y piezas por apertura ─────────────────────────────────────────────────────────────────
+
+const CONFIG_OCUPADA =
+  'Otra persona guardó la configuración mientras trabajabas. Recarga para ver sus cambios y vuelve a intentarlo.';
+
+/**
+ * _kpiAbMetasGuardar (decisión 10): solo cfg.kpi.*, con la versión que vio la pantalla y una fila de historial por meta
+ * que cambia (ámbito 'config', clave 'kpi.<meta>'). Las metas no cambian el cálculo del servidor: no se recalcula.
+ */
+export async function guardarMetasKpi(
+  txt: Record<string, string>,
+  version: number,
+): Promise<Resultado<{ version: number; cambios: number }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const v = validarMetas(txt);
+    if ('error' in v) return v;
+    const actual = await com(s.db).from('com_plan_config').select('config,version').eq('id', 1).maybeSingle();
+    if (actual.error) return fallo(actual.error);
+    if (!actual.data) return { error: 'No hay configuración guardada todavía' };
+    if (Number(actual.data.version) !== Number(version)) return { error: CONFIG_OCUPADA };
+    const antes = kpiAbMetas(normalizarCfgMotor(actual.data.config));
+    const cambios = Object.keys(v.vals).filter((k) => Number(antes[k]) !== v.vals[k]);
+    if (!cambios.length) return { ok: true, version: Number(version), cambios: 0 };
+    const raw: Config = actual.data.config ?? {};
+    const kpi = raw.kpi && typeof raw.kpi === 'object' ? raw.kpi : {};
+    const r = await com(s.db)
+      .from('com_plan_config')
+      .update({ config: { ...raw, kpi: { ...kpi, ...v.vals } }, version: Number(version) + 1 })
+      .eq('id', 1)
+      .eq('version', version)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: CONFIG_OCUPADA };
+    await com(s.db)
+      .from('com_plan_config_historial')
+      .insert(
+        cambios.map((k) => ({
+          ambito: 'config',
+          clave: `kpi.${k}`,
+          valor_anterior: antes[k],
+          valor_nuevo: v.vals[k],
+        })),
+      );
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true, version: Number(version) + 1, cambios: cambios.length };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** "Actualizar" de Indicadores, DOH y Piezas por apertura: vuelve a leer los datos del plan. No escribe nada. */
+export async function actualizarMotor(): Promise<Resultado> {
+  try {
+    await sesionComercializadora(false);
+    limpiarMotor();
+    revalidatePath('/comercializadora', 'layout');
+    return { ok: true };
+  } catch {
+    return { error: 'No se pudo actualizar. Intenta de nuevo.' };
   }
 }
