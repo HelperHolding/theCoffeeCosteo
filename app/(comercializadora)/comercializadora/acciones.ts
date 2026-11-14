@@ -725,13 +725,16 @@ export async function aplicarPiezasApertura(
   try {
     const s = await editorCom();
     if (!s) return { error: SOLO_LECTURA };
-    const validos = cambios
-      .map((c) => ({ ...c, v: Number(String(c.valor).trim().replace(',', '.')) }))
-      .filter((c) => String(c.valor).trim() !== '' && Number.isFinite(c.v) && c.v >= 0)
-      .map((c) => ({ ...c, v: Math.round(c.v * 100) / 100 }));
+    const leidos = cambios.map((c) => ({ ...c, v: Number(String(c.valor).trim().replace(',', '.')) }));
+    const esValido = (c: (typeof leidos)[number]) =>
+      String(c.valor).trim() !== '' && Number.isFinite(c.v) && c.v >= 0;
+    const validos = leidos.filter(esValido).map((c) => ({ ...c, v: Math.round(c.v * 100) / 100 }));
     if (!validos.length) return { error: 'No hay filas marcadas con un valor válido' };
     let guardados = 0;
-    const fallas: string[] = [];
+    // Revisión 3d (I3): un valor inválido se reporta; antes desaparecía y el mensaje decía solo "Guardadas: N".
+    const fallas: string[] = leidos
+      .filter((c) => !esValido(c))
+      .map((c) => `${c.sku}: valor no válido (usa un número de 0 en adelante)`);
     for (const c of validos) {
       const r = await com(s.db)
         .from('com_catalogo')
@@ -752,7 +755,11 @@ export async function aplicarPiezasApertura(
       await registrarHistorial(s.db, 'sku', `${c.sku}:cantidad_por_apertura`, c.antes, c.v);
       guardados++;
     }
-    if (guardados) revalidatePath('/comercializadora', 'layout');
+    if (guardados) {
+      // Revisión 3d (I1): como el viejo (que escribía en _planRaw.cat), el plan ve el valor nuevo sin esperar 10 minutos.
+      limpiarMotor();
+      revalidatePath('/comercializadora', 'layout');
+    }
     return { ok: true, guardados, fallas };
   } catch (e) {
     return fallo(e);

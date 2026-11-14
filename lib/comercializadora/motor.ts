@@ -234,11 +234,14 @@ export type Motor = { ok: true; R: DatosPlan; cfg: Config; version: number } | {
 // que todos los que pueden leer Comercializadora ven los mismos datos. Se pierde al reiniciar la instancia.
 let cache: { t: number; R: DatosPlan } | null = null;
 let memo = new Map<string, unknown>();
+// Revisión 3d (I2): una sola carga a la vez por día + historia; las visitas simultáneas esperan la misma.
+let enCurso: { k: string; p: ReturnType<typeof cargarDatosPlan> } | null = null;
 
 /** "Actualizar": la siguiente lectura vuelve a la base y al puente. */
 export function limpiarMotor() {
   cache = null;
   memo = new Map();
+  enCurso = null;
 }
 
 /**
@@ -253,10 +256,19 @@ export async function motorPlan(db: unknown, ahora: Date = new Date()): Promise<
   const hist = planHistNecesaria(cfg);
   const t = ahora.getTime();
   if (!cache || cache.R.hoy !== hoy || cache.R.hist < hist || t - cache.t > VIDA_MS) {
-    const r = await cargarDatosPlan(db, hoy, hist, t);
+    const k = `${hoy}|${hist}`;
+    if (!enCurso || enCurso.k !== k) {
+      const p = cargarDatosPlan(db, hoy, hist, t).finally(() => {
+        if (enCurso?.p === p) enCurso = null;
+      });
+      enCurso = { k, p };
+    }
+    const r = await enCurso.p;
     if (!r.ok) return r;
-    cache = { t, R: r.datos };
-    memo = new Map();
+    if (cache?.R !== r.datos) {
+      cache = { t, R: r.datos };
+      memo = new Map();
+    }
   }
   return { ok: true, R: cache.R, cfg, version: Number(c.data?.version ?? 0) };
 }

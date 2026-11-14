@@ -193,6 +193,23 @@ describe('motor del plan: carga (port de _planDatCargar) y caché', () => {
     expect(lecturas()).toBe(3);
   });
 
+  it('revisión 3d (I2): dos visitas a la vez con la caché vacía comparten una sola lectura', async () => {
+    const s = sesion();
+    const lecturas = () => s.consultas.filter((c) => c.tabla === 'com_catalogo').length;
+    const [a, b] = await Promise.all([motorPlan(s.db, AHORA), motorPlan(s.db, AHORA)]);
+    expect(a.ok && b.ok).toBe(true);
+    expect(lecturas()).toBe(1);
+    expect(a.ok && b.ok && a.R).toBe(b.ok ? b.R : null);
+  });
+
+  it('revisión 3d (I2): si la carga falla, la siguiente visita vuelve a intentar', async () => {
+    m.puente = dbFalsa({}, [{ tabla: 'com_legado_pedidos', op: 'select', veces: 1 }]).db;
+    const s = sesion();
+    expect((await motorPlan(s.db, AHORA)).ok).toBe(false);
+    m.puente = puente().db;
+    expect((await motorPlan(s.db, AHORA)).ok).toBe(true);
+  });
+
   it('si otra persona guarda una configuración que pide más historia, vuelve a leer con esa historia', async () => {
     const s = sesion();
     await motorPlan(s.db, AHORA);
