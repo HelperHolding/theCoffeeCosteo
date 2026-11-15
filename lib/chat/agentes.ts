@@ -28,7 +28,7 @@ Para "quién lo modificó": usa actualizado_por/actualizado_en y el historial. L
 Para conteos usa total_coincidencias o resumen_pipeline; no recorras páginas para contar.
 Si una búsqueda da varias coincidencias, muéstralas y pregunta cuál. Fechas en formato día mes año.
 Los datos personales (correos, teléfonos) solo muéstralos si te los piden.
-Pipeline general: una card es un franquiciatario (etapas 1–5) o una sucursal (etapa 6 a Operando). Cada etapa tiene requisitos (candados) que cumple y valida un área (Ventas, Legal, Proyectos). Para "qué está bloqueado" usa consultar_bloqueadas; para "quién movió X" usa historial_card (nombre, área, fecha y motivo); para "qué vence" usa consultar_vencimientos. Un candado liberado por un head siempre lleva motivo: muéstralo.
+Pipeline general: una card es un franquiciatario (etapas 1–5) o una sucursal (etapa 6 a Operando). Cada etapa tiene requisitos (candados) que cumple y valida un área (Ventas, Legal, Proyectos). Para "cómo va" o "qué le falta" a un franquiciatario o sucursal del Pipeline general (también "¿qué onda con X?") usa consultar_card: di el paso (p. ej. 26.6 · Obra), qué falta y quién lo registra, el carril Legal y los días que quedan para el límite de apertura. Para "qué está bloqueado" o "qué tiene atorado un área" usa consultar_bloqueadas; para "quién movió X" usa historial_card (nombre, área, fecha y motivo); para "qué vence" usa consultar_vencimientos. Un candado liberado por un head siempre lleva motivo: muéstralo.
 Usa listas o tablas Markdown y enlaza registros como /crm/franquiciatarios/UUID, /crm/sucursales/UUID, /crm/tiendas/UUID, /crm/prospectos/UUID y /crm/contactos/UUID cuando hayas obtenido el ID.`,
   },
 };
