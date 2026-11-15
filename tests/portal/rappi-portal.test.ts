@@ -145,4 +145,15 @@ describe('pestaña Rappi', () => {
     for (const id of [642, 608, 606, 506, 550, 611, 549, 643, 610, 646])
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
   });
+
+  it('lote 3: centro y Bajío con el portal', () => {
+    for (const id of [520, 743, 463, 616, 761, 509, 734, 466, 614, 615])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+  });
+
+  it('lote 4: 9 con el portal; Tepatitlán, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [551, 674, 593, 718, 763, 721, 553, 582, 478])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    expect(sucursalInfo(configDe(508)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
 });
