@@ -17,7 +17,10 @@ export default async function PanelCrm() {
     [
       usuarioCrm(db, perfil, accesos),
       etapasGenerales(db),
-      db.from('crm_v_candados').select('etapa_id,total,listos,liberado').limit(20_000),
+      db
+        .from('crm_v_candados')
+        .select('etapa_id,total,listos,liberado,carril_total,carril_listos')
+        .limit(20_000),
       db.from('crm_liberaciones').select('id', { count: 'exact', head: true }).gte('liberado_en', hace30),
       db
         .from('crm_historial')
@@ -28,7 +31,11 @@ export default async function PanelCrm() {
       vencimientos(db),
     ],
   );
-  const cs = (candados.data ?? []) as Pick<CandadoCard, 'etapa_id' | 'total' | 'listos' | 'liberado'>[];
+  const cs = (candados.data ?? []) as Pick<
+    CandadoCard,
+    'etapa_id' | 'total' | 'listos' | 'liberado' | 'carril_total' | 'carril_listos'
+  >[];
+  const enCarril = cs.filter((c) => c.carril_total > 0);
   const etapaDe = new Map(etapas.map((e) => [e.id, e]));
   const abiertas = cs.filter(
     (c) => etapaDe.get(c.etapa_id)?.tipo === 'abierta' && !etapaDe.get(c.etapa_id)?.provisional,
@@ -73,6 +80,10 @@ export default async function PanelCrm() {
         areas={usuario.areas}
         todas={todas}
         movimientos={(recientes.data ?? []) as Historial[]}
+        carril={{
+          total: enCarril.length,
+          completos: enCarril.filter((c) => c.carril_listos >= c.carril_total).length,
+        }}
       />
     </>
   );

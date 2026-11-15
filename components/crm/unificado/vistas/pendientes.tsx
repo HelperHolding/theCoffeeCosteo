@@ -28,6 +28,9 @@ export interface DatosPendientes {
   totalListas: number;
   bloqueadas: number;
   propias: CardPipeline[];
+  /** Cards cuyo siguiente requisito pendiente lo registra un área del usuario. */
+  tocaRegistrar?: CardPipeline[];
+  totalTocaRegistrar?: number;
   areas: ClaveArea[];
   todas: boolean;
 }
@@ -69,17 +72,23 @@ function ListaCards({
   total,
   etapas,
   vacio,
+  columnas,
 }: {
   cards: CardPipeline[];
   total: number;
   etapas: EtapaGeneral[];
   vacio: string;
+  /** En recuadros anchos, la lista se reparte en columnas. */
+  columnas?: boolean;
 }) {
   if (!cards.length) return <VacioBreve>{vacio}</VacioBreve>;
   const etapaDe = new Map(etapas.map((e) => [e.id, e]));
   return (
     <>
-      <ul role="list" className="-mx-2 space-y-1">
+      <ul
+        role="list"
+        className={columnas ? '-mx-2 grid gap-1 lg:grid-cols-2 xl:grid-cols-3' : '-mx-2 space-y-1'}
+      >
         {cards.slice(0, VISIBLES).map((c) => (
           <li key={`${c.tipo}-${c.id}`}>
             <FilaCard card={c} etapa={etapaDe.get(c.etapaId)} />
@@ -148,6 +157,21 @@ export function VistaPendientes(d: DatosPendientes) {
           )}
         </Seccion>
       </div>
+      {d.tocaRegistrar && (
+        <Seccion
+          titulo="Te toca registrar"
+          contador={d.totalTocaRegistrar ?? d.tocaRegistrar.length}
+          descripcion="El siguiente requisito de estas cards lo registra tu área: sin él no avanzan."
+        >
+          <ListaCards
+            cards={d.tocaRegistrar}
+            total={d.totalTocaRegistrar ?? d.tocaRegistrar.length}
+            etapas={d.etapas}
+            vacio="Nada espera a tu área por ahora."
+            columnas
+          />
+        </Seccion>
+      )}
       <div className="grid gap-4 xl:grid-cols-3">
         <Seccion
           titulo="Por validar"

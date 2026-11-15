@@ -259,3 +259,30 @@ La ficha de la sucursal muestra el **contador** «faltan N días para el límite
 **Numeración:** el archivo se llama **50** porque producción ya tiene aplicadas las migraciones 44–49 del proyecto Comercializadora, que aún no están en `main`. Supabase ordena por la fecha completa (`20261114…` va después de `20261113…49`).
 
 **Ojo al hacer el merge:** Finanzas queda activa. Mientras no tenga integrantes, solo un head o un desarrollador puede registrar los pagos validados.
+
+## 13. Fase 2 — vistas (2026-11-14, rama `feat/crm-proceso`)
+
+- **Apartado «Proceso»** (`/crm/proceso`):
+  - Mapa interactivo con las 10 etapas, los 7 subpasos de Proyectos, el carril Legal y la apertura.
+  - Por paso muestra qué se hace, qué se registra, quién lo hace, dónde, qué sigue, el candado y los avisos automáticos.
+  - El texto vive en `lib/crm/unificado/proceso.ts` y será la base del guion del video. Lo que se registra sale de `crm_requisitos`.
+  - El paso elegido queda en la URL (`?paso=`).
+- **COF y contrato** (`/crm/carril-legal`): tablero de Legal con cinco columnas (COF por enviar, COF enviada, COF firmada, contrato firmado y liberada). Muestra la fecha que importa en cada una y marca la COF fuera de plazo.
+- **Ficha de la sucursal:**
+  - Recuadro del carril Legal con los cinco hitos.
+  - Contador de los 120 días, con barra y aviso de multa.
+- **Atajos antes de las tablas:**
+  - El Pipeline abre con una entrada por tramo (total, bloqueadas, listas y dónde se acumulan), más «COF y contrato» y el tablero completo.
+  - El Panel suma el recuadro del carril Legal.
+  - Mis pendientes agrega «Te toca registrar», con las cards cuyo siguiente requisito le toca a mi área. Incluye a Finanzas, que no mueve etapas.
+- **«¿Olvidaste tu contraseña?»:**
+  - Página nueva `/recuperar-contrasena`.
+  - Siempre responde lo mismo, para no revelar qué correos tienen cuenta.
+  - El enlace del correo pasa por `/auth/confirm` hasta `/establecer-contrasena`.
+
+**Evidencia:**
+
+- `tsc`, `next build` y `git diff --check` pasan.
+- `vitest`: 983 aprobadas; solo falla `paridad`, como en `main`.
+- Pruebas nuevas en `tests/portal/crm-proceso.test.ts`.
+- Revisión visual en 1440 y 375 px sin desborde. Capturas en `docs/crm/capturas-42/`.

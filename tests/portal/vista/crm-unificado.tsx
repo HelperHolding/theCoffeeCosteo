@@ -14,6 +14,11 @@ import { VistaVencimientos } from '../../../components/crm/unificado/vistas/venc
 import { VistaBitacora } from '../../../components/crm/unificado/vistas/bitacora';
 import { VistaActividades, VistaContactos } from '../../../components/crm/unificado/vistas/directorio';
 import { VistaAdmin } from '../../../components/crm/unificado/vistas/admin';
+import { VistaProceso } from '../../../components/crm/unificado/vistas/proceso';
+import { VistaEntradasPipeline } from '../../../components/crm/unificado/vistas/entradas-pipeline';
+import { tramos as calcularTramos } from '../../../lib/crm/unificado/modelo';
+import { VistaCarrilLegal, type FilaCarril } from '../../../components/crm/unificado/vistas/carril-legal';
+import { pasosProceso, type RequisitoProceso } from '../../../lib/crm/unificado/proceso';
 import { Festivos, Membresias, Requisitos as RequisitosAdmin } from '../../../components/crm/unificado/admin';
 import { Tarjeta } from '../../../components/portal/piezas';
 import type { Actividad, Festivo, Membresia, Requisito } from '../../../lib/crm/tipos';
@@ -488,6 +493,27 @@ export function VistaExpedienteUnificado() {
         'Proyectos la confirma a Legal al menos 5 días hábiles antes.',
         { campo: 'fecha_confirmada_apertura', de_etapa_actual: false, anticipable: true },
       ),
+      r(
+        'contrato',
+        'Contrato firmado por franquiciatario y obligado solidario',
+        'firma',
+        'legal',
+        'pendiente',
+        'Ninguna sucursal abre sin las dos firmas.',
+        { de_etapa_actual: false, anticipable: true },
+      ),
+      r(
+        'contrato',
+        'Liberación para apertura',
+        'validacion',
+        'legal',
+        'pendiente',
+        'Con el contrato firmado, Legal libera la sucursal.',
+        {
+          de_etapa_actual: false,
+          anticipable: true,
+        },
+      ),
     ],
     archivos: [
       archivo('d1', 'dictamen_firmado', 'Dictamen local Juriquilla.pdf', 'u-sebastian', 98, 812),
@@ -697,6 +723,7 @@ export function VistaPanelCrm() {
         todas
         movimientos={MOVIMIENTOS}
         ahora={AHORA}
+        carril={{ total: 24, completos: 1 }}
       />
     </>,
   );
@@ -761,6 +788,8 @@ export function VistaPendientesCrm() {
         totalListas={12}
         bloqueadas={63}
         propias={[]}
+        tocaRegistrar={CARDS.filter((c) => c.etapaId === 'obra' || c.etapaId === 'constancia')}
+        totalTocaRegistrar={14}
         areas={['legal']}
         todas={false}
       />
@@ -952,6 +981,221 @@ export function VistaAdminCrm() {
   );
 }
 
+// Catálogo de requisitos igual a la semilla (migraciones 32 y 50): [etapa, nombre, tipo, registra, valida, candado].
+const CATALOGO: [string, string, string, string, string, boolean][] = [
+  ['recepcion', 'Contacto (correo o teléfono)', 'dato', 'ventas', 'ventas', true],
+  ['recepcion', 'Ciudad de interés', 'dato', 'ventas', 'ventas', true],
+  ['recepcion', 'Origen de captación', 'dato', 'ventas', 'ventas', true],
+  ['recepcion', 'Resultado territorial', 'validacion', 'ventas', 'ventas', true],
+  ['recepcion', 'Vendedor asignado', 'dato', 'ventas', 'ventas', true],
+  ['contacto', 'Fecha de primera reunión', 'fecha', 'ventas', 'ventas', true],
+  ['contacto', 'Información comercial enviada (plantilla única)', 'fecha', 'ventas', 'ventas', true],
+  ['revision_contrato', 'Comprobante del apartado ($50,000 + IVA)', 'documento', 'ventas', 'ventas', true],
+  [
+    'revision_contrato',
+    'Pago del apartado validado por Finanzas',
+    'validacion',
+    'finanzas',
+    'finanzas',
+    true,
+  ],
+  ['revision_contrato', 'Solicitud a Legal del envío del contrato', 'fecha', 'ventas', 'ventas', true],
+  ['revision_contrato', 'Contrato enviado al prospecto', 'fecha', 'legal', 'legal', true],
+  ['pld', 'Confirmación de interés', 'fecha', 'ventas', 'ventas', true],
+  ['pld', 'Survey completo y validado', 'documento', 'ventas', 'ventas', true],
+  ['pld', 'Formato PLD firmado (copia digital)', 'documento', 'ventas', 'ventas', true],
+  ['pld', 'Instrucciones de pago enviadas', 'fecha', 'ventas', 'ventas', true],
+  ['pld', 'Comprobante de liquidación del fee', 'documento', 'ventas', 'ventas', true],
+  ['pld', 'Pago validado por Finanzas', 'validacion', 'finanzas', 'finanzas', true],
+  ['bienvenida', 'Correo de bienvenida enviado', 'fecha', 'ventas', 'ventas', true],
+  ['bienvenida', 'Carta de intención firmada', 'firma', 'legal', 'legal', true],
+  ['bienvenida', 'Solicitud de factura: CSF y datos fiscales', 'documento', 'ventas', 'ventas', true],
+  ['bienvenida', 'PLD original recibido en corporativo', 'fecha', 'ventas', 'ventas', true],
+  ['bienvenida', 'Factura emitida', 'documento', 'finanzas', 'finanzas', false],
+  ['locales', 'Lineamientos y formatos enviados', 'fecha', 'ventas', 'ventas', true],
+  ['locales', 'Propuesta(s) de local', 'documento', 'ventas', 'ventas', true],
+  ['locales', 'Dictamen y resolución del Comité', 'documento', 'ventas', 'ventas', true],
+  ['locales', 'Dictamen firmado por el franquiciatario', 'firma', 'ventas', 'ventas', true],
+  ['constancia', 'Contrato de arrendamiento firmado', 'documento', 'ventas', 'ventas', true],
+  ['constancia', 'Solicitud de constancia a Legal', 'fecha', 'ventas', 'ventas', true],
+  ['constancia', 'Constancia de arrendamiento firmada', 'firma', 'legal', 'legal', true],
+  ['constancia', 'Fecha límite de apertura', 'dato', 'legal', 'legal', true],
+  ['transferencia', 'Transferencia a Proyectos habilitada', 'validacion', 'legal', 'legal', true],
+  ['transferencia', 'Fecha estimada de apertura', 'dato', 'proyectos', 'proyectos', true],
+  ['transferencia', 'ID oficial en Jestor', 'dato', 'ventas', 'ventas', true],
+  [
+    'levantamiento',
+    'Documentación del levantamiento arquitectónico',
+    'documento',
+    'proyectos',
+    'proyectos',
+    true,
+  ],
+  ['boceto', 'Boceto de distribución', 'documento', 'proyectos', 'proyectos', true],
+  ['envio_brasil', 'Fecha de envío a Brasil', 'fecha', 'proyectos', 'proyectos', true],
+  ['envio_brasil', 'Evidencia del envío a Brasil', 'documento', 'proyectos', 'proyectos', true],
+  ['proyecto_3d', 'Archivos del proyecto 3D', 'documento', 'proyectos', 'proyectos', true],
+  ['proyecto_ejecutivo', 'Paquete final del proyecto ejecutivo', 'documento', 'proyectos', 'proyectos', true],
+  ['obra', 'Fotografías de terminación de obra', 'documento', 'proyectos', 'proyectos', true],
+  ['capacitacion', 'Viáticos y hospedaje del capacitador', 'documento', 'proyectos', 'proyectos', true],
+  ['capacitacion', 'Video o fotografías de la apertura', 'documento', 'proyectos', 'proyectos', true],
+  ['capacitacion', 'Fecha real de apertura', 'dato', 'proyectos', 'proyectos', true],
+  ['cof', 'COF enviada al franquiciatario', 'fecha', 'legal', 'legal', true],
+  ['cof', 'COF firmada y fecha de entrega', 'firma', 'legal', 'legal', true],
+  ['contrato', 'Fecha confirmada de apertura', 'dato', 'proyectos', 'proyectos', true],
+  ['contrato', 'Contrato firmado por franquiciatario y obligado solidario', 'firma', 'legal', 'legal', true],
+  ['contrato', 'Liberación para apertura', 'validacion', 'legal', 'legal', true],
+];
+export const REQUISITOS_PROCESO = CATALOGO.map(([etapa_id, nombre, tipo, cumple, valida, obligatorio]) => ({
+  etapa_id,
+  nombre,
+  tipo,
+  area_cumple: cumple,
+  area_valida: valida,
+  obligatorio,
+})) as RequisitoProceso[];
+
+export function VistaProcesoCrm() {
+  return marco(
+    <>
+      {encabezado(
+        'Proceso',
+        'Del lead a la apertura: qué se hace en cada etapa, qué se registra, quién lo hace y qué sigue.',
+      )}
+      <VistaProceso
+        pasos={pasosProceso(ETAPAS, REQUISITOS_PROCESO, TOTALES)}
+        inicial={new URLSearchParams(window.location.search).get('paso') ?? undefined}
+      />
+    </>,
+  );
+}
+
+export function VistaCarrilLegalCrm() {
+  const fila = (
+    id: string,
+    nombre: string,
+    franq: string,
+    etapaClave: string,
+    estado: FilaCarril['estado'],
+    fecha: string,
+    fechaTexto: string,
+  ): FilaCarril => ({
+    id,
+    nombre,
+    franquiciatario: franq,
+    etapa: ETAPAS.find((x) => x.clave === etapaClave)!,
+    estado,
+    fecha,
+    fechaTexto,
+    dias: Math.round((Date.parse(`${fecha}T00:00:00Z`) - Date.parse('2026-11-03T00:00:00Z')) / 86_400_000),
+  });
+  return marco(
+    <>
+      {encabezado(
+        'COF y contrato',
+        'El carril Legal de cada sucursal, en paralelo a Proyectos. Ninguna abre sin los cinco hitos.',
+      )}
+      <VistaCarrilLegal
+        filas={[
+          fila(
+            's1',
+            'Mérida Altabrisa',
+            'Elena Robles',
+            'obra',
+            'por_enviar',
+            '2026-10-30',
+            'COF firmada a más tardar',
+          ),
+          fila(
+            's2',
+            'Puebla Centro',
+            'Raúl Benítez',
+            'proyecto_ejecutivo',
+            'por_enviar',
+            '2026-12-20',
+            'COF firmada a más tardar',
+          ),
+          fila(
+            's3',
+            'Querétaro Juriquilla',
+            'Mariana Ortiz',
+            'obra',
+            'cof_enviada',
+            '2026-11-15',
+            'COF firmada a más tardar',
+          ),
+          fila(
+            's4',
+            'León Plaza Sur',
+            'Jorge Salinas',
+            'obra',
+            'cof_firmada',
+            '2027-01-15',
+            'Apertura estimada',
+          ),
+          fila(
+            's5',
+            'Saltillo Centro',
+            'Daniela Cruz',
+            'capacitacion',
+            'contrato_firmado',
+            '2026-11-20',
+            'Apertura confirmada',
+          ),
+          fila(
+            's6',
+            'Toluca Metepec',
+            'Iván Montes',
+            'capacitacion',
+            'liberada',
+            '2026-11-08',
+            'Apertura confirmada',
+          ),
+          fila(
+            's7',
+            'Cancún Centro',
+            'Paola Garza',
+            'levantamiento',
+            'por_enviar',
+            '2027-03-01',
+            'COF firmada a más tardar',
+          ),
+        ]}
+      />
+    </>,
+  );
+}
+
+export function VistaEntradasPipelineCrm() {
+  const entradas = calcularTramos(ETAPAS).map((t) => {
+    const n = (clave: string) => TOTALES[clave] ?? 0;
+    const total = t.etapas.reduce((a, e) => a + n(e.clave), 0);
+    return {
+      clave: t.clave,
+      nombre: t.nombre,
+      area: t.area,
+      total,
+      bloqueadas: t.clave === 'cierre' ? 0 : Math.round(total * 0.93),
+      listas: t.clave === 'cierre' ? 0 : Math.round(total * 0.05),
+      principales: t.etapas
+        .map((e) => ({
+          nombre: e.nombre,
+          numero: e.numero ? String(e.numero) : (e.paso ?? ''),
+          n: n(e.clave),
+        }))
+        .filter((e) => e.n > 0)
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 3),
+    };
+  });
+  return marco(
+    <>
+      {encabezado('Pipeline', 'Elige un tramo para ver sus cards, o abre el tablero completo.')}
+      <VistaEntradasPipeline tramos={entradas} carril={{ total: 24, completos: 1 }} />
+    </>,
+  );
+}
+
 /** Vistas del rediseño por `?vista-crm=<clave>`. */
 export const VISTAS_CRM: Record<string, () => React.ReactNode> = {
   panel: VistaPanelCrm,
@@ -962,4 +1206,7 @@ export const VISTAS_CRM: Record<string, () => React.ReactNode> = {
   contactos: VistaContactosCrm,
   actividades: VistaActividadesCrm,
   admin: VistaAdminCrm,
+  proceso: VistaProcesoCrm,
+  'carril-legal': VistaCarrilLegalCrm,
+  'pipeline-entradas': VistaEntradasPipelineCrm,
 };
