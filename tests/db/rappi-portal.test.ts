@@ -235,16 +235,16 @@ describe('rappi_importar', () => {
   });
 });
 
-describe('tiendas de Rappi (migraciones 29, 36, 51 a 54, 56 y 57)', () => {
-  it('Guadalajara (11), lote 1 (9, sin Roma Sur) lote 2 (10), lote 3 (10), lote 4 (9, sin Tepatitlán) lote 5 (7, sin Fluvial ni Aeropuerto Chiapas) lote 6 (5, sin Mayab ni Tulum) y lote 7 (10): normal y Turbo, salvo las que no tienen Turbo en el portal', async () => {
+describe('tiendas de Rappi (migraciones 29, 36, 51 a 54 y 56 a 58)', () => {
+  it('Guadalajara (11), lote 1 (9, sin Roma Sur) lote 2 (10), lote 3 (10), lote 4 (9, sin Tepatitlán) lote 5 (7, sin Fluvial ni Aeropuerto Chiapas) lote 6 (5, sin Mayab ni Tulum) lote 7 (10), Juárez y Bonampak: normal y Turbo, salvo las que no tienen Turbo en el portal', async () => {
     const r = await db.query<{ company_id: number; canales: string }>(
       `select company_id, string_agg(canal, ',' order by canal) canales from public.rappi_tiendas group by 1 order by 1`,
     );
     expect(r.rows.map((x) => x.company_id)).toEqual([
       384, 457, 459, 460, 463, 466, 477, 478, 506, 507, 509, 513, 514, 515, 518, 519, 520, 532, 545, 546, 547, 549,
-      550, 551, 552, 553, 558, 567, 582, 590, 593, 601, 606, 607, 608, 610, 611, 613, 614, 615, 616, 625, 626, 631,
-      632, 642, 643, 644, 645, 646, 655, 664, 670, 674, 679, 705, 715, 716, 717, 718, 719, 721, 733, 734, 735, 743,
-      754, 761, 763, 770, 771,
+      550, 551, 552, 553, 558, 567, 582, 583, 590, 593, 601, 606, 607, 608, 610, 611, 612, 613, 614, 615, 616, 625,
+      626, 631, 632, 642, 643, 644, 645, 646, 655, 664, 670, 674, 679, 705, 715, 716, 717, 718, 719, 721, 733, 734,
+      735, 743, 754, 761, 763, 770, 771,
     ]);
     const soloNormal = r.rows.filter((x) => x.canales !== 'normal,turbo');
     expect(soloNormal).toEqual([
@@ -258,6 +258,7 @@ describe('tiendas de Rappi (migraciones 29, 36, 51 a 54, 56 y 57)', () => {
       { company_id: 590, canales: 'normal' },
       { company_id: 593, canales: 'normal' },
       { company_id: 601, canales: 'normal' },
+      { company_id: 612, canales: 'normal' },
       { company_id: 613, canales: 'normal' },
       { company_id: 614, canales: 'normal' },
       { company_id: 615, canales: 'normal' },
