@@ -84,7 +84,7 @@ Lo que se vio al armar el guion y que confundiría a alguien en su primer día:
 
 ## 5. Pendientes que necesitan decisión de Carlo (tocan la base)
 
-1. **Un head de cualquier área actúa como head de todas.** `crm_es_head()` no mira el área. ¿Lo dejamos así o el head solo libera y mueve en su área?
+1. ~~**Un head de cualquier área actúa como head de todas.**~~ **Decidido (Carlo, 2026-11-15): se queda así.** Solo los heads liberan candados, y lo hacen en cualquier área, siempre con motivo. Los miembros mueven solo las etapas de su área. El capítulo 6 del video lo explica así.
 2. **Requisitos por campo** (fecha límite, fechas de apertura, Jestor) quedan «Validado» sin quién ni cuándo, y cualquier editor los puede capturar desde Resumen. Propuesta: registrar autor en la bitácora del requisito y limitar el campo al área que lo cumple.
 3. **La bitácora muestra nombres internos** («comprobante_apartado», «fecha_limite_apertura»). Propuesta: traducirlos en la vista de la bitácora (sin migración) y cambiar los textos del disparador en la próxima migración.
 4. **Avisos atendidos desaparecen sin rastro.** Propuesta: sección «Atendidos» con quién y cuándo en Vencimientos.
