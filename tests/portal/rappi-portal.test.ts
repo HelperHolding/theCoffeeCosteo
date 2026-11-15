@@ -145,4 +145,9 @@ describe('pestaña Rappi', () => {
     for (const id of [642, 608, 606, 506, 550, 611, 549, 643, 610, 646])
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
   });
+
+  it('lote 3: centro y Bajío con el portal', () => {
+    for (const id of [520, 743, 463, 616, 761, 509, 734, 466, 614, 615])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+  });
 });
