@@ -315,8 +315,8 @@ export function VacioBreve({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Recorrido de la card por las etapas numeradas de su tipo (1–5 franquiciatario, 6–10 sucursal).
- * Hechas = punto lleno en tinta; actual = aro del color del área; Proyectos (provisional) entre la 8 y la 9.
+ * Recorrido de la card por sus columnas: 1–5 (franquiciatario) o 6–8, los subpasos 26.1–26.7 de Proyectos y la
+ * apertura (sucursal). Hechas = punto lleno en tinta; actual = aro del color del área. El carril Legal no entra.
  */
 export function RecorridoEtapas({
   etapas,
@@ -327,40 +327,30 @@ export function RecorridoEtapas({
   actual: EtapaGeneral;
   tipo: 'franquiciatario' | 'sucursal';
 }) {
-  const numeradas = etapas
-    .filter((e) => e.numero && e.tipo === 'abierta' && e.card === tipo)
-    .sort((a, b) => a.orden - b.orden);
-  const nodos: { clave: string; numero: string; nombre: string; area: ClaveArea; ref: number }[] =
-    numeradas.map((e) => ({
+  const nodos = etapas
+    .filter(
+      (e) =>
+        e.card === tipo &&
+        !e.carril &&
+        (e.tipo === 'abierta' || (e.tipo === 'ganada' && !!e.paso)) &&
+        (e.numero || e.paso),
+    )
+    .sort((a, b) => a.orden - b.orden)
+    .map((e) => ({
       clave: e.clave,
-      numero: String(e.numero),
-      nombre: e.nombre,
+      // En el círculo: el número de etapa o el subpaso sin el «26» (26.3 → .3).
+      numero: e.numero ? String(e.numero) : (e.paso ?? '').replace(/^26/, ''),
+      nombre: e.paso ? `${e.paso} ${e.nombre}` : e.nombre,
       area: e.area,
-      ref: e.numero!,
+      orden: e.orden,
     }));
-  if (tipo === 'sucursal') {
-    const i = nodos.findIndex((n) => n.ref >= 9);
-    nodos.splice(i < 0 ? nodos.length : i, 0, {
-      clave: 'proyectos',
-      numero: 'P',
-      nombre: 'Proyectos',
-      area: 'proyectos',
-      ref: 8.5,
-    });
-  }
-  // Posición de referencia de la etapa actual en la escala de números.
-  const posicion = actual.numero
-    ? actual.numero
-    : actual.provisional
-      ? 8.5
-      : actual.tipo === 'ganada'
-        ? 99
-        : -1;
+  // Una card ganada (formalizada u operando) ya recorrió todas.
+  const posicion = actual.tipo === 'ganada' ? Infinity : actual.orden;
   return (
     <ol role="list" aria-label="Recorrido de etapas" className="flex items-start overflow-x-auto pb-1">
       {nodos.map((n, i) => {
-        const hecha = posicion > n.ref;
-        const esActual = posicion === n.ref;
+        const hecha = posicion > n.orden;
+        const esActual = posicion === n.orden;
         const color = AREAS[n.area].color;
         return (
           <li

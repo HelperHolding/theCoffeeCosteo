@@ -51,11 +51,13 @@ import { destinos, type Destino } from '@/lib/crm/unificado/reglas';
 import { AREAS, cuando, type CardPipeline, type EtapaGeneral } from '@/lib/crm/unificado/modelo';
 import { TIPOS_DOCUMENTO } from '@/lib/crm/validacion';
 import {
+  CAMPOS_FISCALES,
   TERRITORIOS,
   type Actividad,
   type Archivo,
   type ClaveArea,
   type Franquiciatario,
+  type FranquiciatarioFiscal,
   type Historial,
   type Liberacion,
   type Nota,
@@ -79,6 +81,10 @@ export interface DatosExpediente {
   liberaciones: Liberacion[];
   sucursales: { id: string; nombre: string; etapa: EtapaGeneral }[];
   nombres: Record<string, string>;
+  /** Datos fiscales y del obligado solidario; nulos si no hay o si el usuario no los puede ver. */
+  fiscal?: FranquiciatarioFiscal | null;
+  /** Ventas, Legal, Finanzas y Dirección (migración 50). */
+  veSensibles?: boolean;
 }
 
 export interface UsuarioCrm {
@@ -92,9 +98,8 @@ export interface UsuarioCrm {
 }
 
 // Un área inactiva (Finanzas) la cubre Ventas con evidencia (P1); la base aplica la misma regla.
-const efectiva = (a: ClaveArea): ClaveArea => (a === 'finanzas' ? 'ventas' : a);
 const puedeArea = (u: UsuarioCrm, a: ClaveArea) =>
-  u.editable && (u.desarrollador || u.esHead || u.areas.includes(efectiva(a)));
+  u.editable && (u.desarrollador || u.esHead || u.areas.includes(a));
 const listo = (r: Pick<RequisitoCard, 'estado'>) => r.estado === 'validado' || r.estado === 'no_aplica';
 const nombreDoc = (t: string | null) =>
   t && t in TIPOS_DOCUMENTO ? TIPOS_DOCUMENTO[t as keyof typeof TIPOS_DOCUMENTO] : 'Adjunto';
@@ -173,7 +178,7 @@ function FormCumplir({
   alTerminar: () => void;
 }) {
   const { pendiente, error, setError, correr } = useAccion();
-  const conDoc = r.tipo === 'documento' || r.tipo === 'firma' || r.area_valida === 'finanzas';
+  const conDoc = r.tipo === 'documento' || r.tipo === 'firma';
   const conFecha = r.tipo === 'fecha' || r.tipo === 'firma';
   const conValor = r.tipo === 'dato';
   const [fecha, setFecha] = useState('');
@@ -202,7 +207,7 @@ function FormCumplir({
       {conDoc && (
         <div className="grid gap-2 sm:grid-cols-2">
           <label>
-            {r.area_valida === 'finanzas' ? 'Evidencia de Finanzas (correo o comprobante)' : 'Documento'}
+            Documento
             <input
               type="file"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
@@ -429,12 +434,7 @@ function Requisitos({
     .filter((g): g is { etapa: EtapaGeneral; rs: RequisitoCard[] } => !!g.etapa)
     .sort((a, b) => b.etapa.orden - a.etapa.orden);
   if (!ordenadas.length)
-    return (
-      <p className="placa p-5 text-sm text-muted-foreground">
-        Esta etapa no tiene requisitos
-        {datos.etapa.provisional ? ' (provisional, hasta que llegue el documento de Proyectos)' : ''}.
-      </p>
-    );
+    return <p className="placa p-5 text-sm text-muted-foreground">Esta etapa no tiene requisitos.</p>;
   return (
     <div className="space-y-3">
       {ordenadas.map(({ etapa, rs }) => {
@@ -881,9 +881,12 @@ const CAMPOS_SUCURSAL: CampoEditable[] = [
 ];
 
 function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioCrm }) {
-  const fila = (datos.tipo === 'franquiciatario'
-    ? datos.franquiciatario
-    : datos.sucursal) as unknown as Record<string, unknown>;
+  const fila = {
+    ...(datos.tipo === 'franquiciatario' ? datos.franquiciatario : datos.sucursal),
+    ...(datos.tipo === 'franquiciatario' ? datos.fiscal : null),
+  } as unknown as Record<string, unknown>;
+  const oculto = (campo: string) =>
+    !datos.veSensibles && (CAMPOS_FISCALES as readonly string[]).includes(campo);
   const campos = datos.tipo === 'franquiciatario' ? CAMPOS_FRANQUICIATARIO : CAMPOS_SUCURSAL;
   const [editando, setEditando] = useState(false);
   const { pendiente, error, correr } = useAccion();
@@ -954,8 +957,14 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
                 g.campos.length > 5 && 'lg:grid-cols-3',
               )}
             >
+              {g.campos.some(oculto) && (
+                <p className="rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+                  Firmante, obligado solidario y datos fiscales solo los ven Ventas, Legal, Finanzas y
+                  Dirección.
+                </p>
+              )}
               {campos
-                .filter((c) => g.campos.includes(c.campo))
+                .filter((c) => g.campos.includes(c.campo) && !oculto(c.campo))
                 .map((c) => (
                   <div key={c.campo} className="min-w-0">
                     {editando ? (
@@ -1185,7 +1194,7 @@ export function ExpedienteCard({
         className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-card"
         aria-label="Estado de la card"
       >
-        {(etapa.card === datos.tipo || etapa.provisional) && etapa.tipo === 'abierta' && (
+        {etapa.card === datos.tipo && etapa.tipo === 'abierta' && (
           <RecorridoEtapas etapas={datos.etapas} actual={etapa} tipo={datos.tipo} />
         )}
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(14rem,auto)]">
@@ -1203,7 +1212,7 @@ export function ExpedienteCard({
               <ul role="list" className="flex flex-wrap gap-1.5" aria-label="Requisitos que faltan">
                 {faltantes.slice(0, 4).map((r) => (
                   <li key={r.requisito_id}>
-                    <Chip color={AREAS[efectiva(r.area_cumple)].color}>{r.nombre}</Chip>
+                    <Chip color={AREAS[r.area_cumple].color}>{r.nombre}</Chip>
                   </li>
                 ))}
                 {faltantes.length > 4 && (

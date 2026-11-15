@@ -9,7 +9,7 @@ import { PipelineGeneral, TablaCards } from '@/components/crm/unificado/pipeline
 import { NuevoFranquiciatario } from '@/components/crm/unificado/nuevo-franquiciatario';
 
 const POR_PAGINA = 100;
-const TRAMOS = ['ventas', 'locales', 'proyectos', 'legal', 'cierre'] as const;
+const TRAMOS = ['ventas', 'locales', 'proyectos', 'cierre'] as const;
 
 export default async function Pipeline({
   searchParams,

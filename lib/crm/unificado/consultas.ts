@@ -8,6 +8,7 @@ import type {
   ClaveArea,
   Etapa,
   Franquiciatario,
+  FranquiciatarioFiscal,
   Historial,
   Liberacion,
   Membresia,
@@ -42,6 +43,8 @@ export const aEtapaGeneral = (e: Etapa): EtapaGeneral => ({
   tipo: e.tipo,
   opcional: e.opcional,
   provisional: e.provisional,
+  paso: e.paso,
+  carril: e.carril,
   orden: e.orden,
 });
 
@@ -220,12 +223,14 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
     cof: 'cof',
     apertura_5_habiles: 'apertura_5_habiles',
     limite_120: 'limite_120',
+    limite_vencido: 'limite_vencido',
     cof_tardia: 'limite_120',
   };
   const etiquetaVenc: Record<string, string> = {
     cof: 'COF firmada',
     apertura_5_habiles: 'Fecha confirmada a Legal',
     limite_120: 'Límite de apertura',
+    limite_vencido: 'Límite vencido: multa',
     cof_tardia: 'COF tardía',
   };
   const ultimo = (id: string, tipo: TipoCard) => {
@@ -322,6 +327,8 @@ export interface ExpedienteUnificado {
   liberaciones: Liberacion[];
   sucursales: { id: string; nombre: string; etapa: EtapaGeneral }[];
   nombres: Record<string, string>;
+  fiscal: FranquiciatarioFiscal | null;
+  veSensibles: boolean;
 }
 
 /** Expediente completo de una card (franquiciatario o sucursal). Nulo si no existe o no se puede ver. */
@@ -340,7 +347,7 @@ export async function expedienteCard(
         ) as Tienda | null);
   if (!fila) return null;
   const relacion = tipo === 'franquiciatario' ? 'franquiciatario_id' : 'tienda_id';
-  const [etapas, [card], req, archivos, notas, historial, liberaciones, sucursales, franq] =
+  const [etapas, [card], req, archivos, notas, historial, liberaciones, sucursales, franq, fiscal, ve] =
     await Promise.all([
       etapasGenerales(db),
       armarCards(db, [{ id, tipo }]),
@@ -368,6 +375,11 @@ export async function expedienteCard(
             .eq('id', (fila as Tienda).franquiciatario_id!)
             .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
+      // La RLS devuelve vacío a quien no ve datos sensibles.
+      tipo === 'franquiciatario'
+        ? db.from('crm_franquiciatario_fiscal').select('*').eq('franquiciatario_id', id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      db.rpc('crm_ve_sensibles'),
     ]);
   const requisitos = exigir(req) as RequisitoCard[];
   const hist = exigir(historial) as Historial[];
@@ -399,6 +411,8 @@ export async function expedienteCard(
       etapa: etapas.find((e) => e.id === s.etapa_id)!,
     })),
     nombres: Object.fromEntries(quienes),
+    fiscal: exigir(fiscal) as FranquiciatarioFiscal | null,
+    veSensibles: exigir(ve) === true,
   };
 }
 
