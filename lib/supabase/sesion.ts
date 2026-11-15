@@ -73,6 +73,14 @@ export async function sesionCrm(redirigir = true) {
   return { ...s, accesos: a, nivel: a.crm };
 }
 
+/** company_id asignadas al usuario en perfil_sucursales. Falla cerrado: cualquier error al leer = ninguna. */
+const companiasAsignadas = async (db: Db, userId: string): Promise<number[]> => {
+  const r = await db.from('perfil_sucursales').select('company_id').eq('user_id', userId);
+  return !r || r.error || !Array.isArray(r.data)
+    ? []
+    : r.data.map((f) => Number(f.company_id)).filter((n) => Number.isSafeInteger(n) && n > 0);
+};
+
 type DenegacionSucursales = { ok: false; status: 401 | 403; destino: string; mensaje: string };
 
 /**
@@ -95,17 +103,45 @@ export async function accesoSucursales(): Promise<
     };
   if (!c.accesos.sucursales)
     return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Sucursales.' };
-  const r = await c.db.from('perfil_sucursales').select('company_id').eq('user_id', c.usuario.id);
-  const companias =
-    !r || r.error || !Array.isArray(r.data)
-      ? []
-      : r.data.map((f) => Number(f.company_id)).filter((n) => Number.isSafeInteger(n) && n > 0);
+  const companias = await companiasAsignadas(c.db, c.usuario.id);
   return { ok: true, db: c.db, perfil: c.perfil.data, companias };
 }
 
 /** Sesión de páginas de Sucursales: redirige como el resto del portal. */
 export async function sesionSucursales(redirigir = true) {
   const a = await accesoSucursales();
+  if (!a.ok) {
+    if (redirigir) redirect(a.destino);
+    throw new Error(a.mensaje);
+  }
+  return a;
+}
+
+/**
+ * Acceso al módulo BI sin redirigir (para route handlers): como accesoSucursales, pero con la fila 'bi' en
+ * perfil_modulos. Las company_id vienen de perfil_sucursales; admin no tiene acceso implícito.
+ */
+export async function accesoBi(): Promise<
+  | { ok: true; db: Db; perfil: { user_id: string; nombre: string; rol: string }; companias: number[] }
+  | DenegacionSucursales
+> {
+  const c = await contexto();
+  if (!c.usuario) return { ok: false, status: 401, destino: '/login', mensaje: 'La sesión venció.' };
+  if (c.perfil.error || !c.perfil.data?.activo)
+    return {
+      ok: false,
+      status: 403,
+      destino: '/login?aviso=perfil',
+      mensaje: 'Tu cuenta necesita un perfil activo.',
+    };
+  if (!c.accesos.bi) return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso al BI.' };
+  const companias = await companiasAsignadas(c.db, c.usuario.id);
+  return { ok: true, db: c.db, perfil: c.perfil.data, companias };
+}
+
+/** Sesión de páginas del BI: redirige como el resto del portal. */
+export async function sesionBi(redirigir = true) {
+  const a = await accesoBi();
   if (!a.ok) {
     if (redirigir) redirect(a.destino);
     throw new Error(a.mensaje);

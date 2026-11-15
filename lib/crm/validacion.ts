@@ -56,6 +56,10 @@ export const camposFranquiciatario = {
   estado_interes: { tipo: 'texto', max: 120 },
   origen: { tipo: 'texto', max: 120 },
   territorio: opcion(Object.keys(TERRITORIOS)),
+} satisfies Record<string, Campo>;
+
+/** Datos fiscales y del obligado solidario (tabla aparte, migración 50): solo Ventas, Legal, Finanzas y Dirección. */
+export const camposFiscales = {
   firmante: { tipo: 'texto', max: 200 },
   obligado_solidario: { tipo: 'texto', max: 200 },
   razon_social: { tipo: 'texto', max: 200 },

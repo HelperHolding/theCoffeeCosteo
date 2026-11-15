@@ -36,6 +36,9 @@ export interface Etapa {
   card: TipoCard | null;
   opcional: boolean;
   provisional: boolean;
+  // Flujo completo (migración 50).
+  paso: string | null;
+  carril: 'legal' | null;
 }
 
 export const MARCAS_CAFETERA = ['La Marzocco', 'Victoria Arduino'] as const;
@@ -363,12 +366,6 @@ export interface Franquiciatario {
   etapa_previa_id: string | null;
   posicion: number;
   formalizado_en: string | null;
-  firmante: string | null;
-  obligado_solidario: string | null;
-  razon_social: string | null;
-  rfc: string | null;
-  regimen_fiscal: string | null;
-  codigo_postal_fiscal: string | null;
   prospecto_id: string | null;
   muestra: boolean;
   etapa_origen_id: string | null;
@@ -380,6 +377,27 @@ export interface Franquiciatario {
   archivado_en: string | null;
   archivado_por: string | null;
 }
+/** Datos fiscales y del obligado solidario (migración 50): solo Ventas, Legal, Finanzas y Dirección. */
+export interface FranquiciatarioFiscal {
+  franquiciatario_id: string;
+  firmante: string | null;
+  obligado_solidario: string | null;
+  razon_social: string | null;
+  rfc: string | null;
+  regimen_fiscal: string | null;
+  codigo_postal_fiscal: string | null;
+  actualizado_en: string;
+  actualizado_por: string | null;
+  version: number;
+}
+export const CAMPOS_FISCALES = [
+  'firmante',
+  'obligado_solidario',
+  'razon_social',
+  'rfc',
+  'regimen_fiscal',
+  'codigo_postal_fiscal',
+] as const;
 export interface Requisito {
   id: string;
   clave: string;
@@ -431,7 +449,8 @@ export interface Liberacion {
   liberado_en: string;
   consumida_en: string | null;
 }
-export type TipoAviso = 'cof' | 'apertura_5_habiles' | 'limite_120' | 'cof_tardia';
+export type TipoAviso =
+  'cof' | 'apertura_5_habiles' | 'limite_120' | 'cof_tardia' | 'limite_vencido' | 'transferencia';
 export interface Aviso {
   id: string;
   tipo: TipoAviso;
@@ -460,6 +479,9 @@ export interface CandadoCard {
   faltante: string | null;
   faltante_area: ClaveArea | null;
   liberado: boolean;
+  /** Requisitos obligatorios del carril Legal (COF y contrato) visibles para la sucursal (migración 50). */
+  carril_total: number;
+  carril_listos: number;
 }
 /** Vista crm_v_vencimientos. */
 export interface VencimientoCard {

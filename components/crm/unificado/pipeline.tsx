@@ -120,7 +120,9 @@ function Columna({
       <header className="space-y-1 border-b border-line px-3 pb-2.5 pt-3">
         <div className="flex items-start gap-2">
           <h3 id={`col-${etapa.id}`} className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
-            {etapa.numero ? <span className="text-muted-foreground">{etapa.numero} · </span> : null}
+            {etapa.numero || etapa.paso ? (
+              <span className="text-muted-foreground">{etapa.numero ?? etapa.paso} · </span>
+            ) : null}
             {etapa.nombre}
           </h3>
           <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold tabular">
@@ -133,7 +135,6 @@ function Columna({
             {etapa.funcion ?? area.nombre}
           </span>
           {etapa.opcional && <span>· opcional</span>}
-          {etapa.provisional && <span>· provisional</span>}
           {bloqueadas > 0 && (
             <span>
               · {bloqueadas} bloqueada{bloqueadas > 1 ? 's' : ''}

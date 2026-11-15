@@ -19,7 +19,7 @@ export default async function MisPendientes() {
   const mias = (a: ClaveArea) => todas || usuario.areas.includes(a === 'finanzas' ? 'ventas' : a);
   const misEtapas = etapas.filter((e) => e.tipo === 'abierta' && mias(e.area)).map((e) => e.id);
 
-  const [porValidar, candados, propias] = await Promise.all([
+  const [porValidar, candados, propias, toca] = await Promise.all([
     db.from('crm_cumplimientos').select('*').eq('estado', 'cumplido').order('cumplido_en').limit(200),
     misEtapas.length
       ? db.from('crm_v_candados').select('*').in('etapa_id', misEtapas).limit(5000)
@@ -32,6 +32,16 @@ export default async function MisPendientes() {
       .is('formalizado_en', null)
       .order('actualizado_en', { ascending: false })
       .limit(MAX),
+    // Te toca registrar: cards cuyo siguiente requisito pendiente lo registra un área mía (incluye Finanzas,
+    // que no mueve etapas pero sí confirma pagos).
+    usuario.areas.length
+      ? db
+          .from('crm_v_candados')
+          .select('card_id,tipo_card', { count: 'exact' })
+          .in('faltante_area', usuario.areas)
+          .eq('liberado', false)
+          .range(0, MAX - 1)
+      : Promise.resolve({ data: [] as Pick<CandadoCard, 'card_id' | 'tipo_card'>[], count: 0 }),
   ]);
   const cumplidos = (porValidar.data ?? []) as Cumplimiento[];
   const requisitos = cumplidos.length
@@ -50,7 +60,7 @@ export default async function MisPendientes() {
   const cs = (candados.data ?? []) as CandadoCard[];
   const listas = cs.filter((c) => c.liberado || c.listos >= c.total).slice(0, MAX);
   const bloqueadas = cs.filter((c) => !c.liberado && c.listos < c.total);
-  const [cardsListas, cardsValidar, cardsPropias] = await Promise.all([
+  const [cardsListas, cardsValidar, cardsPropias, cardsToca] = await Promise.all([
     armarCards(
       db,
       listas.map((c) => ({ id: c.card_id, tipo: c.tipo_card })),
@@ -64,6 +74,13 @@ export default async function MisPendientes() {
     armarCards(
       db,
       ((propias.data ?? []) as { id: string }[]).map((x) => ({ id: x.id, tipo: 'franquiciatario' as const })),
+    ),
+    armarCards(
+      db,
+      ((toca.data ?? []) as Pick<CandadoCard, 'card_id' | 'tipo_card'>[]).map((c) => ({
+        id: c.card_id,
+        tipo: c.tipo_card,
+      })),
     ),
   ]);
   const misAvisos = avisos.filter((a) => !a.atendido_en && mias(a.area));
@@ -89,6 +106,8 @@ export default async function MisPendientes() {
         totalListas={cs.filter((c) => c.liberado || c.listos >= c.total).length}
         bloqueadas={bloqueadas.length}
         propias={cardsPropias}
+        tocaRegistrar={cardsToca}
+        totalTocaRegistrar={toca.count ?? cardsToca.length}
         areas={usuario.areas}
         todas={todas}
       />

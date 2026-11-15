@@ -819,7 +819,17 @@ export function crearConsultasCrm(db: Db): Consulta[] {
     'consultar_vencimientos',
     'Fechas por vencer de las sucursales: COF (2 meses antes de la apertura estimada), aviso de 5 días hábiles (con festivos) antes de la apertura confirmada, límite de apertura (constancia + 120 días) y COF tardía. Filtra por tipo y por rango de fechas (YYYY-MM-DD); "este mes" = del día 1 al último día del mes.',
     z.object({
-      tipo: z.enum(['cof', 'apertura_5_habiles', 'limite_120', 'cof_tardia', '']).default(''),
+      tipo: z
+        .enum([
+          'cof',
+          'apertura_5_habiles',
+          'limite_120',
+          'limite_vencido',
+          'cof_tardia',
+          'transferencia',
+          '',
+        ])
+        .default(''),
       desde: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)

@@ -48,14 +48,22 @@ import {
   validarRequisito,
 } from '@/app/(crm)/crm/acciones-pipeline';
 import { destinos, type Destino } from '@/lib/crm/unificado/reglas';
-import { AREAS, cuando, type CardPipeline, type EtapaGeneral } from '@/lib/crm/unificado/modelo';
+import {
+  AREAS,
+  cuando,
+  requisitoListo,
+  type CardPipeline,
+  type EtapaGeneral,
+} from '@/lib/crm/unificado/modelo';
 import { TIPOS_DOCUMENTO } from '@/lib/crm/validacion';
 import {
+  CAMPOS_FISCALES,
   TERRITORIOS,
   type Actividad,
   type Archivo,
   type ClaveArea,
   type Franquiciatario,
+  type FranquiciatarioFiscal,
   type Historial,
   type Liberacion,
   type Nota,
@@ -79,6 +87,10 @@ export interface DatosExpediente {
   liberaciones: Liberacion[];
   sucursales: { id: string; nombre: string; etapa: EtapaGeneral }[];
   nombres: Record<string, string>;
+  /** Datos fiscales y del obligado solidario; nulos si no hay o si el usuario no los puede ver. */
+  fiscal?: FranquiciatarioFiscal | null;
+  /** Ventas, Legal, Finanzas y Dirección (migración 50). */
+  veSensibles?: boolean;
 }
 
 export interface UsuarioCrm {
@@ -92,9 +104,8 @@ export interface UsuarioCrm {
 }
 
 // Un área inactiva (Finanzas) la cubre Ventas con evidencia (P1); la base aplica la misma regla.
-const efectiva = (a: ClaveArea): ClaveArea => (a === 'finanzas' ? 'ventas' : a);
 const puedeArea = (u: UsuarioCrm, a: ClaveArea) =>
-  u.editable && (u.desarrollador || u.esHead || u.areas.includes(efectiva(a)));
+  u.editable && (u.desarrollador || u.esHead || u.areas.includes(a));
 const listo = (r: Pick<RequisitoCard, 'estado'>) => r.estado === 'validado' || r.estado === 'no_aplica';
 const nombreDoc = (t: string | null) =>
   t && t in TIPOS_DOCUMENTO ? TIPOS_DOCUMENTO[t as keyof typeof TIPOS_DOCUMENTO] : 'Adjunto';
@@ -173,7 +184,7 @@ function FormCumplir({
   alTerminar: () => void;
 }) {
   const { pendiente, error, setError, correr } = useAccion();
-  const conDoc = r.tipo === 'documento' || r.tipo === 'firma' || r.area_valida === 'finanzas';
+  const conDoc = r.tipo === 'documento' || r.tipo === 'firma';
   const conFecha = r.tipo === 'fecha' || r.tipo === 'firma';
   const conValor = r.tipo === 'dato';
   const [fecha, setFecha] = useState('');
@@ -202,7 +213,7 @@ function FormCumplir({
       {conDoc && (
         <div className="grid gap-2 sm:grid-cols-2">
           <label>
-            {r.area_valida === 'finanzas' ? 'Evidencia de Finanzas (correo o comprobante)' : 'Documento'}
+            Documento
             <input
               type="file"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
@@ -429,12 +440,7 @@ function Requisitos({
     .filter((g): g is { etapa: EtapaGeneral; rs: RequisitoCard[] } => !!g.etapa)
     .sort((a, b) => b.etapa.orden - a.etapa.orden);
   if (!ordenadas.length)
-    return (
-      <p className="placa p-5 text-sm text-muted-foreground">
-        Esta etapa no tiene requisitos
-        {datos.etapa.provisional ? ' (provisional, hasta que llegue el documento de Proyectos)' : ''}.
-      </p>
-    );
+    return <p className="placa p-5 text-sm text-muted-foreground">Esta etapa no tiene requisitos.</p>;
   return (
     <div className="space-y-3">
       {ordenadas.map(({ etapa, rs }) => {
@@ -451,7 +457,11 @@ function Requisitos({
               {n}/{rs.length} listos
             </span>
             {adelanto && (
-              <span className="text-xs font-semibold text-ink-2">· se puede registrar por adelantado</span>
+              <span className="text-xs font-semibold text-ink-2">
+                {etapa.carril
+                  ? '· carril Legal, en paralelo a Proyectos'
+                  : '· se puede registrar por adelantado'}
+              </span>
             )}
           </span>
         );
@@ -881,9 +891,12 @@ const CAMPOS_SUCURSAL: CampoEditable[] = [
 ];
 
 function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioCrm }) {
-  const fila = (datos.tipo === 'franquiciatario'
-    ? datos.franquiciatario
-    : datos.sucursal) as unknown as Record<string, unknown>;
+  const fila = {
+    ...(datos.tipo === 'franquiciatario' ? datos.franquiciatario : datos.sucursal),
+    ...(datos.tipo === 'franquiciatario' ? datos.fiscal : null),
+  } as unknown as Record<string, unknown>;
+  const oculto = (campo: string) =>
+    !datos.veSensibles && (CAMPOS_FISCALES as readonly string[]).includes(campo);
   const campos = datos.tipo === 'franquiciatario' ? CAMPOS_FRANQUICIATARIO : CAMPOS_SUCURSAL;
   const [editando, setEditando] = useState(false);
   const { pendiente, error, correr } = useAccion();
@@ -954,8 +967,14 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
                 g.campos.length > 5 && 'lg:grid-cols-3',
               )}
             >
+              {g.campos.some(oculto) && (
+                <p className="rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted-foreground sm:col-span-2 lg:col-span-3">
+                  Firmante, obligado solidario y datos fiscales solo los ven Ventas, Legal, Finanzas y
+                  Dirección.
+                </p>
+              )}
               {campos
-                .filter((c) => g.campos.includes(c.campo))
+                .filter((c) => g.campos.includes(c.campo) && !oculto(c.campo))
                 .map((c) => (
                   <div key={c.campo} className="min-w-0">
                     {editando ? (
@@ -1079,6 +1098,96 @@ function Sucursales({ datos, usuario }: { datos: DatosExpediente; usuario: Usuar
   );
 }
 
+/** Carril Legal (COF y contrato, en paralelo a Proyectos) y cuenta regresiva de los 120 días para abrir. */
+function CarrilYPlazo({ datos, ahora }: { datos: DatosExpediente; ahora?: Date }) {
+  const carril = new Set(datos.etapas.filter((e) => e.carril).map((e) => e.id));
+  const hitos = datos.requisitos
+    .filter((r) => carril.has(r.etapa_id) && r.obligatorio)
+    .sort((a, b) => a.etapa_orden - b.etapa_orden || a.orden - b.orden);
+  const limite = datos.sucursal?.fecha_limite_apertura ?? null;
+  const operando = datos.etapa.tipo === 'ganada';
+  if (!hitos.length && !limite) return null;
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(
+    ahora ?? new Date(),
+  );
+  const dias = limite
+    ? Math.round((Date.parse(`${limite}T00:00:00Z`) - Date.parse(`${hoy}T00:00:00Z`)) / 86_400_000)
+    : null;
+  const usados = dias === null ? 0 : Math.min(120, Math.max(0, 120 - dias));
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      {hitos.length > 0 && (
+        <div className="min-w-0 rounded-xl border border-dashed border-line-strong p-4">
+          <p className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
+            <span>Carril Legal · COF y contrato, en paralelo a Proyectos</span>
+            <span className="tabular">
+              {hitos.filter((h) => requisitoListo(h)).length} de {hitos.length}
+            </span>
+          </p>
+          <ol role="list" className="mt-3 grid gap-2 sm:grid-cols-5">
+            {hitos.map((h, n) => {
+              const listo = requisitoListo(h);
+              return (
+                <li
+                  key={h.requisito_id}
+                  className="flex items-start gap-2 sm:flex-col sm:items-center sm:text-center"
+                >
+                  <span
+                    className={cn(
+                      'grid size-7 shrink-0 place-items-center rounded-full text-[11px] font-bold',
+                      listo
+                        ? 'bg-ok text-white'
+                        : 'border border-line-strong bg-surface text-muted-foreground',
+                    )}
+                  >
+                    {listo ? <CircleCheck size={14} aria-hidden="true" /> : n + 1}
+                  </span>
+                  <span
+                    className={cn('text-[11px] leading-snug', listo ? 'text-ink' : 'text-muted-foreground')}
+                  >
+                    {h.nombre}
+                    <span className="sr-only">{listo ? ' (listo)' : ' (pendiente)'}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+      {limite && !operando && dias !== null && (
+        <div className="min-w-0 rounded-xl border border-line bg-surface-2/50 p-4">
+          <p className="text-xs font-medium text-muted-foreground">Plazo de 120 días para abrir</p>
+          <p
+            className={cn(
+              'mt-1 font-display text-2xl font-black tabular',
+              dias < 0 ? 'text-bad' : dias <= 14 ? 'text-warn' : 'text-ink',
+            )}
+          >
+            {dias < 0 ? `Vencido hace ${-dias} d` : dias === 0 ? 'Vence hoy' : `Faltan ${dias} días`}
+          </p>
+          <span
+            className="mt-2 block h-1.5 overflow-hidden rounded-full bg-line"
+            role="img"
+            aria-label={`${usados} de 120 días transcurridos`}
+          >
+            <span
+              className={cn(
+                'block h-full rounded-full',
+                dias < 0 ? 'bg-bad' : dias <= 14 ? 'bg-warn' : 'bg-ink',
+              )}
+              style={{ width: `${(usados / 120) * 100}%` }}
+            />
+          </span>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            Límite: {fechaCorta(limite)}. Si vence sin abrir, el CRM avisa la multa a Legal, Proyectos y
+            Finanzas.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ExpedienteCard({
   datos,
   usuario,
@@ -1185,10 +1294,10 @@ export function ExpedienteCard({
         className="space-y-5 rounded-2xl border border-line bg-surface p-5 shadow-card"
         aria-label="Estado de la card"
       >
-        {(etapa.card === datos.tipo || etapa.provisional) && etapa.tipo === 'abierta' && (
+        {etapa.card === datos.tipo && etapa.tipo === 'abierta' && (
           <RecorridoEtapas etapas={datos.etapas} actual={etapa} tipo={datos.tipo} />
         )}
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(14rem,auto)]">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(14rem,auto)]">
           <div className="min-w-0 space-y-2.5 rounded-xl border border-line bg-surface-2/50 p-4">
             <p className="text-xs font-medium text-muted-foreground">Etapa actual</p>
             <ChipEtapa etapa={etapa} className="text-[12px]" />
@@ -1203,7 +1312,7 @@ export function ExpedienteCard({
               <ul role="list" className="flex flex-wrap gap-1.5" aria-label="Requisitos que faltan">
                 {faltantes.slice(0, 4).map((r) => (
                   <li key={r.requisito_id}>
-                    <Chip color={AREAS[efectiva(r.area_cumple)].color}>{r.nombre}</Chip>
+                    <Chip color={AREAS[r.area_cumple].color}>{r.nombre}</Chip>
                   </li>
                 ))}
                 {faltantes.length > 4 && (
@@ -1262,7 +1371,9 @@ export function ExpedienteCard({
               >
                 {siguiente.etapa.numero
                   ? `Avanzar a la etapa ${siguiente.etapa.numero}`
-                  : `Avanzar a ${siguiente.etapa.nombre}`}
+                  : siguiente.etapa.paso
+                    ? `Avanzar a ${siguiente.etapa.paso}`
+                    : `Avanzar a ${siguiente.etapa.nombre}`}
                 <ArrowRight aria-hidden="true" />
               </Button>
             )}
@@ -1292,6 +1403,7 @@ export function ExpedienteCard({
             )}
           </div>
         </div>
+        {datos.tipo === 'sucursal' && <CarrilYPlazo datos={datos} ahora={ahora} />}
         {errorMover && !destino && (
           <p role="alert" className="text-sm text-bad">
             {errorMover}
