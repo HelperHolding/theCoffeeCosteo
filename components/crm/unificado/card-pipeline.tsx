@@ -79,10 +79,9 @@ export function ChipEtapa({ etapa, className }: { etapa: EtapaGeneral; className
     >
       <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: area.color }} />
       <span className="truncate">
-        {etapa.numero ? `${etapa.numero} · ` : ''}
+        {etapa.numero ? `${etapa.numero} · ` : etapa.paso ? `${etapa.paso} · ` : ''}
         {etapa.nombre}
       </span>
-      {etapa.provisional && <span className="text-muted-foreground">· provisional</span>}
     </span>
   );
 }

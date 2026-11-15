@@ -63,19 +63,43 @@ export const ETAPAS: EtapaGeneral[] = [
   }),
   e(7, 'constancia', 'Constancia de arrendamiento', { numero: 7, area: 'legal', card: 'sucursal' }),
   e(8, 'transferencia', 'Transferencia a Proyectos', { numero: 8, area: 'legal', card: 'sucursal' }),
-  e(9, 'p_arquitecta', 'Arquitecta asignada', { area: 'proyectos', card: 'sucursal', provisional: true }),
-  e(10, 'p_3d', 'Proyecto 3D', { area: 'proyectos', card: 'sucursal', provisional: true }),
-  e(11, 'p_ejecutivo', 'Proyecto ejecutivo', { area: 'proyectos', card: 'sucursal', provisional: true }),
-  e(12, 'p_remodelacion', 'En remodelación', { area: 'proyectos', card: 'sucursal', provisional: true }),
-  e(13, 'p_entrega', 'Entrega de local', { area: 'proyectos', card: 'sucursal', provisional: true }),
-  e(14, 'p_capacitacion', 'Agenda de capacitación', {
+  e(9, 'levantamiento', 'Levantamiento arquitectónico', {
+    paso: '26.1',
     area: 'proyectos',
     card: 'sucursal',
-    provisional: true,
   }),
-  e(15, 'cof', 'Circular Oferta de Franquicia (COF)', { numero: 9, area: 'legal', card: 'sucursal' }),
-  e(16, 'contrato', 'Contrato de franquicia y apertura', { numero: 10, area: 'legal', card: 'sucursal' }),
-  e(17, 'operando', 'Operando', { area: 'legal', card: 'sucursal', tipo: 'ganada' }),
+  e(10, 'boceto', 'Elaboración de boceto', { paso: '26.2', area: 'proyectos', card: 'sucursal' }),
+  e(11, 'envio_brasil', 'Envío a Brasil', { paso: '26.3', area: 'proyectos', card: 'sucursal' }),
+  e(12, 'proyecto_3d', 'Recepción del proyecto 3D', { paso: '26.4', area: 'proyectos', card: 'sucursal' }),
+  e(13, 'proyecto_ejecutivo', 'Elaboración del proyecto ejecutivo', {
+    paso: '26.5',
+    area: 'proyectos',
+    card: 'sucursal',
+  }),
+  e(14, 'obra', 'Obra', { paso: '26.6', area: 'proyectos', card: 'sucursal' }),
+  e(14.5, 'capacitacion', 'Capacitación y evidencia de apertura', {
+    paso: '26.7',
+    area: 'proyectos',
+    card: 'sucursal',
+  }),
+  e(15, 'cof', 'Circular Oferta de Franquicia (COF)', {
+    numero: 9,
+    area: 'legal',
+    card: 'sucursal',
+    carril: 'legal',
+  }),
+  e(16, 'contrato', 'Contrato de franquicia y apertura', {
+    numero: 10,
+    area: 'legal',
+    card: 'sucursal',
+    carril: 'legal',
+  }),
+  e(17, 'operando', 'Tienda en operación', {
+    paso: '26.8',
+    area: 'proyectos',
+    card: 'sucursal',
+    tipo: 'ganada',
+  }),
   e(18, 'standby', 'Standby', { area: 'ventas', card: 'franquiciatario', tipo: 'lateral' }),
   e(19, 'descartada', 'Descartada', { area: 'ventas', card: 'franquiciatario', tipo: 'perdida' }),
   e(20, 'cancelada', 'Cancelada', { area: 'legal', card: 'sucursal', tipo: 'perdida' }),
@@ -92,14 +116,13 @@ const TOTALES: Record<string, number> = {
   locales: 65,
   constancia: 4,
   transferencia: 0,
-  p_arquitecta: 4,
-  p_3d: 3,
-  p_ejecutivo: 5,
-  p_remodelacion: 11,
-  p_entrega: 0,
-  p_capacitacion: 1,
-  cof: 0,
-  contrato: 0,
+  levantamiento: 4,
+  boceto: 0,
+  envio_brasil: 0,
+  proyecto_3d: 3,
+  proyecto_ejecutivo: 5,
+  obra: 11,
+  capacitacion: 1,
   operando: 72,
   standby: 6,
   descartada: 33,
@@ -196,16 +219,16 @@ export const CARDS: CardPipeline[] = [
   card('constancia', {
     vencimiento: { tipo: 'limite_120', etiqueta: 'Límite de apertura', fecha: '2027-02-20', dias: 109 },
   }),
-  card('p_arquitecta'),
-  card('p_3d'),
-  card('p_ejecutivo'),
-  card('p_remodelacion', {
+  card('levantamiento'),
+  card('proyecto_3d'),
+  card('proyecto_ejecutivo'),
+  card('obra', {
     vencimiento: { tipo: 'cof', etiqueta: 'COF a Legal', fecha: '2026-11-15', dias: 12 },
   }),
-  card('p_remodelacion', {
+  card('obra', {
     vencimiento: { tipo: 'cof', etiqueta: 'COF a Legal', fecha: '2026-10-30', dias: -4 },
   }),
-  card('p_capacitacion', {
+  card('capacitacion', {
     vencimiento: {
       tipo: 'apertura_5_habiles',
       etiqueta: 'Fecha confirmada a Legal',
@@ -276,7 +299,7 @@ const r = (
     etapa_id: et.id,
     etapa_clave: et.clave,
     etapa_orden: et.orden,
-    de_etapa_actual: etapaClave === 'cof',
+    de_etapa_actual: etapaClave === 'obra',
     nombre,
     tipo,
     area_cumple: cumple,
@@ -352,13 +375,17 @@ const evento = (
 export function VistaExpedienteUnificado() {
   const parametros = new URLSearchParams(window.location.search);
   const sucursal: CardPipeline = {
-    ...card('cof'),
+    ...card('obra'),
     id: 'suc-juriquilla',
     nombre: 'Querétaro Juriquilla',
     franquiciatario: 'Mariana Ortiz',
     ciudad: 'Querétaro',
-    etapaId: 'cof',
-    requisitos: { total: 2, listos: 1, faltante: { nombre: 'COF firmada', area: 'legal' } },
+    etapaId: 'obra',
+    requisitos: {
+      total: 1,
+      listos: 0,
+      faltante: { nombre: 'Fotografías de terminación de obra', area: 'proyectos' },
+    },
     vencimiento: { tipo: 'cof', etiqueta: 'COF firmada', fecha: '2026-11-15', dias: 12 },
     muestra: false,
   };
@@ -379,7 +406,7 @@ export function VistaExpedienteUnificado() {
       numero_tienda_jestor: null,
       arquitecto_asignado: 'Arquitecta Prueba',
     } as Tienda,
-    etapa: etapa('cof'),
+    etapa: etapa('obra'),
     etapas: ETAPAS,
     requisitos: [
       r(
@@ -417,6 +444,23 @@ export function VistaExpedienteUnificado() {
         'validado',
         'Por lo general, firma + 120 días.',
         { campo: 'fecha_limite_apertura', valor: '2027-01-16' },
+      ),
+      r(
+        'obra',
+        'Fotografías de terminación de obra',
+        'documento',
+        'proyectos',
+        'pendiente',
+        'La obra la hace el franquiciatario; Proyectos da seguimiento y valida el cierre.',
+      ),
+      r(
+        'proyecto_ejecutivo',
+        'Paquete final del proyecto ejecutivo',
+        'documento',
+        'proyectos',
+        'validado',
+        'Elaborado y revisado a partir del proyecto 3D.',
+        { cumplido_por: 'u-diego', validado_por: 'u-diego' },
       ),
       r(
         'cof',

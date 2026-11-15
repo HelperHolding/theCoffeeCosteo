@@ -2,6 +2,7 @@
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import {
+  camposFiscales,
   camposFranquiciatario,
   camposSucursal,
   TIPOS_DOCUMENTO,
@@ -182,8 +183,25 @@ export async function guardarCard(
     if (!tipoValido(tipo)) return { error: 'Tipo de card no válido.' };
     const { db } = await editor();
     const campos = tipo === 'franquiciatario' ? camposFranquiciatario : camposSucursal;
+    const fiscalesEnviados =
+      tipo === 'franquiciatario' && Object.keys(camposFiscales).some((k) => k in datos);
     const v = validar(campos as typeof camposFranquiciatario, datos);
-    if (!Object.keys(v).length) return { error: 'No hay cambios.' };
+    const vf = fiscalesEnviados ? validar(camposFiscales, datos) : {};
+    if (!Object.keys(v).length && !Object.keys(vf).length) return { error: 'No hay cambios.' };
+    // Datos fiscales en su tabla: la RLS solo deja escribir a Ventas, Legal, Finanzas y Dirección.
+    if (Object.keys(vf).length) {
+      const f = await db
+        .from('crm_franquiciatario_fiscal')
+        .upsert({ franquiciatario_id: id, ...vf } as never, { onConflict: 'franquiciatario_id' });
+      if (f.error)
+        return {
+          error:
+            f.error.code === '42501'
+              ? 'Los datos fiscales solo los editan Ventas, Legal, Finanzas y Dirección.'
+              : mensaje(f.error),
+        };
+    }
+    if (!Object.keys(v).length) return { version };
     const r = await db
       .from(tipo === 'franquiciatario' ? 'crm_franquiciatarios' : 'crm_tiendas')
       .update(v as never)

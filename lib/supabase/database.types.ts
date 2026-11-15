@@ -207,6 +207,7 @@ export interface Database {
       crm_areas: Tabla<Crm.Area>;
       crm_membresias: Tabla<Crm.Membresia>;
       crm_franquiciatarios: Tabla<Crm.Franquiciatario>;
+      crm_franquiciatario_fiscal: Tabla<Crm.FranquiciatarioFiscal>;
       crm_requisitos: Tabla<Crm.Requisito>;
       crm_cumplimientos: Tabla<Crm.Cumplimiento>;
       crm_liberaciones: Tabla<Crm.Liberacion>;
@@ -281,6 +282,7 @@ export interface Database {
       crm_generar_avisos: { Args: { p_hoy?: string | null }; Returns: number };
       crm_atender_aviso: { Args: { p_aviso: string }; Returns: undefined };
       crm_es_head: { Args: Record<string, never>; Returns: boolean };
+      crm_ve_sensibles: { Args: Record<string, never>; Returns: boolean };
       sucursales_puede_costeo: { Args: { p_company: number }; Returns: boolean };
       sucursales_datos_costeo: { Args: { p_company: number }; Returns: Json };
       sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };
@@ -289,7 +291,10 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
-      sucursales_consumo_desglose: { Args: { p_mes: string; p_companias: number[]; p_insumo: string | null }; Returns: Json };
+      sucursales_consumo_desglose: {
+        Args: { p_mes: string; p_companias: number[]; p_insumo: string | null };
+        Returns: Json;
+      };
       sucursales_consumo_nacional: { Args: { p_mes: string; p_companias: number[] }; Returns: Json };
       sucursales_tablero_hoy: { Args: { p_companias: number[]; p_hoys: string[] }; Returns: Json };
       sucursales_tablero_periodo: {
