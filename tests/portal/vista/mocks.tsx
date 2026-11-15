@@ -1,6 +1,8 @@
 import type { ComponentProps } from 'react';
+// ?ruta=/crm/pendientes simula la página (p. ej. para las sugerencias del agente); con ?grabar, Mis pendientes.
 export function usePathname() {
-  return '/productos';
+  const p = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+  return p.get('ruta') ?? (p.has('grabar') ? '/crm/pendientes' : '/productos');
 }
 export function useSearchParams() {
   return new URLSearchParams();
