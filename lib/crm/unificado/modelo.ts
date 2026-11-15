@@ -19,6 +19,16 @@ export const AREAS: Record<ClaveArea, Area> = {
 };
 
 export type TipoCard = 'franquiciatario' | 'sucursal';
+
+/** Igual que crm_puede_mover: un head o desarrollador mueve todo; los demás, las etapas de su área (y función). */
+export const puedeMoverEtapa = (
+  u: { desarrollador: boolean; esHead: boolean; areas: string[]; funciones: string[]; editable: boolean },
+  e: Pick<EtapaGeneral, 'area' | 'funcionClave'>,
+) =>
+  u.editable &&
+  (u.desarrollador ||
+    u.esHead ||
+    (u.areas.includes(e.area) && (!e.funcionClave || u.funciones.includes(e.funcionClave))));
 export type TipoEtapa = 'abierta' | 'lateral' | 'ganada' | 'perdida';
 
 export interface EtapaGeneral {
@@ -35,6 +45,8 @@ export interface EtapaGeneral {
   area: ClaveArea;
   /** Rol funcional que mueve en lugar del área (p. ej. Aprobación de locales, P2). */
   funcion?: string;
+  /** Clave de esa función (la que llevan las membresías), para decidir botones igual que la base. */
+  funcionClave?: 'aprobacion_locales';
   /** Tipo de card de la etapa; nulo = ambas (Standby). */
   card: TipoCard | null;
   tipo: TipoEtapa;
@@ -67,7 +79,7 @@ export interface Requisito {
 }
 
 export interface Vencimiento {
-  tipo: 'cof' | 'apertura_5_habiles' | 'limite_120' | 'limite_vencido' | 'pld_original';
+  tipo: 'cof' | 'apertura_5_habiles' | 'limite_120' | 'limite_vencido' | 'pld_original' | 'transferencia';
   etiqueta: string;
   fecha: string;
   /** Días restantes; negativo = vencido. */

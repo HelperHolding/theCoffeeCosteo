@@ -95,7 +95,7 @@ export default async function CarrilLegal() {
       <Encabezado
         area="CRM Franquicias"
         titulo="COF y contrato"
-        descripcion="El carril Legal de cada sucursal, en paralelo a Proyectos. Ninguna abre sin los cinco hitos."
+        descripcion="El carril Legal de cada sucursal, en paralelo a Proyectos. Ninguna abre sin su carril Legal completo."
       />
       <VistaCarrilLegal filas={filas} />
     </>

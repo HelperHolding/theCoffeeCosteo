@@ -51,6 +51,7 @@ import { destinos, type Destino } from '@/lib/crm/unificado/reglas';
 import {
   AREAS,
   cuando,
+  puedeMoverEtapa,
   requisitoListo,
   type CardPipeline,
   type EtapaGeneral,
@@ -58,6 +59,7 @@ import {
 import { TIPOS_DOCUMENTO } from '@/lib/crm/validacion';
 import {
   CAMPOS_FISCALES,
+  DOCUMENTOS_SENSIBLES,
   TERRITORIOS,
   type Actividad,
   type Archivo,
@@ -327,6 +329,7 @@ function FilaRequisito({
               style={{ background: AREAS[r.area_cumple].color }}
             />
             Cumple {AREAS[r.area_cumple].nombre}
+            {r.funcion_cumple === 'aprobacion_locales' && ' · Aprobación de locales'}
           </span>
           {r.area_valida !== r.area_cumple && (
             <span className="inline-flex items-center gap-1">
@@ -374,6 +377,13 @@ function FilaRequisito({
       </div>
       {!r.campo && !abierto && (
         <div className="col-start-2 col-end-4 flex flex-wrap gap-2">
+          {r.estado === 'pendiente' && !cumple && usuario.editable && (
+            <p className="text-xs text-muted-foreground">
+              Lo registra {AREAS[r.area_cumple].nombre}
+              {r.funcion_cumple === 'aprobacion_locales' ? ' (Aprobación de locales)' : ''}; tú lo ves para
+              dar seguimiento.
+            </p>
+          )}
           {r.estado === 'pendiente' && cumple && (
             <Button variant="outline" size="sm" onClick={() => setAbierto(true)}>
               {r.tipo === 'documento' || r.tipo === 'firma' ? <Upload aria-hidden="true" /> : null}
@@ -560,11 +570,16 @@ function Documentos({
           <label className="w-56">
             Tipo de documento
             <select value={tipoDoc} onChange={(e) => setTipoDoc(e.target.value)}>
-              {Object.entries(TIPOS_DOCUMENTO).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
+              {Object.entries(TIPOS_DOCUMENTO)
+                .filter(
+                  ([k]) =>
+                    datos.veSensibles !== false || !(DOCUMENTOS_SENSIBLES as readonly string[]).includes(k),
+                )
+                .map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="min-w-56 flex-1">
@@ -1212,11 +1227,16 @@ export function ExpedienteCard({
   const faltantes = actuales.filter((r) => r.obligatorio && !listo(r));
   const posibles = usuario.editable ? destinos(datos.etapas, etapa, datos.tipo, card.etapaPreviaId) : [];
   const siguiente = posibles.find((d) => d.tipo === 'siguiente');
-  const puedeMover =
-    usuario.editable && (usuario.desarrollador || usuario.esHead || usuario.areas.includes(etapa.area));
+  const puedeMover = puedeMoverEtapa(usuario, etapa);
   const bloqueadoTerritorio =
     datos.tipo === 'franquiciatario' && datos.franquiciatario?.territorio === 'bloqueada';
-  const lista = (faltantes.length === 0 && !bloqueadoTerritorio) || card.liberado;
+  const carril = new Set(datos.etapas.filter((e) => e.carril).map((e) => e.id));
+  const faltaCarril =
+    siguiente?.etapa.clave === 'operando'
+      ? datos.requisitos.filter((r) => carril.has(r.etapa_id) && r.obligatorio && !listo(r))
+      : [];
+  const listaEtapa = (faltantes.length === 0 && !bloqueadoTerritorio) || card.liberado;
+  const lista = listaEtapa && faltaCarril.length === 0;
   const mover = (d: Destino, motivo: string | null, sucursal: string | null) =>
     iniciar(async () => {
       setErrorMover('');
@@ -1384,7 +1404,7 @@ export function ExpedienteCard({
               deshabilitado={moviendo}
               compacto={false}
             />
-            {usuario.esHead && !lista && etapa.tipo === 'abierta' && (
+            {usuario.esHead && !listaEtapa && etapa.tipo === 'abierta' && (
               <LiberarCandado
                 datos={datos}
                 faltantes={faltantes}
@@ -1396,9 +1416,11 @@ export function ExpedienteCard({
               <p className="text-[11px] leading-snug text-muted-foreground">
                 {bloqueadoTerritorio
                   ? 'Territorio bloqueado: solo Standby o Descartada, o un head libera el candado.'
-                  : faltantes.length > 1
-                    ? `Faltan ${faltantes.length} requisitos obligatorios para avanzar.`
-                    : 'Falta 1 requisito obligatorio para avanzar.'}
+                  : listaEtapa
+                    ? `Falta el carril Legal (${faltaCarril.length} de COF, contrato o liberación). Ningún candado lo libera.`
+                    : faltantes.length > 1
+                      ? `Faltan ${faltantes.length} requisitos obligatorios para avanzar.`
+                      : 'Falta 1 requisito obligatorio para avanzar.'}
               </p>
             )}
           </div>

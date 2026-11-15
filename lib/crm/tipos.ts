@@ -390,6 +390,15 @@ export interface FranquiciatarioFiscal {
   actualizado_por: string | null;
   version: number;
 }
+/** Igual que crm_documento_sensible (migración 50): solo Ventas, Legal, Finanzas y Dirección los ven y suben. */
+export const DOCUMENTOS_SENSIBLES = [
+  'survey',
+  'pld',
+  'csf',
+  'comprobante_apartado',
+  'comprobante_pago',
+  'factura',
+] as const;
 export const CAMPOS_FISCALES = [
   'firmante',
   'obligado_solidario',

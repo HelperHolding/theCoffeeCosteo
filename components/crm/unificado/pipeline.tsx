@@ -247,6 +247,7 @@ export function PipelineGeneral({
   totales,
   ahora,
   editable = false,
+  movibles,
   tramoInicial = 'todos',
 }: {
   etapas: EtapaGeneral[];
@@ -255,6 +256,8 @@ export function PipelineGeneral({
   totales?: Record<string, number>;
   ahora?: Date;
   editable?: boolean;
+  /** Etapas que el usuario puede mover (su área y función); sin lista, todas las editables. */
+  movibles?: string[];
   tramoInicial?: Tramo['clave'] | 'todos';
 }) {
   const todos = useMemo(() => calcularTramos(etapas), [etapas]);
@@ -479,7 +482,7 @@ export function PipelineGeneral({
                           etapas={etapas}
                           cards={cs}
                           total={filtrando ? cs.length : (totales?.[e.id] ?? cs.length)}
-                          editable={editable}
+                          editable={editable && (!movibles || movibles.includes(e.id))}
                           ahora={ahora}
                           alMover={mover}
                         />

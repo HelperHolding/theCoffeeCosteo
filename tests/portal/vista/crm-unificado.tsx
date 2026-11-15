@@ -64,6 +64,7 @@ export const ETAPAS: EtapaGeneral[] = [
     numero: 6,
     area: 'ventas',
     funcion: 'Aprobación de locales',
+    funcionClave: 'aprobacion_locales',
     card: 'sucursal',
   }),
   e(7, 'constancia', 'Constancia de arrendamiento', { numero: 7, area: 'legal', card: 'sucursal' }),

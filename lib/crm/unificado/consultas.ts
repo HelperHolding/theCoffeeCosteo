@@ -39,6 +39,7 @@ export const aEtapaGeneral = (e: Etapa): EtapaGeneral => ({
   nombre: e.nombre,
   area: e.area ?? 'ventas',
   funcion: e.funcion === 'aprobacion_locales' ? 'Aprobación de locales' : undefined,
+  funcionClave: e.funcion === 'aprobacion_locales' ? 'aprobacion_locales' : undefined,
   card: e.card,
   tipo: e.tipo,
   opcional: e.opcional,
@@ -225,6 +226,7 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
     limite_120: 'limite_120',
     limite_vencido: 'limite_vencido',
     cof_tardia: 'limite_120',
+    transferencia: 'transferencia',
   };
   const etiquetaVenc: Record<string, string> = {
     cof: 'COF firmada',
@@ -232,6 +234,7 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
     limite_120: 'Límite de apertura',
     limite_vencido: 'Límite vencido: multa',
     cof_tardia: 'COF tardía',
+    transferencia: 'Transferencia a Proyectos',
   };
   const ultimo = (id: string, tipo: TipoCard) => {
     const h = hist.find((x) =>
