@@ -217,7 +217,7 @@ export async function guardarCard(
   }
 }
 
-/** Solo un head, con motivo; el nuevo vendedor debe ser de Ventas (migración 54). */
+/** Solo un head, con motivo; el nuevo vendedor debe ser de Ventas (migración 55). */
 export async function reasignarVendedor(id: string, vendedor: string, motivo: string): Promise<Resultado> {
   try {
     const { db } = await editor();

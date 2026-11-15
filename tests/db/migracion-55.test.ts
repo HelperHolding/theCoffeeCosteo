@@ -3,7 +3,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario } from './utilidades';
 
-// Migración 54 (doc 43 §5): los datos que cumplen un requisito los captura su área; el vendedor lo reasigna un head.
+// Migración 55 (doc 43 §5): los datos que cumplen un requisito los captura su área; el vendedor lo reasigna un head.
 let db: PGlite;
 let ventasHead: string, vendedora: string, otraVendedora: string, legal: string, proyectos: string;
 let franq: string, sucursal: string;
