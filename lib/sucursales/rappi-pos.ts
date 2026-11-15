@@ -1,5 +1,6 @@
 import type { CustomNormal, LineaNormal, PedidoNormal } from './normalizar';
 import type { PedidoRappi, ProductoRappi } from './rappi-portal';
+import { enZona } from './tiempo';
 
 /**
  * Traductor de pedidos de Rappi (portal de Partners, docs/rappi-portal) a la forma del POS, para que Ventas, Costeo y
@@ -330,11 +331,51 @@ export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea
 /** Estados que suman: terminados y en curso. Cancelados y rechazados no son venta. */
 const sumaVenta = (estado: string) => !/^cancel/.test(estado);
 
-/** Un pedido de Rappi en la forma del POS (origen «rappi»), o null si fue cancelado o rechazado. */
-export function pedidoRappiAPos(p: PedidoRappi): PedidoNormal | null {
+/**
+ * Zona en la que el portal manda `created_at` de TODAS las tiendas (comprobado el 2026-11-15 con el número de pedido,
+ * que es correlativo en todo el país: los de Tijuana y Hermosillo calzan con los de CDMX sin desfase). Por eso una
+ * sucursal fuera de la hora del centro necesita convertirla para que su Rappi quede en la misma hora que su POS.
+ */
+export const ZONA_RAPPI = 'America/Mexico_City';
+
+/**
+ * Pasa la hora de pared del portal (hora del centro) a la de la sucursal (`zona` de su config, la misma en la que el POS
+ * marca sus tickets). Devuelve fecha y segundo; en la zona del centro no cambia nada.
+ */
+export function horaRappiEnZona(
+  fecha: string,
+  segundo: number,
+  zona: string,
+): { fecha: string; segundo: number } {
+  if (zona === ZONA_RAPPI) return { fecha, segundo };
+  const [a, m, d] = fecha.split('-').map(Number);
+  const pared = Date.UTC(a, m - 1, d) + segundo * 1000;
+  // Instante real: la hora de pared del centro menos su desfase en ese momento (se ajusta una vez si el primer intento
+  // cae del otro lado de un cambio de horario).
+  let instante = pared + 6 * 3600_000;
+  for (let i = 0; i < 2; i++) {
+    const v = enZona(new Date(instante), ZONA_RAPPI);
+    const [va, vm, vd] = v.fecha.split('-').map(Number);
+    const visto = Date.UTC(va, vm - 1, vd) + v.segundo * 1000;
+    if (visto === pared) break;
+    instante += pared - visto;
+  }
+  return enZona(new Date(instante), zona);
+}
+
+/**
+ * Un pedido de Rappi en la forma del POS (origen «rappi»), o null si fue cancelado o rechazado. `zona` es la de la
+ * sucursal (config): la hora del portal se convierte a ella.
+ */
+export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): PedidoNormal | null {
   if (!sumaVenta(p.estado)) return null;
-  const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2}):(\d{2})/.exec(p.creado);
-  if (!m) return null;
+  const c = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2}):(\d{2})/.exec(p.creado);
+  if (!c) return null;
+  const local = horaRappiEnZona(c[1], Number(c[2]) * 3600 + Number(c[3]) * 60 + Number(c[4]), zona);
+  const hh = String(Math.floor(local.segundo / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((local.segundo % 3600) / 60)).padStart(2, '0');
+  const ss = String(local.segundo % 60).padStart(2, '0');
+  const m = [p.creado, local.fecha, hh, mm, ss] as const;
   const lineas = p.productos.flatMap(lineasDe);
   const ventaCent = cent(p.bruto);
   const suma = lineas.reduce(
@@ -344,7 +385,7 @@ export function pedidoRappiAPos(p: PedidoRappi): PedidoNormal | null {
   return {
     id: Number(p.id),
     fecha: m[1],
-    segundo: Number(m[2]) * 3600 + Number(m[3]) * 60 + Number(m[4]),
+    segundo: local.segundo,
     hora: `${m[2]}:${m[3]}:${m[4]}`,
     origen: 'rappi',
     ventaCent,

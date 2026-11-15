@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 
-import { lineasDe, opcionPos, pedidoRappiAPos } from '@/lib/sucursales/rappi-pos';
+import { horaRappiEnZona, lineasDe, opcionPos, pedidoRappiAPos } from '@/lib/sucursales/rappi-pos';
 import type { PedidoRappi, ProductoRappi } from '@/lib/sucursales/rappi-portal';
 import { conRappi, type LecturaNormal } from '@/lib/sucursales/datos';
 import { claveCosto, costear, type DatosCosteo } from '@/lib/sucursales/costeo';
@@ -227,6 +227,33 @@ describe('pedido de Rappi en la forma del POS', () => {
     expect(
       pedidoRappiAPos({ ...pedido('3', 'finished', [producto('Iced Latte', 89)]), bruto: 90 })!.cuadra,
     ).toBe(false);
+  });
+});
+
+describe('hora de Rappi en la zona de la sucursal', () => {
+  // El portal manda la hora del centro para todas las tiendas (número de pedido correlativo, 2026-11-15).
+  const h = (fecha: string, hhmm: string, zona: string) => {
+    const [a, b] = hhmm.split(':').map(Number);
+    const r = horaRappiEnZona(fecha, a * 3600 + b * 60, zona);
+    return `${r.fecha} ${String(Math.floor(r.segundo / 3600)).padStart(2, '0')}:${String((r.segundo % 3600) / 60).padStart(2, '0')}`;
+  };
+  it('el centro y Juárez (reloj del POS en UTC−6) no cambian', () => {
+    expect(h('2026-11-12', '13:05', 'America/Mexico_City')).toBe('2026-11-12 13:05');
+    expect(h('2026-11-12', '13:05', 'Etc/GMT+6')).toBe('2026-11-12 13:05');
+    expect(h('2026-11-12', '13:05', 'America/Monterrey')).toBe('2026-11-12 13:05');
+  });
+  it('Tijuana (reloj del POS en UTC−7) y Hermosillo una hora antes; Cancún una después', () => {
+    expect(h('2026-11-12', '13:05', 'Etc/GMT+7')).toBe('2026-11-12 12:05');
+    expect(h('2026-11-12', '13:05', 'America/Hermosillo')).toBe('2026-11-12 12:05');
+    expect(h('2026-11-12', '13:05', 'America/Cancun')).toBe('2026-11-12 14:05');
+  });
+  it('cerca de la medianoche cambia de día', () => {
+    expect(h('2026-11-12', '00:30', 'America/Hermosillo')).toBe('2026-11-11 23:30');
+    expect(h('2026-11-12', '23:30', 'America/Cancun')).toBe('2026-11-13 00:30');
+  });
+  it('pedidoRappiAPos usa la zona de la sucursal', () => {
+    const p = pedidoRappiAPos(pedido('7', 'finished', [producto('Iced Latte', 89)], '2026-11-12T00:15:09'), 'Etc/GMT+7')!;
+    expect(p).toMatchObject({ fecha: '2026-11-11', hora: '23:15:09', segundo: 23 * 3600 + 15 * 60 + 9 });
   });
 });
 
