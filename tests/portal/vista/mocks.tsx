@@ -25,7 +25,10 @@ export async function guardarRegistro(..._: unknown[]) {
 }
 export async function salir() {}
 // Acciones del CRM en la vista de prueba: mueven en pantalla y no escriben en ninguna base.
-const sinBase = async (..._: unknown[]) => ({ error: 'Vista de prueba: no se escriben datos.' });
+// Con ?grabar (videos por rol) las acciones responden como si se hubieran guardado; el video muestra el resultado.
+const grabando = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('grabar');
+const sinBase = async (..._: unknown[]) =>
+  grabando ? {} : { error: 'Vista de prueba: no se escriben datos.' };
 export async function moverTienda(..._: unknown[]) {
   return { version: 2, posicion: 1, renumerada: false };
 }

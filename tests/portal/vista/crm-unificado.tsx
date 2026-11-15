@@ -249,6 +249,38 @@ export const CARDS: CardPipeline[] = [
   card('cancelada'),
 ];
 
+/** ?grabar: modo de los videos por rol (sin letrero de prototipo; agente con respuesta sintética). */
+const PARAMS = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+const GRABANDO = PARAMS.has('grabar');
+const RESPUESTAS_AGENTE: Record<string, string> = {
+  'legal-atorado':
+    '**3 sucursales esperan a Legal:**\n\n| Sucursal | Paso | Falta |\n|---|---|---|\n' +
+    '| Puebla Centro | 7 · Constancia | Constancia firmada y fecha límite |\n' +
+    '| León Plaza Sur | 9 · COF | COF firmada |\n' +
+    '| Mérida Altabrisa | 10 · Contrato | Contrato firmado |\n\n' +
+    'La más urgente es **Puebla Centro**: su COF vence el 15 de noviembre.',
+  'legal-cof':
+    '**COF que vencen en noviembre:**\n\n- **Mérida Altabrisa** · 30 oct (ya venció)\n' +
+    '- **Puebla Centro** · 15 nov\n\nEn diciembre sigue **Saltillo Centro** (4 dic).',
+};
+if (GRABANDO && typeof window !== 'undefined') {
+  const original = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    if (!String(input).includes('/api/chat')) return original(input, init);
+    const texto = RESPUESTAS_AGENTE[PARAMS.get('respuesta') ?? 'legal-atorado'] ?? '';
+    const partes = [
+      { type: 'start', messageId: 'grabacion' },
+      { type: 'text-start', id: 't' },
+      { type: 'text-delta', id: 't', delta: texto },
+      { type: 'text-end', id: 't' },
+      { type: 'finish' },
+    ];
+    return new Response(partes.map((p) => `data: ${JSON.stringify(p)}\n\n`).join('') + 'data: [DONE]\n\n', {
+      headers: { 'Content-Type': 'text/event-stream', 'x-vercel-ai-ui-message-stream': 'v1' },
+    });
+  };
+}
+
 const marco = (children: React.ReactNode) => (
   <Marco
     perfil={{ nombre: 'Andrés (Legal)', rol: 'admin' }}
@@ -256,9 +288,11 @@ const marco = (children: React.ReactNode) => (
     visibles={['costeo', 'crm', 'sucursales']}
   >
     <div className="vitrina space-y-6">
-      <p className="aviso">
-        PROTOTIPO · DATOS SINTÉTICOS · nombres inventados; totales = muestra mapeada (doc 40)
-      </p>
+      {!GRABANDO && (
+        <p className="aviso">
+          PROTOTIPO · DATOS SINTÉTICOS · nombres inventados; totales = muestra mapeada (doc 40)
+        </p>
+      )}
       {children}
     </div>
   </Marco>
@@ -589,11 +623,161 @@ export function VistaExpedienteUnificado() {
     sucursales: [],
     nombres: { 'u-andres': 'Andrés', 'u-sebastian': 'Sebastián' },
   };
+  const hecho = new Set((parametros.get('hecho') ?? '').split(',').filter(Boolean));
+  // Juriquilla: Legal registra la COF firmada en el carril Legal.
+  if (hecho.has('cof'))
+    datos.requisitos = datos.requisitos.map((q) =>
+      q.nombre === 'COF firmada y fecha de entrega'
+        ? {
+            ...q,
+            estado: 'validado',
+            fecha: '2026-11-03',
+            cumplido_por: 'u-andres',
+            cumplido_en: AHORA.toISOString(),
+            validado_por: 'u-andres',
+            validado_en: AHORA.toISOString(),
+            cumplimiento_id: 'cu-cof',
+          }
+        : q,
+    );
+  if (parametros.get('caso') === 'constancia') {
+    const conConstancia = hecho.has('constancia');
+    const conFecha = hecho.has('fecha');
+    const listos = Number(conConstancia) + Number(conFecha);
+    Object.assign(sucursal, {
+      ...card('constancia'),
+      id: 'suc-puebla',
+      nombre: 'Puebla Centro',
+      franquiciatario: 'Jorge Salinas',
+      ciudad: 'Puebla',
+      etapaId: 'constancia',
+      requisitos: {
+        total: 2,
+        listos,
+        faltante:
+          listos === 2
+            ? null
+            : {
+                nombre: conConstancia ? 'Fecha límite de apertura' : 'Constancia de arrendamiento firmada',
+                area: 'legal',
+              },
+      },
+      vencimiento: { tipo: 'cof', etiqueta: 'COF firmada', fecha: '2026-11-15', dias: 12 },
+      muestra: false,
+    });
+    const actual = { de_etapa_actual: true };
+    const listo = (fecha: string) => ({
+      fecha,
+      cumplido_por: 'u-andres',
+      cumplido_en: AHORA.toISOString(),
+      validado_por: 'u-andres',
+      validado_en: AHORA.toISOString(),
+    });
+    Object.assign(datos, {
+      card: sucursal,
+      franquiciatario: { id: 'fr-jorge', nombre: 'Jorge Salinas' } as Franquiciatario,
+      sucursal: {
+        id: 'suc-puebla',
+        nombre: 'Puebla Centro',
+        ciudad: 'Puebla',
+        direccion: 'Av. Juárez 2915, La Paz',
+        responsable_id: 'u-andres',
+        franquiciatario_id: 'fr-jorge',
+        fecha_limite_apertura: conFecha ? '2027-03-03' : null,
+        fecha_estimada_apertura: null,
+        fecha_confirmada_apertura: null,
+        numero_tienda_jestor: null,
+        arquitecto_asignado: null,
+      } as Tienda,
+      etapa: etapa('constancia'),
+      requisitos: [
+        r(
+          'locales',
+          'Dictamen firmado por el franquiciatario',
+          'firma',
+          'ventas',
+          'validado',
+          'Sin dictamen firmado no se pide la constancia.',
+          {
+            fecha: '2026-10-28',
+            cumplido_por: 'u-sebastian',
+            validado_por: 'u-sebastian',
+          },
+        ),
+        r(
+          'constancia',
+          'Constancia de arrendamiento firmada',
+          'firma',
+          'legal',
+          conConstancia ? 'validado' : 'pendiente',
+          'Legal la firma el mismo día que se acredita el arrendamiento. Sube el PDF firmado.',
+          conConstancia ? { ...actual, ...listo('2026-11-03') } : actual,
+        ),
+        r(
+          'constancia',
+          'Fecha límite de apertura',
+          'dato',
+          'legal',
+          conFecha ? 'validado' : 'pendiente',
+          'Por lo general, firma de la constancia + 120 días. Arranca el contador de apertura.',
+          conFecha
+            ? { ...actual, ...listo('2026-11-03'), campo: 'fecha_limite_apertura', valor: '2027-03-03' }
+            : { ...actual, campo: 'fecha_limite_apertura' },
+        ),
+      ],
+      archivos: [
+        archivo('p1', 'dictamen_firmado', 'Dictamen local Puebla Centro.pdf', 'u-sebastian', 6, 744, {
+          tienda_id: 'suc-puebla',
+        }),
+        ...(conConstancia
+          ? [
+              archivo('p2', 'constancia', 'Constancia Puebla Centro firmada.pdf', 'u-andres', 0, 402, {
+                tienda_id: 'suc-puebla',
+              }),
+            ]
+          : []),
+      ],
+      historial: [
+        ...(conFecha
+          ? [
+              evento(
+                23,
+                'editado',
+                'Fecha límite de apertura: 3 mar 2027',
+                'Andrés',
+                'legal',
+                AHORA.toISOString(),
+              ),
+            ]
+          : []),
+        ...(conConstancia
+          ? [
+              evento(
+                22,
+                'requisito_validado',
+                'Validado: Constancia de arrendamiento firmada',
+                'Andrés',
+                'legal',
+                AHORA.toISOString(),
+              ),
+            ]
+          : []),
+        evento(
+          21,
+          'sucursal_creada',
+          'Sucursal creada en 6 · Aprobación de locales',
+          'Luis',
+          'ventas',
+          hace(9, 16, 2),
+        ),
+      ],
+    });
+  }
   return marco(
     <>
       <Encabezado
         titulo={sucursal.nombre}
-        descripcion="Sucursal de Mariana Ortiz · Querétaro"
+        descripcion={`Sucursal de ${sucursal.franquiciatario} · ${sucursal.ciudad}`}
         migas={[
           { href: '/crm', nombre: 'CRM' },
           { href: '/crm/pipeline', nombre: 'Pipeline' },
@@ -784,16 +968,54 @@ export function VistaPendientesCrm() {
         etapas={ETAPAS}
         avisos={AVISOS}
         vencidos={VENCIMIENTOS.filter((v) => v.dias <= 7)}
-        porValidar={[...de('constancia'), ...de('bienvenida')]}
-        totalPorValidar={3}
+        porValidar={GRABANDO ? [] : [...de('constancia'), ...de('bienvenida')]}
+        totalPorValidar={GRABANDO ? 0 : 3}
         listas={CARDS.filter((c) => c.requisitos.listos >= c.requisitos.total || c.liberado).slice(0, 8)}
         totalListas={12}
         bloqueadas={63}
         propias={[]}
-        tocaRegistrar={CARDS.filter((c) => c.etapaId === 'obra' || c.etapaId === 'constancia')}
-        totalTocaRegistrar={14}
+        tocaRegistrar={
+          GRABANDO
+            ? [
+                card('constancia', {
+                  id: 'suc-puebla',
+                  nombre: 'Puebla Centro',
+                  franquiciatario: 'Jorge Salinas',
+                  ciudad: 'Puebla',
+                  requisitos: { total: 2, listos: 0, faltante: FALTANTE.constancia },
+                  vencimiento: { tipo: 'cof', etiqueta: 'COF firmada', fecha: '2026-11-15', dias: 12 },
+                  muestra: false,
+                }),
+                card('obra', {
+                  id: 'suc-juriquilla',
+                  nombre: 'Querétaro Juriquilla',
+                  franquiciatario: 'Mariana Ortiz',
+                  ciudad: 'Querétaro',
+                  requisitos: { total: 4, listos: 1, faltante: FALTANTE.cof },
+                  vencimiento: { tipo: 'cof', etiqueta: 'COF firmada', fecha: '2026-11-15', dias: 12 },
+                  muestra: false,
+                }),
+                card('cof', {
+                  nombre: 'León Plaza Sur',
+                  franquiciatario: 'Ana Guerrero',
+                  ciudad: 'León',
+                  requisitos: { total: 2, listos: 1, faltante: FALTANTE.cof },
+                  muestra: false,
+                }),
+                card('contrato', {
+                  nombre: 'Mérida Altabrisa',
+                  franquiciatario: 'Rodrigo Pech',
+                  ciudad: 'Mérida',
+                  requisitos: { total: 3, listos: 1, faltante: FALTANTE.contrato },
+                  muestra: false,
+                }),
+              ]
+            : CARDS.filter((c) => c.etapaId === 'obra' || c.etapaId === 'constancia')
+        }
+        totalTocaRegistrar={GRABANDO ? 4 : 14}
         areas={['legal']}
         todas={false}
+        vendedor={!GRABANDO}
       />
     </>,
   );
@@ -806,7 +1028,20 @@ export function VistaVencimientosCrm() {
         'Vencimientos',
         'Cuándo hay que actuar en cada sucursal. Los días hábiles saltan fines de semana y festivos.',
       )}
-      <VistaVencimientos lista={VENCIMIENTOS} avisos={AVISOS} areas={['legal']} todas />
+      <VistaVencimientos
+        lista={VENCIMIENTOS}
+        avisos={AVISOS}
+        atendidos={[
+          {
+            ...aviso('a0', 's1', 'Mérida Altabrisa: la COF debe estar firmada antes del 30 oct', 'legal'),
+            atendido_por: 'u-andres',
+            atendido_en: hace(4, 9, 20),
+            quien: 'Andrés',
+          },
+        ]}
+        areas={['legal']}
+        todas
+      />
     </>,
   );
 }
