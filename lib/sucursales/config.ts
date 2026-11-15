@@ -253,16 +253,16 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   // invertidos; ninguna otra sucursal de la API usa 348): se usa el de la API. Validadas con el 2 de noviembre (Plaza
   // Norte con 1 ¢ de redondeo). Plaza Cantabria es de Ciudad Juárez: UTC−6 fijo como 612 (3-nov: último pedido 18:00 a
   // las 17:10 de Juárez). Plaza Cumbres, de la ciudad de Chihuahua: su hora coincide con America/Chihuahua.
-  delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria'),
-  leon(733, 649, 'Plaza Norte', 'Jardines del Moral'),
-  queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario'),
-  cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte'),
-  cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo'),
-  durango(715, 625, 'Durango Centro', 'Centro'),
-  vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta'),
-  cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico'),
-  delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres'),
-  cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen'),
+  conPortal(delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria')),
+  conPortal(leon(733, 649, 'Plaza Norte', 'Jardines del Moral')),
+  conPortal(queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario')),
+  conPortal(cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte')),
+  conPortal(cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo')),
+  conPortal(durango(715, 625, 'Durango Centro', 'Centro')),
+  conPortal(vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta')),
+  conPortal(cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico')),
+  conPortal(delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres')),
+  conPortal(cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen')),
 ];
 
 export const configDe = (companyId: number) =>

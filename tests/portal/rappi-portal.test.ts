@@ -168,4 +168,9 @@ describe('pestaña Rappi', () => {
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
     for (const id of [462, 627]) expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: false, rappiPortal: false });
   });
+
+  it('lote 7: las 10 con el portal', () => {
+    for (const id of [717, 733, 547, 754, 719, 715, 771, 735, 716, 770])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+  });
 });
