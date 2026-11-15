@@ -239,13 +239,15 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe')),
   // Lote 6, sureste: validadas con el 2 de noviembre y el último pedido de hoy en su hora local (Puerto Cancún y Scala
   // Huayacan con 3 y 1 ¢ de redondeo). Tulum, Mayab y Hermosillo vendieron poco el 2-nov; sus otros días son normales.
-  cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez'),
-  cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán'),
-  cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas'),
+  conPortal(cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez')),
+  conPortal(cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán')),
+  conPortal(cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas')),
+  // Tulum: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tulum', 'America/Cancun')(462, 360, 'Tulum', 'Zona Hotelera'),
+  // Mayab: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   merida(627, 538, 'Mayab', 'Cordemex'),
-  merida(601, 452, 'Calle 47', 'Centro'),
-  merida(655, 566, 'Arthouse Mérida', 'Altabrisa'),
+  conPortal(merida(601, 452, 'Calle 47', 'Centro')),
+  conPortal(merida(655, 566, 'Arthouse Mérida', 'Altabrisa')),
   // Lote 7: en el CRM el número Jestor viene en el nombre («Plaza Cantabria - 632») y el campo está vacío; el número
   // del nombre es el lookerStoreId de la API. El Campanario: la API dice 438 y el CRM «El Campanario - 348» (dígitos
   // invertidos; ninguna otra sucursal de la API usa 348): se usa el de la API. Validadas con el 2 de noviembre (Plaza
