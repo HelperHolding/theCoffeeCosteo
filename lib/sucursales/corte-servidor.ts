@@ -6,7 +6,7 @@ import { conRappi, hoyLocal, leerVentana, type FuenteRappi, type LecturaNormal }
 import type { CatalogoNombres } from './metricas';
 import type { PedidoNormal } from './normalizar';
 import type { PedidoRappi } from './rappi-portal';
-import { pedidoRappiAPos, ZONA_RAPPI } from './rappi-pos';
+import { mismaHoraQueRappi, pedidoRappiAPos } from './rappi-pos';
 import { resumirDia, type FilaResumen } from './resumen';
 import { sumarDias } from './tiempo';
 
@@ -58,6 +58,7 @@ export async function catalogoServicio(db: Servicio): Promise<CatalogoNombres | 
 export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | undefined {
   if (!cfg.rappiPortal) return undefined;
   return async (desde, hasta) => {
+    const otraZona = !mismaHoraQueRappi(cfg.zona, desde) || !mismaHoraQueRappi(cfg.zona, hasta);
     const r = await db
       .from('rappi_pedidos')
       .select(
@@ -65,8 +66,8 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
       )
       .eq('company_id', cfg.companyId)
       // Fecha del portal en hora del centro: fuera de esa zona se lee un día de más a cada lado (ver fuenteRappi).
-      .gte('fecha_local', cfg.zona !== ZONA_RAPPI ? sumarDias(desde, -1) : desde)
-      .lte('fecha_local', cfg.zona !== ZONA_RAPPI ? sumarDias(hasta, 1) : hasta)
+      .gte('fecha_local', otraZona ? sumarDias(desde, -1) : desde)
+      .lte('fecha_local', otraZona ? sumarDias(hasta, 1) : hasta)
       .limit(5000);
     if (r.error || !r.data) return null;
     const pedidos: PedidoNormal[] = [];

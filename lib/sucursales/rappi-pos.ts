@@ -364,6 +364,16 @@ export function horaRappiEnZona(
 }
 
 /**
+ * ¿La zona marca la misma hora que el centro en esa fecha? (Monterrey, Mérida o `Etc/GMT+6` sí: no hace falta leer días
+ * de más ni convertir). Se compara a mediodía para no depender de la hora exacta de un cambio de horario.
+ */
+export function mismaHoraQueRappi(zona: string, fecha: string): boolean {
+  if (zona === ZONA_RAPPI) return true;
+  const r = horaRappiEnZona(fecha, 12 * 3600, zona);
+  return r.fecha === fecha && r.segundo === 12 * 3600;
+}
+
+/**
  * Un pedido de Rappi en la forma del POS (origen «rappi»), o null si fue cancelado o rechazado. `zona` es la de la
  * sucursal (config): la hora del portal se convierte a ella.
  */

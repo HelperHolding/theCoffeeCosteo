@@ -3,7 +3,7 @@ import type { servidor } from '../supabase/servidor';
 import type { ConfigSucursal } from './config';
 import type { FuenteRappi } from './datos';
 import type { RpcRappiPortal } from './rappi-portal';
-import { pedidoRappiAPos, ZONA_RAPPI } from './rappi-pos';
+import { mismaHoraQueRappi, pedidoRappiAPos } from './rappi-pos';
 import type { PedidoNormal } from './normalizar';
 import { sumarDias } from './tiempo';
 
@@ -20,7 +20,7 @@ export function fuenteRappi(db: Db, cfg: ConfigSucursal): FuenteRappi | undefine
     const pedidos: PedidoNormal[] = [];
     // El portal guarda la fecha en hora del centro: fuera de esa zona un pedido cerca de la medianoche cambia de día al
     // convertirlo, así que se lee un día de más a cada lado y se filtra ya con la fecha de la sucursal.
-    const otraZona = cfg.zona !== ZONA_RAPPI;
+    const otraZona = !mismaHoraQueRappi(cfg.zona, desde) || !mismaHoraQueRappi(cfg.zona, hasta);
     const d0 = otraZona ? sumarDias(desde, -1) : desde;
     const h0 = otraZona ? sumarDias(hasta, 1) : hasta;
     for (let inicio = d0; inicio <= h0; inicio = sumarDias(inicio, 62)) {
