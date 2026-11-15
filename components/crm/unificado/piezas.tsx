@@ -355,7 +355,7 @@ export function RecorridoEtapas({
         return (
           <li
             key={n.clave}
-            className="flex min-w-[2.25rem] flex-1 flex-col items-center text-center sm:min-w-[4.5rem]"
+            className="flex min-w-[1.6rem] flex-1 flex-col items-center text-center sm:min-w-[4.5rem]"
           >
             <span className="flex w-full items-center">
               <span
@@ -367,7 +367,7 @@ export function RecorridoEtapas({
               <span
                 aria-current={esActual ? 'step' : undefined}
                 className={cn(
-                  'grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold tabular',
+                  'grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-bold tabular sm:size-8 sm:text-xs',
                   hecha
                     ? 'bg-ink text-white'
                     : esActual
