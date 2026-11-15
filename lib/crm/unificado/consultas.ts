@@ -39,6 +39,7 @@ export const aEtapaGeneral = (e: Etapa): EtapaGeneral => ({
   nombre: e.nombre,
   area: e.area ?? 'ventas',
   funcion: e.funcion === 'aprobacion_locales' ? 'Aprobación de locales' : undefined,
+  funcionClave: e.funcion === 'aprobacion_locales' ? 'aprobacion_locales' : undefined,
   card: e.card,
   tipo: e.tipo,
   opcional: e.opcional,
@@ -225,6 +226,7 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
     limite_120: 'limite_120',
     limite_vencido: 'limite_vencido',
     cof_tardia: 'limite_120',
+    transferencia: 'transferencia',
   };
   const etiquetaVenc: Record<string, string> = {
     cof: 'COF firmada',
@@ -232,6 +234,7 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
     limite_120: 'Límite de apertura',
     limite_vencido: 'Límite vencido: multa',
     cof_tardia: 'COF tardía',
+    transferencia: 'Transferencia a Proyectos',
   };
   const ultimo = (id: string, tipo: TipoCard) => {
     const h = hist.find((x) =>
@@ -329,6 +332,35 @@ export interface ExpedienteUnificado {
   nombres: Record<string, string>;
   fiscal: FranquiciatarioFiscal | null;
   veSensibles: boolean;
+  /** Personas de Ventas (head o miembro): a quién puede reasignar un head el lead. */
+  vendedores: { id: string; nombre: string }[];
+}
+
+/**
+ * Los requisitos que se cumplen con un dato (fecha límite, Jestor…) no tienen cumplimiento propio: quién y cuándo
+ * salen del último cambio de ese campo en la bitácora de la card.
+ */
+export function autorDeCampos(requisitos: RequisitoCard[], historial: Historial[]): RequisitoCard[] {
+  return requisitos.map((r) => {
+    if (!r.campo || r.cumplido_por || r.estado !== 'validado') return r;
+    const llaves = r.campo === 'contacto' ? ['correo', 'telefono'] : [r.campo];
+    const h = historial.find(
+      (x) =>
+        (x.entidad === 'crm_franquiciatarios' || x.entidad === 'crm_tiendas') &&
+        x.actor_id &&
+        x.cambios &&
+        llaves.some((k) => k in (x.cambios as Record<string, unknown>)),
+    );
+    return h
+      ? {
+          ...r,
+          cumplido_por: h.actor_id,
+          cumplido_en: h.fecha,
+          validado_por: h.actor_id,
+          validado_en: h.fecha,
+        }
+      : r;
+  });
 }
 
 /** Expediente completo de una card (franquiciatario o sucursal). Nulo si no existe o no se puede ver. */
@@ -381,8 +413,18 @@ export async function expedienteCard(
         : Promise.resolve({ data: null, error: null }),
       db.rpc('crm_ve_sensibles'),
     ]);
-  const requisitos = exigir(req) as RequisitoCard[];
   const hist = exigir(historial) as Historial[];
+  const requisitos = autorDeCampos(exigir(req) as RequisitoCard[], hist);
+  const ventas =
+    tipo === 'franquiciatario'
+      ? (((
+          await db
+            .from('crm_membresias')
+            .select('user_id')
+            .eq('area', 'ventas')
+            .in('rol', ['head', 'miembro'])
+        ).data ?? []) as { user_id: string }[])
+      : [];
   const libs = exigir(liberaciones) as Liberacion[];
   const quienes = await nombres(db, [
     ...requisitos.flatMap((r) => [r.cumplido_por, r.validado_por]),
@@ -390,6 +432,7 @@ export async function expedienteCard(
     ...(exigir(archivos) as Archivo[]).map((a) => a.subido_por),
     ...(exigir(notas) as Nota[]).map((n) => n.autor_id),
     fila.responsable_id,
+    ...ventas.map((v) => v.user_id),
   ]);
   const etapa = etapas.find((e) => e.id === fila.etapa_id)!;
   return {
@@ -413,6 +456,10 @@ export async function expedienteCard(
     nombres: Object.fromEntries(quienes),
     fiscal: exigir(fiscal) as FranquiciatarioFiscal | null,
     veSensibles: exigir(ve) === true,
+    vendedores: ventas
+      .map((v) => ({ id: v.user_id, nombre: quienes.get(v.user_id) ?? '' }))
+      .filter((v) => v.nombre)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
   };
 }
 

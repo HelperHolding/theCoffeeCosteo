@@ -1,5 +1,5 @@
 import { sesionCrm } from '@/lib/supabase/sesion';
-import { vencimientos } from '@/lib/crm/unificado/consultas';
+import { nombres, vencimientos } from '@/lib/crm/unificado/consultas';
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
 import { Encabezado } from '@/components/portal/piezas';
 import { VistaVencimientos } from '@/components/crm/unificado/vistas/vencimientos';
@@ -13,6 +13,14 @@ export default async function Vencimientos() {
     usuarioCrm(db, perfil, accesos),
     vencimientos(db),
   ]);
+  const atendidos = avisos
+    .filter((a) => a.atendido_en)
+    .sort((a, b) => b.atendido_en!.localeCompare(a.atendido_en!))
+    .slice(0, 30);
+  const quienes = await nombres(
+    db,
+    atendidos.map((a) => a.atendido_por),
+  );
   return (
     <>
       <Encabezado
@@ -23,6 +31,10 @@ export default async function Vencimientos() {
       <VistaVencimientos
         lista={lista}
         avisos={avisos.filter((a) => !a.atendido_en)}
+        atendidos={atendidos.map((a) => ({
+          ...a,
+          quien: a.atendido_por ? (quienes.get(a.atendido_por) ?? null) : null,
+        }))}
         areas={usuario.areas}
         todas={usuario.desarrollador || usuario.esHead}
       />

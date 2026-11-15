@@ -759,40 +759,49 @@ export function crearConsultasCrm(db: Db): Consulta[] {
     },
   );
 
+  /** Busca una card del Pipeline general por nombre (franquiciatario o sucursal) o por ID. */
+  type Busqueda =
+    | { respuesta: Record<string, unknown>; card?: undefined }
+    | { respuesta?: undefined; card: CardAgente & { id: string; tipo: 'franquiciatario' | 'sucursal' } };
+  const buscarCard = async (nombre: string, cardId?: string): Promise<Busqueda> => {
+    let ids: { id: string; tipo: 'franquiciatario' | 'sucursal' }[] = [];
+    if (cardId)
+      ids = [
+        { id: cardId, tipo: 'franquiciatario' },
+        { id: cardId, tipo: 'sucursal' },
+      ];
+    else if (nombre) {
+      const [f, s] = await Promise.all([
+        db.from('crm_franquiciatarios').select('id').ilike('nombre', literal(nombre)).limit(5),
+        db.from('crm_tiendas').select('id').eq('embudo', 'general').ilike('nombre', literal(nombre)).limit(5),
+      ]);
+      ids = [
+        ...exigir(f).map((x) => ({ id: x.id, tipo: 'franquiciatario' as const })),
+        ...exigir(s).map((x) => ({ id: x.id, tipo: 'sucursal' as const })),
+      ];
+    } else return { respuesta: { error: 'Indica el nombre de la card o su ID.' } };
+    const cards = await cardsPorId(ids);
+    const encontradas = ids.filter((x) => cards.has(x.id));
+    if (!encontradas.length)
+      return { respuesta: { coincidencias: 0, mensaje: 'No encontré una card con ese nombre.' } };
+    if (encontradas.length > 1 && !cardId)
+      return {
+        respuesta: {
+          varias_coincidencias: encontradas.map((x) => ({ id: x.id, tipo: x.tipo, ...cards.get(x.id) })),
+        },
+      };
+    const c = encontradas[0];
+    return { card: { ...c, ...cards.get(c.id)! } };
+  };
+
   registrar(
     'historial_card',
     'Quién movió una card del Pipeline general y cuándo: cambios de etapa, requisitos registrados o validados, candados liberados (con motivo), documentos, descargas y avisos. Busca la card por nombre (franquiciatario o sucursal) o pasa su ID.',
     z.object({ nombre: texto, card_id: id.optional(), pagina, limite }),
     async (e) => {
-      let ids: { id: string; tipo: 'franquiciatario' | 'sucursal' }[] = [];
-      if (e.card_id)
-        ids = [
-          { id: e.card_id, tipo: 'franquiciatario' },
-          { id: e.card_id, tipo: 'sucursal' },
-        ];
-      else if (e.nombre) {
-        const [f, s] = await Promise.all([
-          db.from('crm_franquiciatarios').select('id').ilike('nombre', literal(e.nombre)).limit(5),
-          db
-            .from('crm_tiendas')
-            .select('id')
-            .eq('embudo', 'general')
-            .ilike('nombre', literal(e.nombre))
-            .limit(5),
-        ]);
-        ids = [
-          ...exigir(f).map((x) => ({ id: x.id, tipo: 'franquiciatario' as const })),
-          ...exigir(s).map((x) => ({ id: x.id, tipo: 'sucursal' as const })),
-        ];
-      } else return { error: 'Indica el nombre de la card o su ID.' };
-      const cards = await cardsPorId(ids);
-      const encontradas = ids.filter((x) => cards.has(x.id));
-      if (!encontradas.length) return { coincidencias: 0, mensaje: 'No encontré una card con ese nombre.' };
-      if (encontradas.length > 1 && !e.card_id)
-        return {
-          varias_coincidencias: encontradas.map((x) => ({ id: x.id, tipo: x.tipo, ...cards.get(x.id) })),
-        };
-      const c = encontradas[0];
+      const b = await buscarCard(e.nombre, e.card_id);
+      if (!b.card) return b.respuesta;
+      const c = b.card;
       const r = await db
         .from('crm_historial')
         .select('fecha,accion,resumen,actor_nombre,actor_area,motivo,origen')
@@ -809,7 +818,7 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         origen: h.origen,
       }));
       return {
-        card: { id: c.id, tipo: c.tipo, ...cards.get(c.id) },
+        card: c,
         ...resultadoPagina(datos, e.pagina, e.limite),
       };
     },
@@ -855,6 +864,95 @@ export function crearConsultasCrm(db: Db): Consulta[] {
         detalle: v.mensaje,
       }));
       return { hoy: hoy(), total_coincidencias: r.count, ...resultadoPagina(datos, e.pagina, e.limite) };
+    },
+  );
+
+  registrar(
+    'consultar_card',
+    'Cómo va una card del Pipeline general ("¿qué onda con Juriquilla?", "¿qué le falta a Mariana?"): paso actual (1–8, 26.1–26.8), requisitos de la etapa con su estado y qué área los cumple o valida, carril Legal (COF y contrato) de la sucursal y plazo de apertura (constancia + 120 días). Busca la card por nombre o pasa su ID.',
+    z.object({ nombre: texto, card_id: id.optional() }),
+    async (e) => {
+      const b = await buscarCard(e.nombre, e.card_id);
+      if (!b.card) return b.respuesta;
+      const c = b.card;
+      const tabla = c.tipo === 'franquiciatario' ? 'crm_franquiciatarios' : 'crm_tiendas';
+      const [fila, reqs, etapas, candado] = await Promise.all([
+        db
+          .from(tabla)
+          .select(
+            c.tipo === 'sucursal'
+              ? 'etapa_id,fecha_estimada_apertura,fecha_confirmada_apertura,fecha_limite_apertura'
+              : 'etapa_id',
+          )
+          .eq('id', c.id)
+          .single(),
+        db.rpc('crm_requisitos_de', { p_tipo: c.tipo, p_card: c.id, p_todas: true }),
+        db
+          .from('crm_etapas')
+          .select('id,clave,nombre,numero,paso,carril')
+          .eq('embudo', 'general')
+          .order('orden'),
+        db.from('crm_v_candados').select('liberado').eq('card_id', c.id).maybeSingle(),
+      ]);
+      const card = exigir(fila) as unknown as {
+        etapa_id: string;
+        fecha_estimada_apertura?: string | null;
+        fecha_confirmada_apertura?: string | null;
+        fecha_limite_apertura?: string | null;
+      };
+      const todos = exigir(reqs);
+      const ets = exigir(etapas) as (EtapaAgente & { paso: string | null; carril: string | null })[];
+      const actual = ets.find((x) => x.id === card.etapa_id);
+      const carriles = new Set(ets.filter((x) => x.carril).map((x) => x.id));
+      const estado = (r: (typeof todos)[number]) =>
+        r.estado === 'validado' || r.estado === 'no_aplica'
+          ? 'listo'
+          : r.estado === 'cumplido'
+            ? `registrado, falta que lo valide ${r.area_valida}`
+            : `pendiente, lo registra ${r.area_cumple}`;
+      const resumen = (r: (typeof todos)[number]) => ({
+        requisito: r.nombre,
+        obligatorio: r.obligatorio,
+        estado: estado(r),
+      });
+      const deEtapa = todos.filter((r) => r.etapa_id === card.etapa_id);
+      const carril = todos.filter((r) => carriles.has(r.etapa_id));
+      const listos = (rs: typeof todos) =>
+        rs.filter((r) => r.obligatorio && (r.estado === 'validado' || r.estado === 'no_aplica')).length;
+      const obligatorios = (rs: typeof todos) => rs.filter((r) => r.obligatorio).length;
+      const limite = card.fecha_limite_apertura ?? null;
+      const dias = limite
+        ? Math.round((Date.parse(`${limite}T00:00:00Z`) - Date.parse(`${hoy()}T00:00:00Z`)) / 86_400_000)
+        : null;
+      return {
+        hoy: hoy(),
+        card: c,
+        paso: actual
+          ? { numero: actual.paso ?? (actual.numero ? String(actual.numero) : null), nombre: actual.nombre }
+          : null,
+        requisitos_etapa: {
+          listos: `${listos(deEtapa)}/${obligatorios(deEtapa)}`,
+          candado_liberado: candado.data?.liberado ?? false,
+          detalle: deEtapa.map(resumen),
+        },
+        ...(c.tipo === 'sucursal'
+          ? {
+              carril_legal: {
+                listos: `${listos(carril)}/${obligatorios(carril)}`,
+                detalle: carril.map((r) => ({
+                  etapa: ets.find((x) => x.id === r.etapa_id)?.nombre ?? null,
+                  ...resumen(r),
+                })),
+              },
+              apertura: {
+                estimada: card.fecha_estimada_apertura ?? null,
+                confirmada: card.fecha_confirmada_apertura ?? null,
+                limite_120_dias: limite,
+                dias_restantes: dias,
+              },
+            }
+          : {}),
+      };
     },
   );
 

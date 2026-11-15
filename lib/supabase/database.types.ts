@@ -278,6 +278,10 @@ export interface Database {
         Returns: string;
       };
       crm_cancelar_cascada: { Args: { p_franquiciatario: string; p_motivo: string }; Returns: number };
+      crm_reasignar_vendedor: {
+        Args: { p_franquiciatario: string; p_vendedor: string; p_motivo: string };
+        Returns: undefined;
+      };
       crm_registrar_descarga: { Args: { p_archivo: string }; Returns: undefined };
       crm_generar_avisos: { Args: { p_hoy?: string | null }; Returns: number };
       crm_atender_aviso: { Args: { p_aviso: string }; Returns: undefined };

@@ -18,6 +18,8 @@ import {
   RotateCcw,
   ShieldCheck,
   Upload,
+  UserRoundCog,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -39,10 +41,12 @@ import { subirDocumento } from './subida';
 import { enlaceArchivo } from '@/app/(crm)/crm/acciones';
 import {
   avanzarCard,
+  cancelarEnCascada,
   crearSucursal,
   cumplirRequisito,
   guardarCard,
   liberarCandado,
+  reasignarVendedor,
   retirarDocumento,
   revertirRequisito,
   validarRequisito,
@@ -51,6 +55,7 @@ import { destinos, type Destino } from '@/lib/crm/unificado/reglas';
 import {
   AREAS,
   cuando,
+  puedeMoverEtapa,
   requisitoListo,
   type CardPipeline,
   type EtapaGeneral,
@@ -58,6 +63,7 @@ import {
 import { TIPOS_DOCUMENTO } from '@/lib/crm/validacion';
 import {
   CAMPOS_FISCALES,
+  DOCUMENTOS_SENSIBLES,
   TERRITORIOS,
   type Actividad,
   type Archivo,
@@ -91,6 +97,8 @@ export interface DatosExpediente {
   fiscal?: FranquiciatarioFiscal | null;
   /** Ventas, Legal, Finanzas y Dirección (migración 50). */
   veSensibles?: boolean;
+  /** Personas de Ventas a quienes un head puede reasignar el lead. */
+  vendedores?: { id: string; nombre: string }[];
 }
 
 export interface UsuarioCrm {
@@ -327,6 +335,7 @@ function FilaRequisito({
               style={{ background: AREAS[r.area_cumple].color }}
             />
             Cumple {AREAS[r.area_cumple].nombre}
+            {r.funcion_cumple === 'aprobacion_locales' && ' · Aprobación de locales'}
           </span>
           {r.area_valida !== r.area_cumple && (
             <span className="inline-flex items-center gap-1">
@@ -374,6 +383,13 @@ function FilaRequisito({
       </div>
       {!r.campo && !abierto && (
         <div className="col-start-2 col-end-4 flex flex-wrap gap-2">
+          {r.estado === 'pendiente' && !cumple && usuario.editable && (
+            <p className="text-xs text-muted-foreground">
+              Lo registra {AREAS[r.area_cumple].nombre}
+              {r.funcion_cumple === 'aprobacion_locales' ? ' (Aprobación de locales)' : ''}; tú lo ves para
+              dar seguimiento.
+            </p>
+          )}
           {r.estado === 'pendiente' && cumple && (
             <Button variant="outline" size="sm" onClick={() => setAbierto(true)}>
               {r.tipo === 'documento' || r.tipo === 'firma' ? <Upload aria-hidden="true" /> : null}
@@ -560,11 +576,16 @@ function Documentos({
           <label className="w-56">
             Tipo de documento
             <select value={tipoDoc} onChange={(e) => setTipoDoc(e.target.value)}>
-              {Object.entries(TIPOS_DOCUMENTO).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
+              {Object.entries(TIPOS_DOCUMENTO)
+                .filter(
+                  ([k]) =>
+                    datos.veSensibles !== false || !(DOCUMENTOS_SENSIBLES as readonly string[]).includes(k),
+                )
+                .map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="min-w-56 flex-1">
@@ -743,6 +764,156 @@ export function LineaTiempo({ eventos, ahora }: { eventos: Historial[]; ahora?: 
   );
 }
 
+function ReasignarVendedor({ datos, actual }: { datos: DatosExpediente; actual: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [vendedor, setVendedor] = useState('');
+  const [motivo, setMotivo] = useState('');
+  const { pendiente, error, correr } = useAccion();
+  const opciones = (datos.vendedores ?? []).filter((v) => v.id !== actual);
+  const corto = motivo.trim().length < 15;
+  return (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="ml-auto"
+        onClick={() => setAbierto(true)}
+        aria-label={`Reasignar vendedor de ${datos.card.nombre}`}
+      >
+        <UserRoundCog aria-hidden="true" /> Reasignar
+      </Button>
+      <Dialog open={abierto} onOpenChange={setAbierto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reasignar vendedor de {datos.card.nombre}</DialogTitle>
+            <DialogDescription>
+              El lead pasa a otra persona de Ventas. Queda en la bitácora con tu nombre, la fecha y el motivo.
+            </DialogDescription>
+          </DialogHeader>
+          <label>
+            Nuevo vendedor
+            <select value={vendedor} onChange={(e) => setVendedor(e.target.value)}>
+              <option value="">Elige a alguien de Ventas</option>
+              {opciones.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!opciones.length && (
+            <p className="text-xs text-muted-foreground">
+              No hay otras personas en Ventas con acceso al CRM.
+            </p>
+          )}
+          <label>
+            Motivo (obligatorio)
+            <textarea
+              rows={3}
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Por qué cambia de vendedor"
+            />
+          </label>
+          {corto && <p className="text-xs text-muted-foreground">Escribe al menos 15 caracteres.</p>}
+          {error && (
+            <p role="alert" className="text-sm text-bad">
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setAbierto(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={!vendedor || corto || pendiente}
+              onClick={() =>
+                correr(
+                  () => reasignarVendedor(datos.card.id, vendedor, motivo),
+                  () => setAbierto(false),
+                )
+              }
+            >
+              <UserRoundCog aria-hidden="true" /> Reasignar vendedor
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function CancelarCascada({ datos }: { datos: DatosExpediente }) {
+  const [abierto, setAbierto] = useState(false);
+  const [motivo, setMotivo] = useState('');
+  const { pendiente, error, correr } = useAccion();
+  const enProceso = datos.sucursales.filter(
+    (x) => x.etapa?.tipo === 'abierta' || x.etapa?.tipo === 'lateral',
+  );
+  const corto = motivo.trim().length < 15;
+  return (
+    <>
+      <Button variant="outline" onClick={() => setAbierto(true)}>
+        <XCircle aria-hidden="true" /> Descartar con sus sucursales
+      </Button>
+      <Dialog open={abierto} onOpenChange={setAbierto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Descartar a {datos.card.nombre} y cancelar sus sucursales</DialogTitle>
+            <DialogDescription>
+              El franquiciatario pasa a Descartada y estas sucursales en proceso a Cancelada. Queda en la
+              bitácora con tu nombre, la fecha y el motivo.
+            </DialogDescription>
+          </DialogHeader>
+          <ul role="list" className="space-y-1 rounded-xl bg-surface-2 p-3 text-sm">
+            {enProceso.map((x) => (
+              <li key={x.id} className="flex items-center gap-2">
+                <XCircle size={13} aria-hidden="true" className="text-bad" /> {x.nombre}
+                <span className="text-xs text-muted-foreground">({x.etapa.nombre})</span>
+              </li>
+            ))}
+          </ul>
+          <label>
+            Motivo (obligatorio)
+            <textarea
+              rows={3}
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Por qué se descarta y quién lo autorizó"
+            />
+          </label>
+          {corto && <p className="text-xs text-muted-foreground">Escribe al menos 15 caracteres.</p>}
+          {error && (
+            <p role="alert" className="text-sm text-bad">
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setAbierto(false)}>
+              No, regresar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={corto || pendiente}
+              onClick={() =>
+                correr(
+                  () => cancelarEnCascada(datos.card.id, motivo),
+                  () => setAbierto(false),
+                )
+              }
+            >
+              <XCircle aria-hidden="true" /> Descartar y cancelar {enProceso.length}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function LiberarCandado({
   datos,
   faltantes,
@@ -879,6 +1050,17 @@ const CAMPOS_FRANQUICIATARIO: CampoEditable[] = [
   { campo: 'regimen_fiscal', etiqueta: 'Régimen fiscal' },
   { campo: 'codigo_postal_fiscal', etiqueta: 'C.P. fiscal' },
 ];
+/** Área que captura cada dato que cumple un requisito (igual que crm_requisitos; la base lo valida). */
+const AREA_DE_CAMPO: Record<string, ClaveArea> = {
+  territorio: 'ventas',
+  origen: 'ventas',
+  ciudad_interes: 'ventas',
+  fecha_limite_apertura: 'legal',
+  fecha_estimada_apertura: 'proyectos',
+  fecha_confirmada_apertura: 'proyectos',
+  numero_tienda_jestor: 'ventas',
+  fecha_apertura: 'proyectos',
+};
 const CAMPOS_SUCURSAL: CampoEditable[] = [
   { campo: 'nombre', etiqueta: 'Nombre de la sucursal' },
   { campo: 'ciudad', etiqueta: 'Ciudad' },
@@ -898,6 +1080,10 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
   const oculto = (campo: string) =>
     !datos.veSensibles && (CAMPOS_FISCALES as readonly string[]).includes(campo);
   const campos = datos.tipo === 'franquiciatario' ? CAMPOS_FRANQUICIATARIO : CAMPOS_SUCURSAL;
+  const ajeno = (campo: string) => {
+    const a = AREA_DE_CAMPO[campo];
+    return !!a && !puedeArea(usuario, a);
+  };
   const [editando, setEditando] = useState(false);
   const { pendiente, error, correr } = useAccion();
   const texto = (c: CampoEditable) => {
@@ -948,6 +1134,11 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
                 </dt>
                 <dd className="truncate text-sm font-medium">{responsable ?? 'Sin asignar'}</dd>
               </div>
+              {datos.tipo === 'franquiciatario' &&
+                (usuario.esHead || usuario.desarrollador) &&
+                usuario.editable && (
+                  <ReasignarVendedor datos={datos} actual={String(fila.responsable_id ?? '')} />
+                )}
             </div>
           </dl>
         </section>
@@ -991,10 +1182,17 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
                           </select>
                         ) : (
                           <input
-                            name={c.campo}
+                            name={ajeno(c.campo) ? undefined : c.campo}
                             type={c.tipo ?? 'text'}
                             defaultValue={String(fila[c.campo] ?? '')}
+                            disabled={ajeno(c.campo)}
+                            aria-describedby={ajeno(c.campo) ? `${c.campo}-ajeno` : undefined}
                           />
+                        )}
+                        {ajeno(c.campo) && (
+                          <span id={`${c.campo}-ajeno`} className="mt-1 block text-xs text-muted-foreground">
+                            Lo captura {AREAS[AREA_DE_CAMPO[c.campo]].nombre}
+                          </span>
                         )}
                       </label>
                     ) : (
@@ -1212,11 +1410,16 @@ export function ExpedienteCard({
   const faltantes = actuales.filter((r) => r.obligatorio && !listo(r));
   const posibles = usuario.editable ? destinos(datos.etapas, etapa, datos.tipo, card.etapaPreviaId) : [];
   const siguiente = posibles.find((d) => d.tipo === 'siguiente');
-  const puedeMover =
-    usuario.editable && (usuario.desarrollador || usuario.esHead || usuario.areas.includes(etapa.area));
+  const puedeMover = puedeMoverEtapa(usuario, etapa);
   const bloqueadoTerritorio =
     datos.tipo === 'franquiciatario' && datos.franquiciatario?.territorio === 'bloqueada';
-  const lista = (faltantes.length === 0 && !bloqueadoTerritorio) || card.liberado;
+  const carril = new Set(datos.etapas.filter((e) => e.carril).map((e) => e.id));
+  const faltaCarril =
+    siguiente?.etapa.clave === 'operando'
+      ? datos.requisitos.filter((r) => carril.has(r.etapa_id) && r.obligatorio && !listo(r))
+      : [];
+  const listaEtapa = (faltantes.length === 0 && !bloqueadoTerritorio) || card.liberado;
+  const lista = listaEtapa && faltaCarril.length === 0;
   const mover = (d: Destino, motivo: string | null, sucursal: string | null) =>
     iniciar(async () => {
       setErrorMover('');
@@ -1377,6 +1580,12 @@ export function ExpedienteCard({
                 <ArrowRight aria-hidden="true" />
               </Button>
             )}
+            {datos.tipo === 'franquiciatario' &&
+              (usuario.esHead || usuario.desarrollador) &&
+              usuario.editable &&
+              datos.sucursales.some((x) => x.etapa?.tipo === 'abierta' || x.etapa?.tipo === 'lateral') && (
+                <CancelarCascada datos={datos} />
+              )}
             <MenuMover
               nombre={card.nombre}
               destinos={posibles.filter((d) => d.tipo !== 'siguiente')}
@@ -1384,7 +1593,7 @@ export function ExpedienteCard({
               deshabilitado={moviendo}
               compacto={false}
             />
-            {usuario.esHead && !lista && etapa.tipo === 'abierta' && (
+            {usuario.esHead && !listaEtapa && etapa.tipo === 'abierta' && (
               <LiberarCandado
                 datos={datos}
                 faltantes={faltantes}
@@ -1396,9 +1605,11 @@ export function ExpedienteCard({
               <p className="text-[11px] leading-snug text-muted-foreground">
                 {bloqueadoTerritorio
                   ? 'Territorio bloqueado: solo Standby o Descartada, o un head libera el candado.'
-                  : faltantes.length > 1
-                    ? `Faltan ${faltantes.length} requisitos obligatorios para avanzar.`
-                    : 'Falta 1 requisito obligatorio para avanzar.'}
+                  : listaEtapa
+                    ? `Falta el carril Legal (${faltaCarril.length} de COF, contrato o liberación). Ningún candado lo libera.`
+                    : faltantes.length > 1
+                      ? `Faltan ${faltantes.length} requisitos obligatorios para avanzar.`
+                      : 'Falta 1 requisito obligatorio para avanzar.'}
               </p>
             )}
           </div>

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { armarCards, etapasGenerales, pipeline } from '@/lib/crm/unificado/consultas';
-import { estadoCandado, tramos } from '@/lib/crm/unificado/modelo';
+import { estadoCandado, puedeMoverEtapa, tramos } from '@/lib/crm/unificado/modelo';
+import { usuarioCrm } from '@/lib/crm/unificado/usuario';
 import type { CandadoCard } from '@/lib/crm/tipos';
 import {
   VistaEntradasPipeline,
@@ -22,7 +23,7 @@ export default async function Pipeline({
   searchParams: Promise<{ vista?: string; etapa?: string; pagina?: string; tramo?: string }>;
 }) {
   const p = await searchParams;
-  const { db, accesos } = await sesionCrm();
+  const { db, perfil, accesos } = await sesionCrm();
   const editable = puedeEditarCrm(accesos);
 
   // Tabla de una etapa completa («Ver las N en tabla»), paginada en el servidor.
@@ -142,7 +143,10 @@ export default async function Pipeline({
     );
   }
 
-  const { etapas, cards, totales } = await pipeline(db);
+  const [{ etapas, cards, totales }, usuario] = await Promise.all([
+    pipeline(db),
+    usuarioCrm(db, perfil, accesos),
+  ]);
   const etapaDe = new Map(etapas.map((e) => [e.id, e]));
   const conteo = (estado: string) =>
     cards.filter((c) => estadoCandado(c, etapaDe.get(c.etapaId)) === estado).length;
@@ -184,6 +188,7 @@ export default async function Pipeline({
           cards={cards}
           totales={totales}
           editable={editable}
+          movibles={etapas.filter((e) => puedeMoverEtapa(usuario, e)).map((e) => e.id)}
           tramoInicial={tramo}
         />
       )}

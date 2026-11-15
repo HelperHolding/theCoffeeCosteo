@@ -33,6 +33,8 @@ export interface DatosPendientes {
   totalTocaRegistrar?: number;
   areas: ClaveArea[];
   todas: boolean;
+  /** Muestra «Mis leads como vendedor» (Ventas, heads o quien tenga leads a su nombre). */
+  vendedor?: boolean;
 }
 
 const VISIBLES = 6;
@@ -127,7 +129,7 @@ export function VistaPendientes(d: DatosPendientes) {
         <Seccion
           titulo="Avisos sin atender"
           contador={d.avisos.length}
-          descripcion="COF a 2 meses, 5 días hábiles antes de abrir y límite de 120 días."
+          descripcion="COF a 2 meses, 5 días hábiles antes de abrir, límite de 120 días, multa por vencimiento, COF tardía y transferencia."
           cuerpo={false}
         >
           <BandejaAvisos avisos={d.avisos} areas={d.areas} todas={d.todas} />
@@ -161,7 +163,7 @@ export function VistaPendientes(d: DatosPendientes) {
         <Seccion
           titulo="Te toca registrar"
           contador={d.totalTocaRegistrar ?? d.tocaRegistrar.length}
-          descripcion="El siguiente requisito de estas cards lo registra tu área: sin él no avanzan."
+          descripcion="El siguiente requisito de estas cards lo registra tu área (en Legal, también COF y contrato): sin él no avanzan."
         >
           <ListaCards
             cards={d.tocaRegistrar}
@@ -197,18 +199,20 @@ export function VistaPendientes(d: DatosPendientes) {
             vacio="Ninguna card de tu área está lista todavía."
           />
         </Seccion>
-        <Seccion
-          titulo="Mis leads como vendedor"
-          contador={d.propias.length}
-          descripcion="Franquiciatarios a tu nombre (etapas 1–5)."
-        >
-          <ListaCards
-            cards={d.propias}
-            total={d.propias.length}
-            etapas={d.etapas}
-            vacio="No tienes leads asignados."
-          />
-        </Seccion>
+        {d.vendedor !== false && (
+          <Seccion
+            titulo="Mis leads como vendedor"
+            contador={d.propias.length}
+            descripcion="Franquiciatarios a tu nombre (etapas 1–5)."
+          >
+            <ListaCards
+              cards={d.propias}
+              total={d.propias.length}
+              etapas={d.etapas}
+              vacio="No tienes leads asignados."
+            />
+          </Seccion>
+        )}
       </div>
     </>
   );
