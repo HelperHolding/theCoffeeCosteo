@@ -235,7 +235,7 @@ describe('rappi_importar', () => {
   });
 });
 
-describe('tiendas de Rappi (migraciones 29, 36 y 39)', () => {
+describe('tiendas de Rappi (migraciones 29, 36 y 51)', () => {
   it('Guadalajara (11), lote 1 (9, sin Roma Sur) y lote 2 (10): normal y Turbo, salvo Patio Santa Fe y Patio Toluca', async () => {
     const r = await db.query<{ company_id: number; canales: string }>(
       `select company_id, string_agg(canal, ',' order by canal) canales from public.rappi_tiendas group by 1 order by 1`,
