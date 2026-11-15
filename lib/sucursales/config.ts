@@ -211,16 +211,17 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(leon(614, 527, 'Torre Visu', 'Lomas del Campestre')),
   conPortal(delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso')),
   // Lote 4, centro-norte y occidente: validadas con el 2 de noviembre (Centro con 1 ¢ de redondeo).
-  aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio'),
-  aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada'),
-  delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro'),
-  sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico'),
-  sanLuis(763, 619, 'Covalia', 'Covalia'),
+  conPortal(aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio')),
+  conPortal(aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada')),
+  conPortal(delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro')),
+  conPortal(sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico')),
+  conPortal(sanLuis(763, 619, 'Covalia', 'Covalia')),
+  // Tepatitlán: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tepatitlán')(508, 399, 'Tepatitlán', 'La Gloria'),
-  colima(721, 638, 'Constitución', 'Jardines Vista Hermosa'),
-  colima(553, 468, 'Colima', 'Av. Venustiano Carranza'),
-  vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro'),
-  vallarta(478, 373, 'Versalles', 'Versalles'),
+  conPortal(colima(721, 638, 'Constitución', 'Jardines Vista Hermosa')),
+  conPortal(colima(553, 468, 'Colima', 'Av. Venustiano Carranza')),
+  conPortal(vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro')),
+  conPortal(vallarta(478, 373, 'Versalles', 'Versalles')),
   // Lote 5, golfo, sur y norte: validadas con el 2 de noviembre (Ávila Camacho y Andamar con 1 ¢ de redondeo).
   // Andamar está en Boca del Río aunque el CRM diga «Córdoba». Aeropuerto Chiapas abre a las 4 h (aeropuerto).
   vallarta(584, 504, 'Fluvial', 'Las Gaviotas'),
