@@ -12,35 +12,66 @@ Pedido de Carlo para el diseño: «extremadamente visual, más dashboards, más 
 saturar… igual animaciones». Usa los colores fijos de cada origen (Mostrador violeta, App naranja, Rappi verde), la rampa
 azul para la magnitud y el verde y rojo solo para el cambio contra la semana pasada.
 
+**Rediseño del 2026-11-15** (pedido de Carlo: «se ve demasiado agrandado», mapa real, gráficas mejor formadas, top 5
+por ciudad y el periodo menos plano). Las gráficas de ejes miden su ancho y dibujan a tamaño real: alto fijo y letra de
+11 px, sin crecer con la pantalla. Los KPI van de 24 a 40 px.
+
 1. **Hoy:**
-   - la venta del día en grande, contra el mismo día de la semana pasada a la misma hora;
-   - cuatro números clave: pedidos, ticket, sucursales vendiendo y la que va adelante;
-   - la venta acumulada apilada por origen, con la semana pasada punteada.
-2. **México hoy, por estado:** un mapa en mosaico de los 32 estados. Se colorea por venta (azul) o por cambio (rojo
-   a verde). Al lado, las 10 sucursales que más venden, con su mezcla de origen.
-3. **Pedidos por hora** de hoy por origen, con la semana pasada en gris detrás, y un **anillo** con la parte de cada
-   origen.
+   - la venta del día, contra el mismo día de la semana pasada a la misma hora («vs el domingo 8 nov a las 16:10»;
+     con sucursales en otra zona agrega «hora local»);
+   - cuatro números: pedidos, ticket, sucursales con venta (y cuáles no) y la última hora completa contra la misma
+     hora de la semana pasada;
+   - la venta acumulada por tramo de 10 min, apilada por origen, con la semana pasada punteada y el resto del día
+     sombreado.
+2. **México hoy, por estado:**
+   - un mapa con las formas reales de los 32 estados, coloreado por venta o por cambio;
+   - la venta va en 4 pasos de la rampa azul por cuantil, con la leyenda en pesos; el cambio va de rojo a verde;
+   - el Valle de México (CDMX, Estado de México, Morelos y Tlaxcala) va ampliado en una lupa;
+   - al lado, la lista de estados con el mismo color. Es también la vista de tabla del mapa.
+3. **Pedidos por hora:**
+   - columnas por origen con ejes, y en gris la semana pasada hasta el mismo corte;
+   - la hora en curso va rayada y marcada «en curso»; la hora pico lleva su cifra;
+   - **De dónde viene la venta:** una barra 100 % con la parte de cada origen y una tabla con venta, pedidos, ticket
+     y cambio de cada origen.
 4. **Cómo va cada sucursal hoy:**
-   - cada sucursal con su venta, su mezcla de origen y su cambio: verde si sube más de 3 %, rojo si baja más de 3 %;
-   - las ciudades con 3 sucursales o más van en su propio grupo, y las demás juntas en «Más ciudades»;
-   - al tocar una sucursal se abre su tablero.
+   - las 5 que más venden, alineadas, con su barra por origen en la misma escala, su venta y su cambio;
+   - debajo, cada ciudad en una fila: venta, mezcla y cambio. Al abrirla salen todas sus sucursales con venta,
+     pedidos, ticket y cambio. Se ven 8 ciudades y un botón abre las demás.
 5. **Últimas 4, 8 o 12 semanas** (completas, de lunes a domingo):
-   - números del periodo;
-   - venta por semana apilada por origen;
+   - números del periodo, con el promedio por semana y por día, y el cambio de la última semana;
+   - venta por semana con ejes y el cambio contra la anterior. Si Rappi del portal empieza dentro del periodo (1 de
+     octubre), la semana se marca y la descripción lo dice;
+   - venta por día: un calendario de lunes a domingo con el promedio de cada día;
    - lo más vendido;
-   - sucursales ordenadas por venta, con su barra.
+   - sucursales con su tendencia semanal y el cambio de su última semana.
+
+**La curva y las horas entre zonas** (`armarHoy`):
+
+- La curva se corta en el corte más común, `hastaTramo`.
+- Cada sucursal entra hasta su propio tramo, sin pasar de ese corte: Cancún va una hora adelante y no deja una cola de
+  4 sucursales.
+- La semana pasada se corta igual (`baseHasta`). El día completo (`base`) queda como referencia del resto del día.
 
 **Movimiento** (skill movimiento-web, `tablero-mexico.css`):
 
 - **Al cargar, una sola vez:**
   - los bloques suben escalonados;
-  - el mapa se enciende en diagonal, de noroeste a sureste;
+  - el mapa se enciende de oeste a este y el calendario en diagonal;
   - las barras y columnas crecen desde su base;
   - las cifras cuentan hasta su valor.
-- **Al filtrar o con un corte nuevo:** barras, columnas, anillo y colores del mapa se mueven a su valor nuevo, y las
-  cifras cuentan desde el anterior.
+- **Al filtrar o con un corte nuevo:** las barras y los colores del mapa se deslizan a su valor nuevo, y las cifras
+  cuentan desde el anterior.
+- **Al abrir una ciudad:** su panel crece.
 - **«Al día»:** el punto late mientras el corte esté al día.
 - **Movimiento reducido:** con esa preferencia del sistema no se mueve nada.
+
+**Mapa:**
+
+- Trazos en `components/sucursales/mapa-mexico-trazos.ts`, generados con `scripts/sucursales/trazos-mexico.ts`.
+- La geometría es de Natural Earth (dominio público), tomada del TopoJSON de México de datamaps 0.5.9 (MIT). Ese
+  archivo se descargó con OK de Carlo el 2026-11-15 y solo se leyó como datos.
+- Proyección cónica conforme de Lambert con los parámetros del INEGI.
+- Simplificada por arco, para que las fronteras compartidas coincidan. Sin las islas lejanas.
 
 El estado de cada ciudad está en `ESTADO_DE_CIUDAD` (`components/sucursales/tablero-mexico.tsx`). Una ciudad nueva
 sin estado se lista como «sin estado asignado»; no se pierde.
@@ -95,6 +126,20 @@ Vercel Cron (cada 10 min; 5:30 cierre de 8 días)
 - **Prueba visual con datos sintéticos** (`?tablero-mexico`, y `&completo=1` para ver el mapa lleno, en
   `npm run prueba:visual`), en escritorio, en 375 px y en modo día y noche,
   sin desborde de página.
+- `tests/portal/tablero-mexico-calculo.test.tsx` cubre lo que se pinta:
+  - el corte de referencia entre zonas;
+  - la frase de la comparación;
+  - la hora en curso y la última hora completa;
+  - la marca de Rappi en el periodo;
+  - el top 5 y las ciudades.
+- **Datos contra las fuentes, solo lectura** (`scripts/sucursales/verificar-tablero.ts`):
+  - compara lo guardado con la API cruda del POS (sin pago RAPPI) y con `rappi_pedidos` paginado con `.order()`;
+  - revisa la cobertura por día y la frescura de hoy;
+  - el 2026-11-15 cuadró:
+    - POS: 79 de 79 el 14 y el 10 de noviembre (4,600 y 4,413 pedidos);
+    - Rappi: 73 de 73 del 1 al 14 de noviembre (8,350 pedidos, $1,802,568);
+    - hoy: 79 de 79 con corte de las 16:00. Reforma, Puerta Polanco y Mayab estaban en $0, igual que el domingo
+      anterior.
 
 ## Pasos (cada uno con OK de Carlo)
 
