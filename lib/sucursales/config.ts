@@ -224,17 +224,19 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(vallarta(478, 373, 'Versalles', 'Versalles')),
   // Lote 5, golfo, sur y norte: validadas con el 2 de noviembre (Ávila Camacho y Andamar con 1 ¢ de redondeo).
   // Andamar está en Boca del Río aunque el CRM diga «Córdoba». Aeropuerto Chiapas abre a las 4 h (aeropuerto).
+  // Fluvial: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   vallarta(584, 504, 'Fluvial', 'Las Gaviotas'),
-  veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro'),
-  veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar'),
-  delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro'),
+  conPortal(veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro')),
+  conPortal(veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar')),
+  conPortal(delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro')),
+  // Aeropuerto Chiapas: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tuxtla Gutiérrez')(781, 496, 'Aeropuerto Chiapas', 'Aeropuerto'),
-  durango(632, 547, 'Durango', 'Juan de la Barrera'),
-  delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia'),
+  conPortal(durango(632, 547, 'Durango', 'Juan de la Barrera')),
+  conPortal(delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia')),
   // UTC−7 fijo, como Cd. Juárez: el POS no cambió de horario el 1 de noviembre (3-nov: último pedido 16:47 a las 16:04
   // de Tijuana). En verano es la hora local.
-  delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas'),
-  delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe'),
+  conPortal(delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas')),
+  conPortal(delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe')),
   // Lote 6, sureste: validadas con el 2 de noviembre y el último pedido de hoy en su hora local (Puerto Cancún y Scala
   // Huayacan con 3 y 1 ¢ de redondeo). Tulum, Mayab y Hermosillo vendieron poco el 2-nov; sus otros días son normales.
   cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez'),

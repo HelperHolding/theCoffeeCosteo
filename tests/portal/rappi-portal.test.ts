@@ -156,4 +156,10 @@ describe('pestaña Rappi', () => {
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
     expect(sucursalInfo(configDe(508)!)).toMatchObject({ rappi: false, rappiPortal: false });
   });
+
+  it('lote 5: 7 con el portal; Fluvial y Aeropuerto Chiapas, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [705, 590, 645, 632, 558, 613, 664])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    for (const id of [584, 781]) expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
 });
