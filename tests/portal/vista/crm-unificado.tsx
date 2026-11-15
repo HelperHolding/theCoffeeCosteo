@@ -604,9 +604,10 @@ export function VistaExpedienteUnificado() {
         usuario={{
           id: 'u-andres',
           nombre: 'Andrés',
-          areas: ['legal'],
+          // ?como=proyectos (u otra área) muestra la ficha como miembro de esa área, sin ser head.
+          areas: [(parametros.get('como') as 'legal' | null) ?? 'legal'],
           funciones: [],
-          esHead: true,
+          esHead: !parametros.get('como'),
           desarrollador: false,
           editable: true,
         }}

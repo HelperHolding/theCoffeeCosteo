@@ -85,13 +85,13 @@ Lo que se vio al armar el guion y que confundiría a alguien en su primer día:
 ## 5. Pendientes que necesitan decisión de Carlo (tocan la base)
 
 1. ~~**Un head de cualquier área actúa como head de todas.**~~ **Decidido (Carlo, 2026-11-15): se queda así.** Solo los heads liberan candados, y lo hacen en cualquier área, siempre con motivo. Los miembros mueven solo las etapas de su área. El capítulo 6 del video lo explica así.
-2. **Requisitos por campo** (fecha límite, fechas de apertura, Jestor) quedan «Validado» sin quién ni cuándo, y cualquier editor los puede capturar desde Resumen. Propuesta: registrar autor en la bitácora del requisito y limitar el campo al área que lo cumple.
+2. ~~**Requisitos por campo**~~ **Hecho (migración 54):** cada dato lo captura solo su área o un head; la base lo exige y Resumen muestra «Lo captura Legal». Quién y cuándo salen de la bitácora y se ven junto al requisito. Antes: (fecha límite, fechas de apertura, Jestor) quedan «Validado» sin quién ni cuándo, y cualquier editor los puede capturar desde Resumen. Propuesta: registrar autor en la bitácora del requisito y limitar el campo al área que lo cumple.
 3. **La bitácora muestra nombres internos** («comprobante_apartado», «fecha_limite_apertura»). Propuesta: traducirlos en la vista de la bitácora (sin migración) y cambiar los textos del disparador en la próxima migración.
-4. **Avisos atendidos desaparecen sin rastro.** Propuesta: sección «Atendidos» con quién y cuándo en Vencimientos.
-5. **No hay pantalla para reasignar vendedor ni para cancelar en cascada,** aunque los mensajes de error las mencionan.
+4. ~~**Avisos atendidos desaparecen sin rastro.**~~ **Hecho:** Vencimientos tiene «Atendidos» con quién y cuándo (los últimos 30). Antes: Propuesta: sección «Atendidos» con quién y cuándo en Vencimientos.
+5. ~~**No hay pantalla para reasignar vendedor ni para cancelar en cascada,**~~ **Hecho:** en la ficha del franquiciatario un head tiene «Reasignar» (a alguien de Ventas, con motivo; migración 54) y «Descartar con sus sucursales» (con motivo). Un lead sin vendedor lo puede tomar cualquiera de Ventas. Antes: aunque los mensajes de error las mencionan.
 6. **Admin:** falta el head de Finanzas; la casilla de Aprobación de locales se puede marcar en cualquier área pero solo sirve en Ventas; «Usuarios por área» solo muestra tu propia fila si no eres admin de Costeo.
 7. **Vencimientos, Panel y Pipeline sin filtro «Lo mío».** Se puede hacer sin migración; queda para la siguiente vuelta junto con el capítulo 0.
-8. **«Validar» casi nunca aparece**, porque desde la migración 50 cada requisito lo cumple y valida la misma área. Si se quiere la doble firma (p. ej. Finanzas valida lo que sube Ventas), hay que cambiar `area_valida`.
+8. **Decidido: sin doble firma.** «Validar» casi nunca aparece, porque desde la migración 50 cada requisito lo cumple y valida la misma área. Si se quiere la doble firma (p. ej. Finanzas valida lo que sube Ventas), hay que cambiar `area_valida`.
 
 ## 6. Producción
 

@@ -217,21 +217,16 @@ export async function guardarCard(
   }
 }
 
-export async function asignarVendedor(
-  id: string,
-  version: number,
-  usuario: string | null,
-): Promise<Resultado> {
+/** Solo un head, con motivo; el nuevo vendedor debe ser de Ventas (migración 54). */
+export async function reasignarVendedor(id: string, vendedor: string, motivo: string): Promise<Resultado> {
   try {
     const { db } = await editor();
-    const r = await db
-      .from('crm_franquiciatarios')
-      .update({ responsable_id: usuario })
-      .eq('id', id)
-      .eq('version', version)
-      .select('id');
+    const r = await db.rpc('crm_reasignar_vendedor', {
+      p_franquiciatario: id,
+      p_vendedor: vendedor,
+      p_motivo: motivo.trim().slice(0, 1000),
+    });
     if (r.error) return { error: mensaje(r.error) };
-    if (!r.data.length) return { error: 'La card cambió mientras tanto. Recarga.' };
     return {};
   } catch (e) {
     return fallo(e);
