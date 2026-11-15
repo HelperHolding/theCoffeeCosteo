@@ -58,6 +58,8 @@ vi.mock('../../lib/supabase/servidor', () => ({
           : { data: { user: null }, error: null },
     },
     rpc: async (fn: string, args: { p_company: number }) => {
+      // Juárez lee su Rappi del portal desde el 2026-11-15: aquí sin pedidos (migración 28, ya en prod).
+      if (fn === 'sucursales_rappi_portal') return { data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null }, error: null };
       if (!sesion.migrada) return { data: null, error: { code: 'PGRST202', message: 'no existe' } };
       // La base exige perfil activo, módulo Sucursales y la sucursal asignada (migración 24).
       const ve = sesion.activo && sesion.companias.includes(args.p_company);
@@ -604,23 +606,19 @@ describe('Productos y Pedidos', () => {
     const texto = await r.text();
     expect(texto).not.toMatch(/Cent"|costo|margen|iva"/i);
     const d = JSON.parse(texto);
-    // 4 pedidos × (4MIL con Oatmilk → fuera por personalización + BRO13 Único → entra).
-    expect(d.cobertura).toMatchObject({ lineas: 8, incluidas: 4, conReceta: 8, generico: 0 });
-    expect(d.cobertura.excluidas).toEqual({ tamano: 0, personalizacion: 4, receta: 0 });
-    // La leche del 4MIL queda en cero, con su cuadre: 4 unidades la llevan y las 4 quedan fuera.
+    // Juárez lee su Rappi del portal desde el 2026-11-15, así que usa las reglas del piloto (consumo.ts): una
+    // personalización sin calcular (Oatmilk) ya no saca la unidad; se cuenta la receta base y la personalización queda
+    // «sin contar». 4 pedidos × (4MIL + BRO13) = 8 líneas, todas dentro.
+    expect(d.cobertura).toMatchObject({ lineas: 8, incluidas: 8, conReceta: 8, generico: 0, sinContar: 4 });
+    expect(d.cobertura.excluidas).toEqual({ tamano: 0, personalizacion: 0, receta: 0 });
     expect(d.insumos.map((i: { insumo: string; cantidad: number }) => [i.insumo, i.cantidad])).toEqual([
       ['PAPEL', 2],
-      ['LECHE ENTERA', 0],
+      ['LECHE ENTERA', 800],
       ['BROWNIE', 4],
     ]);
-    const leche = d.insumos.find((i: { insumo: string }) => i.insumo === 'LECHE ENTERA');
-    expect(leche.fuera.map((x: { unidades: number; razon: string }) => [x.unidades, x.razon])).toEqual([
-      // «Oatmilk» ya es un ajuste (leche de avena), pero esta receta de prueba no lleva la leche entera directa.
-      [4, 'faltan datos de la receta para calcular sus personalizaciones'],
-    ]);
     expect(d.diario.map((x: { fecha: string; incluidas: number }) => [x.fecha, x.incluidas])).toEqual([
-      ['2026-10-21', 1],
-      ['2026-10-22', 3],
+      ['2026-10-21', 2],
+      ['2026-10-22', 6],
     ]);
     // Sin la migración no hay recetas que leer: 503, nunca consumo cero.
     sesion.migrada = false;

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { claseEstado, construirRappiPortal, type RpcRappiPortal } from '@/lib/sucursales/rappi-portal';
-import { configDe } from '@/lib/sucursales/config';
+import { configDe, sucursalesConfiguradas } from '@/lib/sucursales/config';
 import { sucursalInfo } from '@/lib/sucursales/datos';
 import { pestanasDe } from '@/components/sucursales/ventas-pos';
 
@@ -123,7 +123,7 @@ describe('construirRappiPortal', () => {
 });
 
 describe('pestaña Rappi', () => {
-  it('las 11 de Guadalajara la tienen por el portal (con filtro de Rappi: se suma); Cancún y Juárez por la API', () => {
+  it('las 11 de Guadalajara, Juárez y Bonampak la tienen por el portal; ninguna por la API del POS (2026-11-15)', () => {
     const namora = sucursalInfo(configDe(513)!);
     expect(configDe(513)!.rappi).toBe(false);
     expect(namora).toMatchObject({ rappi: true, rappiPortal: true });
@@ -132,7 +132,8 @@ describe('pestaña Rappi', () => {
     for (const id of gdl)
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
     for (const id of [612, 583])
-      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: false });
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    expect(sucursalesConfiguradas.filter((c) => c.rappi)).toEqual([]);
   });
 
   it('lote 1 de CDMX: 9 con el portal; Roma Sur, sin tiendas en el portal, solo con el POS', () => {

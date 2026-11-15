@@ -304,23 +304,26 @@ describe('POS + Rappi del portal', () => {
     expect(l.estado).toBe('completa');
   });
 
-  it('si un pedido llegó por los dos lados se queda la versión del portal (Rubén Darío: «Generic» en el POS)', async () => {
+  it('el Rappi del POS (forma de pago RAPPI) no cuenta: solo el del portal, también sin portal (Carlo, 2026-11-15)', async () => {
     const l = await conRappi(lectura(), async () => rappi);
     const doble = l.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!;
     expect(doble).toBe(rappi[1]);
     expect(doble.tipo).toBe('RAPPI_PORTAL');
-    expect(l.pedidos.filter((p) => p.numeroPedidoRappi === '2950000009')).toHaveLength(1);
-    // Solo el POS lo tiene: se conserva tal cual.
+    // Solo el POS lo tiene: también se quita.
     const soloPos = await conRappi(lectura(), async () => [rappi[0]]);
-    expect(soloPos.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!.tipo).toBe('CREDIT');
+    expect(soloPos.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')).toBeUndefined();
+    // Sin portal (sin fuente): el POS se queda sin Rappi y el total declarado baja.
+    const sinPortal = await conRappi(lectura());
+    expect(sinPortal.pedidos.map((p) => p.origen)).toEqual(['mostrador']);
+    expect(sinPortal.totalDeclarado).toBe(1);
   });
 
   it('si Rappi no se pudo leer la lectura queda parcial y lo dice; sin fuente o con error del POS, no cambia', async () => {
     const l = await conRappi(lectura(), async () => null);
     expect(l.estado).toBe('parcial');
     expect(l.avisos[0]).toMatch(/Rappi/);
-    expect(l.pedidos).toHaveLength(2);
-    const base = lectura();
+    expect(l.pedidos).toHaveLength(1);
+    const base = lectura({ pedidos: [pos(null)], totalDeclarado: 1 });
     expect(await conRappi(base)).toBe(base);
     const conError = lectura({ estado: 'error', pedidos: [] });
     expect(await conRappi(conError, async () => rappi)).toBe(conError);

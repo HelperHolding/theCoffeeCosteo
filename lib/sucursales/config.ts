@@ -21,7 +21,10 @@ export interface ConfigSucursal {
   zona: string;
   /** Cómo interpretar `createdAt`. Ver docs/sucursales/03 (pendiente de confirmar con el proveedor). */
   modoTiempo: ModoTiempo;
-  /** ¿Rappi llega por la API (forma de pago RAPPI)? Hoy solo 532. Sin Rappi no hay pestaña ni filtro de Rappi. */
+  /**
+   * ¿Rappi por la API del POS (forma de pago RAPPI)? Desde el 2026-11-15 ninguna: ese Rappi no cuenta (conRappi) y el
+   * Rappi viene solo del portal (rappiPortal). Sin Rappi no hay pestaña ni filtro de Rappi.
+   */
   rappi: boolean;
   /**
    * Rappi leído del portal de Partners por el cron de n8n (docs/rappi-portal): se suma a Ventas, Costeo y Consumo con
@@ -33,10 +36,6 @@ export interface ConfigSucursal {
   /** TEMPORAL (pedido por Carlo, 2026-10-22): audio que suena en En vivo por cada pedido nuevo. */
   sonidoVenta?: string;
 }
-
-/** Rappi llega por la API con forma de pago RAPPI (convenio): se suma a las ventas y se filtra arriba. */
-const ALCANCE_RAPPI =
-  'Incluye Rappi (forma de pago RAPPI en la API). Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
 /** Rappi no llega por la API del POS: se lee del portal de Rappi (docs/rappi-portal) y se suma a las ventas. */
 const ALCANCE_POS_RAPPI_PORTAL =
@@ -128,8 +127,10 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     zona: 'Etc/GMT+6',
     modoTiempo: 'local-etiquetada-z',
     sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
-    rappi: true,
-    alcance: ALCANCE_RAPPI,
+    // Rappi solo del portal desde el 2026-11-15 (Carlo): el de la API del POS ya no cuenta (conRappi).
+    rappi: false,
+    rappiPortal: true,
+    alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
   {
     // Validada el 2026-10-22 con scripts/sucursales/validar-sucursal.ts (docs/sucursales/10).
@@ -141,12 +142,14 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Cancun',
     modoTiempo: 'local-etiquetada-z',
-    rappi: true,
-    alcance: ALCANCE_RAPPI,
+    // Rappi solo del portal desde el 2026-11-15 (Carlo): tienda normal y Turbo; el de la API del POS ya no cuenta.
+    rappi: false,
+    rappiPortal: true,
+    alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
   {
-    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Tiene Rappi por la API del POS, pero
-    // llega como «Generic»: con rappiPortal, cada pedido toma la versión del portal (mismo número; conRappi).
+    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Su POS cobra Rappi (forma de pago RAPPI)
+    // como «Generic»; desde el 2026-11-15 ese Rappi del POS no cuenta y solo se suma el del portal (conRappi).
     companyId: 532,
     lookerStoreId: 455,
     nombre: 'Rubén Darío',
@@ -155,7 +158,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Mexico_City',
     modoTiempo: 'local-etiquetada-z',
-    rappi: true,
+    rappi: false,
     rappiPortal: true,
     alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
