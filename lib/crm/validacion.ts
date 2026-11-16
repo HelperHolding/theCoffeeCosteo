@@ -77,6 +77,7 @@ export const camposSucursal = {
   fecha_estimada_apertura: { tipo: 'fecha' },
   fecha_confirmada_apertura: { tipo: 'fecha' },
   fecha_limite_apertura: { tipo: 'fecha' },
+  fecha_apertura: { tipo: 'fecha' },
   arquitecto_asignado: { tipo: 'texto', max: 200 },
 } satisfies Record<string, Campo>;
 
@@ -87,6 +88,7 @@ export const TIPOS_DOCUMENTO = {
   survey: 'Survey',
   pld: 'PLD',
   csf: 'Constancia de Situación Fiscal',
+  factura: 'Factura',
   carta_intencion: 'Carta de intención',
   propuesta_local: 'Propuesta de local',
   dictamen: 'Dictamen del Comité',
@@ -95,6 +97,14 @@ export const TIPOS_DOCUMENTO = {
   constancia: 'Constancia de arrendamiento',
   cof: 'Circular Oferta de Franquicia',
   contrato_franquicia: 'Contrato de franquicia',
+  levantamiento: 'Levantamiento arquitectónico',
+  boceto: 'Boceto de distribución',
+  evidencia_brasil: 'Evidencia del envío a Brasil',
+  proyecto_3d: 'Proyecto 3D',
+  proyecto_ejecutivo: 'Proyecto ejecutivo',
+  fotos_obra: 'Fotografías de terminación de obra',
+  viaticos_capacitador: 'Viáticos y hospedaje del capacitador',
+  evidencia_apertura: 'Evidencia de apertura',
   evidencia: 'Evidencia (correo o confirmación)',
   otro: 'Otro',
 } as const;
