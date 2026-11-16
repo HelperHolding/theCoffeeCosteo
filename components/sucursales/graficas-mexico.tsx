@@ -43,6 +43,25 @@ export const compacto = (cent: number) =>
     notation: 'compact',
     maximumFractionDigits: cent >= 1_000_000_00 ? 1 : 0,
   }).format(cent / 100);
+/**
+ * Lo que se está viendo (docs/sucursales/16): hoy en vivo, un día cerrado o un rango. `cuando` va en frases («$5 k
+ * hoy», «el sábado 7 nov»), `corto` en tooltips y leyendas, `contra` es la base del cambio y `columna`, el encabezado
+ * del cambio en las tablas.
+ */
+export interface Momento {
+  cuando: string;
+  corto: string;
+  contra: string;
+  columna: string;
+}
+export const MOMENTO_HOY: Momento = {
+  cuando: 'hoy',
+  corto: 'hoy',
+  contra: 'la semana pasada a la misma hora',
+  columna: 'vs sem. pasada',
+};
+const deCuando = (corto: string) => (corto === 'hoy' ? 'de hoy' : `del ${corto}`);
+
 const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 export const hhmm = (seg: number) =>
   `${String(Math.floor(seg / 3600)).padStart(2, '0')}:${String(Math.floor((seg % 3600) / 60)).padStart(2, '0')}`;
@@ -168,17 +187,25 @@ function primeraHora(series: number[][], porHora: boolean) {
 /**
  * Venta acumulada de hoy por tramo de 10 min, apilada por origen, contra la semana pasada (línea punteada, día
  * completo). Hoy llega hasta `hastaTramo` (el corte de referencia); a la derecha, el resto del día va sombreado.
+ * Un día cerrado (`cerrado`) llega a las 24:00 sin marca de «Ahora»; con `paso` 6 solo tiene datos por hora y la
+ * curva une las horas en punto (nunca inventa los tramos de en medio).
  */
 export function CurvaHoy({
   hoy,
   base,
   hastaTramo,
   etiquetaBase,
+  paso = 1,
+  cerrado = false,
+  corto = 'hoy',
 }: {
   hoy: Record<Origen, number[]>;
   base: number[] | null;
   hastaTramo: number;
   etiquetaBase: string;
+  paso?: number;
+  cerrado?: boolean;
+  corto?: string;
 }) {
   const id = useId();
   const [ref, W] = useAncho<HTMLDivElement>();
@@ -196,7 +223,10 @@ export function CurvaHoy({
   const ancho = Math.max(1, W - M.izq - M.der);
   const x = (t: number) => M.izq + ((t - t0) / (t1 - t0)) * ancho;
   const y = (v: number) => H - M.aba - (v / tope) * (H - M.arr - M.aba);
-  const tramos = Array.from({ length: corte - t0 + 1 }, (_, k) => t0 + k);
+  // Puntos de la curva: cada tramo, o cada hora en punto con `paso` 6 (t0 y el corte de un día cerrado son horas).
+  const puntos = (hasta: number) =>
+    Array.from({ length: Math.floor((hasta - t0) / paso) + 1 }, (_, k) => t0 + k * paso);
+  const tramos = puntos(corte);
   const formas = capas.map((_, i) => {
     const debajo = (t: number) => capas.slice(0, i).reduce((a, c) => a + al(c, t), 0);
     const arriba = (t: number) => debajo(t) + al(capas[i], t);
@@ -205,7 +235,7 @@ export function CurvaHoy({
     return `${sup.join('')}${inf.join('')}Z`;
   });
   const lineaBase = baseAc
-    ? Array.from({ length: t1 - t0 + 1 }, (_, k) => t0 + k)
+    ? puntos(t1)
         .map((t, k) => `${k ? 'L' : 'M'}${x(t).toFixed(1)},${y(al(baseAc, t)).toFixed(1)}`)
         .join('')
     : null;
@@ -213,8 +243,8 @@ export function CurvaHoy({
     (h) => h % (W < 460 ? 6 : 3) === 0,
   );
   const fijar = (clientX: number, r: DOMRect) => {
-    const t = Math.round(t0 + ((clientX - r.left - M.izq) / ancho) * (t1 - t0));
-    setActivo(Math.min(t1, Math.max(t0 + 1, t)));
+    const t = Math.round((t0 + ((clientX - r.left - M.izq) / ancho) * (t1 - t0)) / paso) * paso;
+    setActivo(Math.min(t1, Math.max(t0 + paso, t)));
   };
   const a = activo;
   const derecha = x(corte) > W - 110;
@@ -225,7 +255,11 @@ export function CurvaHoy({
           width={W}
           height={H}
           role="img"
-          aria-label={`Venta acumulada de hoy hasta las ${hhmm(corte * 600)}: ${dinero(total(corte), MXN, false)}${baseAc ? `; ${etiquetaBase} a la misma hora: ${dinero(al(baseAc, corte), MXN, false)}; su día completo: ${dinero(al(baseAc, t1), MXN, false)}` : ''}.`}
+          aria-label={
+            cerrado
+              ? `Venta acumulada ${deCuando(corto)}: ${dinero(total(corte), MXN, false)}${baseAc ? `; ${etiquetaBase}: ${dinero(al(baseAc, t1), MXN, false)}` : ''}.`
+              : `Venta acumulada ${deCuando(corto)} hasta las ${hhmm(corte * 600)}: ${dinero(total(corte), MXN, false)}${baseAc ? `; ${etiquetaBase} a la misma hora: ${dinero(al(baseAc, corte), MXN, false)}; su día completo: ${dinero(al(baseAc, t1), MXN, false)}` : ''}.`
+          }
           tabIndex={0}
           className="block outline-none focus-visible:ring-2 focus-visible:ring-ink"
           onKeyDown={(e) => {
@@ -309,22 +343,26 @@ export function CurvaHoy({
               strokeLinejoin="round"
             />
           )}
-          <line
-            x1={x(corte)}
-            x2={x(corte)}
-            y1={M.arr - 4}
-            y2={H - M.aba}
-            stroke={TINTA}
-            strokeOpacity={0.55}
-          />
-          <text
-            x={x(corte) + (derecha ? -6 : 6)}
-            y={M.arr - 10}
-            textAnchor={derecha ? 'end' : 'start'}
-            className="fill-ink text-[11px] font-semibold tabular"
-          >
-            Ahora · {hhmm(corte * 600)}
-          </text>
+          {!cerrado && (
+            <>
+              <line
+                x1={x(corte)}
+                x2={x(corte)}
+                y1={M.arr - 4}
+                y2={H - M.aba}
+                stroke={TINTA}
+                strokeOpacity={0.55}
+              />
+              <text
+                x={x(corte) + (derecha ? -6 : 6)}
+                y={M.arr - 10}
+                textAnchor={derecha ? 'end' : 'start'}
+                className="fill-ink text-[11px] font-semibold tabular"
+              >
+                Ahora · {hhmm(corte * 600)}
+              </text>
+            </>
+          )}
           {baseAc && (
             <circle
               cx={x(corte)}
@@ -354,7 +392,7 @@ export function CurvaHoy({
                     etiqueta: etiquetaOrigen[o],
                     valor: dinero(al(capas[i], a), MXN, false),
                   })),
-                  { color: TINTA, etiqueta: 'hoy', valor: dinero(total(a), MXN, false) },
+                  { color: TINTA, etiqueta: corto, valor: dinero(total(a), MXN, false) },
                 ]
               : []),
             ...(baseAc
@@ -385,6 +423,7 @@ export function ColumnasHora({
   horaEnCurso,
   ultimaHora,
   etiquetaBase,
+  corto = 'hoy',
 }: {
   hoy: Record<Origen, number[]>;
   base: number[] | null;
@@ -392,6 +431,7 @@ export function ColumnasHora({
   horaEnCurso: number | null;
   ultimaHora: number;
   etiquetaBase: string;
+  corto?: string;
 }) {
   const id = useId();
   const [ref, W] = useAncho<HTMLDivElement>();
@@ -416,7 +456,7 @@ export function ColumnasHora({
           width={W}
           height={H}
           role="group"
-          aria-label={`Pedidos por hora de hoy frente a ${etiquetaBase}.${pico !== null ? ` Hora pico: ${hh(pico)} con ${numero(total(pico))} pedidos.` : ''}`}
+          aria-label={`Pedidos por hora ${deCuando(corto)} frente a ${etiquetaBase}.${pico !== null ? ` Hora pico: ${hh(pico)} con ${numero(total(pico))} pedidos.` : ''}`}
           className="block"
         >
           <defs>
@@ -462,7 +502,7 @@ export function ColumnasHora({
                 key={h}
                 tabIndex={0}
                 role="img"
-                aria-label={`${hh(h)} a ${hh(h + 1)}: ${futura ? 'aún no pasa' : `${numero(total(h))} pedidos hoy`}${base ? `, ${numero(g)} ${etiquetaBase}${h === horaEnCurso ? ' al mismo corte' : ''}` : ''}`}
+                aria-label={`${hh(h)} a ${hh(h + 1)}: ${futura ? 'aún no pasa' : `${numero(total(h))} pedidos ${corto}`}${base ? `, ${numero(g)} ${etiquetaBase}${h === horaEnCurso ? ' al mismo corte' : ''}` : ''}`}
                 onPointerEnter={() => setActiva(h)}
                 onPointerLeave={() => setActiva(null)}
                 onFocus={() => setActiva(h)}
@@ -570,7 +610,7 @@ export function ColumnasHora({
                     etiqueta: etiquetaOrigen[o],
                     valor: numero(hoy[o][activa] ?? 0),
                   })),
-                  { color: TINTA, etiqueta: 'pedidos hoy', valor: numero(total(activa)) },
+                  { color: TINTA, etiqueta: `pedidos ${corto}`, valor: numero(total(activa)) },
                 ]
               : []),
             ...(base
@@ -616,7 +656,7 @@ export interface FilaMezcla {
 }
 
 /** De dónde viene la venta: barra 100 % por origen con su parte, y la tabla de cada origen. */
-export function MezclaOrigen({ filas }: { filas: FilaMezcla[] }) {
+export function MezclaOrigen({ filas, momento = MOMENTO_HOY }: { filas: FilaMezcla[]; momento?: Momento }) {
   const total = filas.reduce((a, f) => a + f.venta, 0);
   const visibles = filas.filter((f) => f.venta > 0);
   return (
@@ -661,14 +701,14 @@ export function MezclaOrigen({ filas }: { filas: FilaMezcla[] }) {
         </ul>
       </div>
       <table className="w-full text-sm">
-        <caption className="sr-only">Venta de hoy por origen</caption>
+        <caption className="sr-only">Venta por origen, {momento.cuando}</caption>
         <thead>
           <tr className="text-xs text-muted-foreground">
             <th className="pb-2 text-left font-medium">Origen</th>
             <th className="pb-2 text-right font-medium">Venta</th>
             <th className="pb-2 text-right font-medium">Pedidos</th>
             <th className="hidden pb-2 text-right font-medium sm:table-cell">Ticket</th>
-            <th className="pb-2 text-right font-medium">vs sem. pasada</th>
+            <th className="pb-2 text-right font-medium">{momento.columna}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -786,14 +826,23 @@ export interface SemanaColumna {
  * Venta por semana: columnas apiladas por origen con el total arriba y el cambio contra la anterior abajo. Una
  * semana sin todos sus días va rayada. `rappiDesde`: la semana en que empieza Rappi del portal (antes no existe).
  */
+const TEXTOS_SEMANA = {
+  grafica: 'Venta por semana por origen',
+  parcial: 'semana con días sin guardar',
+  contra: 'contra la anterior',
+};
+
+/** También sirve por día (rango del tablero) con otros `textos`: las etiquetas se ralean según el ancho. */
 export function SemanasApiladas({
   semanas,
   rappiDesde,
   rappiTexto,
+  textos = TEXTOS_SEMANA,
 }: {
   semanas: SemanaColumna[];
   rappiDesde?: string | null;
   rappiTexto?: string;
+  textos?: typeof TEXTOS_SEMANA;
 }) {
   const id = useId();
   const [ref, W] = useAncho<HTMLDivElement>();
@@ -806,13 +855,14 @@ export function SemanasApiladas({
   const banda = Math.max(1, W - M.izq - M.der) / Math.max(1, semanas.length);
   const x = (i: number) => M.izq + i * banda;
   const y = (v: number) => H - M.aba - (v / tope) * (H - M.arr - M.aba);
-  const cada = banda < 56 ? 2 : 1;
+  // Etiquetas (total, fecha y cambio) cada `cada` columnas, contando desde la última: unos 56 px por etiqueta.
+  const cada = Math.max(1, Math.ceil(56 / banda));
   const visible = (i: number) => (semanas.length - 1 - i) % cada === 0;
   const iRappi = rappiDesde ? semanas.findIndex((s) => s.clave === rappiDesde) : -1;
   return (
     <div ref={ref} className="relative" style={{ height: H }}>
       {W > 0 && (
-        <svg width={W} height={H} role="group" aria-label="Venta por semana por origen" className="block">
+        <svg width={W} height={H} role="group" aria-label={textos.grafica} className="block">
           <defs>
             <pattern
               id={`${id}-raya`}
@@ -871,7 +921,7 @@ export function SemanasApiladas({
                 key={s.clave}
                 tabIndex={0}
                 role="img"
-                aria-label={`${s.etiqueta}: ${dinero(t, MXN, false)}${s.parcial ? ' (semana con días sin guardar)' : ''}${s.delta === null ? '' : `, ${pct(s.delta)} contra la anterior`}`}
+                aria-label={`${s.etiqueta}: ${dinero(t, MXN, false)}${s.parcial ? ` (${textos.parcial})` : ''}${s.delta === null ? '' : `, ${pct(s.delta)} ${textos.contra}`}`}
                 onPointerEnter={() => setActiva(i)}
                 onPointerLeave={() => setActiva(null)}
                 onFocus={() => setActiva(i)}
@@ -971,7 +1021,13 @@ export function SemanasApiladas({
             { color: TINTA, etiqueta: 'total', valor: dinero(total(semanas[activa]), MXN, false) },
             ...(semanas[activa].delta === null
               ? []
-              : [{ color: 'transparent', etiqueta: 'vs la anterior', valor: pct(semanas[activa].delta) }]),
+              : [
+                  {
+                    color: 'transparent',
+                    etiqueta: textos.contra.replace(/^contra /, 'vs '),
+                    valor: pct(semanas[activa].delta),
+                  },
+                ]),
           ]}
         />
       )}
@@ -1150,7 +1206,7 @@ const SECUENCIAL = RAMPA.slice(1).map((fondo, i) => ({ fondo, tinta: TINTA_RAMPA
 export const nombreEstado = (clave: string) => ESTADOS_MX.find((e) => e.clave === clave)?.nombre ?? clave;
 
 /** Color de cada estado y su leyenda. Venta: 4 pasos por cuantil (rango) entre los estados con venta. */
-export function pintura(estados: EstadoMapa[], modo: 'venta' | 'cambio') {
+export function pintura(estados: EstadoMapa[], modo: 'venta' | 'cambio', cuando = 'hoy') {
   const cortes = cuantiles(
     estados.map((e) => e.venta),
     SECUENCIAL.length,
@@ -1164,7 +1220,7 @@ export function pintura(estados: EstadoMapa[], modo: 'venta' | 'cambio') {
     modo === 'cambio'
       ? DIVERGENTE.map((d) => ({ fondo: d.fondo, texto: d.texto }))
       : cortes.length < SECUENCIAL.length - 1
-        ? [{ fondo: SECUENCIAL[SECUENCIAL.length - 1].fondo, texto: 'con venta hoy' }]
+        ? [{ fondo: SECUENCIAL[SECUENCIAL.length - 1].fondo, texto: `con venta ${cuando}` }]
         : SECUENCIAL.map((s, i) => ({
             fondo: s.fondo,
             texto:
@@ -1182,10 +1238,18 @@ const LUPA = ['CDMX', 'MEX', 'MOR', 'TLAX'];
 const VB = { w: MAPA_MX.ancho, h: MAPA_MX.alto };
 const onda = (x: number) => Math.round((x / VB.w) * 14);
 
-export function MapaMexico({ estados, modo }: { estados: EstadoMapa[]; modo: 'venta' | 'cambio' }) {
+export function MapaMexico({
+  estados,
+  modo,
+  momento = MOMENTO_HOY,
+}: {
+  estados: EstadoMapa[];
+  modo: 'venta' | 'cambio';
+  momento?: Momento;
+}) {
   const id = useId();
   const [activo, setActivo] = useState<string | null>(null);
-  const { color, leyenda } = pintura(estados, modo);
+  const { color, leyenda } = pintura(estados, modo, momento.cuando);
   const de = (c: string) => estados.find((e) => e.clave === c);
   const valor = (e: EstadoMapa) =>
     modo === 'venta'
@@ -1219,7 +1283,7 @@ export function MapaMexico({ estados, modo }: { estados: EstadoMapa[]; modo: 've
   const etiquetaDe = (clave: string) => {
     const e = de(clave);
     if (!e?.sucursales) return `${nombreEstado(clave)}: sin sucursales en el tablero`;
-    return `${nombreEstado(clave)}: ${e.sucursales} ${e.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${dinero(e.venta, MXN, false)} hoy${e.delta === null ? '' : `, ${porcentaje(e.delta, 1)} contra la semana pasada`}`;
+    return `${nombreEstado(clave)}: ${e.sucursales} ${e.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${dinero(e.venta, MXN, false)} ${momento.cuando}${e.delta === null ? '' : `, ${porcentaje(e.delta, 1)} contra ${momento.contra}`}`;
   };
   const trazoDe = (clave: string) => ESTADOS_MX.find((s) => s.clave === clave)!.d;
   return (
@@ -1229,7 +1293,7 @@ export function MapaMexico({ estados, modo }: { estados: EstadoMapa[]; modo: 've
           viewBox={`0 0 ${VB.w} ${VB.h}`}
           className="block h-auto w-full"
           role="group"
-          aria-label="Mapa de México con la venta de hoy por estado"
+          aria-label={`Mapa de México con la venta por estado, ${momento.cuando}`}
         >
           <defs>
             <clipPath id={`${id}-lupa`}>
@@ -1413,11 +1477,11 @@ export function MapaMexico({ estados, modo }: { estados: EstadoMapa[]; modo: 've
             <p className="font-semibold text-ink">{nombreEstado(info.clave)}</p>
             <p className="mt-1 tabular text-ink-2">
               {numero(info.sucursales)} {info.sucursales === 1 ? 'sucursal' : 'sucursales'} ·{' '}
-              {dinero(info.venta, MXN, false)} hoy
+              {dinero(info.venta, MXN, false)} {momento.cuando}
             </p>
             {info.delta !== null && (
               <p className="tabular text-muted-foreground">
-                {porcentaje(info.delta, 1)} contra la semana pasada a la misma hora
+                {porcentaje(info.delta, 1)} contra {momento.contra}
               </p>
             )}
             <p className="mt-1 text-muted-foreground">

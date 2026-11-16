@@ -7,9 +7,11 @@ import { sucursalesConfiguradas as configuradas, type ConfigSucursal } from '../
 import { armarConsumoNacional, type RpcConsumoNacional } from '../../../lib/sucursales/consumo-nacional';
 import { diaLunes } from '../../../lib/sucursales/metricas';
 import type { Origen, PedidoNormal } from '../../../lib/sucursales/normalizar';
+import { leerConsulta } from '../../../lib/sucursales/tablero-fechas';
 import {
   armarHoy,
   armarPeriodo,
+  armarRango,
   resumirDia,
   type FilaResumen,
   type RpcHoy,
@@ -126,13 +128,16 @@ if (!vacio)
       );
     }
 
-/** Lo mismo que sucursales_tablero_hoy. */
-function rpcHoy(): RpcHoy {
+/**
+ * Lo mismo que sucursales_tablero_hoy, con `dia` (hoy por omisión) para todas. Como en la base, los tramos de 10 min
+ * de hace más de 8 días ya no están (quedan las horas).
+ */
+function rpcHoy(dia = hoy): RpcHoy {
   return {
     ultimo_corte: vacio ? null : new Date(Date.now() - 4 * 60_000).toISOString(),
     dias: filas
-      .filter((f) => f.fecha === hoy || f.fecha === sumarDias(hoy, -7))
-      .map((f) => ({ ...f, hoy: f.fecha === hoy })),
+      .filter((f) => f.fecha === dia || f.fecha === sumarDias(dia, -7))
+      .map((f) => ({ ...f, tramos: f.fecha < sumarDias(hoy, -8) ? null : f.tramos, hoy: f.fecha === dia })),
   };
 }
 
@@ -314,12 +319,42 @@ window.fetch = async (entrada, init) => {
   const lunes = sumarDias(hoy, -diaLunes(hoy));
   const hasta = sumarDias(lunes, -1);
   const desde = sumarDias(lunes, -7 * semanas);
-  return Response.json({
+  // Un día o un rango, igual que la ruta (lib/sucursales/tablero-fechas).
+  const consulta = leerConsulta(url.searchParams, sumarDias(hoy, -1));
+  if ('error' in consulta) return Response.json({ error: consulta.error }, { status: 400 });
+  const base = {
     generadoEn: new Date().toISOString(),
     semanas,
-    hoy: armarHoy(rpcHoy(), sucursalesConfiguradas),
     periodo: armarPeriodo(rpcPeriodo(desde, hasta), desde, hasta, sucursalesConfiguradas),
-  });
+  };
+  if (consulta.modo === 'rango') {
+    const actual = armarPeriodo(rpcPeriodo(consulta.desde, consulta.hasta), consulta.desde, consulta.hasta, sucursalesConfiguradas);
+    const previo = armarPeriodo(
+      rpcPeriodo(consulta.previoDesde, consulta.previoHasta),
+      consulta.previoDesde,
+      consulta.previoHasta,
+      sucursalesConfiguradas,
+    );
+    return Response.json({
+      ...base,
+      modo: 'rango',
+      rango: {
+        desde: consulta.desde,
+        hasta: consulta.hasta,
+        previoDesde: consulta.previoDesde,
+        previoHasta: consulta.previoHasta,
+        dias: actual.dias,
+        diasPrevio: previo.dias,
+        productos: actual.productos,
+        diasLeidos: actual.diasLeidos,
+        incompletos: actual.incompletos,
+      },
+      hoy: armarRango(actual, previo, sucursalesConfiguradas),
+    });
+  }
+  if (consulta.modo === 'dia')
+    return Response.json({ ...base, modo: 'dia', fecha: consulta.dia, hoy: armarHoy(rpcHoy(consulta.dia), sucursalesConfiguradas) });
+  return Response.json({ ...base, hoy: armarHoy(rpcHoy(), sucursalesConfiguradas) });
 };
 
 export function VistaTableroMexico() {

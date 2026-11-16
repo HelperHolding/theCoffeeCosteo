@@ -21,7 +21,8 @@ import {
   type PorOrigen,
   type Serie,
 } from '@/lib/sucursales/resumen';
-import { sumarDias } from '@/lib/sucursales/tiempo';
+import { HISTORIAL_DESDE, RANGO_MAX_DIAS } from '@/lib/sucursales/tablero-fechas';
+import { diasEntre, fechaValida, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { AZUL, COLOR_ORIGEN, Delta, SERIE_BASE } from './colores';
 import { etiquetaSemana } from './graficas-tendencias';
@@ -36,11 +37,13 @@ import {
   ListaEstados,
   MapaMexico,
   MezclaOrigen,
+  MOMENTO_HOY,
   ORIGENES,
   SemanasApiladas,
   hhmm,
   type EstadoMapa,
   type FilaMezcla,
+  type Momento,
   type SemanaColumna,
 } from './graficas-mexico';
 import { ErrorCarga, Esqueleto } from './estados';
@@ -101,6 +104,13 @@ const ESTADO_DE_CIUDAD: Record<string, string> = {
 const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 const pasa = (o: Origen, f: FiltroOrigen) => f === 'todos' || o === f;
 const lunesDe = (fecha: string) => sumarDias(fecha, -((new Date(`${fecha}T12:00:00Z`).getUTCDay() + 6) % 7));
+const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** La gráfica de semanas, por día (rango). */
+const TEXTOS_DIA = {
+  grafica: 'Venta por día por origen',
+  parcial: 'día con lectura incompleta',
+  contra: 'contra el mismo día de la semana anterior',
+};
 const lista = (xs: string[]) =>
   xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`;
 
@@ -114,59 +124,76 @@ const sumar = (cs: Cifras[], f: FiltroOrigen) =>
     { pedidos: 0, venta: 0 },
   );
 
+/** Qué se ve: hoy en vivo, un día cerrado o un rango de días cerrados (docs/sucursales/16). */
+type Vista =
+  { modo: 'vivo' } | { modo: 'dia'; dia: string } | { modo: 'rango'; desde: string; hasta: string };
+
+const hoyCdmx = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date());
+
 /**
  * Tablero de México (docs/sucursales/16): la venta de todas las sucursales del usuario, sumada. Lee solo los totales
- * del corte (cada 10 min); el filtro de origen y el modo del mapa se aplican aquí, sin volver a leer.
+ * del corte (cada 10 min); el filtro de origen y el modo del mapa se aplican aquí, sin volver a leer. El selector de
+ * fechas cambia lo que se lee: hoy en vivo, un día o un rango.
  */
 export function TableroMexicoVista() {
   const [semanas, setSemanas] = useState<(typeof SEMANAS)[number]>(8);
   const [origen, setOrigen] = useState<FiltroOrigen>('todos');
   const [modoMapa, setModoMapa] = useState<'venta' | 'cambio'>('venta');
+  const [vista, setVista] = useState<Vista>({ modo: 'vivo' });
+  const fechas =
+    vista.modo === 'dia'
+      ? `&dia=${vista.dia}`
+      : vista.modo === 'rango'
+        ? `&desde=${vista.desde}&hasta=${vista.hasta}`
+        : '';
   const { datos, error, cargando, recargar } = useLectura<TableroMexico>(
-    `/api/sucursales/tablero?semanas=${semanas}`,
-    { intervaloMs: 120_000 },
+    `/api/sucursales/tablero?semanas=${semanas}${fechas}`,
+    // Un día o un rango cerrados no cambian: solo hoy se vuelve a leer.
+    { intervaloMs: vista.modo === 'vivo' ? 120_000 : undefined },
   );
   const v = useMemo(() => (datos ? calcular(datos, origen) : null), [datos, origen]);
-  if (!datos || !v)
-    return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={3} />;
 
-  const edad = datos.hoy.ultimoCorte
+  const edad = datos?.hoy.ultimoCorte
     ? Math.max(0, (Date.parse(datos.generadoEn) - Date.parse(datos.hoy.ultimoCorte)) / 1000)
     : null;
   const estadoCorte =
     edad === null ? 'sin' : edad > 30 * 60 ? 'retrasado' : edad > 15 * 60 ? 'pendiente' : 'al-dia';
-  const c = v.comparable;
-  const origenes = ORIGENES.filter((o) => pasa(o, origen));
   return (
     <div className="tablero-mx space-y-7" aria-busy={cargando}>
       <div className="placa flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
         <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={cn(
-              'inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold',
-              estadoCorte === 'al-dia' && 'bg-ok-soft text-ok',
-              estadoCorte === 'pendiente' && 'bg-warn-soft text-warn',
-              (estadoCorte === 'retrasado' || estadoCorte === 'sin') && 'bg-bad-soft text-bad',
-            )}
-          >
-            <span
-              aria-hidden="true"
-              className={cn('size-1.5 rounded-full bg-current', estadoCorte === 'al-dia' && 'mx-vivo')}
-            />
-            {
-              {
-                sin: 'Sin corte todavía',
-                retrasado: 'Corte retrasado',
-                pendiente: 'Corte pendiente',
-                'al-dia': 'Al día',
-              }[estadoCorte]
-            }
-          </span>
-          <span className="text-muted-foreground" aria-live="polite">
-            {edad === null
-              ? 'El primer corte aparece en los siguientes 10 minutos.'
-              : `Último corte ${hace(edad)}. Se actualiza cada 10 minutos.`}
-          </span>
+          <SelectorFechas vista={vista} alCambiar={setVista} />
+          {vista.modo === 'vivo' && datos && (
+            <span className="flex items-center gap-2" title="Se actualiza cada 10 minutos.">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold',
+                  estadoCorte === 'al-dia' && 'bg-ok-soft text-ok',
+                  estadoCorte === 'pendiente' && 'bg-warn-soft text-warn',
+                  (estadoCorte === 'retrasado' || estadoCorte === 'sin') && 'bg-bad-soft text-bad',
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn('size-1.5 rounded-full bg-current', estadoCorte === 'al-dia' && 'mx-vivo')}
+                />
+                {
+                  {
+                    sin: 'Sin corte todavía',
+                    retrasado: 'Corte retrasado',
+                    pendiente: 'Corte pendiente',
+                    'al-dia': 'Al día',
+                  }[estadoCorte]
+                }
+              </span>
+              <span className="text-muted-foreground" aria-live="polite">
+                {edad === null
+                  ? 'El primer corte aparece en los siguientes 10 minutos.'
+                  : `Último corte ${hace(edad)}.`}
+              </span>
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Segmentos
@@ -179,17 +206,163 @@ export function TableroMexicoVista() {
             activa={origen}
             alCambiar={(o) => setOrigen(o as FiltroOrigen)}
           />
-          <button
-            type="button"
-            onClick={recargar}
-            className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card active:scale-[0.97]"
-          >
-            <RefreshCw size={15} aria-hidden="true" className={cargando ? 'animate-spin' : ''} />
-            Actualizar
-          </button>
+          {vista.modo === 'vivo' && (
+            <button
+              type="button"
+              onClick={recargar}
+              className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card active:scale-[0.97]"
+            >
+              <RefreshCw size={15} aria-hidden="true" className={cargando ? 'animate-spin' : ''} />
+              Actualizar
+            </button>
+          )}
         </div>
       </div>
+      {!datos || !v ? (
+        error ? (
+          <ErrorCarga error={error} alReintentar={recargar} />
+        ) : (
+          <Esqueleto filas={3} />
+        )
+      ) : (
+        <Cuerpo
+          datos={datos}
+          v={v}
+          origen={origen}
+          semanas={semanas}
+          alSemanas={setSemanas}
+          modoMapa={modoMapa}
+          alModoMapa={setModoMapa}
+        />
+      )}
+    </div>
+  );
+}
 
+/** Hoy en vivo, un día o un rango: botones y campos de fecha (del historial a ayer, rangos de hasta 120 días). */
+function SelectorFechas({ vista, alCambiar }: { vista: Vista; alCambiar: (v: Vista) => void }) {
+  const ayer = useMemo(() => sumarDias(hoyCdmx(), -1), []);
+  const [dia, setDia] = useState(vista.modo === 'dia' ? vista.dia : ayer);
+  const [desde, setDesde] = useState(vista.modo === 'rango' ? vista.desde : sumarDias(ayer, -6));
+  const [hasta, setHasta] = useState(vista.modo === 'rango' ? vista.hasta : ayer);
+  const fuera = (f: string) => !fechaValida(f) || f < HISTORIAL_DESDE || f > ayer;
+  const problemaRango = (d: string, h: string) =>
+    fuera(d) || fuera(h)
+      ? `Elige fechas del ${diaMes(HISTORIAL_DESDE)} a ayer.`
+      : d > h
+        ? 'La fecha de inicio va antes de la final.'
+        : diasEntre(d, h) + 1 > RANGO_MAX_DIAS
+          ? `El rango puede tener hasta ${RANGO_MAX_DIAS} días.`
+          : null;
+  const problema =
+    vista.modo === 'dia' && fuera(dia)
+      ? `Elige un día del ${diaMes(HISTORIAL_DESDE)} a ayer.`
+      : vista.modo === 'rango'
+        ? problemaRango(desde, hasta)
+        : null;
+  const alDia = (x: string) => {
+    setDia(x);
+    if (!fuera(x)) alCambiar({ modo: 'dia', dia: x });
+  };
+  const alRango = (d: string, h: string) => {
+    setDesde(d);
+    setHasta(h);
+    if (!problemaRango(d, h)) alCambiar({ modo: 'rango', desde: d, hasta: h });
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Segmentos
+        etiqueta="Qué ver"
+        opciones={[
+          { id: 'vivo', texto: 'Hoy' },
+          { id: 'dia', texto: 'Un día' },
+          { id: 'rango', texto: 'Rango' },
+        ]}
+        activa={vista.modo}
+        alCambiar={(m) =>
+          m === 'dia' ? alDia(dia) : m === 'rango' ? alRango(desde, hasta) : alCambiar({ modo: 'vivo' })
+        }
+      />
+      {vista.modo === 'dia' && (
+        <CampoFecha etiqueta="Día" valor={dia} min={HISTORIAL_DESDE} max={ayer} alCambiar={alDia} />
+      )}
+      {vista.modo === 'rango' && (
+        <>
+          <CampoFecha
+            etiqueta="Del"
+            valor={desde}
+            min={HISTORIAL_DESDE}
+            max={hasta || ayer}
+            alCambiar={(x) => alRango(x, hasta)}
+          />
+          <CampoFecha
+            etiqueta="al"
+            valor={hasta}
+            min={desde || HISTORIAL_DESDE}
+            max={ayer}
+            alCambiar={(x) => alRango(desde, x)}
+          />
+        </>
+      )}
+      {problema && (
+        <span role="alert" className="text-xs font-medium text-bad">
+          {problema}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function CampoFecha({
+  etiqueta,
+  valor,
+  min,
+  max,
+  alCambiar,
+}: {
+  etiqueta: string;
+  valor: string;
+  min: string;
+  max: string;
+  alCambiar: (fecha: string) => void;
+}) {
+  return (
+    <label className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface pl-3 pr-2 text-sm shadow-card focus-within:ring-2 focus-within:ring-ink">
+      <span className="text-xs font-medium text-ink-2">{etiqueta}</span>
+      <input
+        type="date"
+        value={valor}
+        min={min}
+        max={max}
+        onChange={(e) => alCambiar(e.target.value)}
+        className="bg-transparent font-semibold tabular text-ink outline-none"
+      />
+    </label>
+  );
+}
+
+function Cuerpo({
+  datos,
+  v,
+  origen,
+  semanas,
+  alSemanas,
+  modoMapa,
+  alModoMapa,
+}: {
+  datos: TableroMexico;
+  v: Calculo;
+  origen: FiltroOrigen;
+  semanas: (typeof SEMANAS)[number];
+  alSemanas: (n: (typeof SEMANAS)[number]) => void;
+  modoMapa: 'venta' | 'cambio';
+  alModoMapa: (m: 'venta' | 'cambio') => void;
+}) {
+  const c = v.comparable;
+  const origenes = ORIGENES.filter((o) => pasa(o, origen));
+  const m = v.momento;
+  return (
+    <>
       {v.avisos.length > 0 && (
         <ul className="placa space-y-1 px-3 py-2 text-xs text-muted-foreground">
           {v.avisos.map((a) => (
@@ -198,7 +371,7 @@ export function TableroMexicoVista() {
         </ul>
       )}
 
-      {/* 1. Hoy: la cifra del día, cuatro números clave y la curva por origen. */}
+      {/* 1. El día (o el rango): la cifra, cuatro números clave y la curva por origen (o la venta por día). */}
       <section
         data-entra
         style={{ '--i': 0 } as React.CSSProperties}
@@ -208,7 +381,8 @@ export function TableroMexicoVista() {
         <div className="grid gap-x-8 gap-y-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,2fr)] lg:items-center">
           <div className="min-w-0">
             <h2 id="mx-hoy" className="text-sm font-medium text-ink-2">
-              Venta de hoy{origen === 'todos' ? '' : `, ${etiquetaOrigen[origen]}`}
+              {v.titulo}
+              {origen === 'todos' ? '' : `, ${etiquetaOrigen[origen]}`}
             </h2>
             <p className="mt-1.5 font-display text-[2.5rem] font-black leading-none tracking-[-0.03em]">
               <Cifra valor={v.hoy.venta} formato={(x) => dinero(Math.round(x), MXN, false)} />
@@ -217,7 +391,9 @@ export function TableroMexicoVista() {
               {c ? (
                 <Delta valor={c.venta} sufijo={c.sufijo} />
               ) : (
-                <span className="text-xs text-muted-foreground">Sin base comparable todavía</span>
+                <span className="text-xs text-muted-foreground">
+                  {v.modo === 'vivo' ? 'Sin base comparable todavía' : 'Sin base para comparar'}
+                </span>
               )}
             </p>
           </div>
@@ -236,16 +412,21 @@ export function TableroMexicoVista() {
               )}
             </Numero>
             <Numero
-              etiqueta="Con venta hoy"
+              etiqueta={v.modo === 'vivo' ? 'Con venta hoy' : 'Con venta'}
               nota={
                 v.sinCorte ? (
-                  `${v.sinCorte} sin corte`
+                  `${v.sinCorte} ${v.modo === 'vivo' ? 'sin corte' : 'sin datos'}`
                 ) : v.sinVenta.length ? (
-                  <span title={`Sin venta todavía: ${lista(v.sinVenta)}`} className="line-clamp-2">
+                  <span
+                    title={`Sin venta${v.modo === 'vivo' ? ' todavía' : ''}: ${lista(v.sinVenta)}`}
+                    className="line-clamp-2"
+                  >
                     Sin venta: {lista(v.sinVenta)}
                   </span>
-                ) : (
+                ) : v.modo === 'vivo' ? (
                   'todas vendiendo'
+                ) : (
+                  'todas vendieron'
                 )
               }
             >
@@ -254,30 +435,73 @@ export function TableroMexicoVista() {
                 <span className="text-base font-bold text-muted-foreground"> de {numero(v.total)}</span>
               </span>
             </Numero>
-            <Numero
-              etiqueta={v.ultimaHora ? `Última hora, ${v.ultimaHora.etiqueta}` : 'Última hora'}
-              nota={v.ultimaHora ? <Delta valor={v.ultimaHora.delta} /> : null}
-            >
-              {v.ultimaHora ? dinero(v.ultimaHora.venta, MXN, false) : '—'}
-            </Numero>
+            {v.modo === 'vivo' ? (
+              <Numero
+                etiqueta={v.ultimaHora ? `Última hora, ${v.ultimaHora.etiqueta}` : 'Última hora'}
+                nota={v.ultimaHora ? <Delta valor={v.ultimaHora.delta} /> : null}
+              >
+                {v.ultimaHora ? dinero(v.ultimaHora.venta, MXN, false) : '—'}
+              </Numero>
+            ) : v.rango ? (
+              <Numero etiqueta="Promedio por día" nota={`venta de ${numero(v.rango.dias)} días`}>
+                <Cifra valor={v.rango.porDia} formato={(x) => dinero(Math.round(x), MXN, false)} />
+              </Numero>
+            ) : (
+              <Numero
+                etiqueta={v.pico ? `Hora pico, ${hh(v.pico.hora)} a ${hh(v.pico.hora + 1)}` : 'Hora pico'}
+                nota={v.pico ? `pedidos, ${dinero(v.pico.venta, MXN, false)}` : null}
+              >
+                {v.pico ? numero(v.pico.pedidos) : '—'}
+              </Numero>
+            )}
           </dl>
         </div>
         <div className="border-t border-line px-5 pb-4 pt-4 sm:px-6">
-          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h3 className="text-sm font-semibold">Venta acumulada en el día</h3>
-            <LeyendaOrigen
-              solo={origenes}
-              extra={
-                v.hayBase ? [{ color: SERIE_BASE, etiqueta: `${v.dia}, día completo`, linea: true }] : []
-              }
-            />
-          </div>
-          <CurvaHoy
-            hoy={v.ventaTramo}
-            base={v.baseVentaTramo}
-            hastaTramo={v.hastaTramo}
-            etiquetaBase={v.dia}
-          />
+          {v.rango ? (
+            <>
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <div>
+                  <h3 className="text-sm font-semibold">Venta por día</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Apilada por origen; abajo, el cambio contra el mismo día de la semana anterior.
+                  </p>
+                </div>
+                <LeyendaOrigen solo={origenes} />
+              </div>
+              <SemanasApiladas
+                semanas={v.rango.columnas}
+                rappiDesde={v.rango.rappi}
+                rappiTexto={v.rango.rappi ? `Rappi desde el ${diaMes(v.rango.rappi)}` : undefined}
+                textos={TEXTOS_DIA}
+              />
+            </>
+          ) : (
+            <>
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h3 className="text-sm font-semibold">Venta acumulada en el día</h3>
+                <LeyendaOrigen
+                  solo={origenes}
+                  extra={
+                    v.hayBase ? [{ color: SERIE_BASE, etiqueta: `${v.dia}, día completo`, linea: true }] : []
+                  }
+                />
+              </div>
+              <CurvaHoy
+                hoy={v.ventaTramo}
+                base={v.baseVentaTramo}
+                hastaTramo={v.hastaTramo}
+                etiquetaBase={v.dia}
+                paso={v.paso}
+                cerrado={v.modo !== 'vivo'}
+                corto={m.corto}
+              />
+              {v.paso > 1 && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Por hora: de los días de hace más de una semana solo se guardan las horas.
+                </p>
+              )}
+            </>
+          )}
         </div>
       </section>
 
@@ -285,7 +509,7 @@ export function TableroMexicoVista() {
       <div data-entra style={{ '--i': 1 } as React.CSSProperties} className="grid gap-6 xl:grid-cols-12">
         <Tarjeta
           className="xl:col-span-8"
-          titulo="México hoy, por estado"
+          titulo={`México ${m.cuando}, por estado`}
           descripcion={`${v.estados.filter((e) => e.sucursales).length} estados con sucursales. Pasa el cursor o el foco por un estado para ver su detalle; el Valle de México va ampliado.`}
           acciones={
             <Segmentos
@@ -295,11 +519,11 @@ export function TableroMexicoVista() {
                 { id: 'cambio', texto: 'Cambio' },
               ]}
               activa={modoMapa}
-              alCambiar={(m) => setModoMapa(m as 'venta' | 'cambio')}
+              alCambiar={(x) => alModoMapa(x as 'venta' | 'cambio')}
             />
           }
         >
-          <MapaMexico estados={v.estados} modo={modoMapa} />
+          <MapaMexico estados={v.estados} modo={modoMapa} momento={m} />
           {v.sinEstado.length > 0 && (
             <p className="mt-3 text-xs text-muted-foreground">
               Sin estado asignado: {v.sinEstado.join(', ')}.
@@ -311,57 +535,88 @@ export function TableroMexicoVista() {
           titulo="Por estado"
           descripcion={
             modoMapa === 'venta'
-              ? 'De más a menos venta hoy, con el color del mapa.'
-              : `Cambio contra ${v.dia} a la misma hora, con el color del mapa.`
+              ? `De más a menos venta ${m.cuando}, con el color del mapa.`
+              : `Cambio contra ${m.contra}, con el color del mapa.`
           }
         >
-          <div className="-mr-2 max-h-[32rem] overflow-auto pr-2">
+          {/* relative: los textos solo para lectores de pantalla quedan dentro del recorte (no alargan la página). */}
+          <div className="relative -mr-2 max-h-[32rem] overflow-auto pr-2">
             <ListaEstados estados={v.estados} modo={modoMapa} />
           </div>
         </Tarjeta>
       </div>
 
-      {/* 3. Cuándo y de dónde: ritmo por hora y mezcla por origen. */}
+      {/* 3. Cuándo y de dónde: ritmo por hora (o lo más vendido del rango) y mezcla por origen. */}
       <div data-entra style={{ '--i': 2 } as React.CSSProperties} className="grid gap-6 xl:grid-cols-12">
-        <Tarjeta
-          className="xl:col-span-7"
-          titulo="Pedidos por hora"
-          descripcion={
-            v.pico
-              ? `Hora pico: ${hh(v.pico.hora)} a ${hh(v.pico.hora + 1)}, con ${numero(v.pico.pedidos)} pedidos. En gris, ${v.dia} hasta el mismo corte.`
-              : `Hoy por origen; en gris, ${v.dia} hasta el mismo corte.`
-          }
-        >
-          <div className="space-y-3">
-            <LeyendaOrigen solo={origenes} extra={v.hayBase ? [{ color: '#e4dfd5', etiqueta: v.dia }] : []} />
-            <ColumnasHora
-              hoy={v.pedidosHora}
-              base={v.basePedidosHora}
-              baseHasta={v.baseHastaPedidosHora}
-              horaEnCurso={v.horaEnCurso}
-              ultimaHora={v.ultimaHoraConDatos}
-              etiquetaBase={v.dia}
-            />
-          </div>
-        </Tarjeta>
+        {v.rango ? (
+          <Tarjeta
+            className="xl:col-span-7"
+            titulo="Lo más vendido"
+            descripcion={`Por importe, ${m.cuando}: producto con sus personalizaciones, y en cuántas sucursales se vendió.`}
+          >
+            {v.rango.productos.length === 0 ? (
+              <Vacio titulo="Sin productos en el rango" />
+            ) : (
+              <>
+                <BarrasOrigen filas={v.rango.productos} />
+                <p className="mt-4 text-xs text-muted-foreground">* {NOTA_LINEAS}</p>
+              </>
+            )}
+          </Tarjeta>
+        ) : (
+          <Tarjeta
+            className="xl:col-span-7"
+            titulo="Pedidos por hora"
+            descripcion={
+              v.pico
+                ? `Hora pico: ${hh(v.pico.hora)} a ${hh(v.pico.hora + 1)}, con ${numero(v.pico.pedidos)} pedidos. En gris, ${v.dia}${v.modo === 'vivo' ? ' hasta el mismo corte' : ''}.`
+                : `${capital(m.cuando)} por origen; en gris, ${v.dia}${v.modo === 'vivo' ? ' hasta el mismo corte' : ''}.`
+            }
+          >
+            <div className="space-y-3">
+              <LeyendaOrigen
+                solo={origenes}
+                extra={v.hayBase ? [{ color: '#e4dfd5', etiqueta: v.dia }] : []}
+              />
+              <ColumnasHora
+                hoy={v.pedidosHora}
+                base={v.basePedidosHora}
+                baseHasta={v.baseHastaPedidosHora}
+                horaEnCurso={v.horaEnCurso}
+                ultimaHora={v.ultimaHoraConDatos}
+                etiquetaBase={v.dia}
+                corto={m.corto}
+              />
+            </div>
+          </Tarjeta>
+        )}
         <Tarjeta
           className="xl:col-span-5"
           titulo="De dónde viene la venta"
-          descripcion={`Hoy, por origen. El cambio es contra ${v.dia} a la misma hora.`}
+          descripcion={`${capital(m.cuando)}, por origen. El cambio es contra ${m.contra}.`}
         >
-          <MezclaOrigen filas={v.mezcla} />
+          <MezclaOrigen filas={v.mezcla} momento={m} />
         </Tarjeta>
       </div>
 
       {/* 4. Cada sucursal: las 5 que más venden y cada ciudad con todas las suyas. */}
       <div data-entra style={{ '--i': 3 } as React.CSSProperties}>
         <Tarjeta
-          titulo="Cómo va cada sucursal hoy"
-          descripcion={`Las 5 que más venden y, abajo, cada ciudad: ábrela para ver todas sus sucursales. El cambio es contra ${v.dia} a la misma hora.`}
+          titulo={v.modo === 'vivo' ? 'Cómo va cada sucursal hoy' : `Cómo le fue a cada sucursal ${m.cuando}`}
+          descripcion={`Las 5 que más ${v.modo === 'vivo' ? 'venden' : 'vendieron'} y, abajo, cada ciudad: ábrela para ver todas sus sucursales. El cambio es contra ${m.contra}.`}
         >
           <div className="space-y-7">
-            {v.top.length === 0 ? <Vacio titulo="Sin ventas hoy todavía" /> : <Podio filas={v.top} />}
-            <Ciudades grupos={v.ciudades} />
+            {v.top.length === 0 ? (
+              <Vacio titulo={v.modo === 'vivo' ? 'Sin ventas hoy todavía' : `Sin ventas ${m.cuando}`} />
+            ) : (
+              <Podio
+                filas={v.top}
+                titulo={
+                  v.modo === 'vivo' ? 'Las 5 que más venden hoy' : `Las 5 que más vendieron ${m.cuando}`
+                }
+              />
+            )}
+            <Ciudades grupos={v.ciudades} momento={m} />
           </div>
         </Tarjeta>
       </div>
@@ -384,7 +639,7 @@ export function TableroMexicoVista() {
             etiqueta="Semanas"
             opciones={SEMANAS.map((n) => ({ id: String(n), texto: `${n} sem.` }))}
             activa={String(semanas)}
-            alCambiar={(n) => setSemanas(Number(n) as (typeof SEMANAS)[number])}
+            alCambiar={(n) => alSemanas(Number(n) as (typeof SEMANAS)[number])}
           />
         </div>
         {datos.periodo.diasLeidos === 0 ? (
@@ -477,7 +732,7 @@ export function TableroMexicoVista() {
           </>
         )}
       </section>
-    </div>
+    </>
   );
 }
 
@@ -550,13 +805,13 @@ function Numero({
 
 type Calculo = ReturnType<typeof calcular>;
 
-/** Las 5 sucursales que más venden hoy: rango, nombre, barra por origen a la misma escala, venta y cambio. */
-function Podio({ filas }: { filas: Calculo['top'] }) {
+/** Las 5 sucursales que más venden: rango, nombre, barra por origen a la misma escala, venta y cambio. */
+function Podio({ filas, titulo }: { filas: Calculo['top']; titulo: string }) {
   const max = Math.max(1, ...filas.map((f) => f.venta));
   return (
     <section aria-labelledby="mx-top">
       <h3 id="mx-top" className="mb-2 text-sm font-semibold">
-        Las 5 que más venden hoy
+        {titulo}
       </h3>
       <ol className="divide-y divide-line">
         {filas.map((s, i) => (
@@ -618,7 +873,7 @@ function Podio({ filas }: { filas: Calculo['top'] }) {
 }
 
 /** Cada ciudad en una fila que se abre para mostrar todas sus sucursales. */
-function Ciudades({ grupos }: { grupos: Calculo['ciudades'] }) {
+function Ciudades({ grupos, momento }: { grupos: Calculo['ciudades']; momento: Momento }) {
   const [abiertas, setAbiertas] = useState<Set<string>>(new Set());
   const [todas, setTodas] = useState(false);
   const visibles = todas ? grupos : grupos.slice(0, CIUDADES_VISIBLES);
@@ -710,7 +965,7 @@ function Ciudades({ grupos }: { grupos: Calculo['ciudades'] }) {
                 data-abierto={abierta || undefined}
               >
                 <div className="min-h-0 overflow-hidden">
-                  {abierta && <TablaCiudad filas={g.sucursales} />}
+                  {abierta && <TablaCiudad filas={g.sucursales} momento={momento} />}
                 </div>
               </div>
             </li>
@@ -730,10 +985,16 @@ function Ciudades({ grupos }: { grupos: Calculo['ciudades'] }) {
   );
 }
 
-function TablaCiudad({ filas }: { filas: Calculo['ciudades'][number]['sucursales'] }) {
+function TablaCiudad({
+  filas,
+  momento,
+}: {
+  filas: Calculo['ciudades'][number]['sucursales'];
+  momento: Momento;
+}) {
   const max = Math.max(1, ...filas.map((f) => f.venta));
   return (
-    <div className="overflow-x-auto bg-surface-2/40 px-3 pb-3 pt-1">
+    <div className="relative overflow-x-auto bg-surface-2/40 px-3 pb-3 pt-1">
       <table className="w-full min-w-[34rem] text-sm">
         <thead>
           <tr className="text-xs text-muted-foreground">
@@ -741,7 +1002,7 @@ function TablaCiudad({ filas }: { filas: Calculo['ciudades'][number]['sucursales
             <th className="w-[38%] py-2 text-left font-medium">Venta</th>
             <th className="py-2 text-right font-medium">Pedidos</th>
             <th className="py-2 text-right font-medium">Ticket</th>
-            <th className="py-2 text-right font-medium">vs sem. pasada</th>
+            <th className="py-2 text-right font-medium">{momento.columna}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -753,7 +1014,11 @@ function TablaCiudad({ filas }: { filas: Calculo['ciudades'][number]['sucursales
                 </Link>
                 {(s.sinCorte || !s.completa) && (
                   <span className="ml-2 text-xs text-muted-foreground">
-                    {s.sinCorte ? 'sin corte de hoy' : 'lectura parcial'}
+                    {s.sinCorte
+                      ? momento.cuando === 'hoy'
+                        ? 'sin corte de hoy'
+                        : 'sin datos'
+                      : 'lectura parcial'}
                   </span>
                 )}
               </td>
@@ -822,7 +1087,9 @@ function Tendencia({ serie, etiqueta }: { serie: number[]; etiqueta: string }) {
 function TablaSucursales({ filas }: { filas: Calculo['tabla'] }) {
   const max = Math.max(1, ...filas.map((f) => f.venta));
   return (
-    <div className="max-h-[34rem] overflow-auto">
+    // relative: sin él, los textos solo para lectores de pantalla («sube», «baja») escapan del recorte y alargan la
+    // página miles de píxeles (quedaba solo el muro al final).
+    <div className="relative max-h-[34rem] overflow-auto">
       <table className="tabla w-full min-w-[34rem] text-sm">
         <thead className="sticky top-0 z-[1]">
           <tr>
@@ -903,6 +1170,41 @@ const aHoras = (s: number[]) =>
   Array.from({ length: 24 }, (_, h) => s.slice(h * 6, h * 6 + 6).reduce((a, b) => a + b, 0));
 
 /** Todo lo que se pinta, con el filtro de origen aplicado. Exportada para las pruebas. */
+/** Las 10 que más venden por importe, con el filtro de origen (periodo o rango). */
+function masVendidos(lista: TableroMexico['periodo']['productos'], f: FiltroOrigen) {
+  const prods = lista
+    .map((p) => {
+      const por = Object.fromEntries(
+        (Object.entries(p.por) as [Origen, [number, number]][])
+          .filter(([o]) => pasa(o, f))
+          .map(([o, x]) => [o, x[1]]),
+      ) as Partial<Record<Origen, number>>;
+      const lineas = (Object.entries(p.por) as [Origen, [number, number]][])
+        .filter(([o]) => pasa(o, f))
+        .reduce((acc, [, x]) => acc + x[0], 0);
+      const importe = Object.values(por).reduce((acc, x) => acc + (x ?? 0), 0);
+      return { p, por, lineas, importe };
+    })
+    .filter((x) => x.importe > 0)
+    .sort((x, y) => y.importe - x.importe);
+  const totalProd = prods.reduce((acc, x) => acc + x.importe, 0);
+  return prods.slice(0, 10).map((x) => ({
+    clave: x.p.clave,
+    nombre: x.p.nombre,
+    detalle: `${x.p.sucursales} suc.`,
+    por: x.por,
+    valor: (
+      <>
+        <span className="font-semibold">{dinero(x.importe, MXN, false)}</span>
+        <span className="ml-2 text-xs text-muted-foreground">
+          {porcentaje(totalProd ? x.importe / totalProd : null, 0)}
+        </span>
+      </>
+    ),
+    nota: `${numero(x.lineas)} lín.*`,
+  }));
+}
+
 export function calcular(d: TableroMexico, f: FiltroOrigen) {
   const ss = d.hoy.sucursales;
   const conCorte = ss.filter((s) => !s.sinCorte);
@@ -919,14 +1221,46 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
     comparables.map((s) => s.comparable!.base),
     f,
   );
-  const diaBase = sumarDias(
-    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date(d.generadoEn)),
-    -7,
-  );
-  const dia = `el ${nombreDia(diaBase)} ${diaMes(diaBase)}`;
+  // Qué se ve: hoy en vivo, un día cerrado (contra el mismo día de la semana anterior, completo) o un rango (contra
+  // los mismos días justo antes).
+  const modo = d.modo ?? 'vivo';
+  const r = modo === 'rango' ? (d.rango ?? null) : null;
+  const fecha =
+    modo === 'dia' && d.fecha
+      ? d.fecha
+      : new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date(d.generadoEn));
+  const diaBase = sumarDias(fecha, -7);
+  const dia = r
+    ? etiquetaSemana(r.previoDesde, r.previoHasta)
+    : `el ${nombreDia(diaBase)} ${diaMes(diaBase)}`;
+  const diasRango = r ? diasEntre(r.desde, r.hasta) + 1 : 0;
+  const momento: Momento =
+    modo === 'vivo'
+      ? { ...MOMENTO_HOY, contra: `${dia} a la misma hora` }
+      : r
+        ? {
+            cuando: `del ${diaMes(r.desde)} al ${diaMes(r.hasta)}`,
+            corto: `${diaMes(r.desde)} a ${diaMes(r.hasta)}`,
+            contra: `los ${numero(diasRango)} días anteriores (${dia})`,
+            columna: 'vs días antes',
+          }
+        : {
+            cuando: `el ${nombreDia(fecha)} ${diaMes(fecha)}`,
+            corto: `${nombreDia(fecha).slice(0, 3)} ${diaMes(fecha)}`,
+            contra: dia,
+            columna: 'vs sem. pasada',
+          };
+  const titulo =
+    modo === 'vivo'
+      ? 'Venta de hoy'
+      : r
+        ? `Venta del ${diaMes(r.desde)} al ${diaMes(r.hasta)}`
+        : `Venta del ${nombreDia(fecha)} ${diaMes(fecha)}`;
   const k = d.hoy.curva.hastaTramo;
   // Las sucursales en otra zona comparan a la misma hora LOCAL (una hora antes o después que el centro).
   const otraZona = new Set(comparables.map((s) => s.comparadoA)).size > 1;
+  const parciales =
+    comparables.length < conCorte.length ? `, ${comparables.length} de ${conCorte.length} sucursales` : '';
   const comparable =
     comparables.length && baseC.venta > 0
       ? {
@@ -936,7 +1270,12 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
             hoyC.pedidos && baseC.pedidos
               ? variacion(hoyC.venta / hoyC.pedidos, baseC.venta / baseC.pedidos)
               : null,
-          sufijo: `vs ${dia} a las ${hhmm(k * TRAMO_SEGUNDOS)}${otraZona ? ' (hora local)' : ''}${comparables.length < conCorte.length ? `, ${comparables.length} de ${conCorte.length} sucursales` : ''}`,
+          sufijo:
+            modo === 'vivo'
+              ? `vs ${dia} a las ${hhmm(k * TRAMO_SEGUNDOS)}${otraZona ? ' (hora local)' : ''}${parciales}`
+              : r
+                ? `vs ${momento.contra}${parciales}`
+                : `vs ${dia}, día completo${parciales}`,
         }
       : null;
 
@@ -953,18 +1292,22 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
   const horaEnCurso = k % 6 ? Math.floor(k / 6) : null;
   const ultimaHoraConDatos = Math.max(0, Math.ceil(k / 6) - 1);
   const totalHora = (h: number) => ORIGENES.reduce((a, o) => a + pedidosHora[o][h], 0);
+  const ventaEnHora = (s: Record<Origen, number[]>, h: number) =>
+    ORIGENES.reduce((a, o) => a + s[o].slice(h * 6, h * 6 + 6).reduce((x, y) => x + y, 0), 0);
   const pico = Array.from({ length: 24 }, (_, h) => h)
     .filter((h) => h <= ultimaHoraConDatos && h !== horaEnCurso && totalHora(h) > 0)
-    .reduce<{ hora: number; pedidos: number } | null>(
-      (m, h) => (m === null || totalHora(h) > m.pedidos ? { hora: h, pedidos: totalHora(h) } : m),
+    .reduce<{ hora: number; pedidos: number; venta: number } | null>(
+      (m, h) =>
+        m === null || totalHora(h) > m.pedidos
+          ? { hora: h, pedidos: totalHora(h), venta: ventaEnHora(ventaTramo, h) }
+          : m,
       null,
     );
   // Última hora completa (todas las sucursales del corte de referencia) contra la misma hora de la semana pasada.
+  // Solo en vivo: en un día cerrado la última hora es la de las 23:00.
   const hu = Math.floor(k / 6) - 1;
-  const ventaEnHora = (r: Record<Origen, number[]>, h: number) =>
-    ORIGENES.reduce((a, o) => a + r[o].slice(h * 6, h * 6 + 6).reduce((x, y) => x + y, 0), 0);
   const ultimaHora =
-    hu >= 0
+    modo === 'vivo' && hu >= 0
       ? {
           etiqueta: `${hh(hu)} a ${hh(hu + 1)}`,
           venta: ventaEnHora(ventaTramo, hu),
@@ -1094,37 +1437,41 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
     pedidos: sumaFiltrada(x.pedidos, f),
   }));
 
-  const prods = d.periodo.productos
-    .map((p) => {
-      const por = Object.fromEntries(
-        (Object.entries(p.por) as [Origen, [number, number]][])
-          .filter(([o]) => pasa(o, f))
-          .map(([o, x]) => [o, x[1]]),
-      ) as Partial<Record<Origen, number>>;
-      const lineas = (Object.entries(p.por) as [Origen, [number, number]][])
-        .filter(([o]) => pasa(o, f))
-        .reduce((acc, [, x]) => acc + x[0], 0);
-      const importe = Object.values(por).reduce((acc, x) => acc + (x ?? 0), 0);
-      return { p, por, lineas, importe };
-    })
-    .filter((x) => x.importe > 0)
-    .sort((x, y) => y.importe - x.importe);
-  const totalProd = prods.reduce((acc, x) => acc + x.importe, 0);
-  const productos = prods.slice(0, 10).map((x) => ({
-    clave: x.p.clave,
-    nombre: x.p.nombre,
-    detalle: `${x.p.sucursales} suc.`,
-    por: x.por,
-    valor: (
-      <>
-        <span className="font-semibold">{dinero(x.importe, MXN, false)}</span>
-        <span className="ml-2 text-xs text-muted-foreground">
-          {porcentaje(totalProd ? x.importe / totalProd : null, 0)}
-        </span>
-      </>
-    ),
-    nota: `${numero(x.lineas)} lín.*`,
-  }));
+  const productos = masVendidos(d.periodo.productos, f);
+
+  // Rango: la venta de cada día (todos los días, también los que no tienen renglón) con el cambio contra el mismo
+  // día de la semana anterior (del rango o del periodo de antes), lo más vendido y el promedio por día.
+  const rango = r
+    ? (() => {
+        const ventaDe = new Map(
+          [...r.diasPrevio, ...r.dias].map((x) => [x.fecha, sumaFiltrada(x.venta, f)] as const),
+        );
+        const deFecha = new Map(r.dias.map((x) => [x.fecha, x]));
+        const columnas: SemanaColumna[] = Array.from({ length: diasRango }, (_, i) => {
+          const fx = sumarDias(r.desde, i);
+          const x = deFecha.get(fx);
+          const venta = x ? sumaFiltrada(x.venta, f) : 0;
+          const antes = ventaDe.get(sumarDias(fx, -7));
+          return {
+            clave: fx,
+            etiqueta: diaMes(fx).replace('.', ''),
+            por: Object.fromEntries(
+              ORIGENES.filter((o) => pasa(o, f)).map((o) => [o, x?.venta[o] ?? 0]),
+            ) as Partial<Record<Origen, number>>,
+            parcial: false,
+            delta: antes ? variacion(venta, antes) : null,
+          };
+        });
+        const primera = r.dias.find((x) => (x.venta.rappi ?? 0) > 0)?.fecha ?? null;
+        return {
+          dias: diasRango,
+          porDia: hoy.venta / diasRango,
+          columnas,
+          rappi: (f === 'todos' || f === 'rappi') && primera && primera > r.desde ? primera : null,
+          productos: masVendidos(r.productos, f),
+        };
+      })()
+    : null;
 
   const claves = d.periodo.semanas.map((w) => w.semana);
   const filasPeriodo = d.periodo.sucursales.map((s) => {
@@ -1154,12 +1501,23 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
 
   const sinCorte = ss.length - conCorte.length;
   const incompletas = conCorte.filter((s) => !s.completa).length;
+  const ese = modo === 'vivo' ? 'hoy' : 'ese día';
+  // Un día o rango con Rappi contra una base sin Rappi del portal (antes de que se leyera): «Todo» sube de más.
+  const rappiDe = (lado: 'hoy' | 'base') =>
+    comparables.reduce((acc, s) => acc + (s.comparable![lado].rappi?.venta_cent ?? 0), 0);
   const avisos = [
-    incompletas === 1
-      ? '1 sucursal con alguna lectura incompleta hoy: su venta puede ir por debajo.'
-      : incompletas
-        ? `${incompletas} sucursales con alguna lectura incompleta hoy: su venta puede ir por debajo.`
-        : '',
+    r
+      ? r.incompletos
+        ? `${r.incompletos} ${r.incompletos === 1 ? 'día de sucursal' : 'días de sucursal'} del rango con lectura incompleta: la venta puede ir por debajo.`
+        : ''
+      : incompletas === 1
+        ? `1 sucursal con alguna lectura incompleta ${ese}: su venta puede ir por debajo.`
+        : incompletas
+          ? `${incompletas} sucursales con alguna lectura incompleta ${ese}: su venta puede ir por debajo.`
+          : '',
+    f === 'todos' && modo !== 'vivo' && rappiDe('hoy') > 0 && rappiDe('base') === 0
+      ? `${capital(momento.contra)} no ${r ? 'tienen' : 'tiene'} venta de Rappi del portal (empezó a leerse después): el cambio de «Todo» va de más.`
+      : '',
     d.periodo.incompletos
       ? `${d.periodo.incompletos} ${d.periodo.incompletos === 1 ? 'día de sucursal' : 'días de sucursal'} del periodo con lectura incompleta.`
       : '',
@@ -1167,6 +1525,11 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
   ].filter(Boolean);
 
   return {
+    modo,
+    momento,
+    titulo,
+    paso: d.hoy.curva.paso ?? 1,
+    rango,
     total: ss.length,
     sinCorte,
     conVenta: celdas.filter((s) => s.venta > 0).length,

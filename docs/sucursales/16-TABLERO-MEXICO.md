@@ -52,6 +52,34 @@ por ciudad y el periodo menos plano). Las gráficas de ejes miden su ancho y dib
   4 sucursales.
 - La semana pasada se corta igual (`baseHasta`). El día completo (`base`) queda como referencia del resto del día.
 
+**Un día o un rango** (pedido de Carlo, 2026-11-15). Arriba a la izquierda: Hoy / Un día / Rango, con campos de fecha
+del 10 de agosto de 2026 (`HISTORIAL_DESDE`) a ayer. Sin migración: son las mismas dos RPC.
+
+- **Un día:** `sucursales_tablero_hoy` con esa fecha para todas. Se compara el día completo contra el mismo día de la
+  semana anterior («vs el sábado 7 nov, día completo»).
+  - En lugar de «Última hora» va la hora pico.
+  - Los tramos de 10 min se borran a los 8 días: un día más viejo dibuja la curva por hora, con las horas guardadas
+    (`tramosDeHoras`, `curva.paso` 6). Nunca se inventan los tramos de en medio.
+- **Rango:** hasta 120 días (el límite de la RPC). `sucursales_tablero_periodo` lee dos veces: el rango y los mismos
+  días justo antes, para el cambio («vs los 7 días anteriores (1–7 nov)»). `armarRango` le da la forma de «hoy», así
+  que el mapa, la mezcla, el top 5 y las ciudades son los mismos.
+  - En lugar de la curva va la venta por día, con el cambio contra el mismo día de la semana anterior.
+  - En lugar de los pedidos por hora va lo más vendido del rango. La RPC del periodo no tiene horas; hacerlo
+    llevaría otra RPC.
+  - Una sucursal sin venta en todo el rango cuenta como «sin venta»: el periodo no distingue un día cerrado de uno sin
+    leer. Los días incompletos se avisan aparte.
+- **Rappi en la comparación:** Rappi del portal se lee desde el 1 de octubre. Si el día o rango tiene Rappi y su base no,
+  un aviso dice que el cambio de «Todo» va de más.
+- La validación de fechas (`lib/sucursales/tablero-fechas.ts`) es la misma en la ruta, la vista de prueba y las pruebas.
+  El último día permitido es el anterior al «hoy» más temprano entre zonas.
+
+**Espacio vacío al final de la página** (corregido el 2026-11-15):
+
+- **Causa:** la tabla «Sucursales en el periodo» tiene scroll propio, pero su caja no tenía posición. Sus textos solo
+  para lectores de pantalla («sube», «baja») son `position: absolute`, se escapaban del recorte y alargaban la página
+  hasta ~9,700 px (quedaba solo el muro).
+- **Arreglo:** `relative` en esa caja, en la de Por estado y en la tabla de cada ciudad.
+
 **Movimiento** (skill movimiento-web, `tablero-mexico.css`):
 
 - **Al cargar, una sola vez:**
