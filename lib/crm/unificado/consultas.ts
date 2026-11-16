@@ -1,6 +1,5 @@
 import 'server-only';
 import type { Db } from '../../portal/consultas';
-import { leerTodo } from '../consultas';
 import type {
   Archivo,
   Aviso,
@@ -83,38 +82,61 @@ export async function misAreas(db: Db, userId: string) {
 
 type FilaLigera = { id: string; etapa_id: string; actualizado_en: string };
 
-/** Pipeline: cards de cada columna (las más recientes primero, hasta POR_COLUMNA) y totales por etapa. */
+/**
+ * Pipeline: cards de cada columna (las más recientes primero, hasta POR_COLUMNA) y totales por etapa.
+ * Cada etapa se consulta por separado y todas a la vez (conteo + primeras N): antes se leían los
+ * ~3,700 leads en páginas de 500, una tras otra, solo para quedarse con 50 por columna.
+ */
 export async function pipeline(db: Db, { soloMuestra }: { soloMuestra?: boolean } = {}) {
-  const [etapas, franq, tiendas] = await Promise.all([
-    etapasGenerales(db),
-    leerTodo<FilaLigera & { muestra: boolean }>(
-      db,
-      'crm_franquiciatarios',
-      'id,etapa_id,actualizado_en,muestra',
-      (q) => q.is('archivado_en', null),
-    ),
-    leerTodo<FilaLigera & { muestra: boolean }>(
-      db,
-      'crm_tiendas',
-      'id,etapa_id,actualizado_en,muestra',
-      (q) => q.eq('embudo', 'general').is('archivado_en', null),
-    ),
-  ]);
-  const todas = [
-    ...franq.map((f) => ({ ...f, tipo: 'franquiciatario' as const })),
-    ...tiendas.map((t) => ({ ...t, tipo: 'sucursal' as const })),
-  ].filter((c) => (soloMuestra === false ? !c.muestra : true));
+  const etapas = await etapasGenerales(db);
+  const fuentes = (e: EtapaGeneral) =>
+    (e.card ? [e.card] : (['franquiciatario', 'sucursal'] as const)).map((tipo) => ({ e, tipo }));
+  const consulta = (tipo: TipoCard, columnas: string, opciones?: { count: 'exact'; head: true }) => {
+    let q =
+      tipo === 'franquiciatario'
+        ? db.from('crm_franquiciatarios').select(columnas, opciones)
+        : db.from('crm_tiendas').select(columnas, opciones).eq('embudo', 'general');
+    q = q.is('archivado_en', null);
+    return soloMuestra === false ? q.eq('muestra', false) : q;
+  };
+  const porFuente = await Promise.all(
+    etapas.flatMap(fuentes).map(async ({ e, tipo }) => {
+      const [conteo, primeras] = await Promise.all([
+        consulta(tipo, 'id', { count: 'exact', head: true }).eq('etapa_id', e.id),
+        consulta(tipo, 'id,etapa_id,actualizado_en')
+          .eq('etapa_id', e.id)
+          .order('actualizado_en', { ascending: false })
+          .limit(POR_COLUMNA),
+      ]);
+      if (conteo.error || primeras.error) throw new Error('No se pudo consultar el CRM. Intenta de nuevo.');
+      return {
+        etapa: e.id,
+        total: conteo.count ?? 0,
+        filas: ((primeras.data ?? []) as unknown as FilaLigera[]).map((f) => ({ ...f, tipo })),
+      };
+    }),
+  );
+  const muestra =
+    soloMuestra === false
+      ? 0
+      : (
+          await Promise.all(
+            (['franquiciatario', 'sucursal'] as const).map((tipo) =>
+              consulta(tipo, 'id', { count: 'exact', head: true }).eq('muestra', true),
+            ),
+          )
+        ).reduce((s, r) => s + (r.count ?? 0), 0);
   const totales: Record<string, number> = {};
-  const porEtapa = new Map<string, typeof todas>();
-  for (const c of todas) {
-    totales[c.etapa_id] = (totales[c.etapa_id] ?? 0) + 1;
-    porEtapa.set(c.etapa_id, [...(porEtapa.get(c.etapa_id) ?? []), c]);
+  const porEtapa = new Map<string, (FilaLigera & { tipo: TipoCard })[]>();
+  for (const f of porFuente) {
+    totales[f.etapa] = (totales[f.etapa] ?? 0) + f.total;
+    porEtapa.set(f.etapa, [...(porEtapa.get(f.etapa) ?? []), ...f.filas]);
   }
   const visibles = [...porEtapa.values()].flatMap((xs) =>
     xs.sort((a, b) => b.actualizado_en.localeCompare(a.actualizado_en)).slice(0, POR_COLUMNA),
   );
   const cards = await armarCards(db, visibles);
-  return { etapas, cards, totales, muestra: todas.filter((c) => c.muestra).length };
+  return { etapas, cards, totales, muestra };
 }
 
 /** Datos de las cards a mostrar: nombre, candado, vencimiento, contadores y último movimiento. */
@@ -149,68 +171,52 @@ export async function armarCards(db: Db, lista: { id: string; tipo: TipoCard }[]
         ...(exigir(await db.from('crm_v_vencimientos').select('*').in('tienda_id', t)) as VencimientoCard[]),
       ),
     ),
-    ...trozos(idsF).map(async (t) => {
-      archivos.push(
-        ...(exigir(
-          await db
-            .from('crm_archivos')
-            .select('franquiciatario_id,tienda_id')
-            .in('franquiciatario_id', t)
-            .is('archivado_en', null),
-        ) as typeof archivos),
-      );
-      notas.push(
-        ...(exigir(
-          await db
-            .from('crm_notas')
-            .select('franquiciatario_id,tienda_id')
-            .in('franquiciatario_id', t)
-            .is('archivado_en', null),
-        ) as typeof notas),
-      );
-      hist.push(
-        ...(exigir(
-          await db
-            .from('crm_historial')
-            .select('tienda_id,franquiciatario_id,actor_nombre,fecha,origen')
-            .in('franquiciatario_id', t)
-            .neq('origen', 'importacion')
-            .order('fecha', { ascending: false })
-            .limit(t.length * 3),
-        ) as typeof hist),
-      );
-    }),
-    ...trozos(idsS).map(async (t) => {
-      archivos.push(
-        ...(exigir(
-          await db
-            .from('crm_archivos')
-            .select('franquiciatario_id,tienda_id')
-            .in('tienda_id', t)
-            .is('archivado_en', null),
-        ) as typeof archivos),
-      );
-      notas.push(
-        ...(exigir(
-          await db
-            .from('crm_notas')
-            .select('franquiciatario_id,tienda_id')
-            .in('tienda_id', t)
-            .is('archivado_en', null),
-        ) as typeof notas),
-      );
-      hist.push(
-        ...(exigir(
-          await db
-            .from('crm_historial')
-            .select('tienda_id,franquiciatario_id,actor_nombre,fecha,origen')
-            .in('tienda_id', t)
-            .neq('origen', 'importacion')
-            .order('fecha', { ascending: false })
-            .limit(t.length * 3),
-        ) as typeof hist),
-      );
-    }),
+    // Archivos, notas e historial de cada trozo van a la vez (antes uno tras otro).
+    ...trozos(idsF).flatMap((t) => [
+      db
+        .from('crm_archivos')
+        .select('franquiciatario_id,tienda_id')
+        .in('franquiciatario_id', t)
+        .is('archivado_en', null)
+        .then((r) => archivos.push(...(exigir(r) as typeof archivos))),
+      db
+        .from('crm_notas')
+        .select('franquiciatario_id,tienda_id')
+        .in('franquiciatario_id', t)
+        .is('archivado_en', null)
+        .then((r) => notas.push(...(exigir(r) as typeof notas))),
+      db
+        .from('crm_historial')
+        .select('tienda_id,franquiciatario_id,actor_nombre,fecha,origen')
+        .in('franquiciatario_id', t)
+        .neq('origen', 'importacion')
+        .order('fecha', { ascending: false })
+        .limit(t.length * 3)
+        .then((r) => hist.push(...(exigir(r) as typeof hist))),
+    ]),
+    // Archivos, notas e historial de cada trozo van a la vez (antes uno tras otro).
+    ...trozos(idsS).flatMap((t) => [
+      db
+        .from('crm_archivos')
+        .select('franquiciatario_id,tienda_id')
+        .in('tienda_id', t)
+        .is('archivado_en', null)
+        .then((r) => archivos.push(...(exigir(r) as typeof archivos))),
+      db
+        .from('crm_notas')
+        .select('franquiciatario_id,tienda_id')
+        .in('tienda_id', t)
+        .is('archivado_en', null)
+        .then((r) => notas.push(...(exigir(r) as typeof notas))),
+      db
+        .from('crm_historial')
+        .select('tienda_id,franquiciatario_id,actor_nombre,fecha,origen')
+        .in('tienda_id', t)
+        .neq('origen', 'importacion')
+        .order('fecha', { ascending: false })
+        .limit(t.length * 3)
+        .then((r) => hist.push(...(exigir(r) as typeof hist))),
+    ]),
   ]);
   const cuenta = (
     xs: { franquiciatario_id: string | null; tienda_id: string | null }[],

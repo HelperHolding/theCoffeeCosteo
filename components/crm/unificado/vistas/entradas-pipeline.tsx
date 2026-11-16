@@ -13,6 +13,18 @@ export interface EntradaTramo {
   principales: { nombre: string; numero: string; n: number }[];
 }
 
+/** Lugar de las tarjetas mientras llegan las cifras: mismo tamaño, sin brillo animado. */
+export function EsqueletoEntradas() {
+  return (
+    <div role="status" aria-label="Cargando las cifras del Pipeline" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <div key={i} className="h-[13.5rem] rounded-2xl border border-line bg-surface/70" />
+      ))}
+      <span className="sr-only">Cargando…</span>
+    </div>
+  );
+}
+
 /** Entrada del Pipeline: un atajo por tramo antes del tablero completo (doc 41 §7). */
 export function VistaEntradasPipeline({
   tramos,

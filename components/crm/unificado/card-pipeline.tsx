@@ -92,7 +92,8 @@ export function CardPipelineVista({
   ahora,
   asa,
   acciones,
-  arrastrando,
+  origen,
+  flotante,
 }: {
   card: CardPipeline;
   etapa: EtapaGeneral;
@@ -101,52 +102,58 @@ export function CardPipelineVista({
   asa?: React.ReactNode;
   /** Menú «Mover a…» u otras acciones. */
   acciones?: React.ReactNode;
-  arrastrando?: boolean;
+  /** La card se está arrastrando: aquí queda su hueco. */
+  origen?: boolean;
+  /** Copia que sigue al cursor mientras se arrastra. */
+  flotante?: boolean;
 }) {
-  const area = AREAS[etapa.area];
   const Icono = card.tipo === 'franquiciatario' ? UserRound : Store;
   const v = card.vencimiento;
+  const conCandado = estadoCandado(card, etapa) !== 'sin-candado';
   return (
     <article
       className={cn(
-        'relative overflow-hidden rounded-xl border border-line bg-surface py-3 pl-4 pr-3 shadow-card',
+        'tablero-card relative px-3 pb-2.5 pt-3',
         card.liberado && 'ring-1 ring-warn/40',
-        arrastrando && 'opacity-60 ring-2 ring-crema/40',
+        flotante && 'tablero-flotante',
       )}
+      data-origen={origen || undefined}
       aria-label={`${card.tipo === 'franquiciatario' ? 'Franquiciatario' : 'Sucursal'} ${card.nombre}`}
     >
-      {/* Barra del área responsable de la etapa: identidad, nunca el único indicador. */}
-      <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1" style={{ background: area.color }} />
-      <div className="flex items-start gap-2">
-        {asa ?? <Icono size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-muted-foreground" />}
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[13.5px] font-semibold leading-snug">
-            <Link href={rutaCard(card)} className="hover:underline focus-visible:underline">
+      <div className="flex items-start gap-1.5">
+        {asa ?? (
+          <span className="grid size-6 shrink-0 place-items-center text-muted-foreground">
+            <Icono size={14} strokeWidth={1.75} aria-hidden="true" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h3 className="line-clamp-2 text-[13.5px] font-semibold leading-snug tracking-[-0.005em] [text-wrap:balance]">
+            <Link href={rutaCard(card)} className="hover:underline focus-visible:underline" draggable={false}>
               {card.nombre}
             </Link>
           </h3>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
             {[card.tipo === 'sucursal' ? card.franquiciatario : null, card.ciudad]
               .filter(Boolean)
               .join(' · ') || 'Sin ciudad'}
           </p>
         </div>
         {card.muestra && (
-          <span className="shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+          <span className="mt-0.5 shrink-0 rounded-full border border-line-strong/70 px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
             Muestra
           </span>
         )}
         {acciones}
       </div>
 
-      {estadoCandado(card, etapa) !== 'sin-candado' && (
-        <div className="mt-3 space-y-1.5">
+      {conCandado && (
+        <div className="mt-2.5 space-y-1.5 rounded-[10px] bg-surface-2/60 px-2.5 py-2">
           <Candado card={card} etapa={etapa} compacto />
           <Medidor listos={card.requisitos.listos} total={card.requisitos.total} />
           {card.requisitos.faltante && !card.liberado && (
             <p className="flex min-w-0 items-center gap-1.5 text-[11px] text-ink-2">
               <span className="shrink-0 text-muted-foreground">Falta</span>
-              <Chip color={AREAS[card.requisitos.faltante.area].color} className="min-w-0">
+              <Chip color={AREAS[card.requisitos.faltante.area].color} className="min-w-0 bg-surface">
                 {card.requisitos.faltante.nombre}
               </Chip>
             </p>
@@ -156,7 +163,7 @@ export function CardPipelineVista({
       {v && (
         <p
           className={cn(
-            'mt-2 inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11.5px]',
+            'mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px]',
             v.dias < 0
               ? 'bg-bad-soft font-semibold text-bad'
               : v.dias <= 7
@@ -164,18 +171,18 @@ export function CardPipelineVista({
                 : 'bg-surface-2 text-ink-2',
           )}
         >
-          <Clock size={12} aria-hidden="true" className="shrink-0" />
+          <Clock size={12} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
           {textoVencimiento(v)}
         </p>
       )}
 
-      <footer className="mt-3 flex items-center gap-3 border-t border-line pt-2 text-[11px] text-muted-foreground">
-        <span className="inline-flex items-center gap-1" title="Archivos">
-          <Paperclip size={12} aria-hidden="true" /> <span className="sr-only">Archivos:</span>
+      <footer className="mt-2.5 flex items-center gap-3 px-0.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 tabular" title="Archivos">
+          <Paperclip size={12} strokeWidth={1.75} aria-hidden="true" /> <span className="sr-only">Archivos:</span>
           {card.archivos}
         </span>
-        <span className="inline-flex items-center gap-1" title="Notas">
-          <StickyNote size={12} aria-hidden="true" /> <span className="sr-only">Notas:</span>
+        <span className="inline-flex items-center gap-1 tabular" title="Notas">
+          <StickyNote size={12} strokeWidth={1.75} aria-hidden="true" /> <span className="sr-only">Notas:</span>
           {card.notas}
         </span>
         {card.ultimo && (
