@@ -1026,7 +1026,12 @@ const GRUPOS_SUCURSAL = [
   },
   {
     titulo: 'Fechas de apertura',
-    campos: ['fecha_limite_apertura', 'fecha_estimada_apertura', 'fecha_confirmada_apertura'],
+    campos: [
+      'fecha_limite_apertura',
+      'fecha_estimada_apertura',
+      'fecha_confirmada_apertura',
+      'fecha_apertura',
+    ],
   },
 ];
 const CAMPOS_FRANQUICIATARIO: CampoEditable[] = [
@@ -1068,6 +1073,7 @@ const CAMPOS_SUCURSAL: CampoEditable[] = [
   { campo: 'fecha_limite_apertura', etiqueta: 'Fecha límite de apertura', tipo: 'date' },
   { campo: 'fecha_estimada_apertura', etiqueta: 'Fecha estimada de apertura', tipo: 'date' },
   { campo: 'fecha_confirmada_apertura', etiqueta: 'Fecha confirmada de apertura', tipo: 'date' },
+  { campo: 'fecha_apertura', etiqueta: 'Fecha real de apertura', tipo: 'date' },
   { campo: 'numero_tienda_jestor', etiqueta: 'ID Jestor', tipo: 'number' },
   { campo: 'arquitecto_asignado', etiqueta: 'Arquitecta asignada' },
 ];
