@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
+import type { Db } from '@/lib/portal/consultas';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
 import { armarCards, etapasGenerales, pipeline } from '@/lib/crm/unificado/consultas';
@@ -6,6 +8,7 @@ import { estadoCandado, puedeMoverEtapa, tramos } from '@/lib/crm/unificado/mode
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
 import type { CandadoCard } from '@/lib/crm/tipos';
 import {
+  EsqueletoEntradas,
   VistaEntradasPipeline,
   type EntradaTramo,
 } from '@/components/crm/unificado/vistas/entradas-pipeline';
@@ -87,42 +90,9 @@ export default async function Pipeline({
     );
   }
 
-  // Sin tramo elegido: atajos por tramo antes del tablero completo (doc 41 §7).
+  // Sin tramo elegido: atajos por tramo antes del tablero completo (doc 41 §7). El encabezado sale de
+  // inmediato y las cifras (que leen crm_v_candados completa) llegan en cuanto están.
   if (!p.tramo) {
-    const [etapas, candados] = await Promise.all([
-      etapasGenerales(db),
-      db
-        .from('crm_v_candados')
-        .select('etapa_id,total,listos,liberado,carril_total,carril_listos')
-        .limit(20_000),
-    ]);
-    const cs = (candados.data ?? []) as Pick<
-      CandadoCard,
-      'etapa_id' | 'total' | 'listos' | 'liberado' | 'carril_total' | 'carril_listos'
-    >[];
-    const entradas: EntradaTramo[] = tramos(etapas).map((t) => {
-      const ids = new Set(t.etapas.map((e) => e.id));
-      const de = cs.filter((c) => ids.has(c.etapa_id));
-      const abierta = (id: string) => t.etapas.find((e) => e.id === id)?.tipo === 'abierta';
-      return {
-        clave: t.clave,
-        nombre: t.nombre,
-        area: t.area,
-        total: de.length,
-        bloqueadas: de.filter((c) => abierta(c.etapa_id) && !c.liberado && c.listos < c.total).length,
-        listas: de.filter((c) => abierta(c.etapa_id) && (c.liberado || c.listos >= c.total)).length,
-        principales: t.etapas
-          .map((e) => ({
-            nombre: e.nombre,
-            numero: e.numero ? String(e.numero) : (e.paso ?? ''),
-            n: de.filter((c) => c.etapa_id === e.id).length,
-          }))
-          .filter((e) => e.n > 0)
-          .sort((a, b) => b.n - a.n)
-          .slice(0, 3),
-      };
-    });
-    const enCarril = cs.filter((c) => c.carril_total > 0);
     return (
       <>
         <Encabezado
@@ -132,13 +102,9 @@ export default async function Pipeline({
         >
           {editable && <NuevoFranquiciatario />}
         </Encabezado>
-        <VistaEntradasPipeline
-          tramos={entradas}
-          carril={{
-            total: enCarril.length,
-            completos: enCarril.filter((c) => c.carril_listos >= c.carril_total).length,
-          }}
-        />
+        <Suspense fallback={<EsqueletoEntradas />}>
+          <EntradasConCifras db={db} />
+        </Suspense>
       </>
     );
   }
@@ -193,5 +159,51 @@ export default async function Pipeline({
         />
       )}
     </>
+  );
+}
+
+async function EntradasConCifras({ db }: { db: Db }) {
+  const [etapas, candados] = await Promise.all([
+    etapasGenerales(db),
+    db
+      .from('crm_v_candados')
+      .select('etapa_id,total,listos,liberado,carril_total,carril_listos')
+      .limit(20_000),
+  ]);
+  const cs = (candados.data ?? []) as Pick<
+    CandadoCard,
+    'etapa_id' | 'total' | 'listos' | 'liberado' | 'carril_total' | 'carril_listos'
+  >[];
+  const entradas: EntradaTramo[] = tramos(etapas).map((t) => {
+    const ids = new Set(t.etapas.map((e) => e.id));
+    const de = cs.filter((c) => ids.has(c.etapa_id));
+    const abierta = (id: string) => t.etapas.find((e) => e.id === id)?.tipo === 'abierta';
+    return {
+      clave: t.clave,
+      nombre: t.nombre,
+      area: t.area,
+      total: de.length,
+      bloqueadas: de.filter((c) => abierta(c.etapa_id) && !c.liberado && c.listos < c.total).length,
+      listas: de.filter((c) => abierta(c.etapa_id) && (c.liberado || c.listos >= c.total)).length,
+      principales: t.etapas
+        .map((e) => ({
+          nombre: e.nombre,
+          numero: e.numero ? String(e.numero) : (e.paso ?? ''),
+          n: de.filter((c) => c.etapa_id === e.id).length,
+        }))
+        .filter((e) => e.n > 0)
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 3),
+    };
+  });
+  const enCarril = cs.filter((c) => c.carril_total > 0);
+  return (
+    <VistaEntradasPipeline
+      tramos={entradas}
+      carril={{
+        total: enCarril.length,
+        completos: enCarril.filter((c) => c.carril_listos >= c.carril_total).length,
+      }}
+    />
   );
 }
