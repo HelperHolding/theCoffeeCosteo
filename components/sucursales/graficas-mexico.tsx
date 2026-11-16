@@ -22,14 +22,20 @@ const MXN = 'MXN';
 const TINTA = '#2b2926';
 const REJILLA = '#e3ded4';
 const FANTASMA = '#e4dfd5';
-/** Como compacto, con dos decimales en millones: los totales semanales se parecen mucho entre sí. */
-const compactoFino = (cent: number) =>
-  new Intl.NumberFormat('es-MX', {
+/**
+ * Como compacto, con dos decimales fijos en millones: los totales semanales se parecen mucho entre sí. Los decimales
+ * salen del mayor de la gráfica (`max`), para que todas las columnas se lean igual («$4.00 M», no «$4 M»).
+ */
+const compactoFino = (cent: number, max: number) => {
+  const decimales = max >= 1_000_000_00 ? 2 : 0;
+  return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: MXN,
     notation: 'compact',
-    maximumFractionDigits: cent >= 1_000_000_00 ? 2 : 0,
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
   }).format(cent / 100);
+};
 export const compacto = (cent: number) =>
   new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -795,7 +801,8 @@ export function SemanasApiladas({
   const H = 272;
   const M = { izq: 50, der: 6, arr: 26, aba: 44 };
   const total = (s: SemanaColumna) => ORIGENES.reduce((a, o) => a + (s.por[o] ?? 0), 0);
-  const { tope, marcas } = escala(Math.max(...semanas.map(total)));
+  const mayor = Math.max(...semanas.map(total));
+  const { tope, marcas } = escala(mayor);
   const banda = Math.max(1, W - M.izq - M.der) / Math.max(1, semanas.length);
   const x = (i: number) => M.izq + i * banda;
   const y = (v: number) => H - M.aba - (v / tope) * (H - M.arr - M.aba);
@@ -920,7 +927,7 @@ export function SemanasApiladas({
                       textAnchor="middle"
                       className="fill-ink text-[11px] font-semibold tabular"
                     >
-                      {compactoFino(t)}
+                      {compactoFino(t, mayor)}
                     </text>
                     <text
                       x={cx}
