@@ -1,0 +1,412 @@
+/*
+ * Tablero del Pipeline (rediseño 2026-11-16). Sobre el muro de madera:
+ *   - columnas lechosas sin desenfoque (23 columnas con blur trababan el desplazamiento);
+ *   - tarjetas claras con una sombra en capas;
+ *   - un riel con barra y flechas propias en lugar de la barra cuadrada y blanca del sistema;
+ *   - al arrastrar, la tarjeta flota por encima de todo y las columnas dicen si aceptan la tarjeta.
+ * El color de cada área vive en la columna (acento, número de etapa) y no se repite en cada tarjeta.
+ */
+.tablero {
+  --tab-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --tab-columna: rgb(250 248 244 / 0.8);
+  --tab-columna-borde: rgb(255 255 255 / 0.85);
+  --tab-card: #ffffff;
+  --tab-card-borde: rgb(60 40 20 / 0.07);
+  --tab-sombra: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 1px 2px rgb(60 40 20 / 0.07),
+    0 10px 22px -16px rgb(60 40 20 / 0.42);
+  --tab-sombra-alta: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 2px 4px rgb(60 40 20 / 0.08),
+    0 18px 30px -18px rgb(60 40 20 / 0.5);
+  --tab-cristal: rgb(255 255 255 / 0.62);
+  --tab-cristal-borde: rgb(255 255 255 / 0.8);
+}
+html[data-luz='noche'] .tablero {
+  --tab-columna: rgb(246 242 235 / 0.9);
+  --tab-columna-borde: rgb(255 255 255 / 0.35);
+  --tab-cristal: rgb(250 247 242 / 0.82);
+  --tab-cristal-borde: rgb(255 255 255 / 0.4);
+}
+
+/* Barra de filtros y controles segmentados (vista, tramo). */
+.tablero-barra {
+  background: var(--tab-cristal);
+  border: 1px solid var(--tab-cristal-borde);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 16px 32px -24px rgb(60 40 20 / 0.55);
+}
+.tablero-campo {
+  height: 2.5rem;
+  border-radius: 999px !important;
+  border: 1px solid rgb(60 40 20 / 0.12) !important;
+  background: rgb(255 255 255 / 0.9) !important;
+  box-shadow: inset 0 1px 2px rgb(60 40 20 / 0.06);
+}
+.tablero-campo:focus {
+  border-color: var(--color-crema) !important;
+  box-shadow: 0 0 0 3px rgb(168 119 74 / 0.18) !important;
+}
+.tablero-segmento {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(60 40 20 / 0.07);
+  box-shadow: inset 0 1px 2px rgb(60 40 20 / 0.1);
+}
+/* Segmento suelto sobre el muro (selector de tramo): lleva su propio cristal para leerse de día y de noche. */
+.tablero-segmento-suelto {
+  background: var(--tab-cristal);
+  border: 1px solid var(--tab-cristal-borde);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 12px 24px -18px rgb(40 24 10 / 0.6);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.tablero-segmento > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.125rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+  transition:
+    background-color 150ms,
+    color 150ms,
+    box-shadow 150ms;
+  -webkit-tap-highlight-color: transparent;
+}
+.tablero-segmento > button[aria-pressed='true'] {
+  background: var(--color-ink);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 6px 14px -8px rgb(17 17 17 / 0.7);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tablero-segmento > button[aria-pressed='false']:hover {
+    background: rgb(255 255 255 / 0.75);
+    color: var(--color-ink);
+  }
+}
+.tablero-segmento > button:active {
+  transform: scale(0.97);
+}
+.tablero-interruptor {
+  position: relative;
+  width: 2.25rem;
+  height: 1.375rem;
+  border-radius: 999px;
+  background: rgb(60 40 20 / 0.18);
+  transition: background-color 150ms;
+}
+.tablero-interruptor::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(17 17 17 / 0.3);
+  transition: transform 180ms var(--tab-ease);
+}
+[aria-checked='true'] > .tablero-interruptor {
+  background: var(--color-ink);
+}
+[aria-checked='true'] > .tablero-interruptor::after {
+  transform: translateX(0.875rem);
+}
+
+/* Riel horizontal: se desvanece en el lado que tiene más columnas; la barra queda nítida abajo. */
+.tablero-riel {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 14px;
+  --fade-izq: 0px;
+  --fade-der: 0px;
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-izq),
+      #000 calc(100% - var(--fade-der)),
+      transparent 100%
+    ),
+    linear-gradient(#000, #000);
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade-izq),
+      #000 calc(100% - var(--fade-der)),
+      transparent 100%
+    ),
+    linear-gradient(#000, #000);
+  -webkit-mask-size:
+    100% calc(100% - 14px),
+    100% 14px;
+  mask-size:
+    100% calc(100% - 14px),
+    100% 14px;
+  -webkit-mask-position: top, bottom;
+  mask-position: top, bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.tablero-riel[data-izq] {
+  --fade-izq: 36px;
+}
+.tablero-riel[data-der] {
+  --fade-der: 36px;
+}
+.tablero-riel::-webkit-scrollbar {
+  height: 10px;
+}
+.tablero-riel::-webkit-scrollbar-track {
+  margin: 0 18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.16);
+}
+.tablero-riel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgb(255 255 255 / 0.72) padding-box;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+.tablero-riel::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.95) padding-box;
+}
+@supports (-moz-appearance: none) {
+  .tablero-riel {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.72) rgb(255 255 255 / 0.16);
+  }
+}
+
+/* Flechas del riel: cristal redondo a la altura de los encabezados de columna. */
+.tablero-flecha {
+  position: absolute;
+  top: 3.25rem;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  color: var(--color-ink);
+  background: rgb(255 255 255 / 0.9);
+  border: 1px solid rgb(255 255 255 / 0.95);
+  box-shadow: 0 12px 24px -12px rgb(40 24 10 / 0.6);
+  transition:
+    opacity 180ms var(--tab-ease),
+    transform 180ms var(--tab-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.tablero-flecha[data-lado='izq'] {
+  left: -0.5rem;
+}
+.tablero-flecha[data-lado='der'] {
+  right: -0.5rem;
+}
+.tablero-flecha[data-oculta] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95);
+}
+.tablero-flecha:active {
+  transform: scale(0.95);
+}
+
+/* Etiqueta del tramo sobre su grupo de columnas. */
+.tablero-tramo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2rem;
+  padding: 0 0.85rem 0 0.6rem;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink);
+  background: rgb(255 255 255 / 0.85);
+  box-shadow: 0 8px 18px -12px rgb(40 24 10 / 0.6);
+}
+
+/* Columna: lechosa, con acento del área arriba y estados mientras se arrastra. */
+.tablero-columna {
+  position: relative;
+  background: var(--tab-columna);
+  border: 1px solid var(--tab-columna-borde);
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 18px 36px -28px rgb(40 24 10 / 0.6);
+  transition:
+    opacity 200ms var(--tab-ease),
+    box-shadow 200ms var(--tab-ease),
+    background-color 200ms;
+}
+.tablero-columna[data-destino='no'] {
+  opacity: 0.45;
+}
+.tablero-columna[data-destino='si'] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 0 0 2px color-mix(in srgb, var(--area) 45%, transparent),
+    0 18px 36px -28px rgb(40 24 10 / 0.6);
+}
+.tablero-columna[data-sobre='si'] {
+  background: color-mix(in srgb, var(--area) 10%, rgb(255 255 255 / 0.92));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 0 0 2.5px var(--area),
+    0 24px 44px -26px rgb(40 24 10 / 0.7);
+}
+.tablero-columna[data-sobre='no'] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 0 0 2px color-mix(in srgb, var(--color-bad) 60%, transparent);
+}
+.tablero-acento {
+  position: absolute;
+  top: -1px;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--area);
+}
+.tablero-numero {
+  display: grid;
+  place-items: center;
+  min-width: 1.625rem;
+  height: 1.625rem;
+  padding: 0 0.35rem;
+  border-radius: 0.5rem;
+  font-size: 11.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--area) 78%, #000);
+  background: color-mix(in srgb, var(--area) 14%, #fff);
+}
+.tablero-lista {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(60 40 20 / 0.2) transparent;
+}
+.tablero-lista::-webkit-scrollbar {
+  width: 8px;
+}
+.tablero-lista::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgb(60 40 20 / 0.2) padding-box;
+}
+.tablero-lista::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+/* Tarjeta. */
+.tablero-card {
+  background: var(--tab-card);
+  border: 1px solid var(--tab-card-borde);
+  border-radius: 0.875rem;
+  box-shadow: var(--tab-sombra);
+  transition:
+    transform 160ms var(--tab-ease),
+    box-shadow 160ms var(--tab-ease),
+    opacity 160ms;
+}
+.tablero-asa {
+  opacity: 0.45;
+  transition:
+    opacity 150ms,
+    background-color 150ms,
+    color 150ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tablero-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--tab-sombra-alta);
+  }
+  .tablero-card:hover .tablero-asa {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .tablero-asa {
+    opacity: 1;
+  }
+}
+.tablero-asa:focus-visible {
+  opacity: 1;
+}
+/* La tarjeta original se queda como hueco mientras su copia flota. */
+.tablero-card[data-origen] {
+  opacity: 0.38;
+  transform: none;
+  box-shadow: none;
+  border-style: dashed;
+  border-color: rgb(60 40 20 / 0.35);
+}
+/* Copia que sigue al cursor. */
+.tablero-flotante {
+  cursor: grabbing;
+  transform: rotate(-1.5deg) scale(1.03);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9) inset,
+    0 0 0 1px rgb(255 255 255 / 0.9),
+    0 34px 60px -24px rgb(40 24 10 / 0.65),
+    0 10px 20px -12px rgb(40 24 10 / 0.35);
+  animation: tablero-levantar 160ms var(--tab-ease);
+}
+@keyframes tablero-levantar {
+  from {
+    transform: none;
+    box-shadow: var(--tab-sombra);
+  }
+}
+.tablero-boton-icono {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  color: var(--color-muted-foreground);
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tablero-boton-icono:hover {
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+  }
+}
+.tablero-boton-icono:active {
+  transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tablero-flotante {
+    transform: none;
+    animation: none;
+  }
+  .tablero-card:hover {
+    transform: none;
+  }
+  .tablero-flecha,
+  .tablero-flecha[data-oculta] {
+    transform: none;
+  }
+}
