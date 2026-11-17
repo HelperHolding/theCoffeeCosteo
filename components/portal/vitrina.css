@@ -29,6 +29,16 @@ html[data-luz='noche'] .vitrina {
     0 18px 36px -22px rgb(60 40 20 / 0.55);
 }
 /*
+ * Tarjetas con tabla: más lechosas. Al 50 %, la orilla entre el muro y la madera se ve detrás de una fila y parece
+ * una fila resaltada; así las filas quedan parejas y el cristal se nota solo como tinte.
+ */
+.vitrina .rounded-2xl.bg-surface:has(table) {
+  --vitrina-cristal: rgb(255 255 255 / 0.88);
+}
+html[data-luz='noche'] .vitrina .rounded-2xl.bg-surface:has(table) {
+  --vitrina-cristal: rgb(250 247 242 / 0.94);
+}
+/*
  * Texto secundario sobre cristal: el gris de siempre (#6b6560) sobre la veta más oscura (#c39c6c) detrás del cristal
  * al 50 % queda en ~3.7:1. Este (#57514c) da ~5:1 de día y de noche (AA para texto chico); sobre blanco, 7.8:1.
  */
