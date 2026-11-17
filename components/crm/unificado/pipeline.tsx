@@ -566,7 +566,7 @@ export function PipelineGeneral({
       </div>
 
       {/* Selector de tramo: en teléfono enfoca un tramo; en escritorio filtra el tablero. */}
-      <div className="max-w-full overflow-x-auto pb-1">
+      <div className="tablero-desliza max-w-full overflow-x-auto pb-2">
         <div role="group" aria-label="Tramo del proceso" className="tablero-segmento tablero-segmento-suelto">
           {[{ clave: 'todos' as const, nombre: 'Todo el proceso', area: null }, ...todos].map((t) => (
             <button key={t.clave} type="button" aria-pressed={tramo === t.clave} onClick={() => setTramo(t.clave)}>
