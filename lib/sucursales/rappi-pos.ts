@@ -69,6 +69,12 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   'pain au chocolat': '3FOOD3',
   'pan de muerto con glaseado de naranja': 'RAPPIPANMUENAR',
   'pan de muerto tradicional': 'PANMUEAPP',
+  // Peppermint Mocha (temporada, desde el 2026-11-12 en Rappi): mismo producto que en el POS. El Iced Matcha del POS
+  // se llama en Rappi «Peppermint Mocha Matcha Iced Latte» (Productos_nuevos_Costeo_2026-11-17.xlsx, docs/bi/04).
+  'peppermint mocha iced latte': 'PEPMIALPP',
+  'peppermint mocha latte': 'PEPMOLAPP',
+  'peppermint mocha matcha iced latte': 'PEPIMLAPP',
+  'peppermint mocha matcha latte': 'PEPMMLAPP',
   'pumpkin iced latte': 'CPUMICAPP',
   'pumpkin latte': 'CPUMLAAPP',
   'pumpkin spice frap': 'CPUMFRAPP',
