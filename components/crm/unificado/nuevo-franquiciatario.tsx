@@ -90,7 +90,7 @@ export function NuevoFranquiciatario() {
               <Button type="button" variant="ghost" onClick={() => setAbierto(false)}>
                 Cancelar
               </Button>
-              <Button disabled={pendiente}>{pendiente ? 'Guardando…' : 'Registrar lead'}</Button>
+              <Button pendiente={pendiente}>{pendiente ? 'Guardando…' : 'Registrar lead'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -49,6 +49,16 @@
   --color-madera-tinta: #3b2a19;
   --shadow-card: 0 1px 2px rgb(17 17 17 / 0.04), 0 2px 8px -2px rgb(17 17 17 / 0.06);
   --shadow-lift: 0 2px 4px rgb(17 17 17 / 0.05), 0 12px 24px -8px rgb(17 17 17 / 0.14);
+  /* Movimiento (skill movimiento-web): pocas curvas, nombradas. Utilidades: ease-salida, ease-suave… */
+  --ease-salida: cubic-bezier(0.16, 1, 0.3, 1); /* entradas e indicadores: arranca rápido y frena suave */
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1); /* hovers y elementos pequeños */
+  --ease-entrada-salida: cubic-bezier(0.76, 0, 0.24, 1); /* cambios de estado grandes */
+}
+/* Duraciones: app de trabajo, movimiento mínimo. Con movimiento reducido, la regla de @layer base las anula. */
+:root {
+  --dur-micro: 150ms; /* hover, foco, interruptores */
+  --dur-corta: 250ms; /* segmentos, pestañas, menús */
+  --dur-media: 450ms; /* paneles, cifras */
 }
 @layer base {
   fieldset {
@@ -145,6 +155,74 @@
   }
 }
 @layer components {
+  /* Selector segmentado (components/ui/segmentos.tsx): la pastilla oscura se desliza a la opción elegida. */
+  .segmentos {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 10px;
+    background: var(--color-surface);
+  }
+  .segmentos > button {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-ink-2);
+    transition:
+      color var(--dur-corta) var(--ease-suave),
+      background-color var(--dur-micro) var(--ease-suave),
+      transform var(--dur-micro) var(--ease-suave);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .segmentos > button:active {
+    transform: scale(0.97);
+  }
+  .segmentos > button:focus-visible {
+    outline: 2px solid var(--color-crema);
+    outline-offset: 1px;
+  }
+  .segmentos > button[aria-checked='true'] {
+    color: var(--color-crema);
+  }
+  /* Antes de medir (o sin JS) la elegida lleva su propio fondo. */
+  .segmentos:not([data-medido]) > button[aria-checked='true'] {
+    background: var(--color-ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .segmentos > button[aria-checked='false']:hover {
+      background: var(--color-surface-2);
+      color: var(--color-ink);
+    }
+  }
+  .segmentos-pastilla {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 0;
+    border-radius: 8px;
+    background: var(--color-ink);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      0 4px 10px -6px rgb(17 17 17 / 0.6);
+  }
+  .segmentos-pastilla[data-animar] {
+    transition:
+      transform var(--dur-corta) var(--ease-salida),
+      width var(--dur-corta) var(--ease-salida);
+  }
   .panel {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-xl);

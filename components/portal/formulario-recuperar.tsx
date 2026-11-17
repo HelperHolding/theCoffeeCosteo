@@ -23,7 +23,7 @@ export function FormularioRecuperar() {
           {estado}
         </p>
       )}
-      <Button size="lg" className="w-full" disabled={pending}>
+      <Button size="lg" className="w-full" pendiente={pending}>
         {pending ? 'Un momento…' : 'Enviar enlace'}
       </Button>
     </form>

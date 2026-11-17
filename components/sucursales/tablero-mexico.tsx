@@ -24,6 +24,8 @@ import {
 import { HISTORIAL_DESDE, RANGO_MAX_DIAS } from '@/lib/sucursales/tablero-fechas';
 import { diasEntre, fechaValida, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Button } from '@/components/ui/button';
+import { Segmentos } from '@/components/ui/segmentos';
 import { AZUL, COLOR_ORIGEN, Delta, SERIE_BASE } from './colores';
 import { etiquetaSemana } from './graficas-tendencias';
 import {
@@ -207,14 +209,10 @@ export function TableroMexicoVista() {
             alCambiar={(o) => setOrigen(o as FiltroOrigen)}
           />
           {vista.modo === 'vivo' && (
-            <button
-              type="button"
-              onClick={recargar}
-              className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card active:scale-[0.97]"
-            >
-              <RefreshCw size={15} aria-hidden="true" className={cargando ? 'animate-spin' : ''} />
+            <Button variant="outline" size="sm" onClick={recargar} aria-busy={cargando || undefined}>
+              <RefreshCw aria-hidden="true" className={cargando ? 'motion-safe:animate-spin' : ''} />
               Actualizar
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -737,45 +735,6 @@ function Cuerpo({
 }
 
 /** Control segmentado con un punto de color opcional (los orígenes llevan su color). */
-function Segmentos({
-  etiqueta,
-  opciones,
-  activa,
-  alCambiar,
-}: {
-  etiqueta: string;
-  opciones: { id: string; texto: string; color?: string }[];
-  activa: string;
-  alCambiar: (id: string) => void;
-}) {
-  return (
-    <div
-      role="radiogroup"
-      aria-label={etiqueta}
-      className="flex rounded-[10px] border border-line-strong bg-surface p-0.5"
-    >
-      {opciones.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          role="radio"
-          aria-checked={activa === o.id}
-          onClick={() => alCambiar(o.id)}
-          className={cn(
-            'inline-flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-sm font-semibold transition-colors duration-200 active:scale-[0.97]',
-            activa === o.id ? 'bg-ink text-crema' : 'text-ink-2 hover:bg-surface-2',
-          )}
-        >
-          {o.color && (
-            <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: o.color }} />
-          )}
-          {o.texto}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function Numero({
   etiqueta,
   nota,
@@ -973,13 +932,9 @@ function Ciudades({ grupos, momento }: { grupos: Calculo['ciudades']; momento: M
         })}
       </ul>
       {grupos.length > CIUDADES_VISIBLES && (
-        <button
-          type="button"
-          onClick={() => setTodas((t) => !t)}
-          className="mt-3 inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card active:scale-[0.97]"
-        >
+        <Button variant="outline" size="sm" className="mt-3" onClick={() => setTodas((t) => !t)}>
           {todas ? 'Ver menos ciudades' : `Ver las ${grupos.length} ciudades`}
-        </button>
+        </Button>
       )}
     </section>
   );

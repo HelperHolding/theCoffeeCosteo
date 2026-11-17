@@ -267,7 +267,7 @@ function FormCumplir({
         </p>
       )}
       <div className="flex gap-2">
-        <Button size="sm" disabled={pendiente}>
+        <Button size="sm" pendiente={pendiente}>
           {pendiente ? 'Guardando…' : r.tipo === 'validacion' ? 'Registrar validación' : 'Registrar'}
         </Button>
         <Button
@@ -592,7 +592,7 @@ function Documentos({
             Archivo (PDF, imagen, Word o Excel; hasta 25 MB)
             <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </label>
-          <Button disabled={pendiente || !file}>
+          <Button pendiente={pendiente} disabled={!file}>
             <Upload aria-hidden="true" /> Subir
           </Button>
         </form>
@@ -1229,7 +1229,7 @@ function Resumen({ datos, usuario }: { datos: DatosExpediente; usuario: UsuarioC
         <div className="flex gap-2">
           {editando ? (
             <>
-              <Button disabled={pendiente}>{pendiente ? 'Guardando…' : 'Guardar datos'}</Button>
+              <Button pendiente={pendiente}>{pendiente ? 'Guardando…' : 'Guardar datos'}</Button>
               <Button type="button" variant="ghost" onClick={() => setEditando(false)}>
                 Cancelar
               </Button>
@@ -1288,7 +1288,7 @@ function Sucursales({ datos, usuario }: { datos: DatosExpediente; usuario: Usuar
             Ciudad
             <input value={ciudad} onChange={(e) => setCiudad(e.target.value)} />
           </label>
-          <Button disabled={pendiente}>
+          <Button pendiente={pendiente}>
             <Plus aria-hidden="true" /> Agregar sucursal
           </Button>
           {error && (

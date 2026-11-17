@@ -3,24 +3,38 @@
 import { Banknote, Layers, Package, Receipt, Ticket } from 'lucide-react';
 import { Barra, Kpi, Tarjeta } from '@/components/portal/piezas';
 import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
+import { Cifra } from '@/components/sucursales/graficas-mexico';
 import type { numerosClave } from '@/lib/bi/bloques';
 
 const decimales = new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/** Bloque 1. Los cocientes sin base (0 tickets) llegan como null y se ven «—». */
+/**
+ * Bloque 1. Los cocientes sin base (0 tickets) llegan como null y se ven «—». Las cifras cuentan hasta el valor nuevo
+ * al cambiar un filtro (Cifra: el lector de pantalla oye solo el valor final; con movimiento reducido no cuentan).
+ */
 export function NumerosClave({ n }: { n: ReturnType<typeof numerosClave> }) {
+  const animada = (v: number | null, formato: (x: number) => string) =>
+    v === null ? '—' : <Cifra valor={v} formato={formato} />;
   return (
     <section aria-label="Números clave" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
       <Kpi
         etiqueta="Ventas Netas"
-        valor={dinero(n.ventaCent, 'MXN', false)}
+        valor={animada(n.ventaCent, (x) => dinero(Math.round(x), 'MXN', false))}
         icono={Banknote}
         nota={`Cobrado: ${dinero(n.cobradoCent)}`}
       />
-      <Kpi etiqueta="Ticket Promedio" valor={dinero(n.ticketPromedioCent)} icono={Receipt} />
-      <Kpi etiqueta="# de Tickets" valor={numero(n.tickets)} icono={Ticket} />
-      <Kpi etiqueta="Promedio UPT" valor={n.upt === null ? '—' : decimales.format(n.upt)} icono={Layers} />
-      <Kpi etiqueta="Total Products" valor={numero(n.unidades)} icono={Package} />
+      <Kpi
+        etiqueta="Ticket Promedio"
+        valor={animada(n.ticketPromedioCent, (x) => dinero(Math.round(x)))}
+        icono={Receipt}
+      />
+      <Kpi etiqueta="# de Tickets" valor={animada(n.tickets, (x) => numero(Math.round(x)))} icono={Ticket} />
+      <Kpi etiqueta="Promedio UPT" valor={animada(n.upt, (x) => decimales.format(x))} icono={Layers} />
+      <Kpi
+        etiqueta="Total Products"
+        valor={animada(n.unidades, (x) => numero(Math.round(x)))}
+        icono={Package}
+      />
     </section>
   );
 }
