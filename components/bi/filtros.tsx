@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RpcOpciones } from '@/lib/bi/tipos';
 import { FR_POR_OMISION, hoyMexico, leerUrl, OPCIONES_FR, resolverPeriodo, type FiltrosUrl } from '@/lib/bi/url';
+import { Button } from '@/components/ui/button';
 import { SelectorMultiple } from './selector-multiple';
 
 const RETRASO_MS = 400;
@@ -289,15 +290,15 @@ export function FiltrosBi({
 
       {/* Debajo de los filtros extra: en el celular quedan al final de la lista desplegada, no a la mitad. */}
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
           aria-expanded={masFiltros}
           aria-controls="bi-mas-filtros"
           onClick={() => setMasFiltros((m) => !m)}
-          className="rounded-md border border-line px-3 py-1.5 text-sm font-semibold text-ink-2"
         >
           {masFiltros ? 'Mostrar menos filtros' : 'Mostrar más filtros'}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={() => {
