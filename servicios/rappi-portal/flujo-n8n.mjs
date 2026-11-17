@@ -29,7 +29,7 @@ if (!lote) {
   mensaje = lote.mensaje ?? '';
 }
 const ok = r && r.statusCode >= 200 && r.statusCode < 300;
-if (lote && !ok) { estado = 'error'; mensaje += ' Supabase respondió ' + r?.statusCode + ': ' + JSON.stringify(r?.body).slice(0, 300); }
+if (lote && !ok) { estado = 'error'; mensaje += r?.error ? ' No se pudo guardar en Supabase: ' + String(r.error.message ?? r.error).slice(0, 300) : ' Supabase respondió ' + r?.statusCode + ': ' + JSON.stringify(r?.body).slice(0, 300); }
 else if (ok && r.body && typeof r.body === 'object') {
   const b = r.body;
   if (b.nuevos !== undefined) mensaje += ' Guardados: ' + b.nuevos + ' nuevos, ' + b.cambiados + ' cambiados, ' + b.desaparecidos + ' para revisar.';
@@ -157,22 +157,40 @@ const nodes = [
     looseTypeValidation: true,
     options: {},
   }),
+  // El lote se arma como texto en un nodo de código: con 110 tiendas, el cierre (~4,500 pedidos) y el repaso (~8,500)
+  // hacían que la expresión `JSON.stringify({ p_lote: $json.body })` agotara el tiempo de expresiones de n8n
+  // («Expression timed out», 2026-11-15 y 16) y la corrida se cortaba sin guardar ni avisar.
+  nodo(
+    'Armar lote',
+    'n8n-nodes-base.code',
+    2,
+    [640, 270],
+    {
+      jsCode: 'return [{ json: { cuerpo: JSON.stringify({ p_lote: $input.first().json.body }) } }];',
+    },
+    { onError: 'continueRegularOutput' },
+  ),
   nodo(
     'Guardar en Supabase',
     'n8n-nodes-base.httpRequest',
     4.2,
-    [700, 270],
+    [760, 270],
     {
       method: 'POST',
       url: SUPABASE,
       authentication: 'genericCredentialType',
       genericAuthType: 'httpHeaderAuth',
       sendBody: true,
-      specifyBody: 'json',
-      jsonBody: '={{ JSON.stringify({ p_lote: $json.body }) }}',
+      contentType: 'raw',
+      rawContentType: 'application/json',
+      body: '={{ $json.cuerpo }}',
       options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 120000 },
     },
-    { notes: 'Credencial: Header Auth apikey = llave secreta de Supabase. Solo llama rappi_importar.' },
+    {
+      notes: 'Credencial: Header Auth apikey = llave secreta de Supabase. Solo llama rappi_importar.',
+      // Si algo falla aquí, «Resumen» lo reporta y avisa por correo en vez de cortar la corrida en silencio.
+      onError: 'continueRegularOutput',
+    },
   ),
   nodo('Resumen', 'n8n-nodes-base.code', 2, [940, 270], { jsCode: resumen }),
   nodo('¿Avisar?', 'n8n-nodes-base.if', 2.2, [1160, 270], {
@@ -224,7 +242,8 @@ const connections = {
   ...conecta('Repaso', 'Leer portal'),
   ...conecta('Manual', 'Leer portal'),
   ...conecta('Leer portal', '¿Lector OK?'),
-  ...conecta('¿Lector OK?', 'Guardar en Supabase', 'Resumen'),
+  ...conecta('¿Lector OK?', 'Armar lote', 'Resumen'),
+  ...conecta('Armar lote', 'Guardar en Supabase'),
   ...conecta('Guardar en Supabase', 'Resumen'),
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
