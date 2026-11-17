@@ -33,7 +33,7 @@ import { Tarjeta } from '../../../components/portal/piezas';
 import type { Actividad, Festivo, Membresia, Requisito } from '../../../lib/crm/tipos';
 import type { Aviso, VencimientoCard } from '../../../lib/crm/tipos';
 import { TERRITORIOS } from '../../../lib/crm/tipos';
-import '../../../app/(sucursales)/sucursales/vitrina.css';
+import '../../../components/portal/vitrina.css';
 import * as flujo from './flujo';
 
 // Fecha fija para que las capturas no dependan del día.

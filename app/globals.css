@@ -616,3 +616,36 @@ html[data-luz='noche'] .barra-muro img {
   filter: invert(1);
   mix-blend-mode: screen;
 }
+
+/*
+ * Cambio de pantalla dentro de un módulo (TransicionPagina, React <ViewTransition>): la vieja se desvanece en 120 ms
+ * y la nueva aparece subiendo 6 px. Sin desenfoque (cuesta). Los clics no se pierden durante la transición.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.pagina-sale) {
+  animation: 120ms cubic-bezier(0.22, 1, 0.36, 1) both pagina-desvanece;
+}
+::view-transition-new(.pagina-entra) {
+  animation: 240ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both pagina-aparece;
+}
+@keyframes pagina-desvanece {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pagina-aparece {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
