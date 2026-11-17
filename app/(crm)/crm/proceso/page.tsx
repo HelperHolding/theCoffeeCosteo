@@ -1,5 +1,5 @@
 import { sesionCrm } from '@/lib/supabase/sesion';
-import { etapasGenerales } from '@/lib/crm/unificado/consultas';
+import { candadosTodos, etapasGenerales } from '@/lib/crm/unificado/consultas';
 import { pasosProceso, type RequisitoProceso } from '@/lib/crm/unificado/proceso';
 import { Encabezado } from '@/components/portal/piezas';
 import { VistaProceso } from '@/components/crm/unificado/vistas/proceso';
@@ -15,11 +15,10 @@ export default async function Proceso({ searchParams }: { searchParams: Promise<
       .select('etapa_id,nombre,tipo,area_cumple,area_valida,obligatorio,orden')
       .eq('activo', true)
       .order('orden'),
-    db.from('crm_v_candados').select('etapa_id').limit(20_000),
+    candadosTodos(db, ['etapa_id'] as const),
   ]);
   const porEtapa: Record<string, number> = {};
-  for (const c of (candados.data ?? []) as { etapa_id: string }[])
-    porEtapa[c.etapa_id] = (porEtapa[c.etapa_id] ?? 0) + 1;
+  for (const c of candados) porEtapa[c.etapa_id] = (porEtapa[c.etapa_id] ?? 0) + 1;
   return (
     <>
       <Encabezado

@@ -3,10 +3,9 @@ import Link from 'next/link';
 import type { Db } from '@/lib/portal/consultas';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { puedeEditarCrm } from '@/lib/portal/modulos';
-import { armarCards, etapasGenerales, pipeline } from '@/lib/crm/unificado/consultas';
+import { armarCards, candadosTodos, etapasGenerales, pipeline } from '@/lib/crm/unificado/consultas';
 import { estadoCandado, puedeMoverEtapa, tramos } from '@/lib/crm/unificado/modelo';
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
-import type { CandadoCard } from '@/lib/crm/tipos';
 import {
   EsqueletoEntradas,
   VistaEntradasPipeline,
@@ -42,6 +41,7 @@ export default async function Pipeline({
           .eq('etapa_id', etapa.id)
           .is('archivado_en', null)
           .order('actualizado_en', { ascending: false })
+          .order('id')
           .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1)
       : { data: [], count: 0 };
     const tipo = etapa?.card === 'sucursal' ? ('sucursal' as const) : ('franquiciatario' as const);
@@ -163,17 +163,10 @@ export default async function Pipeline({
 }
 
 async function EntradasConCifras({ db }: { db: Db }) {
-  const [etapas, candados] = await Promise.all([
+  const [etapas, cs] = await Promise.all([
     etapasGenerales(db),
-    db
-      .from('crm_v_candados')
-      .select('etapa_id,total,listos,liberado,carril_total,carril_listos')
-      .limit(20_000),
+    candadosTodos(db, ['etapa_id', 'total', 'listos', 'liberado', 'carril_total', 'carril_listos'] as const),
   ]);
-  const cs = (candados.data ?? []) as Pick<
-    CandadoCard,
-    'etapa_id' | 'total' | 'listos' | 'liberado' | 'carril_total' | 'carril_listos'
-  >[];
   const entradas: EntradaTramo[] = tramos(etapas).map((t) => {
     const ids = new Set(t.etapas.map((e) => e.id));
     const de = cs.filter((c) => ids.has(c.etapa_id));

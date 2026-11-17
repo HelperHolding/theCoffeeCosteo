@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Db } from '../../portal/consultas';
+import { leerPaginas, type Db } from '../../portal/consultas';
 import type {
   Archivo,
   Aviso,
@@ -385,52 +385,59 @@ export async function expedienteCard(
         ) as Tienda | null);
   if (!fila) return null;
   const relacion = tipo === 'franquiciatario' ? 'franquiciatario_id' : 'tienda_id';
-  const [etapas, [card], req, archivos, notas, historial, liberaciones, sucursales, franq, fiscal, ve] =
-    await Promise.all([
-      etapasGenerales(db),
-      armarCards(db, [{ id, tipo }]),
-      db.rpc('crm_requisitos_de', { p_tipo: tipo, p_card: id, p_todas: true }),
-      db.from('crm_archivos').select('*').eq(relacion, id).order('subido_en', { ascending: false }),
-      db
-        .from('crm_notas')
-        .select('*')
-        .eq(relacion, id)
-        .is('archivado_en', null)
-        .order('creado_en', { ascending: false }),
-      db.from('crm_historial').select('*').eq(relacion, id).order('fecha', { ascending: false }).limit(300),
-      db.from('crm_liberaciones').select('*').eq('card_id', id).order('liberado_en', { ascending: false }),
-      tipo === 'franquiciatario'
-        ? db
-            .from('crm_tiendas')
-            .select('id,nombre,etapa_id')
-            .eq('franquiciatario_id', id)
-            .is('archivado_en', null)
-        : Promise.resolve({ data: [], error: null }),
-      tipo === 'sucursal' && (fila as Tienda).franquiciatario_id
-        ? db
-            .from('crm_franquiciatarios')
-            .select('*')
-            .eq('id', (fila as Tienda).franquiciatario_id!)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      // La RLS devuelve vacío a quien no ve datos sensibles.
-      tipo === 'franquiciatario'
-        ? db.from('crm_franquiciatario_fiscal').select('*').eq('franquiciatario_id', id).maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      db.rpc('crm_ve_sensibles'),
-    ]);
+  const [
+    etapas,
+    [card],
+    req,
+    archivos,
+    notas,
+    historial,
+    liberaciones,
+    sucursales,
+    franq,
+    fiscal,
+    ve,
+    equipo,
+  ] = await Promise.all([
+    etapasGenerales(db),
+    armarCards(db, [{ id, tipo }]),
+    db.rpc('crm_requisitos_de', { p_tipo: tipo, p_card: id, p_todas: true }),
+    db.from('crm_archivos').select('*').eq(relacion, id).order('subido_en', { ascending: false }),
+    db
+      .from('crm_notas')
+      .select('*')
+      .eq(relacion, id)
+      .is('archivado_en', null)
+      .order('creado_en', { ascending: false }),
+    db.from('crm_historial').select('*').eq(relacion, id).order('fecha', { ascending: false }).limit(300),
+    db.from('crm_liberaciones').select('*').eq('card_id', id).order('liberado_en', { ascending: false }),
+    tipo === 'franquiciatario'
+      ? db
+          .from('crm_tiendas')
+          .select('id,nombre,etapa_id')
+          .eq('franquiciatario_id', id)
+          .is('archivado_en', null)
+      : Promise.resolve({ data: [], error: null }),
+    tipo === 'sucursal' && (fila as Tienda).franquiciatario_id
+      ? db
+          .from('crm_franquiciatarios')
+          .select('*')
+          .eq('id', (fila as Tienda).franquiciatario_id!)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    // La RLS devuelve vacío a quien no ve datos sensibles.
+    tipo === 'franquiciatario'
+      ? db.from('crm_franquiciatario_fiscal').select('*').eq('franquiciatario_id', id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    db.rpc('crm_ve_sensibles'),
+    // Vendedores para reasignar (solo franquiciatarios): en el mismo lote, no en una ronda aparte.
+    tipo === 'franquiciatario'
+      ? db.from('crm_membresias').select('user_id').eq('area', 'ventas').in('rol', ['head', 'miembro'])
+      : Promise.resolve({ data: [], error: null }),
+  ]);
   const hist = exigir(historial) as Historial[];
   const requisitos = autorDeCampos(exigir(req) as RequisitoCard[], hist);
-  const ventas =
-    tipo === 'franquiciatario'
-      ? (((
-          await db
-            .from('crm_membresias')
-            .select('user_id')
-            .eq('area', 'ventas')
-            .in('rol', ['head', 'miembro'])
-        ).data ?? []) as { user_id: string }[])
-      : [];
+  const ventas = (equipo.data ?? []) as { user_id: string }[];
   const libs = exigir(liberaciones) as Liberacion[];
   const quienes = await nombres(db, [
     ...requisitos.flatMap((r) => [r.cumplido_por, r.validado_por]),
@@ -469,11 +476,30 @@ export async function expedienteCard(
   };
 }
 
+/**
+ * Candados de todas las cards (crm_v_candados, ~3,850 filas) sin el tope de 1,000 de PostgREST: `.limit(20000)` no
+ * lo salta, y los conteos de Panel, Pipeline, Proceso y Pendientes salían recortados.
+ * Primero con crm_candados_todos (migración 61: la vista se calcula una vez y llega en un jsonb). Si la función aún
+ * no existe en la base, por páginas ordenadas por card_id (único); es correcto pero recalcula la vista por página.
+ */
+export async function candadosTodos<C extends keyof CandadoCard>(
+  db: Db,
+  columnas: readonly C[],
+): Promise<Pick<CandadoCard, C>[]> {
+  const r = await db.rpc('crm_candados_todos');
+  if (!r.error && Array.isArray(r.data)) return r.data as unknown as Pick<CandadoCard, C>[];
+  return leerPaginas<Pick<CandadoCard, C>>(
+    (desde, hasta) =>
+      db.from('crm_v_candados').select(columnas.join(',')).order('card_id').range(desde, hasta),
+    { error: 'No se pudo consultar el CRM. Intenta de nuevo.' },
+  );
+}
+
 /** Vencimientos y avisos (Panel, Mis pendientes y Vencimientos). */
 export async function vencimientos(db: Db) {
   const [v, a] = await Promise.all([
     db.from('crm_v_vencimientos').select('*').order('fecha'),
-    db.from('crm_avisos').select('*').order('fecha_objetivo'),
+    db.from('crm_avisos').select('*').order('fecha_objetivo').order('id'),
   ]);
   const hoy = hoyMx();
   return {

@@ -287,6 +287,8 @@ export interface Database {
       crm_atender_aviso: { Args: { p_aviso: string }; Returns: undefined };
       crm_es_head: { Args: Record<string, never>; Returns: boolean };
       crm_ve_sensibles: { Args: Record<string, never>; Returns: boolean };
+      /** Migración 61: crm_v_candados completa en un jsonb (sin el tope de max_rows). */
+      crm_candados_todos: { Args: Record<string, never>; Returns: Json };
       sucursales_puede_costeo: { Args: { p_company: number }; Returns: boolean };
       sucursales_datos_costeo: { Args: { p_company: number }; Returns: Json };
       sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };

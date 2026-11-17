@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { sesionCrm } from '@/lib/supabase/sesion';
 import { nombres, vencimientos } from '@/lib/crm/unificado/consultas';
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
@@ -7,8 +8,11 @@ import { VistaVencimientos } from '@/components/crm/unificado/vistas/vencimiento
 /** Fechas clave de las sucursales: COF, 5 días hábiles (con festivos) y límite de 120 días. */
 export default async function Vencimientos() {
   const { db, perfil, accesos } = await sesionCrm();
-  // Genera los avisos que ya entraron en su ventana (idempotente; pg_cron lo hace a diario).
-  await db.rpc('crm_generar_avisos', {});
+  // Genera los avisos que ya entraron en su ventana (idempotente; pg_cron lo hace a diario). Después de responder,
+  // para no frenar la página: lo nuevo aparece en la siguiente visita.
+  after(async () => {
+    await db.rpc('crm_generar_avisos', {});
+  });
   const [usuario, { vencimientos: lista, avisos }] = await Promise.all([
     usuarioCrm(db, perfil, accesos),
     vencimientos(db),

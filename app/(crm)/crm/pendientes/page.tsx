@@ -1,5 +1,5 @@
 import { sesionCrm } from '@/lib/supabase/sesion';
-import { armarCards, etapasGenerales, vencimientos } from '@/lib/crm/unificado/consultas';
+import { armarCards, candadosTodos, etapasGenerales, vencimientos } from '@/lib/crm/unificado/consultas';
 import { usuarioCrm } from '@/lib/crm/unificado/usuario';
 import { Encabezado } from '@/components/portal/piezas';
 import { VistaPendientes } from '@/components/crm/unificado/vistas/pendientes';
@@ -26,11 +26,21 @@ export default async function MisPendientes() {
     .map((e) => e.id);
 
   const deCarril = todas || usuario.areas.includes('legal');
-  const [porValidar, candados, propias, toca, carril] = await Promise.all([
+  const [porValidar, todosCandados, propias, toca] = await Promise.all([
     db.from('crm_cumplimientos').select('*').eq('estado', 'cumplido').order('cumplido_en').limit(200),
-    misEtapas.length
-      ? db.from('crm_v_candados').select('*').in('etapa_id', misEtapas).limit(5000)
-      : Promise.resolve({ data: [] as CandadoCard[] }),
+    // Una sola lectura completa (sin el tope de 1,000) para mis etapas y para el carril Legal.
+    misEtapas.length || deCarril
+      ? candadosTodos(db, [
+          'card_id',
+          'tipo_card',
+          'etapa_id',
+          'total',
+          'listos',
+          'liberado',
+          'carril_total',
+          'carril_listos',
+        ] as const)
+      : Promise.resolve([]),
     db
       .from('crm_franquiciatarios')
       .select('id')
@@ -50,18 +60,12 @@ export default async function MisPendientes() {
           .not('etapa_id', 'in', `(${sinFuncion.join(',') || '00000000-0000-0000-0000-000000000000'})`)
           .range(0, MAX - 1)
       : Promise.resolve({ data: [] as Pick<CandadoCard, 'card_id' | 'tipo_card'>[], count: 0 }),
-    // Carril Legal (COF y contrato): corre en paralelo a Proyectos, así que no sale en faltante_area.
-    deCarril
-      ? db
-          .from('crm_v_candados')
-          .select('card_id,tipo_card,carril_total,carril_listos')
-          .gt('carril_total', 0)
-          .limit(5000)
-      : Promise.resolve({ data: [] as CandadoCard[] }),
   ]);
-  const carrilAbierto = ((carril.data ?? []) as CandadoCard[]).filter(
-    (c) => c.carril_listos < c.carril_total,
-  );
+  // Carril Legal (COF y contrato): corre en paralelo a Proyectos, así que no sale en faltante_area.
+  const carrilAbierto = deCarril
+    ? todosCandados.filter((c) => c.carril_total > 0 && c.carril_listos < c.carril_total)
+    : [];
+  const enMisEtapas = new Set(misEtapas);
   const tocaIds = new Set(((toca.data ?? []) as Pick<CandadoCard, 'card_id'>[]).map((c) => c.card_id));
   const tocaCarril = carrilAbierto.filter((c) => !tocaIds.has(c.card_id));
   const cumplidos = (porValidar.data ?? []) as Cumplimiento[];
@@ -78,7 +82,7 @@ export default async function MisPendientes() {
     const r = reqDe.get(c.requisito_id);
     return r && mias(r.area_valida) && c.cumplido_por !== perfil.user_id;
   });
-  const cs = (candados.data ?? []) as CandadoCard[];
+  const cs = todosCandados.filter((c) => enMisEtapas.has(c.etapa_id));
   const listas = cs.filter((c) => c.liberado || c.listos >= c.total).slice(0, MAX);
   const bloqueadas = cs.filter((c) => !c.liberado && c.listos < c.total);
   const [cardsListas, cardsValidar, cardsPropias, cardsToca] = await Promise.all([
