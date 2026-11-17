@@ -36,7 +36,7 @@ else if (ok && r.body && typeof r.body === 'object') {
   if (b.cambios?.length) mensaje += ' Cambios: ' + b.cambios.map((c) => '#' + c.id + ' ' + c.de + ' → ' + c.a).join(', ') + '.';
 }
 // Un correo cuando aparece el problema (o cambia) y otro cada 6 h si sigue; en el cierre diario, también si el portal
-// se saltó pedidos o hubo pedidos que ya no aparecen.
+// se saltó pedidos, hubo pedidos que ya no aparecen o hubo corridas que se recuperaron solas.
 const st = $getWorkflowStaticData('global');
 let avisar = false;
 if (estado === 'error' || estado === 'sesion_expirada') {
@@ -46,7 +46,23 @@ if (estado === 'error' || estado === 'sesion_expirada') {
   if (estado === 'ok' || estado === 'sin_ordenes') st.ultimoAviso = null;
   if (lote?.tipo === 'cierre' && (/menos de lo que contó/.test(mensaje) || (r?.body?.desaparecidos ?? 0) > 0)) avisar = true;
 }
-return [{ json: { avisar, tipo: lote?.tipo ?? pedido.tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
+// Corridas que se recuperaron solas (la sesión se cayó a media lectura y el lector volvió a entrar, #142): no son
+// falla, pero conviene saber si se vuelven frecuentes. Se juntan y van en UN correo al día, con el cierre de las 5:07.
+const recuperada = estado === 'ok' || estado === 'sin_ordenes' ? /A media lectura: (.*?) Se volvió a entrar/.exec(mensaje) : null;
+if (recuperada) {
+  const hora = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+  st.recuperadas = [...(st.recuperadas ?? []), hora + ' (' + (lote?.tipo ?? pedido.tipo) + '): ' + recuperada[1]].slice(-50);
+}
+let asunto = estado === 'sesion_expirada' ? 'el lector no pudo entrar' : estado === 'error' ? 'revisar lectura' : 'revisar pedidos';
+if ((lote?.tipo ?? pedido.tipo) === 'cierre' && st.recuperadas?.length) {
+  const n = st.recuperadas.length;
+  const lista = 'El lector se recuperó solo ' + n + (n === 1 ? ' vez' : ' veces') + ' desde el último aviso (la sesión de Rappi se cayó a media lectura, volvió a entrar y terminó la lectura; no se perdió nada):\\n- ' + st.recuperadas.join('\\n- ');
+  if (!avisar) asunto = 'el lector se recuperó solo ' + n + (n === 1 ? ' vez' : ' veces');
+  mensaje = lista + '\\n\\nCierre: ' + mensaje;
+  avisar = true;
+  st.recuperadas = [];
+}
+return [{ json: { avisar, asunto, tipo: lote?.tipo ?? pedido.tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
 
 const id = () => randomUUID();
 const nodo = (name, type, typeVersion, position, parameters, extra = {}) => ({
@@ -182,8 +198,7 @@ const nodes = [
     {
       fromEmail: 'Avisos Rappi <scervera@dodopizz.mx>',
       toEmail: AVISAR_A,
-      subject:
-        "=Rappi The Coffee ({{ $json.tipo }}): {{ $json.estado === 'sesion_expirada' ? 'el lector no pudo entrar' : $json.estado === 'error' ? 'revisar lectura' : 'revisar pedidos' }}",
+      subject: '=Rappi The Coffee ({{ $json.tipo }}): {{ $json.asunto }}',
       emailFormat: 'text',
       text: '={{ $json.mensaje }}\n\nVentana: {{ $json.desde }} a {{ $json.hasta }}.\nPara reponer días: POST al webhook «Reponer» con {"tipo":"manual","desde":"AAAA-MM-DD","hasta":"AAAA-MM-DD"}.',
       options: {},
@@ -265,8 +280,10 @@ const n8n = async (metodo, ruta, cuerpo) => {
 };
 const existente = (await n8n('GET', '/workflows?limit=250')).data.find((w) => w.name === NOMBRE);
 if (existente) {
-  // Conserva las credenciales elegidas en la UI y el id del webhook.
+  // Conserva las credenciales elegidas en la UI, el id del webhook y los ajustes que n8n agrega por su cuenta
+  // (availableInMCP, binaryMode).
   const actual = await n8n('GET', `/workflows/${existente.id}`);
+  flujo.settings = { ...actual.settings, ...flujo.settings };
   for (const n of flujo.nodes) {
     const previo = actual.nodes.find((x) => x.name === n.name);
     if (previo?.credentials) n.credentials = { ...n.credentials, ...previo.credentials };
