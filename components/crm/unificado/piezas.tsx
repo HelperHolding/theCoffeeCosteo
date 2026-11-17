@@ -347,7 +347,8 @@ export function RecorridoEtapas({
   // Una card ganada (formalizada u operando) ya recorrió todas.
   const posicion = actual.tipo === 'ganada' ? Infinity : actual.orden;
   return (
-    <ol role="list" aria-label="Recorrido de etapas" className="flex items-start overflow-x-auto pb-1">
+    // py-1: el anillo de la etapa actual (3 px) sale del círculo; sin ese margen, el desplazamiento lo recorta.
+    <ol role="list" aria-label="Recorrido de etapas" className="flex items-start overflow-x-auto py-1">
       {nodos.map((n, i) => {
         const hecha = posicion > n.orden;
         const esActual = posicion === n.orden;
