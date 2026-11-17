@@ -1,5 +1,5 @@
 import '../../../components/sucursales/tablero-mexico.css';
-import '../../../app/(sucursales)/sucursales/vitrina.css';
+import '../../../components/portal/vitrina.css';
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
 import { VistasMexico } from '../../../components/sucursales/vistas-mexico';
