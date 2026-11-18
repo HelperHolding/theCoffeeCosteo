@@ -1,19 +1,18 @@
 'use client';
 import { useState } from 'react';
 import { Boxes, PackageX } from 'lucide-react';
-import { Kpi, Pill, Vacio, type Estado } from '@/components/portal/piezas';
+import { Kpi, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { numero, pesos } from '@/lib/comercializadora/formato';
-import type { FilaInventario } from '@/lib/comercializadora/inventario';
+import type { FilaInventarioContable } from '@/lib/comercializadora/inventario';
 import { DescargarCsv } from './descargar-csv';
 import { Ajuste3pl } from './ajuste-3pl';
 
 const POR_PAGINA = 25;
-const TONO: Record<string, Estado> = { rojo: 'pierde', amarillo: 'bajo', verde: 'ok' };
 const ESTATUS = ['Activo', 'Compra Recurrente', 'Prueba', 'Hasta Agotar Existencias', 'Inactivo'];
 
 export function Inventario(p: {
-  filas: FilaInventario[];
+  filas: FilaInventarioContable[];
   valor: { valor: number; sinCosto: number };
   viejos: string[];
   ultimoSync: string | null;
@@ -21,6 +20,8 @@ export function Inventario(p: {
   editable: boolean;
   autorizadores: string[];
   saldos3pl: Record<string, number | null>;
+  /** Si no se pudieron leer los pedidos, venta/día y cobertura no se muestran y se dice por qué. */
+  ventaAviso: string | null;
 }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
@@ -35,9 +36,8 @@ export function Inventario(p: {
     (f) =>
       (!texto || f.sku.toLowerCase().includes(texto) || f.nombre.toLowerCase().includes(texto)) &&
       (!cat || f.categoria === cat) &&
-      (!est || (est === 'faltantes' ? f.disponible <= 0 : f.estatus === est)),
+      (!est || (est === 'faltantes' ? f.inventario != null && f.inventario <= 0 : f.estatus === est)),
   );
-  const viejos = new Set(p.viejos);
   const minutos = p.ultimoSync
     ? Math.round((new Date(p.hoy + 'T12:00:00Z').getTime() - new Date(p.ultimoSync).getTime()) / 60000)
     : null;
@@ -54,8 +54,11 @@ export function Inventario(p: {
           icono={Boxes}
         />
         <Kpi
-          etiqueta="Faltantes (disponible ≤ 0)"
-          valor={p.filas.filter((f) => f.disponible <= 0 && f.estatus !== 'Inactivo').length}
+          etiqueta="Faltantes (inventario ≤ 0)"
+          valor={
+            p.filas.filter((f) => f.inventario != null && f.inventario <= 0 && f.estatus !== 'Inactivo')
+              .length
+          }
           icono={PackageX}
           tono="bajo"
         />
@@ -66,6 +69,11 @@ export function Inventario(p: {
           : 'Todavía no hay sincronización con Zoho.'}
         {minutos != null && minutos > 120 ? ' · revisa la conexión' : ''}
       </p>
+      {p.ventaAviso ? (
+        <p role="alert" className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">
+          {p.ventaAviso} Venta/día y cobertura no se muestran.
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
@@ -118,10 +126,9 @@ export function Inventario(p: {
             ['sku', 'SKU'],
             ['nombre', 'Nombre'],
             ['categoria', 'Categoria'],
-            ['fisico', 'CEDIS'],
-            ['comprometido', 'Comprometido'],
-            ['disponible', 'Disponible'],
-            ['tresPl', '3PL'],
+            ['inventario', 'Inventario (contable)'],
+            ['venta', 'Venta/dia (30 dias)'],
+            ['cobertura', 'Cobertura (dias)'],
             ['estatus', 'Estatus'],
           ]}
         />
@@ -142,20 +149,10 @@ export function Inventario(p: {
           <table className="tabla">
             <thead>
               <tr>
-                <th>SKU</th>
-                <th className="text-right">Físico (Zoho)</th>
-                <th className="text-right">Contable (Zoho)</th>
-                <th className="text-right">Comprometido</th>
-                <th className="text-right">Disponible</th>
-                <th className="text-right">En camino</th>
-                <th className="text-right">Mín</th>
-                <th className="text-right">Máx</th>
+                <th>Nombre</th>
+                <th className="text-right">Inventario</th>
                 <th className="text-right">Venta/día</th>
                 <th className="text-right">Cobertura (días)</th>
-                <th>Estado</th>
-                <th className="text-right">3PL</th>
-                <th>Estatus</th>
-                <th>Proveedor</th>
               </tr>
             </thead>
             <tbody>
@@ -163,38 +160,13 @@ export function Inventario(p: {
                 <tr key={f.sku}>
                   <td>
                     <div className="font-medium">{f.nombre}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {f.sku} · {f.categoria}
-                    </div>
+                    <div className="text-xs text-muted-foreground">{f.sku}</div>
                   </td>
-                  <td className="text-right tabular-nums">{numero(f.fisico)}</td>
-                  <td className="text-right tabular-nums">{f.contable == null ? '—' : numero(f.contable)}</td>
-                  <td className="text-right tabular-nums">{numero(f.comprometido)}</td>
-                  <td className="text-right font-semibold tabular-nums">{numero(f.disponible)}</td>
-                  <td className="text-right tabular-nums">{numero(f.camino)}</td>
-                  <td className="text-right tabular-nums">
-                    {f.minimo == null ? '—' : `${numero(f.minimo)}${f.minManual ? ' ✎' : ''}`}
+                  <td className="text-right font-semibold tabular-nums">
+                    {f.inventario == null ? '—' : numero(f.inventario)}
                   </td>
-                  <td className="text-right tabular-nums">
-                    {f.maximo == null ? '—' : `${numero(f.maximo)}${f.maxManual ? ' ✎' : ''}`}
-                  </td>
-                  <td className="text-right tabular-nums">{numero(f.venta)}</td>
+                  <td className="text-right tabular-nums">{f.venta == null ? '—' : numero(f.venta)}</td>
                   <td className="text-right tabular-nums">{f.cobertura == null ? '—' : f.cobertura}</td>
-                  <td>
-                    {f.estado ? (
-                      <Pill estado={TONO[f.estado]}>
-                        {f.estado === 'rojo' ? 'Pedir' : f.estado === 'amarillo' ? 'Atento' : 'Bien'}
-                      </Pill>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td className="text-right tabular-nums">
-                    {numero(f.tresPl)}
-                    {viejos.has(f.sku) ? <div className="text-xs text-warn">3PL sin actualizar</div> : null}
-                  </td>
-                  <td>{f.estatus}</td>
-                  <td>{f.proveedor || '—'}</td>
                 </tr>
               ))}
             </tbody>

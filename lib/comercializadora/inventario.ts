@@ -1,4 +1,5 @@
 import { difDias } from './fechas';
+import { serieDiaria, type PedidoPlan } from '../../supabase/functions/_shared/planEngine.ts';
 import { enCamino, saldoCedis } from './quepedir';
 import type { ArticuloCatalogo, LineaOcZoho } from './tipos';
 
@@ -155,4 +156,64 @@ export function pegarConteo(txt: string): { sku: string; cantidad: number }[] {
     r.set(m[1], (r.get(m[1]) ?? 0) + cant);
   }
   return [...r.entries()].map(([sku, cantidad]) => ({ sku, cantidad }));
+}
+
+/**
+ * Venta/día de Inventario (pedido del usuario, 2026-11-18): lo vendido en los últimos 30 días ÷ 30, día de CDMX.
+ * Cuenta todos los pedidos vigentes (resurtido, sin vincular, marketing, corporativo, llenado) salvo los de apertura,
+ * que serieDiaria nunca cuenta. No es la demanda del plan (com_minmax.venta_diaria), que usa método, picos y temporada.
+ */
+export function ventaDiaria30(d: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cfg: any;
+  hoy: string;
+  catalogo: { sku: string; created_at?: string | null }[];
+  mapa: { shopify_nombre: string; sku: string }[];
+  pedidosApertura: { pedido_id: unknown }[];
+  aperturas: { id: unknown; estatus: string | null; fecha: string | null }[];
+  pedidos: PedidoPlan[];
+}): Record<string, number> {
+  const todos = {
+    resurtido: true,
+    sin_vincular: true,
+    apertura: false,
+    marketing: true,
+    corporativo: true,
+    llenado: true,
+  };
+  const cfg = { ...d.cfg, consumo: { ...d.cfg.consumo, ventana: 30, tipos: todos } };
+  const s = serieDiaria({
+    cfg,
+    hoy: d.hoy,
+    hist: 30,
+    primerPedido: null,
+    pedidos: d.pedidos,
+    catalogo: d.catalogo,
+    mapa: d.mapa,
+    pedidosApertura: d.pedidosApertura.map((x) => x.pedido_id),
+    aperturas: d.aperturas,
+  });
+  return Object.fromEntries(
+    Object.entries(s.u).map(([sku, u]) => [sku, Math.round((u.reduce((a, b) => a + b, 0) / 30) * 100) / 100]),
+  );
+}
+
+export type FilaInventarioContable = Omit<FilaInventario, 'venta' | 'cobertura'> & {
+  /** Contable de Zoho (comprado facturado − vendido facturado); null si el artículo no se ha sincronizado. */
+  inventario: number | null;
+  venta: number | null;
+  cobertura: number | null;
+};
+
+/** Inventario = contable; cobertura = inventario ÷ venta/día (redondeada, sin negativos). Sin venta de pedidos: null. */
+export function conVentaContable(
+  filas: FilaInventario[],
+  venta30: Record<string, number> | null,
+): FilaInventarioContable[] {
+  return filas.map((f) => {
+    const venta = venta30 ? n(venta30[f.sku]) : null;
+    const cobertura =
+      venta != null && venta > 0 && f.contable != null ? Math.max(0, Math.round(f.contable / venta)) : null;
+    return { ...f, inventario: f.contable, venta, cobertura };
+  });
 }

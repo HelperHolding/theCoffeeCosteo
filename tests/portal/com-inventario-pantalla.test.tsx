@@ -29,10 +29,12 @@ const fila = (o: Record<string, unknown>) => ({
 });
 
 describe('Inventario', () => {
-  it('filtra por búsqueda y por "solo faltantes"', async () => {
+  it('filtra por búsqueda y por "solo faltantes" (inventario contable ≤ 0, no el disponible)', async () => {
     render(
       <Inventario
-        filas={[fila({}), fila({ sku: 'B', nombre: 'Vasos', disponible: 0, fisico: 0 })] as never}
+        filas={
+          [fila({}), fila({ sku: 'B', nombre: 'Vasos', inventario: 0, disponible: 99, fisico: 0 })] as never
+        }
         valor={{ valor: 500, sinCosto: 0 }}
         viejos={[]}
         ultimoSync={null}
@@ -40,6 +42,7 @@ describe('Inventario', () => {
         editable={false}
         autorizadores={[]}
         saldos3pl={{}}
+        ventaAviso={null}
       />,
     );
     expect(screen.getByText('Café')).toBeInTheDocument();
@@ -58,6 +61,7 @@ describe('Inventario', () => {
         editable={false}
         autorizadores={[]}
         saldos3pl={{}}
+        ventaAviso={null}
       />,
     );
     expect(screen.queryByRole('button', { name: /Ajustar 3PL/ })).not.toBeInTheDocument();

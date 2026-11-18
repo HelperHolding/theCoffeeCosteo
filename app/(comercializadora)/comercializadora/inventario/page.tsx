@@ -4,18 +4,23 @@ import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { com, leerTodoCom } from '@/lib/comercializadora/consultas';
 import {
+  conVentaContable,
   filasInventario,
   tresPlViejo,
   valorInventario,
+  ventaDiaria30,
   type ArticuloInventario,
   type MinMaxInventario,
 } from '@/lib/comercializadora/inventario';
+import { memoMotor, motorPlan } from '@/lib/comercializadora/motor';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import type { LineaOcZoho } from '@/lib/comercializadora/tipos';
 
 export default async function InventarioPagina() {
   const { db, accesos } = await sesionComercializadora();
   const hoy = hoyCdmx();
+  // Venta/día = lo vendido en 30 días ÷ 30, sin aperturas, con los pedidos que el motor ya tiene en caché (plan 3d).
+  const motor = motorPlan(db);
   const [catalogo, minmax, ventas, lineas, sync, config, aut] = await Promise.all([
     leerTodoCom<ArticuloInventario>(
       db,
@@ -54,21 +59,39 @@ export default async function InventarioPagina() {
     com(db).rpc('com_autorizadores'),
   ]);
   const editable = puedeEditarCom(accesos);
+  const m = await motor;
+  const venta30 = m.ok
+    ? memoMotor(m, 'venta30', () =>
+        ventaDiaria30({
+          cfg: m.cfg,
+          hoy: m.R.hoy,
+          catalogo: m.R.cat,
+          mapa: m.R.map,
+          pedidosApertura: m.R.pedAper,
+          aperturas: m.R.aperturas,
+          pedidos: m.R.pedidos,
+        }),
+      )
+    : null;
   return (
     <>
       <Encabezado
         area="Comercializadora"
         titulo="Inventario"
-        descripcion="Existencias de Zoho (CEDIS) y del 3PL, con su cobertura y semáforo."
+        descripcion="Inventario contable de Zoho, venta diaria de los últimos 30 días (sin aperturas) y su cobertura."
       />
       <Inventario
-        filas={filasInventario({
-          catalogo,
-          minmax,
-          ventas,
-          lineas,
-          yulius: config.data?.config?.inv?.yulius !== false,
-        })}
+        filas={conVentaContable(
+          filasInventario({
+            catalogo,
+            minmax,
+            ventas,
+            lineas,
+            yulius: config.data?.config?.inv?.yulius !== false,
+          }),
+          venta30,
+        )}
+        ventaAviso={m.ok ? null : m.error}
         valor={valorInventario(catalogo)}
         viejos={catalogo.filter((c) => tresPlViejo(c, hoy)).map((c) => c.sku)}
         ultimoSync={sync.data?.[0]?.fin ?? null}
