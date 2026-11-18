@@ -92,3 +92,11 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Quién autoriza un ajuste: perfiles con Comercializadora `edicion` o `desarrollador`.
 - `auto.modo` no se cambia desde la pantalla de configuración: se pasa a Real en el cutover (plan 4).
 - Días de crédito: se editan en Zoho (términos de pago); el portal los muestra.
+
+## 10. Inicio, Envíos, Traspasos y Mapeo (plan 3c)
+
+- El puente lee además `pedidos.monto`, `pedidos.shopify_order_number`, `aperturas.sucursal` y `aperturas.contacto`. En bliocjvq, `portal_puente` necesita `grant select` de esas columnas (aplicado antes de la migración 49).
+- Inicio y Mapeo leen el puente en el servidor con la llave de servicio (`SUPABASE_SECRET_KEY`); en Vercel debe existir en Production y Preview. Sin ella, Inicio muestra lo de `com_*` y avisa que no hay ventas.
+- Ingresar un traspaso al 3PL suma a `saldo_yulius` en la misma transacción (`com_ingresar_traspaso`); al CEDIS se registra en Zoho.
+- Crédito Comercializadora y los KPIs de pedidos (Fill rate, OTIF, entregas, encuestas, DSO) se migran con Pedidos. Ventas no se porta.
+- Indicadores y DOH llegan con el plan 3d (necesitan el motor de planeación).
