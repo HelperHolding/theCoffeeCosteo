@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FormularioAcceso } from '@/components/portal/formulario-acceso';
 import { Marca } from '@/components/portal/marca';
 export default async function Login({
@@ -48,11 +49,19 @@ export default async function Login({
               <p className="aviso">
                 {aviso === 'perfil'
                   ? 'Tu cuenta necesita un perfil activo. Contacta al administrador.'
-                  : 'El enlace no es válido o venció. Solicita una nueva invitación.'}
+                  : 'El enlace no es válido o venció. Pide uno nuevo en «¿Olvidaste tu contraseña?».'}
               </p>
             )}
             {configurado ? (
-              <FormularioAcceso next={next} />
+              <>
+                <FormularioAcceso next={next} />
+                <Link
+                  href="/recuperar-contrasena"
+                  className="block text-center text-sm font-semibold text-ink-2 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </>
             ) : (
               <p className="aviso">Falta configurar Supabase. Consulta las instrucciones del README.</p>
             )}

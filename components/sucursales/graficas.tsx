@@ -530,7 +530,8 @@ export interface Segmento {
   etiqueta: string;
   color: string;
   ventaCent: number;
-  pedidos: number;
+  /** null: la medida no tiene pedidos (p. ej. la mezcla por grupo del BI) y no se rotula. */
+  pedidos: number | null;
   participacion: number | null;
 }
 
@@ -574,7 +575,7 @@ export function BarraApilada({
             key={s.clave}
             onPointerEnter={() => setActivo(s.clave)}
             onPointerLeave={() => setActivo(null)}
-            className={`flex items-center gap-2 rounded-lg px-1.5 py-1 text-sm transition-colors ${activo === s.clave ? 'bg-surface-2' : ''}`}
+            className={`flex flex-wrap items-center gap-x-2 rounded-lg px-1.5 py-1 text-sm transition-colors sm:flex-nowrap ${activo === s.clave ? 'bg-surface-2' : ''}`}
           >
             <span
               aria-hidden="true"
@@ -582,8 +583,10 @@ export function BarraApilada({
               style={{ backgroundColor: s.color }}
             />
             <span className="min-w-0 flex-1 truncate font-medium">{s.etiqueta}</span>
-            <span className="tabular text-ink-2">
-              {dinero(s.ventaCent, moneda, false)} · {numero(s.pedidos)} ped.
+            {/* En celular el monto baja a su renglón: el nombre usa todo el ancho y no se corta («CONTINGENCY - …»). */}
+            <span className="order-last basis-full pl-5 text-xs tabular text-ink-2 sm:order-none sm:basis-auto sm:pl-0 sm:text-sm">
+              {dinero(s.ventaCent, moneda, false)}
+              {s.pedidos === null ? null : ` · ${numero(s.pedidos)} ped.`}
             </span>
             <span className="w-11 text-right tabular font-semibold">{porcentaje(s.participacion, 0)}</span>
           </li>

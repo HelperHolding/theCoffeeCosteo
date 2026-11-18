@@ -16,6 +16,7 @@ import type { PedidoVista, RespuestaVivo } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { frescura, type Frescura } from '@/lib/sucursales/tiempo';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Button } from '@/components/ui/button';
 import { ConInfo, type InfoTablero } from '@/components/portal/con-info';
 import { BarraApilada, CurvaAcumulada, PedidosPorHora, Ranking } from './graficas';
 import { COLOR_ORIGEN, Delta, Etiqueta, SERIE_HOY, colorPago } from './colores';
@@ -118,32 +119,28 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {sonido.disponible && origen !== 'rappi' && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={sonido.alternar}
               aria-pressed={sonido.activo}
               title="Suena un “cuac” por cada pedido nuevo mientras esta página esté abierta"
-              className={`inline-flex h-9 items-center gap-2 rounded-[10px] border px-3 text-sm font-semibold shadow-card ${
-                sonido.activo ? 'border-ok bg-ok-soft text-ok' : 'border-line-strong bg-surface'
-              }`}
+              className={sonido.activo ? 'border-ok bg-ok-soft text-ok hover:bg-ok-soft' : undefined}
             >
-              {sonido.activo ? (
-                <Volume2 size={15} aria-hidden="true" />
-              ) : (
-                <VolumeX size={15} aria-hidden="true" />
-              )}
+              {sonido.activo ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
               Sonido de ventas {sonido.activo ? 'activado' : 'apagado'}
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={recargar}
             disabled={cargando}
-            className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold shadow-card disabled:opacity-60"
+            aria-busy={cargando || undefined}
           >
-            <RefreshCw size={15} aria-hidden="true" className={cargando ? 'motion-safe:animate-spin' : ''} />
+            <RefreshCw aria-hidden="true" className={cargando ? 'motion-safe:animate-spin' : ''} />
             Actualizar
-          </button>
+          </Button>
         </div>
       </div>
 

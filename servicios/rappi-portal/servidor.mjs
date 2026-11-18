@@ -20,7 +20,15 @@ import { createServer } from 'node:http';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { setTimeout as esperar } from 'node:timers/promises';
 import { chromium } from 'playwright-core';
-import { diasEntre, enParalelo, fechaMX, huellaListado, pedidoDeListado } from './lote.mjs';
+import {
+  diasEntre,
+  enParalelo,
+  esFallaSinRespuesta,
+  fechaMX,
+  huellaListado,
+  pedidoDeListado,
+  reintentable,
+} from './lote.mjs';
 
 const PORTAL = 'https://partners.rappi.com';
 const API = 'https://services.rappi.com/rests-partners-gateway/cauth';
@@ -56,7 +64,7 @@ const CONCURRENCIA = Math.min(6, Math.max(1, Number(RAPPI_CONCURRENCIA) || 3));
 /** Tope de una reposición manual (días × tiendas), para que termine antes de los 10 min que espera n8n. */
 const MAX_CONSULTAS_MANUAL = 400;
 
-/** El portal respondió 401/403: la sesión ya no sirve. */
+/** El portal respondió 401/403, o no respondió tras los reintentos: la sesión ya no sirve (o no se puede usar). */
 class SesionCaducada extends Error {}
 
 /** Candado 1: lo único que puede salir del navegador fuera de GET/HEAD/OPTIONS. */
@@ -222,27 +230,35 @@ async function iniciarSesion(pagina) {
   };
 }
 
-/** Llama al API del portal desde la página, con el token y los encabezados que usa la propia página. Solo LECTURAS. */
+/**
+ * Llama al API del portal desde la página, con el token y los encabezados que usa la propia página. Solo LECTURAS.
+ * Sin respuesta HTTP (esFallaSinRespuesta) devuelve status 0 en vez de tumbar la corrida.
+ */
 const pedirApi = (pagina, metodo, ruta, cuerpo) => {
   if (!LECTURAS.some((l) => l.metodo === metodo && l.ruta.test(ruta)))
     throw new Error(`SOLO LECTURA: llamada no permitida ${metodo} ${ruta}`);
-  return pagina.evaluate(
-    async ({ url, metodo, cuerpo, version }) => {
-      const r = await fetch(url, {
-        method: metodo,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Accept-Language': 'es',
-          'Content-Type': 'application/json;charset=utf-8',
-          'client-app-name': 'Partners Portal',
-          'client-app-version': version,
-        },
-        body: cuerpo ? JSON.stringify(cuerpo) : undefined,
-      });
-      return { status: r.status, json: await r.json().catch(() => null) };
-    },
-    { url: `${API}${ruta}`, metodo, cuerpo, version: RAPPI_CLIENTE_VERSION },
-  );
+  return pagina
+    .evaluate(
+      async ({ url, metodo, cuerpo, version }) => {
+        const r = await fetch(url, {
+          method: metodo,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            'Accept-Language': 'es',
+            'Content-Type': 'application/json;charset=utf-8',
+            'client-app-name': 'Partners Portal',
+            'client-app-version': version,
+          },
+          body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+        });
+        return { status: r.status, json: await r.json().catch(() => null) };
+      },
+      { url: `${API}${ruta}`, metodo, cuerpo, version: RAPPI_CLIENTE_VERSION },
+    )
+    .catch((e) => {
+      if (esFallaSinRespuesta(e)) return { status: 0, json: null };
+      throw e;
+    });
 };
 
 /** Ventana por tipo de corrida (hora de México): vivo = ayer y hoy; cierre = 7 días; repaso = 14 días. */
@@ -253,7 +269,7 @@ function ventana({ tipo, desde, hasta }) {
   return { desde: fechaMX(-1), hasta: fechaMX(0) };
 }
 
-/** Pedidos de una tienda en un día. Si Rappi responde 429 o 5xx, reintenta dos veces con pausa. */
+/** Pedidos de una tienda en un día. Si Rappi responde 429 o 5xx, o no responde, reintenta dos veces con pausa. */
 async function listarDia(pagina, tienda, dia) {
   let total = null;
   const vistos = new Map();
@@ -270,11 +286,13 @@ async function listarDia(pagina, tienda, dia) {
         page_size: PAGINA,
         order_id: '',
       });
-      if (!(r.status === 429 || r.status >= 500) || intento === 2) break;
+      if (!reintentable(r.status) || intento === 2) break;
       await esperar(2000 * (intento + 1));
     }
     if (r.status === 401 || r.status === 403)
       throw new SesionCaducada(`El portal respondió ${r.status} al historial.`);
+    if (r.status === 0)
+      throw new SesionCaducada('El portal no respondió al historial (Failed to fetch) en 3 intentos.');
     if (r.status !== 200 || !Array.isArray(r.json?.results))
       throw new Error(`Historial ${tienda} ${dia}: HTTP ${r.status}.`);
     total ??= r.json.total_rows;
@@ -287,6 +305,13 @@ async function listarDia(pagina, tienda, dia) {
 }
 
 const idDe = (o) => String(o.id).replace(/^MX/, '');
+
+/** Vuelve a cargar el portal y, si ya no hay sesión, entra con el usuario del lector. Igual que al iniciar. */
+async function renovarSesion(pagina) {
+  await pagina.goto(`${PORTAL}/home`, { waitUntil: 'domcontentloaded' });
+  if (await esperarSesion(pagina)) return { fallo: null, entro: false };
+  return iniciarSesion(pagina);
+}
 
 async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
   const base = { tipo, desde, hasta, estado: 'ok', mensaje: '', tiendas: [], pedidos: [] };
@@ -315,6 +340,8 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
     const pagina = await contexto.newPage();
     await pagina.goto(`${PORTAL}/home`, { waitUntil: 'domcontentloaded' });
     let relogin = false;
+    /** Motivo, si hubo que volver a entrar a media lectura. */
+    let recuperada = '';
     if (!(await esperarSesion(pagina))) {
       const { fallo, entro } = await iniciarSesion(pagina);
       if (fallo)
@@ -327,17 +354,34 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
     }
 
     // Historial: una consulta por tienda y día, CONCURRENCIA a la vez; los resultados quedan en orden de tienda y día.
-    let listados;
-    try {
-      listados = await enParalelo(
-        tiendas.flatMap((tienda) => diasEntre(desde, hasta).map((dia) => ({ tienda, dia }))),
-        CONCURRENCIA,
-        ({ tienda, dia }) => listarDia(pagina, tienda, dia),
-      );
-    } catch (e) {
-      if (e instanceof SesionCaducada) return { ...base, estado: 'sesion_expirada', mensaje: e.message };
-      throw e;
+    // Si la sesión se cae a media lectura (el token vence durante la corrida), se vuelve a entrar UNA vez y se leen
+    // solo las consultas que faltaban.
+    const consultas = tiendas.flatMap((tienda) => diasEntre(desde, hasta).map((dia) => ({ tienda, dia })));
+    const clave = ({ tienda, dia }) => `${tienda}|${dia}`;
+    const leidas = new Map();
+    for (let vuelta = 0; ; vuelta++) {
+      try {
+        await enParalelo(
+          consultas.filter((c) => !leidas.has(clave(c))),
+          CONCURRENCIA,
+          async (c) => leidas.set(clave(c), await listarDia(pagina, c.tienda, c.dia)),
+        );
+        break;
+      } catch (e) {
+        if (!(e instanceof SesionCaducada)) throw e;
+        if (vuelta)
+          return {
+            ...base,
+            estado: 'sesion_expirada',
+            mensaje: `${e.message} Ya se había vuelto a entrar en esta corrida; la siguiente lo intenta de nuevo.`,
+          };
+        const { fallo, entro } = await renovarSesion(pagina);
+        if (fallo) return { ...base, estado: 'sesion_expirada', mensaje: `${e.message} ${fallo}` };
+        relogin ||= entro;
+        recuperada = e.message;
+      }
     }
+    const listados = consultas.map((c) => leidas.get(clave(c)));
 
     // Detalle (descuentos) solo de lo nuevo o cambiado, hasta el tope del tipo de corrida.
     const cache = leerJson(CACHE, {});
@@ -403,6 +447,7 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
       const resto = sinDetalle.length - detalles;
       base.mensaje = [
         relogin ? 'Sesión renovada con login automático.' : '',
+        recuperada ? `A media lectura: ${recuperada} Se volvió a entrar y se terminó la lectura.` : '',
         `Leídos ${base.pedidos.length} pedidos de ${tiendas.length} tiendas (${desde} a ${hasta}) en ${Math.round((Date.now() - inicio) / 1000)} s.`,
         sinDetalle.length
           ? `Descuentos leídos de ${detalles} pedidos${resto ? `; faltan ${resto} para las siguientes corridas` : ''}.`

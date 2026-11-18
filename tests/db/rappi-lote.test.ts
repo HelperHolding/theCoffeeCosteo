@@ -1,7 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
-import { diasEntre, enParalelo, fechaMX, pedidoDeListado } from '../../servicios/rappi-portal/lote.mjs';
+import {
+  diasEntre,
+  enParalelo,
+  esFallaSinRespuesta,
+  fechaMX,
+  pedidoDeListado,
+  reintentable,
+} from '../../servicios/rappi-portal/lote.mjs';
 
 // El lector (servicios/rappi-portal) convierte el JSON del portal al lote de rappi_importar. Forma del JSON observada
 // el 2026-10-29 en un pedido de Namóra (doc 01 §4); cliente anonimizado.
@@ -168,5 +175,19 @@ describe('lote del lector de Rappi', () => {
     // 0 y 1 empiezan; 1 falla a los 5 ms; 0 termina y ya no se toma ninguno más.
     expect(empezados).toEqual([0, 1]);
     expect(terminados).toEqual([0]);
+  });
+
+  it('fetch sin respuesta (16/11 09:07): se reconoce y se reintenta; los demás errores no', () => {
+    expect(esFallaSinRespuesta(new Error('page.evaluate: TypeError: Failed to fetch'))).toBe(true);
+    expect(
+      esFallaSinRespuesta(
+        new Error('page.evaluate: Execution context was destroyed, most likely because of a navigation'),
+      ),
+    ).toBe(true);
+    expect(esFallaSinRespuesta(new Error('net::ERR_CONNECTION_RESET'))).toBe(true);
+    expect(esFallaSinRespuesta(new Error('SOLO LECTURA: llamada no permitida POST /x'))).toBe(false);
+    expect(esFallaSinRespuesta(new Error('Target page, context or browser has been closed'))).toBe(false);
+    expect([0, 429, 500, 503].every(reintentable)).toBe(true);
+    expect([200, 400, 401, 403, 404].some(reintentable)).toBe(false);
   });
 });

@@ -124,7 +124,7 @@ for (const cfg of lista) {
   let rappi = null;
   const guardados = rappiPorSucursal.get(cfg.companyId);
   if (guardados) {
-    const rps = guardados.map(pedidoRappiAPos).filter((p): p is PedidoNormal => !!p);
+    const rps = guardados.map((p) => pedidoRappiAPos(p, cfg.zona)).filter((p): p is PedidoNormal => !!p);
     const juntos = await conRappi(l, async () => rps);
     const sinEnlaceRappi = new Map<string, number>();
     for (const p of rps)

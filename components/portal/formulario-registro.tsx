@@ -123,7 +123,7 @@ export function FormularioRegistro({
         </p>
       )}
       {editable && (
-        <Button onClick={guardar} disabled={pending}>
+        <Button onClick={guardar} pendiente={pending}>
           {pending ? 'Guardando…' : id === null ? 'Crear' : 'Guardar cambios'}
         </Button>
       )}

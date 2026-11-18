@@ -212,7 +212,7 @@ export function DatosTienda({ tienda, editable }: { tienda: Tienda; editable: bo
         <Button type="button" variant="ghost" onClick={() => setEditando(false)} disabled={pendiente}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={pendiente}>
+        <Button type="submit" pendiente={pendiente}>
           {pendiente ? 'Guardando…' : 'Guardar cambios'}
         </Button>
       </div>
