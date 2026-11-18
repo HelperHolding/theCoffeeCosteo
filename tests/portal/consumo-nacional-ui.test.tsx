@@ -59,7 +59,7 @@ describe('pestaña Consumo del Tablero México', () => {
     usar();
     render(<ConsumoNacionalVista />);
     expect(await screen.findByText('LECHE ENTERA')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Octubre 2026' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'Octubre 2026' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getAllByText(/312\.5 × 1,000 ml/).length).toBeGreaterThan(0);
     expect(screen.getByText('+25 %')).toBeInTheDocument();
     expect(screen.getByText('90 %')).toBeInTheDocument(); // cobertura
@@ -68,13 +68,13 @@ describe('pestaña Consumo del Tablero México', () => {
   it('cambia de mes sin perder la barra, muestra el mes nuevo y abre el desglose', async () => {
     usar();
     const { container } = render(<ConsumoNacionalVista />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Septiembre 2026' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Septiembre 2026' }));
     // Mientras carga: la barra sigue, el cuerpo está ocupado.
-    expect(screen.getByRole('button', { name: 'Octubre 2026' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Octubre 2026' })).toBeInTheDocument();
     expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
     await waitFor(() => expect(fetchFalso).toHaveBeenCalledWith(expect.stringContaining('mes=2026-09'), expect.anything()));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Septiembre 2026' })).toHaveAttribute('aria-pressed', 'true'));
-    expect(screen.getByRole('button', { name: 'Octubre 2026' })).toHaveAttribute('aria-pressed', 'false');
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'Septiembre 2026' })).toHaveAttribute('aria-checked', 'true'));
+    expect(screen.getByRole('radio', { name: 'Octubre 2026' })).toHaveAttribute('aria-checked', 'false');
     expect((await screen.findAllByText(/250 × 1,000 ml/)).length).toBeGreaterThan(0);
     fireEvent.click(await screen.findByRole('button', { name: /LECHE ENTERA/ }));
     const panel = await screen.findByRole('region', { name: /Desglose de LECHE ENTERA/ });
@@ -87,10 +87,10 @@ describe('pestaña Consumo del Tablero México', () => {
     render(<ConsumoNacionalVista />);
     await screen.findByText('LECHE ENTERA');
     expect(screen.getByText('POPOTE')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Rappi' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Rappi' }));
     expect(screen.getByText('POPOTE')).toBeInTheDocument();
     expect(screen.queryByText('LECHE ENTERA')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Mostrador' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Mostrador' }));
     expect(screen.queryByText('POPOTE')).toBeNull();
     expect(screen.getByText('LECHE ENTERA')).toBeInTheDocument();
   });
@@ -166,7 +166,7 @@ describe('pestaña Consumo del Tablero México', () => {
     render(<ConsumoNacionalVista />);
     await screen.findByText('LECHE ENTERA');
     const antes = fetchFalso.mock.calls.length;
-    fireEvent.click(screen.getByRole('button', { name: 'Octubre 2026' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Octubre 2026' }));
     expect(fetchFalso.mock.calls.length).toBe(antes);
     expect(screen.getByText('LECHE ENTERA')).toBeInTheDocument();
   });

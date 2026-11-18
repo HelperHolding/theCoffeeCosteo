@@ -145,7 +145,7 @@ export function Membresias({
             <input type="checkbox" checked={locales} onChange={(e) => setLocales(e.target.checked)} />
             Aprobación de locales
           </label>
-          <Button disabled={pendiente}>Guardar acceso</Button>
+          <Button pendiente={pendiente}>Guardar acceso</Button>
           {error && (
             <p role="alert" className="basis-full text-sm text-bad">
               {error}
@@ -218,7 +218,7 @@ export function Festivos({ festivos, puede }: { festivos: Festivo[]; puede: bool
             Nombre
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
           </label>
-          <Button disabled={pendiente}>Agregar festivo</Button>
+          <Button pendiente={pendiente}>Agregar festivo</Button>
           {error && (
             <p role="alert" className="basis-full text-sm text-bad">
               {error}

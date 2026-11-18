@@ -55,7 +55,7 @@ it('muestra cobertura, semana parcial, mapa de calor accesible y cambia a 8 sema
   expect(screen.getByRole('grid', { name: /Pedidos promedio por día y hora/ })).toBeInTheDocument();
   expect(screen.getByRole('gridcell', { name: /Mar 10:00, 0\.3 pedidos en promedio/ })).toBeInTheDocument();
   expect(screen.getByText(/Lectura incompleta:/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: '8 semanas' }));
+  fireEvent.click(screen.getByRole('radio', { name: '8 semanas' }));
   expect(pendientes.at(-1)!.url).toBe('/api/sucursales/612/tendencias?semanas=8&origen=todos');
   // Mientras llega la nueva clave no se muestran las cifras de la anterior.
   expect(screen.queryByText(/3 de 4 semanas completas/)).toBeNull();

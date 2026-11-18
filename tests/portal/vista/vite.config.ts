@@ -17,6 +17,7 @@ export default defineConfig({
       { find: '@/app/(auth)/login/actions', replacement: mocks },
       { find: '@/app/(crm)/crm/acciones-pipeline', replacement: mocks },
       { find: '@/app/(crm)/crm/acciones', replacement: mocks },
+      { find: '@/lib/supabase/cliente', replacement: mocks },
       { find: '@', replacement: raiz },
     ],
   },

@@ -7,9 +7,19 @@ import type { Aviso, ClaveArea, VencimientoCard } from '@/lib/crm/tipos';
 export interface DatosVencimientos {
   lista: (VencimientoCard & { dias: number })[];
   avisos: Aviso[];
+  /** Últimos avisos atendidos, con quién y cuándo (no se borran: quedan como rastro). */
+  atendidos?: (Aviso & { quien: string | null })[];
   areas: ClaveArea[];
   todas: boolean;
 }
+
+const cuandoAtendido = new Intl.DateTimeFormat('es-MX', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'America/Mexico_City',
+});
 
 const mes = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const texto = (d: number) => (d < 0 ? `Venció hace ${-d} d` : d === 0 ? 'Vence hoy' : `En ${d} d`);
@@ -93,6 +103,27 @@ export function VistaVencimientos(d: DatosVencimientos) {
           className="xl:sticky xl:top-20"
         >
           <BandejaAvisos avisos={d.avisos} areas={d.areas} todas={d.todas} />
+          {d.atendidos && d.atendidos.length > 0 && (
+            <details className="border-t border-line">
+              <summary className="cursor-pointer px-5 py-3 text-sm font-semibold">
+                Atendidos ({d.atendidos.length})
+              </summary>
+              <ul role="list" className="divide-y divide-line">
+                {d.atendidos.map((a) => (
+                  <li key={a.id} className="px-5 py-2.5">
+                    <p className="text-sm text-ink-2">
+                      <Link href={`/crm/sucursales/${a.tienda_id}`} className="hover:underline">
+                        {a.mensaje}
+                      </Link>
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Atendió {a.quien ?? 'alguien'} · {cuandoAtendido.format(new Date(a.atendido_en!))}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </Seccion>
       </div>
     </>

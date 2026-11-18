@@ -91,7 +91,7 @@ function NuevoElemento({ tienda, checklist }: { tienda: string; checklist: strin
         placeholder="Agregar elemento…"
         className={claseCampo}
       />
-      <Button type="submit" variant="outline" disabled={pendiente || !texto.trim()}>
+      <Button type="submit" variant="outline" pendiente={pendiente} disabled={!texto.trim()}>
         Agregar
       </Button>
     </form>
@@ -159,7 +159,7 @@ export function ChecklistsTienda({
             placeholder="Nueva lista (p. ej. Apertura)"
             className={`${claseCampo} max-w-xs`}
           />
-          <Button type="submit" variant="outline" disabled={pendiente || !nombre.trim()}>
+          <Button type="submit" variant="outline" pendiente={pendiente} disabled={!nombre.trim()}>
             <Plus aria-hidden="true" /> Crear lista
           </Button>
           {error && (

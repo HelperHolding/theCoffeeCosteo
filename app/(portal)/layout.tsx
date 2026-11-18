@@ -2,6 +2,7 @@ import { accesos, sesion } from '@/lib/supabase/sesion';
 import { todas } from '@/lib/portal/consultas';
 import { modulosVisibles } from '@/lib/portal/modulos';
 import { Marco } from '@/components/portal/marco';
+import '@/components/portal/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { db, perfil } = await sesion();
@@ -23,7 +24,8 @@ export default async function PortalLayout({ children }: { children: React.React
       visibles={modulosVisibles(a, perfil.rol)}
       busqueda={recetas}
     >
-      {children}
+      {/* Cristal sobre el muro (vitrina.css), igual que Sucursales, CRM, BI e Inicio. */}
+      <div className="vitrina space-y-7">{children}</div>
     </Marco>
   );
 }

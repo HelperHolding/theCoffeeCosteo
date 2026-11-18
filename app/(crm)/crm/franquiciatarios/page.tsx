@@ -21,7 +21,9 @@ export default async function Franquiciatarios({
     .select('*', { count: 'exact' })
     .is('archivado_en', null)
     .order('formalizado_en', { ascending: false, nullsFirst: false })
-    .order('actualizado_en', { ascending: false });
+    .order('actualizado_en', { ascending: false })
+    // Desempate único: los importados comparten fechas y, sin él, las páginas repiten o saltan filas.
+    .order('id');
   if (p.estado === 'formalizados') q = q.not('formalizado_en', 'is', null);
   if (p.estado === 'en_proceso') q = q.is('formalizado_en', null);
   if (p.q?.trim()) q = q.ilike('nombre', `%${p.q.trim().replace(/[%_,()"]/g, ' ')}%`);

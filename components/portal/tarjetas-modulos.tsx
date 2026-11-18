@@ -32,13 +32,13 @@ export function TarjetasModulos({
     );
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {modulos.map((m) => {
+      {modulos.map((m, i) => {
         const Icono = iconos[m.id];
         return (
-          <li key={m.id}>
+          <li key={m.id} className="tarjeta-entrada" style={{ '--i': i } as React.CSSProperties}>
             <Link
               href={m.href}
-              className="group flex h-full flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-colors hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              className="tarjeta-modulo group flex h-full flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card hover:border-ink/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               <span className="flex items-center justify-between">
                 <span className="grid size-11 place-items-center rounded-xl bg-ink text-crema">
@@ -47,7 +47,7 @@ export function TarjetasModulos({
                 <ArrowUpRight
                   size={18}
                   aria-hidden="true"
-                  className="text-muted-foreground transition-colors group-hover:text-ink"
+                  className="text-muted-foreground transition-[color,translate] duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-ink"
                 />
               </span>
               <span>

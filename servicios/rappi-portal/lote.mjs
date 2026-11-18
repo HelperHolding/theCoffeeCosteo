@@ -49,6 +49,19 @@ export async function enParalelo(elementos, n, fn) {
   return res;
 }
 
+/**
+ * ¿El fetch de la página murió sin respuesta HTTP? Pasa con la red caída y cuando Rappi rechaza un token vencido sin
+ * encabezados CORS: el navegador solo ve «TypeError: Failed to fetch» (corridas del 2026-11-11 y 2026-11-16 09:07,
+ * a media lectura; la siguiente tuvo que volver a entrar). También si el portal recarga la página a medio `evaluate`.
+ */
+export const esFallaSinRespuesta = (e) =>
+  /Failed to fetch|NetworkError when attempting to fetch|Load failed|net::ERR_|Execution context was destroyed/i.test(
+    String(e?.message ?? e),
+  );
+
+/** ¿Vale la pena repetir la consulta? 0 = sin respuesta (esFallaSinRespuesta), 429 o 5xx. */
+export const reintentable = (status) => status === 0 || status === 429 || status >= 500;
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null);
 
 /**
