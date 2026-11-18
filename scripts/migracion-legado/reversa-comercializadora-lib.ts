@@ -37,18 +37,29 @@ const ordenado = (v: unknown): unknown =>
   Array.isArray(v)
     ? v.map(ordenado)
     : v && typeof v === 'object'
-      ? Object.fromEntries(Object.keys(v as object).sort().map((k) => [k, ordenado((v as Fila)[k])]))
+      ? Object.fromEntries(
+          Object.keys(v as object)
+            .sort()
+            .map((k) => [k, ordenado((v as Fila)[k])]),
+        )
       : v;
 const firma = (f: Fila, cols: string[]) => JSON.stringify(cols.map((c) => ordenado(f[c] ?? null)));
-const clave = (f: Fila, llave: string[]) => JSON.stringify(llave.map((k) => (f[k] == null ? null : String(f[k]))));
+const clave = (f: Fila, llave: string[]) =>
+  JSON.stringify(llave.map((k) => (f[k] == null ? null : String(f[k]))));
 
 /**
  * `columnasViejo`: las escribibles en bliocjvq. Se copian las que también trae el portal, incluidas las generadas allá
  * (com_minmax.minimo/maximo son generadas en el portal y columnas normales en el viejo).
  */
-export function deltaTabla(t: TablaCom, columnasViejo: string[], portal: Fila[], viejo: Fila[]): DeltaTabla {
-  const columnas = columnasViejo.filter((c) => portal.some((f) => c in f));
+export function deltaTabla(t: TablaCom, columnasViejo: string[], portal0: Fila[], viejo: Fila[]): DeltaTabla {
+  const columnas = columnasViejo.filter((c) => portal0.some((f) => c in f));
   const enViejo = new Map(viejo.map((f) => [clave(f, t.llave), f]));
+  // Revisión plan 4 (I1): en la reversa el portal ya está en simulación; el modo de OC del viejo se conserva, si no
+  // el viejo volvería sin OCs reales (es el espejo de la copia, que fuerza simulación en el portal).
+  const portal =
+    t.tabla === 'com_plan_config'
+      ? portal0.map((f) => conModoDelViejo(f, enViejo.get(clave(f, t.llave))))
+      : portal0;
   const enPortal = new Set(portal.map((f) => clave(f, t.llave)));
   const upserts = portal
     .filter((f) => {
@@ -60,6 +71,13 @@ export function deltaTabla(t: TablaCom, columnasViejo: string[], portal: Fila[],
     .filter((f) => !enPortal.has(clave(f, t.llave)))
     .map((f) => Object.fromEntries(t.llave.map((k) => [k, f[k] == null ? null : String(f[k])])));
   return { tabla: t.tabla, llave: t.llave, secuencia: t.secuencia, columnas, upserts, borrar };
+}
+
+function conModoDelViejo(f: Fila, v: Fila | undefined): Fila {
+  const modo = (v?.config as { auto?: { modo?: unknown } } | null | undefined)?.auto?.modo;
+  if (modo === undefined) return f;
+  const cfg = (f.config ?? {}) as { auto?: Record<string, unknown> };
+  return { ...f, config: { ...cfg, auto: { ...(cfg.auto ?? {}), modo } } };
 }
 
 const id = (s: string) => `"${s.replace(/"/g, '""')}"`;
@@ -93,9 +111,18 @@ export function sqlReversa(deltas: DeltaTabla[], marca: string): string {
     }
   }
   if (!cuerpo.length) return '';
-  return [`-- Reversa Comercializadora ${marca}: portal → bliocjvq (solo tablas editables). Pegar completo.`, 'begin;', "set local app.origen = 'migracion';", ...cuerpo, 'commit;', ''].join('\n');
+  return [
+    `-- Reversa Comercializadora ${marca}: portal → bliocjvq (solo tablas editables). Pegar completo.`,
+    'begin;',
+    "set local app.origen = 'migracion';",
+    ...cuerpo,
+    'commit;',
+    '',
+  ].join('\n');
 }
 
 export function reporteReversa(deltas: DeltaTabla[]): string {
-  return deltas.map((d) => `${d.tabla.padEnd(30)} a escribir ${d.upserts.length} · a borrar ${d.borrar.length}`).join('\n');
+  return deltas
+    .map((d) => `${d.tabla.padEnd(30)} a escribir ${d.upserts.length} · a borrar ${d.borrar.length}`)
+    .join('\n');
 }

@@ -54,7 +54,8 @@ export interface ResultadoDia {
   completo: boolean;
   faltan: string[];
   verde: boolean;
-  conteos: { skus: number; proveedores: number; folios: number };
+  /** proveedoresViejo: los que tuvieron OC en el viejo ese día (regla de salida de la ventana, Tarea 9). */
+  conteos: { skus: number; proveedores: number; proveedoresViejo: number; folios: number };
   diferencias: Diferencia[];
 }
 
@@ -86,7 +87,14 @@ export function compararMinmax(v: Lado, p: Lado): Diferencia[] {
     }
     for (const campo of ['minimo', 'maximo'] as const)
       if (distinto(a[campo], b[campo]))
-        out.push({ clave: `minmax:${sku}:${campo}`, seccion: 'minmax', detalle: campo, viejo: a[campo], portal: b[campo], causa });
+        out.push({
+          clave: `minmax:${sku}:${campo}`,
+          seccion: 'minmax',
+          detalle: campo,
+          viejo: a[campo],
+          portal: b[campo],
+          causa,
+        });
   }
   return out;
 }
@@ -164,13 +172,22 @@ export function evaluarDia(
   explicadas: Explicada[],
 ): ResultadoDia {
   const faltan: string[] = [];
-  for (const [nombre, lado] of [['viejo', viejo], ['portal', portal]] as const)
+  for (const [nombre, lado] of [
+    ['viejo', viejo],
+    ['portal', portal],
+  ] as const)
     for (const proc of PROCESOS)
-      if (!lado.corridas.some((c) => c.proceso === proc && c.ok === true)) faltan.push(`${nombre}: sin ${proc} correcto ese día`);
-  if (viejo.firmaGlobal !== portal.firmaGlobal) faltan.push('configuración, parámetros o mapeo distintos (copiar editables)');
+      if (!lado.corridas.some((c) => c.proceso === proc && c.ok === true))
+        faltan.push(`${nombre}: sin ${proc} correcto ese día`);
+  if (viejo.firmaGlobal !== portal.firmaGlobal)
+    faltan.push('configuración, parámetros o mapeo distintos (copiar editables)');
   const motivo = new Map(explicadas.map((e) => [e.clave, e.motivo]));
-  const diferencias = [...compararMinmax(viejo, portal), ...compararOcs(viejo, portal), ...diferenciasOv(acciones)].map(
-    (d) => (motivo.has(d.clave) ? { ...d, causa: 'explicada' as const, motivo: motivo.get(d.clave) } : d),
+  const diferencias = [
+    ...compararMinmax(viejo, portal),
+    ...compararOcs(viejo, portal),
+    ...diferenciasOv(acciones),
+  ].map((d) =>
+    motivo.has(d.clave) ? { ...d, causa: 'explicada' as const, motivo: motivo.get(d.clave) } : d,
   );
   const completo = faltan.length === 0;
   return {
@@ -181,6 +198,7 @@ export function evaluarDia(
     conteos: {
       skus: new Set([...viejo.minmax, ...portal.minmax].map((f) => f.sku)).size,
       proveedores: new Set([...viejo.ocs, ...portal.ocs].map(llaveProv)).size,
+      proveedoresViejo: new Set(viejo.ocs.map(llaveProv)).size,
       folios: new Set(acciones.map((a) => a.folio)).size,
     },
     diferencias,
@@ -208,7 +226,7 @@ export const DIAS_REQUERIDOS = 3;
 export function reporteParidad(r: ResultadoDia, rachaDias: number): string {
   const lineas = [
     `Paridad Comercializadora ${r.fecha}: ${r.verde ? 'VERDE' : r.completo ? 'CON DIFERENCIAS' : 'INCOMPLETO'}`,
-    `Comparados: ${r.conteos.skus} SKUs de mín/máx, ${r.conteos.proveedores} proveedores con OC, ${r.conteos.folios} folios con acción de OV.`,
+    `Comparados: ${r.conteos.skus} SKUs de mín/máx, ${r.conteos.proveedores} proveedores con OC (${r.conteos.proveedoresViejo} del viejo), ${r.conteos.folios} folios con acción de OV.`,
     ...r.faltan.map((f) => `  falta: ${f}`),
   ];
   for (const causa of ['motor', 'entrada', 'explicada'] as const) {
@@ -222,7 +240,9 @@ export function reporteParidad(r: ResultadoDia, rachaDias: number): string {
       }[causa],
     );
     for (const d of ds)
-      lineas.push(`  ${d.clave}  viejo=${d.viejo ?? '—'} portal=${d.portal ?? '—'}  ${d.detalle}${d.motivo ? ` · ${d.motivo}` : ''}`);
+      lineas.push(
+        `  ${d.clave}  viejo=${d.viejo ?? '—'} portal=${d.portal ?? '—'}  ${d.detalle}${d.motivo ? ` · ${d.motivo}` : ''}`,
+      );
   }
   lineas.push(`Racha: ${rachaDias} de ${DIAS_REQUERIDOS} días seguidos sin diferencias.`);
   return lineas.join('\n');

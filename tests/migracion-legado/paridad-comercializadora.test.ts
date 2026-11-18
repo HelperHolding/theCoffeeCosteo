@@ -32,7 +32,14 @@ describe('paridad: mín/máx', () => {
   it('un mínimo distinto con las mismas entradas es del motor; con otras entradas, no comparable', () => {
     const p = lado({ minmax: [{ sku: 'A', minimo: 12, maximo: 20, calculado_at: null }] });
     expect(compararMinmax(lado(), p)).toEqual([
-      { clave: 'minmax:A:minimo', seccion: 'minmax', detalle: 'minimo', viejo: 10, portal: 12, causa: 'motor' },
+      {
+        clave: 'minmax:A:minimo',
+        seccion: 'minmax',
+        detalle: 'minimo',
+        viejo: 10,
+        portal: 12,
+        causa: 'motor',
+      },
     ]);
     expect(compararMinmax(lado(), { ...p, firmasSku: { A: 'otra' } })[0].causa).toBe('entrada');
   });
@@ -65,7 +72,14 @@ describe('paridad: OCs automáticas', () => {
   it('cantidad distinta, SKU de más y proveedor que solo pidió uno de los dos', () => {
     const p = lado({
       ocs: [
-        { vendor_id: 'V1', vendor_name: 'Jarabes', lineas: [{ sku: 'A', cantidad: 6 }, { sku: 'B', cantidad: 1 }] },
+        {
+          vendor_id: 'V1',
+          vendor_name: 'Jarabes',
+          lineas: [
+            { sku: 'A', cantidad: 6 },
+            { sku: 'B', cantidad: 1 },
+          ],
+        },
         { vendor_id: 'V2', vendor_name: 'Vasos', lineas: [{ sku: 'C', cantidad: 4 }] },
       ],
       firmasProv: { V1: 'p1', V2: 'p2' },
@@ -96,23 +110,50 @@ describe('paridad: OVs', () => {
 
 describe('paridad: el día', () => {
   it('verde: completo y sin diferencias del motor (las de entrada no cuentan)', () => {
-    const p = lado({ minmax: [{ sku: 'A', minimo: 99, maximo: 20, calculado_at: null }], firmasSku: { A: 'x' } });
+    const p = lado({
+      minmax: [{ sku: 'A', minimo: 99, maximo: 20, calculado_at: null }],
+      firmasSku: { A: 'x' },
+    });
     const r = evaluarDia('2026-11-20', lado(), p, [], []);
     expect(r).toMatchObject({ completo: true, verde: true, faltan: [] });
     expect(r.diferencias[0].causa).toBe('entrada');
   });
 
   it('una diferencia explicada no rompe el verde y lleva su motivo', () => {
-    const acc: AccionOv[] = [{ accion: 'avanzar', folio: '#2', sku: null, estado_antes: 'por_enviar', estado: 'cancelado' }];
+    const acc: AccionOv[] = [
+      { accion: 'avanzar', folio: '#2', sku: null, estado_antes: 'por_enviar', estado: 'cancelado' },
+    ];
     const r = evaluarDia('2026-11-20', lado(), lado(), acc, [
       { clave: 'ov:avanzar:#2:por_enviar>cancelado', motivo: 'cancelación masiva del viejo no liberaba' },
     ]);
     expect(r.verde).toBe(true);
-    expect(r.diferencias[0]).toMatchObject({ causa: 'explicada', motivo: 'cancelación masiva del viejo no liberaba' });
+    expect(r.diferencias[0]).toMatchObject({
+      causa: 'explicada',
+      motivo: 'cancelación masiva del viejo no liberaba',
+    });
+  });
+
+  it('revisión plan 4 (I4): cuenta aparte los proveedores con OC del viejo (regla de salida de la ventana)', () => {
+    const p = lado({
+      ocs: [
+        { vendor_id: 'V1', vendor_name: 'Jarabes', lineas: [{ sku: 'A', cantidad: 5 }] },
+        { vendor_id: 'V2', vendor_name: 'Vasos', lineas: [{ sku: 'C', cantidad: 4 }] },
+      ],
+    });
+    const r = evaluarDia('2026-11-20', lado({ ocs: [] }), p, [], []);
+    expect(r.conteos.proveedores).toBe(2);
+    expect(r.conteos.proveedoresViejo).toBe(0);
+    expect(evaluarDia('2026-11-20', lado(), lado(), [], []).conteos.proveedoresViejo).toBe(1);
   });
 
   it('incompleto si un lado no corrió com-minmax o la OC ese día, o si la configuración difiere', () => {
-    const r = evaluarDia('2026-11-20', lado({ corridas: [{ proceso: 'com-minmax', ok: true }] }), lado({ firmaGlobal: 'h' }), [], []);
+    const r = evaluarDia(
+      '2026-11-20',
+      lado({ corridas: [{ proceso: 'com-minmax', ok: true }] }),
+      lado({ firmaGlobal: 'h' }),
+      [],
+      [],
+    );
     expect(r.completo).toBe(false);
     expect(r.verde).toBe(false);
     expect(r.faltan).toEqual([

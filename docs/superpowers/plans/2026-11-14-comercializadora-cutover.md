@@ -9,7 +9,7 @@
 - **Cutover y reversa:** el runbook del día del cambio, en el orden fijo del spec, con cada paso de producción marcado (quién lo hace y con OK). Incluye la reversa con copia en sentido inverso y la ventana de 30 días antes de archivar.
 
 **Architecture:**
-- **Migración 50 (Postgres + pg_cron):**
+- **Migración 70 (Postgres + pg_cron):**
   - `com_ov_plan(existentes, ventana)` lee los pedidos por el puente (`com_legado_*`) con el mapeo del portal. Devuelve las acciones (`insertar`, `avanzar`, `reabierto`, `ambiguo`) sobre las filas `venta` que recibe.
   - `com_derivar_ov(aplicar, ventana)` las aplica a `com_movimientos` y deja rastro en `com_sync_log`.
   - El job `com-ov-pedidos` (`10,40 * * * *`) se crea **inactivo**.
@@ -115,6 +115,13 @@ La guía de operación es `docs/migracion/comercializadora.md`, secciones 1–13
 - **Secretos `ZOHO_*` del proyecto viejo:** el usuario los tiene guardados en un lugar seguro; la reversa (Tarea 12) puede volver a ponerlos.
 - **Quedan para el día del cambio (Tareas 8 a 10):** fecha y ventana, quién corre cada paso de producción, un OK por día o uno para toda la rutina de la ventana, y los límites diarios de la API de Zoho con dos sistemas sincronizando.
 
+**Correcciones de la revisión final (2026-11-18, después de las Tareas 1–6).** El código de los bloques de las Tareas 1, 2 y 4 es el de antes de estas correcciones; el del repo manda:
+
+- La migración es `20261118000070_comercializadora_ov_pedidos.sql` (main ya tiene su propia 050–060). El runbook usa `aplicar70.mts`.
+- El cron de `com-ov-pedidos` corre con `set statement_timeout = '5min'` antes de `com_derivar_ov(true)`: si el puente no responde, la corrida se corta y la siguiente reintenta.
+- La reversa conserva el `auto.modo` del viejo al regresar `com_plan_config` (el portal ya está en simulación): el viejo vuelve con OCs reales. En la Tarea 12, verificar `com_oc_auto` con `modo = 'real'` después de la primera corrida, no solo `ok`.
+- El reporte de paridad trae `conteos.proveedoresViejo`, que es lo que lee la regla de salida de la Tarea 9.
+
 ## Mapa de dependencias del sitio viejo (verificado en `ee23758`)
 
 | | Qué | Dónde (`app/index.html` salvo que se diga) | En este plan |
@@ -135,7 +142,7 @@ Las líneas son de `ee23758` (`feat/proveedores-sin-stock`). Las ediciones de la
 
 | Archivo | Tarea | Qué hace |
 | --- | --- | --- |
-| `supabase/migrations/20261114000050_comercializadora_ov_pedidos.sql` | 1 | `com_ov_cantidad`, `com_ov_plan`, `com_derivar_ov`, job `com-ov-pedidos` inactivo |
+| `supabase/migrations/20261118000070_comercializadora_ov_pedidos.sql` | 1 | `com_ov_cantidad`, `com_ov_plan`, `com_derivar_ov`, job `com-ov-pedidos` inactivo |
 | `tests/db/comercializadora-ov.test.ts` | 1 | Reglas de la derivación en PGlite |
 | `scripts/migracion-legado/paridad-comercializadora-lib.ts` | 2 | Comparación pura, día, racha y reporte |
 | `tests/migracion-legado/paridad-comercializadora.test.ts` | 2 | Pruebas de la comparación |
@@ -185,7 +192,7 @@ Los SQL y scripts del runbook están en `...\scratchpad\runbook4\`. `validar-run
 1. **Dos crons en Real** (cutover a medias, reversa en desorden o alguien que vuelve a programar un job). Expectativa: en ningún momento hay OCs reales de los dos lados el mismo día. Lo cubren:
    - Tarea 10: `viejo-desprogramar.sql` con verificación vacía antes de `portal-activar.sql`; el candado y el índice único del portal; `viejo-quieto.sql` al día siguiente;
    - Tarea 12: el portal se apaga y se verifica antes de `viejo-reprogramar.sql`;
-   - Tarea 8: `sombra-activar.sql` aborta si `auto.modo` no es `simulacion`, y `aplicar50.mts` imprime `com-ov-pedidos` con `active = false`. En PGlite no hay cron: esa parte de la migración solo se ve en producción.
+   - Tarea 8: `sombra-activar.sql` aborta si `auto.modo` no es `simulacion`, y `aplicar70.mts` imprime `com-ov-pedidos` con `active = false`. En PGlite no hay cron: esa parte de la migración solo se ve en producción.
 2. **La derivación duplica OVs o regresa estados** (dos corridas a la vez, "Marcar enviado" del portal, pedido cancelado y vuelto a pagar, folio repetido, el mismo pedido cada 30 min). Expectativa: una fila por artículo y nunca hacia atrás. Lo cubre la Tarea 1:
    - "idempotente";
    - "solo avanza…" y "Marcar enviado";
@@ -199,7 +206,7 @@ Los SQL y scripts del runbook están en `...\scratchpad\runbook4\`. `validar-run
    - Tarea 4: la reversa como red de seguridad.
 4. **El puente cae durante el cutover** (bliocjvq no responde). Expectativa: la derivación falla sin dejar nada a medias, lo registra y la siguiente corrida reintenta; nada se activa a ciegas. Lo cubren:
    - Tarea 1: "si el puente falla, registra el error y no deja filas a medias";
-   - Tarea 8: `aplicar50.mts` revierte si `com_ov_plan` no puede leer el puente;
+   - Tarea 8: `aplicar70.mts` revierte si `com_ov_plan` no puede leer el puente;
    - Tarea 10, Step 8: la corrida en `registrar` tiene que salir `ok` antes de activar.
 5. **Falta una variable en Vercel** (`COM_SECRETO`, `SUPABASE_SECRET_KEY`) o el usuario no tiene el módulo. Expectativa: se detecta antes del cambio, no cuando alguien quiere pedir. Lo cubre la Tarea 10, Step 1:
    - el usuario confirma los nombres en Vercel;
@@ -208,10 +215,10 @@ Los SQL y scripts del runbook están en `...\scratchpad\runbook4\`. `validar-run
 
 ---
 
-### Task 1: OVs desde los pedidos (migración 50)
+### Task 1: OVs desde los pedidos (migración 70)
 
 **Files:**
-- Create: `supabase/migrations/20261114000050_comercializadora_ov_pedidos.sql`
+- Create: `supabase/migrations/20261118000070_comercializadora_ov_pedidos.sql`
 - Test: `tests/db/comercializadora-ov.test.ts`
 
 **Interfaces:**
@@ -276,7 +283,7 @@ const ventas = async (db: PGlite) =>
 const derivar = async (db: PGlite, aplicar = true, ventana = 45) =>
   (await db.query<{ r: Record<string, unknown> }>('select public.com_derivar_ov($1, $2) r', [aplicar, ventana])).rows[0].r;
 
-describe('OVs desde los pedidos (migración 50)', () => {
+describe('OVs desde los pedidos (migración 70)', () => {
   let db: PGlite;
   beforeEach(async () => {
     db = await crearDbLocal();
@@ -454,7 +461,7 @@ Expected: FAIL, las 16 pruebas, con `function public.com_derivar_ov(unknown, unk
 
 - [ ] **Step 3: Write minimal implementation**
 
-Crear `supabase/migrations/20261114000050_comercializadora_ov_pedidos.sql`:
+Crear `supabase/migrations/20261118000070_comercializadora_ov_pedidos.sql`:
 
 ```sql
 -- OVs desde los pedidos (plan 4, decisión 1). Sustituye a _comSyncPedidoPagado, _comSyncPedidoEnviado y
@@ -632,8 +639,8 @@ Expected: PASS. Las 16 nuevas, más las del puente, la guardia de lectura (ningu
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/20261114000050_comercializadora_ov_pedidos.sql tests/db/comercializadora-ov.test.ts
-git commit -m "feat(comercializadora): OVs desde los pedidos del puente (migración 50)"
+git add supabase/migrations/20261118000070_comercializadora_ov_pedidos.sql tests/db/comercializadora-ov.test.ts
+git commit -m "feat(comercializadora): OVs desde los pedidos del puente (migración 70)"
 ```
 
 ---
@@ -841,7 +848,7 @@ export interface Lado {
   firmasProv: Record<string, string>;
   firmaGlobal: string;
 }
-/** Una fila de public.com_ov_plan (migración 50). */
+/** Una fila de public.com_ov_plan (migración 70). */
 export interface AccionOv {
   accion: 'insertar' | 'avanzar' | 'reabierto' | 'ambiguo';
   folio: string;
@@ -2141,7 +2148,7 @@ Agregar a `docs/migracion/comercializadora.md`:
 ```markdown
 ## 14. Paridad y cutover (plan 4)
 
-- **OVs desde los pedidos** (migración 50):
+- **OVs desde los pedidos** (migración 70):
   - `com_derivar_ov(aplicar)` crea y avanza las filas `venta` de `com_movimientos` a partir de los pedidos del puente, con `com_sku_mapping`. Sustituye a las tres funciones del HTML viejo, que quedan vacías;
   - reglas: pedidos con apertura; `pagado`/`empacado` → `por_enviar`, `enviado`/`entregado`/`terminado` → `enviado`, `cancelado` → `cancelado`. Inserta solo folios sin filas y de los últimos 45 días. Solo avanza, nunca regresa (respeta "Marcar enviado"). `reabierto` y `ambiguo` se reportan y no se tocan;
   - job `com-ov-pedidos` (`10,40 * * * *`), activo desde el cutover. Cada corrida deja una fila en `com_sync_log` (`proceso = 'com-ov-pedidos'`) con lo que hizo. `com_ov_plan(filas)` dice qué haría sin escribir.
@@ -2185,7 +2192,7 @@ git push -u origin feat/comercializadora-cutover
 
 PR con base `feat/comercializadora-plan-abastos` (encima del #118). En la descripción van:
 - las decisiones 1 (OVs desde los pedidos, con sus reglas y la ventana), 4 (copia final completa), 5 (revoke por lista), 7 (qué es un día verde) y 9 (corrige al spec sobre `provider-notifications`);
-- que la migración 50 **no** está aplicada y que el job nace inactivo;
+- que la migración 70 **no** está aplicada y que el job nace inactivo;
 - que nada de este PR escribe en producción por sí solo.
 
 - [ ] **Step 4: PR del repo viejo**
@@ -2218,14 +2225,14 @@ Cada paso dice **quién** lo hace:
 
 Los comandos son de PowerShell, desde `C:\Users\sebcm\Projects\thecoffee-costeos`, salvo que se diga otra cosa. Los SQL y scripts de una vez viven en `$env:TEMP\plan4\` (Tarea 8, Step 1), nunca en el repo. Los SQL de bliocjvq se abren y se pegan completos en su SQL Editor.
 
-### Task 8: Migración 50 y sombra
+### Task 8: migración 70 y sombra
 
 **Files:**
-- Create (fuera del repo): `$env:TEMP\plan4\*.sql`, `$env:TEMP\plan4\sql-portal.mts`, `$env:TEMP\plan4\aplicar50.mts`
+- Create (fuera del repo): `$env:TEMP\plan4\*.sql`, `$env:TEMP\plan4\sql-portal.mts`, `$env:TEMP\plan4\aplicar70.mts`
 
 **Interfaces:**
 - Consumes: Tareas 1 a 3 integradas en la rama (el código de la migración y `conPortalLectura`).
-- Produces: migración 50 aplicada y registrada; `com-ov-pedidos` inactivo; los tres jobs del portal activos en simulación.
+- Produces: migración 70 aplicada y registrada; `com-ov-pedidos` inactivo; los tres jobs del portal activos en simulación.
 
 - [ ] **Step 1: [agente] Preparar los archivos del runbook**
 
@@ -2249,21 +2256,21 @@ const ultima = (Array.isArray(r) ? r.at(-1) : r) as { rows?: unknown[] };
 console.log(JSON.stringify(ultima.rows ?? [], null, 2));
 ```
 
-`aplicar50.mts`:
+`aplicar70.mts`:
 
 ```ts
-// Aplica la migración 50 en el portal en UNA transacción y la registra, como se hizo con la 49.
+// Aplica la migración 70 en el portal en UNA transacción y la registra, como se hizo con la 49 (la 50 a la 60 son de main).
 // Si la lectura del puente falla, se revierte todo. Se corre desde la raíz del repo del portal.
 import { readFileSync } from 'node:fs';
 import { enPortal } from 'file:///C:/Users/sebcm/Projects/thecoffee-costeos/scripts/migracion-legado/conexion.ts';
 
-const v = '20261114000050';
+const v = '20261118000070';
 const nombre = 'comercializadora_ov_pedidos';
 const sql = readFileSync(`supabase/migrations/${v}_${nombre}.sql`, 'utf8');
 
 const r = await enPortal(async (db) => {
   if ((await db.query(`select 1 from supabase_migrations.schema_migrations where version = $1`, [v])).rows.length)
-    throw new Error('La 50 ya está registrada; no se aplica');
+    throw new Error('La 70 ya está registrada; no se aplica');
   await db.query(sql);
   const cols = (
     await db.query<{ c: string }>(
@@ -2543,12 +2550,12 @@ Expected:
 - `COM_EFECTOS_EXTERNOS` **no** aparece; `COM_SECRETO` y los `ZOHO_*` sí (solo nombres);
 - `zoho-sync`, `com-minmax` y `zoho-generar-oc` con `active = false`.
 
-- [ ] **Step 3: [agente · OK] Aplicar la migración 50**
+- [ ] **Step 3: [agente · OK] Aplicar la migración 70**
 
 Con la rama del plan 4 en el disco (la migración tiene que estar en `supabase/migrations`):
 
 ```powershell
-npx.cmd tsx "$env:TEMP\plan4\aplicar50.mts"
+npx.cmd tsx "$env:TEMP\plan4\aplicar70.mts"
 ```
 
 Expected:
@@ -2658,7 +2665,7 @@ La racha llega a 3 con la regla de la decisión 7. De esos tres días, **al meno
 3. [usuario] **Recorrido en producción** con un usuario de edición: Qué pedir, Inicio y Órdenes cargan. Ninguna dice "no está configurado" ni "no hay ventas".
 4. [usuario] **Módulo:** quienes usaban Comercializadora en el viejo (rol `comercializadora` o permiso `pedidos_com`) tienen el módulo `comercializadora` en el portal (Admin → accesos), con `edicion` o `lectura` según corresponda. Entran con su mismo usuario y contraseña (Fase 0).
 5. [agente] **Migración y racha:**
-   - `aplicar50.mts` ya se corrió (`schema_migrations` tiene `20261114000050`);
+   - `aplicar70.mts` ya se corrió (`schema_migrations` tiene `20261118000070`);
    - `portal-cron.sql --lectura` muestra `com-ov-pedidos` inactivo;
    - la última paridad dice "Racha: 3 de 3" o más.
 6. [usuario] **Valores de `ZOHO_*` guardados** fuera de Supabase (gestor de contraseñas). Supabase no los deja leer de vuelta, y sin ellos no hay reversa.
@@ -2926,7 +2933,7 @@ Lo que la reversa no regresa: `com_oc_auto` del portal. Las OCs reales siguen en
 - **El código se probó antes de escribir el plan:**
   - **Portal**, en una copia en `feat/comercializadora-plan-abastos` (`fc7f233`) con `npm ci` propio (`scratchpad\repo4`):
     - Vitest: 182 archivos (181 verdes más la falla conocida de Rappi), 1,434 pasadas y 5 omitidas;
-    - las nuevas: 16 de la migración 50, 11 de la comparación, 3 de lecturas y 3 de la reversa;
+    - las nuevas: 16 de la migración 70, 11 de la comparación, 3 de lecturas y 3 de la reversa;
     - el RED de cada tarea, comprobado quitando el archivo;
     - `tsc --noEmit` limpio, `npm run test:funciones` con 257 pasadas y 33 ignoradas, y `next build` correcto.
   - **Repo viejo**, en una copia de `ee23758` (`scratchpad\viejo4`):
@@ -2941,7 +2948,7 @@ Lo que la reversa no regresa: `com_oc_auto` del portal. Las OCs reales siguen en
     - grants antes, revoke (deja Crédito y `com_proveedores`) y quieto;
     - reprogramar, archivar y desarchivar.
 
-    `sql-portal.mts` y `aplicar50.mts` pasan tsc. **No se corrió nada contra producción.**
+    `sql-portal.mts` y `aplicar70.mts` pasan tsc. **No se corrió nada contra producción.**
   - **No se probó:** el recorrido del HTML viejo en el navegador con sesión real (Tarea 6, Step 6) ni la primera corrida real con `pg_net`/fdw. Son pasos del runbook.
 - **Marcadores pendientes:** ninguno. Las horas de ejemplo de `viejo-quieto.sql` y `portal-ediciones.sql` se sustituyen al usarlas (Tarea 10, Step 7; Tarea 11, Step 1). Las preguntas abiertas del usuario son el dominio, la rama de Netlify, la fecha y la ventana, y quién corre cada paso.
 - **Tipos consistentes:**
@@ -2955,5 +2962,5 @@ Lo que la reversa no regresa: `com_oc_auto` del portal. Las OCs reales siguen en
   1. Dos crons: Tarea 10 (Steps 3 y 10, con verificación vacía), Tarea 12 (Step 7 después del Step 1), Tarea 8 (guarda de `sombra-activar.sql`, probada).
   2. Duplicar o regresar: Tarea 1 ("idempotente", "solo avanza…", "reabierto", "ambiguo", "cantidades…", candado).
   3. Copia que pisa: Tarea 10, Step 7 (`portal-ediciones.sql`, probado) y Tarea 3 ("las firmas cambian si cambia una entrada").
-  4. Puente caído: Tarea 1 ("si el puente falla…"), `aplicar50.mts` y Tarea 10 (Step 8).
+  4. Puente caído: Tarea 1 ("si el puente falla…"), `aplicar70.mts` y Tarea 10 (Step 8).
   5. Vercel o módulo: Tarea 10, Step 1 (puntos 2 a 4).

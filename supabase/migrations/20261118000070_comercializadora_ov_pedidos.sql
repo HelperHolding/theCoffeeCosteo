@@ -144,14 +144,14 @@ revoke execute on function public.com_derivar_ov(boolean, integer) from public, 
 grant execute on function public.com_ov_cantidad(jsonb), public.com_ov_plan(jsonb, integer),
   public.com_derivar_ov(boolean, integer) to service_role;
 
--- Job creado INACTIVO, como los de la migración 47: se activa en el cutover (plan 4, Tarea 9).
+-- Job creado INACTIVO, como los de la migración 47: se activa en el cutover (plan 4, Tarea 10).
 do $$
 declare
   j record;
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron')
      and exists (select 1 from pg_roles where rolname = 'supabase_admin') then
-    perform cron.schedule('com-ov-pedidos', '10,40 * * * *', $c$ select public.com_derivar_ov(true) $c$);
+    perform cron.schedule('com-ov-pedidos', '10,40 * * * *', $c$ set statement_timeout = '5min'; select public.com_derivar_ov(true) $c$);
     for j in select jobid from cron.job where jobname = 'com-ov-pedidos' loop
       perform cron.alter_job(j.jobid, active := false);
     end loop;

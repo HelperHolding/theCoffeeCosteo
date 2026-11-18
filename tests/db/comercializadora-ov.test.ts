@@ -41,7 +41,7 @@ const ventas = async (db: PGlite) =>
 const derivar = async (db: PGlite, aplicar = true, ventana = 45) =>
   (await db.query<{ r: Record<string, unknown> }>('select public.com_derivar_ov($1, $2) r', [aplicar, ventana])).rows[0].r;
 
-describe('OVs desde los pedidos (migración 50)', () => {
+describe('OVs desde los pedidos (migración 70)', () => {
   let db: PGlite;
   beforeEach(async () => {
     db = await crearDbLocal();
