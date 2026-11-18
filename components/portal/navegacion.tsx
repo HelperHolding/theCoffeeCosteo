@@ -32,7 +32,6 @@ import {
   Wallet,
   type LucideIcon,
   Waypoints,
-  Scale,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
 
