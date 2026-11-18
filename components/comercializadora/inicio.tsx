@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   AlertTriangle,
   Boxes,
@@ -22,12 +23,29 @@ import {
   type PedidoActivo,
   type ResultadoInicio,
 } from '@/lib/comercializadora/inicio';
+import type { RiesgoInicio } from '@/lib/comercializadora/doh';
 
-function Panel({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Panel({
+  titulo,
+  enlace,
+  children,
+}: {
+  titulo: string;
+  enlace?: { href: string; texto: string };
+  children: React.ReactNode;
+}) {
   return (
     <details open className="placa rounded-xl p-4">
       <summary className="cursor-pointer text-sm font-semibold">{titulo}</summary>
       <div className="mt-3 text-sm">{children}</div>
+      {enlace ? (
+        <Link
+          href={enlace.href}
+          className="mt-3 inline-block text-xs font-semibold text-crema-strong underline"
+        >
+          {enlace.texto} →
+        </Link>
+      ) : null}
     </details>
   );
 }
@@ -37,11 +55,14 @@ export function Inicio({
   ventas,
   pedidos,
   hoy,
+  riesgo,
 }: {
   r: ResultadoInicio;
   ventas: boolean;
   pedidos: { total: number; top: PedidoActivo[] } | null;
   hoy: string;
+  /** Plan 3d: riesgo de quiebre del motor. undefined = no se muestra; null = no se pudo calcular. */
+  riesgo?: RiesgoInicio | null;
 }) {
   const mes = r.mes;
   const inv = r.inventario;
@@ -238,7 +259,52 @@ export function Inicio({
           )}
         </Panel>
 
-        <Panel titulo="Sin stock">
+        {riesgo !== undefined ? (
+          <Panel
+            titulo="Riesgo de quiebre"
+            enlace={{ href: '/comercializadora/doh?estado=pedir', texto: 'Ver en DOH' }}
+          >
+            {riesgo === null ? (
+              <p className="text-muted-foreground">No se pudo calcular el riesgo de quiebre.</p>
+            ) : (
+              <>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  <b className="text-bad">{riesgo.pedir}</b> por pedir ·{' '}
+                  <b className="text-warn">{riesgo.confirmar}</b> con OC por confirmar ·{' '}
+                  <b className="text-ok">{riesgo.cubierto}</b> cubiertos con OC
+                  {riesgo.negativos ? ` · ${riesgo.negativos} con inventario negativo (revisar)` : ''}
+                </p>
+                {!riesgo.lista.length ? (
+                  <Vacio titulo="Nada por pedir ni por confirmar" />
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {riesgo.lista.map((f) => (
+                      <li key={f.sku} className="flex justify-between gap-2 py-2">
+                        <span>
+                          {f.nombre}{' '}
+                          <span className="text-xs text-muted-foreground">
+                            {f.sku} · {numero(Math.round(f.inv))} uds · {numero(Math.round(f.cons * 10) / 10)}
+                            /día
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <b className={f.estado === 'pedir' ? 'text-bad' : 'text-warn'}>
+                            {f.dias !== null ? `${Math.round(f.dias)} d` : '—'}
+                          </b>
+                          <Pill estado={f.estado === 'pedir' ? 'pierde' : 'bajo'}>
+                            {f.estado === 'pedir' ? 'Pedir ya' : 'OC por confirmar'}
+                          </Pill>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </Panel>
+        ) : null}
+
+        <Panel titulo="Sin stock" enlace={{ href: '/comercializadora/doh', texto: 'Ver DOH' }}>
           {!inv.sinStock.length ? (
             <Vacio titulo="Ningún artículo en cero" />
           ) : (
@@ -281,7 +347,7 @@ export function Inicio({
           )}
         </Panel>
 
-        <Panel titulo="Inventario crítico">
+        <Panel titulo="Inventario crítico" enlace={{ href: '/comercializadora/doh', texto: 'Ver DOH' }}>
           {!inv.faltantes.length && !inv.stockBajo.length ? (
             <p className="text-muted-foreground">
               {inv.criticos} artículos urgentes o pronto por días de inventario; ninguno corto para pedidos

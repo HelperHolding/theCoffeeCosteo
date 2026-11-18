@@ -100,3 +100,14 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Ingresar un traspaso al 3PL suma a `saldo_yulius` en la misma transacción (`com_ingresar_traspaso`); al CEDIS se registra en Zoho.
 - Crédito Comercializadora y los KPIs de pedidos (Fill rate, OTIF, entregas, encuestas, DSO) se migran con Pedidos. Ventas no se porta.
 - Indicadores y DOH llegan con el plan 3d (necesitan el motor de planeación).
+
+## 11. Motor, DOH e Indicadores (plan 3d)
+
+- El motor de planeación del sitio viejo (`_planEngSku`, `_planDatAMotor`, `_planBuild`, `_kpiAbCalc`, `_planPzasApCalc`) está portado en `supabase/functions/_shared/plan{Motor,Datos,Build,Kpi,Piezas}.ts`. Las pruebas de paridad se corren con el HTML viejo:
+  `git -C <repo viejo> show a9e4a22:app/index.html > "$TEMP/app-vieja-a9e4a22.html"` y luego `COM_APP_VIEJA="$TEMP/app-vieja-a9e4a22.html" npm run test:funciones` (sin la variable, se ignoran).
+- DOH, Indicadores, el riesgo de quiebre de Inicio y Piezas por apertura se calculan en el servidor del portal. Los datos crudos se guardan 10 minutos en memoria, compartidos entre usuarios; "Actualizar" los vuelve a leer. Leen los pedidos por el puente con `SUPABASE_SECRET_KEY`.
+- Como en el viejo, DOH e Indicadores usan el cálculo local (no la simulación de `com-minmax`) y el lead time de `com_lead_times`. **Diferencia conocida con Qué pedir:** `com-minmax` usa primero `zoho_lead_time`.
+- Un borrador de OC (en la carga de Zoho de la configuración o con `status = 'draft'` en `com_zoho_oc_lineas`) nunca cuenta como en camino. Ya no se usa la copia fija de OCs del 13-oct del sitio viejo.
+- Las metas de Indicadores se guardan en `com_plan_config.config.kpi` con historial (`kpi.<meta>`). Mientras el viejo siga en Real, no se editan desde el portal.
+- Piezas por apertura: Catálogo → "Sugerir piezas por apertura". Aplicar guarda solo lo marcado y deja historial por artículo.
+- "OCs en camino al día con Zoho" (Indicadores › Datos del plan) mide la frescura de la última corrida buena de `zoho-sync` (≤ 3 días verde, ≤ 7 ámbar), no la conciliación por archivo del viejo.

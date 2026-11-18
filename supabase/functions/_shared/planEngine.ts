@@ -197,7 +197,7 @@ function planCorreosNorm(a: any): string[] { var s: any = {}, o: string[] = []; 
 const PLAN_SERVICIOS = [0.9, 0.95, 0.975, 0.99];
 export const PLAN_TIPOS_DEM = ["resurtido", "sin_vincular", "apertura", "marketing", "corporativo", "llenado"];
 
-function planCfgNum(v: any, rango: [number, number, number], def: any): any {
+export function planCfgNum(v: any, rango: [number, number, number], def: any): any {
   var n = Number(v);
   if (v === null || v === "" || !isFinite(n)) return def;
   n = Math.min(rango[1], Math.max(rango[0], n));
@@ -275,7 +275,7 @@ function medianocheLocal(y: number, m0: number, d: number): number {
   return u - desfase(t);
 }
 /** Fecha local (CDMX) 'YYYY-MM-DD' de un instante. */
-function fechaLocal(t: number): string {
+export function fechaLocal(t: number): string {
   const x = new Date(t + desfase(t));
   return x.toISOString().slice(0, 10);
 }
@@ -288,10 +288,10 @@ function parseLocalDate(f: any): number | null {
   return medianocheLocal(y, m - 1, d);
 }
 export function medianocheCdmx(iso: string): number { return medianocheLocal(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)); }
-function parseItems(x: any): any[] { if (typeof x === "string") { try { x = JSON.parse(x); } catch { x = []; } } return Array.isArray(x) ? x : []; }
+export function parseItems(x: any): any[] { if (typeof x === "string") { try { x = JSON.parse(x); } catch { x = []; } } return Array.isArray(x) ? x : []; }
 
 export const CORP_EMAILS: Record<string, string> = { "workat@mx.thecoffee.jp": "Oficina Corporativa", "marketingtc@mx.thecoffee.jp": "Marketing" };
-const PLAN_AP_FUERA: Record<string, number> = { activa: 1, cancelada: 1, cancelacion_pendiente: 1, corporativo: 1 };
+export const PLAN_AP_FUERA: Record<string, number> = { activa: 1, cancelada: 1, cancelacion_pendiente: 1, corporativo: 1 };
 const PLAN_RE_NOTA_APERTURA = /pedido de apertura|kit de apertura/i;
 const CANCELADOS = new Set(["cancelado", "cancelacion_pendiente"]);
 

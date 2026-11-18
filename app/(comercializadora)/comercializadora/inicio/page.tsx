@@ -14,6 +14,8 @@ import {
   type VentaMov,
 } from '@/lib/comercializadora/inicio';
 import type { MovCompra } from '@/lib/comercializadora/ordenes';
+import { indicadoresMotor, motorPlan } from '@/lib/comercializadora/motor';
+import { riesgoInicio, type RiesgoInicio } from '@/lib/comercializadora/doh';
 
 const VENTA = 'id,folio,sku,cantidad,estado,fecha_envio';
 
@@ -93,6 +95,14 @@ export default async function InicioPagina() {
     mermas,
     pedidos: pedidosMes.ok ? pedidosMes.datos : null,
   });
+  // Plan 3d: el riesgo de quiebre sale del motor (la misma cuenta que DOH e Indicadores). Si no se puede, se dice.
+  let riesgo: RiesgoInicio | null = null;
+  try {
+    const m = await motorPlan(db);
+    if (m.ok) riesgo = riesgoInicio(indicadoresMotor(m).riesgo);
+  } catch {
+    riesgo = null;
+  }
   return (
     <>
       <Encabezado
@@ -100,7 +110,7 @@ export default async function InicioPagina() {
         titulo="Inicio"
         descripcion="El día de la Comercializadora: dinero del mes, compras en camino e inventario que pide atención."
       />
-      <Inicio r={r} ventas={pedidosMes.ok} pedidos={pedidos} hoy={hoy} />
+      <Inicio r={r} ventas={pedidosMes.ok} pedidos={pedidos} hoy={hoy} riesgo={riesgo} />
     </>
   );
 }

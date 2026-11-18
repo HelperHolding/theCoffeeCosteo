@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Encabezado } from '@/components/portal/piezas';
 import { Catalogo } from '@/components/comercializadora/catalogo';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
@@ -41,7 +42,11 @@ export default async function CatalogoPagina() {
         area="Comercializadora"
         titulo="Catálogo"
         descripcion="Datos de compra de cada artículo. El costo, el proveedor y el estatus vienen de Zoho."
-      />
+      >
+        <Link href="/comercializadora/catalogo/piezas-apertura" className="text-sm font-semibold underline">
+          Sugerir piezas por apertura
+        </Link>
+      </Encabezado>
       <Catalogo
         filas={catalogo}
         leadTimes={Object.fromEntries(lts.map((l) => [l.sku, l.dias]))}
