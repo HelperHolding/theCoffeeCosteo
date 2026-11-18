@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:0;background:#f6f4ef;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #e3ded4;border-radius:16px;">
+            <tr>
+              <td style="padding:32px 32px 8px;">
+                <img src="{{ .SiteURL }}/the-coffee.png" width="56" height="56" alt="The Coffee" style="display:block;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:Arial,Helvetica,sans-serif;color:#111111;">
+                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;">Elige tu contraseña del portal</h1>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#2b2926;">
+                  A partir de ahora cada persona entra al portal de The Coffee con su propia contraseña. Elige la tuya para
+                  <strong>{{ .Email }}</strong> con este botón.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 32px 8px;">
+                <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery"
+                   style="display:inline-block;background:#111111;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:999px;">Elegir mi contraseña</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 32px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#6b6560;">
+                El enlace sirve una sola vez y vence en 24 horas. Si ya venció, entra a {{ .SiteURL }}/login y usa «¿Olvidaste tu contraseña?».
+              </td>
+            </tr>
+          </table>
+          <p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b6560;">The Coffee México</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

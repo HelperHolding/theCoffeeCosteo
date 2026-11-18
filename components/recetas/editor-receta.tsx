@@ -356,7 +356,7 @@ export function EditorReceta({
         </p>
       )}
       {editable && (
-        <Button variant="accent" size="lg" disabled={pending} onClick={guardar}>
+        <Button variant="accent" size="lg" pendiente={pending} onClick={guardar}>
           {pending ? 'Guardando…' : 'Guardar receta completa'}
         </Button>
       )}

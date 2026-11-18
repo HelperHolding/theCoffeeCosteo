@@ -9,6 +9,8 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('../../lib/supabase/servidor', () => ({
   servidor: async () => ({
+    // Juárez lee su Rappi del portal desde el 2026-11-15: aquí sin pedidos.
+    rpc: async () => ({ data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null }, error: null }),
     auth: {
       getUser: async () =>
         sesion.usuario

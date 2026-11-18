@@ -6,7 +6,7 @@ import { conRappi, hoyLocal, leerVentana, type FuenteRappi, type LecturaNormal }
 import type { CatalogoNombres } from './metricas';
 import type { PedidoNormal } from './normalizar';
 import type { PedidoRappi } from './rappi-portal';
-import { pedidoRappiAPos } from './rappi-pos';
+import { mismaHoraQueRappi, pedidoRappiAPos } from './rappi-pos';
 import { resumirDia, type FilaResumen } from './resumen';
 import { sumarDias } from './tiempo';
 
@@ -58,14 +58,16 @@ export async function catalogoServicio(db: Servicio): Promise<CatalogoNombres | 
 export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | undefined {
   if (!cfg.rappiPortal) return undefined;
   return async (desde, hasta) => {
+    const otraZona = !mismaHoraQueRappi(cfg.zona, desde) || !mismaHoraQueRappi(cfg.zona, hasta);
     const r = await db
       .from('rappi_pedidos')
       .select(
         'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
       )
       .eq('company_id', cfg.companyId)
-      .gte('fecha_local', desde)
-      .lte('fecha_local', hasta)
+      // Fecha del portal en hora del centro: fuera de esa zona se lee un día de más a cada lado (ver fuenteRappi).
+      .gte('fecha_local', otraZona ? sumarDias(desde, -1) : desde)
+      .lte('fecha_local', otraZona ? sumarDias(hasta, 1) : hasta)
       .limit(5000);
     if (r.error || !r.data) return null;
     const pedidos: PedidoNormal[] = [];
@@ -94,8 +96,8 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
           precio: Number(y.precio),
           opciones: (y.opciones ?? []) as PedidoRappi['productos'][number]['opciones'],
         })),
-      } as PedidoRappi);
-      if (p) {
+      } as PedidoRappi, cfg.zona);
+      if (p && p.fecha >= desde && p.fecha <= hasta) {
         // Tienda Turbo según rappi_tiendas.canal: el POS no lo distingue, la carga del BI sí.
         const tienda = x.rappi_tiendas as { canal?: string } | { canal?: string }[] | null;
         const canal = Array.isArray(tienda) ? tienda[0]?.canal : tienda?.canal;

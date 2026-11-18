@@ -137,7 +137,7 @@ export function ActividadesTienda({
               <Button type="button" variant="ghost" onClick={() => setNueva(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={pendiente}>
+              <Button type="submit" pendiente={pendiente}>
                 Guardar
               </Button>
             </div>
