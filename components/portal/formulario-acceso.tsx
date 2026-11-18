@@ -42,7 +42,7 @@ export function FormularioAcceso({ nueva = false, next = '' }: { nueva?: boolean
           {error}
         </p>
       )}
-      <Button size="lg" className="w-full" disabled={pending}>
+      <Button size="lg" className="w-full" pendiente={pending}>
         {pending ? 'Un momento…' : nueva ? 'Guardar contraseña' : 'Entrar'}
       </Button>
     </form>

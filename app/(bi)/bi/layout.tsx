@@ -2,6 +2,7 @@ import { accesos, sesionBi } from '@/lib/supabase/sesion';
 import { modulosVisibles } from '@/lib/portal/modulos';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { Marco, type ItemBusqueda } from '@/components/portal/marco';
+import '@/components/portal/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function BiLayout({ children }: { children: React.ReactNode }) {
   const { db, perfil, companias } = await sesionBi();
@@ -20,7 +21,7 @@ export default async function BiLayout({ children }: { children: React.ReactNode
       visibles={modulosVisibles(await accesos(db, perfil.user_id), perfil.rol)}
       busqueda={busqueda}
     >
-      <div className="space-y-7">{children}</div>
+      <div className="vitrina space-y-7">{children}</div>
     </Marco>
   );
 }

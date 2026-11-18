@@ -10,6 +10,7 @@ import { VistaExpediente, VistaTiendas } from './crm';
 import { VISTAS_CRM, VistaExpedienteUnificado, VistaPipeline } from './crm-unificado';
 import { VistaSucursales } from './sucursales';
 import { VistaTableroMexico } from './tablero-mexico';
+import { VistaBi } from './bi';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
 // Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
 const americano = (canal: string, orden: number, precio: number, comision: number, envase: number) => {
@@ -50,6 +51,8 @@ createRoot(document.getElementById('root')!).render(
     <VistaPipeline />
   ) : window.location.search.includes('expediente-unificado') ? (
     <VistaExpedienteUnificado />
+  ) : new URLSearchParams(window.location.search).has('bi') ? (
+    <VistaBi />
   ) : window.location.search.includes('tablero-mexico') ? (
     <VistaTableroMexico />
   ) : window.location.search.includes('sucursales') ? (

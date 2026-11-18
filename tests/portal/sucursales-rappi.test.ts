@@ -8,6 +8,8 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('../../lib/supabase/servidor', () => ({
   servidor: async () => ({
+    // Juárez lee su Rappi del portal desde el 2026-11-15: aquí sin pedidos.
+    rpc: async () => ({ data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null }, error: null }),
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } }, error: null }) },
     from: (tabla: string) => ({
       select: () => ({
@@ -211,24 +213,20 @@ describe('rutas con Rappi', () => {
       params: Promise.resolve({ companyId: '612' }),
     });
 
-  it('En vivo suma Rappi con Mostrador y App; filtrar por rappi trae solo Rappi con su neto', async () => {
+  // Rappi solo del portal (Carlo, 2026-11-15): lo cobrado con forma de pago RAPPI en el POS ya no se suma.
+  it('En vivo deja fuera el Rappi del POS: solo Mostrador y App', async () => {
     const pos = (await (await llamar(vivo, '')).json()) as RespuestaVivo;
-    expect(pos.kpis).toMatchObject({ pedidos: 3, ventaCent: 49500 });
-    expect(pos.origenes.map((o) => o.origen)).toEqual(['mostrador', 'rappi']);
-    expect(pos.origenes[1].participacion).toBeCloseTo(2 / 3);
-    expect(pos.pagos.map((p) => p.metodo)).toContain('RAPPI');
-    const mostrador = (await (await llamar(vivo, '?origen=mostrador')).json()) as RespuestaVivo;
-    expect(mostrador.kpis).toMatchObject({ pedidos: 1, ventaCent: 16500 });
+    expect(pos.kpis).toMatchObject({ pedidos: 1, ventaCent: 16500 });
+    expect(pos.origenes.map((o) => o.origen)).toEqual(['mostrador']);
+    expect(pos.pagos.map((p) => p.metodo)).not.toContain('RAPPI');
     const r = (await (await llamar(vivo, '?origen=rappi')).json()) as RespuestaVivo;
-    expect(r.kpis).toMatchObject({ pedidos: 2, ventaCent: 33000, netoCent: 28050 });
-    expect(r.kpisBase).toMatchObject({ pedidos: 1 });
-    expect(r.comparativo?.pedidos).toBeCloseTo(1);
-    expect(r.ultimosPedidos.every((p) => p.origen === 'rappi' && p.metodo === 'RAPPI')).toBe(true);
+    expect(r.kpis).toMatchObject({ pedidos: 0, ventaCent: 0 });
+    expect(r.ultimosPedidos).toEqual([]);
   });
 
-  it('Productos y conciliación incluyen Rappi en "todos"', async () => {
+  it('Productos y conciliación tampoco cuentan el Rappi del POS', async () => {
     const d = (await (await llamar(productosGet, '?desde=2026-10-22')).json()) as RespuestaProductos;
-    expect(d.totales.pedidos).toBe(3);
-    expect(d.conciliacion).toMatchObject({ ventaCent: 49500, diferenciaCent: 0 });
+    expect(d.totales.pedidos).toBe(1);
+    expect(d.conciliacion).toMatchObject({ ventaCent: 16500, diferenciaCent: 0 });
   });
 });

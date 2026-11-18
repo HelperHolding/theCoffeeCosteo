@@ -68,6 +68,7 @@ it('usa las reglas y solo las consultas del CRM', async () => {
     'consultar_bloqueadas',
     'historial_card',
     'consultar_vencimientos',
+    'consultar_card',
   ]);
 });
 

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
 import { Slot } from 'radix-ui';
+import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform,color] duration-150 outline-none focus-visible:ring-[3px] focus-visible:ring-crema/35 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -42,10 +43,18 @@ function Button({
   variant = 'default',
   size = 'default',
   asChild = false,
+  pendiente = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    /**
+     * Mientras el servidor responde: se deshabilita, avisa con aria-busy y muestra un giro en lugar de su ícono
+     * (o antes del texto si no lleva ícono). Con ícono, el ancho no cambia y el botón no salta.
+     */
+    pendiente?: boolean;
   }) {
   const Comp = asChild ? Slot.Root : 'button';
 
@@ -54,9 +63,24 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-pendiente={pendiente || undefined}
+      aria-busy={pendiente || undefined}
+      disabled={asChild ? undefined : disabled || pendiente}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        pendiente && 'cursor-wait [&>svg:not(.giro)]:hidden',
+      )}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {pendiente && <Loader2 aria-hidden="true" className="giro motion-safe:animate-spin" />}
+          {children}
+        </>
+      )}
+    </Comp>
   );
 }
 

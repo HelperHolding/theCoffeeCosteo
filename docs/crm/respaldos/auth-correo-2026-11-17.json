@@ -1,0 +1,8 @@
+{
+  "site_url": "https://the-coffee-portal-helperholding.vercel.app/",
+  "uri_allow_list": "https://the-coffee-costeo-thecoffee1.vercel.app/,https://the-coffee-costeo-thecoffee1.vercel.app/**,https://the-*-coffee-costeo-thecoffee1.vercel.app,https://the-*-coffee-costeo-thecoffee1.vercel.app/**,https://the-coffee-portal-thecoffee1.vercel.app/,https://the-coffee-portal-thecoffee1.vercel.app/**,https://the-*-coffee-portal-thecoffee1.vercel.app,https://the-*-coffee-portal-thecoffee1.vercel.app/**,https://the-coffee-portal-helperholding.vercel.app/,https://the-coffee-portal-helperholding.vercel.app/**,https://the-*-coffee-portal-helperholding.vercel.app,https://the-*-coffee-portal-helperholding.vercel.app/**",
+  "mailer_subjects_invite": "You've been invited",
+  "mailer_templates_invite_content": "<h2>You've been invited</h2>\n\n<p>You've been invited to create an account. Follow the link below to accept.</p>\n<p><a href=\"{{ .ConfirmationURL }}\">Accept invitation</a></p>",
+  "mailer_subjects_recovery": "Reset your password",
+  "mailer_templates_recovery_content": "<h2>Reset your password</h2>\n\n<p>We received a request to reset your password. Follow the link below to choose a new one.</p>\n<p><a href=\"{{ .ConfirmationURL }}\">Reset password</a></p>\n\n<p>If you didn't request this, you can safely ignore this email.</p>"
+}
