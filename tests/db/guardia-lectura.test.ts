@@ -6,6 +6,8 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 const PREDICADOS = [
   /tiene_rol\(/,
   /crm_puede_leer\(\)/,
+  // Datos sensibles del CRM (main, migración 50): exige crm_puede_leer() y además ser desarrollador o de ventas/legal/finanzas.
+  /crm_ve_sensibles\(\)/,
   /sucursales_[a-z_]+\(/,
   /bi_[a-z_]+\(/,
   /user_id = (\( SELECT )?auth\.uid\(\)/,
