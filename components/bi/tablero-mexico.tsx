@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CircleAlert, Clock, RotateCcw } from 'lucide-react';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Button } from '@/components/ui/button';
 import { ErrorCarga } from '@/components/sucursales/estados';
 import { fechaCorta, horaDe } from '@/components/sucursales/formato';
 import { useLectura } from '@/components/sucursales/use-lectura';
@@ -60,7 +61,7 @@ export function TableroMexico() {
   }, [tendencias.datos]);
 
   return (
-    <div className="space-y-6">
+    <div className="tablero-bi space-y-6">
       <FiltrosBi filtros={filtros} opciones={opciones} alCambiar={alCambiar} />
 
       {tablero.datos ? (
@@ -158,19 +159,15 @@ function Bloques({
           <span className="text-muted-foreground">
             Del {fechaCorta(respuesta.periodo.desde)} al {fechaCorta(respuesta.periodo.hasta)}
           </span>
-          <button
-            type="button"
-            onClick={alActualizar}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs font-semibold"
-          >
-            <RotateCcw size={13} aria-hidden="true" />
+          <Button variant="outline" size="xs" className="ml-auto" onClick={alActualizar}>
+            <RotateCcw aria-hidden="true" />
             Actualizar
-          </button>
+          </Button>
         </p>
         {cargas.length > 0 && <Aviso>{cargas.join('; ')} (nunca se cuentan como cero).</Aviso>}
         {a.rappiPendiente && (
           <Aviso>
-            Rappi de Zoho pendiente (F3): en tiendas sin el portal de Rappi falta su venta de Rappi.
+            El Rappi de Zoho todavía no se carga: en las tiendas sin portal de Rappi falta su venta de Rappi.
           </Aviso>
         )}
       </section>

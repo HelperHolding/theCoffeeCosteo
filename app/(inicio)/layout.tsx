@@ -1,6 +1,7 @@
 import { accesos, sesion } from '@/lib/supabase/sesion';
 import { modulosVisibles } from '@/lib/portal/modulos';
 import { Marco } from '@/components/portal/marco';
+import '@/components/portal/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function InicioLayout({ children }: { children: React.ReactNode }) {
   const { db, perfil } = await sesion(undefined, true, { sinCosteo: true });
@@ -12,7 +13,8 @@ export default async function InicioLayout({ children }: { children: React.React
       seccion="inicio"
       visibles={visibles}
     >
-      {children}
+      {/* Portada: las tarjetas de módulos son cristal sobre el muro (vitrina.css). */}
+      <div className="vitrina space-y-7">{children}</div>
     </Marco>
   );
 }

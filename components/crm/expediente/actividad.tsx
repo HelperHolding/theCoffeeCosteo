@@ -80,7 +80,7 @@ export function ActividadTienda({
               </p>
             )}
             <div className="flex justify-end">
-              <Button type="submit" size="sm" disabled={pendiente || !texto.trim()}>
+              <Button type="submit" size="sm" pendiente={pendiente} disabled={!texto.trim()}>
                 {pendiente ? 'Guardando…' : 'Agregar nota'}
               </Button>
             </div>

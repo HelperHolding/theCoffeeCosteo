@@ -19,18 +19,34 @@ export const AREAS: Record<ClaveArea, Area> = {
 };
 
 export type TipoCard = 'franquiciatario' | 'sucursal';
+
+/** Igual que crm_puede_mover: un head o desarrollador mueve todo; los demás, las etapas de su área (y función). */
+export const puedeMoverEtapa = (
+  u: { desarrollador: boolean; esHead: boolean; areas: string[]; funciones: string[]; editable: boolean },
+  e: Pick<EtapaGeneral, 'area' | 'funcionClave'>,
+) =>
+  u.editable &&
+  (u.desarrollador ||
+    u.esHead ||
+    (u.areas.includes(e.area) && (!e.funcionClave || u.funciones.includes(e.funcionClave))));
 export type TipoEtapa = 'abierta' | 'lateral' | 'ganada' | 'perdida';
 
 export interface EtapaGeneral {
   id: string;
   clave: string;
-  /** Número del documento de proceso (1–10); nulo en provisionales y finales. */
+  /** Número del documento de proceso (1–10); nulo en subpasos de Proyectos y finales. */
   numero: number | null;
+  /** Subpaso de Proyectos en el documento (26.1 … 26.8). */
+  paso?: string | null;
+  /** COF y contrato: se registran en paralelo dentro de la sucursal; no son columna del Pipeline. */
+  carril?: 'legal' | null;
   nombre: string;
   /** Área que mueve la card fuera de esta etapa. */
   area: ClaveArea;
   /** Rol funcional que mueve en lugar del área (p. ej. Aprobación de locales, P2). */
   funcion?: string;
+  /** Clave de esa función (la que llevan las membresías), para decidir botones igual que la base. */
+  funcionClave?: 'aprobacion_locales';
   /** Tipo de card de la etapa; nulo = ambas (Standby). */
   card: TipoCard | null;
   tipo: TipoEtapa;
@@ -63,7 +79,7 @@ export interface Requisito {
 }
 
 export interface Vencimiento {
-  tipo: 'cof' | 'apertura_5_habiles' | 'limite_120' | 'pld_original';
+  tipo: 'cof' | 'apertura_5_habiles' | 'limite_120' | 'limite_vencido' | 'pld_original' | 'transferencia';
   etiqueta: string;
   fecha: string;
   /** Días restantes; negativo = vencido. */
@@ -111,7 +127,7 @@ export function estadoCandado(
 
 /** Tramos del Pipeline: encabezados por área en el orden del proceso. */
 export interface Tramo {
-  clave: 'ventas' | 'locales' | 'proyectos' | 'legal' | 'cierre';
+  clave: 'ventas' | 'locales' | 'proyectos' | 'cierre';
   nombre: string;
   area: ClaveArea | null;
   etapas: EtapaGeneral[];
@@ -136,17 +152,17 @@ export function tramos(etapas: EtapaGeneral[]): Tramo[] {
     },
     {
       clave: 'proyectos',
-      nombre: 'Proyectos (provisional)',
+      nombre: 'Proyectos · 26.1 a 26.7',
       area: 'proyectos',
-      etapas: por((e) => !!e.provisional),
+      etapas: por((e) => e.tipo === 'abierta' && !!e.paso),
     },
+    // COF y contrato (carril Legal) no son columnas: se ven en la ficha de la sucursal.
     {
-      clave: 'legal',
-      nombre: 'COF, contrato y apertura',
-      area: 'legal',
-      etapas: por((e) => e.tipo === 'abierta' && (e.numero ?? 0) >= 9),
+      clave: 'cierre',
+      nombre: 'Apertura, laterales y finales',
+      area: null,
+      etapas: por((e) => e.tipo !== 'abierta'),
     },
-    { clave: 'cierre', nombre: 'Laterales y finales', area: null, etapas: por((e) => e.tipo !== 'abierta') },
   ].filter((t) => t.etapas.length > 0) as Tramo[];
 }
 
@@ -186,7 +202,9 @@ export const ETIQUETA_VENCIMIENTO: Record<string, string> = {
   cof: 'COF firmada',
   apertura_5_habiles: 'Fecha confirmada a Legal',
   limite_120: 'Límite de apertura',
+  limite_vencido: 'Límite vencido: multa',
   cof_tardia: 'COF tardía',
+  transferencia: 'Transferencia a Proyectos',
   pld_original: 'PLD original',
 };
 
