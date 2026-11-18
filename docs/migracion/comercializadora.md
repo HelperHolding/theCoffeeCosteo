@@ -132,3 +132,38 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - Borradores por resolver: los `draft` de zoho-sync (`com_zoho_oc_lineas`); emitir, ajustar o borrar con las reglas del viejo. Un borrador no cuenta como en camino ni como compra emitida.
 - La carga del motor lee además `com_catalogo.clasificacion_detallada`, `com_zoho_oc_lineas.synced_at` y `com_zoho_proveedor.dias_credito`.
 - Diferencias conocidas con el viejo: crédito desde Zoho y no desde `com_proveedores`; borradores de zoho-sync en lugar de la carga de la configuración; el error de una categoría se ve también en la vista simple; Importaciones usa el escenario guardado; no se portan "Pagos por viernes", el historial de 60 días por proveedor ni los avisos de `_planBannersHtml` (salvo el de la fuente de las cantidades).
+
+## 14. Paridad y cutover (plan 4)
+
+- **OVs desde los pedidos** (migración 70):
+  - `com_derivar_ov(aplicar)` crea y avanza las filas `venta` de `com_movimientos` a partir de los pedidos del puente, con `com_sku_mapping`. Sustituye a las tres funciones del HTML viejo, que quedan vacías;
+  - reglas: pedidos con apertura; `pagado`/`empacado` → `por_enviar`, `enviado`/`entregado`/`terminado` → `enviado`, `cancelado` → `cancelado`. Inserta solo folios sin filas y de los últimos 45 días. Solo avanza, nunca regresa (respeta "Marcar enviado"). `reabierto` y `ambiguo` se reportan y no se tocan;
+  - job `com-ov-pedidos` (`10,40 * * * *`), activo desde el cutover. Cada corrida deja una fila en `com_sync_log` (`proceso = 'com-ov-pedidos'`) con lo que hizo. `com_ov_plan(filas)` dice qué haría sin escribir.
+- **Paridad diaria:**
+  - `npx.cmd tsx scripts/migracion-legado/paridad-comercializadora.ts --guardar`, después de las 13:05 UTC. Lee los dos lados en solo lectura y compara el mín/máx, la OC del cron por proveedor y SKU, y las OVs (lo que `com_ov_plan` haría sobre las filas del viejo);
+  - "no comparable" = entradas distintas (copiar editables). Las diferencias aceptadas van en `docs/migracion/paridad/explicadas.json`;
+  - se avanza al cutover con 3 días seguidos verdes (`docs/migracion/paridad/<fecha>.json`).
+- **Sombra:** los crons del portal corren con `auto.modo = 'simulacion'` y sin `COM_EFECTOS_EXTERNOS`. Durante la ventana solo se copia `--solo-editables`, después de la paridad.
+- **Día del cambio (en este orden):**
+  1. pausar el portal;
+  2. desprogramar en bliocjvq (verificar `cron.job` vacío);
+  3. quitar los `ZOHO_*` de bliocjvq;
+  4. publicar el HTML viejo;
+  5. guardar los grants y revocar escritura en las 17 tablas de bliocjvq;
+  6. copia final completa;
+  7. `com_derivar_ov(false)`;
+  8. `auto.modo = 'real'` y `COM_EFECTOS_EXTERNOS=si`;
+  9. activar los cuatro jobs del portal;
+  10. verificar.
+
+  Los SQL están en el plan 4 (Tarea 10).
+- **Reversa (hasta 30 días):**
+  1. apagar el portal y volverlo a simulación;
+  2. `reversa-comercializadora.ts` (escribe un SQL en `%TEMP%`) y pegarlo en el SQL Editor de bliocjvq;
+  3. devolver grants y `ZOHO_*`;
+  4. revertir el PR del HTML viejo;
+  5. reprogramar los jobs viejos.
+
+  Lo que no regresa: las OCs automáticas del portal, que siguen en Zoho.
+- **A los 30 días:** las 17 tablas pasan a `archivo_comercializadora` en bliocjvq y se borran las cuatro funciones viejas. Desde ahí ya no hay copia ni reversa. `com_credito_abonos`, `send-email` y el rol `portal_puente` se quedan (Pedidos).
+- **Sin cambios:** `provider-notifications`, `aperturas-sync`, Apps Script y n8n no leen `com_*`.
