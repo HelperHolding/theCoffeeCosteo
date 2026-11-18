@@ -2,11 +2,21 @@ import type { FormOc } from './ordenes';
 import { masDias } from './fechas';
 import { impAhoraDatos, type CorridaImp } from '../../supabase/functions/_shared/planImp.ts';
 import { planCantOC, type PlanCafe } from '../../supabase/functions/_shared/planCafe.ts';
+import type { PlanProv } from '../../supabase/functions/_shared/planProv.ts';
+import type { GrupoSem } from '../../supabase/functions/_shared/planSem.ts';
 
 /** De dónde viene la OC sugerida (el viejo lo mostraba como "sugerido por …"). */
-export type OrigenOc = 'Importaciones' | 'Café';
-const ORIGEN: Record<string, OrigenOc> = { importaciones: 'Importaciones', cafe: 'Café' };
-const CLAVE: Record<OrigenOc, string> = { Importaciones: 'importaciones', Café: 'cafe' };
+export type OrigenOc = 'Importaciones' | 'Café' | 'Plan de abastos';
+const ORIGEN: Record<string, OrigenOc> = {
+  importaciones: 'Importaciones',
+  cafe: 'Café',
+  plan: 'Plan de abastos',
+};
+const CLAVE: Record<OrigenOc, string> = {
+  Importaciones: 'importaciones',
+  Café: 'cafe',
+  'Plan de abastos': 'plan',
+};
 export const MAX_LINEAS_OC = 60;
 
 export interface PrellenadoOc {
@@ -113,28 +123,59 @@ export function ocImportaciones(c: CorridaImp, clave: string): PrellenadoOc | { 
 }
 
 /**
- * window._planCrearOC(key, 'cafe'): lo de hoy del proveedor (pedirHoy del servidor o pedirEsta local). Monto solo si
- * todos tienen costo; arribo = hoy + el lead time más largo.
+ * window._planCrearOC(key, fuente): lo de hoy del proveedor (pedirHoy del servidor o pedirEsta local). Monto solo si
+ * todos tienen costo; arribo = hoy + el lead time más largo. Desde el plan local (plan 3f, 'Plan de abastos') no entra el
+ * café que ese plan traiga con compra.excluir_cafe = false: se pide desde su propio grupo de Café (_planCafeFueraLocal).
  */
-export function ocCafe(c: PlanCafe, key: string): PrellenadoOc | { error: string } {
+export function ocPlan(
+  c: PlanProv,
+  key: string,
+  origen: 'Café' | 'Plan de abastos',
+): PrellenadoOc | { error: string } {
   const g = c.provs.find((x) => x.key === key);
   if (!g || !g.real) return { error: 'Asigna un proveedor a estos artículos antes de crear la OC' };
-  const items = g.rows.filter((r) => planCantOC(r) > 0);
+  const fueraLocal = (r: { esCafe?: boolean }) =>
+    !!(r.esCafe && !c.soloCafe && c.cfg?.compra?.excluir_cafe === false);
+  const rowsOC = origen === 'Café' ? g.rows : g.rows.filter((r) => !fueraLocal(r));
+  const items = rowsOC.filter((r) => planCantOC(r) > 0);
   if (!items.length)
     return {
-      error: g.rows.some((r) => r.calc.pedirEsta > 0)
+      error: rowsOC.some((r) => r.calc.pedirEsta > 0)
         ? 'Nada que pedir hoy a este proveedor: lo de esta semana toca en los próximos días'
         : 'Nada que pedir esta semana a este proveedor',
+    };
+  // Revisión 3f (I2): el enlace lleva hasta MAX_LINEAS_OC; antes se recortaba en silencio y el monto contaba todo.
+  if (items.length > MAX_LINEAS_OC)
+    return {
+      error: `Son ${items.length} artículos y una OC prellenada lleva hasta ${MAX_LINEAS_OC}: créala desde Órdenes de compra.`,
     };
   let mOC = 0,
     sinC = 0;
   items.forEach((r) => (r.costo > 0 ? (mOC += planCantOC(r) * r.costo) : sinC++));
   const ltMax = Math.max(...items.map((r) => Number(r.s.lt) || 0));
   return {
-    origen: 'Café',
+    origen,
     proveedor: g.nombre,
     lineas: items.map((r) => ({ sku: r.sku, cantidad: planCantOC(r) })),
     monto: sinC === 0 && mOC > 0 ? Math.round(mOC * 100) / 100 : null,
     arribo: masDias(c.hoyIso, ltMax),
   };
+}
+/** window._planCrearOC(key, 'cafe'): "Qué pedir" de Café (plan 3e). */
+export const ocCafe = (c: PlanCafe, key: string) => ocPlan(c, key, 'Café');
+/** window._planCrearOC(key): un proveedor del plan local, desde el Plan de abastos o Esta semana (plan 3f). */
+export const ocLocal = (c: PlanProv, key: string) => ocPlan(c, key, 'Plan de abastos');
+
+/**
+ * "Crear OC" de un grupo del Plan de abastos o de Esta semana (plan 3f): según su categoría, _impCrearOC(g.pk) o
+ * _planCrearOC(g.pk[, 'cafe']). Si la categoría no se pudo calcular, dice por qué.
+ */
+export function ocGrupoSem(
+  g: Pick<GrupoSem, 'fuente' | 'pk'>,
+  p: { local: PlanProv; cafe: PlanCafe | null; imp: CorridaImp | null },
+): PrellenadoOc | { error: string } {
+  if (g.fuente === 'imp')
+    return p.imp ? ocImportaciones(p.imp, g.pk) : { error: 'No hay un cálculo de importaciones.' };
+  if (g.fuente === 'cafe') return p.cafe ? ocCafe(p.cafe, g.pk) : { error: 'No hay un cálculo de café.' };
+  return ocLocal(p.local, g.pk);
 }

@@ -95,13 +95,23 @@ export function zocBorradorSet(cfg: any): Record<string, 1> | null {
 }
 
 /** Línea de una OC de Zoho en borrador (com_zoho_oc_lineas con status 'draft'). */
-export interface LineaBorrador { po_number: string; sku: string; vendor_name: string | null; fecha_oc: string | null; cantidad: number | null; cantidad_recibida: number | null; precio: number | null }
+export interface LineaBorrador { po_number: string; sku: string; vendor_name: string | null; fecha_oc: string | null; cantidad: number | null; cantidad_recibida: number | null; precio: number | null; synced_at?: string | null }
 
 /** Decisión 6: los borradores de la configuración más los borradores reales de Zoho que trae zoho-sync. */
 export function borradoresPlan(R: { ocZohoBorr?: LineaBorrador[] | null }, cfg: any): Record<string, 1> | null {
   var s: Record<string, 1> = {}, n = 0, base = zocBorradorSet(cfg);
   if (base) Object.keys(base).forEach(function (k) { s[k] = 1; n++; });
   (R.ocZohoBorr || []).forEach(function (l) { var k = zocKey(l.po_number); if (k) { s[k + "|" + String(l.sku).trim().toUpperCase()] = 1; n++; } });
+  return n ? s : null;
+}
+/**
+ * Folios en borrador (_zocBorradorFolios 38541, para las compras ya emitidas del Plan de abastos) con la misma regla de la
+ * decisión 6 del 3d: los de la configuración más los `draft` de zoho-sync.
+ */
+export function borradorFoliosPlan(R: { ocZohoBorr?: LineaBorrador[] | null }, cfg: any): Record<string, 1> | null {
+  var s: Record<string, 1> = {}, n = 0, f = zocFuenteBorr(cfg);
+  if (f) f.ls.forEach(function (l: any) { if (l.borrador) { var k = zocKey(l.folio); if (k) { s[k] = 1; n++; } } });
+  (R.ocZohoBorr || []).forEach(function (l) { var k = zocKey(l.po_number); if (k) { s[k] = 1; n++; } });
   return n ? s : null;
 }
 
@@ -137,8 +147,11 @@ export interface DatosPlan {
   pedAper: { pedido_id: any }[]; kit: Record<string, boolean>;
   conteoUlt: { cedis: Record<string, string>; yulius: Record<string, string> };
   ocZohoBorr?: LineaBorrador[] | null;
-  /** Mínimos de proveedor de Zoho (com_zoho_proveedor): los usa la agrupación por proveedor (plan 3e, Café). */
-  zprov?: { vendor_id: any; nombre: string | null; minimo_compra: number | null }[] | null;
+  /**
+   * Proveedores de Zoho (com_zoho_proveedor): el mínimo lo usa la agrupación por proveedor (plan 3e) y los días de crédito,
+   * el viernes de pago de Esta semana (plan 3f).
+   */
+  zprov?: { vendor_id: any; nombre: string | null; minimo_compra: number | null; dias_credito?: number | null }[] | null;
   srv: Servidor | null; avisos: string[]; cargadoEn: number;
 }
 
