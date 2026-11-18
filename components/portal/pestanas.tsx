@@ -1,5 +1,6 @@
 'use client';
 import { useId, useState } from 'react';
+import { usePastilla } from '@/components/ui/use-pastilla';
 
 export function Pestanas({
   pestanas,
@@ -15,6 +16,7 @@ export function Pestanas({
 }) {
   const base = useId();
   const [actual, setActual] = useState(pestanas.some((p) => p.id === inicial) ? inicial! : pestanas[0]?.id);
+  const { ref, medido, animar, estilo } = usePastilla<HTMLDivElement>('[aria-selected="true"]', actual);
   const elegir = (id: string) => {
     setActual(id);
     alCambiar?.(id);
@@ -25,9 +27,10 @@ export function Pestanas({
   return (
     <div className="space-y-6">
       <div
+        ref={ref}
         role="tablist"
         aria-orientation="horizontal"
-        className="placa flex gap-1 overflow-x-auto overflow-y-hidden rounded-b-none border-b border-line px-2 [scrollbar-width:none]"
+        className="placa relative flex gap-1 overflow-x-auto overflow-y-hidden rounded-b-none border-b border-line px-2 [scrollbar-width:none]"
         onKeyDown={(e) => {
           if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
           const i = pestanas.findIndex((p) => p.id === actual);
@@ -37,6 +40,16 @@ export function Pestanas({
           document.getElementById(`${base}-${siguiente.id}`)?.focus();
         }}
       >
+        {/* Subrayado que se desliza a la pestaña elegida; antes de medir, la pestaña lleva su propio borde. */}
+        {medido && (
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full bg-crema ${
+              animar ? 'transition-[transform,width] duration-(--dur-corta) ease-salida' : ''
+            }`}
+            style={estilo}
+          />
+        )}
         {pestanas.map((p) => {
           const activa = p.id === actual;
           return (
@@ -49,8 +62,10 @@ export function Pestanas({
               aria-controls={`${base}-${p.id}-panel`}
               tabIndex={activa ? 0 : -1}
               onClick={() => elegir(p.id)}
-              className={`relative -mb-px flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                activa ? 'border-crema text-ink' : 'border-transparent text-muted-foreground hover:text-ink'
+              className={`relative -mb-px flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors duration-(--dur-corta) ${
+                activa
+                  ? `text-ink ${medido ? 'border-transparent' : 'border-crema'}`
+                  : 'border-transparent text-muted-foreground hover:text-ink'
               }`}
             >
               {p.nombre}

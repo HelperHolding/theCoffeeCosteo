@@ -25,6 +25,8 @@ import {
   Settings2,
   BarChart3,
   type LucideIcon,
+  Waypoints,
+  Scale,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
 
@@ -79,10 +81,12 @@ const gruposCrm: Grupo[] = [
     titulo: 'CRM Franquicias',
     enlaces: [
       { href: '/crm', nombre: 'Panel', icono: LayoutDashboard, exacto: true },
+      { href: '/crm/proceso', nombre: 'Proceso', icono: Waypoints },
       { href: '/crm/pipeline', nombre: 'Pipeline', icono: Columns3 },
       { href: '/crm/franquiciatarios', nombre: 'Franquiciatarios', icono: UsersRound },
       { href: '/crm/pendientes', nombre: 'Mis pendientes', icono: ListTodo },
       { href: '/crm/vencimientos', nombre: 'Vencimientos', icono: CalendarClock },
+      { href: '/crm/carril-legal', nombre: 'COF y contrato', icono: Scale },
       { href: '/crm/bitacora', nombre: 'Bitácora', icono: ScrollText },
       { href: '/crm/contactos', nombre: 'Contactos', icono: Contact },
       { href: '/crm/actividades', nombre: 'Actividades', icono: CalendarCheck },

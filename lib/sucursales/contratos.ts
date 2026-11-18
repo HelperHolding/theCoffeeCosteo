@@ -186,7 +186,25 @@ export interface RespuestaTendencias {
 export interface TableroMexico {
   generadoEn: string;
   semanas: number;
+  /**
+   * `vivo` (por omisión): hoy. `dia`: un día cerrado (`fecha`), en `hoy` con la misma forma. `rango`: días cerrados; en
+   * `hoy` va cada sucursal con su total del rango y el de los mismos días justo antes (`armarRango`).
+   */
+  modo?: 'vivo' | 'dia' | 'rango';
+  fecha?: string;
+  rango?: {
+    desde: string;
+    hasta: string;
+    previoDesde: string;
+    previoHasta: string;
+    dias: TableroPeriodo['dias'];
+    diasPrevio: TableroPeriodo['dias'];
+    productos: TableroPeriodo['productos'];
+    diasLeidos: number;
+    incompletos: number;
+  };
   hoy: TableroHoy;
+  /** Las últimas 4, 8 o 12 semanas completas: no cambia con el día o el rango. */
   periodo: TableroPeriodo;
 }
 
