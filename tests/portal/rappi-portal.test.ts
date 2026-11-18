@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { claseEstado, construirRappiPortal, type RpcRappiPortal } from '@/lib/sucursales/rappi-portal';
-import { configDe } from '@/lib/sucursales/config';
+import { configDe, sucursalesConfiguradas } from '@/lib/sucursales/config';
 import { sucursalInfo } from '@/lib/sucursales/datos';
 import { pestanasDe } from '@/components/sucursales/ventas-pos';
 
@@ -123,7 +123,7 @@ describe('construirRappiPortal', () => {
 });
 
 describe('pestaña Rappi', () => {
-  it('las 11 de Guadalajara la tienen por el portal (con filtro de Rappi: se suma); Cancún y Juárez por la API', () => {
+  it('las 11 de Guadalajara, Juárez y Bonampak la tienen por el portal; ninguna por la API del POS (2026-11-15)', () => {
     const namora = sucursalInfo(configDe(513)!);
     expect(configDe(513)!.rappi).toBe(false);
     expect(namora).toMatchObject({ rappi: true, rappiPortal: true });
@@ -132,12 +132,46 @@ describe('pestaña Rappi', () => {
     for (const id of gdl)
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
     for (const id of [612, 583])
-      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: false });
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    expect(sucursalesConfiguradas.filter((c) => c.rappi)).toEqual([]);
   });
 
   it('lote 1 de CDMX: 9 con el portal; Roma Sur, sin tiendas en el portal, solo con el POS', () => {
     for (const id of [519, 546, 545, 670, 460, 626, 607, 507, 625])
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
     expect(sucursalInfo(configDe(469)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
+
+  it('lote 2: las 8 de CDMX y las 2 de Toluca con el portal', () => {
+    for (const id of [642, 608, 606, 506, 550, 611, 549, 643, 610, 646])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+  });
+
+  it('lote 3: centro y Bajío con el portal', () => {
+    for (const id of [520, 743, 463, 616, 761, 509, 734, 466, 614, 615])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+  });
+
+  it('lote 4: 9 con el portal; Tepatitlán, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [551, 674, 593, 718, 763, 721, 553, 582, 478])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    expect(sucursalInfo(configDe(508)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
+
+  it('lote 5: 7 con el portal; Fluvial y Aeropuerto Chiapas, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [705, 590, 645, 632, 558, 613, 664])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    for (const id of [584, 781]) expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
+
+  it('lote 6: 5 con el portal; Mayab y Tulum, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [552, 679, 644, 601, 655])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    for (const id of [462, 627]) expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
+
+  it('lote 7: las 10 con el portal', () => {
+    for (const id of [717, 733, 547, 754, 719, 715, 771, 735, 716, 770])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
   });
 });

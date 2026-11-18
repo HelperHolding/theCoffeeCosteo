@@ -73,7 +73,7 @@ export function HistorialReceta({
         </p>
       )}
       {mas && (
-        <Button disabled={pending} variant="outline" onClick={cargar}>
+        <Button pendiente={pending} variant="outline" onClick={cargar}>
           {pending ? 'Cargando…' : 'Ver cambios anteriores'}
         </Button>
       )}

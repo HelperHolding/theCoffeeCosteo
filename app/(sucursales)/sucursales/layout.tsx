@@ -2,7 +2,7 @@ import { accesos, sesionSucursales } from '@/lib/supabase/sesion';
 import { modulosVisibles } from '@/lib/portal/modulos';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { Marco, type ItemBusqueda } from '@/components/portal/marco';
-import './vitrina.css';
+import '@/components/portal/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function SucursalesLayout({ children }: { children: React.ReactNode }) {
   const { db, perfil, companias } = await sesionSucursales();

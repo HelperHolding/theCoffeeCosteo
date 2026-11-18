@@ -72,7 +72,7 @@ export function NuevaTienda({ etapas }: { etapas: { id: string; nombre: string }
             </p>
           )}
           <DialogFooter>
-            <Button type="submit" disabled={pendiente}>
+            <Button type="submit" pendiente={pendiente}>
               {pendiente ? 'Creando…' : 'Crear tienda'}
             </Button>
           </DialogFooter>
