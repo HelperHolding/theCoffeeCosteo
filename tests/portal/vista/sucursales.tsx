@@ -398,7 +398,7 @@ window.fetch = async (entrada, init) => {
   const rappi = portal
     ? async (d: string, h: string) =>
         rappiPortalSintetico(d, h)
-          .pedidos.map(pedidoRappiAPos)
+          .pedidos.map((p) => pedidoRappiAPos(p))
           .filter((p) => p !== null)
     : undefined;
   if (m[2] === 'costeo')

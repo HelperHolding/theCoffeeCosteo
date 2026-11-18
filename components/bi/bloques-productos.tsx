@@ -31,7 +31,7 @@ export function RankingProductos({ meses }: { meses: ReturnType<typeof rankingPo
   return (
     <Tarjeta
       titulo="Ranking de Productos"
-      descripcion="Ordenado por venta neta del mes. El margen llega en F4.1."
+      descripcion="Ordenado por venta neta del mes. Sin margen todavía: falta definir la fuente del costo."
       cuerpo={false}
       acciones={
         meses.length > 0 && (
@@ -63,7 +63,7 @@ export function RankingProductos({ meses }: { meses: ReturnType<typeof rankingPo
       ) : (
         <>
           <div className="mt-4 overflow-x-auto">
-            <table className="tabla min-w-[36rem]">
+            <table className="tabla tabla-bi min-w-[36rem]">
               <caption className="sr-only">Productos de {nombreMes(actual.mes)} por venta neta</caption>
               <thead>
                 <tr>

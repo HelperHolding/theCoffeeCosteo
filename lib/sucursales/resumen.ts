@@ -157,10 +157,22 @@ export interface TableroHoy {
   ultimoCorte: string | null;
   sucursales: SucursalTablero[];
   /**
-   * Pedidos y venta por tramo de 10 min y por origen, sumando sucursales: hoy solo hasta el último tramo completo de
-   * cada sucursal; la semana pasada, el día completo.
+   * Pedidos y venta por tramo de 10 min (hora local) y por origen, sumando sucursales:
+   * - `hastaTramo`: el tramo de referencia, el corte más común (las sucursales en otra zona van una hora antes o
+   *   después; si no, la curva tendría una cola de solo 4 sucursales);
+   * - `hoy` y `baseHasta`: hoy y la semana pasada hasta el mismo tramo de CADA sucursal y nunca después de
+   *   `hastaTramo`, para comparar parejo;
+   * - `base`: la semana pasada, el día completo (referencia del resto del día);
+   * - `paso`: cada cuántos tramos hay un dato real. 1 = cada 10 min; 6 = por hora, en un día cerrado de hace más de
+   *   8 días (sus tramos ya se borraron y quedan las horas, ver `tramosDeHoras`).
    */
-  curva: { hoy: PorOrigen<Serie>; base: PorOrigen<Serie>; hastaTramo: number };
+  curva: {
+    hoy: PorOrigen<Serie>;
+    base: PorOrigen<Serie>;
+    baseHasta: PorOrigen<Serie>;
+    hastaTramo: number;
+    paso: number;
+  };
 }
 
 export interface TableroPeriodo {
@@ -170,7 +182,14 @@ export interface TableroPeriodo {
   incompletos: number;
   semanas: { semana: string; cifras: Cifras; dias: number }[];
   dias: { fecha: string; venta: PorOrigen<number>; pedidos: PorOrigen<number> }[];
-  sucursales: { companyId: number; nombre: string; ciudad: string; cifras: Cifras }[];
+  /** `porSemana`: cifras de la sucursal por lunes de semana (la llave de `semanas`). */
+  sucursales: {
+    companyId: number;
+    nombre: string;
+    ciudad: string;
+    cifras: Cifras;
+    porSemana: Record<string, Cifras>;
+  }[];
   productos: {
     clave: string;
     codigo: string;
@@ -203,8 +222,61 @@ function hastaTramo(tramos: PorOrigen<Serie>, hasta: number): Cifras {
   return c;
 }
 
+/** Corte de un día ya cerrado: leído hasta las 24:00. */
+export const DIA_COMPLETO = 86_400;
+
+/**
+ * Las 24 horas de un día cerrado como tramos de 10 min: el total de cada hora va en su último tramo, así el
+ * acumulado es exacto en cada hora en punto (la curva de ese día solo se dibuja por hora, `paso` 6).
+ */
+export function tramosDeHoras(horas: PorOrigen<Serie>): PorOrigen<Serie> {
+  const r: PorOrigen<Serie> = {};
+  for (const [o, [p, v]] of Object.entries(horas) as [Origen, Serie][]) {
+    const s = serie(TRAMOS);
+    for (let h = 0; h < 24; h++) {
+      s[0][h * 6 + 5] = p[h] ?? 0;
+      s[1][h * 6 + 5] = v[h] ?? 0;
+    }
+    r[o] = s;
+  }
+  return r;
+}
+
+const cifrasDe = (origenes: PorOrigen<TotalesOrigen>) => {
+  const c: Cifras = {};
+  for (const [o, t] of Object.entries(origenes) as [Origen, TotalesOrigen][]) sumarEn(c, o, t);
+  return c;
+};
+
+/**
+ * Hoy en vivo, o un día ya cerrado (la misma RPC con esa fecha para todas). Un día cerrado se compara completo contra
+ * el mismo día de la semana anterior; si ya no tiene tramos, su curva sale de las horas.
+ */
 export function armarHoy(rpc: RpcHoy, sucursales: ConfigSucursal[]): TableroHoy {
-  const curva = { hoy: {} as PorOrigen<Serie>, base: {} as PorOrigen<Serie>, hastaTramo: 0 };
+  // Tramo de referencia: el corte más común entre las sucursales con renglón de hoy (en empate, el mayor).
+  const cortes = new Map<number, number>();
+  for (const d of rpc.dias)
+    if (d.hoy && sucursales.some((s) => s.companyId === d.company_id)) {
+      const k = Math.floor(d.corte_segundo / TRAMO_SEGUNDOS);
+      cortes.set(k, (cortes.get(k) ?? 0) + 1);
+    }
+  const referencia = [...cortes].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? 0;
+  const curva = {
+    hoy: {} as PorOrigen<Serie>,
+    base: {} as PorOrigen<Serie>,
+    baseHasta: {} as PorOrigen<Serie>,
+    hastaTramo: referencia,
+    paso: 1,
+  };
+  const cerrado = (d?: DiaHoyRpc) => !!d && d.corte_segundo >= DIA_COMPLETO;
+  // Tramos de 10 min; en un día cerrado que ya no los tiene, las horas (y toda la curva pasa a ir por hora).
+  const tramosDe = (d?: DiaHoyRpc) => {
+    if (!d) return null;
+    if (d.tramos) return d.tramos;
+    if (!cerrado(d) || !d.horas) return null;
+    curva.paso = 6;
+    return tramosDeHoras(d.horas);
+  };
   const acumular = (destino: PorOrigen<Serie>, tramos: PorOrigen<Serie>, hasta: number) => {
     for (const [o, [p, v]] of Object.entries(tramos) as [Origen, Serie][]) {
       const d = (destino[o] ??= serie(TRAMOS));
@@ -217,17 +289,25 @@ export function armarHoy(rpc: RpcHoy, sucursales: ConfigSucursal[]): TableroHoy 
   const filas = sucursales.map((cfg): SucursalTablero => {
     const hoy = rpc.dias.find((d) => d.company_id === cfg.companyId && d.hoy);
     const base = rpc.dias.find((d) => d.company_id === cfg.companyId && !d.hoy);
-    const c: Cifras = {};
-    for (const [o, t] of Object.entries(hoy?.origenes ?? {}) as [Origen, TotalesOrigen][]) sumarEn(c, o, t);
-    // Tramos completos: la comparación llega al inicio del tramo en curso, igual en los dos días.
+    const c = cifrasDe(hoy?.origenes ?? {});
+    // Tramos completos: la comparación llega al inicio del tramo en curso, igual en los dos días. Dos días cerrados
+    // se comparan completos, con todos sus totales.
     const k = hoy ? Math.floor(hoy.corte_segundo / TRAMO_SEGUNDOS) : 0;
     const comparable =
-      hoy?.tramos && base?.tramos
-        ? { hoy: hastaTramo(hoy.tramos, k), base: hastaTramo(base.tramos, k) }
-        : null;
-    if (hoy?.tramos) acumular(curva.hoy, hoy.tramos, k);
-    if (base?.tramos) acumular(curva.base, base.tramos, TRAMOS);
-    curva.hastaTramo = Math.max(curva.hastaTramo, k);
+      hoy && base && cerrado(hoy) && cerrado(base)
+        ? { hoy: c, base: cifrasDe(base.origenes) }
+        : hoy?.tramos && base?.tramos
+          ? { hoy: hastaTramo(hoy.tramos, k), base: hastaTramo(base.tramos, k) }
+          : null;
+    const tope = Math.min(k, referencia);
+    const th = tramosDe(hoy);
+    const tb = tramosDe(base);
+    if (th) acumular(curva.hoy, th, tope);
+    if (tb) {
+      acumular(curva.base, tb, TRAMOS);
+      // Sin renglón de hoy no hay con qué comparar: la semana pasada solo entra como referencia del día.
+      if (hoy) acumular(curva.baseHasta, tb, tope);
+    }
     return {
       companyId: cfg.companyId,
       nombre: cfg.nombre,
@@ -250,7 +330,7 @@ export function armarPeriodo(
   sucursales: ConfigSucursal[],
 ): TableroPeriodo {
   const semanas = new Map<string, { cifras: Cifras; dias: number }>();
-  const porSucursal = new Map<number, Cifras>();
+  const porSucursal = new Map<number, { cifras: Cifras; porSemana: Record<string, Cifras> }>();
   for (const s of rpc.semanas) {
     const t = {
       pedidos: s.pedidos,
@@ -262,8 +342,9 @@ export function armarPeriodo(
     sumarEn(w.cifras, s.origen, t);
     w.dias = Math.max(w.dias, s.dias);
     semanas.set(s.semana, w);
-    const c = porSucursal.get(s.company_id) ?? {};
-    sumarEn(c, s.origen, t);
+    const c = porSucursal.get(s.company_id) ?? { cifras: {}, porSemana: {} };
+    sumarEn(c.cifras, s.origen, t);
+    sumarEn((c.porSemana[s.semana] ??= {}), s.origen, t);
     porSucursal.set(s.company_id, c);
   }
   const dias = new Map<string, { fecha: string; venta: PorOrigen<number>; pedidos: PorOrigen<number> }>();
@@ -301,9 +382,43 @@ export function armarPeriodo(
         companyId: s.companyId,
         nombre: s.nombre,
         ciudad: s.ciudad,
-        cifras: porSucursal.get(s.companyId)!,
+        ...porSucursal.get(s.companyId)!,
       })),
     productos: [...prods.values()],
+  };
+}
+
+/**
+ * Un rango de días cerrados con la forma de «hoy», para pintar el mismo tablero: cada sucursal con su total del rango
+ * y, para el cambio, su total de los mismos días justo antes (`previo`). Sin curva: un rango no tiene tramos. Una
+ * sucursal sin venta en el rango queda en cero (el periodo no distingue un día cerrado de uno sin leer; los días
+ * incompletos los cuenta `incompletos`).
+ */
+export function armarRango(
+  actual: TableroPeriodo,
+  previo: TableroPeriodo,
+  sucursales: ConfigSucursal[],
+): TableroHoy {
+  const de = (p: TableroPeriodo) => new Map(p.sucursales.map((s) => [s.companyId, s.cifras]));
+  const [a, b] = [de(actual), de(previo)];
+  return {
+    ultimoCorte: null,
+    sucursales: sucursales.map((cfg): SucursalTablero => {
+      const hoy = a.get(cfg.companyId) ?? {};
+      const base = b.get(cfg.companyId);
+      return {
+        companyId: cfg.companyId,
+        nombre: cfg.nombre,
+        ciudad: cfg.ciudad,
+        sinCorte: false,
+        completa: true,
+        corteSegundo: null,
+        hoy,
+        comparable: base ? { hoy, base } : null,
+        comparadoA: null,
+      };
+    }),
+    curva: { hoy: {}, base: {}, baseHasta: {}, hastaTramo: 0, paso: 1 },
   };
 }
 

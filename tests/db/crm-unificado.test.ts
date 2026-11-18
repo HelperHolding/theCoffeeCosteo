@@ -6,7 +6,7 @@ import { comoUsuario, crearUsuario } from './utilidades';
 // CRM Unificado (doc 40 §7): candados, permisos por área, franquiciatario → sucursal, bitácora y avisos.
 let db: PGlite;
 let luis: string, vendedora: string, andres: string, legalMiembro: string, diego: string, proyectos: string;
-let sebastian: string, lector: string, sinCrm: string;
+let sebastian: string, lector: string, sinCrm: string, finanzas: string;
 
 const como = <T>(u: string, fn: () => Promise<T>) => comoUsuario(db, u, fn);
 const uno = async <T>(u: string, sql: string, p: unknown[] = []) =>
@@ -109,9 +109,7 @@ async function formalizar(f: string) {
   await cumplir(vendedora, 'franquiciatario', f, 'liquidacion_comprobante', {
     archivo: await archivo(vendedora, 'franquiciatario_id', f),
   });
-  await cumplir(vendedora, 'franquiciatario', f, 'pago_validado', {
-    archivo: await archivo(vendedora, 'franquiciatario_id', f),
-  });
+  await cumplir(finanzas, 'franquiciatario', f, 'pago_validado');
   await avanzar(vendedora, 'franquiciatario', f, 'bienvenida', await version('crm_franquiciatarios', f));
   await cumplir(vendedora, 'franquiciatario', f, 'bienvenida', { fecha: '2026-10-05' });
   await cumplir(andres, 'franquiciatario', f, 'carta_intencion', {
@@ -136,22 +134,40 @@ beforeAll(async () => {
   sebastian = await usuario('admin', 'desarrollador', 'ventas', 'miembro', ['aprobacion_locales']);
   lector = await usuario('compras', 'lectura', 'ventas', 'lectura');
   sinCrm = await usuario('admin', null);
+  finanzas = await usuario('compras', 'edicion', 'finanzas', 'miembro');
 });
 afterAll(async () => db.close());
 
 describe('etapas y requisitos sembrados', () => {
-  it('el embudo general tiene las 10 etapas del documento, 6 provisionales y la 3 opcional', async () => {
+  it('el embudo general tiene las 10 etapas, los 8 subpasos de Proyectos y la 3 opcional; COF y contrato son carril', async () => {
     const r = await db.query<{
       clave: string;
       numero: number | null;
-      provisional: boolean;
+      paso: string | null;
+      carril: string | null;
       opcional: boolean;
-    }>(`select clave, numero, provisional, opcional from crm_etapas where embudo = 'general' order by orden`);
+    }>(
+      `select clave, numero, paso, carril, opcional from crm_etapas where embudo = 'general' and activa order by orden`,
+    );
     expect(r.rows.filter((e) => e.numero).map((e) => e.numero)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    expect(r.rows.filter((e) => e.provisional)).toHaveLength(6);
+    expect(r.rows.filter((e) => e.paso).map((e) => e.paso)).toEqual([
+      '26.1',
+      '26.2',
+      '26.3',
+      '26.4',
+      '26.5',
+      '26.6',
+      '26.7',
+      '26.8',
+    ]);
+    expect(r.rows.filter((e) => e.carril).map((e) => e.clave)).toEqual(['cof', 'contrato']);
     expect(r.rows.find((e) => e.clave === 'revision_contrato')?.opcional).toBe(true);
+    const prov = await db.query<{ n: number }>(
+      `select count(*)::int n from crm_etapas where embudo = 'general' and provisional and activa`,
+    );
+    expect(prov.rows[0].n).toBe(0);
     const n = await db.query<{ n: number }>('select count(*)::int n from crm_requisitos');
-    expect(n.rows[0].n).toBe(37);
+    expect(n.rows[0].n).toBe(48);
   });
 });
 
@@ -259,12 +275,12 @@ describe('candados (§5.4)', () => {
     await cumplir(vendedora, 'franquiciatario', f, 'apartado_comprobante', {
       archivo: await archivo(vendedora, 'franquiciatario_id', f),
     });
-    // P1: Finanzas inactiva; Ventas registra su validación con evidencia y queda la nota.
-    const v = await cumplir(vendedora, 'franquiciatario', f, 'apartado_validado', {
-      archivo: await archivo(vendedora, 'franquiciatario_id', f),
-    });
+    // Finanzas activa (Checkpoint C): Ventas ya no registra la validación del pago; Finanzas sí.
+    await expect(cumplir(vendedora, 'franquiciatario', f, 'apartado_validado')).rejects.toThrow(
+      'lo registra Finanzas',
+    );
+    const v = await cumplir(finanzas, 'franquiciatario', f, 'apartado_validado');
     expect(v.estado).toBe('validado');
-    expect(v.nota).toMatch(/^Validado por Finanzas \(registrado por /);
   });
 
   it('un head libera el candado con motivo; un miembro no; la liberación se consume al avanzar', async () => {
@@ -344,7 +360,7 @@ describe('franquiciatario → sucursal (D2)', () => {
     ).rejects.toThrow('desde el franquiciatario');
   });
 
-  it('la etapa 6 la mueve Aprobación de locales; COF y contrato son por sucursal con carril paralelo', async () => {
+  it('la etapa 6 la mueve Aprobación de locales; Proyectos avanza por sus 7 subpasos con entregable', async () => {
     await expect(
       avanzar(vendedora, 'sucursal', s, 'constancia', await version('crm_tiendas', s)),
     ).rejects.toThrow('Aprobación de locales');
@@ -372,21 +388,91 @@ describe('franquiciatario → sucursal (D2)', () => {
     );
     await avanzar(andres, 'sucursal', s, 'transferencia', await version('crm_tiendas', s));
     await cumplir(andres, 'sucursal', s, 'transferencia_habilitada');
-    await avanzar(legalMiembro, 'sucursal', s, 'p_arquitecta', await version('crm_tiendas', s));
-    // Carril paralelo (Q2): Legal registra la COF mientras la sucursal está en Proyectos.
-    const cof = await cumplir(andres, 'sucursal', s, 'cof_enviada', { fecha: '2026-11-10' });
-    expect(cof.estado).toBe('validado');
+    // El ID de Jestor ya es candado de la etapa 8.
     await expect(
-      avanzar(legalMiembro, 'sucursal', s, 'p_3d', await version('crm_tiendas', s)),
+      avanzar(legalMiembro, 'sucursal', s, 'levantamiento', await version('crm_tiendas', s)),
+    ).rejects.toThrow('Bloqueada: faltan 1');
+    await como(vendedora, () =>
+      db.query(`update crm_tiendas set numero_tienda_jestor = 4321 where id = $1`, [s]),
+    );
+    await avanzar(legalMiembro, 'sucursal', s, 'levantamiento', await version('crm_tiendas', s));
+    await expect(
+      avanzar(legalMiembro, 'sucursal', s, 'boceto', await version('crm_tiendas', s)),
     ).rejects.toThrow('la mueve Proyectos');
-    await avanzar(proyectos, 'sucursal', s, 'p_capacitacion', await version('crm_tiendas', s));
-    await avanzar(proyectos, 'sucursal', s, 'cof', await version('crm_tiendas', s));
-    const c = await uno<{ total: number; listos: number }>(
+    // Elegir el subpaso no basta: sin el entregable validado no avanza.
+    await expect(
+      avanzar(proyectos, 'sucursal', s, 'boceto', await version('crm_tiendas', s)),
+    ).rejects.toThrow('Bloqueada');
+    const pasos: [string, string, string][] = [
+      ['levantamiento_doc', 'levantamiento', 'boceto'],
+      ['boceto_doc', 'boceto', 'envio_brasil'],
+      ['brasil_evidencia', 'evidencia_brasil', 'proyecto_3d'],
+      ['proyecto_3d_doc', 'proyecto_3d', 'proyecto_ejecutivo'],
+      ['ejecutivo_doc', 'proyecto_ejecutivo', 'obra'],
+      ['obra_fotos', 'fotos_obra', 'capacitacion'],
+    ];
+    for (const [clave, tipo, siguiente] of pasos) {
+      if (clave === 'brasil_evidencia')
+        await cumplir(proyectos, 'sucursal', s, 'brasil_fecha', { fecha: '2026-11-20' });
+      const c = await cumplir(proyectos, 'sucursal', s, clave, {
+        archivo: await archivo(proyectos, 'tienda_id', s, tipo),
+      });
+      expect(c.estado).toBe('validado');
+      await avanzar(proyectos, 'sucursal', s, siguiente, await version('crm_tiendas', s));
+    }
+    expect(await etapaDe('crm_tiendas', s)).toBe('capacitacion');
+  });
+
+  it('COF y contrato van en el carril Legal; la apertura exige los dos carriles', async () => {
+    // El carril no es una columna.
+    await expect(avanzar(proyectos, 'sucursal', s, 'cof', await version('crm_tiendas', s))).rejects.toThrow(
+      'carril Legal',
+    );
+    const antes = await uno<{ total: number; listos: number; carril_total: number; carril_listos: number }>(
       andres,
-      'select total, listos from crm_v_candados where card_id = $1',
+      'select total, listos, carril_total, carril_listos from crm_v_candados where card_id = $1',
       [s],
     );
-    expect(c).toEqual({ total: 2, listos: 1 });
+    expect(antes).toEqual({ total: 3, listos: 0, carril_total: 5, carril_listos: 0 });
+    for (const [clave, tipo] of [
+      ['capacitador_viaticos', 'viaticos_capacitador'],
+      ['apertura_evidencia', 'evidencia_apertura'],
+    ] as const)
+      await cumplir(proyectos, 'sucursal', s, clave, {
+        archivo: await archivo(proyectos, 'tienda_id', s, tipo),
+      });
+    await como(proyectos, () =>
+      db.query(
+        `update crm_tiendas set fecha_apertura = '2027-01-15', fecha_confirmada_apertura = '2027-01-15' where id = $1`,
+        [s],
+      ),
+    );
+    // Proyectos completo, Legal no: no abre, y ningún head lo libera.
+    await expect(avanzar(diego, 'sucursal', s, 'operando', await version('crm_tiendas', s))).rejects.toThrow(
+      'carril Legal no está completo (faltan 4',
+    );
+    await expect(
+      uno(diego, `select crm_liberar_candado('sucursal', $1, 'Abre ya, Legal firma después') r`, [s]),
+    ).rejects.toThrow('no tiene candado');
+    // Legal registra su carril mientras la sucursal sigue en Proyectos.
+    await cumplir(andres, 'sucursal', s, 'cof_enviada', { fecha: '2026-11-10' });
+    await expect(
+      cumplir(andres, 'sucursal', s, 'contrato_firmado', {
+        archivo: await archivo(andres, 'tienda_id', s),
+        fecha: '2026-12-01',
+      }),
+    ).rejects.toThrow('Primero');
+    await cumplir(andres, 'sucursal', s, 'cof_firmada', {
+      archivo: await archivo(andres, 'tienda_id', s),
+      fecha: '2026-11-12',
+    });
+    await cumplir(andres, 'sucursal', s, 'contrato_firmado', {
+      archivo: await archivo(andres, 'tienda_id', s),
+      fecha: '2026-12-01',
+    });
+    await cumplir(andres, 'sucursal', s, 'liberacion_apertura');
+    const r = await avanzar(proyectos, 'sucursal', s, 'operando', await version('crm_tiendas', s));
+    expect(r.etapa).toBe('operando');
   });
 
   it('no se descarta un franquiciatario con sucursales en proceso; un head cancela en cascada', async () => {
@@ -560,5 +646,77 @@ describe('avisos de tiempo (§7)', () => {
       `select crm_atender_aviso(id) from crm_avisos where tienda_id = $1 and tipo = 'cof'`,
       [s],
     );
+  });
+
+  it('al vencer los 120 días sin abrir avisa la multa a Legal, Proyectos y Finanzas', async () => {
+    const f = await franquiciatarioListo();
+    const { sucursal_id: s } = await formalizar(f);
+    await db.query(`update crm_tiendas set fecha_limite_apertura = '2027-04-30' where id = $1`, [s]);
+    await uno(vendedora, `select crm_generar_avisos('2027-04-30') n`);
+    const previo = await db.query<{ area: string }>(
+      `select area from crm_avisos where tienda_id = $1 and tipo = 'limite_120' order by area`,
+      [s],
+    );
+    expect(previo.rows.map((x) => x.area)).toEqual(['legal', 'proyectos']);
+    expect(
+      (await db.query(`select 1 from crm_avisos where tienda_id = $1 and tipo = 'limite_vencido'`, [s])).rows,
+    ).toHaveLength(0);
+    await uno(vendedora, `select crm_generar_avisos('2027-05-01') n`);
+    await uno(vendedora, `select crm_generar_avisos('2027-05-02') n`);
+    const multa = await db.query<{ area: string }>(
+      `select area from crm_avisos where tienda_id = $1 and tipo = 'limite_vencido' order by area`,
+      [s],
+    );
+    expect(multa.rows.map((x) => x.area)).toEqual(['finanzas', 'legal', 'proyectos']);
+    await uno(
+      finanzas,
+      `select crm_atender_aviso(id) from crm_avisos where tienda_id = $1 and tipo = 'limite_vencido' and area = 'finanzas'`,
+      [s],
+    );
+  });
+});
+
+describe('datos sensibles (Checkpoint C)', () => {
+  it('datos fiscales y documentos sensibles: Ventas, Legal y Finanzas sí; Proyectos no', async () => {
+    const f = await franquiciatarioListo();
+    await uno(
+      vendedora,
+      `insert into crm_franquiciatario_fiscal (franquiciatario_id, rfc, obligado_solidario) values ($1, 'XAXX010101000', 'Obligado Prueba') returning 1`,
+      [f],
+    );
+    const pld = await archivo(vendedora, 'franquiciatario_id', f, 'pld');
+    const otro = await archivo(vendedora, 'franquiciatario_id', f, 'propuesta_local');
+    for (const u of [vendedora, andres, finanzas, sebastian]) {
+      const r = await uno<{ rfc: string } | undefined>(
+        u,
+        'select rfc from crm_franquiciatario_fiscal where franquiciatario_id = $1',
+        [f],
+      );
+      expect(r?.rfc).toBe('XAXX010101000');
+    }
+    const ocultos = await uno<{ n: number }>(
+      proyectos,
+      'select count(*)::int n from crm_franquiciatario_fiscal where franquiciatario_id = $1',
+      [f],
+    );
+    expect(ocultos.n).toBe(0);
+    const docs = await como(proyectos, () =>
+      db.query<{ id: string }>('select id from crm_archivos where id = any($1)', [[pld, otro]]),
+    );
+    expect(docs.rows.map((x) => x.id)).toEqual([otro]);
+    await expect(
+      uno(
+        proyectos,
+        `update crm_franquiciatario_fiscal set rfc = 'X' where franquiciatario_id = $1 returning 1`,
+        [f],
+      ),
+    ).resolves.toBeUndefined();
+    // La bitácora registra qué campo cambió, nunca el valor.
+    const h = await db.query<{ resumen: string; cambios: Record<string, unknown> }>(
+      `select resumen, cambios from crm_historial where entidad = 'crm_franquiciatario_fiscal' and franquiciatario_id = $1`,
+      [f],
+    );
+    expect(h.rows[0].resumen).toBe('Datos fiscales y del obligado solidario: obligado_solidario, rfc');
+    expect(JSON.stringify(h.rows[0].cambios)).not.toContain('XAXX');
   });
 });

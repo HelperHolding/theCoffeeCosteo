@@ -1,9 +1,10 @@
 /*
  * Tablero de México (docs/sucursales/16), skill movimiento-web. Es un tablero, así que el movimiento dice qué cambió:
- * - una sola entrada orquestada al cargar: los bloques suben 12 px escalonados 60 ms y el mapa se enciende en diagonal
- *   (de noroeste a sureste);
- * - al cambiar el filtro o llegar un corte nuevo, las barras, columnas, anillo y colores del mapa se mueven a su nuevo
- *   valor (transiciones, no se vuelven a animar desde cero) y las cifras cuentan hasta el nuevo valor (useCifra);
+ * - una sola entrada orquestada al cargar: los bloques suben 12 px escalonados 60 ms, el mapa se enciende de oeste a
+ *   este y el calendario en diagonal;
+ * - al cambiar el filtro o llegar un corte nuevo, las barras y los colores del mapa se deslizan a su nuevo valor
+ *   (transiciones, no se vuelven a animar desde cero) y las cifras cuentan hasta el nuevo valor (useCifra);
+ * - una ciudad se abre con su panel creciendo (respuesta al clic);
  * - el punto «Al día» late mientras el corte está al día.
  * Solo se animan transform, opacity y colores. Con movimiento reducido no se mueve nada.
  */
@@ -27,27 +28,49 @@
   }
 }
 
-/* Mapa: cada estado se enciende según su diagonal (--d = columna + fila). */
+/*
+ * Mapa (trazos reales): cada estado se enciende de oeste a este (--d = posición, 0 a 14) y su color se desliza al
+ * cambiar entre Venta y Cambio o al llegar un corte. Los rótulos aparecen detrás de su estado.
+ */
 .mx-estado {
-  animation: mx-enciende 650ms var(--mx-ease-salida) both;
-  animation-delay: calc(250ms + var(--d, 0) * 45ms);
-  transition:
-    background-color var(--mx-dur-media) var(--mx-ease-suave),
-    color var(--mx-dur-media) var(--mx-ease-suave),
-    transform var(--mx-dur-corta) var(--mx-ease-suave),
-    box-shadow var(--mx-dur-corta) var(--mx-ease-suave);
+  animation: mx-enciende 600ms var(--mx-ease-salida) both;
+  animation-delay: calc(200ms + var(--d, 0) * 40ms);
+  transition: fill var(--mx-dur-media) var(--mx-ease-suave);
+}
+.mx-rotulo {
+  animation: mx-aparece 500ms var(--mx-ease-salida) both;
+  animation-delay: calc(450ms + var(--d, 0) * 40ms);
 }
 @keyframes mx-enciende {
   from {
     opacity: 0;
-    transform: scale(0.55);
   }
 }
 @media (hover: hover) and (pointer: fine) {
-  .mx-estado[data-con]:hover {
-    transform: translateY(-2px) scale(1.06);
-    box-shadow: 0 10px 22px -12px rgb(40 30 20 / 0.55);
+  .mx-estado[tabindex]:hover {
+    filter: brightness(1.06);
   }
+}
+.mx-estado:focus-visible {
+  outline: none;
+  stroke: #111111;
+  stroke-width: 2;
+}
+
+/* Calendario: las celdas se encienden en diagonal (--d = semana + día). */
+.mx-celda {
+  animation: mx-aparece 450ms var(--mx-ease-salida) both;
+  animation-delay: calc(200ms + var(--d, 0) * 18ms);
+  transition: background-color var(--mx-dur-media) var(--mx-ease-suave);
+}
+
+/* Ciudad que se abre: el panel crece de 0 a su alto (grid 0fr → 1fr); responde al clic, no se repite sola. */
+.mx-panel {
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--mx-dur-corta) var(--mx-ease-salida);
+}
+.mx-panel[data-abierto] {
+  grid-template-rows: 1fr;
 }
 
 /* Barras horizontales: crecen desde la izquierda al montar y se deslizan al nuevo ancho al filtrar. */
@@ -63,48 +86,28 @@
   }
 }
 
-/* Columnas: crecen desde la base al montar y cambian de alto al filtrar. */
+/* Columnas (rectángulos SVG): crecen desde su base al montar. */
 .mx-columna {
+  transform-box: fill-box;
   transform-origin: center bottom;
-  animation: mx-crece-y 750ms var(--mx-ease-salida) both;
-  animation-delay: calc(200ms + var(--i, 0) * 30ms);
-  transition: height var(--mx-dur-media) var(--mx-ease-suave);
+  animation: mx-crece-y 700ms var(--mx-ease-salida) both;
+  animation-delay: calc(200ms + var(--i, 0) * 25ms);
 }
 @keyframes mx-crece-y {
   from {
-    transform: scaleY(0);
+    transform: scaleY(0.04);
   }
 }
 
-/* Líneas que se dibujan una vez (pathLength = 1). */
-.mx-traza {
-  stroke-dasharray: 1;
-  animation: mx-traza 1300ms var(--mx-ease-salida) both;
-  animation-delay: 250ms;
-}
-@keyframes mx-traza {
-  from {
-    stroke-dashoffset: 1;
-  }
-}
+/* Áreas y líneas de la curva: aparecen una vez; al filtrar se redibujan sin volver a animar. */
 .mx-area {
-  animation: mx-aparece 900ms var(--mx-ease-salida) both;
-  animation-delay: 350ms;
-  transition: d var(--mx-dur-media) var(--mx-ease-suave);
+  animation: mx-aparece 800ms var(--mx-ease-salida) both;
+  animation-delay: 300ms;
 }
 @keyframes mx-aparece {
   from {
     opacity: 0;
   }
-}
-
-/* Anillo: cada segmento llega a su largo (stroke-dasharray) y se reacomoda al filtrar. */
-.mx-anillo {
-  transition:
-    stroke-dasharray var(--mx-dur-media) var(--mx-ease-suave),
-    stroke-dashoffset var(--mx-dur-media) var(--mx-ease-suave);
-  animation: mx-aparece 700ms var(--mx-ease-salida) both;
-  animation-delay: 300ms;
 }
 
 /* «Al día»: un anillo que late detrás del punto. */

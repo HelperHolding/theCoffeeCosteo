@@ -6,6 +6,7 @@ import type { ConsumoNacional, DesgloseConsumo } from '@/lib/sucursales/contrato
 import { armarDesglose, vistaConsumo, type FilaInsumo, type VistaConsumo } from '@/lib/sucursales/consumo-nacional';
 import { etiquetaOrigen, filtrosOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
+import { Segmentos } from '@/components/ui/segmentos';
 import { cn } from '@/lib/utils';
 import { ErrorCarga, Esqueleto } from './estados';
 import { useLectura } from './use-lectura';
@@ -56,36 +57,22 @@ export function ConsumoNacionalVista() {
   return (
     <div className="tablero-mx space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="group" aria-label="Mes" className="flex flex-wrap gap-2">
-          {base.meses.map((m) => (
-            <button
-              key={m}
-              type="button"
-              aria-pressed={m === mesActivo}
-              onClick={() => {
-                if (m === mesActivo) return;
-                setMes(m);
-                setAbierto(null);
-              }}
-              className={cn('rounded-full px-3 py-1.5 text-sm font-semibold', m === mesActivo ? 'bg-ink text-crema' : 'bg-muted')}
-            >
-              {nombreMes(m)}
-            </button>
-          ))}
-        </div>
-        <div role="group" aria-label="Origen" className="flex flex-wrap gap-1.5">
-          {filtrosOrigen.map((o) => (
-            <button
-              key={o}
-              type="button"
-              aria-pressed={o === origen}
-              onClick={() => setOrigen(o)}
-              className={cn('rounded-full px-3 py-1 text-xs font-semibold', o === origen ? 'bg-ink text-crema' : 'bg-muted')}
-            >
-              {etiquetaOrigen[o]}
-            </button>
-          ))}
-        </div>
+        <Segmentos
+          etiqueta="Mes"
+          opciones={base.meses.map((m) => ({ id: m, texto: nombreMes(m) }))}
+          activa={mesActivo}
+          alCambiar={(m) => {
+            if (m === mesActivo) return;
+            setMes(m);
+            setAbierto(null);
+          }}
+        />
+        <Segmentos
+          etiqueta="Origen"
+          opciones={filtrosOrigen.map((o) => ({ id: o, texto: etiquetaOrigen[o] }))}
+          activa={origen}
+          alCambiar={(o) => setOrigen(o as FiltroOrigen)}
+        />
       </div>
       <div aria-busy={!datos && !error} className="space-y-6">
         {!datos || !v ? (

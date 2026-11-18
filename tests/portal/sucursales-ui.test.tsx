@@ -127,24 +127,13 @@ describe('En vivo', () => {
     expect(screen.queryAllByText('$330')).toHaveLength(0);
   });
 
-  it('aviso de calidad Rappi: visible siempre que las métricas incluyan Rappi, sin tocar cifras', async () => {
+  it('aviso de calidad del Rappi del POS: ya no sale, porque solo cuenta el del portal (2026-11-15)', async () => {
     const aviso = () => screen.queryAllByRole('note').find((n) => n.textContent === AVISO_CALIDAD_RAPPI);
     render(<SucursalVentas />);
-    expect(aviso()).toBeDefined();
-    expect(AVISO_CALIDAD_RAPPI).toBe(
-      'Datos reportados por el POS de Brasil. Detectamos pedidos Rappi con artículos o cargos de tamaño no desglosados; estos importes pueden diferir de Rappi y no representan una liquidación.',
-    );
     await responder(0, vivoTodos);
-    expect(screen.getAllByText('$330').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('radio', { name: 'Mostrador' }));
-    expect(aviso()).toBeUndefined();
-    fireEvent.click(screen.getByRole('radio', { name: 'App The Coffee' }));
     expect(aviso()).toBeUndefined();
     fireEvent.click(screen.getByRole('radio', { name: 'Rappi' }));
-    expect(aviso()).toBeDefined();
-    fireEvent.click(screen.getByRole('radio', { name: 'Mostrador' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Rappi' }));
-    expect(aviso()).toBeDefined();
+    expect(aviso()).toBeUndefined();
   });
 
   it('un error del portal o del proveedor nunca se muestra como venta cero', async () => {

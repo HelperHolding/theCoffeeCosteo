@@ -73,8 +73,8 @@ export function sugerenciasPara(ruta: string, titulo?: string): string[] {
     return ['¿Qué actividades están vencidas?', '¿Qué actividades siguen en curso?'];
   if (ruta.startsWith('/crm'))
     return [
-      '¿Cuántas tiendas hay en cada etapa?',
-      '¿Qué tiendas están en remodelación y qué les falta?',
+      '¿Qué sucursales están atoradas y qué les falta?',
+      '¿Qué vence esta semana?',
       '¿Cuáles fueron los últimos cambios en el CRM y quién los hizo?',
     ];
   if (ruta.startsWith('/productos/') && titulo && !ruta.endsWith('/nuevo') && !ruta.endsWith('/calculadora'))

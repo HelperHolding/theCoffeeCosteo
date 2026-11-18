@@ -5,6 +5,7 @@ import type { RespuestaTendencias } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, etiquetaPago, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { Kpi, Tarjeta, Vacio } from '@/components/portal/piezas';
 import { ConInfo } from '@/components/portal/con-info';
+import { Segmentos } from '@/components/ui/segmentos';
 import { infoTendencias } from './info-tableros';
 import { AZUL, BarraCelda, COLOR_ORIGEN, Delta, colorPago } from './colores';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
@@ -32,23 +33,12 @@ export function Tendencias({ companyId, origen }: { companyId: number; origen: F
   const selector = (
     <div className="placa flex flex-wrap items-center gap-3 px-3 py-2">
       <span className="text-sm font-medium text-ink-2">Periodo</span>
-      <div
-        className="flex rounded-[10px] border border-line-strong bg-paper p-0.5"
-        role="group"
-        aria-label="Semanas"
-      >
-        {OPCIONES.map((n) => (
-          <button
-            key={n}
-            type="button"
-            aria-pressed={semanas === n}
-            onClick={() => setSemanas(n)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${semanas === n ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink'}`}
-          >
-            {n} semanas
-          </button>
-        ))}
-      </div>
+      <Segmentos
+        etiqueta="Semanas"
+        opciones={OPCIONES.map((n) => ({ id: String(n), texto: `${n} semanas` }))}
+        activa={String(semanas)}
+        alCambiar={(n) => setSemanas(Number(n) as (typeof OPCIONES)[number])}
+      />
       {datos && datos.semanas.length > 0 && (
         <span className="text-xs text-muted-foreground">
           {datos.semanasCompletas} de {datos.semanas.length} semanas completas ·{' '}

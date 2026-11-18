@@ -6,6 +6,7 @@ import { etiquetaOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { diasEntre, enZona, fechaValida, sumarDias } from '@/lib/sucursales/tiempo';
 import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { ConInfo } from '@/components/portal/con-info';
+import { Button } from '@/components/ui/button';
 import { infoPedidos } from './info-tableros';
 import { claseCampo } from '@/lib/crm/formato';
 import { DetallePedido } from './detalle-pedido';
@@ -88,20 +89,15 @@ export function Pedidos({
             ))}
           </select>
         </label>
-        <button
-          type="button"
-          onClick={() => cambiar(() => (setDesde(hoy), setHasta(hoy)))}
-          className="h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold"
-        >
+        <Button variant="outline" onClick={() => cambiar(() => (setDesde(hoy), setHasta(hoy)))}>
           Hoy
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => cambiar(() => (setDesde(sumarDias(hoy, -1)), setHasta(sumarDias(hoy, -1))))}
-          className="h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold"
         >
           Ayer
-        </button>
+        </Button>
       </div>
 
       {!valido ? (
