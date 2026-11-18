@@ -1,5 +1,13 @@
 import Link from 'next/link';
-import { Activity, ArrowUpRight, BarChart3, Calculator, Store, type LucideIcon } from 'lucide-react';
+import {
+  Activity,
+  ArrowUpRight,
+  BarChart3,
+  Calculator,
+  ShoppingCart,
+  Store,
+  type LucideIcon,
+} from 'lucide-react';
 import type { IdModulo, Modulo } from '@/lib/portal/modulos';
 import { Vacio } from './piezas';
 
@@ -8,6 +16,7 @@ const iconos: Record<IdModulo, LucideIcon> = {
   crm: Store,
   sucursales: Activity,
   bi: BarChart3,
+  comercializadora: ShoppingCart,
 };
 
 export function TarjetasModulos({

@@ -75,6 +75,17 @@ export async function sesionCrm(redirigir = true) {
   return { ...s, accesos: a, nivel: a.crm };
 }
 
+/** Comercializadora: cualquier rol con el módulo en perfil_modulos (lectura ve; edicion/desarrollador editan). */
+export async function sesionComercializadora(redirigir = true) {
+  const s = await sesion(undefined, redirigir, { sinCosteo: true });
+  const a = await accesos(s.db, s.perfil.user_id);
+  if (!a.comercializadora) {
+    if (redirigir) redirect('/');
+    throw new Error('No tienes acceso a Comercializadora');
+  }
+  return { ...s, accesos: a, nivel: a.comercializadora };
+}
+
 /** company_id asignadas al usuario en perfil_sucursales. Falla cerrado: cualquier error al leer = ninguna. */
 const companiasAsignadas = async (db: Db, userId: string): Promise<number[]> => {
   const r = await db.from('perfil_sucursales').select('company_id').eq('user_id', userId);
