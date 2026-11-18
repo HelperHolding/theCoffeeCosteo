@@ -31,17 +31,27 @@ async function conectar(variable: string, proyecto: string, aplicacion: string):
   return c;
 }
 
-/** bliocjvq en SOLO LECTURA: begin read only y siempre rollback. */
-export async function conLegado<T>(fn: (db: Consultor) => Promise<T>): Promise<T> {
-  const c = await conectar('DATABASE_URL_LEGADO', PROYECTO_LEGADO, 'migracion-legado-lectura');
+/** Lee en SOLO LECTURA: begin read only, en UTC, y siempre rollback. */
+async function soloLectura<T>(c: pg.Client, fn: (db: Consultor) => Promise<T>): Promise<T> {
   try {
     await c.query('begin read only');
     await c.query("set local statement_timeout = '60s'");
+    await c.query("set local timezone = 'UTC'");
     return await fn(c as unknown as Consultor);
   } finally {
     await c.query('rollback').catch(() => {});
     await c.end();
   }
+}
+
+/** bliocjvq en SOLO LECTURA. */
+export async function conLegado<T>(fn: (db: Consultor) => Promise<T>): Promise<T> {
+  return soloLectura(await conectar('DATABASE_URL_LEGADO', PROYECTO_LEGADO, 'migracion-legado-lectura'), fn);
+}
+
+/** Portal en SOLO LECTURA (plan 4: paridad y reversa). */
+export async function conPortalLectura<T>(fn: (db: Consultor) => Promise<T>): Promise<T> {
+  return soloLectura(await conectar('DATABASE_URL', PROYECTO_PORTAL, 'migracion-legado-lectura-portal'), fn);
 }
 
 /** Portal en UNA transacción, con origen 'migracion' para la bitácora. Confirma solo si fn termina sin error. */
