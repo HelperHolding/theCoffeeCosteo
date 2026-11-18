@@ -140,6 +140,25 @@ describe('líneas de un producto de Rappi', () => {
     ).toEqual(['Elige el Tamaño: Chica 240 ml']);
   });
 
+  it('tamaño sin ml (desde el 2026-11-11): la palabra da el tamaño y la bebida los ml (Carlos, 2026-11-18)', () => {
+    // Calientes: Tradicional 240 ml y Grande 355 ml; frías: Tradicional 440 ml y Grande 600 ml, en POS y Rappi.
+    expect(opcionPos('Elige el Tamaño', 'Tradicional', '4TW')).toBe('Regular - 240ml');
+    expect(opcionPos('Elige el Tamaño', 'Grande', '4TW')).toBe('Large - 355ml');
+    expect(opcionPos('Elige tu tamaño.', 'Tradicional', '5IL')).toBe('Regular - 440ml');
+    expect(opcionPos('Elige tu tamaño.', 'Grande', '1IC')).toBe('Large - 600ml');
+    expect(opcionPos('Elige el tamaño caliente', 'Tradicional 240 ml', '4TW')).toBe('Regular - 240ml');
+    // Los ml de Rappi no mandan: un Americano «Grande 590 ml» es el Grande caliente (355 ml).
+    expect(opcionPos('Elige el Tamaño', 'Grande 590 ml.', '2AM')).toBe('Large - 355ml');
+    expect(opcionPos('Elige el Tamaño', 'Mediano 440  ml', '2SC')).toBe('Regular - 440ml');
+    expect(
+      nombres(lineasDe(producto('Iced Vanilla', 99, [['Elige el Tamaño', 'Grande']]))[0].customs),
+    ).toEqual(['Large - 600ml']);
+    // Hot Drip V60 solo existe en Tradicional caliente: es de tamaño Único y el tamaño de Rappi no es un vaso.
+    expect(lineasDe(producto('Hot Drip V60', 69, [['Elige el Tamaño', 'Tradicional']]))[0].customs).toEqual(
+      [],
+    );
+  });
+
   it('Métodos: Cold Drip V60 va en el vaso chico; Hot Drip V60 es de tamaño Único y no lleva vaso', () => {
     expect(nombres(lineasDe(producto('Cold Drip V60', 75))[0].customs)).toEqual(['Regular - 440ml']);
     expect(lineasDe(producto('Hot Drip V60', 69))[0].customs).toEqual([]);

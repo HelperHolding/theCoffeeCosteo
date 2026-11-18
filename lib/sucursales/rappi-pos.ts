@@ -114,8 +114,11 @@ interface ParteCombo {
   /** Categorías (normalizadas) de acompañamientos que personalizan esta parte. */
   personaliza: readonly string[];
 }
-/** Rappi escribe la categoría del vaso de dos formas: «Elige el Tamaño» y «Elige tu tamaño» (Pumpkin Iced Latte, True White…). */
-const CATEGORIAS_TAMANO = ['elige el tamaño', 'elige tu tamaño'] as const;
+/**
+ * Rappi escribe la categoría del vaso de varias formas: «Elige el Tamaño», «Elige tu tamaño» (Pumpkin Iced Latte, True
+ * White…) y «Elige el tamaño caliente» (True White).
+ */
+const CATEGORIAS_TAMANO = ['elige el tamaño', 'elige tu tamaño', 'elige el tamaño caliente'] as const;
 const BEBIDA = ['leche', 'café', ...CATEGORIAS_TAMANO, 'miel'] as const;
 export const COMBOS_RAPPI: Readonly<Record<string, readonly ParteCombo[]>> = {
   'crea tu the coffee': [
@@ -130,17 +133,50 @@ export const COMBOS_RAPPI: Readonly<Record<string, readonly ParteCombo[]>> = {
 
 /**
  * Acompañamiento de Rappi → personalización del POS, por categoría normalizada (Rappi la escribe con variantes:
- * «Leche», «Leche.», «Leche Latte»…). Vasos: Mediano y Tradicional 440 ml = Regular 440; Tradicional 240 ml = Regular
- * 240; Grande 590 ml = Large 600; Grande 355 ml = Large 355 (Carlo, 2026-10-29). `null` = descriptivo, se omite (el
- * combo del POS ya es eso).
+ * «Leche», «Leche.», «Leche Latte»…). `null` = descriptivo, se omite (el combo del POS ya es eso).
  */
-const VASOS: Readonly<Record<string, string>> = {
-  'mediano 440 ml': 'Regular - 440ml',
-  'tradicional 440 ml': 'Regular - 440ml',
-  'tradicional 240 ml': 'Regular - 240ml',
-  'grande 590 ml': 'Large - 600ml',
-  'grande 355 ml': 'Large - 355ml',
-};
+/**
+ * Bebidas calientes (código POS): en el POS y en Rappi van en Tradicional 240 ml o Grande 355 ml; las demás bebidas son
+ * frías, en Tradicional 440 ml o Grande 600 ml (Carlos, 2026-11-18). Incluye los combos del POS con bebida caliente.
+ */
+const CALIENTES: ReadonlySet<string> = new Set([
+  '2AM', // Americano
+  '4TW', // True White
+  '6CM', // Chai Latte
+  '1FC', // Flat Caramel
+  '3MC', // Mad Mocha
+  '5MC', // Matcha Latte
+  '7MVT', // Matcha Vanilla Latte
+  '2VLT', // Vainilla Latte
+  '4UC', // Urban Chocolat
+  'CPUMLAAPP', // Pumpkin Latte
+  'SOLAAUAPP', // Sora Latte
+  'PEPMOLAPP', // Peppermint Mocha Latte
+  'PEPMMLAPP', // Peppermint Mocha Matcha Latte
+  'TRWCROAPP', // True White + Croissant de queso y jamón
+]);
+/** Bebidas de un solo tamaño: el tamaño que mande Rappi no es un vaso (Hot Drip V60 solo es Tradicional caliente). */
+const SIN_TAMANO: ReadonlySet<string> = new Set(['1HDV60']);
+/**
+ * Vaso del POS para el tamaño de Rappi. Rappi escribe el tamaño de muchas formas («Tradicional», «Tradicional 240 ml»,
+ * «Mediano 440 ml», «Grande», «Grande 590 ml.»…) y sus ml no siempre corresponden a la bebida (un Americano llega como
+ * «Grande 590 ml»): manda la palabra (Tradicional y Mediano = Regular, Grande = Large) y la bebida da los ml. Otra
+ * palabra queda a la vista (fuera por tamaño), nunca como Grande.
+ */
+function vasoRappi(d: string, codigo: string): string | null | undefined {
+  const palabra = d.split(' ')[0];
+  const regular = ['tradicional', 'mediano'].includes(palabra);
+  if (!regular && palabra !== 'grande') return undefined;
+  if (SIN_TAMANO.has(codigo)) return null;
+  const caliente = CALIENTES.has(codigo);
+  return regular
+    ? caliente
+      ? 'Regular - 240ml'
+      : 'Regular - 440ml'
+    : caliente
+      ? 'Large - 355ml'
+      : 'Large - 600ml';
+}
 /**
  * Vaso de las bebidas de Rappi que llegan sin opción de tamaño. Hasta el 2026-11-03 Rappi las vendía así y eran las
  * grandes (Carlo, 2026-10-29): el Large que usa el POS de Namóra para ese producto (1 al 28 de octubre), 355 ml en las
@@ -195,8 +231,9 @@ const VAINILLA: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   '9IMT': { medio: 'Average Vanilla (15ml)', más: 'More Vanilla (20ml)', menos: 'Less Vanilla (10ml)' },
 };
 const CATEGORIAS: Readonly<Record<string, (d: string, codigo: string) => string | null | undefined>> = {
-  'elige el tamaño': (d) => VASOS[d],
-  'elige tu tamaño': (d) => VASOS[d],
+  'elige el tamaño': vasoRappi,
+  'elige tu tamaño': vasoRappi,
+  'elige el tamaño caliente': vasoRappi,
   leche: (d) => LECHES[d],
   'leche latte': (d) => LECHES[d],
   'leche para tú gelato frappé': (d) =>
@@ -303,7 +340,7 @@ export function lineasDe(x: ProductoRappi): (LineaNormal & { partes?: ParteLinea
   } else {
     lineaCustoms = customs(x.opciones, codigo);
     const vaso = VASO_UNICO_RAPPI[clave];
-    // Si el pedido trae tamaño, manda ese; uno que no está en VASOS queda a la vista (fuera por tamaño), no como Grande.
+    // Si el pedido trae tamaño, manda ese; uno que vasoRappi no reconoce queda a la vista (fuera por tamaño), no como Grande.
     const eligioTamano = x.opciones.some((o) =>
       (CATEGORIAS_TAMANO as readonly string[]).includes(normalizarRappi(o.categoria)),
     );
