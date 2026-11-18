@@ -16,7 +16,7 @@ const MOTIVOS = ['Conteo físico', 'Merma', 'Reposición', 'Corrección de error
 type Linea = { sku: string; modo: 'diff' | 'set'; cantidad: string };
 
 export function Ajuste3pl(p: {
-  filas: FilaInventario[];
+  filas: Pick<FilaInventario, 'sku' | 'nombre' | 'costo'>[];
   saldos: Record<string, number | null>;
   autorizadores: string[];
   hoy: string;
