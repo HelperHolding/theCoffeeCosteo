@@ -10,6 +10,9 @@ services:
     build:
       context: ./rappi-thecoffee
     restart: always
+    # Recoge los procesos que deja Chromium al cerrar. Sin esto se acumulan zombis hasta el límite de procesos del
+    # contenedor (2,315): el 14-nov el lector ya no pudo abrir el navegador y se quedó «ocupado» 13 h.
+    init: true
     environment:
       EXTRACTOR_KEY: ${RAPPI_THECOFFEE_KEY}
       RAPPI_USUARIO: ${RAPPI_THECOFFEE_USUARIO:-}

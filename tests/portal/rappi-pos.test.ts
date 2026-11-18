@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 
-import { lineasDe, opcionPos, pedidoRappiAPos } from '@/lib/sucursales/rappi-pos';
+import { horaRappiEnZona, lineasDe, mismaHoraQueRappi, opcionPos, pedidoRappiAPos } from '@/lib/sucursales/rappi-pos';
 import type { PedidoRappi, ProductoRappi } from '@/lib/sucursales/rappi-portal';
 import { conRappi, type LecturaNormal } from '@/lib/sucursales/datos';
 import { claveCosto, costear, type DatosCosteo } from '@/lib/sucursales/costeo';
@@ -140,6 +140,25 @@ describe('líneas de un producto de Rappi', () => {
     ).toEqual(['Elige el Tamaño: Chica 240 ml']);
   });
 
+  it('tamaño sin ml (desde el 2026-11-11): la palabra da el tamaño y la bebida los ml (Carlos, 2026-11-18)', () => {
+    // Calientes: Tradicional 240 ml y Grande 355 ml; frías: Tradicional 440 ml y Grande 600 ml, en POS y Rappi.
+    expect(opcionPos('Elige el Tamaño', 'Tradicional', '4TW')).toBe('Regular - 240ml');
+    expect(opcionPos('Elige el Tamaño', 'Grande', '4TW')).toBe('Large - 355ml');
+    expect(opcionPos('Elige tu tamaño.', 'Tradicional', '5IL')).toBe('Regular - 440ml');
+    expect(opcionPos('Elige tu tamaño.', 'Grande', '1IC')).toBe('Large - 600ml');
+    expect(opcionPos('Elige el tamaño caliente', 'Tradicional 240 ml', '4TW')).toBe('Regular - 240ml');
+    // Los ml de Rappi no mandan: un Americano «Grande 590 ml» es el Grande caliente (355 ml).
+    expect(opcionPos('Elige el Tamaño', 'Grande 590 ml.', '2AM')).toBe('Large - 355ml');
+    expect(opcionPos('Elige el Tamaño', 'Mediano 440  ml', '2SC')).toBe('Regular - 440ml');
+    expect(
+      nombres(lineasDe(producto('Iced Vanilla', 99, [['Elige el Tamaño', 'Grande']]))[0].customs),
+    ).toEqual(['Large - 600ml']);
+    // Hot Drip V60 solo existe en Tradicional caliente: es de tamaño Único y el tamaño de Rappi no es un vaso.
+    expect(lineasDe(producto('Hot Drip V60', 69, [['Elige el Tamaño', 'Tradicional']]))[0].customs).toEqual(
+      [],
+    );
+  });
+
   it('Métodos: Cold Drip V60 va en el vaso chico; Hot Drip V60 es de tamaño Único y no lleva vaso', () => {
     expect(nombres(lineasDe(producto('Cold Drip V60', 75))[0].customs)).toEqual(['Regular - 440ml']);
     expect(lineasDe(producto('Hot Drip V60', 69))[0].customs).toEqual([]);
@@ -230,6 +249,39 @@ describe('pedido de Rappi en la forma del POS', () => {
   });
 });
 
+describe('hora de Rappi en la zona de la sucursal', () => {
+  // El portal manda la hora del centro para todas las tiendas (número de pedido correlativo, 2026-11-15).
+  const h = (fecha: string, hhmm: string, zona: string) => {
+    const [a, b] = hhmm.split(':').map(Number);
+    const r = horaRappiEnZona(fecha, a * 3600 + b * 60, zona);
+    return `${r.fecha} ${String(Math.floor(r.segundo / 3600)).padStart(2, '0')}:${String((r.segundo % 3600) / 60).padStart(2, '0')}`;
+  };
+  it('el centro y Juárez (reloj del POS en UTC−6) no cambian', () => {
+    expect(h('2026-11-12', '13:05', 'America/Mexico_City')).toBe('2026-11-12 13:05');
+    expect(h('2026-11-12', '13:05', 'Etc/GMT+6')).toBe('2026-11-12 13:05');
+    expect(h('2026-11-12', '13:05', 'America/Monterrey')).toBe('2026-11-12 13:05');
+  });
+  it('Tijuana (reloj del POS en UTC−7) y Hermosillo una hora antes; Cancún una después', () => {
+    expect(h('2026-11-12', '13:05', 'Etc/GMT+7')).toBe('2026-11-12 12:05');
+    expect(h('2026-11-12', '13:05', 'America/Hermosillo')).toBe('2026-11-12 12:05');
+    expect(h('2026-11-12', '13:05', 'America/Cancun')).toBe('2026-11-12 14:05');
+  });
+  it('cerca de la medianoche cambia de día', () => {
+    expect(h('2026-11-12', '00:30', 'America/Hermosillo')).toBe('2026-11-11 23:30');
+    expect(h('2026-11-12', '23:30', 'America/Cancun')).toBe('2026-11-13 00:30');
+  });
+  it('solo las zonas con otra hora leen días de más', () => {
+    for (const z of ['America/Mexico_City', 'America/Monterrey', 'America/Merida', 'Etc/GMT+6'])
+      expect(mismaHoraQueRappi(z, '2026-11-12')).toBe(true);
+    for (const z of ['Etc/GMT+7', 'America/Hermosillo', 'America/Cancun'])
+      expect(mismaHoraQueRappi(z, '2026-11-12')).toBe(false);
+  });
+  it('pedidoRappiAPos usa la zona de la sucursal', () => {
+    const p = pedidoRappiAPos(pedido('7', 'finished', [producto('Iced Latte', 89)], '2026-11-12T00:15:09'), 'Etc/GMT+7')!;
+    expect(p).toMatchObject({ fecha: '2026-11-11', hora: '23:15:09', segundo: 23 * 3600 + 15 * 60 + 9 });
+  });
+});
+
 describe('POS + Rappi del portal', () => {
   const pos = (numeroPedidoRappi: string | null, fecha = '2026-10-27'): PedidoNormal => ({
     id: 1,
@@ -271,23 +323,26 @@ describe('POS + Rappi del portal', () => {
     expect(l.estado).toBe('completa');
   });
 
-  it('si un pedido llegó por los dos lados se queda la versión del portal (Rubén Darío: «Generic» en el POS)', async () => {
+  it('el Rappi del POS (forma de pago RAPPI) no cuenta: solo el del portal, también sin portal (Carlo, 2026-11-15)', async () => {
     const l = await conRappi(lectura(), async () => rappi);
     const doble = l.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!;
     expect(doble).toBe(rappi[1]);
     expect(doble.tipo).toBe('RAPPI_PORTAL');
-    expect(l.pedidos.filter((p) => p.numeroPedidoRappi === '2950000009')).toHaveLength(1);
-    // Solo el POS lo tiene: se conserva tal cual.
+    // Solo el POS lo tiene: también se quita.
     const soloPos = await conRappi(lectura(), async () => [rappi[0]]);
-    expect(soloPos.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')!.tipo).toBe('CREDIT');
+    expect(soloPos.pedidos.find((p) => p.numeroPedidoRappi === '2950000009')).toBeUndefined();
+    // Sin portal (sin fuente): el POS se queda sin Rappi y el total declarado baja.
+    const sinPortal = await conRappi(lectura());
+    expect(sinPortal.pedidos.map((p) => p.origen)).toEqual(['mostrador']);
+    expect(sinPortal.totalDeclarado).toBe(1);
   });
 
   it('si Rappi no se pudo leer la lectura queda parcial y lo dice; sin fuente o con error del POS, no cambia', async () => {
     const l = await conRappi(lectura(), async () => null);
     expect(l.estado).toBe('parcial');
     expect(l.avisos[0]).toMatch(/Rappi/);
-    expect(l.pedidos).toHaveLength(2);
-    const base = lectura();
+    expect(l.pedidos).toHaveLength(1);
+    const base = lectura({ pedidos: [pos(null)], totalDeclarado: 1 });
     expect(await conRappi(base)).toBe(base);
     const conError = lectura({ estado: 'error', pedidos: [] });
     expect(await conRappi(conError, async () => rappi)).toBe(conError);

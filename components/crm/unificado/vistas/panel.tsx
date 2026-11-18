@@ -29,6 +29,8 @@ export interface DatosPanel {
   todas: boolean;
   movimientos: Historial[];
   ahora?: Date;
+  /** Sucursales con carril Legal (COF y contrato) y cuántas lo tienen completo. */
+  carril?: { total: number; completos: number };
 }
 
 const textoDias = (d: number) => (d < 0 ? `venció hace ${-d} d` : d === 0 ? 'vence hoy' : `en ${d} d`);
@@ -126,6 +128,31 @@ export function VistaPanel(d: DatosPanel) {
               </article>
             );
           })}
+          {d.carril && (
+            <Link
+              href="/crm/carril-legal"
+              className="relative flex flex-col overflow-hidden rounded-xl border border-dashed border-line-strong bg-surface/70 p-4 hover:border-ink/30"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-1"
+                style={{
+                  background: `repeating-linear-gradient(90deg, ${AREAS.legal.color} 0 10px, transparent 10px 16px)`,
+                }}
+              />
+              <span className="text-[13px] font-semibold text-ink-2">Carril Legal · COF y contrato</span>
+              <span className="mt-1 font-display text-3xl font-black leading-none tabular">
+                {d.carril.total.toLocaleString('es-MX')}
+              </span>
+              <span className="mt-3 text-xs text-ink-2">
+                En paralelo a Proyectos. Con los cinco hitos listos:{' '}
+                <span className="font-semibold tabular">{d.carril.completos.toLocaleString('es-MX')}</span>
+              </span>
+              <span className="mt-auto pt-3 text-xs font-semibold text-crema-strong">
+                Abrir el tablero de Legal
+              </span>
+            </Link>
+          )}
         </div>
         {cierre && (
           <ul role="list" className="mt-3 flex flex-wrap gap-2">

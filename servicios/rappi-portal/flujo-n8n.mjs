@@ -29,24 +29,58 @@ if (!lote) {
   mensaje = lote.mensaje ?? '';
 }
 const ok = r && r.statusCode >= 200 && r.statusCode < 300;
-if (lote && !ok) { estado = 'error'; mensaje += ' Supabase respondió ' + r?.statusCode + ': ' + JSON.stringify(r?.body).slice(0, 300); }
+if (lote && !ok) { estado = 'error'; mensaje += r?.error ? ' No se pudo guardar en Supabase: ' + String(r.error.message ?? r.error).slice(0, 300) : ' Supabase respondió ' + r?.statusCode + ': ' + JSON.stringify(r?.body).slice(0, 300); }
 else if (ok && r.body && typeof r.body === 'object') {
   const b = r.body;
   if (b.nuevos !== undefined) mensaje += ' Guardados: ' + b.nuevos + ' nuevos, ' + b.cambiados + ' cambiados, ' + b.desaparecidos + ' para revisar.';
   if (b.cambios?.length) mensaje += ' Cambios: ' + b.cambios.map((c) => '#' + c.id + ' ' + c.de + ' → ' + c.a).join(', ') + '.';
 }
-// Un correo cuando aparece el problema (o cambia) y otro cada 6 h si sigue; en el cierre diario, también si el portal
-// se saltó pedidos o hubo pedidos que ya no aparecen.
+// Avisos:
+// - Corrida de cada 10 min que falla: NO avisa la primera vez, porque la siguiente relee ayer y hoy (fallas sueltas del
+//   2026-11-16 09:07 «Failed to fetch» y del 2026-11-17 11:47 «403», que la siguiente resolvió sola). Si la siguiente
+//   también falla, avisa. Las sueltas van en el correo diario.
+// - Cierre, repaso o reposición que falla: avisa al momento (corren una vez).
+// - Si el problema sigue, otro correo cada 6 h (o si cambia de tipo).
+// - En el cierre diario, también si el portal se saltó pedidos, hubo pedidos que ya no aparecen, o hubo corridas que se
+//   recuperaron solas o fallaron sueltas.
 const st = $getWorkflowStaticData('global');
+const tipo = lote?.tipo ?? pedido.tipo;
+const hora = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
 let avisar = false;
 if (estado === 'error' || estado === 'sesion_expirada') {
-  const previo = st.ultimoAviso;
-  if (!previo || previo.estado !== estado || Date.now() - previo.t > 6 * 3600 * 1000) { avisar = true; st.ultimoAviso = { estado, t: Date.now() }; }
+  if (tipo === 'vivo' && !st.pendiente && !st.ultimoAviso) {
+    st.pendiente = hora + ' (vivo): ' + String(lote?.mensaje || mensaje).slice(0, 200);
+  } else {
+    st.pendiente = null;
+    const previo = st.ultimoAviso;
+    if (!previo || previo.estado !== estado || Date.now() - previo.t > 6 * 3600 * 1000) { avisar = true; st.ultimoAviso = { estado, t: Date.now() }; }
+  }
 } else {
-  if (estado === 'ok' || estado === 'sin_ordenes') st.ultimoAviso = null;
-  if (lote?.tipo === 'cierre' && (/menos de lo que contó/.test(mensaje) || (r?.body?.desaparecidos ?? 0) > 0)) avisar = true;
+  if (estado === 'ok' || estado === 'sin_ordenes') {
+    st.ultimoAviso = null;
+    if (st.pendiente) { st.sueltas = [...(st.sueltas ?? []), st.pendiente].slice(-50); st.pendiente = null; }
+  }
+  if (tipo === 'cierre' && (/menos de lo que contó/.test(mensaje) || (r?.body?.desaparecidos ?? 0) > 0)) avisar = true;
 }
-return [{ json: { avisar, tipo: lote?.tipo ?? pedido.tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
+// Corridas que se recuperaron solas (la sesión se cayó a media lectura y el lector volvió a entrar, #142): no son
+// falla, pero conviene saber si se vuelven frecuentes. Se juntan y van en UN correo al día, con el cierre de las 5:07.
+const recuperada = estado === 'ok' || estado === 'sin_ordenes' ? /A media lectura: (.*?) Se volvió a entrar/.exec(mensaje) : null;
+if (recuperada) st.recuperadas = [...(st.recuperadas ?? []), hora + ' (' + tipo + '): ' + recuperada[1]].slice(-50);
+let asunto = estado === 'sesion_expirada' ? 'el lector no pudo entrar' : estado === 'error' ? 'revisar lectura' : 'revisar pedidos';
+const rec = st.recuperadas ?? [];
+const sue = st.sueltas ?? [];
+if (tipo === 'cierre' && (rec.length || sue.length)) {
+  const veces = (n, una, varias) => n + ' ' + (n === 1 ? una : varias);
+  const partes = [];
+  if (rec.length) partes.push('El lector se recuperó solo ' + veces(rec.length, 'vez', 'veces') + ' desde el último aviso (la sesión de Rappi se cayó a media lectura, volvió a entrar y terminó la lectura; no se perdió nada):\\n- ' + rec.join('\\n- '));
+  if (sue.length) partes.push('Fallaron ' + veces(sue.length, 'corrida suelta', 'corridas sueltas') + ' (la siguiente salió bien y releyó ayer y hoy; no se perdió nada):\\n- ' + sue.join('\\n- '));
+  if (!avisar) asunto = 'resumen del lector: ' + [rec.length ? 'se recuperó solo ' + veces(rec.length, 'vez', 'veces') : '', sue.length ? veces(sue.length, 'falla suelta', 'fallas sueltas') : ''].filter(Boolean).join(', ');
+  mensaje = partes.join('\\n\\n') + '\\n\\nCierre: ' + mensaje;
+  avisar = true;
+  st.recuperadas = [];
+  st.sueltas = [];
+}
+return [{ json: { avisar, asunto, tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
 
 const id = () => randomUUID();
 const nodo = (name, type, typeVersion, position, parameters, extra = {}) => ({
@@ -141,22 +175,40 @@ const nodes = [
     looseTypeValidation: true,
     options: {},
   }),
+  // El lote se arma como texto en un nodo de código: con 110 tiendas, el cierre (~4,500 pedidos) y el repaso (~8,500)
+  // hacían que la expresión `JSON.stringify({ p_lote: $json.body })` agotara el tiempo de expresiones de n8n
+  // («Expression timed out», 2026-11-15 y 16) y la corrida se cortaba sin guardar ni avisar.
+  nodo(
+    'Armar lote',
+    'n8n-nodes-base.code',
+    2,
+    [640, 270],
+    {
+      jsCode: 'return [{ json: { cuerpo: JSON.stringify({ p_lote: $input.first().json.body }) } }];',
+    },
+    { onError: 'continueRegularOutput' },
+  ),
   nodo(
     'Guardar en Supabase',
     'n8n-nodes-base.httpRequest',
     4.2,
-    [700, 270],
+    [760, 270],
     {
       method: 'POST',
       url: SUPABASE,
       authentication: 'genericCredentialType',
       genericAuthType: 'httpHeaderAuth',
       sendBody: true,
-      specifyBody: 'json',
-      jsonBody: '={{ JSON.stringify({ p_lote: $json.body }) }}',
+      contentType: 'raw',
+      rawContentType: 'application/json',
+      body: '={{ $json.cuerpo }}',
       options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 120000 },
     },
-    { notes: 'Credencial: Header Auth apikey = llave secreta de Supabase. Solo llama rappi_importar.' },
+    {
+      notes: 'Credencial: Header Auth apikey = llave secreta de Supabase. Solo llama rappi_importar.',
+      // Si algo falla aquí, «Resumen» lo reporta y avisa por correo en vez de cortar la corrida en silencio.
+      onError: 'continueRegularOutput',
+    },
   ),
   nodo('Resumen', 'n8n-nodes-base.code', 2, [940, 270], { jsCode: resumen }),
   nodo('¿Avisar?', 'n8n-nodes-base.if', 2.2, [1160, 270], {
@@ -182,8 +234,7 @@ const nodes = [
     {
       fromEmail: 'Avisos Rappi <scervera@dodopizz.mx>',
       toEmail: AVISAR_A,
-      subject:
-        "=Rappi The Coffee ({{ $json.tipo }}): {{ $json.estado === 'sesion_expirada' ? 'el lector no pudo entrar' : $json.estado === 'error' ? 'revisar lectura' : 'revisar pedidos' }}",
+      subject: '=Rappi The Coffee ({{ $json.tipo }}): {{ $json.asunto }}',
       emailFormat: 'text',
       text: '={{ $json.mensaje }}\n\nVentana: {{ $json.desde }} a {{ $json.hasta }}.\nPara reponer días: POST al webhook «Reponer» con {"tipo":"manual","desde":"AAAA-MM-DD","hasta":"AAAA-MM-DD"}.',
       options: {},
@@ -209,7 +260,8 @@ const connections = {
   ...conecta('Repaso', 'Leer portal'),
   ...conecta('Manual', 'Leer portal'),
   ...conecta('Leer portal', '¿Lector OK?'),
-  ...conecta('¿Lector OK?', 'Guardar en Supabase', 'Resumen'),
+  ...conecta('¿Lector OK?', 'Armar lote', 'Resumen'),
+  ...conecta('Armar lote', 'Guardar en Supabase'),
   ...conecta('Guardar en Supabase', 'Resumen'),
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
@@ -265,8 +317,10 @@ const n8n = async (metodo, ruta, cuerpo) => {
 };
 const existente = (await n8n('GET', '/workflows?limit=250')).data.find((w) => w.name === NOMBRE);
 if (existente) {
-  // Conserva las credenciales elegidas en la UI y el id del webhook.
+  // Conserva las credenciales elegidas en la UI, el id del webhook y los ajustes que n8n agrega por su cuenta
+  // (availableInMCP, binaryMode).
   const actual = await n8n('GET', `/workflows/${existente.id}`);
+  flujo.settings = { ...actual.settings, ...flujo.settings };
   for (const n of flujo.nodes) {
     const previo = actual.nodes.find((x) => x.name === n.name);
     if (previo?.credentials) n.credentials = { ...n.credentials, ...previo.credentials };

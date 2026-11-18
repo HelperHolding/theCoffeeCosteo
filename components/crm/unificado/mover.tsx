@@ -38,11 +38,11 @@ export function MenuMover({
         aria-label={`Mover ${nombre} a otra etapa`}
         className={
           compacto
-            ? 'grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-ink disabled:opacity-40'
+            ? 'tablero-boton-icono disabled:opacity-40'
             : 'inline-flex h-9 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3 text-sm font-semibold hover:bg-surface-2 disabled:opacity-40'
         }
       >
-        <ArrowRightLeft size={14} aria-hidden="true" />
+        <ArrowRightLeft size={14} strokeWidth={1.75} aria-hidden="true" />
         {!compacto && 'Mover a…'}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-1">

@@ -8,12 +8,19 @@ import { comoUsuario, crearUsuario } from './utilidades';
 let db: PGlite;
 let dev: string;
 const etapa = async (embudo: string, nombre: string) =>
-  (await db.query<{ id: string }>('select id from crm_etapas where embudo = $1 and nombre = $2', [embudo, nombre])).rows[0].id;
+  (
+    await db.query<{ id: string }>('select id from crm_etapas where embudo = $1 and nombre = $2', [
+      embudo,
+      nombre,
+    ])
+  ).rows[0].id;
 
 beforeAll(async () => {
   db = await crearDbLocal();
   dev = await crearUsuario(db, 'admin');
-  await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1, 'crm', 'desarrollador')`, [dev]);
+  await db.query(`insert into perfil_modulos (user_id, modulo, nivel) values ($1, 'crm', 'desarrollador')`, [
+    dev,
+  ]);
   await db.query(`insert into crm_etapas (embudo, nombre, orden) values
     ('prospectos', 'Contactado', 1), ('prospectos', 'Interes en Zona Bloqueada', 2), ('prospectos', 'Lead Basura', 3),
     ('prospectos', 'Nuevo Franquiciatario', 4)`);
@@ -49,12 +56,19 @@ describe('mapeo de la muestra', () => {
   it('el ensayo no escribe nada', async () => {
     const r = await mapear(db, { ensayo: true });
     expect(r.aplicado).toBe(false);
-    expect((await db.query<{ n: number }>('select count(*)::int n from crm_franquiciatarios')).rows[0].n).toBe(0);
+    expect(
+      (await db.query<{ n: number }>('select count(*)::int n from crm_franquiciatarios')).rows[0].n,
+    ).toBe(0);
   });
 
   it('mapea prospectos y tiendas con las reglas aprobadas y guarda la etapa original', async () => {
     const r = await mapear(db);
-    expect(r).toMatchObject({ aplicado: true, franquiciatariosDeProspectos: 5, franquiciatariosDeTiendas: 3, sucursales: 4 });
+    expect(r).toMatchObject({
+      aplicado: true,
+      franquiciatariosDeProspectos: 5,
+      franquiciatariosDeTiendas: 3,
+      sucursales: 4,
+    });
     expect(r.conteos).toMatchObject({
       recepcion: 2, // sin estado + zona bloqueada (Q3)
       contacto: 1,
@@ -63,7 +77,7 @@ describe('mapeo de la muestra', () => {
       formalizado: 3,
       locales: 1,
       constancia: 1,
-      p_remodelacion: 1,
+      obra: 1,
       operando: 1,
     });
     const bloqueado = await db.query<{ territorio: string }>(
@@ -82,25 +96,32 @@ describe('mapeo de la muestra', () => {
       `select count(*)::int n from crm_tiendas where muestra and etapa_origen_id is not null and fecha_estimada_apertura = '2027-03-01'`,
     );
     expect(origen.rows[0].n).toBe(4);
-    const h = await db.query<{ n: number }>(`select count(*)::int n from crm_historial where origen = 'sistema'`);
+    const h = await db.query<{ n: number }>(
+      `select count(*)::int n from crm_historial where origen = 'sistema'`,
+    );
     expect(h.rows[0].n).toBeGreaterThan(0);
   });
 
   it('repetir no duplica', async () => {
     const r = await mapear(db);
     expect(r.aplicado).toBe(false);
-    expect((await db.query<{ n: number }>('select count(*)::int n from crm_franquiciatarios')).rows[0].n).toBe(8);
+    expect(
+      (await db.query<{ n: number }>('select count(*)::int n from crm_franquiciatarios')).rows[0].n,
+    ).toBe(8);
   });
 
   it('la reversión regresa todo a los embudos de Zoho; se niega si hay trabajo de usuarios', async () => {
     const t = await db.query<{ id: string }>(`select id from crm_tiendas where nombre = 'T1'`);
-    const n = await comoUsuario(db, dev, async () =>
-      (
-        await db.query<{ id: string }>(
-          `insert into crm_notas (franquiciatario_id, contenido) select franquiciatario_id, 'x' from crm_tiendas where id = $1 returning id`,
-          [t.rows[0].id],
-        )
-      ).rows[0],
+    const n = await comoUsuario(
+      db,
+      dev,
+      async () =>
+        (
+          await db.query<{ id: string }>(
+            `insert into crm_notas (franquiciatario_id, contenido) select franquiciatario_id, 'x' from crm_tiendas where id = $1 returning id`,
+            [t.rows[0].id],
+          )
+        ).rows[0],
     );
     await expect(revertirMapeo(db)).rejects.toThrow('registros de usuarios');
     await db.query(`select set_config('app.origen', 'sistema', false)`);
@@ -118,7 +139,8 @@ describe('mapeo de la muestra', () => {
 describe('limpieza para el arranque', () => {
   it('borra muestra e importados; conserva configuración y toda la bitácora', async () => {
     await mapear(db);
-    const bitacoraAntes = (await db.query<{ n: number }>('select count(*)::int n from crm_historial')).rows[0].n;
+    const bitacoraAntes = (await db.query<{ n: number }>('select count(*)::int n from crm_historial')).rows[0]
+      .n;
     const ensayo = await limpiar(db, { ensayo: true });
     expect(ensayo.aplicado).toBe(false);
     expect((await db.query<{ n: number }>('select count(*)::int n from crm_tiendas')).rows[0].n).toBe(4);
@@ -130,6 +152,6 @@ describe('limpieza para el arranque', () => {
               (select count(*) from crm_requisitos)::int requisitos, (select count(*) from crm_areas)::int areas,
               (select count(*) from perfil_modulos)::int accesos`,
     );
-    expect(conf.rows[0]).toEqual({ etapas: 22, requisitos: 37, areas: 4, accesos: 1 });
+    expect(conf.rows[0]).toEqual({ etapas: 29, requisitos: 48, areas: 4, accesos: 1 });
   });
 });
