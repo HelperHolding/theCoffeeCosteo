@@ -60,7 +60,7 @@ function Precio({ f, manual, notaInicial = '' }: { f: Resumen; manual: boolean; 
           {error}
         </p>
       )}
-      <Button variant="accent" size="sm" disabled={pending} onClick={guardar}>
+      <Button variant="accent" size="sm" pendiente={pending} onClick={guardar}>
         {pending ? 'Guardando…' : 'Guardar precio'}
       </Button>
     </div>

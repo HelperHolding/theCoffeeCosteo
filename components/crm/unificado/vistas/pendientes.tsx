@@ -28,8 +28,13 @@ export interface DatosPendientes {
   totalListas: number;
   bloqueadas: number;
   propias: CardPipeline[];
+  /** Cards cuyo siguiente requisito pendiente lo registra un área del usuario. */
+  tocaRegistrar?: CardPipeline[];
+  totalTocaRegistrar?: number;
   areas: ClaveArea[];
   todas: boolean;
+  /** Muestra «Mis leads como vendedor» (Ventas, heads o quien tenga leads a su nombre). */
+  vendedor?: boolean;
 }
 
 const VISIBLES = 6;
@@ -69,17 +74,23 @@ function ListaCards({
   total,
   etapas,
   vacio,
+  columnas,
 }: {
   cards: CardPipeline[];
   total: number;
   etapas: EtapaGeneral[];
   vacio: string;
+  /** En recuadros anchos, la lista se reparte en columnas. */
+  columnas?: boolean;
 }) {
   if (!cards.length) return <VacioBreve>{vacio}</VacioBreve>;
   const etapaDe = new Map(etapas.map((e) => [e.id, e]));
   return (
     <>
-      <ul role="list" className="-mx-2 space-y-1">
+      <ul
+        role="list"
+        className={columnas ? '-mx-2 grid gap-1 lg:grid-cols-2 xl:grid-cols-3' : '-mx-2 space-y-1'}
+      >
         {cards.slice(0, VISIBLES).map((c) => (
           <li key={`${c.tipo}-${c.id}`}>
             <FilaCard card={c} etapa={etapaDe.get(c.etapaId)} />
@@ -118,7 +129,7 @@ export function VistaPendientes(d: DatosPendientes) {
         <Seccion
           titulo="Avisos sin atender"
           contador={d.avisos.length}
-          descripcion="COF a 2 meses, 5 días hábiles antes de abrir y límite de 120 días."
+          descripcion="COF a 2 meses, 5 días hábiles antes de abrir, límite de 120 días, multa por vencimiento, COF tardía y transferencia."
           cuerpo={false}
         >
           <BandejaAvisos avisos={d.avisos} areas={d.areas} todas={d.todas} />
@@ -148,6 +159,21 @@ export function VistaPendientes(d: DatosPendientes) {
           )}
         </Seccion>
       </div>
+      {d.tocaRegistrar && (
+        <Seccion
+          titulo="Te toca registrar"
+          contador={d.totalTocaRegistrar ?? d.tocaRegistrar.length}
+          descripcion="El siguiente requisito de estas cards lo registra tu área (en Legal, también COF y contrato): sin él no avanzan."
+        >
+          <ListaCards
+            cards={d.tocaRegistrar}
+            total={d.totalTocaRegistrar ?? d.tocaRegistrar.length}
+            etapas={d.etapas}
+            vacio="Nada espera a tu área por ahora."
+            columnas
+          />
+        </Seccion>
+      )}
       <div className="grid gap-4 xl:grid-cols-3">
         <Seccion
           titulo="Por validar"
@@ -173,18 +199,20 @@ export function VistaPendientes(d: DatosPendientes) {
             vacio="Ninguna card de tu área está lista todavía."
           />
         </Seccion>
-        <Seccion
-          titulo="Mis leads como vendedor"
-          contador={d.propias.length}
-          descripcion="Franquiciatarios a tu nombre (etapas 1–5)."
-        >
-          <ListaCards
-            cards={d.propias}
-            total={d.propias.length}
-            etapas={d.etapas}
-            vacio="No tienes leads asignados."
-          />
-        </Seccion>
+        {d.vendedor !== false && (
+          <Seccion
+            titulo="Mis leads como vendedor"
+            contador={d.propias.length}
+            descripcion="Franquiciatarios a tu nombre (etapas 1–5)."
+          >
+            <ListaCards
+              cards={d.propias}
+              total={d.propias.length}
+              etapas={d.etapas}
+              vacio="No tienes leads asignados."
+            />
+          </Seccion>
+        )}
       </div>
     </>
   );

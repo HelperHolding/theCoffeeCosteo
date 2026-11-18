@@ -21,7 +21,10 @@ export interface ConfigSucursal {
   zona: string;
   /** Cómo interpretar `createdAt`. Ver docs/sucursales/03 (pendiente de confirmar con el proveedor). */
   modoTiempo: ModoTiempo;
-  /** ¿Rappi llega por la API (forma de pago RAPPI)? Hoy solo 532. Sin Rappi no hay pestaña ni filtro de Rappi. */
+  /**
+   * ¿Rappi por la API del POS (forma de pago RAPPI)? Desde el 2026-11-15 ninguna: ese Rappi no cuenta (conRappi) y el
+   * Rappi viene solo del portal (rappiPortal). Sin Rappi no hay pestaña ni filtro de Rappi.
+   */
   rappi: boolean;
   /**
    * Rappi leído del portal de Partners por el cron de n8n (docs/rappi-portal): se suma a Ventas, Costeo y Consumo con
@@ -33,10 +36,6 @@ export interface ConfigSucursal {
   /** TEMPORAL (pedido por Carlo, 2026-10-22): audio que suena en En vivo por cada pedido nuevo. */
   sonidoVenta?: string;
 }
-
-/** Rappi llega por la API con forma de pago RAPPI (convenio): se suma a las ventas y se filtra arriba. */
-const ALCANCE_RAPPI =
-  'Incluye Rappi (forma de pago RAPPI en la API). Usa el filtro de origen para ver Mostrador, App o Rappi por separado.';
 
 /** Rappi no llega por la API del POS: se lee del portal de Rappi (docs/rappi-portal) y se suma a las ventas. */
 const ALCANCE_POS_RAPPI_PORTAL =
@@ -128,8 +127,10 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     zona: 'Etc/GMT+6',
     modoTiempo: 'local-etiquetada-z',
     sonidoVenta: '/sonidos/venta-612.mp3', // TEMPORAL: "cuac" por cada venta
-    rappi: true,
-    alcance: ALCANCE_RAPPI,
+    // Rappi solo del portal desde el 2026-11-15 (Carlo): el de la API del POS ya no cuenta (conRappi).
+    rappi: false,
+    rappiPortal: true,
+    alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
   {
     // Validada el 2026-10-22 con scripts/sucursales/validar-sucursal.ts (docs/sucursales/10).
@@ -141,12 +142,14 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Cancun',
     modoTiempo: 'local-etiquetada-z',
-    rappi: true,
-    alcance: ALCANCE_RAPPI,
+    // Rappi solo del portal desde el 2026-11-15 (Carlo): tienda normal y Turbo; el de la API del POS ya no cuenta.
+    rappi: false,
+    rappiPortal: true,
+    alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
   {
-    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Tiene Rappi por la API del POS, pero
-    // llega como «Generic»: con rappiPortal, cada pedido toma la versión del portal (mismo número; conRappi).
+    // Validada el 2026-10-22 (docs/sucursales/11): CRM "Darío- 455" (Zapopan). Su POS cobra Rappi (forma de pago RAPPI)
+    // como «Generic»; desde el 2026-11-15 ese Rappi del POS no cuenta y solo se suma el del portal (conRappi).
     companyId: 532,
     lookerStoreId: 455,
     nombre: 'Rubén Darío',
@@ -155,7 +158,7 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
     moneda: 'MXN',
     zona: 'America/Mexico_City',
     modoTiempo: 'local-etiquetada-z',
-    rappi: true,
+    rappi: false,
     rappiPortal: true,
     alcance: ALCANCE_POS_RAPPI_PORTAL,
   },
@@ -189,75 +192,80 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   // Lote 2, Ciudad de México y Toluca: validadas con el 2 de noviembre (Tecnológico con 1 ¢ de redondeo). Interlomas y
   // Satélite van en la zona metropolitana de la Ciudad de México. Tecnológico (Metepec) y Patio Toluca van en Toluca,
   // aunque el CRM las ponga en «Ciudad de México». Puerta Polanco cierra a distinta hora según el día (16, 17 o 20 h).
-  cdmx(642, 555, 'Puerta Polanco', 'Miguel Hidalgo · Polanco'),
-  cdmx(608, 473, 'Interlomas', 'Interlomas'),
-  cdmx(606, 478, 'Satélite', 'Ciudad Satélite'),
-  cdmx(506, 387, 'Portales Norte', 'Benito Juárez · Portales Norte'),
-  cdmx(550, 424, 'Río Nazas', 'Cuauhtémoc'),
-  cdmx(611, 490, 'Insurgentes', 'Benito Juárez · Del Valle'),
-  cdmx(549, 404, 'La del Valle', 'Benito Juárez · Del Valle'),
-  cdmx(643, 554, 'Patio Santa Fe', 'Álvaro Obregón · Santa Fe'),
-  toluca(610, 476, 'Tecnológico', 'Metepec · Plaza Tecnológico'),
-  toluca(646, 560, 'Patio Toluca', 'Toluca · Vértice'),
+  conPortal(cdmx(642, 555, 'Puerta Polanco', 'Miguel Hidalgo · Polanco')),
+  conPortal(cdmx(608, 473, 'Interlomas', 'Interlomas')),
+  conPortal(cdmx(606, 478, 'Satélite', 'Ciudad Satélite')),
+  conPortal(cdmx(506, 387, 'Portales Norte', 'Benito Juárez · Portales Norte')),
+  conPortal(cdmx(550, 424, 'Río Nazas', 'Cuauhtémoc')),
+  conPortal(cdmx(611, 490, 'Insurgentes', 'Benito Juárez · Del Valle')),
+  conPortal(cdmx(549, 404, 'La del Valle', 'Benito Juárez · Del Valle')),
+  conPortal(cdmx(643, 554, 'Patio Santa Fe', 'Álvaro Obregón · Santa Fe')),
+  conPortal(toluca(610, 476, 'Tecnológico', 'Metepec · Plaza Tecnológico')),
+  conPortal(toluca(646, 560, 'Patio Toluca', 'Toluca · Vértice')),
   // Lote 3, centro y Bajío: validadas con el 2 de noviembre (Los Arcos con 1 ¢ de redondeo).
-  toluca(520, 420, 'Galerías Metepec', 'Metepec · Galerías'),
-  toluca(743, 618, 'Townsquare', 'Metepec · La Providencia'),
-  delPos('Valle de Bravo')(463, 347, 'Avándaro', 'Avándaro'),
-  delPos('Pachuca')(616, 529, 'Colosio Pachuca', 'Punta Azul'),
-  delPos('Puebla')(761, 617, 'Centro Histórico Puebla', 'Centro Histórico'),
-  queretaro(509, 401, 'Los Arcos', 'Jardines de Querétaro'),
-  queretaro(734, 650, 'UpTown Juriquilla', 'Juriquilla'),
-  delPos('San Miguel de Allende')(466, 379, 'Canal 16', 'Centro'),
-  leon(614, 527, 'Torre Visu', 'Lomas del Campestre'),
-  delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso'),
+  conPortal(toluca(520, 420, 'Galerías Metepec', 'Metepec · Galerías')),
+  conPortal(toluca(743, 618, 'Townsquare', 'Metepec · La Providencia')),
+  conPortal(delPos('Valle de Bravo')(463, 347, 'Avándaro', 'Avándaro')),
+  conPortal(delPos('Pachuca')(616, 529, 'Colosio Pachuca', 'Punta Azul')),
+  conPortal(delPos('Puebla')(761, 617, 'Centro Histórico Puebla', 'Centro Histórico')),
+  conPortal(queretaro(509, 401, 'Los Arcos', 'Jardines de Querétaro')),
+  conPortal(queretaro(734, 650, 'UpTown Juriquilla', 'Juriquilla')),
+  conPortal(delPos('San Miguel de Allende')(466, 379, 'Canal 16', 'Centro')),
+  conPortal(leon(614, 527, 'Torre Visu', 'Lomas del Campestre')),
+  conPortal(delPos('Silao')(615, 525, 'Paseo MS', 'El Progreso')),
   // Lote 4, centro-norte y occidente: validadas con el 2 de noviembre (Centro con 1 ¢ de redondeo).
-  aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio'),
-  aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada'),
-  delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro'),
-  sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico'),
-  sanLuis(763, 619, 'Covalia', 'Covalia'),
+  conPortal(aguascalientes(551, 433, 'Colosio Aguascalientes', 'Blvd. Colosio')),
+  conPortal(aguascalientes(674, 587, 'Garza Sada', 'Av. Garza Sada')),
+  conPortal(delPos('Zacatecas')(593, 474, 'Zacatecas', 'Centro')),
+  conPortal(sanLuis(718, 574, 'Trendy San Luis', 'Lomas del Tecnológico')),
+  conPortal(sanLuis(763, 619, 'Covalia', 'Covalia')),
+  // Tepatitlán: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tepatitlán')(508, 399, 'Tepatitlán', 'La Gloria'),
-  colima(721, 638, 'Constitución', 'Jardines Vista Hermosa'),
-  colima(553, 468, 'Colima', 'Av. Venustiano Carranza'),
-  vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro'),
-  vallarta(478, 373, 'Versalles', 'Versalles'),
+  conPortal(colima(721, 638, 'Constitución', 'Jardines Vista Hermosa')),
+  conPortal(colima(553, 468, 'Colima', 'Av. Venustiano Carranza')),
+  conPortal(vallarta(582, 505, 'Centro Puerto Vallarta', 'Centro')),
+  conPortal(vallarta(478, 373, 'Versalles', 'Versalles')),
   // Lote 5, golfo, sur y norte: validadas con el 2 de noviembre (Ávila Camacho y Andamar con 1 ¢ de redondeo).
   // Andamar está en Boca del Río aunque el CRM diga «Córdoba». Aeropuerto Chiapas abre a las 4 h (aeropuerto).
+  // Fluvial: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   vallarta(584, 504, 'Fluvial', 'Las Gaviotas'),
-  veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro'),
-  veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar'),
-  delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro'),
+  conPortal(veracruz(705, 612, 'Ávila Camacho', 'Boca del Río · Costa de Oro')),
+  conPortal(veracruz(590, 501, 'Andamar', 'Boca del Río · Andamar')),
+  conPortal(delPos('Oaxaca')(645, 558, 'Oaxaca', 'Centro')),
+  // Aeropuerto Chiapas: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tuxtla Gutiérrez')(781, 496, 'Aeropuerto Chiapas', 'Aeropuerto'),
-  durango(632, 547, 'Durango', 'Juan de la Barrera'),
-  delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia'),
+  conPortal(durango(632, 547, 'Durango', 'Juan de la Barrera')),
+  conPortal(delPos('Torreón', 'America/Monterrey')(558, 451, 'Distrito Independencia', 'Blvd. Independencia')),
   // UTC−7 fijo, como Cd. Juárez: el POS no cambió de horario el 1 de noviembre (3-nov: último pedido 16:47 a las 16:04
   // de Tijuana). En verano es la hora local.
-  delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas'),
-  delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe'),
+  conPortal(delPos('Tijuana', 'Etc/GMT+7')(613, 482, 'Tijuana', 'Las Américas')),
+  conPortal(delPos('Hermosillo', 'America/Hermosillo')(664, 561, 'Andenes Hermosillo', 'Santa Fe')),
   // Lote 6, sureste: validadas con el 2 de noviembre y el último pedido de hoy en su hora local (Puerto Cancún y Scala
   // Huayacan con 3 y 1 ¢ de redondeo). Tulum, Mayab y Hermosillo vendieron poco el 2-nov; sus otros días son normales.
-  cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez'),
-  cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán'),
-  cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas'),
+  conPortal(cancun(552, 466, 'Puerto Cancún', 'Puerto Juárez')),
+  conPortal(cancun(679, 593, 'Scala Huayacan', 'Av. Huayacán')),
+  conPortal(cancun(644, 557, 'Malecón Cancún', 'Plaza Las Américas')),
+  // Tulum: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   delPos('Tulum', 'America/Cancun')(462, 360, 'Tulum', 'Zona Hotelera'),
+  // Mayab: sin tienda en la cuenta del portal de Rappi (2026-11-15), queda solo con el POS.
   merida(627, 538, 'Mayab', 'Cordemex'),
-  merida(601, 452, 'Calle 47', 'Centro'),
-  merida(655, 566, 'Arthouse Mérida', 'Altabrisa'),
+  conPortal(merida(601, 452, 'Calle 47', 'Centro')),
+  conPortal(merida(655, 566, 'Arthouse Mérida', 'Altabrisa')),
   // Lote 7: en el CRM el número Jestor viene en el nombre («Plaza Cantabria - 632») y el campo está vacío; el número
   // del nombre es el lookerStoreId de la API. El Campanario: la API dice 438 y el CRM «El Campanario - 348» (dígitos
   // invertidos; ninguna otra sucursal de la API usa 348): se usa el de la API. Validadas con el 2 de noviembre (Plaza
   // Norte con 1 ¢ de redondeo). Plaza Cantabria es de Ciudad Juárez: UTC−6 fijo como 612 (3-nov: último pedido 18:00 a
   // las 17:10 de Juárez). Plaza Cumbres, de la ciudad de Chihuahua: su hora coincide con America/Chihuahua.
-  delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria'),
-  leon(733, 649, 'Plaza Norte', 'Jardines del Moral'),
-  queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario'),
-  cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte'),
-  cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo'),
-  durango(715, 625, 'Durango Centro', 'Centro'),
-  vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta'),
-  cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico'),
-  delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres'),
-  cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen'),
+  conPortal(delPos('Ciudad Juárez', 'Etc/GMT+6')(717, 632, 'Plaza Cantabria', 'Plaza Cantabria')),
+  conPortal(leon(733, 649, 'Plaza Norte', 'Jardines del Moral')),
+  conPortal(queretaro(547, 438, 'El Campanario', 'Hacienda El Campanario')),
+  conPortal(cdmx(754, 662, 'Tampico 33', 'Cuauhtémoc · Roma Norte')),
+  conPortal(cdmx(719, 634, 'Nuevo León', 'Cuauhtémoc · Hipódromo')),
+  conPortal(durango(715, 625, 'Durango Centro', 'Centro')),
+  conPortal(vallarta(771, 675, 'Marina Vallarta', 'Marina Vallarta')),
+  conPortal(cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico')),
+  conPortal(delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres')),
+  conPortal(cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen')),
 ];
 
 export const configDe = (companyId: number) =>

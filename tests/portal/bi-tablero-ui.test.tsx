@@ -75,8 +75,10 @@ describe('<TableroMexico>', () => {
     );
     expect(screen.getByText(/Cobrado:/)).toBeTruthy();
     expect(screen.getByText(/Faltan 1 de 4 días de tienda/)).toBeTruthy();
-    expect(screen.getByText(/Rappi de Zoho pendiente/)).toBeTruthy();
-    expect(screen.getByText(/Disponible en F5/)).toBeTruthy();
+    expect(screen.getByText(/El Rappi de Zoho todavía no se carga/)).toBeTruthy();
+    // Sin metas cargadas: «Sin datos», sin códigos internos de fase a la vista.
+    expect(screen.getAllByText('Sin datos').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/\bF[345](\.1)?\b/)).toBeNull();
     expect(screen.getByText('Ventura')).toBeTruthy();
   });
 
@@ -208,8 +210,9 @@ describe('<TableroMexico> con datos en todos los bloques', () => {
     expect(screen.getByText('Producto 0')).toBeTruthy();
     expect(screen.getByRole('img', { name: /Venta neta por mes, una línea por año/ })).toBeTruthy();
     expect(
-      screen.getByRole('img', { name: /Venta neta \(columnas\) y tickets \(línea\) por día/ }),
+      screen.getByRole('img', { name: /Venta neta \(columnas\) y tickets \(línea\) por día\./ }),
     ).toBeTruthy();
+    expect(screen.getAllByText('Ticket promedio').length).toBeGreaterThan(0);
     expect(screen.getByText('Con café')).toBeTruthy();
   });
 });

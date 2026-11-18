@@ -235,36 +235,36 @@ export const vistaPedido = (p: PedidoNormal): PedidoVista => ({
 export type FuenteRappi = (desde: string, hasta: string) => Promise<PedidoNormal[] | null>;
 
 /**
- * Suma a una lectura del POS los pedidos de Rappi del portal del mismo periodo (origen «rappi»). Un pedido que ya llegó
- * por el POS (refundId = ID de Rappi) no se cuenta dos veces: se queda la versión del portal, que trae productos,
- * tamaños y opciones en vez de «Generic» (Rubén Darío, 2026-11-02: los 21 pedidos Rappi del POS del 27-oct y 1-nov
- * estaban en el portal con el mismo número). Si Rappi no se pudo leer, la lectura queda parcial.
+ * Rappi solo del portal (pedido por Carlo, 2026-11-15): los pedidos que el POS cobra con forma de pago RAPPI (origen
+ * «rappi» de la API) se quitan en todas las sucursales, porque el portal separa la tienda normal de la Turbo y trae los
+ * productos con sus tamaños y opciones, en vez de «Generic». Después se suman los pedidos del portal del mismo periodo,
+ * si la sucursal tiene `rappiPortal`. Si Rappi no se pudo leer, la lectura queda parcial (nunca Rappi en cero).
  */
 export async function conRappi(l: LecturaNormal, rappi?: FuenteRappi): Promise<LecturaNormal> {
-  if (!rappi || l.estado === 'error') return l;
-  const extra = await rappi(l.desde, l.hasta);
+  const sinRappiPos = l.pedidos.filter((p) => p.origen !== 'rappi');
+  const quitados = l.pedidos.length - sinRappiPos.length;
+  const base: LecturaNormal = quitados
+    ? {
+        ...l,
+        pedidos: sinRappiPos,
+        totalDeclarado: l.totalDeclarado === null ? null : l.totalDeclarado - quitados,
+      }
+    : l;
+  if (!rappi || base.estado === 'error') return base;
+  const extra = await rappi(base.desde, base.hasta);
   if (!extra)
     return {
-      ...l,
+      ...base,
       estado: 'parcial',
-      avisos: ['No se pudieron leer los pedidos de Rappi del portal.', ...l.avisos],
+      avisos: ['No se pudieron leer los pedidos de Rappi del portal.', ...base.avisos],
     };
-  const delPeriodo = extra.filter((p) => p.fecha >= l.desde && p.fecha <= l.hasta);
-  const portal = new Map(delPeriodo.filter((p) => p.numeroPedidoRappi).map((p) => [p.numeroPedidoRappi, p]));
-  const reemplazados = new Set<string>();
-  const pedidos = l.pedidos.map((p) => {
-    const r = p.numeroPedidoRappi ? portal.get(p.numeroPedidoRappi) : undefined;
-    if (!r) return p;
-    reemplazados.add(p.numeroPedidoRappi!);
-    return r;
-  });
-  const nuevos = delPeriodo.filter((p) => !p.numeroPedidoRappi || !reemplazados.has(p.numeroPedidoRappi));
-  if (!nuevos.length && !reemplazados.size) return l;
+  const delPeriodo = extra.filter((p) => p.fecha >= base.desde && p.fecha <= base.hasta);
+  if (!delPeriodo.length) return base;
   return {
-    ...l,
+    ...base,
     // Del más reciente al más antiguo, como el POS.
-    pedidos: [...pedidos, ...nuevos].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.segundo - a.segundo),
-    totalDeclarado: l.totalDeclarado === null ? null : l.totalDeclarado + nuevos.length,
+    pedidos: [...sinRappiPos, ...delPeriodo].sort((x, y) => y.fecha.localeCompare(x.fecha) || y.segundo - x.segundo),
+    totalDeclarado: base.totalDeclarado === null ? null : base.totalDeclarado + delPeriodo.length,
   };
 }
 

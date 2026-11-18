@@ -3,17 +3,20 @@
 import { Fragment } from 'react';
 import { Barra, Insignia, Tarjeta } from '@/components/portal/piezas';
 import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
+import { AZUL } from '@/components/sucursales/colores';
 import { cociente, type kpiTiendas, type promociones } from '@/lib/bi/bloques';
 
-const F5 = (
-  <span className="text-muted-foreground" title="Las metas llegan en F5">
-    F5
+/** Sin metas cargadas todavía: se ve «—», nunca cero. */
+const SIN_META = (
+  <span className="text-muted-foreground" title="Sin metas cargadas">
+    —
   </span>
 );
 
 /** Bloque 4: Propias/Franquicia → tienda, con venta, tickets, ticket promedio y share de la red. */
 export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiendas> }) {
   const total = grupos.reduce((s, g) => s + g.ventaCent, 0);
+  const maxShare = Math.max(0, ...grupos.flatMap((g) => g.tiendas.map((t) => t.share ?? 0)));
   return (
     <Tarjeta
       titulo="KPI Venta The Coffee"
@@ -24,7 +27,7 @@ export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiend
         <p className="p-5 text-sm text-muted-foreground">Sin venta por tienda en el periodo.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <table className="tabla min-w-[44rem]">
+          <table className="tabla tabla-bi min-w-[44rem]">
             <caption className="sr-only">Venta por tienda agrupada por tipo</caption>
             <thead>
               <tr>
@@ -58,8 +61,8 @@ export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiend
                     <td className="numero">{numero(g.tickets)}</td>
                     <td className="numero">{dinero(cociente(g.ventaCent, g.tickets))}</td>
                     <td className="numero">{porcentaje(cociente(g.ventaCent, total))}</td>
-                    <td className="numero">{F5}</td>
-                    <td className="numero">{F5}</td>
+                    <td className="numero">{SIN_META}</td>
+                    <td className="numero">{SIN_META}</td>
                   </tr>
                   {g.tiendas.map((t) => (
                     <tr key={t.companyId}>
@@ -69,9 +72,25 @@ export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiend
                       <td className="numero">{dinero(t.ventaCent)}</td>
                       <td className="numero">{numero(t.tickets)}</td>
                       <td className="numero">{dinero(t.ticketPromedioCent)}</td>
-                      <td className="numero">{porcentaje(t.share)}</td>
-                      <td className="numero">{F5}</td>
-                      <td className="numero">{F5}</td>
+                      <td className="numero">
+                        <span className="inline-flex items-center justify-end gap-2">
+                          <span
+                            aria-hidden="true"
+                            className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-surface-2 sm:block"
+                          >
+                            <span
+                              className="block h-full rounded-full"
+                              style={{
+                                width: `${maxShare > 0 ? ((t.share ?? 0) / maxShare) * 100 : 0}%`,
+                                backgroundColor: AZUL.fuerte,
+                              }}
+                            />
+                          </span>
+                          {porcentaje(t.share)}
+                        </span>
+                      </td>
+                      <td className="numero">{SIN_META}</td>
+                      <td className="numero">{SIN_META}</td>
                     </tr>
                   ))}
                 </Fragment>
@@ -119,7 +138,7 @@ export function Promociones({ datos }: { datos: ReturnType<typeof promociones> }
         <p className="mt-2 text-sm text-muted-foreground">Ninguna tienda vendió promociones en el periodo.</p>
       ) : (
         <div className="mt-2 overflow-x-auto">
-          <table className="tabla min-w-[40rem]">
+          <table className="tabla tabla-bi min-w-[40rem]">
             <caption className="sr-only">Share y cantidad vendida de cada promoción por tienda</caption>
             <thead>
               <tr>

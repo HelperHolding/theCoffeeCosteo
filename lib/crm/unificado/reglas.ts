@@ -3,8 +3,7 @@ import type { EtapaGeneral, TipoCard } from './modelo';
 // Destinos permitidos desde una etapa: el mismo orden que aplica crm_avanzar en la base (migración 32).
 // La base vuelve a revisarlo todo (permisos, candados y versión); esto solo arma el menú «Mover a…» y
 // decide cuándo pedir motivo antes de llamar.
-export type TipoMovimiento =
-  'siguiente' | 'omitir' | 'regresar' | 'standby' | 'volver' | 'cerrar' | 'proyectos';
+export type TipoMovimiento = 'siguiente' | 'omitir' | 'regresar' | 'standby' | 'volver' | 'cerrar';
 
 export interface Destino {
   etapa: EtapaGeneral;
@@ -20,7 +19,10 @@ export function destinos(
   tipo: TipoCard,
   etapaPreviaId: string | null,
 ): Destino[] {
-  const propias = etapas.filter((e) => e.card === null || e.card === tipo).sort((a, b) => a.orden - b.orden);
+  // El carril Legal (COF y contrato) no es destino: se registra dentro de la sucursal (migración 50).
+  const propias = etapas
+    .filter((e) => (e.card === null || e.card === tipo) && !e.carril)
+    .sort((a, b) => a.orden - b.orden);
   const avance = propias.filter((e) => e.tipo === 'abierta' || e.tipo === 'ganada');
   const salida: Destino[] = [];
   const agregar = (etapa: EtapaGeneral, t: TipoMovimiento, requiereMotivo: boolean) =>
@@ -38,11 +40,6 @@ export function destinos(
         if (despues) agregar(despues, 'omitir', true);
       }
     }
-    if (actual.provisional) {
-      for (const e of avance)
-        if (e.orden > actual.orden && e.id !== siguiente?.id && (e.provisional || e.clave === 'cof'))
-          agregar(e, 'proyectos', false);
-    }
     for (const e of avance.filter((x) => x.tipo === 'abierta' && x.orden < actual.orden).reverse())
       agregar(e, 'regresar', true);
     for (const e of propias.filter((x) => x.tipo === 'lateral')) agregar(e, 'standby', true);
@@ -59,5 +56,4 @@ export const textoMovimiento: Record<TipoMovimiento, string> = {
   standby: 'Pausar en',
   volver: 'Reanudar en',
   cerrar: 'Cerrar como',
-  proyectos: 'Pasar a',
 };

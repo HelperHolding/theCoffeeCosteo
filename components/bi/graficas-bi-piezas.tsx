@@ -1,7 +1,7 @@
 'use client';
 // Piezas comunes de las gráficas del tablero BI (graficas-bi.tsx): tipos, paleta, escalas, interacción,
 // leyenda y tabla equivalente.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AZUL, COLOR_ORIGEN, SERIE_BASE, TIPOS } from '@/components/sucursales/colores';
 
 export interface Categoria {
@@ -30,7 +30,28 @@ const PALETA = [
 ];
 export const colorCategoria = (i: number) => PALETA[i] ?? SERIE_BASE;
 
+/** Ancho de respaldo del lienzo antes de medir (y en pruebas sin ResizeObserver). */
 export const W = 720;
+
+/**
+ * Ancho real del contenedor en px. El viewBox de cada gráfica usa ese ancho, así el texto de los ejes mide siempre
+ * 11px: con un viewBox fijo crecía en pantallas anchas y se volvía ilegible en las angostas.
+ */
+export function useAncho<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [ancho, setAncho] = useState(W);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = Math.round(e.contentRect.width);
+      if (w > 0) setAncho(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return { ref, ancho };
+}
 export const LINEA_REJILLA = 'stroke-line';
 export const TEXTO_EJE = 'fill-muted-foreground text-[11px]';
 
@@ -79,7 +100,7 @@ export function tramosDe(puntos: (Punto | null)[]) {
 export const aPuntos = (tramo: Punto[]) => tramo.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 
 /** Índice bajo el puntero o recorrido con las flechas. */
-export function useIndiceActivo(n: number, xDe: (i: number) => number) {
+export function useIndiceActivo(n: number, xDe: (i: number) => number, ancho = W) {
   const [indice, setIndice] = useState<number | null>(null);
   const ref = useRef<SVGSVGElement>(null);
   const props = {
@@ -87,7 +108,7 @@ export function useIndiceActivo(n: number, xDe: (i: number) => number) {
     tabIndex: 0,
     onPointerMove: (e: React.PointerEvent<SVGSVGElement>) => {
       const r = ref.current!.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * W;
+      const x = ((e.clientX - r.left) / r.width) * ancho;
       let mejor = 0;
       for (let i = 1; i < n; i++) if (Math.abs(xDe(i) - x) < Math.abs(xDe(mejor) - x)) mejor = i;
       setIndice(mejor);
@@ -140,7 +161,7 @@ export function TablaEquivalente({
     <details className="text-sm">
       <summary className="cursor-pointer font-semibold text-ink-2">Ver como tabla</summary>
       <div className="mt-2 max-h-96 overflow-auto">
-        <table className="tabla w-full">
+        <table className="tabla tabla-bi w-full">
           <caption className="sr-only">{resumen}</caption>
           <thead>
             <tr>
