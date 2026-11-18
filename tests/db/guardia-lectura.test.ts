@@ -6,6 +6,7 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 const PREDICADOS = [
   /tiene_rol\(/,
   /crm_puede_leer\(\)/,
+  /com_puede_leer\(\)/,
   // Datos sensibles del CRM (main, migración 50): exige crm_puede_leer() y además ser desarrollador o de ventas/legal/finanzas.
   /crm_ve_sensibles\(\)/,
   /sucursales_[a-z_]+\(/,
@@ -117,7 +118,7 @@ describe('guardia de lecturas', () => {
 
   it('los esquemas privados no se exponen a usuarios', async () => {
     const r = await db.query<{ esquema: string }>(`
-      select e as esquema from unnest(array['migracion_legado', 'zoho_staging']) e
+      select e as esquema from unnest(array['migracion_legado', 'zoho_staging', 'legado']) e
       where has_schema_privilege('authenticated', e, 'USAGE') or has_schema_privilege('anon', e, 'USAGE')`);
     expect(r.rows).toEqual([]);
   });

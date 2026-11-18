@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:funciones": "deno test --config supabase/functions/deno.json --allow-env --allow-read supabase/functions",
     "typecheck": "tsc --noEmit",
     "migracion": "tsx scripts/migracion/index.ts",
     "dev": "next dev",
