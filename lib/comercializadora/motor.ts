@@ -25,6 +25,13 @@ import {
   type Servidor,
 } from '../../supabase/functions/_shared/planDatos.ts';
 import { kpiAbCalc } from '../../supabase/functions/_shared/planKpi.ts';
+import { impCorrer, type CorridaImp } from '../../supabase/functions/_shared/planImp.ts';
+import {
+  cafeCorrer,
+  cafeOrdenes,
+  type CorridaCafe,
+  type PlanCafe,
+} from '../../supabase/functions/_shared/planCafe.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Fila = Record<string, any>;
@@ -157,7 +164,7 @@ export async function cargarDatosPlan(
     return { ok: false, error: SIN_DATOS_PLAN };
   }
   const [cat, lt, map, oc, comp] = base;
-  const [pedidos, primero, aperturas, pedAper, conteos, borr, srv] = await Promise.all([
+  const [pedidos, primero, aperturas, pedAper, conteos, borr, srv, zprov] = await Promise.all([
     pedidosPlanLegado((q) => q.gte('fecha_pedido', corte)),
     primerPedidoLegado(),
     aperturasPlanLegado(),
@@ -177,6 +184,15 @@ export async function cargarDatosPlan(
       ),
     ),
     servidorPlan(db, ahora),
+    // Plan 3e: mínimos de proveedor de Zoho para la agrupación por proveedor (Qué pedir de café), como R.zprov del viejo.
+    opcional(
+      leerTodoCom<{ vendor_id: string; nombre: string | null; minimo_compra: number | null }>(
+        db,
+        'com_zoho_proveedor',
+        'vendor_id,nombre,minimo_compra',
+        'vendor_id',
+      ),
+    ),
   ]);
   if (!pedidos.ok) return { ok: false, error: pedidos.error };
   const avisos: string[] = [];
@@ -184,6 +200,7 @@ export async function cargarDatosPlan(
   if (!pedAper.ok) avisos.push('pedidos_apertura');
   if (!conteos) avisos.push('conteos');
   if (!borr) avisos.push('borradores de Zoho');
+  if (!zprov) avisos.push('mínimos de proveedor');
   const aps = normalizarAperturas(aperturas.ok ? aperturas.datos : []);
   // Historia real: días desde el primer pedido de la base (si no se pudo leer, alcanza la ventana pedida).
   let histReal = hist;
@@ -221,6 +238,7 @@ export async function cargarDatosPlan(
       kit,
       conteoUlt,
       ocZohoBorr: borr ?? [],
+      zprov: zprov ?? [],
       srv,
       avisos,
       cargadoEn: ahora,
@@ -288,3 +306,13 @@ export type MotorListo = Extract<Motor, { ok: true }>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const indicadoresMotor = (m: MotorListo): any =>
   memoMotor(m, 'kpi', () => kpiAbCalc(m.R, m.cfg, Date.now()));
+
+/** Importaciones (plan 3e): la corrida del modelo de la Sheet con el escenario de la vista, una vez por datos + configuración. */
+export const importacionesMotor = (m: MotorListo, esc?: string | null): CorridaImp =>
+  memoMotor(m, `imp|${esc ?? ''}`, () => impCorrer(m.R, m.cfg, esc));
+/** Café (plan 3e): la proyección del año con el escenario de la vista. */
+export const cafeMotor = (m: MotorListo, esc?: string | null): CorridaCafe =>
+  memoMotor(m, `cafe|${esc ?? ''}`, () => cafeCorrer(m.R, m.cfg, esc));
+/** Qué pedir de café (plan 3e): el plan de abasto solo con café tostado, agrupado por proveedor. */
+export const cafeOrdenesMotor = (m: MotorListo): PlanCafe =>
+  memoMotor(m, 'cafe-ordenes', () => cafeOrdenes(m.R, m.cfg));

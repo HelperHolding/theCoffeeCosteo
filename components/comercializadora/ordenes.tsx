@@ -8,6 +8,7 @@ import { pesos } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
 import { textoDestino, validarOc, type FormOc, type OcGrupo } from '@/lib/comercializadora/ordenes';
 import { eliminarOc, guardarOc, recibirOc } from '@/app/(comercializadora)/comercializadora/acciones';
+import type { FormPrellenado } from '@/lib/comercializadora/crearOc';
 
 const TONO: Record<OcGrupo['estado'], Estado> = { emitida: 'neutro', parcial: 'bajo', recibida: 'ok' };
 const NOMBRE: Record<OcGrupo['estado'], string> = {
@@ -26,11 +27,15 @@ export function Ordenes(p: {
   ultimoSync: string | null;
   editable: boolean;
   hoy: string;
+  prellenado?: FormPrellenado | null;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState<string | null>(null);
   const [recibido, setRecibido] = useState<Record<string, number>>({});
-  const [form, setForm] = useState<(FormOc & { anterior?: string }) | null>(null);
+  // Plan 3e: "Crear OC" de Importaciones o Café llega con el formulario de nueva OC ya lleno; se revisa y se guarda.
+  const [form, setForm] = useState<
+    (FormOc & { anterior?: string; origen?: string; omitidos?: number }) | null
+  >(p.editable && p.prellenado ? p.prellenado : null);
   const [error, setError] = useState<string | null>(null);
   const [ver, setVer] = useState(POR_PAGINA);
   const [pendiente, iniciar] = useTransition();
@@ -44,6 +49,12 @@ export function Ordenes(p: {
       alTerminar?.();
       router.refresh();
     });
+  // Revisión 3e (I3): al cerrar o guardar una OC sugerida, la URL pierde el prellenado; si no, recargar la reabría
+  // (riesgo de capturar dos veces la misma OC).
+  const cerrarForm = () => {
+    if (form?.origen) router.replace('/comercializadora/ordenes');
+    setForm(null);
+  };
   const nueva = (): FormOc => ({
     folio: '',
     proveedor: '',
@@ -107,6 +118,17 @@ export function Ordenes(p: {
 
       {form ? (
         <Tarjeta titulo={form.anterior ? `Editar ${form.anterior}` : 'Nueva orden de compra'}>
+          {form.origen ? (
+            <p role="status" className="mb-3 rounded-lg bg-surface-2 px-3 py-2 text-sm text-ink-2">
+              Revisa cantidades, proveedor y SKUs antes de guardar: {form.lineas.length}{' '}
+              {form.lineas.length === 1 ? 'artículo sugerido' : 'artículos sugeridos'} por {form.origen} para{' '}
+              <b>{form.proveedor}</b>. Monto y fecha de arribo son estimados (cantidad × costo; llegada del
+              plan): ajústalos a los de la OC real.
+              {form.omitidos
+                ? ` ${form.omitidos} ${form.omitidos === 1 ? 'artículo no está' : 'artículos no están'} en el catálogo y no se incluyeron.`
+                : ''}
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="text-sm">
               Folio
@@ -116,21 +138,33 @@ export function Ordenes(p: {
                 onChange={(e) => setForm({ ...form, folio: e.target.value })}
               />
             </label>
-            <label className="text-sm">
-              Proveedor
-              <select
-                className={claseCampo}
-                value={form.proveedor}
-                onChange={(e) => setForm({ ...form, proveedor: e.target.value })}
-              >
-                <option value="">Elige…</option>
-                {p.proveedores.map((x) => (
-                  <option key={x} value={x}>
-                    {x}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {form.origen ? (
+              <div className="text-sm">
+                Proveedor
+                <p className={`${claseCampo} flex items-center gap-2 bg-surface-2`}>
+                  <b>{form.proveedor}</b>
+                  <span className="text-xs text-muted-foreground">
+                    sugerido por {form.origen}, no editable
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <label className="text-sm">
+                Proveedor
+                <select
+                  className={claseCampo}
+                  value={form.proveedor}
+                  onChange={(e) => setForm({ ...form, proveedor: e.target.value })}
+                >
+                  <option value="">Elige…</option>
+                  {p.proveedores.map((x) => (
+                    <option key={x} value={x}>
+                      {x}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="text-sm">
               Destino
               <select
@@ -226,10 +260,10 @@ export function Ordenes(p: {
               onClick={() => {
                 const v = validarOc(form);
                 if (v) return setError(v);
-                const { anterior, ...datos } = form;
+                const { anterior, origen: _origen, omitidos: _omitidos, ...datos } = form;
                 correr(
                   () => guardarOc(datos, anterior),
-                  () => setForm(null),
+                  () => cerrarForm(),
                 );
               }}
               className="h-10 rounded-[10px] bg-ink px-4 text-sm font-semibold text-white"
@@ -238,7 +272,7 @@ export function Ordenes(p: {
             </button>
             <button
               type="button"
-              onClick={() => setForm(null)}
+              onClick={() => cerrarForm()}
               className="h-10 rounded-[10px] border border-line-strong px-4 text-sm font-semibold"
             >
               Cerrar

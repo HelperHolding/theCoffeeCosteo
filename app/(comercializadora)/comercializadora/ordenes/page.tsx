@@ -7,13 +7,14 @@ import { com, leerTodoCom } from '@/lib/comercializadora/consultas';
 import { agruparOcs, resumenOcs, type MovCompra } from '@/lib/comercializadora/ordenes';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { pesos } from '@/lib/comercializadora/formato';
+import { prellenadoOc } from '@/lib/comercializadora/crearOc';
 
 const ESTADOS = ['emitida', 'parcial', 'recibida'];
 
 export default async function OrdenesPagina({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; mes?: string }>;
+  searchParams: Promise<{ estado?: string; mes?: string } & Record<string, string | string[] | undefined>>;
 }) {
   const { db, accesos } = await sesionComercializadora();
   const sp = await searchParams;
@@ -45,6 +46,15 @@ export default async function OrdenesPagina({
   const k = resumenOcs(movs, hoy);
   const estado = ESTADOS.includes(sp.estado ?? '') ? sp.estado : undefined;
   const mes = /^\d{4}-\d{2}$/.test(sp.mes ?? '') ? sp.mes : undefined;
+  // Plan 3e: "Crear OC" de Importaciones y Café abre el formulario prellenado (solo SKUs del catálogo; nada se guarda solo).
+  const editable = puedeEditarCom(accesos);
+  const prellenado = editable
+    ? prellenadoOc(
+        sp,
+        catalogo.map((c) => c.sku),
+        hoy,
+      )
+    : null;
   const grupos = agruparOcs(movs).filter(
     (g) => (!estado || g.estado === estado) && (!mes || String(g.fecha).startsWith(mes)),
   );
@@ -81,8 +91,9 @@ export default async function OrdenesPagina({
         proveedores={proveedores.map((p) => p.nombre ?? p.vendor_id).sort((a, b) => a.localeCompare(b, 'es'))}
         catalogo={catalogo}
         ultimoSync={sync.data?.[0]?.inicio ?? null}
-        editable={puedeEditarCom(accesos)}
+        editable={editable}
         hoy={hoy}
+        prellenado={prellenado}
       />
     </>
   );
