@@ -1,4 +1,5 @@
 import type { NivelModulo } from '../supabase/database.types';
+import { tieneCosteo } from './roles';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
 export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi';
@@ -22,8 +23,8 @@ export const modulos: Modulo[] = [
     nombre: 'Costeo',
     descripcion: 'Recetas, insumos, márgenes y precios por canal.',
     href: '/costeo',
-    // Cualquier perfil activo con rol de Costeo; el rol 'sucursales' (migración 24) no entra.
-    acceso: (_, rol) => rol !== 'sucursales',
+    // Solo roles de Costeo (falla cerrado): sucursales, interno, franquiciado y proveedor no entran.
+    acceso: (_, rol) => tieneCosteo(rol),
   },
   {
     id: 'crm',

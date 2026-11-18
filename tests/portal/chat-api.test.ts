@@ -27,7 +27,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.stubEnv('ANTHROPIC_API_KEY', 'solo-prueba');
   m.user.mockResolvedValue({ data: { user: { id: 'usuario' } }, error: null });
-  m.perfil.mockResolvedValue({ data: { activo: true }, error: null });
+  m.perfil.mockResolvedValue({ data: { activo: true, rol: 'compras' }, error: null });
   m.cupo.mockResolvedValue({ data: true, error: null });
   m.tools.mockReturnValue({});
   m.stream.mockReturnValue({
@@ -77,4 +77,13 @@ it('envía únicamente texto validado, limita pasos y oculta errores del proveed
   const error = await POST(peticion());
   expect(error.status).toBe(503);
   expect(await error.text()).not.toContain('clave privada');
+});
+
+it('el asistente de Costeo no atiende a perfiles sin rol de Costeo (falla cerrado)', async () => {
+  for (const rol of ['franquiciado', 'proveedor', 'interno', 'sucursales', undefined]) {
+    m.perfil.mockResolvedValue({ data: { activo: true, rol }, error: null });
+    expect((await POST(peticion())).status).toBe(403);
+  }
+  expect(m.cupo).not.toHaveBeenCalled();
+  expect(m.stream).not.toHaveBeenCalled();
 });

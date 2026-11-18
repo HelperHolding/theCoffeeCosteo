@@ -1,6 +1,7 @@
 // Contrato basado en las migraciones locales. numeric llega como número vía PostgREST.
 import type * as Crm from '../crm/tipos';
-export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales';
+export type Rol =
+  'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales' | 'interno' | 'franquiciado' | 'proveedor';
 export type Unidad = 'gr' | 'ml' | 'pza';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
 export interface Catalogo {

@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { servidor } from './servidor';
 import { puede, type Area } from '../portal/permisos';
+import { tieneCosteo } from '../portal/roles';
 import type { Accesos } from '../portal/modulos';
 
 type Db = Awaited<ReturnType<typeof servidor>>;
@@ -29,8 +30,9 @@ const contexto = cache(async () => {
 });
 
 /**
- * Sesión del portal. El rol 'sucursales' (perfil sin Costeo, migración 24) solo pasa donde se permite
- * explícitamente (Inicio y CRM): en Costeo va a /sucursales o la acción falla. La RLS de Costeo también lo niega.
+ * Sesión del portal. Los roles sin Costeo (sucursales, migración 24; interno, franquiciado y proveedor, migración 44)
+ * solo pasan donde se permite explícitamente (`sinCosteo`: Inicio, CRM). En Costeo, 'sucursales' va a /sucursales y
+ * los demás a Inicio, o la acción falla. La RLS de Costeo también los niega.
  */
 export async function sesion(
   area?: Area,
@@ -48,8 +50,8 @@ export async function sesion(
     if (redirigir) redirect('/login?aviso=perfil');
     throw new Error('Tu cuenta necesita un perfil activo.');
   }
-  if (r.data.rol === 'sucursales' && !sinCosteo) {
-    if (redirigir) redirect('/sucursales');
+  if (!sinCosteo && !tieneCosteo(r.data.rol)) {
+    if (redirigir) redirect(r.data.rol === 'sucursales' ? '/sucursales' : '/');
     throw new Error('Tu perfil no tiene acceso a Costeo.');
   }
   if (area && !puede(r.data.rol, area)) throw new Error('No tienes permiso para esta acción');

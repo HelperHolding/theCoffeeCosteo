@@ -3,7 +3,15 @@ import type { PGlite } from '@electric-sql/pglite';
 
 export const num = (v: unknown): number => Number(v);
 
-export type Rol = 'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales';
+export type Rol =
+  | 'compras'
+  | 'operaciones'
+  | 'finanzas'
+  | 'admin'
+  | 'sucursales'
+  | 'interno'
+  | 'franquiciado'
+  | 'proveedor';
 
 /** Ejecuta fn como el rol `authenticated` de Supabase con auth.uid() = userId. */
 export async function comoUsuario<T>(db: PGlite, userId: string, fn: () => Promise<T>): Promise<T> {
