@@ -283,6 +283,54 @@
   .tabla tbody tr:last-child td {
     border-bottom: 0;
   }
+  /* BI: los encabezados de fila (tiendas, productos) se leen como texto, no como rótulo de columna. */
+  .tabla-bi tbody th {
+    background: transparent;
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: normal;
+    min-width: 10rem;
+  }
+  /*
+   * BI: cinco números clave sin renglones a medias. 2 columnas (la última a lo ancho), luego 3 arriba + 2 abajo
+   * (rejilla de 6) y, con espacio, los cinco en fila.
+   */
+  .kpis-bi {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 40rem) {
+    .kpis-bi {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .kpis-bi > :last-child {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 64rem) {
+    .kpis-bi {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .kpis-bi > * {
+      grid-column: span 2;
+    }
+    .kpis-bi > :nth-child(n + 4),
+    .kpis-bi > :last-child {
+      grid-column: span 3;
+    }
+  }
+  @media (min-width: 96rem) {
+    .kpis-bi {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .kpis-bi > *,
+    .kpis-bi > :nth-child(n + 4),
+    .kpis-bi > :last-child {
+      grid-column: auto;
+    }
+  }
   .numero {
     font-variant-numeric: tabular-nums;
     text-align: right;

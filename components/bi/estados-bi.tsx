@@ -36,7 +36,7 @@ export function Cargando({ texto }: { texto: string }) {
   const bloque = 'rounded-2xl bg-surface/70 motion-safe:animate-pulse';
   return (
     <div role="status" aria-live="polite" className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+      <div className="kpis-bi">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className={`${bloque} h-32`} />
         ))}

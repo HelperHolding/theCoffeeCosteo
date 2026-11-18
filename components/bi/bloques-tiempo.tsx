@@ -2,11 +2,11 @@
 // Bloque 6 del tablero BI: tiempo y pago (por fecha, método de pago, pago por tienda, día de la semana y hora).
 import { Tarjeta } from '@/components/portal/piezas';
 import { BarraApilada } from '@/components/sucursales/graficas';
-import { AZUL, COLOR_ORIGEN } from '@/components/sucursales/colores';
 import { diaMes, dinero, fechaCorta, numero, porcentaje } from '@/components/sucursales/formato';
 import type { pagoPorTienda } from '@/lib/bi/bloques';
 import type { RpcTablero } from '@/lib/bi/tipos';
-import { ColumnasYLinea, colorCategoria, type Categoria } from './graficas-bi';
+import { ColumnasYLinea, type Categoria } from './graficas-bi';
+import { colorDe, enOrden, PAGOS, SERIE_TICKETS, SERIE_VENTA } from './colores-bi';
 import { dineroEje } from './graficas-bi-piezas';
 
 const DIAS = [
@@ -21,6 +21,32 @@ const DIAS = [
 const hh = (h: number) => String(h).padStart(2, '0');
 const dineroSerie = (v: number | null) => dinero(v, 'MXN', false);
 const SIN_VENTA = <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>;
+
+type VentaTickets = { venta_cent: number; tickets: number } | undefined;
+
+/** Venta (columnas), tickets (línea) y ticket promedio (solo tooltip y tabla) de las mismas categorías. */
+const ventaYTickets = (filas: VentaTickets[]) => ({
+  columnas: {
+    etiqueta: 'Venta neta',
+    color: SERIE_VENTA,
+    valores: filas.map((f) => f?.venta_cent ?? null),
+    formato: dineroSerie,
+    eje: dineroEje,
+  },
+  linea: {
+    etiqueta: 'Tickets',
+    color: SERIE_TICKETS,
+    valores: filas.map((f) => f?.tickets ?? null),
+    formato: numero,
+    eje: numero,
+  },
+  extra: {
+    etiqueta: 'Ticket promedio',
+    color: 'transparent',
+    valores: filas.map((f) => (f && f.tickets > 0 ? Math.round(f.venta_cent / f.tickets) : null)),
+    formato: dineroSerie,
+  },
+});
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -56,7 +82,9 @@ export function TiempoYPago({
     ? Array.from({ length: Math.max(...horas) - desde + 1 }, (_, i) => desde + i)
     : [];
   const hora = new Map(porHora.map((h) => [h.hora, h]));
-  const colorPago = new Map(porPago.map((p, i) => [p.etiqueta, colorCategoria(i)]));
+  // Orden y color fijos por etiqueta de pago (colores-bi.ts): un filtro no repinta los métodos que quedan.
+  const pagos = enOrden(porPago, PAGOS, (p) => p.etiqueta);
+  const colorPago = (etiqueta: string) => colorDe(PAGOS, etiqueta);
 
   return (
     <Tarjeta titulo="Tiempo y pago">
@@ -68,20 +96,7 @@ export function TiempoYPago({
             <ColumnasYLinea
               resumen="Venta neta (columnas) y tickets (línea) por día"
               categorias={fechas}
-              columnas={{
-                etiqueta: 'Venta neta',
-                color: AZUL.fuerte,
-                valores: porFecha.map((f) => f.venta_cent),
-                formato: dineroSerie,
-                eje: dineroEje,
-              }}
-              linea={{
-                etiqueta: 'Tickets',
-                color: COLOR_ORIGEN.app,
-                valores: porFecha.map((f) => f.tickets),
-                formato: numero,
-                eje: numero,
-              }}
+              {...ventaYTickets(porFecha)}
             />
           )}
         </Seccion>
@@ -92,23 +107,10 @@ export function TiempoYPago({
               SIN_VENTA
             ) : (
               <ColumnasYLinea
-                resumen="Venta neta por día de la semana"
+                resumen="Venta neta (columnas) y tickets (línea) por día de la semana"
                 anchoMinimo="min-w-[20rem]"
                 categorias={DIAS.map((d) => ({ clave: String(d.dow), eje: d.corto, titulo: d.largo }))}
-                columnas={{
-                  etiqueta: 'Venta neta',
-                  color: AZUL.fuerte,
-                  valores: DIAS.map((d) => dia.get(d.dow)?.venta_cent ?? null),
-                  formato: dineroSerie,
-                  eje: dineroEje,
-                }}
-                linea={{
-                  etiqueta: 'Tickets',
-                  color: COLOR_ORIGEN.app,
-                  valores: DIAS.map((d) => dia.get(d.dow)?.tickets ?? null),
-                  formato: numero,
-                  eje: numero,
-                }}
+                {...ventaYTickets(DIAS.map((d) => dia.get(d.dow)))}
               />
             )}
           </Seccion>
@@ -117,27 +119,14 @@ export function TiempoYPago({
               SIN_VENTA
             ) : (
               <ColumnasYLinea
-                resumen="Venta neta por hora del día"
+                resumen="Venta neta (columnas) y tickets (línea) por hora del día"
                 anchoMinimo="min-w-[24rem]"
                 categorias={rango.map((h) => ({
                   clave: String(h),
                   eje: hh(h),
                   titulo: `${hh(h)}:00–${hh(h)}:59`,
                 }))}
-                columnas={{
-                  etiqueta: 'Venta neta',
-                  color: AZUL.fuerte,
-                  valores: rango.map((h) => hora.get(h)?.venta_cent ?? null),
-                  formato: dineroSerie,
-                  eje: dineroEje,
-                }}
-                linea={{
-                  etiqueta: 'Tickets',
-                  color: COLOR_ORIGEN.app,
-                  valores: rango.map((h) => hora.get(h)?.tickets ?? null),
-                  formato: numero,
-                  eje: numero,
-                }}
+                {...ventaYTickets(rango.map((h) => hora.get(h)))}
               />
             )}
           </Seccion>
@@ -150,10 +139,10 @@ export function TiempoYPago({
             <BarraApilada
               titulo="Participación en la venta neta (ped. = tickets)"
               moneda="MXN"
-              segmentos={porPago.map((p) => ({
+              segmentos={pagos.map((p) => ({
                 clave: p.etiqueta,
                 etiqueta: p.etiqueta,
-                color: colorPago.get(p.etiqueta)!,
+                color: colorPago(p.etiqueta),
                 ventaCent: p.venta_cent,
                 pedidos: p.tickets,
                 participacion: p.share,
@@ -167,7 +156,7 @@ export function TiempoYPago({
             SIN_VENTA
           ) : (
             <div className="overflow-x-auto">
-              <table className="tabla" style={{ minWidth: `${20 + porPago.length * 7}rem` }}>
+              <table className="tabla tabla-bi" style={{ minWidth: `${20 + pagos.length * 7}rem` }}>
                 <caption className="sr-only">
                   Participación de cada método de pago en la venta neta de cada tienda
                 </caption>
@@ -178,7 +167,7 @@ export function TiempoYPago({
                       Venta
                     </th>
                     <th scope="col">Mezcla</th>
-                    {porPago.map((p) => (
+                    {pagos.map((p) => (
                       <th key={p.etiqueta} scope="col" className="numero">
                         {p.etiqueta}
                       </th>
@@ -199,19 +188,19 @@ export function TiempoYPago({
                             aria-hidden="true"
                             className="flex h-2.5 w-full gap-[2px] overflow-hidden rounded-[4px]"
                           >
-                            {t.pagos.map((p) => (
+                            {enOrden(t.pagos, PAGOS, (p) => p.etiqueta).map((p) => (
                               <span
                                 key={p.etiqueta}
                                 className="h-full"
                                 style={{
                                   width: `${(p.share ?? 0) * 100}%`,
-                                  backgroundColor: colorPago.get(p.etiqueta) ?? colorCategoria(99),
+                                  backgroundColor: colorPago(p.etiqueta),
                                 }}
                               />
                             ))}
                           </span>
                         </td>
-                        {porPago.map((p) => (
+                        {pagos.map((p) => (
                           <td key={p.etiqueta} className="numero">
                             {porcentaje(share.get(p.etiqueta) ?? null)}
                           </td>

@@ -61,7 +61,7 @@ export function TableroMexico() {
   }, [tendencias.datos]);
 
   return (
-    <div className="space-y-6">
+    <div className="tablero-bi space-y-6">
       <FiltrosBi filtros={filtros} opciones={opciones} alCambiar={alCambiar} />
 
       {tablero.datos ? (
@@ -167,7 +167,7 @@ function Bloques({
         {cargas.length > 0 && <Aviso>{cargas.join('; ')} (nunca se cuentan como cero).</Aviso>}
         {a.rappiPendiente && (
           <Aviso>
-            Rappi de Zoho pendiente (F3): en tiendas sin el portal de Rappi falta su venta de Rappi.
+            El Rappi de Zoho todavía no se carga: en las tiendas sin portal de Rappi falta su venta de Rappi.
           </Aviso>
         )}
       </section>
