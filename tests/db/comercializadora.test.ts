@@ -4,10 +4,10 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario, darModulo, num } from './utilidades';
 
 const TABLAS = [
-  'com_catalogo', 'com_catalogo_costo_historial', 'com_kit_apertura', 'com_lead_times', 'com_minmax',
-  'com_movimientos', 'com_oc_auto', 'com_pago_proyectado', 'com_parametros', 'com_plan_config',
-  'com_plan_config_historial', 'com_proveedor_cierre', 'com_sku_mapping', 'com_sync_cambios', 'com_sync_log',
-  'com_zoho_oc_lineas', 'com_zoho_proveedor',
+  'com_catalogo', 'com_catalogo_costo_historial', 'com_insumo_sku', 'com_kit_apertura', 'com_lead_times', 'com_minmax',
+  'com_movimientos', 'com_oc_auto', 'com_ovs_corridas', 'com_ovs_lineas', 'com_ovs_tiendas', 'com_pago_proyectado',
+  'com_parametros', 'com_plan_config', 'com_plan_config_historial', 'com_proveedor_cierre', 'com_sku_mapping',
+  'com_sync_cambios', 'com_sync_log', 'com_zoho_oc_lineas', 'com_zoho_proveedor',
 ];
 
 async function sembrar(db: PGlite) {
@@ -27,7 +27,7 @@ describe('Comercializadora: tablas y acceso (migración 45)', () => {
     await sembrar(db);
   });
 
-  it('crea las 17 tablas con RLS', async () => {
+  it('crea las 21 tablas con RLS (17 de la migración 45 y 4 del piloto de OV, migración 72)', async () => {
     const r = await db.query<{ t: string; rls: boolean }>(`
       select c.relname t, c.relrowsecurity rls from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relkind = 'r' and c.relname like 'com\\_%' order by 1`);
