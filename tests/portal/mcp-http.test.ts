@@ -6,10 +6,15 @@ const m = vi.hoisted(() => ({
   rangos: vi.fn(),
   filtro: vi.fn(),
   fuentes: {} as Record<string, Record<string, unknown>[]>,
+  grok: vi.fn(),
 }));
 vi.mock('../../lib/mcp/autenticacion', async (original) => ({
   ...(await original<typeof import('../../lib/mcp/autenticacion')>()),
   autenticarMcp: m.auth,
+}));
+vi.mock('../../lib/mcp/token', () => ({
+  esTokenGrok: (t: string) => t === 'token-de-grok',
+  autenticarGrok: m.grok,
 }));
 import { atenderMcp } from '../../lib/mcp/http';
 import { GET as metadatos } from '../../app/.well-known/oauth-protected-resource/route';
@@ -179,4 +184,14 @@ it('acepta navegadores del dominio propio y del dominio anterior de Vercel', asy
     );
     expect(r.status).not.toBe(403);
   }
+});
+it('el token de Grok usa la sesión del usuario de Grok; otro token sigue por OAuth', async () => {
+  m.grok.mockResolvedValue({ from: m.from });
+  const r = await rpc('tools/list', {}, 'token-de-grok');
+  expect(r.status).toBe(200);
+  expect(m.grok).toHaveBeenCalledTimes(1);
+  expect(m.auth).not.toHaveBeenCalled();
+  await rpc('tools/list', {}, 'otro-token');
+  expect(m.auth).toHaveBeenCalledWith('otro-token');
+  expect(m.grok).toHaveBeenCalledTimes(1);
 });

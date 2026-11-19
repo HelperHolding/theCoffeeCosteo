@@ -175,3 +175,19 @@ Se documenta en `docs/mcp/grok.md`.
 3. `lib/mcp/ventas.ts` + pruebas.
 4. Consentimiento para Grok.
 5. `docs/mcp/grok.md`, `supabase db push` (lo corre el administrador), alta del `client_id`, verificación real.
+
+## 9. Cambio (2026-11-19): Grok entra con token fijo, no con OAuth
+
+Al probar la fase 0, Grok llegó al consentimiento (sí soporta MCP con OAuth y registro dinámico), pero se decidió
+un acceso más simple, como en otros proyectos de la empresa:
+
+- `Authorization: Bearer MCP_GROK_TOKEN` (variable de Vercel, ≥ 32 caracteres, comparación en tiempo constante).
+- Con ese token, `lib/mcp/token.ts` inicia sesión como el usuario dedicado `MCP_GROK_EMAIL` / `MCP_GROK_PASSWORD`
+  y consulta con su JWT: es una sesión normal (sin `client_id`), así que `ventas_lectura` usa
+  `sucursales_acceso` / `bi_acceso` y Grok ve exactamente las sucursales asignadas a ese usuario.
+- Cada consulta exige perfil activo y la migración MCP publicada. Sin `MCP_GROK_TOKEN`, el camino está apagado.
+- Cualquier otro token sigue por OAuth (Claude sin cambios).
+- La sección 5.3 (callback de Grok en el consentimiento) ya no es necesaria; `mcp_ventas_clientes` queda para
+  futuros conectores OAuth.
+- Riesgo aceptado: quien tenga el token consulta como el usuario de Grok (solo las herramientas de lectura); el
+  usuario solo lleva módulos de lectura. Revocación: borrar la variable o desactivar el usuario.
