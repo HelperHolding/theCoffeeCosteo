@@ -205,6 +205,32 @@ export type FilaInventarioContable = Omit<FilaInventario, 'venta' | 'cobertura'>
   cobertura: number | null;
 };
 
+export type FilaInventarioAperturas = FilaInventarioContable & {
+  /** Kit por apertura (com_kit_apertura.kit: manual o promedio calculado). */
+  kitApertura: number;
+  coberturaAperturas: number | null;
+};
+
+/**
+ * Cobertura con aperturas (pedido del usuario, 2026-11-18): inventario ÷ (venta/día + kit × aperturas por mes ÷ 30),
+ * redondeada y sin negativos. Sin inventario, sin venta de los pedidos o sin demanda: null.
+ */
+export function conCoberturaAperturas(
+  filas: FilaInventarioContable[],
+  kit: Record<string, number>,
+  aperturasMes: number,
+): FilaInventarioAperturas[] {
+  return filas.map((f) => {
+    const kitApertura = n(kit[f.sku]);
+    const demanda = f.venta == null ? null : f.venta + (kitApertura * n(aperturasMes)) / 30;
+    const coberturaAperturas =
+      demanda != null && demanda > 0 && f.inventario != null
+        ? Math.max(0, Math.round(f.inventario / demanda))
+        : null;
+    return { ...f, kitApertura, coberturaAperturas };
+  });
+}
+
 /** Inventario = contable; cobertura = inventario ÷ venta/día (redondeada, sin negativos). Sin venta de pedidos: null. */
 export function conVentaContable(
   filas: FilaInventario[],

@@ -4,7 +4,7 @@ import { Boxes, PackageX } from 'lucide-react';
 import { Kpi, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { numero, pesos } from '@/lib/comercializadora/formato';
-import type { FilaInventarioContable } from '@/lib/comercializadora/inventario';
+import type { FilaInventarioAperturas } from '@/lib/comercializadora/inventario';
 import { DescargarCsv } from './descargar-csv';
 import { Ajuste3pl } from './ajuste-3pl';
 
@@ -12,7 +12,9 @@ const POR_PAGINA = 25;
 const ESTATUS = ['Activo', 'Compra Recurrente', 'Prueba', 'Hasta Agotar Existencias', 'Inactivo'];
 
 export function Inventario(p: {
-  filas: FilaInventarioContable[];
+  filas: FilaInventarioAperturas[];
+  /** Aperturas por mes de Configuración (aper.por_mes) para la cobertura con aperturas. */
+  aperturasMes: number;
   valor: { valor: number; sinCosto: number };
   viejos: string[];
   ultimoSync: string | null;
@@ -74,6 +76,10 @@ export function Inventario(p: {
           {p.ventaAviso} Venta/día y cobertura no se muestran.
         </p>
       ) : null}
+      <p className="text-sm text-muted-foreground">
+        Cobertura c/aperturas suma a la venta/día el kit de apertura de cada artículo con{' '}
+        {numero(p.aperturasMes)} aperturas al mes (Configuración › Aperturas por mes; el kit se edita en Kit).
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
@@ -129,6 +135,8 @@ export function Inventario(p: {
             ['inventario', 'Inventario (contable)'],
             ['venta', 'Venta/dia (30 dias)'],
             ['cobertura', 'Cobertura (dias)'],
+            ['kitApertura', 'Kit por apertura'],
+            ['coberturaAperturas', 'Cobertura con aperturas (dias)'],
             ['estatus', 'Estatus'],
           ]}
         />
@@ -153,6 +161,7 @@ export function Inventario(p: {
                 <th className="text-right">Inventario</th>
                 <th className="text-right">Venta/día</th>
                 <th className="text-right">Cobertura (días)</th>
+                <th className="text-right">Cobertura c/aperturas (días)</th>
               </tr>
             </thead>
             <tbody>
@@ -167,6 +176,9 @@ export function Inventario(p: {
                   </td>
                   <td className="text-right tabular-nums">{f.venta == null ? '—' : numero(f.venta)}</td>
                   <td className="text-right tabular-nums">{f.cobertura == null ? '—' : f.cobertura}</td>
+                  <td className="text-right tabular-nums">
+                    {f.coberturaAperturas == null ? '—' : f.coberturaAperturas}
+                  </td>
                 </tr>
               ))}
             </tbody>
