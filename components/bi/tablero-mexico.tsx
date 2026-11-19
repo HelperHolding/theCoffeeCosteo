@@ -1,5 +1,5 @@
 'use client';
-// Tablero «The Coffee México» (BI F4): orquesta los filtros de la URL, las dos lecturas (tablero y tendencias)
+// Tablero «The Coffee México» (BI F4 y F5): orquesta los filtros de la URL, las dos lecturas (tablero y tendencias)
 // y los bloques 1 a 8. Las cifras se arman en lib/bi/bloques.ts; aquí solo se reparten.
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +12,8 @@ import { useLectura } from '@/components/sucursales/use-lectura';
 import {
   avisos,
   conShare,
+  contraMeta,
+  filtrosDeLinea,
   kpiTiendas,
   numerosClave,
   pagoPorTienda,
@@ -77,6 +79,7 @@ export function TableroMexico() {
             <Bloques
               respuesta={tablero.datos}
               tablero={tablero.datos.tablero}
+              filtrosLinea={filtrosDeLinea(filtros)}
               alActualizar={() => {
                 void tablero.recargar();
                 void tendencias.recargar();
@@ -118,10 +121,12 @@ export function TableroMexico() {
 function Bloques({
   respuesta,
   tablero: t,
+  filtrosLinea,
   alActualizar,
 }: {
   respuesta: RespuestaTablero;
   tablero: RpcTablero;
+  filtrosLinea: string[];
   alActualizar: () => void;
 }) {
   const tiendas = respuesta.opciones.tiendas;
@@ -129,6 +134,7 @@ function Bloques({
     () => ({
       avisos: avisos(t, respuesta.opciones),
       numeros: numerosClave(t),
+      metas: contraMeta(t),
       grupos: conShare(t.por_grupo),
       cafe: conShare(t.por_cafe),
       master: conShare([...t.por_master].sort((x, y) => y.venta_cent - x.venta_cent)),
@@ -173,9 +179,9 @@ function Bloques({
       </section>
 
       <NumerosClave n={b.numeros} />
-      <ContraMeta />
+      <ContraMeta datos={b.metas} filtrosLinea={filtrosLinea} />
       <Mezcla grupos={b.grupos} cafe={b.cafe} master={b.master} />
-      <KpiVentaTiendas grupos={b.kpi} />
+      <KpiVentaTiendas grupos={b.kpi} comparar={filtrosLinea.length === 0} />
       <Promociones datos={b.promos} />
       <TiempoYPago
         porFecha={t.por_fecha}
