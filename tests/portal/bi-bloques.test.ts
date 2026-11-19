@@ -134,7 +134,7 @@ describe('metas y P.E. (F5)', () => {
     expect(c.diasSinMeta).toBe(3);
   });
 
-  it('sin metas (o base sin la migración 72): null, nunca cero', () => {
+  it('sin metas (o base sin la migración 73): null, nunca cero', () => {
     expect(contraMeta(t)).toEqual({ meta: null, pe: null, tiendas: 0, diasSinMeta: 0 });
     const sinCargar = contraMeta({ ...t, metas: { ...metas, tiendas_con_meta: 0, meta_cent: 0, tiendas_con_pe: 0, pe_cent: 0 } });
     expect(sinCargar.meta).toBeNull();

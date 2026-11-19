@@ -3,7 +3,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario } from './utilidades';
 
-// Migración 72: metas diarias con factores fijos por mes, P.E. diario y «metas» en bi_tablero.
+// Migración 73: metas diarias con factores fijos por mes, P.E. diario y «metas» en bi_tablero.
 let db: PGlite;
 let u: string;
 const L = (pedido: string, importe: number) => ({

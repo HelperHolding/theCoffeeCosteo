@@ -1,7 +1,7 @@
 # BI 04 · Metas y punto de equilibrio (F5)
 
 Fecha: 2026-11-19. Cuarta entrega del BI: llena el bloque 2 del tablero («Contra meta y punto de equilibrio») y las
-columnas Meta y Vs meta de «KPI Venta The Coffee». Migración **72** (`20261119000072_bi_metas_pe.sql`).
+columnas Meta y Vs meta de «KPI Venta The Coffee». Migración **73** (`20261119000073_bi_metas_pe.sql`; la 72 es de Comercializadora).
 
 ## De dónde salen
 
