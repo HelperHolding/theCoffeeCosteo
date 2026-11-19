@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Db } from '../portal/consultas';
 import { configDe, type ConfigSucursal } from '../sucursales/config';
-import { armarHoy, type PorOrigen, type RpcHoy, type TotalesOrigen } from '../sucursales/resumen';
+import { armarHoy, type PorOrigen, type RpcHoy, type RpcPeriodo, type TotalesOrigen } from '../sucursales/resumen';
 import { enZona } from '../sucursales/tiempo';
 import {
   aPesos,
@@ -195,6 +195,82 @@ export function consultasVentas(db: Db): Consulta[] {
           modo: 'periodo',
           ...p,
           agrupar: e.agrupar,
+          ignoradas,
+          ...resultadoPagina(filas.slice(desde, desde + e.limite + 1), e.pagina, e.limite),
+        }) as Record<string, unknown>;
+      },
+    ),
+    consulta(
+      'ventas_por_hora',
+      `Pedidos y venta por hora local (0–23) de UN día, sumando las sucursales pedidas (o todas), separados por canal. Para una sola sucursal, pásala en sucursales. ${CANALES} ${MONTOS} ${NO_ESTIMA}`,
+      z.object({ fecha, sucursales: listaSucursales }),
+      async (e) => {
+        const { companias, ignoradas } = elegir(await visibles(db), 'sucursales', e.sucursales);
+        const dias = exigir(
+          await db.rpc('mcp_ventas_dias', { p_companias: companias, p_desde: e.fecha, p_hasta: e.fecha, p_horas: true }),
+        ) as unknown as DiaVentas[];
+        const horas = Array.from({ length: 24 }, (_, hora) => ({
+          hora,
+          pedidos: 0,
+          venta_cent: 0,
+          por_canal: {} as Record<string, { pedidos: number; venta_cent: number }>,
+        }));
+        for (const d of dias)
+          for (const [canal, [pedidos, venta]] of Object.entries(d.horas ?? {}))
+            for (let h = 0; h < 24; h++) {
+              if (!pedidos[h] && !venta[h]) continue;
+              const x = horas[h];
+              x.pedidos += pedidos[h];
+              x.venta_cent += venta[h];
+              const c = (x.por_canal[canal] ??= { pedidos: 0, venta_cent: 0 });
+              c.pedidos += pedidos[h];
+              c.venta_cent += venta[h];
+            }
+        return aPesos({
+          fecha: e.fecha,
+          sucursales_con_datos: dias.length,
+          incompletas: dias.filter((d) => !d.completa).map((d) => d.company_id),
+          ignoradas,
+          horas,
+        }) as Record<string, unknown>;
+      },
+    ),
+    consulta(
+      'ventas_por_producto',
+      `Productos vendidos en un periodo (máximo ${MAX_DIAS} días), ordenados por importe: código, nombre, líneas vendidas, importe, en cuántas sucursales se vendió y desglose por canal. canal filtra un solo canal. Paginado (máximo 50 por página). ${CANALES} ${MONTOS} ${NO_ESTIMA}`,
+      z.object({
+        desde: fecha,
+        hasta: fecha,
+        sucursales: listaSucursales,
+        canal: z.enum(['mostrador', 'app', 'rappi']).optional(),
+        pagina,
+        limite,
+      }),
+      async (e) => {
+        const p = rango(e);
+        const { companias, ignoradas } = elegir(await visibles(db), 'sucursales', e.sucursales);
+        const r = exigir(
+          await db.rpc('sucursales_tablero_periodo', { p_companias: companias, p_desde: p.desde, p_hasta: p.hasta }),
+        ) as unknown as RpcPeriodo;
+        const productos = new Map<
+          string,
+          { codigo: string; nombre: string; lineas: number; importe_cent: number; sucursales: number; por_canal: Record<string, { lineas: number; importe_cent: number }> }
+        >();
+        for (const x of r.productos) {
+          if (e.canal && x.origen !== e.canal) continue;
+          const prod = productos.get(x.clave) ?? { codigo: x.codigo, nombre: x.nombre, lineas: 0, importe_cent: 0, sucursales: x.sucursales, por_canal: {} };
+          prod.lineas += x.lineas;
+          prod.importe_cent += x.importe_cent;
+          prod.por_canal[x.origen] = { lineas: x.lineas, importe_cent: x.importe_cent };
+          productos.set(x.clave, prod);
+        }
+        const filas = [...productos.values()].sort((a, b) => b.importe_cent - a.importe_cent || a.codigo.localeCompare(b.codigo));
+        const desde = (e.pagina - 1) * e.limite;
+        return aPesos({
+          ...p,
+          canal: e.canal ?? null,
+          dias_leidos: r.dias_leidos,
+          dias_incompletos: r.incompletos,
           ignoradas,
           ...resultadoPagina(filas.slice(desde, desde + e.limite + 1), e.pagina, e.limite),
         }) as Record<string, unknown>;
