@@ -1,5 +1,6 @@
 @import 'tailwindcss';
-@theme inline {
+/* Sin «inline»: las utilidades leen var(--color-…), así el modo oscuro solo redefine las variables. */
+@theme {
   /* Marca: minimalismo cálido. Tinta y papel; crema solo como acento. */
   --color-ink: #111111;
   --color-ink-2: #2b2926;
@@ -134,10 +135,10 @@
   }
   h1 {
     font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 900;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
   h2 {
     font-family: var(--font-display);
@@ -374,304 +375,55 @@
   }
 }
 
-/* Intensidad de la luz del letrero; registrada para poder animarla (parpadeo de encendido). */
-@property --enc {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 1;
-}
-@keyframes letrero-encender {
-  0% {
-    --enc: 0;
-  }
-  7% {
-    --enc: 0.55;
-  }
-  10% {
-    --enc: 0.08;
-  }
-  16% {
-    --enc: 0.8;
-  }
-  19% {
-    --enc: 0.25;
-  }
-  24% {
-    --enc: 0.9;
-  }
-  34% {
-    --enc: 0.82;
-  }
-  100% {
-    --enc: 1;
-  }
-}
-
 /*
- * Tema "muro de sucursal" (aprobado por Carlo, 2026-10-22): como en las tiendas, la mitad superior del
- * muro es blanco cálido y la inferior un lambrín de madera clara en duelas verticales con moldura blanca.
- * El texto nunca va directo sobre la madera: tarjetas, placas y el letrero son blancos.
+ * Fondo formal (rediseño Helper Holding, 2026-11-19): color sólido, sin madera, texturas ni letrero de caja de luz.
+ * La clase .muro se conserva como gancho del marco y del modo noche.
  */
 @layer components {
   .muro {
-    isolation: isolate;
-    background: var(--color-muro);
-  }
-  .muro::before {
-    content: '';
-    position: fixed;
-    inset: auto 0 0 0;
-    height: 50vh;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      linear-gradient(180deg, rgb(40 24 10 / 0.32), rgb(40 24 10 / 0) 22px),
-      linear-gradient(180deg, rgb(255 255 255 / 0) 70%, rgb(40 24 10 / 0.12)),
-      /* Duelas de 128px: junta hundida, cara abombada y tonos alternos (periodos de 3 y 5 duelas). */
-        repeating-linear-gradient(
-          90deg,
-          rgb(58 36 16 / 0.55) 0 1px,
-          rgb(58 36 16 / 0.28) 1px 3px,
-          rgb(255 246 232 / 0.55) 3px 4px,
-          rgb(255 246 232 / 0) 4px 125px,
-          rgb(58 36 16 / 0.12) 125px 128px
-        ),
-      repeating-linear-gradient(
-          90deg,
-          rgb(70 44 20 / 0.1) 0,
-          rgb(255 250 240 / 0.12) 30%,
-          rgb(255 250 240 / 0.06) 62%,
-          rgb(70 44 20 / 0.12) 100%
-        )
-        0 0 / 128px 100%,
-      repeating-linear-gradient(
-        90deg,
-        rgb(255 250 240 / 0.1) 0 128px,
-        rgb(120 78 38 / 0.1) 128px 256px,
-        rgb(255 250 240 / 0) 256px 384px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        rgb(0 0 0 / 0) 0 128px,
-        rgb(150 100 50 / 0.1) 128px 256px,
-        rgb(255 250 240 / 0.08) 256px 384px,
-        rgb(0 0 0 / 0) 384px 512px,
-        rgb(110 70 34 / 0.09) 512px 640px
-      ),
-      url('/madera.svg') 0 0 / 640px 1400px,
-      var(--color-madera);
-    box-shadow:
-      0 -12px 0 #f8f6f2,
-      0 -13px 0 rgb(17 17 17 / 0.12),
-      0 -16px 10px -6px rgb(17 17 17 / 0.08);
-  }
-  @media print {
-    .muro::before {
-      display: none;
-    }
+    background: var(--color-paper);
   }
 
-  /* Placa blanca para texto o controles que quedarían sobre el muro o la madera. */
+  /* Placa: antes separaba el texto de la madera; sobre el fondo liso ya no lleva fondo ni sombra. */
   .placa {
-    background: rgb(255 255 255 / 0.94);
     border-radius: 0.75rem;
-    box-shadow: 0 8px 20px -14px rgb(60 40 20 / 0.45);
   }
 
-  /*
-   * Letrero de sucursal (encabezado de página, aprobado por Carlo 2026-10-23): caja de luz colgante como
-   * la del mostrador. Dos varillas al techo, aro de aluminio blanco, cara de acrílico pareja, cara inferior
-   * vista desde abajo, halo tenue y un charco de luz suave en el muro. Todo lo luminoso se multiplica por
-   * --enc (0 apagado, 1 encendido) para el parpadeo de encendido.
-   */
-  .letrero-escena {
-    --enc: 1;
-    position: relative;
-    isolation: isolate;
-    padding-top: 1.75rem;
+  /* Encabezado de página (Encabezado de piezas.tsx): rótulo con filete, título y una línea fina de cierre. */
+  .encabezado {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-line);
   }
-  /* Primera carga de la sesión: el letrero se enciende con un parpadeo corto (lo marca app/layout.tsx). */
-  html[data-letrero='encender'] .letrero-escena {
-    animation: letrero-encender 1.4s linear both;
+  .encabezado-area {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-crema-strong);
   }
-  .letrero-luz {
-    position: absolute;
-    z-index: -1;
-    inset: -2.5rem -1rem -9rem;
-    pointer-events: none;
-    /* closest-side: llega a cero antes de la orilla de la capa, sin cortes rectos */
-    background: radial-gradient(
-      ellipse closest-side at 50% 40%,
-      rgb(255 248 230 / calc(0.18 * var(--enc) * var(--halo, 1))) 0 45%,
-      rgb(255 244 220 / calc(0.07 * var(--enc) * var(--halo, 1))) 75%,
-      rgb(255 244 220 / 0) 100%
-    );
-  }
-  .letrero-varilla {
-    position: absolute;
-    z-index: 0;
-    top: -2.5rem;
-    left: 14%;
-    width: 4px;
-    height: calc(2.5rem + 1.75rem + 2px);
-    border-radius: 2px;
-    background:
-      linear-gradient(90deg, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 40%, rgb(0 0 0 / 0.25)),
-      linear-gradient(
-        180deg,
-        #2a2725 0 55%,
-        color-mix(in oklab, #b9b1a4 calc(var(--enc) * 100%), #3a3633) 100%
-      );
-    box-shadow: 7px 12px 9px -3px rgb(40 30 20 / calc(0.22 - 0.1 * var(--enc)));
-  }
-  .letrero-varilla + .letrero-varilla {
-    left: auto;
-    right: 14%;
-  }
-  .letrero-varilla::after {
-    /* casquillo sobre la tapa de la caja */
+  .encabezado-area::before {
     content: '';
-    position: absolute;
-    bottom: -1px;
-    left: -5px;
-    width: 14px;
-    height: 6px;
-    border-radius: 2px 2px 0 0;
-    background: linear-gradient(
-      180deg,
-      #f2efe9,
-      color-mix(in oklab, #fffaf0 calc(var(--enc) * 100%), #b7b2aa)
-    );
-    box-shadow: 0 0 6px rgb(255 248 228 / calc(0.9 * var(--enc)));
-  }
-  .letrero {
-    position: relative;
-    padding: 1.75rem 2.25rem 1.85rem;
-    border-radius: 3px;
-    /* Cara pareja: la luz se reparte uniforme y solo cae un poco en las esquinas. */
-    background: radial-gradient(
-      130% 160% at 50% 40%,
-      color-mix(in oklab, #ffffff calc(var(--enc) * 100%), #e9e6e0) 0 50%,
-      color-mix(in oklab, #fdfbf7 calc(var(--enc) * 100%), #e4e0d8) 78%,
-      color-mix(in oklab, #f6f2ea calc(var(--enc) * 100%), #dbd6cc) 100%
-    );
-    box-shadow:
-      /* aro de aluminio: no emite, así que es apenas más gris que la cara encendida */
-      inset 0 0 0 5px color-mix(in oklab, #efece6 calc(var(--enc) * 100%), #e2ded6),
-      inset 0 0 0 6px rgb(0 0 0 / 0.07),
-      inset 0 2px 3px 6px rgb(120 100 70 / 0.05),
-      inset 0 0 30px 6px rgb(255 253 246 / calc(0.9 * var(--enc))),
-      /* canto del aro (define la caja sobre el muro claro) y halo tenue */ 0 0 0 1px rgb(90 70 45 / 0.08),
-      0 0 56px 10px rgb(255 247 226 / calc(0.3 * var(--enc) * var(--halo, 1))),
-      /* sombra lejana: la caja cuelga separada del muro; encendida se aclara */ 0 54px 42px -30px
-        rgb(70 50 25 / calc(0.36 - 0.14 * var(--enc)));
-  }
-  /* Cara inferior de la caja, vista desde abajo: trapecio que se angosta hacia el fondo. */
-  .letrero::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    height: 11px;
-    clip-path: polygon(0 0, 100% 0, 98.6% 100%, 1.4% 100%);
-    background: linear-gradient(
-      180deg,
-      color-mix(in oklab, #f7f3ea calc(var(--enc) * 100%), #d9d4ca) 0,
-      color-mix(in oklab, #e3dccd calc(var(--enc) * 100%), #c9c3b7) 70%,
-      color-mix(in oklab, #d6cebe calc(var(--enc) * 100%), #bdb7ab) 100%
-    );
-  }
-  /* Grano del acrílico, apenas perceptible. */
-  .letrero::after {
-    content: '';
-    position: absolute;
-    inset: 6px;
-    pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
-      0 0 / 180px 180px;
-    mix-blend-mode: multiply;
-    opacity: 0.045;
-  }
-  .letrero > * {
-    position: relative;
-    z-index: 1;
-  }
-  .letrero-marca {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.35rem;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-    color: #161616;
-  }
-  @media (max-width: 639px) {
-    .letrero {
-      padding: 1.4rem 1.25rem;
-    }
-    .letrero-varilla {
-      left: 10%;
-    }
-    .letrero-varilla + .letrero-varilla {
-      right: 10%;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html[data-letrero='encender'] .letrero-escena {
-      animation: none;
-    }
-  }
-  @media print {
-    .letrero-luz,
-    .letrero-varilla,
-    .letrero::before,
-    .letrero::after {
-      display: none;
-    }
-    .letrero-escena {
-      padding-top: 0;
-    }
-    .letrero {
-      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
-    }
+    width: 1.25rem;
+    height: 2px;
+    background: var(--color-crema);
   }
 
-  /* Ficha con textura de madera (íconos de KPI). */
+  /* Menú lateral (marco.tsx): blanco con una franja negra en la orilla que lo separa del contenido. */
+  .lateral {
+    box-shadow: inset -4px 0 0 #111111;
+  }
+
+  /* Ficha de color para íconos de KPI (antes con textura de madera). */
   .ficha-madera {
-    background:
-      url('/madera.svg') 0 0 / 320px 700px,
-      var(--color-madera);
-    color: var(--color-madera-tinta);
-  }
-}
-@layer components {
-  /* Sobre el muro, las tarjetas grandes (mostrador) proyectan una sombra cálida; los controles no. */
-  .muro main .rounded-2xl.shadow-card {
-    box-shadow:
-      0 1px 2px rgb(17 17 17 / 0.05),
-      0 14px 28px -16px rgb(60 40 20 / 0.45);
+    background: var(--color-crema-soft);
+    color: var(--color-crema-strong);
   }
 }
 
-/*
- * Modo noche del muro (interruptor sol/luna de la barra superior; lo aplica app/layout.tsx antes de pintar):
- * la tienda de noche. Muro y lambrín en penumbra y el letrero ilumina más; tarjetas, placas y letrero
- * siguen blancos, así que el texto no cambia.
- */
 @layer components {
-  html[data-luz='noche'] .muro {
-    background: #3a342d;
-  }
-  html[data-luz='noche'] .muro::before {
-    filter: brightness(0.5) saturate(0.9);
-  }
-  html[data-luz='noche'] .letrero-escena {
-    --halo: 1.4;
-  }
-  html[data-luz='noche'] .letrero-varilla {
-    background: linear-gradient(90deg, #1d1b19, #0f0e0d 45%, #2a2826);
-  }
-
   /* Interruptor día/noche: sol · riel · luna, sin texto. */
   .interruptor-luz {
     display: inline-flex;
@@ -728,21 +480,6 @@
   }
 }
 
-/* Fuera de capa: la barra superior lleva utilidades de color (bg-muro/85, border-line/80) que ganan a components. */
-html[data-luz='noche'] .barra-muro {
-  background: rgb(58 52 45 / 0.85);
-  border-color: rgb(255 255 255 / 0.08);
-  color: #f1ece4;
-}
-html[data-luz='noche'] .barra-muro [aria-label='Abrir menú'] {
-  color: #f1ece4;
-}
-/* El logo de la barra pasa a su versión negativa (como en el lateral). */
-html[data-luz='noche'] .barra-muro img {
-  filter: invert(1);
-  mix-blend-mode: screen;
-}
-
 /*
  * Cambio de pantalla dentro de un módulo (TransicionPagina, React <ViewTransition>): la vieja se desvanece en 120 ms
  * y la nueva aparece subiendo 6 px. Sin desenfoque (cuesta). Los clics no se pierden durante la transición.
@@ -774,4 +511,77 @@ html[data-luz='noche'] .barra-muro img {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
   }
+}
+
+/*
+ * Modo oscuro (interruptor sol/luna; app/layout.tsx lo aplica antes de pintar con html[data-luz='noche']).
+ * Tema oscuro completo: se redefinen las variables de color, así fondo, tarjetas, textos, bordes y avisos cambian
+ * juntos. Superficies en grises cálidos casi negros (no café), texto claro y crema más luminosa como acento.
+ */
+html[data-luz='noche'] {
+  color-scheme: dark;
+  --color-ink: #f1ede6;
+  --color-ink-2: #d5cfc5;
+  --color-paper: #121212;
+  --color-surface: #1c1c1b;
+  --color-surface-2: #272624;
+  --color-line: #2f2e2b;
+  --color-line-strong: #46443f;
+  --color-crema: #c9935f;
+  --color-crema-strong: #dcaa78;
+  --color-crema-soft: #33281d;
+  --color-ok: #6cc592;
+  --color-ok-soft: #16291e;
+  --color-warn: #e2ad5a;
+  --color-warn-soft: #2f2514;
+  --color-bad: #ef8578;
+  --color-bad-soft: #351b18;
+  --color-muted-foreground: #a29b91;
+  --color-primary-foreground: #121212;
+  --color-muro: #121212;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 16px 32px -12px rgb(0 0 0 / 0.7);
+}
+/* Rellenos sólidos con texto blanco (botón principal, pastillas activas): el relleno se aclara, el texto se oscurece. */
+html[data-luz='noche'] :is(.bg-ink, .bg-ink-2, .bg-bad, .bg-ok, .bg-crema, .bg-crema-strong).text-white {
+  color: var(--color-paper);
+}
+/* Contenedores oscuros con texto blanco dentro (p. ej. el selector Ventas · Costeo · Consumo): gris elevado. */
+html[data-luz='noche'] .bg-ink:not(.text-white):has(*) {
+  background-color: #2a2927;
+}
+/* Blancos fijos (esqueletos de carga, chips) pasan a superficie. */
+html[data-luz='noche'] .bg-white,
+html[data-luz='noche'] [class~='bg-white/90'] {
+  background: var(--color-surface-2);
+}
+html[data-luz='noche'] :is([class~='bg-white/60'], [class~='bg-white/70']) {
+  background: rgb(255 255 255 / 0.05);
+}
+/* Hovers con color fijo de día (botones outline y secondary). */
+html[data-luz='noche'] :is([class*='hover:bg-[#fbfaf7]'], [class*='hover:bg-[#e6e1d7]']):hover {
+  background: var(--color-surface-2);
+}
+/* Selector segmentado: la pastilla elegida es un gris elevado, no un bloque claro. */
+html[data-luz='noche'] .segmentos-pastilla,
+html[data-luz='noche'] .segmentos:not([data-medido]) > button[aria-checked='true'] {
+  background: #3a3936;
+}
+/* Menú lateral de noche: un tono más oscuro que el fondo, separado por una línea fina (sin la franja negra). */
+html[data-luz='noche'] .lateral {
+  background: #0b0b0b;
+  box-shadow: inset -1px 0 0 var(--color-line);
+}
+/* Contenido claro sobre crema (pestaña activa de Sucursales y Tablero México): el texto sigue oscuro. */
+html[data-luz='noche'] .bg-crema :is(.text-ink, .text-ink-2),
+html[data-luz='noche'] .bg-crema.text-ink {
+  color: #111111;
+}
+html[data-luz='noche'] .tabla th {
+  color: var(--color-muted-foreground);
+}
+/* Barra superior: el logo va en claro. */
+html[data-luz='noche'] .barra-muro {
+  background: var(--color-paper);
+  border-color: var(--color-line);
 }

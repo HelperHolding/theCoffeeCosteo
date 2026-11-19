@@ -1,17 +1,22 @@
 import { createMcpHandler } from 'mcp-handler';
 import { autenticarMcp, ErrorMcp } from './autenticacion';
 import { registrarHerramientas } from './herramientas';
-import { URL_PORTAL } from './config';
+import { URL_PORTAL, URL_PORTAL_VERCEL } from './config';
+import { autenticarGrok, esTokenGrok } from './token';
 export async function atenderMcp(request: Request) {
   const headers = new Headers({ 'Cache-Control': 'private, no-store' });
   const origin = request.headers.get('origin');
-  if (origin && ![URL_PORTAL, 'https://claude.ai', 'https://claude.com'].includes(origin)) {
+  if (
+    origin &&
+    ![URL_PORTAL, URL_PORTAL_VERCEL, 'https://claude.ai', 'https://claude.com'].includes(origin)
+  ) {
     return Response.json({ error: 'Origen no permitido.' }, { status: 403, headers });
   }
   const token = request.headers.get('authorization')?.match(/^Bearer ([^\s]+)$/i)?.[1];
   try {
     if (!token) throw new ErrorMcp(401, 'Conecta Claude e inicia sesión para consultar.');
-    const db = await autenticarMcp(token);
+    // Grok entra con un token fijo (lib/mcp/token.ts); los demás clientes, con OAuth.
+    const db = esTokenGrok(token) ? await autenticarGrok() : await autenticarMcp(token);
     const handler = createMcpHandler((server) => registrarHerramientas(server, db), {
       serverInfo: { name: 'the-coffee-consultas', version: '1.0.0' },
       maxSubscriptions: 0,

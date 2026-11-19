@@ -57,11 +57,11 @@ export function ColumnasSemana({
             patternUnits="userSpaceOnUse"
             patternTransform="rotate(45)"
           >
-            <rect width="6" height="6" fill="#efece5" />
-            <line x1="0" y1="0" x2="0" y2="6" stroke="#cfc8ba" strokeWidth="2" />
+            <rect width="6" height="6" fill="var(--color-surface-2)" />
+            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--color-line-strong)" strokeWidth="2" />
           </pattern>
         </defs>
-        <line x1={M.izq} x2={W - M.der} y1={y(0)} y2={y(0)} stroke="#e3ded4" />
+        <line x1={M.izq} x2={W - M.der} y1={y(0)} y2={y(0)} stroke="var(--color-line)" />
         {semanas.map((s, i) => {
           const cx = M.izq + (i + 0.5) * slot;
           const top = s.valor === null ? y(max * 0.18) : y(s.valor);
@@ -88,7 +88,7 @@ export function ColumnasSemana({
                 y={M.arr - 18}
                 width={slot}
                 height={H - M.arr - M.aba + 18}
-                fill={activa === i ? '#efece5' : 'transparent'}
+                fill={activa === i ? 'var(--color-surface-2)' : 'transparent'}
                 rx={6}
               />
               <path d={d} fill={s.valor === null ? `url(#${id}-raya)` : SERIE_HOY} />
@@ -109,7 +109,7 @@ export function ColumnasSemana({
           titulo={semanas[activa].etiqueta}
           filas={[
             {
-              color: semanas[activa].valor === null ? '#cfc8ba' : SERIE_HOY,
+              color: semanas[activa].valor === null ? 'var(--color-line-strong)' : SERIE_HOY,
               etiqueta: titulo,
               valor: semanas[activa].valor === null ? 'Lectura incompleta' : formato(semanas[activa].valor!),
             },
@@ -157,7 +157,7 @@ export function LineaSemanal({
         aria-label={`${titulo}. La tabla de la semana tiene las cifras.`}
         className="h-auto w-full"
       >
-        <line x1={M.izq} x2={W - M.der} y1={H - M.aba} y2={H - M.aba} stroke="#e3ded4" />
+        <line x1={M.izq} x2={W - M.der} y1={H - M.aba} y2={H - M.aba} stroke="var(--color-line)" />
         <polyline
           points={tramo}
           fill="none"
@@ -223,8 +223,8 @@ export function LineaSemanal({
 }
 
 const RAMPA = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
-const CERO = '#efece5';
-const SIN_DATOS = '#f7f5f1';
+const CERO = 'var(--color-surface-2)';
+const SIN_DATOS = 'var(--color-surface-2)';
 const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const hh = (h: number) => String(h).padStart(2, '0');
 const uno = (v: number) => v.toLocaleString('es-MX', { maximumFractionDigits: 1 });

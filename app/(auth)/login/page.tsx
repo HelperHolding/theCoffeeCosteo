@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { FormularioAcceso } from '@/components/portal/formulario-acceso';
-import { Marca } from '@/components/portal/marca';
+import { MarcaHolding } from '@/components/portal/marca';
 export default async function Login({
   searchParams,
 }: {
@@ -11,40 +11,39 @@ export default async function Login({
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   );
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-white lg:flex">
-        <Marca negativo className="size-28 -ml-3" />
-        <div>
-          <p className="font-display text-5xl font-black leading-[1.05] tracking-tight">
-            Cada taza,
+    <main className="grid min-h-screen bg-paper lg:grid-cols-[1.1fr_1fr]">
+      {/* Panel de marca: fondo sólido, sin texturas ni adornos. */}
+      <section className="hidden flex-col justify-between bg-ink p-12 text-white lg:flex xl:p-16">
+        <MarcaHolding negativo tamano="lg" />
+        <div className="max-w-lg">
+          <span aria-hidden="true" className="block h-0.5 w-10 bg-crema" />
+          <p className="mt-6 font-display text-[2.6rem] font-bold leading-[1.12] tracking-[-0.02em]">
+            Información del grupo,
             <br />
-            bien costeada<span className="text-crema">.</span>
+            en un solo lugar.
           </p>
-          <p className="mt-5 max-w-md text-neutral-400">
-            Recetas, costos y márgenes por canal en un solo lugar, con la precisión que pide cada bebida.
+          <p className="mt-5 text-[15px] leading-relaxed text-neutral-400">
+            Sucursales, ventas, costeo, CRM y abastos de The Coffee, con datos verificados para tomar
+            decisiones.
           </p>
         </div>
-        <p className="text-xs uppercase tracking-[.3em] text-neutral-500">ザ・コーヒー · Portal de costeos</p>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full border border-white/[.06]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-8 -bottom-8 size-64 rounded-full border border-white/[.08]"
-        />
+        <p className="text-[11px] font-medium uppercase tracking-[.28em] text-neutral-500">
+          Helper Holding · Plataforma corporativa
+        </p>
       </section>
       <section className="grid place-items-center p-6">
-        <div className="w-full max-w-sm space-y-7">
+        <div className="w-full max-w-sm space-y-8">
           <div className="lg:hidden">
-            <Marca className="size-24 -ml-2" />
+            <MarcaHolding tamano="md" />
           </div>
           <div>
-            <p className="eyebrow">Portal de costeos</p>
-            <h1 className="mt-2">Iniciar sesión</h1>
-            <p className="mt-2 text-sm text-muted-foreground">Recetas, costos y decisiones de precio.</p>
+            <p className="eyebrow">Plataforma Helper Holding</p>
+            <h1 className="mt-3">Iniciar sesión</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Accede con la cuenta que te asignó el administrador.
+            </p>
           </div>
-          <div className="panel space-y-5">
+          <div className="space-y-5 rounded-xl border border-line bg-surface p-6">
             {aviso && (
               <p className="aviso">
                 {aviso === 'perfil'
@@ -57,7 +56,7 @@ export default async function Login({
                 <FormularioAcceso next={next} />
                 <Link
                   href="/recuperar-contrasena"
-                  className="block text-center text-sm font-semibold text-ink-2 hover:underline"
+                  className="block text-center text-sm font-medium text-ink-2 hover:underline"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -67,7 +66,7 @@ export default async function Login({
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            Acceso exclusivo para usuarios creados por el administrador.
+            Acceso exclusivo para usuarios autorizados por Helper Holding.
           </p>
         </div>
       </section>

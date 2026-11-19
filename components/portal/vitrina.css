@@ -1,70 +1,19 @@
 /*
- * "Vitrina" (Sucursales, CRM, BI e Inicio): las tarjetas se vuelven cristal esmerilado sobre el muro y el lambrín,
- * en lugar de blanco sólido. El menú, la barra superior y el letrero no cambian. El texto sigue sobre una
- * superficie clara (cristal al 50–80 %), nunca sobre la madera. Con «reducir transparencia» del sistema (Windows:
- * efectos de transparencia apagados) las tarjetas vuelven a blanco sólido.
+ * "Vitrina" (Sucursales, CRM, BI e Inicio). Rediseño formal 2026-11-19: el fondo es liso, así que las tarjetas son
+ * blancas sólidas con borde fino y sombra neutra (antes cristal esmerilado sobre la madera). Las variables se
+ * conservan para los estados de las tarjetas (hover, pop-up abierto).
  */
 .vitrina {
-  --vitrina-cristal: rgb(255 255 255 / 0.5);
-  --vitrina-borde: rgb(255 255 255 / 0.75);
-  --vitrina-desenfoque: blur(16px) saturate(1.25);
-}
-html[data-luz='noche'] .vitrina {
-  /* De noche la madera es oscura: el cristal se vuelve más lechoso para que el texto gris siga leyéndose. */
-  --vitrina-cristal: rgb(250 247 242 / 0.8);
-  --vitrina-borde: rgb(255 255 255 / 0.35);
+  --vitrina-cristal: var(--color-surface);
+  --vitrina-borde: var(--color-line);
+  --vitrina-sombra: 0 1px 2px rgb(17 17 17 / 0.04), 0 8px 24px -18px rgb(17 17 17 / 0.18);
 }
 
-/* Tarjetas y KPIs (Tarjeta y Kpi de piezas.tsx) y la barra de filtros. */
-.vitrina .rounded-2xl.bg-surface,
-.vitrina .placa {
+/* Tarjetas y KPIs (Tarjeta y Kpi de piezas.tsx). */
+.vitrina .rounded-2xl.bg-surface {
   background: var(--vitrina-cristal);
   border-color: var(--vitrina-borde);
-  backdrop-filter: var(--vitrina-desenfoque);
-  -webkit-backdrop-filter: var(--vitrina-desenfoque);
-}
-.vitrina .rounded-2xl.bg-surface {
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.65),
-    0 18px 36px -22px rgb(60 40 20 / 0.55);
-}
-/*
- * Tarjetas con tabla: más lechosas. Al 50 %, la orilla entre el muro y la madera se ve detrás de una fila y parece
- * una fila resaltada; así las filas quedan parejas y el cristal se nota solo como tinte.
- */
-.vitrina .rounded-2xl.bg-surface:has(table) {
-  --vitrina-cristal: rgb(255 255 255 / 0.88);
-}
-html[data-luz='noche'] .vitrina .rounded-2xl.bg-surface:has(table) {
-  --vitrina-cristal: rgb(250 247 242 / 0.94);
-}
-/*
- * Tablero BI: las tarjetas con tabla o gráfica son largas y caen sobre las tablas del lambrín; al 88 % las juntas
- * de la madera aún cruzan filas y barras. Ahí el cristal es casi blanco: el dato manda, la madera queda en las orillas.
- */
-.vitrina .tablero-bi .rounded-2xl.bg-surface:has(table, svg[role='img']) {
-  --vitrina-cristal: rgb(255 255 255 / 0.95);
-}
-html[data-luz='noche'] .vitrina .tablero-bi .rounded-2xl.bg-surface:has(table, svg[role='img']) {
-  --vitrina-cristal: rgb(250 247 242 / 0.97);
-}
-/*
- * Texto secundario sobre cristal: el gris de siempre (#6b6560) sobre la veta más oscura (#c39c6c) detrás del cristal
- * al 50 % queda en ~3.7:1. Este (#57514c) da ~5:1 de día y de noche (AA para texto chico); sobre blanco, 7.8:1.
- */
-.vitrina .text-muted-foreground {
-  color: #57514c;
-}
-@supports not (backdrop-filter: blur(1px)) {
-  .vitrina {
-    --vitrina-cristal: rgb(255 255 255 / 0.92);
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .vitrina {
-    --vitrina-cristal: #ffffff;
-    --vitrina-desenfoque: none;
-  }
+  box-shadow: var(--vitrina-sombra);
 }
 
 /*
@@ -90,11 +39,11 @@ html[data-luz='noche'] .vitrina .tablero-bi .rounded-2xl.bg-surface:has(table, s
 }
 @media (hover: hover) and (pointer: fine) {
   .vitrina .tarjeta-modulo:hover {
-    --vitrina-cristal: rgb(255 255 255 / 0.72);
+    --vitrina-borde: var(--color-line-strong);
     translate: 0 -2px;
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.7),
-      0 22px 40px -22px rgb(60 40 20 / 0.6);
+      0 1px 2px rgb(17 17 17 / 0.05),
+      0 16px 32px -20px rgb(17 17 17 / 0.28);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -111,14 +60,13 @@ html[data-luz='noche'] .vitrina .tablero-bi .rounded-2xl.bg-surface:has(table, s
     background-color 250ms;
 }
 .vitrina .con-info:hover > :first-child {
-  --vitrina-cristal: rgb(255 255 255 / 0.7);
+  --vitrina-borde: var(--color-line-strong);
 }
 .vitrina .con-info[data-abierto] > :first-child {
-  --vitrina-cristal: rgb(255 255 255 / 0.86);
   transform: translateY(-2px);
   box-shadow:
     0 0 0 2px var(--color-crema),
-    0 22px 40px -22px rgb(60 40 20 / 0.6);
+    0 16px 32px -20px rgb(17 17 17 / 0.28);
 }
 /* El botón (i) es para teclado y pantallas táctiles; con mouse el pop-up lo abre el cursor. */
 .con-info-boton {
@@ -140,8 +88,8 @@ html[data-luz='noche'] .vitrina .tablero-bi .rounded-2xl.bg-surface:has(table, s
 
 /* Pop-up: blanco sólido (se lee sobre cualquier fondo) y una entrada corta desde la tarjeta. */
 .con-info-pop {
-  background: #ffffff;
-  box-shadow: 0 24px 48px -20px rgb(40 24 10 / 0.45);
+  background: var(--color-surface);
+  box-shadow: 0 24px 48px -20px rgb(17 17 17 / 0.3);
 }
 .con-info-pop[data-state='open'] {
   animation: con-info-entra 220ms cubic-bezier(0.16, 1, 0.3, 1);

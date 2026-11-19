@@ -218,7 +218,7 @@ export function Navegacion({
     <nav aria-label="Principal" className="flex flex-col gap-5">
       {gruposDe(seccion, visibles).map((g) => (
         <div key={g.titulo}>
-          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[.22em] text-neutral-500">
+          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[.22em] text-muted-foreground">
             {g.titulo}
           </p>
           <ul className="flex flex-col gap-0.5">
@@ -231,9 +231,7 @@ export function Navegacion({
                     onClick={alNavegar}
                     aria-current={activo ? 'page' : undefined}
                     className={`group relative flex items-center gap-3 rounded-[10px] px-3 py-2 text-[13.5px] font-medium transition-colors ${
-                      activo
-                        ? 'bg-white/[.09] text-white'
-                        : 'text-neutral-400 hover:bg-white/[.05] hover:text-white'
+                      activo ? 'bg-surface-2 text-ink' : 'text-ink-2 hover:bg-surface-2 hover:text-ink'
                     }`}
                   >
                     {activo && (
@@ -242,7 +240,7 @@ export function Navegacion({
                     <Icono
                       size={17}
                       aria-hidden="true"
-                      className={activo ? 'text-crema' : 'text-neutral-500 group-hover:text-neutral-300'}
+                      className={activo ? 'text-crema-strong' : 'text-muted-foreground group-hover:text-ink'}
                     />
                     {nombre}
                   </Link>

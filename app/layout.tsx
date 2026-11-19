@@ -9,17 +9,17 @@ const titulo = Zen_Kaku_Gothic_New({
   display: 'swap',
 });
 export const metadata: Metadata = {
-  title: 'The Coffee · Costeos',
-  description: 'Recetas y costos por canal',
+  title: 'Helper Holding · The Coffee',
+  description: 'Plataforma de Helper Holding: sucursales, ventas, costeo, CRM y abastos de The Coffee',
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${texto.variable} ${titulo.variable}`} suppressHydrationWarning>
       <head>
-        {/* Modo noche guardado (InterruptorLuz) y parpadeo del letrero solo en la primera carga de la sesión. */}
+        {/* Modo noche guardado (InterruptorLuz), aplicado antes de pintar. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(localStorage.getItem("luz")==="noche")document.documentElement.setAttribute("data-luz","noche");if(sessionStorage.getItem("letrero"))return;sessionStorage.setItem("letrero","1");var h=document.documentElement;h.setAttribute("data-letrero","encender");setTimeout(function(){h.removeAttribute("data-letrero")},2000)}catch(e){}})()`,
+            __html: `(function(){try{if(localStorage.getItem("luz")==="noche")document.documentElement.setAttribute("data-luz","noche")}catch(e){}})()`,
           }}
         />
       </head>

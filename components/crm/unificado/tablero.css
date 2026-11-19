@@ -12,18 +12,43 @@
   --tab-columna-borde: rgb(255 255 255 / 0.85);
   --tab-card: #ffffff;
   --tab-card-borde: rgb(60 40 20 / 0.07);
-  --tab-sombra: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 1px 2px rgb(60 40 20 / 0.07),
+  --tab-sombra:
+    0 1px 0 rgb(255 255 255 / 0.9) inset, 0 1px 2px rgb(60 40 20 / 0.07),
     0 10px 22px -16px rgb(60 40 20 / 0.42);
-  --tab-sombra-alta: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 2px 4px rgb(60 40 20 / 0.08),
+  --tab-sombra-alta:
+    0 1px 0 rgb(255 255 255 / 0.9) inset, 0 2px 4px rgb(60 40 20 / 0.08),
     0 18px 30px -18px rgb(60 40 20 / 0.5);
   --tab-cristal: rgb(255 255 255 / 0.62);
   --tab-cristal-borde: rgb(255 255 255 / 0.8);
 }
 html[data-luz='noche'] .tablero {
-  --tab-columna: rgb(246 242 235 / 0.9);
-  --tab-columna-borde: rgb(255 255 255 / 0.35);
-  --tab-cristal: rgb(250 247 242 / 0.82);
-  --tab-cristal-borde: rgb(255 255 255 / 0.4);
+  --tab-columna: var(--color-surface);
+  --tab-columna-borde: var(--color-line);
+  --tab-cristal: var(--color-surface-2);
+  --tab-cristal-borde: var(--color-line);
+  --tab-card: var(--color-surface-2);
+  --tab-card-borde: var(--color-line-strong);
+  --tab-sombra: 0 1px 2px rgb(0 0 0 / 0.5);
+  --tab-sombra-alta: 0 2px 4px rgb(0 0 0 / 0.5), 0 18px 30px -18px rgb(0 0 0 / 0.8);
+}
+html[data-luz='noche'] .tablero-campo {
+  background: var(--color-surface) !important;
+  border-color: var(--color-line-strong) !important;
+}
+html[data-luz='noche'] .tablero-segmento {
+  background: rgb(255 255 255 / 0.06);
+}
+html[data-luz='noche'] .tablero-segmento > button[aria-pressed='false']:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+html[data-luz='noche'] .tablero-interruptor {
+  background: rgb(255 255 255 / 0.16);
+}
+html[data-luz='noche'] .tablero-interruptor::after {
+  background: var(--color-paper);
+}
+html[data-luz='noche'] [aria-checked='false'] > .tablero-interruptor::after {
+  background: #d5cfc5;
 }
 
 /* Barra de filtros y controles segmentados (vista, tramo). */
@@ -85,7 +110,7 @@ html[data-luz='noche'] .tablero {
 }
 .tablero-segmento > button[aria-pressed='true'] {
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-primary-foreground);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.12),
     0 6px 14px -8px rgb(17 17 17 / 0.7);
@@ -415,4 +440,10 @@ html[data-luz='noche'] .tablero {
   .tablero-flecha[data-oculta] {
     transform: none;
   }
+}
+
+/* Modo oscuro: rótulo de cada tramo sobre superficie oscura. */
+html[data-luz='noche'] .tablero-tramo {
+  background: var(--color-surface-2);
+  box-shadow: none;
 }
