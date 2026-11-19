@@ -77,6 +77,8 @@ export interface DepsOvs {
   consumo: (companyId: number, desde: string, hasta: string) => Promise<ConsumoTienda>;
   /** La corrida 'ok' de la semana anterior (semana − 7) de la tienda, o null. */
   anterior: (companyId: number, semana: string) => Promise<CorridaAnterior | null>;
+  /** ¿La tienda ya tiene una corrida 'ok' de esta semana? (revisión final: no se recalcula sin forzar). */
+  yaCalculada: (companyId: number, semana: string) => Promise<boolean>;
   guardar: (c: CorridaGuardar) => Promise<void>;
   bitacora: (f: FilaBitacora) => Promise<void>;
   enviar: (para: string[], asunto: string, html: string) => Promise<ResultadoCorreo>;
@@ -87,6 +89,8 @@ export interface ResumenTiendaOvs {
   estado: 'ok' | 'error';
   error: string | null;
   guardada: boolean;
+  /** Ya tenía corrida 'ok' esta semana y no se forzó: no se recalculó, no se guardó ni salió en el correo. */
+  omitida?: boolean;
   lineas: number;
   sugeridas: number;
   monto: number;
@@ -192,7 +196,12 @@ function conError(
   };
 }
 
-export async function correrOvs(deps: DepsOvs): Promise<ResumenOvs> {
+/**
+ * `forzar`: recalcula aunque la semana ya tenga corrida 'ok'. Sin él (el cron y una corrida a mano normal), la tienda que ya
+ * se calculó esta semana se omite: así la sugerencia que ya se mandó no se reemplaza a media semana (la medición de la
+ * semana siguiente compara contra ella) y un reintento fallido no avisa "no se calculó" (revisión final).
+ */
+export async function correrOvs(deps: DepsOvs, opts: { forzar?: boolean } = {}): Promise<ResumenOvs> {
   const inicio = deps.ahora().toISOString();
   const hoy = hoyCdmx(deps.ahora());
   const semana = lunesDe(hoy);
@@ -221,6 +230,31 @@ export async function correrOvs(deps: DepsOvs): Promise<ResumenOvs> {
   const paraCorreo: TiendaCorreo[] = [];
   const errores: string[] = [];
   for (const t of tiendas) {
+    if (!opts.forzar) {
+      let ya = false;
+      try {
+        ya = await deps.yaCalculada(t.company_id, semana);
+      } catch (e) {
+        console.error(
+          '[comercializadora] ov-sugerida: no se pudo revisar la corrida de la semana',
+          mensaje(e),
+        );
+      }
+      if (ya) {
+        resumen.tiendas.push({
+          company_id: t.company_id,
+          nombre: t.nombre,
+          estado: 'ok',
+          error: null,
+          guardada: false,
+          omitida: true,
+          lineas: 0,
+          sugeridas: 0,
+          monto: 0,
+        });
+        continue;
+      }
+    }
     let r: { correo: TiendaCorreo; corrida: CorridaGuardar };
     try {
       if (!comunes) throw new Error(errorComun);
@@ -250,7 +284,7 @@ export async function correrOvs(deps: DepsOvs): Promise<ResumenOvs> {
       monto: Math.round(sugeridas.reduce((s, l) => s + (l.monto ?? 0), 0) * 100) / 100,
     });
   }
-  if (tiendas.length) {
+  if (paraCorreo.length) {
     const { asunto, html } = correoOvs(semana, paraCorreo);
     resumen.correo = await deps.enviar(comunes?.correos ?? CORREOS_OVS, asunto, html);
   }
@@ -332,6 +366,17 @@ export function depsReales(db: SupabaseClient): DepsOvs {
         catalogo,
         deps: { leer: leerDias, rappi: (c) => rappiServicio(db, c) },
       });
+    },
+    yaCalculada: async (companyId, semana) => {
+      const c = await com(db)
+        .from('com_ovs_corridas')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('semana', semana)
+        .eq('estado', 'ok')
+        .maybeSingle();
+      if (c.error) throw new Error('No se pudo leer la corrida de esta semana.');
+      return !!c.data;
     },
     anterior: async (companyId, semana) => {
       const previa = masDias(semana, -7);

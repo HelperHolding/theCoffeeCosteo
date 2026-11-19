@@ -15,7 +15,9 @@ export async function GET(req: Request) {
   const db = clienteServicio();
   if (!db) return Response.json({ error: 'Falta la llave de servicio de Supabase.' }, { status: 503 });
   try {
-    return Response.json(await correrOvs(depsReales(db)));
+    // ?forzar=1 (a mano): recalcula aunque la semana ya tenga corrida ok; sin él, esas tiendas se omiten.
+    const forzar = new URL(req.url).searchParams.get('forzar') === '1';
+    return Response.json(await correrOvs(depsReales(db), { forzar }));
   } catch (e) {
     console.error('[comercializadora] ov-sugerida', e instanceof Error ? e.message : e);
     return Response.json({ error: 'La orden de venta sugerida no se pudo calcular.' }, { status: 500 });

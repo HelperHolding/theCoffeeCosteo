@@ -74,3 +74,22 @@ describe('GET /api/comercializadora/ov-sugerida', () => {
     expect(v.crons).toContainEqual({ path: '/api/comercializadora/ov-sugerida', schedule: '0 12 * * 1' });
   });
 });
+
+describe('revisión final: forzar a mano', () => {
+  it('?forzar=1 pasa forzar a la corrida; sin él, no', async () => {
+    m.correrOvs.mockResolvedValue({
+      semana: '2026-11-16',
+      hoy: '2026-11-18',
+      tiendas: [],
+      correo: 'sin-tiendas',
+    });
+    await GET(
+      new Request('http://localhost/api/comercializadora/ov-sugerida?forzar=1', {
+        headers: { authorization: 'Bearer secreto-cron' },
+      }),
+    );
+    expect(m.correrOvs.mock.calls[0][1]).toEqual({ forzar: true });
+    await GET(pedir('Bearer secreto-cron'));
+    expect(m.correrOvs.mock.calls[1][1]).toEqual({ forzar: false });
+  });
+});

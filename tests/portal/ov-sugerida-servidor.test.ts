@@ -57,6 +57,7 @@ function falsas(o: Partial<DepsOvs> = {}) {
     pedidos: async () => [],
     consumo: async () => consumoOk(),
     anterior: async () => null,
+    yaCalculada: async () => false,
     guardar: async (c) => {
       guardadas.push(c);
     },
@@ -252,5 +253,34 @@ describe('dependencias reales (escrituras)', () => {
         { proceso: 'com-ovs', inicio: 'a', fin: 'b', ok: true, resumen: { x: 1 }, error: null },
       ],
     ]);
+  });
+});
+
+describe('revisión final: una semana ya calculada no se recalcula sin forzar', () => {
+  it('sin forzar, la tienda con corrida ok de esta semana se omite (no se guarda ni sale en el correo); las demás sí', async () => {
+    const yaCalculada = vi.fn(async (id: number, _semana: string) => id === 519);
+    const f = falsas({ yaCalculada });
+    const r = await correrOvs(f.deps);
+    expect(yaCalculada).toHaveBeenCalledWith(519, '2026-11-16');
+    expect(f.guardadas.map((g) => g.company_id)).toEqual([460]);
+    expect(r.tiendas.find((t) => t.company_id === 519)).toMatchObject({ omitida: true, guardada: false });
+    expect(f.correos).toHaveLength(1);
+    expect(f.correos[0].html).not.toContain('La Mexicana');
+  });
+
+  it('si todas ya estaban calculadas no manda correo', async () => {
+    const f = falsas({ yaCalculada: async () => true });
+    const r = await correrOvs(f.deps);
+    expect(f.guardadas).toEqual([]);
+    expect(f.correos).toEqual([]);
+    expect(r.correo).toBe('sin-tiendas');
+  });
+
+  it('con forzar recalcula aunque ya haya corrida ok', async () => {
+    const yaCalculada = vi.fn(async () => true);
+    const f = falsas({ yaCalculada });
+    await correrOvs(f.deps, { forzar: true });
+    expect(yaCalculada).not.toHaveBeenCalled();
+    expect(f.guardadas.map((g) => g.company_id)).toEqual([519, 460]);
   });
 });
