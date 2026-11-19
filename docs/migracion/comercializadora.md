@@ -167,3 +167,16 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
   Lo que no regresa: las OCs automáticas del portal, que siguen en Zoho.
 - **A los 30 días:** las 17 tablas pasan a `archivo_comercializadora` en bliocjvq y se borran las cuatro funciones viejas. Desde ahí ya no hay copia ni reversa. `com_credito_abonos`, `send-email` y el rol `portal_puente` se quedan (Pedidos).
 - **Sin cambios:** `provider-notifications`, `aperturas-sync`, Apps Script y n8n no leen `com_*`.
+
+## 15. Orden de venta sugerida, piloto (spec 2026-11-18)
+
+- **Qué hace:** cada lunes 06:00 CDMX (cron de Vercel `0 12 * * 1` → `GET /api/comercializadora/ov-sugerida`, con `CRON_SECRET`) calcula la orden sugerida de las tiendas activas de `com_ovs_tiendas` (La Mexicana 519/411, Pasaje Parián 460/354, Avándaro 463/347), la guarda en `com_ovs_corridas`/`com_ovs_lineas` y manda un correo. No escribe nada en Shopify ni en Zoho.
+- **Cálculo** (`lib/comercializadora/ovSugerida.ts`): pedidos de resurtido de la apertura (reglas de `serieDiaria`), cadencia = mediana de días entre pedidos de 90 días en [7, 30] (14 con menos de 2), consumo por receta de `hoy-28 … hoy-1` con el motor de Sucursales, insumo → SKU con `com_insumo_sku`, calibración `k` en [0.8, 1.5], fuera de receta por historial (÷ 90), menos lo pedido hoy, más el arrastre de la semana anterior (±1 paquete). Inactivos fuera (se avisan).
+- **Variables en Vercel:** `CORREO_URL` y `CORREO_LLAVE` (las mismas de las funciones). Sin ellas la corrida se guarda y `com_sync_log` dice "correo no configurado". **Excepción:** este correo sale aunque `COM_EFECTOS_EXTERNOS` esté apagado, porque solo va a direcciones internas.
+- **Destinatarios:** `com_plan_config.config.ovs.correos`; si no está, `compras@mx.thecoffee.jp` y `scervera@mx.thecoffee.jp`. Para cambiarlos (SQL Editor del portal):
+  `update com_plan_config set config = jsonb_set(config, '{ovs}', '{"correos":["compras@mx.thecoffee.jp"]}'::jsonb), version = version + 1 where id = 1;`
+- **Mapeo insumo → SKU:** `com_insumo_sku` (`factor` = unidades del insumo por paquete; un solo SKU activo por insumo). La migración 72 cargó el del ejercicio por nombre exacto del insumo; para ver qué no resolvió:
+  `select count(*) from com_insumo_sku;` (esperado 50) y el correo lista "Insumos de receta sin SKU". Se corrige con insert/update en el SQL Editor (todavía no hay pantalla).
+- **Bitácora:** `select inicio, ok, error, resumen from com_sync_log where proceso = 'com-ovs' order by inicio desc limit 5;`
+- **Correr a mano** (repite la semana, no duplica): `curl.exe -H "Authorization: Bearer <CRON_SECRET>" https://<dominio del portal>/api/comercializadora/ov-sugerida`. Lo hace el usuario; el secreto no se pega en chats ni en commits.
+- **Apagar el piloto:** `update com_ovs_tiendas set activo = false;` (la ruta corre y no hace nada) o quitar el cron de `vercel.json`.
