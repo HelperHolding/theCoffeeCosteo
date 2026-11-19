@@ -1,11 +1,14 @@
 import { createMcpHandler } from 'mcp-handler';
 import { autenticarMcp, ErrorMcp } from './autenticacion';
 import { registrarHerramientas } from './herramientas';
-import { URL_PORTAL } from './config';
+import { URL_PORTAL, URL_PORTAL_VERCEL } from './config';
 export async function atenderMcp(request: Request) {
   const headers = new Headers({ 'Cache-Control': 'private, no-store' });
   const origin = request.headers.get('origin');
-  if (origin && ![URL_PORTAL, 'https://claude.ai', 'https://claude.com'].includes(origin)) {
+  if (
+    origin &&
+    ![URL_PORTAL, URL_PORTAL_VERCEL, 'https://claude.ai', 'https://claude.com'].includes(origin)
+  ) {
     return Response.json({ error: 'Origen no permitido.' }, { status: 403, headers });
   }
   const token = request.headers.get('authorization')?.match(/^Bearer ([^\s]+)$/i)?.[1];

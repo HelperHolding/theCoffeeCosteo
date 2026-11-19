@@ -64,7 +64,7 @@ vitest, PGlite (`scripts/db/pglite`) para pruebas de base.
 
 Lo hace una persona con cuenta de grok.com y acceso al panel de Supabase. No toca código.
 
-- [ ] **Step 1:** En grok.com, agregar un conector MCP personalizado con URL `https://the-coffee-costeo.vercel.app/mcp`.
+- [ ] **Step 1:** En grok.com, agregar un conector MCP personalizado con URL `https://portal.thecoffeemexico.com/mcp`.
 - [ ] **Step 2:** Confirmar que Grok abre el login del portal o la pantalla `/oauth/consent`. Hoy esa pantalla
   mostrará «Esta solicitud no usa el retorno permitido de Claude.»; eso es lo esperado y prueba que Grok hizo
   descubrimiento OAuth y registro dinámico.
@@ -1339,7 +1339,7 @@ Expected: PASS. Si alguna prueba existente esperaba un texto con «Claude», act
 ````markdown
 # Consultar ventas de The Coffee desde Grok
 
-Servidor: `https://the-coffee-costeo.vercel.app/mcp` (el mismo de Claude, ver `claude-web.md`).
+Servidor: `https://portal.thecoffeemexico.com/mcp` (el mismo de Claude, ver `claude-web.md`).
 
 ## Activación por el administrador
 

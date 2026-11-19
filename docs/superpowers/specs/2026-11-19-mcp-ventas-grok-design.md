@@ -5,7 +5,7 @@ Fecha: 2026-11-19. Estado: propuesto.
 ## 1. Objetivo
 
 Que **Grok (grok.com)**, conectado como **conector MCP remoto** al servidor que ya existe en
-`https://the-coffee-costeo.vercel.app/mcp`, pueda consultar **solo en lectura** las ventas de las sucursales
+`https://portal.thecoffeemexico.com/mcp`, pueda consultar **solo en lectura** las ventas de las sucursales
 The Coffee de México:
 
 - totales por sucursal y día (mostrador / app / Rappi), incluido **hoy en vivo** (corte cada 10 min);

@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 async function rpc(method: string, params: unknown = {}, token = 'prueba') {
   return atenderMcp(
-    new Request('https://the-coffee-costeo.vercel.app/mcp', {
+    new Request('https://portal.thecoffeemexico.com/mcp', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,7 +74,10 @@ it('anónimo recibe 401 con descubrimiento sin consultar datos', async () => {
   expect(r.headers.get('www-authenticate')).toContain('/.well-known/oauth-protected-resource');
   expect(m.auth).not.toHaveBeenCalled();
   const meta = await metadatos().json();
-  expect(meta.resource).toBe('https://the-coffee-costeo.vercel.app/mcp');
+  expect(meta.resource).toBe('https://portal.thecoffeemexico.com/mcp');
+  expect(r.headers.get('www-authenticate')).toContain(
+    'https://portal.thecoffeemexico.com/.well-known/oauth-protected-resource',
+  );
   expect(meta.authorization_servers).toEqual(['https://prueba.supabase.co/auth/v1']);
 });
 it('negocia MCP y anuncia únicamente once herramientas de lectura', async () => {
@@ -168,4 +171,12 @@ it('retorna errores de consulta sin filtrar credenciales ni detalles internos', 
   const r = await mensaje(await rpc('tools/call', { name: 'buscar_insumos', arguments: {} }));
   expect(r.result.isError).toBe(true);
   expect(JSON.stringify(r)).not.toContain('secreto');
+});
+it('acepta navegadores del dominio propio y del dominio anterior de Vercel', async () => {
+  for (const origen of ['https://portal.thecoffeemexico.com', 'https://the-coffee-costeo.vercel.app']) {
+    const r = await atenderMcp(
+      new Request('https://portal.thecoffeemexico.com/mcp', { headers: { Origin: origen } }),
+    );
+    expect(r.status).not.toBe(403);
+  }
 });
