@@ -1,6 +1,6 @@
 # Consultar The Coffee desde Claude en la web
 
-Servidor: `https://the-coffee-costeo.vercel.app/mcp`.
+Servidor: `https://portal.thecoffeemexico.com/mcp`.
 
 Las consultas usan la cuenta y el perfil activo del portal. El MCP ofrece seis herramientas: buscar recetas, consultar receta, consultar costos, buscar insumos, recetas por insumo (también usos indirectos) y consultar alertas. Costos en MXN; porcentajes como fracciones; precios ausentes se conservan como null.
 
@@ -15,7 +15,7 @@ Las consultas usan la cuenta y el perfil activo del portal. El MCP ofrece seis h
 
    Agrega políticas restrictivas para impedir insert/update/delete con tokens OAuth, restringe la consulta de perfiles al propio y oculta la bitácora. Las sesiones habituales del portal conservan los permisos por rol. El servidor y la pantalla de consentimiento permanecen bloqueados mientras falte esta migración.
 
-2. En Supabase → Authentication → URL Configuration, configurar Site URL como `https://the-coffee-costeo.vercel.app`.
+2. En Supabase → Authentication → URL Configuration, configurar Site URL como `https://portal.thecoffeemexico.com` y agregar `https://portal.thecoffeemexico.com/**` a Redirect URLs (el dominio anterior, `https://the-coffee-costeo.vercel.app`, sigue funcionando).
 3. En Authentication → OAuth Server, habilitar el servidor OAuth 2.1 y configurar Authorization Path como `/oauth/consent`.
 4. Habilitar Dynamic Client Registration. Solo registra aplicaciones OAuth; mantener desactivado el registro libre de usuarios.
 5. Preferir firma JWT asimétrica en la configuración de Supabase (necesaria si se solicita `openid`). No cambiar claves ni copiar secretos al repositorio. No se necesita una clave administrativa para el MCP.
@@ -24,7 +24,7 @@ Las consultas usan la cuenta y el perfil activo del portal. El MCP ofrece seis h
 ## Conectar en Claude
 
 1. Customize/Personalizar → Connectors/Conectores → Add custom connector.
-2. Nombre: `The Coffee`. URL: `https://the-coffee-costeo.vercel.app/mcp`.
+2. Nombre: `The Coffee`. URL: `https://portal.thecoffeemexico.com/mcp`.
 3. Autenticación mediante inicio de sesión. Para el cliente OAuth elegir **Register automatically / Registrarse automáticamente**, porque esta integración utiliza el registro dinámico de Supabase. No introducir claves administrativas ni contraseñas como headers.
 4. Iniciar sesión con la cuenta habitual del portal y aprobar **Permitir consultas**. La pantalla muestra la aplicación y los permisos solicitados.
 5. Activar el conector en una conversación.

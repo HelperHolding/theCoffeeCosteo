@@ -311,6 +311,12 @@ export interface Database {
       bi_opciones: { Args: { p: Json }; Returns: Json };
       bi_tablero: { Args: { p: Json }; Returns: Json };
       bi_tendencias: { Args: { p: Json }; Returns: Json };
+      /** Migración 73: ventas de solo lectura para el MCP (clientes OAuth en mcp_ventas_clientes). */
+      mcp_ventas_sucursales: { Args: Record<string, never>; Returns: Json };
+      mcp_ventas_dias: {
+        Args: { p_companias: number[]; p_desde: string; p_hasta: string; p_horas: boolean };
+        Returns: Json;
+      };
     };
     Enums: { unidad: Unidad };
     CompositeTypes: Record<string, never>;

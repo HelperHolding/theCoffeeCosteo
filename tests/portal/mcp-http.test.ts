@@ -6,10 +6,15 @@ const m = vi.hoisted(() => ({
   rangos: vi.fn(),
   filtro: vi.fn(),
   fuentes: {} as Record<string, Record<string, unknown>[]>,
+  grok: vi.fn(),
 }));
 vi.mock('../../lib/mcp/autenticacion', async (original) => ({
   ...(await original<typeof import('../../lib/mcp/autenticacion')>()),
   autenticarMcp: m.auth,
+}));
+vi.mock('../../lib/mcp/token', () => ({
+  esTokenGrok: (t: string) => t === 'token-de-grok',
+  autenticarGrok: m.grok,
 }));
 import { atenderMcp } from '../../lib/mcp/http';
 import { GET as metadatos } from '../../app/.well-known/oauth-protected-resource/route';
@@ -46,7 +51,7 @@ beforeEach(() => {
 });
 async function rpc(method: string, params: unknown = {}, token = 'prueba') {
   return atenderMcp(
-    new Request('https://the-coffee-costeo.vercel.app/mcp', {
+    new Request('https://portal.thecoffeemexico.com/mcp', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,10 +79,13 @@ it('anónimo recibe 401 con descubrimiento sin consultar datos', async () => {
   expect(r.headers.get('www-authenticate')).toContain('/.well-known/oauth-protected-resource');
   expect(m.auth).not.toHaveBeenCalled();
   const meta = await metadatos().json();
-  expect(meta.resource).toBe('https://the-coffee-costeo.vercel.app/mcp');
+  expect(meta.resource).toBe('https://portal.thecoffeemexico.com/mcp');
+  expect(r.headers.get('www-authenticate')).toContain(
+    'https://portal.thecoffeemexico.com/.well-known/oauth-protected-resource',
+  );
   expect(meta.authorization_servers).toEqual(['https://prueba.supabase.co/auth/v1']);
 });
-it('negocia MCP y anuncia únicamente seis herramientas de lectura', async () => {
+it('negocia MCP y anuncia únicamente once herramientas de lectura', async () => {
   const r = await rpc('initialize', {
     protocolVersion: '2025-11-25',
     capabilities: {},
@@ -86,7 +94,7 @@ it('negocia MCP y anuncia únicamente seis herramientas de lectura', async () =>
   expect(r.status).toBe(200);
   expect((await mensaje(r)).result.serverInfo.name).toBe('the-coffee-consultas');
   const tools = (await mensaje(await rpc('tools/list'))).result.tools;
-  expect(tools).toHaveLength(6);
+  expect(tools).toHaveLength(11);
   expect(tools.every((t: { annotations: { readOnlyHint: boolean } }) => t.annotations.readOnlyHint)).toBe(
     true,
   );
@@ -168,4 +176,22 @@ it('retorna errores de consulta sin filtrar credenciales ni detalles internos', 
   const r = await mensaje(await rpc('tools/call', { name: 'buscar_insumos', arguments: {} }));
   expect(r.result.isError).toBe(true);
   expect(JSON.stringify(r)).not.toContain('secreto');
+});
+it('acepta navegadores del dominio propio y del dominio anterior de Vercel', async () => {
+  for (const origen of ['https://portal.thecoffeemexico.com', 'https://the-coffee-costeo.vercel.app']) {
+    const r = await atenderMcp(
+      new Request('https://portal.thecoffeemexico.com/mcp', { headers: { Origin: origen } }),
+    );
+    expect(r.status).not.toBe(403);
+  }
+});
+it('el token de Grok usa la sesión del usuario de Grok; otro token sigue por OAuth', async () => {
+  m.grok.mockResolvedValue({ from: m.from });
+  const r = await rpc('tools/list', {}, 'token-de-grok');
+  expect(r.status).toBe(200);
+  expect(m.grok).toHaveBeenCalledTimes(1);
+  expect(m.auth).not.toHaveBeenCalled();
+  await rpc('tools/list', {}, 'otro-token');
+  expect(m.auth).toHaveBeenCalledWith('otro-token');
+  expect(m.grok).toHaveBeenCalledTimes(1);
 });

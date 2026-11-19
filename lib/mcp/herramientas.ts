@@ -3,8 +3,9 @@ import { z } from 'zod';
 import type { Db } from '../portal/consultas';
 import { dependientes } from '../portal/dependencias';
 import type { Linea, Receta } from '../supabase/database.types';
-const pagina = z.number().int().min(1).max(10000).default(1);
-const limite = z.number().int().min(1).max(50).default(25);
+import { ErrorConsulta, exigir, limite, pagina, resultadoPagina, type Consulta } from './consulta';
+import { consultasVentas } from './ventas';
+export { resultadoPagina, type Consulta };
 const texto = z.string().trim().max(100).default('');
 const id = z.uuid();
 const anotaciones = {
@@ -14,19 +15,6 @@ const anotaciones = {
   openWorldHint: false,
 };
 const literal = (valor: string) => `%${valor.replace(/[\\%_]/g, '\\$&')}%`;
-function exigir<T>(r: { data: T | null; error: unknown }): NonNullable<T> {
-  if (r.error || r.data === null) throw new Error('No se pudo consultar la base. Intenta de nuevo.');
-  return r.data as NonNullable<T>;
-}
-export function resultadoPagina<T>(filas: T[], p: number, n: number) {
-  return { datos: filas.slice(0, n), pagina: p, siguiente_pagina: filas.length > n ? p + 1 : null };
-}
-export interface Consulta {
-  nombre: string;
-  descripcion: string;
-  esquema: z.ZodObject;
-  ejecutar: (entrada: unknown) => Promise<Record<string, unknown>>;
-}
 export function crearConsultas(db: Db): Consulta[] {
   const consultas: Consulta[] = [];
   const registrar = <S extends z.ZodRawShape>(
@@ -257,7 +245,8 @@ export function crearConsultas(db: Db): Consulta[] {
   return consultas;
 }
 export function registrarHerramientas(server: McpServer, db: Db) {
-  for (const c of crearConsultas(db)) {
+  // Las de ventas solo se registran aquí (MCP), no en crearConsultas: el chat del portal no las recibe.
+  for (const c of [...crearConsultas(db), ...consultasVentas(db)]) {
     server.registerTool(
       c.nombre,
       { description: c.descripcion, inputSchema: c.esquema, annotations: anotaciones },
@@ -268,13 +257,16 @@ export function registrarHerramientas(server: McpServer, db: Db) {
             content: [{ type: 'text' as const, text: JSON.stringify(datos) }],
             structuredContent: datos,
           };
-        } catch {
+        } catch (e) {
           return {
             isError: true,
             content: [
               {
                 type: 'text' as const,
-                text: 'No se pudo completar la consulta. Revisa el identificador o vuelve a intentarlo.',
+                text:
+                  e instanceof ErrorConsulta
+                    ? e.message
+                    : 'No se pudo completar la consulta. Revisa el identificador o vuelve a intentarlo.',
               },
             ],
           };
