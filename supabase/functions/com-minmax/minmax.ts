@@ -2,6 +2,7 @@ import { type Apertura, fechasKit, kitApertura, type MapaSku, minMax, normalizar
 import { aPlanCfg, leerConfig, type PlanCfg, registrar, type SupabaseClient, todo } from "../_shared/db.ts";
 import { proyectarYGuardar, type ResumenCierre } from "./pagos.ts";
 import { avisarCierres } from "./avisosCierre.ts";
+import { avisadoHoy, avisarBorradores, type LineaBorrador } from "./avisoBorradores.ts";
 import { hoyCdmx, sumarDias } from "../_shared/fechas.ts";
 import { demandaPlan, demandaPlanCurva, medianocheCdmx, mergeCfg, serieDiaria } from "../_shared/planEngine.ts";
 
@@ -143,7 +144,8 @@ export async function escribir(db: SupabaseClient, r: Resultado, ahora: string):
   if (error) throw error;
 }
 
-export async function recalcular(db: SupabaseClient, hoy = hoyCdmx()) {
+/** `borradores: false` (zoho-generar-oc) recalcula sin el correo de OCs en borrador: ese sale solo de la corrida de las 06:30. */
+export async function recalcular(db: SupabaseClient, hoy = hoyCdmx(), opts: { borradores?: boolean } = {}) {
   const e = await cargarEntradas(db, hoy);
   const r = calcular(e);
   await escribir(db, r, new Date().toISOString());
@@ -157,5 +159,16 @@ export async function recalcular(db: SupabaseClient, hoy = hoyCdmx()) {
     try { avisos = await avisarCierres(db, e.cfg.auto.correos, hoy, cierres.cierres); }
     catch (err) { avisos = { enviados: 0, error: String((err as Error)?.message ?? err) }; }
   }
-  return { skus: r.minmax.length, sinMapa: r.sinMapa, aperturasProximas: r.aperturasProximas, proyeccion, avisos };
+  // OCs en borrador en Zoho con 2 días o más: un correo al día a los destinatarios de alertas. Nunca tumba el recálculo.
+  let borradores: { enviados: number; borradores: number; error?: string; yaAvisado?: boolean } | undefined;
+  if (opts.borradores !== false) try {
+    if (await avisadoHoy(db, hoy)) borradores = { enviados: 0, borradores: 0, yaAvisado: true };
+    else {
+      const lineas = await todo<LineaBorrador>((a, b) =>
+        db.from("com_zoho_oc_lineas").select("zoho_po_id,po_number,vendor_name,fecha_oc,cantidad,precio,es_auto")
+          .eq("status", "draft").order("zoho_po_id").range(a, b));
+      borradores = await avisarBorradores(e.cfg.auto.correos, hoy, lineas);
+    }
+  } catch (err) { borradores = { enviados: 0, borradores: 0, error: String((err as Error)?.message ?? err) }; }
+  return { skus: r.minmax.length, sinMapa: r.sinMapa, aperturasProximas: r.aperturasProximas, proyeccion, avisos, borradores };
 }

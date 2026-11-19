@@ -169,7 +169,7 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
     if ((count ?? 0) > 0) return { corrida, modo, ocs: 0, lineas: 0, aCorregir: 0, errores: [] as string[], omitida: "ya corrió hoy" };
   }
 
-  const rec = await (opts.recalcular ?? recalcular)(db, fecha);
+  const rec = await (opts.recalcular ?? recalcular)(db, fecha, { borradores: false });
   const filas = await cargarFilas(db, ult!.inicio);
   const errores: string[] = [];
   // Mínimo de compra por proveedor, para el correo y para avisar si la simulación no pudo adelantar compras.
