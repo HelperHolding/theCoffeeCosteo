@@ -16,7 +16,10 @@ const ref = new URL(env.get('NEXT_PUBLIC_SUPABASE_URL')!).hostname.split('.')[0]
 const sql = async (q: string) => {
   const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${env.get('SUPABASE_ACCESS_TOKEN')}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${env.get('SUPABASE_ACCESS_TOKEN')}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ query: q }),
   });
   const j = await r.json();
@@ -33,7 +36,8 @@ const [previo] = await sql(`select
   (select count(*)::int from supabase_migrations.schema_migrations where version = '${VERSION}') registrada,
   (select count(*)::int from pg_class where relname like 'franq\\_%' and relnamespace = 'public'::regnamespace) tablas,
   (select count(*)::int from pg_proc where proname like 'franq\\_%') funciones`);
-if (previo.registrada || previo.tablas || previo.funciones) throw new Error(`Estado previo inesperado: ${JSON.stringify(previo)}`);
+if (previo.registrada || previo.tablas || previo.funciones)
+  throw new Error(`Estado previo inesperado: ${JSON.stringify(previo)}`);
 
 // 1. Respaldo de lo que la migración reemplaza.
 const checks = await sql(`select conname, pg_get_constraintdef(oid) definicion from pg_constraint
