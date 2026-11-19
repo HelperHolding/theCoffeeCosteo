@@ -23,7 +23,7 @@ export default async function OcAutomaticasPagina() {
       <Encabezado
         area="Comercializadora"
         titulo="OC automáticas"
-        descripcion="Borradores de órdenes de compra que se generan todos los días a las 07:05."
+        descripcion="Borradores de órdenes de compra que se generan los lunes y jueves a las 08:00. Si un borrador lleva 2 días o más sin enviarse en Zoho, se avisa por correo."
       />
       <AvisosCierre avisos={avisos} hoy={hoy} />
       {corridas.length === 0 ? (

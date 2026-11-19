@@ -546,3 +546,12 @@ Deno.test("generar sin la migración y sin cierres: genera las OCs normales con 
   assertEquals(inserts.map((i) => [i.vendor_id, i.monto]), [["v1", 6400], ["v2", 6400]]);
   assertEquals(r.errores, ["mínimos de proveedor: falta aplicar la migración"]);
 });
+
+Deno.test("generar: recalcula sin mandar el aviso de OCs en borrador (ese correo sale solo de com-minmax a las 06:30)", async () => {
+  const { db } = dbModelo({ modo: "simulacion", ...dosProveedores() });
+  const llamadas: unknown[][] = [];
+  const espia = ((...a: unknown[]) => { llamadas.push(a); return Promise.resolve(undefined as never); }) as typeof sinRecalcular;
+  await generar(db, null, { origen: "manual", ahora, recalcular: espia });
+  assertEquals(llamadas.length, 1);
+  assertEquals(llamadas[0][2], { borradores: false });
+});
