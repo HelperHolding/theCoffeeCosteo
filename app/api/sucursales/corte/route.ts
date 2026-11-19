@@ -1,18 +1,9 @@
-import { timingSafeEqual } from 'node:crypto';
+import { autorizadoCron } from '@/lib/cron';
 import { clienteServicio, cortar } from '@/lib/sucursales/corte-servidor';
 
 export const runtime = 'nodejs';
 // Hoy de todas las sucursales tarda ~20 s (16.5 s medido con 79, 4 lecturas a la vez); el cierre de 8 días, más.
 export const maxDuration = 300;
-
-const autorizado = (req: Request) => {
-  const secreto = process.env.CRON_SECRET;
-  const dado = req.headers.get('authorization') ?? '';
-  if (!secreto) return false;
-  const a = Buffer.from(dado);
-  const b = Buffer.from(`Bearer ${secreto}`);
-  return a.length === b.length && timingSafeEqual(a, b);
-};
 
 /**
  * Corte del Tablero de México (docs/sucursales/16), llamado por Vercel Cron con `Authorization: Bearer CRON_SECRET`:
@@ -20,7 +11,7 @@ const autorizado = (req: Request) => {
  * entren los cambios tardíos de Rappi y el cierre del día). Sin CRON_SECRET configurado no corre.
  */
 export async function GET(req: Request) {
-  if (!autorizado(req)) return Response.json({ error: 'No autorizado.' }, { status: 401 });
+  if (!autorizadoCron(req)) return Response.json({ error: 'No autorizado.' }, { status: 401 });
   const db = clienteServicio();
   if (!db) return Response.json({ error: 'Falta la llave de servicio de Supabase.' }, { status: 503 });
   const dias = Number(new URL(req.url).searchParams.get('dias') ?? '1');
