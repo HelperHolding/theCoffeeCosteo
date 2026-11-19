@@ -6,7 +6,7 @@ import { ThinkingOrb } from 'thinking-orbs';
 import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact, Activity } from 'lucide-react';
 import { Navegacion, gruposDe, type Seccion } from './navegacion';
 import type { IdModulo } from '@/lib/portal/modulos';
-import { Marca } from './marca';
+import { MarcaHolding } from './marca';
 import { InterruptorLuz } from './interruptor-luz';
 import { Agente } from './agente';
 import { Button } from '@/components/ui/button';
@@ -31,13 +31,13 @@ export type ItemBusqueda = {
 };
 const textos: Record<Seccion, { marca: [string, string]; buscar: string; registros: string }> = {
   comercializadora: {
-    marca: ['The Coffee', 'comercializadora'],
+    marca: ['Comercializadora', 'abastos'],
     buscar: 'Buscar pantalla…',
     registros: 'Registros',
   },
-  inicio: { marca: ['The Coffee', 'portal'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
+  inicio: { marca: ['Inicio', 'módulos'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
   costeo: {
-    marca: ['Portal de', 'costeos'],
+    marca: ['Costeo', 'recetas'],
     buscar: 'Buscar producto, insumo o pantalla…',
     registros: 'Recetas',
   },
@@ -51,7 +51,7 @@ const textos: Record<Seccion, { marca: [string, string]; buscar: string; registr
     buscar: 'Buscar sucursal o pantalla…',
     registros: 'Sucursales',
   },
-  bi: { marca: ['BI', 'The Coffee'], buscar: 'Buscar tienda o tablero…', registros: 'Tiendas' },
+  bi: { marca: ['BI', 'tableros'], buscar: 'Buscar tienda o tablero…', registros: 'Tiendas' },
 };
 
 export function Marco({
@@ -99,12 +99,10 @@ export function Marco({
 
   const lateral = (
     <div className="flex h-full flex-col gap-7 px-5 py-6">
-      <Link href="/" aria-label="The Coffee · Inicio" className="flex items-center gap-3">
-        <Marca negativo className="size-14 -my-2 -ml-2" />
-        <span className="border-l border-white/15 pl-3 text-[10px] font-semibold uppercase leading-relaxed tracking-[.24em] text-neutral-400">
-          {t.marca[0]}
-          <br />
-          {t.marca[1]}
+      <Link href="/" aria-label="Helper Holding · Inicio" className="block">
+        <MarcaHolding negativo tamano="md" />
+        <span className="mt-5 block border-t border-white/10 pt-3 text-[10px] font-semibold uppercase tracking-[.24em] text-neutral-400">
+          {t.marca[0]} · {t.marca[1]}
         </span>
       </Link>
       <Suspense>
@@ -136,7 +134,7 @@ export function Marco({
     <div
       className={`muro min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
     >
-      <aside className="hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+      <aside className="lateral hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         {lateral}
       </aside>
 
@@ -147,14 +145,14 @@ export function Marco({
             className="absolute inset-0 bg-ink/40"
             onClick={() => setMenu(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-ink shadow-2xl">
+          <aside className="lateral absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-ink shadow-2xl">
             {lateral}
           </aside>
         </div>
       )}
 
       <div className="flex min-w-0 flex-col">
-        <div className="barra-muro sticky top-0 z-30 border-b border-line/80 bg-muro/85 backdrop-blur-md">
+        <div className="barra-muro sticky top-0 z-30 border-b border-line bg-paper">
           <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-3 px-4 md:px-8">
             <Button
               variant="ghost"
@@ -165,8 +163,8 @@ export function Marco({
             >
               {menu ? <X size={20} /> : <Menu size={20} />}
             </Button>
-            <Link href="/" className="lg:hidden" aria-label="The Coffee">
-              <Marca className="size-11" />
+            <Link href="/" className="lg:hidden" aria-label="Helper Holding · Inicio">
+              <MarcaHolding tamano="sm" />
             </Link>
             <button
               onClick={() => setBuscador(true)}
