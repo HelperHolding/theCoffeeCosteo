@@ -82,6 +82,60 @@ describe('<TableroMexico>', () => {
     expect(screen.getByText('Ventura')).toBeTruthy();
   });
 
+  it('con metas y P.E.: cumplimiento de los días con corte, diferencia y meta por tienda', async () => {
+    nav.qs = 'tiendas=384';
+    const metas = {
+      tiendas: 1, tiendas_con_meta: 1, dias_sin_meta: 2,
+      meta_cent: 70000, meta_tickets: 7, meta_corriente_cent: 40000, meta_tickets_corriente: 4,
+      venta_corriente_cent: 30000, tickets_corriente: 4,
+      por_tienda: [{ company_id: 384, meta_cent: 70000, meta_corriente_cent: 40000, venta_corriente_cent: 30000 }],
+      tiendas_con_pe: 1, pe_cent: 20000, pe_corriente_cent: 10000, venta_pe_corriente_cent: 30000,
+      pe_por_tienda: [{ company_id: 384, pe_cent: 20000, pe_corriente_cent: 10000, venta_corriente_cent: 30000 }],
+    };
+    global.fetch = vi.fn(async (url: string) =>
+      new Response(
+        JSON.stringify(
+          String(url).includes('tendencias')
+            ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
+            : { ...tablero, tablero: { ...tablero.tablero, metas } },
+        ),
+        { status: 200 },
+      ),
+    ) as never;
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByText('Cumplimiento')).toBeTruthy());
+    expect(screen.queryByText('Sin datos')).toBeNull();
+    expect(screen.getByText(/Diferencia vs meta: −\$100\.00/)).toBeTruthy();
+    expect(screen.getByText(/Excedente sobre el P\.E\.: \+\$200\.00/)).toBeTruthy();
+    expect(screen.getByText(/2 días de tienda del periodo sin meta cargada/)).toBeTruthy();
+    // Meta de Ventura en la tabla por tienda (y en su grupo): meta del periodo y 75 % de cumplimiento.
+    expect(screen.getAllByText('$700.00').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('con un filtro de producto, pago, hora o monto la meta no se compara', async () => {
+    const metas = {
+      tiendas: 1, tiendas_con_meta: 1, dias_sin_meta: 0,
+      meta_cent: 70000, meta_tickets: 7, meta_corriente_cent: 40000, meta_tickets_corriente: 4,
+      venta_corriente_cent: 30000, tickets_corriente: 4,
+      por_tienda: [{ company_id: 384, meta_cent: 70000, meta_corriente_cent: 40000, venta_corriente_cent: 30000 }],
+      tiendas_con_pe: 0, pe_cent: 0, pe_corriente_cent: 0, venta_pe_corriente_cent: 0, pe_por_tienda: [],
+    };
+    global.fetch = vi.fn(async (url: string) =>
+      new Response(
+        JSON.stringify(
+          String(url).includes('tendencias')
+            ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
+            : { ...tablero, tablero: { ...tablero.tablero, metas } },
+        ),
+        { status: 200 },
+      ),
+    ) as never;
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByText(/con el filtro de café no se\s+comparan/)).toBeTruthy());
+    expect(screen.queryByText('Cumplimiento')).toBeNull();
+    expect(screen.getByText('Meta del periodo')).toBeTruthy();
+  });
+
   it('sin tiendas que pasen los filtros: vacío claro, sin ceros', async () => {
     global.fetch = vi.fn(
       async () => new Response(JSON.stringify({ ...tablero, tablero: null }), { status: 200 }),

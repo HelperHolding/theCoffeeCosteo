@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  avisos, cociente, conShare, kpiTiendas, numerosClave, pagoPorTienda, promociones, rankingPorMes, tendenciaAnual,
+  avisos, cociente, conShare, contraMeta, filtrosDeLinea, kpiTiendas, numerosClave, pagoPorTienda, promociones, rankingPorMes, tendenciaAnual,
   tendenciaSemanal,
 } from '@/lib/bi/bloques';
-import type { RpcOpciones, RpcTablero, TiendaBi } from '@/lib/bi/tipos';
+import type { RpcMetas, RpcOpciones, RpcTablero, TiendaBi } from '@/lib/bi/tipos';
+import { leerUrl } from '@/lib/bi/url';
 
 const vacio: RpcTablero = {
   cargas: { esperados: 0, con_carga: 0, incompletos: 0 },
@@ -66,7 +67,8 @@ describe('bloques', () => {
     const k = kpiTiendas(t, tiendas);
     expect(k.map((g) => g.tipo)).toEqual(['Sucursales Propias', 'Franquicia']);
     expect(k[0].tiendas[0]).toEqual({ companyId: 384, nombre: 'Ventura', ventaCent: 20000, tickets: 3,
-      ticketPromedioCent: 20000 / 3, share: 20000 / 30000 });
+      ticketPromedioCent: 20000 / 3, share: 20000 / 30000, metaCent: null, cumplimiento: null });
+    expect(k[0]).toMatchObject({ metaCent: null, cumplimiento: null });
     expect(k[1].ventaCent).toBe(10000);
   });
 
@@ -106,5 +108,51 @@ describe('bloques', () => {
     const o = { tiendas_sin_rappi: 2, ultimo_corte: '2026-11-05T15:10:00Z' } as RpcOpciones;
     expect(avisos(t, o)).toEqual({ faltantes: 2, esperados: 10, incompletos: 1, rappiPendiente: true,
       ultimoCorte: '2026-11-05T15:10:00Z' });
+  });
+});
+
+const metas: RpcMetas = {
+  tiendas: 2, tiendas_con_meta: 2, dias_sin_meta: 3,
+  meta_cent: 70000, meta_tickets: 7, meta_corriente_cent: 40000, meta_tickets_corriente: 4,
+  venta_corriente_cent: 30000, tickets_corriente: 4,
+  por_tienda: [
+    { company_id: 384, meta_cent: 50000, meta_corriente_cent: 25000, venta_corriente_cent: 20000 },
+    { company_id: 612, meta_cent: 0, meta_corriente_cent: 0, venta_corriente_cent: 10000 },
+  ],
+  tiendas_con_pe: 1, pe_cent: 20000, pe_corriente_cent: 10000, venta_pe_corriente_cent: 20000,
+  pe_por_tienda: [{ company_id: 384, pe_cent: 20000, pe_corriente_cent: 10000, venta_corriente_cent: 20000 }],
+};
+
+describe('metas y P.E. (F5)', () => {
+  it('cumplimiento, diferencia y avance: cocientes de sumas de los días con corte', () => {
+    const c = contraMeta({ ...t, metas });
+    expect(c.meta).toMatchObject({ metaCent: 70000, metaCorrienteCent: 40000, ventaCorrienteCent: 30000,
+      diferenciaCent: -10000, cumplimiento: 0.75, avance: 30000 / 70000, cumplimientoTickets: 1,
+      ticketPromedioMetaCent: 10000, ticketPromedioCent: 7500, tiendas: 2 });
+    expect(c.pe).toEqual({ peCent: 20000, peCorrienteCent: 10000, ventaCorrienteCent: 20000, diferenciaCent: 10000,
+      cobertura: 2, tiendas: 1 });
+    expect(c.diasSinMeta).toBe(3);
+  });
+
+  it('sin metas (o base sin la migración 72): null, nunca cero', () => {
+    expect(contraMeta(t)).toEqual({ meta: null, pe: null, tiendas: 0, diasSinMeta: 0 });
+    const sinCargar = contraMeta({ ...t, metas: { ...metas, tiendas_con_meta: 0, meta_cent: 0, tiendas_con_pe: 0, pe_cent: 0 } });
+    expect(sinCargar.meta).toBeNull();
+    expect(sinCargar.pe).toBeNull();
+    // Sin días con corte todavía: hay meta, pero el cumplimiento no se puede calcular.
+    expect(contraMeta({ ...t, metas: { ...metas, meta_corriente_cent: 0 } }).meta?.cumplimiento).toBeNull();
+  });
+
+  it('KPI por tienda: meta del periodo y cumplimiento; meta 0 (aún no abre) = sin meta', () => {
+    const k = kpiTiendas({ ...t, metas }, tiendas);
+    expect(k[0].tiendas[0]).toMatchObject({ companyId: 384, metaCent: 50000, cumplimiento: 0.8 });
+    expect(k[0]).toMatchObject({ metaCent: 50000, cumplimiento: 0.8 });
+    expect(k[1].tiendas[0]).toMatchObject({ companyId: 612, metaCent: null, cumplimiento: null });
+    expect(k[1]).toMatchObject({ metaCent: null, cumplimiento: null });
+  });
+
+  it('filtros de línea: solo los que recortan la venta de la tienda', () => {
+    expect(filtrosDeLinea(leerUrl(new URLSearchParams('tiendas=384&dias=1&comp=si')))).toEqual([]);
+    expect(filtrosDeLinea(leerUrl(new URLSearchParams('prod=Latte&hora=9&min=10')))).toEqual(['producto', 'hora', 'monto']);
   });
 });

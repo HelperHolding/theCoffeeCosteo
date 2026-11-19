@@ -142,5 +142,5 @@ pantalla contra Zoho. Tolerancia como en el doc 02.
 
 - **Rappi de Zoho** pendiente (F3): el Rappi de la historia aún no está.
 - **Margen del ranking** en F4.1.
-- **Metas y P.E.** en F5.
+- **Metas y P.E.** en F5: ver `docs/bi/04-METAS-PE.md`.
 - **Hora 0 inflada en Zoho:** el BI no la replica.

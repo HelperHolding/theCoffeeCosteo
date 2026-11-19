@@ -190,7 +190,48 @@ function tablero(): RpcTablero {
       { fuente: 'pos', canal: 'app', venta_cent: Math.round(venta * 0.06) },
       { fuente: 'pos', canal: 'rappi', venta_cent: Math.round(venta * 0.09) },
     ],
+    metas: metasDe(venta, tickets),
   };
+
+  // Metas (F5): cada tienda con su meta; unas arriba y otras abajo. P.E. solo en las Sucursales Propias.
+  function metasDe(v: number, tk: number) {
+    const porTienda = tiendas.map((t, i) => {
+      const ventaT = Math.round((v * repartoTienda[i]) / sumaTiendas);
+      const metaC = Math.round(ventaT / (0.82 + azar() * 0.32));
+      return {
+        company_id: t.company_id,
+        meta_cent: Math.round(metaC * 1.4),
+        meta_corriente_cent: metaC,
+        venta_corriente_cent: ventaT,
+      };
+    });
+    const propias = tiendas.filter((t) => t.tipo === 'Sucursales Propias');
+    const pePorTienda = propias.map((t) => {
+      const fila = porTienda.find((x) => x.company_id === t.company_id)!;
+      const pe = Math.round(fila.venta_corriente_cent / (1.05 + azar() * 0.4));
+      return { company_id: t.company_id, pe_cent: Math.round(pe * 1.4), pe_corriente_cent: pe,
+        venta_corriente_cent: fila.venta_corriente_cent };
+    });
+    const suma = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((s, x) => s + f(x), 0);
+    const metaC = suma(porTienda, (x) => x.meta_corriente_cent);
+    return {
+      tiendas: tiendas.length,
+      tiendas_con_meta: tiendas.length,
+      dias_sin_meta: 0,
+      meta_cent: suma(porTienda, (x) => x.meta_cent),
+      meta_tickets: Math.round((tk / 0.97) * 1.4),
+      meta_corriente_cent: metaC,
+      meta_tickets_corriente: Math.round(tk / 0.97),
+      venta_corriente_cent: suma(porTienda, (x) => x.venta_corriente_cent),
+      tickets_corriente: tk,
+      por_tienda: porTienda,
+      tiendas_con_pe: pePorTienda.length,
+      pe_cent: suma(pePorTienda, (x) => x.pe_cent),
+      pe_corriente_cent: suma(pePorTienda, (x) => x.pe_corriente_cent),
+      venta_pe_corriente_cent: suma(pePorTienda, (x) => x.venta_corriente_cent),
+      pe_por_tienda: pePorTienda,
+    };
+  }
 }
 
 function tendencias(): RespuestaTendencias {

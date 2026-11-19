@@ -15,6 +15,30 @@ export interface RpcTablero {
   promociones: { company_id: number; promocion: string; unidades: number; venta_cent: number }[];
   ranking: { codigo: string; nombre: string; mes: string; unidades: number; venta_cent: number; lineas: number }[];
   fuentes: { fuente: string; canal: string; venta_cent: number }[];
+  /** Desde la migración 72; sin ella (base anterior) no llega y la pantalla dice «sin datos». */
+  metas?: RpcMetas;
+}
+
+/**
+ * Metas y P.E. de las tiendas filtradas (solo filtros de tienda, día de la semana y semana). «Corriente» = solo los
+ * días de tienda con carga del POS, con la venta de esos mismos días.
+ */
+export interface RpcMetas {
+  tiendas: number;
+  tiendas_con_meta: number;
+  dias_sin_meta: number;
+  meta_cent: number;
+  meta_tickets: number;
+  meta_corriente_cent: number;
+  meta_tickets_corriente: number;
+  venta_corriente_cent: number;
+  tickets_corriente: number;
+  por_tienda: { company_id: number; meta_cent: number; meta_corriente_cent: number; venta_corriente_cent: number }[];
+  tiendas_con_pe: number;
+  pe_cent: number;
+  pe_corriente_cent: number;
+  venta_pe_corriente_cent: number;
+  pe_por_tienda: { company_id: number; pe_cent: number; pe_corriente_cent: number; venta_corriente_cent: number }[];
 }
 
 export interface TiendaBi {

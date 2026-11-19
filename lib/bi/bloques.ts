@@ -1,8 +1,11 @@
 // Funciones puras que convierten el resultado de las RPC en bloques del tablero.
 // Promedios y porcentajes siempre son cociente de sumas; nunca se promedian promedios.
 import type { RpcOpciones, RpcTablero, RpcTendencias, TiendaBi } from './tipos';
+import type { FiltrosUrl } from './url';
 
 export const cociente = (a: number, b: number): number | null => (b > 0 ? a / b : null);
+/** ¿Llega a la meta? Con el mismo redondeo que se ve (un decimal): 99.96 % se ve «100.0 %» y cuenta como meta. */
+export const alcanza = (x: number | null): boolean => x !== null && Math.round(x * 1000) >= 1000;
 const nombreDe = (tiendas: TiendaBi[], c: number) => tiendas.find((x) => x.company_id === c)?.nombre ?? `Tienda ${c}`;
 const tipoDe = (tiendas: TiendaBi[], c: number) => tiendas.find((x) => x.company_id === c)?.tipo ?? 'Sin tipo';
 const ORDEN_TIPO = ['Sucursales Propias', 'Franquicia', 'Sin tipo'];
@@ -13,6 +16,56 @@ export function numerosClave(t: RpcTablero) {
     ventaCent: k.venta_cent, cobradoCent: k.venta_bruta_cent, tickets: k.tickets,
     ticketPromedioCent: cociente(k.venta_cent, k.tickets), upt: cociente(k.lineas, k.tickets), unidades: k.unidades,
   };
+}
+
+/**
+ * Bloque 2. Cumplimiento = venta ÷ meta de los días con corte (como «Cumplimiento Meta» de Zoho); la meta del periodo
+ * completo incluye los días que faltan. null = no hay meta (o P.E.) cargada para estas tiendas y fechas: nunca cero.
+ */
+export function contraMeta(t: RpcTablero) {
+  const m = t.metas;
+  if (!m) return { meta: null, pe: null, tiendas: 0, diasSinMeta: 0 };
+  const meta =
+    m.tiendas_con_meta > 0 && m.meta_cent > 0
+      ? {
+          metaCent: m.meta_cent,
+          metaCorrienteCent: m.meta_corriente_cent,
+          ventaCorrienteCent: m.venta_corriente_cent,
+          diferenciaCent: m.venta_corriente_cent - m.meta_corriente_cent,
+          cumplimiento: cociente(m.venta_corriente_cent, m.meta_corriente_cent),
+          avance: cociente(m.venta_corriente_cent, m.meta_cent),
+          metaTickets: m.meta_tickets,
+          cumplimientoTickets: cociente(m.tickets_corriente, m.meta_tickets_corriente),
+          ticketPromedioMetaCent: cociente(m.meta_corriente_cent, m.meta_tickets_corriente),
+          ticketPromedioCent: cociente(m.venta_corriente_cent, m.tickets_corriente),
+          tiendas: m.tiendas_con_meta,
+        }
+      : null;
+  const pe =
+    m.tiendas_con_pe > 0 && m.pe_cent > 0
+      ? {
+          peCent: m.pe_cent,
+          peCorrienteCent: m.pe_corriente_cent,
+          ventaCorrienteCent: m.venta_pe_corriente_cent,
+          diferenciaCent: m.venta_pe_corriente_cent - m.pe_corriente_cent,
+          cobertura: cociente(m.venta_pe_corriente_cent, m.pe_corriente_cent),
+          tiendas: m.tiendas_con_pe,
+        }
+      : null;
+  return { meta, pe, tiendas: m.tiendas, diasSinMeta: m.dias_sin_meta };
+}
+
+/** Filtros que recortan la venta por línea (producto, pago, hora, monto): con ellos la meta de la tienda no se compara. */
+export function filtrosDeLinea(f: FiltrosUrl): string[] {
+  return [
+    f.categorias.length > 0 && 'categoría',
+    f.grupos.length > 0 && 'grupo',
+    f.cafe.length > 0 && 'café',
+    f.productos.length > 0 && 'producto',
+    f.pagos.length > 0 && 'método de pago',
+    f.horas.length > 0 && 'hora',
+    (f.montoMin !== undefined || f.montoMax !== undefined) && 'monto',
+  ].filter((x): x is string => typeof x === 'string');
 }
 
 export function conShare<T extends { venta_cent: number }>(filas: T[]) {
@@ -31,25 +84,40 @@ export function kpiTiendas(t: RpcTablero, tiendas: TiendaBi[]) {
   }
   type Grupo = {
     tipo: string; ventaCent: number; tickets: number;
+    metaCent: number | null; metaCorrienteCent: number; ventaCorrienteCent: number;
     tiendas: { companyId: number; nombre: string; ventaCent: number; tickets: number;
-      ticketPromedioCent: number | null; share: number | null }[];
+      ticketPromedioCent: number | null; share: number | null; metaCent: number | null;
+      cumplimiento: number | null }[];
   };
+  const metas = new Map((t.metas?.por_tienda ?? []).map((m) => [m.company_id, m]));
   const grupos = new Map<string, Grupo>();
   for (const [companyId, a] of porTienda) {
     const tipo = tipoDe(tiendas, companyId);
-    const g = grupos.get(tipo) ?? { tipo, ventaCent: 0, tickets: 0, tiendas: [] };
+    const g = grupos.get(tipo) ?? { tipo, ventaCent: 0, tickets: 0, metaCent: null, metaCorrienteCent: 0,
+      ventaCorrienteCent: 0, tiendas: [] };
     g.ventaCent += a.ventaCent;
     g.tickets += a.tickets;
+    // Meta 0 en el periodo (la tienda aún no abre según la meta) se trata como «sin meta».
+    const m = metas.get(companyId);
+    const conMeta = m && m.meta_cent > 0 ? m : null;
+    if (conMeta) {
+      g.metaCent = (g.metaCent ?? 0) + conMeta.meta_cent;
+      g.metaCorrienteCent += conMeta.meta_corriente_cent;
+      g.ventaCorrienteCent += conMeta.venta_corriente_cent;
+    }
     g.tiendas.push({ companyId, nombre: nombreDe(tiendas, companyId), ventaCent: a.ventaCent, tickets: a.tickets,
-      ticketPromedioCent: cociente(a.ventaCent, a.tickets), share: cociente(a.ventaCent, total) });
+      ticketPromedioCent: cociente(a.ventaCent, a.tickets), share: cociente(a.ventaCent, total),
+      metaCent: conMeta?.meta_cent ?? null,
+      cumplimiento: conMeta ? cociente(conMeta.venta_corriente_cent, conMeta.meta_corriente_cent) : null });
     grupos.set(tipo, g);
   }
   for (const g of grupos.values()) g.tiendas.sort((x, y) => y.ventaCent - x.ventaCent);
+  const conCumplimiento = (g: Grupo) => ({ ...g, cumplimiento: cociente(g.ventaCorrienteCent, g.metaCorrienteCent) });
   const orden = (tipo: string) => {
     const i = ORDEN_TIPO.indexOf(tipo);
     return i === -1 ? ORDEN_TIPO.length : i;
   };
-  return [...grupos.values()].sort((x, y) => orden(x.tipo) - orden(y.tipo));
+  return [...grupos.values()].sort((x, y) => orden(x.tipo) - orden(y.tipo)).map(conCumplimiento);
 }
 
 export const META_PROMO = { 'Promoción alimentos y bebidas': 0.06, 'Promoción café': 0.01 } as const;

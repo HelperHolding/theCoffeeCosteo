@@ -4,23 +4,62 @@ import { Fragment } from 'react';
 import { Barra, Insignia, Tarjeta } from '@/components/portal/piezas';
 import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
 import { AZUL } from '@/components/sucursales/colores';
-import { cociente, type kpiTiendas, type promociones } from '@/lib/bi/bloques';
+import { alcanza, cociente, type kpiTiendas, type promociones } from '@/lib/bi/bloques';
 
-/** Sin metas cargadas todavía: se ve «—», nunca cero. */
-const SIN_META = (
-  <span className="text-muted-foreground" title="Sin metas cargadas">
+/** Sin meta cargada (o sin comparación posible): se ve «—», nunca cero. */
+const Guion = ({ titulo }: { titulo: string }) => (
+  <span className="text-muted-foreground" title={titulo}>
     —
   </span>
 );
 
-/** Bloque 4: Propias/Franquicia → tienda, con venta, tickets, ticket promedio y share de la red. */
-export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiendas> }) {
+/** Meta del periodo y cumplimiento (venta ÷ meta de los días con corte). */
+function CeldasMeta({
+  metaCent,
+  cumplimiento,
+  comparar,
+}: {
+  metaCent: number | null;
+  cumplimiento: number | null;
+  comparar: boolean;
+}) {
+  if (metaCent === null)
+    return (
+      <>
+        <td className="numero">
+          <Guion titulo="Sin meta cargada" />
+        </td>
+        <td className="numero">
+          <Guion titulo="Sin meta cargada" />
+        </td>
+      </>
+    );
+  return (
+    <>
+      <td className="numero">{dinero(metaCent)}</td>
+      <td className="numero">
+        {!comparar ? (
+          <Guion titulo="Con filtros de producto, pago, hora o monto la meta no se compara" />
+        ) : cumplimiento === null ? (
+          <Guion titulo="Todavía no hay días con corte" />
+        ) : (
+          <span className={alcanza(cumplimiento) ? 'font-semibold text-ok' : 'font-semibold text-bad'}>
+            {porcentaje(cumplimiento)}
+          </span>
+        )}
+      </td>
+    </>
+  );
+}
+
+/** Bloque 4: Propias/Franquicia → tienda, con venta, tickets, ticket promedio, share de la red y meta. */
+export function KpiVentaTiendas({ grupos, comparar }: { grupos: ReturnType<typeof kpiTiendas>; comparar: boolean }) {
   const total = grupos.reduce((s, g) => s + g.ventaCent, 0);
   const maxShare = Math.max(0, ...grupos.flatMap((g) => g.tiendas.map((t) => t.share ?? 0)));
   return (
     <Tarjeta
       titulo="KPI Venta The Coffee"
-      descripcion="Share: participación de cada tienda en la venta neta del filtro."
+      descripcion="Share: participación de cada tienda en la venta neta del filtro. Vs meta: venta de los días con corte contra su meta."
       cuerpo={false}
     >
       {grupos.length === 0 ? (
@@ -61,8 +100,7 @@ export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiend
                     <td className="numero">{numero(g.tickets)}</td>
                     <td className="numero">{dinero(cociente(g.ventaCent, g.tickets))}</td>
                     <td className="numero">{porcentaje(cociente(g.ventaCent, total))}</td>
-                    <td className="numero">{SIN_META}</td>
-                    <td className="numero">{SIN_META}</td>
+                    <CeldasMeta metaCent={g.metaCent} cumplimiento={g.cumplimiento} comparar={comparar} />
                   </tr>
                   {g.tiendas.map((t) => (
                     <tr key={t.companyId}>
@@ -89,8 +127,7 @@ export function KpiVentaTiendas({ grupos }: { grupos: ReturnType<typeof kpiTiend
                           {porcentaje(t.share)}
                         </span>
                       </td>
-                      <td className="numero">{SIN_META}</td>
-                      <td className="numero">{SIN_META}</td>
+                      <CeldasMeta metaCent={t.metaCent} cumplimiento={t.cumplimiento} comparar={comparar} />
                     </tr>
                   ))}
                 </Fragment>
