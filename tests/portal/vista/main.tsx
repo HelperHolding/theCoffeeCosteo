@@ -11,6 +11,7 @@ import { VISTAS_CRM, VistaExpedienteUnificado, VistaPipeline } from './crm-unifi
 import { VistaSucursales } from './sucursales';
 import { VistaTableroMexico } from './tablero-mexico';
 import { VistaBi } from './bi';
+import { VistaFranquiciatarios } from './franquiciatarios';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
 // Americano Grande con los números del Excel de márgenes (comisión sobre precio con IVA).
 const americano = (canal: string, orden: number, precio: number, comision: number, envase: number) => {
@@ -47,6 +48,8 @@ const vistaCrm = VISTAS_CRM[new URLSearchParams(window.location.search).get('vis
 createRoot(document.getElementById('root')!).render(
   vistaCrm ? (
     vistaCrm()
+  ) : new URLSearchParams(window.location.search).has('franquiciatarios') ? (
+    <VistaFranquiciatarios />
   ) : window.location.search.includes('pipeline') ? (
     <VistaPipeline />
   ) : window.location.search.includes('expediente-unificado') ? (

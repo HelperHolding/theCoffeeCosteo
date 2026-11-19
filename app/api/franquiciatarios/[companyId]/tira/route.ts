@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 /** Tira de venta de un día (hoy o los 6 anteriores). */
 export async function GET(req: Request, { params }: { params: Promise<{ companyId: string }> }) {
   const a = await autorizarFranq(params);
-  if ('respuesta' in a) return a.respuesta;
+  if (!a.ok) return a.respuesta;
   const q = new URL(req.url).searchParams;
   const origen = leerOrigen(q);
   if (!origen) return invalido('Origen inválido.');

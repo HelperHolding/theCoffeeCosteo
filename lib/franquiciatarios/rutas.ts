@@ -12,8 +12,8 @@ export const json = (cuerpo: unknown, status = 200) => NextResponse.json(cuerpo,
  */
 export async function autorizarFranq(params: Promise<{ companyId: string }>, { soloGestor = false } = {}) {
   const a = await accesoFranquiciatarios();
-  if (!a.ok) return { respuesta: json({ error: a.mensaje }, a.status) } as const;
+  if (!a.ok) return { ok: false, respuesta: json({ error: a.mensaje }, a.status) } as const;
   const r = resolverFranq((await params).companyId, a.sucursales);
-  if (!r || (soloGestor && !esGestorFranq(r.rol))) return { respuesta: json({ error: 'No encontrada' }, 404) } as const;
-  return { ...a, cfg: r.cfg, rol: r.rol } as const;
+  if (!r || (soloGestor && !esGestorFranq(r.rol))) return { ok: false, respuesta: json({ error: 'No encontrada' }, 404) } as const;
+  return { ...a, ok: true, cfg: r.cfg, rol: r.rol } as const;
 }

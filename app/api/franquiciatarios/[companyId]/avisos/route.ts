@@ -16,7 +16,7 @@ const celda = (v: unknown) => {
 /** CSV de avisos («No» vigentes e incidencias) para gerente, franquiciatario o admin de la sucursal. */
 export async function GET(req: Request, { params }: { params: Promise<{ companyId: string }> }) {
   const a = await autorizarFranq(params, { soloGestor: true });
-  if ('respuesta' in a) return a.respuesta;
+  if (!a.ok) return a.respuesta;
   const q = new URL(req.url).searchParams;
   const desde = q.get('desde');
   const hasta = q.get('hasta');

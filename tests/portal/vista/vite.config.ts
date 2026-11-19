@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 const raiz = fileURLToPath(new URL('../../../', import.meta.url));
 const mocks = fileURLToPath(new URL('./mocks.tsx', import.meta.url));
+const accionesFranq = fileURLToPath(new URL('./franq-acciones.ts', import.meta.url));
 export default defineConfig({
   publicDir: fileURLToPath(new URL('../../../public', import.meta.url)),
   root: fileURLToPath(new URL('.', import.meta.url)),
@@ -17,6 +18,7 @@ export default defineConfig({
       { find: '@/app/(auth)/login/actions', replacement: mocks },
       { find: '@/app/(crm)/crm/acciones-pipeline', replacement: mocks },
       { find: '@/app/(crm)/crm/acciones', replacement: mocks },
+      { find: '@/app/(franquiciatarios)/franquiciatarios/acciones', replacement: accionesFranq },
       { find: '@/lib/supabase/cliente', replacement: mocks },
       { find: '@', replacement: raiz },
     ],

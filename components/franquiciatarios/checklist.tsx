@@ -82,7 +82,7 @@ function Avance({ seccion }: { seccion: SeccionDia }) {
           <span className="font-semibold text-ink">{seccion.respondidos}</span> de {total}
           {seccion.noes > 0 && (
             <span className="ml-2 font-semibold text-bad">
-              · {seccion.noes} {seccion.noes === 1 ? '«No»' : '«No»s'}
+              · {seccion.noes} en «No»
             </span>
           )}
         </p>
