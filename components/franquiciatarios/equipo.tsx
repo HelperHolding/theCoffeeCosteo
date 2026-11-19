@@ -57,7 +57,11 @@ export function Equipo({ companyId, baristas }: { companyId: number; baristas: F
             className={campo}
           />
           <Button size="lg" type="submit" disabled={pendiente || nuevo.trim().length < 2}>
-            {pendiente ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <UserPlus aria-hidden="true" />}
+            {pendiente ? (
+              <LoaderCircle className="animate-spin" aria-hidden="true" />
+            ) : (
+              <UserPlus aria-hidden="true" />
+            )}
             Agregar
           </Button>
         </div>
@@ -121,7 +125,13 @@ function Fila({
           <label className="sr-only" htmlFor={`b-${b.id}`}>
             Nombre
           </label>
-          <input id={`b-${b.id}`} value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} className={campo} />
+          <input
+            id={`b-${b.id}`}
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            maxLength={60}
+            className={campo}
+          />
           <div className="flex gap-2">
             <Button type="submit" disabled={pendiente || nombre.trim().length < 2}>
               Guardar
@@ -143,7 +153,12 @@ function Fila({
           </div>
           <div className="flex gap-2">
             {b.activo && (
-              <Button variant="ghost" size="sm" onClick={() => setEditando(true)} aria-label={`Editar ${b.nombre}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditando(true)}
+                aria-label={`Editar ${b.nombre}`}
+              >
                 <Pencil aria-hidden="true" /> Editar
               </Button>
             )}

@@ -196,13 +196,18 @@ export async function accesoFranquiciatarios(): Promise<
       mensaje: 'Tu cuenta necesita un perfil activo.',
     };
   const nivel = c.accesos.franquiciatarios;
-  if (!nivel) return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Franquiciatarios.' };
+  if (!nivel)
+    return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Franquiciatarios.' };
   const sucursales = new Map<number, RolFranq>();
   const admin = nivel === 'desarrollador';
   if (admin) {
     for (const s of sucursalesConfiguradas) sucursales.set(s.companyId, 'admin');
   } else {
-    const r = await c.db.from('franq_miembros').select('company_id,rol').eq('user_id', c.usuario.id).eq('activo', true);
+    const r = await c.db
+      .from('franq_miembros')
+      .select('company_id,rol')
+      .eq('user_id', c.usuario.id)
+      .eq('activo', true);
     if (r && !r.error && Array.isArray(r.data))
       for (const f of r.data) {
         const id = Number(f.company_id);

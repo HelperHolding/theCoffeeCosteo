@@ -22,7 +22,9 @@ import { textoHora } from '../sucursales/tiempo';
  * nombres se leen con la llave de servicio SOLO después de autorizar la sucursal con la sesión del usuario (la cuenta de
  * baristas no tiene el módulo Sucursales, que piden sus RPC). Las mismas tablas, la misma conversión (pedidoRappiAPos).
  */
-export async function fuentesFranq(cfg: ConfigSucursal): Promise<{ rappi?: FuenteRappi; catalogo?: CatalogoNombres }> {
+export async function fuentesFranq(
+  cfg: ConfigSucursal,
+): Promise<{ rappi?: FuenteRappi; catalogo?: CatalogoNombres }> {
   const db = clienteServicio();
   if (!db) {
     // Sin llave de servicio no se inventa Rappi en cero: la lectura queda parcial.
@@ -106,15 +108,33 @@ export async function construirTira(
     corte: textoHora(ahora.segundo),
     generadoEn: Date.now(),
     lectura: { estado: l.estado, avisos: l.avisos },
-    totales: { ventaCent: r.ventaCent, pedidos: r.pedidos, ticketCent: r.ticketCent, descuentoCent: r.descuentoCent },
-    origenes: origenes(ps).map(({ origen: o, pedidos: n, ventaCent }) => ({ origen: o, pedidos: n, ventaCent })),
-    pagos: pagos(ps).map(({ metodo, etiqueta, pedidos: n, ventaCent }) => ({ metodo, etiqueta, pedidos: n, ventaCent })),
+    totales: {
+      ventaCent: r.ventaCent,
+      pedidos: r.pedidos,
+      ticketCent: r.ticketCent,
+      descuentoCent: r.descuentoCent,
+    },
+    origenes: origenes(ps).map(({ origen: o, pedidos: n, ventaCent }) => ({
+      origen: o,
+      pedidos: n,
+      ventaCent,
+    })),
+    pagos: pagos(ps).map(({ metodo, etiqueta, pedidos: n, ventaCent }) => ({
+      metodo,
+      etiqueta,
+      pedidos: n,
+      ventaCent,
+    })),
     productos: productos(ps, l.pedidos, fuentes.catalogo).map((p) => ({
       clave: p.clave,
       nombre: p.nombre,
       lineas: p.lineas,
       importeCent: p.importeCent,
     })),
-    conciliacion: { diferenciaCent: c.diferenciaCent, pedidosNoCuadran: c.pedidosNoCuadran, soloRedondeo: c.soloRedondeo },
+    conciliacion: {
+      diferenciaCent: c.diferenciaCent,
+      pedidosNoCuadran: c.pedidosNoCuadran,
+      soloRedondeo: c.soloRedondeo,
+    },
   };
 }

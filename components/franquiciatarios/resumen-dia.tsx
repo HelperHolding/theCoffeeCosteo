@@ -26,7 +26,12 @@ export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: strin
             >
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-display text-lg font-bold">{s.nombre}</h3>
-                <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', e.clase)}>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+                    e.clase,
+                  )}
+                >
                   <e.icono size={13} aria-hidden="true" /> {e.texto}
                 </span>
               </div>
@@ -44,7 +49,8 @@ export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: strin
               <div className="mt-auto space-y-1 pt-4 text-sm">
                 {s.noes > 0 && (
                   <p className="flex items-center gap-1.5 font-semibold text-bad">
-                    <TriangleAlert size={14} aria-hidden="true" /> {s.noes} {s.noes === 1 ? 'punto en «No»' : 'puntos en «No»'}
+                    <TriangleAlert size={14} aria-hidden="true" /> {s.noes}{' '}
+                    {s.noes === 1 ? 'punto en «No»' : 'puntos en «No»'}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">

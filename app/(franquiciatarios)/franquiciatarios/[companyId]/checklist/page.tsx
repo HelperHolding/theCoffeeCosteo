@@ -25,7 +25,10 @@ export default async function PaginaChecklist({
   const dia = c.gestor && esFecha(q.dia) && q.dia <= hoy ? q.dia : hoy;
   const esHoy = dia === hoy;
   const base = `/franquiciatarios/${c.companyId}`;
-  const [estado, baristas] = await Promise.all([leerDia(c.db, c.companyId, dia), leerBaristas(c.db, c.companyId)]);
+  const [estado, baristas] = await Promise.all([
+    leerDia(c.db, c.companyId, dia),
+    leerBaristas(c.db, c.companyId),
+  ]);
   const elegido = c.rol === 'barista' ? await baristaElegido(baristas, c.companyId) : null;
   const encabezado = (
     <Encabezado
@@ -34,7 +37,8 @@ export default async function PaginaChecklist({
       descripcion={
         <span className="first-letter:uppercase">
           {diaLargo(dia)}
-          {esHoy ? ' · hoy' : ' · consulta de un día anterior'}. Todo «No» se explica en Observaciones y se comunica.
+          {esHoy ? ' · hoy' : ' · consulta de un día anterior'}. Todo «No» se explica en Observaciones y se
+          comunica.
         </span>
       }
     />
@@ -95,7 +99,12 @@ export default async function PaginaChecklist({
                 )}
               >
                 <span className="text-sm font-bold leading-tight">{s.nombre}</span>
-                <span className={cn('text-xs tabular', s.clave === actual.clave ? 'text-white/75' : 'text-muted-foreground')}>
+                <span
+                  className={cn(
+                    'text-xs tabular',
+                    s.clave === actual.clave ? 'text-white/75' : 'text-muted-foreground',
+                  )}
+                >
                   {s.estado === 'completa' ? 'Completa' : `${s.respondidos}/${s.puntos.length}`}
                   {s.noes > 0 && ` · ${s.noes} No`}
                 </span>

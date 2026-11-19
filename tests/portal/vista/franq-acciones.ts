@@ -1,6 +1,13 @@
 // Arnés visual: sustituye las server actions de Franquiciatarios por un estado en memoria con las MISMAS reglas que la
 // migración 75 (observación en «No», firma con todo respondido, recibe ≠ entrega, firmada = solo gestores con motivo).
-import type { FranqBarista, FranqFirma, FranqIncidencia, FranqRespuesta, SeccionClave, TipoFirma } from '../../../lib/franquiciatarios/tipos';
+import type {
+  FranqBarista,
+  FranqFirma,
+  FranqIncidencia,
+  FranqRespuesta,
+  SeccionClave,
+  TipoFirma,
+} from '../../../lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -57,7 +64,8 @@ export async function responder(d: {
   const q = quien();
   if (typeof q === 'string') return { error: q };
   const ch = CHECK[d.seccion];
-  if (!d.cumple && (d.observacion ?? '').trim().length < 3) return { error: 'Todo «No» se explica en Observaciones.' };
+  if (!d.cumple && (d.observacion ?? '').trim().length < 3)
+    return { error: 'Todo «No» se explica en Observaciones.' };
   const previa = tienda.respuestas.filter((r) => r.checklist_id === ch && r.punto_id === d.punto).at(-1);
   const firmada = tienda.firmas.some((f) => f.checklist_id === ch);
   if (firmada && tienda.rol === 'barista')
@@ -82,7 +90,9 @@ export async function firmar(_c: number, seccion: SeccionClave, tipo: TipoFirma)
   const q = quien();
   if (typeof q === 'string') return { error: q };
   const ch = CHECK[seccion];
-  const faltan = tienda.puntos[seccion].filter((p) => !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p));
+  const faltan = tienda.puntos[seccion].filter(
+    (p) => !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p),
+  );
   if (faltan.length) return { error: `Faltan ${faltan.length} puntos por responder antes de firmar.` };
   if (tipo === 'recibe') {
     const e = tienda.firmas.find((f) => f.checklist_id === ch && f.tipo === 'entrega');
@@ -105,7 +115,12 @@ export async function registrarIncidencia(_c: number, texto: string): Promise<Re
   return { ok: true };
 }
 
-export async function corregir(d: { respuesta: number; cumple: boolean; observacion?: string | null; motivo: string }): Promise<Resultado> {
+export async function corregir(d: {
+  respuesta: number;
+  cumple: boolean;
+  observacion?: string | null;
+  motivo: string;
+}): Promise<Resultado> {
   await espera();
   const previa = tienda.respuestas.find((r) => r.id === d.respuesta);
   if (!previa) return { error: 'No existe ese registro.' };
@@ -123,11 +138,17 @@ export async function corregir(d: { respuesta: number; cumple: boolean; observac
   return { ok: true };
 }
 
-export async function guardarBarista(d: { id: number | null; nombre: string; activo: boolean }): Promise<Resultado> {
+export async function guardarBarista(d: {
+  id: number | null;
+  nombre: string;
+  activo: boolean;
+}): Promise<Resultado> {
   await espera();
   const nombre = d.nombre.trim().replace(/\s+/g, ' ');
   if (nombre.length < 2) return { error: 'El nombre debe tener entre 2 y 60 caracteres.' };
-  if (tienda.baristas.some((b) => b.activo && b.id !== d.id && b.nombre.toLowerCase() === nombre.toLowerCase()))
+  if (
+    tienda.baristas.some((b) => b.activo && b.id !== d.id && b.nombre.toLowerCase() === nombre.toLowerCase())
+  )
     return { error: 'Ya hay un barista activo con ese nombre.' };
   if (d.id === null)
     tienda.baristas.push({
@@ -140,7 +161,11 @@ export async function guardarBarista(d: { id: number | null; nombre: string; act
       actualizado_por: null,
       actualizado_en: null,
     });
-  else Object.assign(tienda.baristas.find((b) => b.id === d.id)!, { nombre, activo: d.activo, actualizado_en: ahora() });
+  else
+    Object.assign(
+      tienda.baristas.find((b) => b.id === d.id)!,
+      { nombre, activo: d.activo, actualizado_en: ahora() },
+    );
   avisar();
   return { ok: true };
 }

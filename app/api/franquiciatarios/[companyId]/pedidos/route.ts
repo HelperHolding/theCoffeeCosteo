@@ -17,7 +17,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
   const periodo = leerPeriodo(q, a.cfg, 7);
   if (typeof periodo === 'string') return invalido(periodo);
   // El módulo solo muestra hoy y los 6 días anteriores.
-  if (diasEntre(periodo.desde, hoyLocal(a.cfg).fecha) >= DIAS_TIRA) return invalido(`Solo los últimos ${DIAS_TIRA} días.`);
+  if (diasEntre(periodo.desde, hoyLocal(a.cfg).fecha) >= DIAS_TIRA)
+    return invalido(`Solo los últimos ${DIAS_TIRA} días.`);
   const pago = q.get('pago') || null;
   if (pago !== null && !/^[A-Z_]{1,40}$/.test(pago)) return invalido('Forma de pago inválida.');
   const pagina = Number(q.get('pagina') ?? '1');

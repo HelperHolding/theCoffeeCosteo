@@ -91,7 +91,10 @@ export async function leerBaristas(db: Db, companyId: number): Promise<FranqBari
 export const cookieBarista = (companyId: number) => `franq_barista_${companyId}`;
 
 /** Barista declarado en este dispositivo, solo si sigue activo en esa sucursal. */
-export async function baristaElegido(baristas: FranqBarista[], companyId: number): Promise<FranqBarista | null> {
+export async function baristaElegido(
+  baristas: FranqBarista[],
+  companyId: number,
+): Promise<FranqBarista | null> {
   const v = Number((await cookies()).get(cookieBarista(companyId))?.value);
   return baristas.find((b) => b.id === v && b.activo) ?? null;
 }

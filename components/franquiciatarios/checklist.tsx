@@ -8,7 +8,8 @@ import type { TipoFirma } from '@/lib/franquiciatarios/tipos';
 import { firmar, responder, type Resultado } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
 import { hora } from './formato';
 
-const SIN_RED = 'No se guardó: no hay conexión. Lo que escribiste sigue aquí; reintenta cuando vuelva la red.';
+const SIN_RED =
+  'No se guardó: no hay conexión. Lo que escribiste sigue aquí; reintenta cuando vuelva la red.';
 
 /** Llama una acción del servidor sin perder lo capturado si falla la red. */
 async function intentar(fn: () => Promise<Resultado>): Promise<Resultado> {
@@ -47,8 +48,8 @@ export function Checklist({
       <Avance seccion={seccion} />
       {bloqueada && editable && (
         <p className="rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm text-ink-2">
-          La {seccion.nombre.toLowerCase()} ya está firmada. Si algo cambió, avisa al gerente para que registre la
-          corrección.
+          La {seccion.nombre.toLowerCase()} ya está firmada. Si algo cambió, avisa al gerente para que
+          registre la corrección.
         </p>
       )}
       <ol className="space-y-3" aria-label={`Puntos de ${seccion.nombre}`}>
@@ -80,11 +81,7 @@ function Avance({ seccion }: { seccion: SeccionDia }) {
         </h2>
         <p className="text-sm tabular text-ink-2">
           <span className="font-semibold text-ink">{seccion.respondidos}</span> de {total}
-          {seccion.noes > 0 && (
-            <span className="ml-2 font-semibold text-bad">
-              · {seccion.noes} en «No»
-            </span>
-          )}
+          {seccion.noes > 0 && <span className="ml-2 font-semibold text-bad">· {seccion.noes} en «No»</span>}
         </p>
       </div>
       <div
@@ -96,7 +93,10 @@ function Avance({ seccion }: { seccion: SeccionDia }) {
         aria-valuenow={seccion.respondidos}
       >
         <div
-          className={cn('h-full rounded-full transition-[width] duration-300', seccion.estado === 'completa' ? 'bg-ok' : 'bg-ink')}
+          className={cn(
+            'h-full rounded-full transition-[width] duration-300',
+            seccion.estado === 'completa' ? 'bg-ok' : 'bg-ink',
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -427,7 +427,11 @@ function Firma({
                 })
               }
             >
-              {pendiente ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <PenLine aria-hidden="true" />}
+              {pendiente ? (
+                <LoaderCircle className="animate-spin" aria-hidden="true" />
+              ) : (
+                <PenLine aria-hidden="true" />
+              )}
               Confirmar firma
             </Button>
             <Button variant="ghost" disabled={pendiente} onClick={() => setConfirmar(false)}>

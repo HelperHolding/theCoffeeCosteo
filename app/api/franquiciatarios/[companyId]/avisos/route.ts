@@ -27,7 +27,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ companyI
   const csv = [
     ['dia', 'tipo', 'seccion', 'punto', 'estandar', 'observacion', 'nombre', 'registrado_en'].join(','),
     ...filas.map((f) =>
-      [f.dia, f.tipo === 'no' ? 'No' : 'Incidencia', f.seccion, f.punto, f.estandar, f.observacion, f.nombre, f.registrado_en]
+      [
+        f.dia,
+        f.tipo === 'no' ? 'No' : 'Incidencia',
+        f.seccion,
+        f.punto,
+        f.estandar,
+        f.observacion,
+        f.nombre,
+        f.registrado_en,
+      ]
         .map(celda)
         .join(','),
     ),

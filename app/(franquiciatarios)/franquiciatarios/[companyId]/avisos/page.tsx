@@ -43,11 +43,23 @@ export default async function PaginaAvisos({
       <form className="flex flex-wrap items-end gap-2" action={`${base}/avisos`}>
         <label className="text-sm font-medium text-ink">
           Desde
-          <input type="date" name="desde" defaultValue={desde} max={hoy} className="mt-1 block h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm" />
+          <input
+            type="date"
+            name="desde"
+            defaultValue={desde}
+            max={hoy}
+            className="mt-1 block h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm"
+          />
         </label>
         <label className="text-sm font-medium text-ink">
           Hasta
-          <input type="date" name="hasta" defaultValue={hasta} max={hoy} className="mt-1 block h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm" />
+          <input
+            type="date"
+            name="hasta"
+            defaultValue={hasta}
+            max={hoy}
+            className="mt-1 block h-10 rounded-[10px] border border-line-strong bg-surface px-3 text-sm"
+          />
         </label>
         <button className="h-10 rounded-[10px] border border-line-strong bg-surface px-4 text-sm font-semibold text-ink hover:border-ink/40">
           Ver periodo
@@ -58,11 +70,16 @@ export default async function PaginaAvisos({
       ) : (
         <Avisos companyId={c.companyId} avisos={avisos} />
       )}
-      <section aria-labelledby="historial" className="rounded-2xl border border-line bg-surface p-5 shadow-card">
+      <section
+        aria-labelledby="historial"
+        className="rounded-2xl border border-line bg-surface p-5 shadow-card"
+      >
         <h2 id="historial" className="text-lg">
           Checklists por día
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">Abre el checklist completo de cualquier día del periodo.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Abre el checklist completo de cualquier día del periodo.
+        </p>
         <ul className="mt-3 flex flex-wrap gap-2">
           {dias.map((d) => (
             <li key={d}>

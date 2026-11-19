@@ -6,9 +6,13 @@ const env = await leerEnvLocal();
 const ref = new URL(env.get('NEXT_PUBLIC_SUPABASE_URL')!).hostname.split('.')[0];
 const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: 'POST',
-  headers: { Authorization: `Bearer ${env.get('SUPABASE_ACCESS_TOKEN')}`, 'Content-Type': 'application/json' },
+  headers: {
+    Authorization: `Bearer ${env.get('SUPABASE_ACCESS_TOKEN')}`,
+    'Content-Type': 'application/json',
+  },
   body: JSON.stringify({
-    query: 'begin read only; select version, name from supabase_migrations.schema_migrations order by version; ',
+    query:
+      'begin read only; select version, name from supabase_migrations.schema_migrations order by version; ',
   }),
 });
 const base = (await r.json()) as { version: string; name: string }[];

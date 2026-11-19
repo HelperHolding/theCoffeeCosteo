@@ -20,11 +20,16 @@ export function Incidencias({
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
   return (
-    <section aria-labelledby="incidencias" className="rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5">
+    <section
+      aria-labelledby="incidencias"
+      className="rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5"
+    >
       <h2 id="incidencias" className="text-lg">
         Incidencias y pendientes del día
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">Lo que el gerente y el siguiente turno deben saber.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Lo que el gerente y el siguiente turno deben saber.
+      </p>
       {editable && (
         <form
           className="mt-4 space-y-2"

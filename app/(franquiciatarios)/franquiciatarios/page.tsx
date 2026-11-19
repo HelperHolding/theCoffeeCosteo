@@ -8,7 +8,12 @@ import { MarcoFranq } from '@/components/franquiciatarios/marco-franq';
 
 export const dynamic = 'force-dynamic';
 
-const ROL = { admin: 'Administración', franquiciatario: 'Franquiciatario', gerente: 'Gerente', barista: 'Baristas' };
+const ROL = {
+  admin: 'Administración',
+  franquiciatario: 'Franquiciatario',
+  gerente: 'Gerente',
+  barista: 'Baristas',
+};
 
 export default async function Sucursales() {
   const s = await sesionFranquiciatarios();
@@ -23,7 +28,9 @@ export default async function Sucursales() {
       <Encabezado area="Operación" titulo="Mis sucursales" descripcion="Elige la sucursal para ver su día." />
       {lista.length === 0 ? (
         <div className="rounded-2xl border border-line bg-surface shadow-card">
-          <Vacio titulo="Aún no tienes sucursales asignadas">Pide al administrador que te asigne tu sucursal.</Vacio>
+          <Vacio titulo="Aún no tienes sucursales asignadas">
+            Pide al administrador que te asigne tu sucursal.
+          </Vacio>
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

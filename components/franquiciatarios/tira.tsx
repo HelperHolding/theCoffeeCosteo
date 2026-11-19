@@ -113,8 +113,12 @@ export function Ticket({ t }: { t: Tira }) {
 
       {(t.parcial || t.lectura.estado !== 'completa') && (
         <p className="mt-4 rounded-lg border border-warn/40 bg-warn-soft px-3 py-2 text-center text-xs font-semibold text-warn">
-          {t.parcial ? `PARCIAL · el día no ha cerrado · corte ${t.corte}` : 'Lectura parcial: faltan datos de la fuente'}
-          {t.lectura.avisos.length > 0 && <span className="mt-1 block font-normal">{t.lectura.avisos.join(' ')}</span>}
+          {t.parcial
+            ? `PARCIAL · el día no ha cerrado · corte ${t.corte}`
+            : 'Lectura parcial: faltan datos de la fuente'}
+          {t.lectura.avisos.length > 0 && (
+            <span className="mt-1 block font-normal">{t.lectura.avisos.join(' ')}</span>
+          )}
         </p>
       )}
 
@@ -142,7 +146,11 @@ export function Ticket({ t }: { t: Tira }) {
 
       <Bloque titulo="Por origen">
         {t.origenes.map((o) => (
-          <Fila key={o.origen} izq={`${etiquetaOrigen[o.origen]} (${o.pedidos})`} der={dinero(o.ventaCent, m)} />
+          <Fila
+            key={o.origen}
+            izq={`${etiquetaOrigen[o.origen]} (${o.pedidos})`}
+            der={dinero(o.ventaCent, m)}
+          />
         ))}
       </Bloque>
       <Bloque titulo="Por forma de pago">
@@ -154,14 +162,19 @@ export function Ticket({ t }: { t: Tira }) {
         {t.productos.length === 0 ? (
           <p className="text-xs text-ink-2">Sin productos.</p>
         ) : (
-          t.productos.map((p) => <Fila key={p.clave} izq={`${p.lineas} × ${p.nombre}`} der={dinero(p.importeCent, m)} />)
+          t.productos.map((p) => (
+            <Fila key={p.clave} izq={`${p.lineas} × ${p.nombre}`} der={dinero(p.importeCent, m)} />
+          ))
         )}
       </Bloque>
 
       {t.conciliacion.diferenciaCent !== 0 && (
         <p className="mt-3 text-xs text-ink-2">
           Diferencia entre venta y productos: {dinero(t.conciliacion.diferenciaCent, m)}
-          {t.conciliacion.soloRedondeo ? ' (redondeo del proveedor)' : ` en ${t.conciliacion.pedidosNoCuadran} pedidos`}.
+          {t.conciliacion.soloRedondeo
+            ? ' (redondeo del proveedor)'
+            : ` en ${t.conciliacion.pedidosNoCuadran} pedidos`}
+          .
         </p>
       )}
       <div className="tira-regla my-4" />

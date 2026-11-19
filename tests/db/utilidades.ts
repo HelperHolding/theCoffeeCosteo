@@ -30,7 +30,11 @@ export async function comoUsuario<T>(db: PGlite, userId: string, fn: () => Promi
 export async function crearUsuario(db: PGlite, rol: Rol): Promise<string> {
   const id = randomUUID();
   await db.query('insert into auth.users (id, email) values ($1, $2)', [id, `${rol}-${id}@prueba.mx`]);
-  await db.query('insert into perfiles (user_id, nombre, rol) values ($1, $2, $3)', [id, `Usuario ${rol}`, rol]);
+  await db.query('insert into perfiles (user_id, nombre, rol) values ($1, $2, $3)', [
+    id,
+    `Usuario ${rol}`,
+    rol,
+  ]);
   return id;
 }
 
@@ -40,5 +44,9 @@ export async function darModulo(
   modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios',
   nivel: 'desarrollador' | 'edicion' | 'lectura',
 ): Promise<void> {
-  await db.query('insert into perfil_modulos (user_id, modulo, nivel) values ($1, $2, $3)', [userId, modulo, nivel]);
+  await db.query('insert into perfil_modulos (user_id, modulo, nivel) values ($1, $2, $3)', [
+    userId,
+    modulo,
+    nivel,
+  ]);
 }

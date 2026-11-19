@@ -35,7 +35,8 @@ export function QuienEres({
           ¿Quién eres?
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Toca tu nombre. Todo lo que registres en este dispositivo quedará a tu nombre hasta que cambies de persona.
+          Toca tu nombre. Todo lo que registres en este dispositivo quedará a tu nombre hasta que cambies de
+          persona.
         </p>
       </div>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

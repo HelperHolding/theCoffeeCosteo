@@ -68,7 +68,9 @@ export function FiltroOrigenFranq({
             key={o}
             className={cn(
               'flex min-h-12 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-semibold transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-crema/45',
-              origen === o ? 'border-ink bg-ink text-white' : 'border-line-strong bg-surface text-ink hover:border-ink/40',
+              origen === o
+                ? 'border-ink bg-ink text-white'
+                : 'border-line-strong bg-surface text-ink hover:border-ink/40',
             )}
           >
             <input

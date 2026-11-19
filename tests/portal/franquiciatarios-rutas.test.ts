@@ -23,13 +23,19 @@ vi.mock('../../lib/supabase/servidor', () => ({
   servidor: async () => ({
     auth: {
       getUser: async () =>
-        sesion.usuario ? { data: { user: { id: sesion.usuario } }, error: null } : { data: { user: null }, error: null },
+        sesion.usuario
+          ? { data: { user: { id: sesion.usuario } }, error: null }
+          : { data: { user: null }, error: null },
     },
     rpc: async (fn: string, args: { p_company: number }) => {
-      const ve = sesion.modulos.some((m) => m.modulo === 'sucursales') && sesion.companias.includes(args.p_company);
+      const ve =
+        sesion.modulos.some((m) => m.modulo === 'sucursales') && sesion.companias.includes(args.p_company);
       if (fn === 'sucursales_rappi_portal')
         return ve
-          ? { data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null }, error: null }
+          ? {
+              data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null },
+              error: null,
+            }
           : { data: null, error: null };
       if (fn === 'sucursales_catalogo_pos') return { data: ve ? [] : null, error: null };
       return { data: null, error: null };
@@ -56,7 +62,8 @@ vi.mock('../../lib/supabase/servidor', () => ({
 vi.mock('../../lib/sucursales/corte-servidor', () => ({
   clienteServicio: () => ({}),
   catalogoServicio: async () => new Map(),
-  rappiServicio: (_db: unknown, cfg: { rappiPortal?: boolean }) => (cfg.rappiPortal ? async () => [] : undefined),
+  rappiServicio: (_db: unknown, cfg: { rappiPortal?: boolean }) =>
+    cfg.rappiPortal ? async () => [] : undefined,
 }));
 
 import { GET as vivoFranq } from '../../app/api/franquiciatarios/[companyId]/vivo/route';
@@ -103,7 +110,11 @@ beforeEach(() => {
   const api = apiFalsa({
     '2026-10-22': [
       pedido('2026-10-22', '08:00:00'),
-      pedido('2026-10-22', '09:30:00', { fromSmartphone: true, paymentMethod: 'VIRTUAL_WALLET', refundId: null }),
+      pedido('2026-10-22', '09:30:00', {
+        fromSmartphone: true,
+        paymentMethod: 'VIRTUAL_WALLET',
+        refundId: null,
+      }),
       pedido('2026-10-22', '11:15:00', { paymentMethod: 'DINHEIRO' }),
     ],
     '2026-10-21': [pedido('2026-10-21', '10:00:00'), pedido('2026-10-21', '18:00:00')],
@@ -118,26 +129,38 @@ describe('acceso a las rutas del módulo', () => {
   it.each([
     ['sin sesión', () => (sesion.usuario = null), '612', 401],
     ['perfil inactivo', () => (sesion.activo = false), '612', 403],
-    ['sin el módulo (aunque tenga Sucursales)', () => (sesion.modulos = [{ modulo: 'sucursales', nivel: 'lectura' }]), '612', 403],
+    [
+      'sin el módulo (aunque tenga Sucursales)',
+      () => (sesion.modulos = [{ modulo: 'sucursales', nivel: 'lectura' }]),
+      '612',
+      403,
+    ],
     ['otra sucursal', () => {}, '477', 404],
     ['membresía inactiva o inexistente', () => (sesion.miembros = []), '612', 404],
     ['company manipulada', () => {}, '612abc', 404],
-  ] as [string, () => void, string, number][])('%s → %i sin llamar al proveedor', async (_n, preparar, id, status) => {
-    preparar();
-    for (const h of rutas) {
-      const r = await llamar(h, id);
-      expect(r.status).toBe(status);
-      expect(JSON.stringify(await r.json())).not.toMatch(/Juárez|Granja/);
-    }
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
+  ] as [string, () => void, string, number][])(
+    '%s → %i sin llamar al proveedor',
+    async (_n, preparar, id, status) => {
+      preparar();
+      for (const h of rutas) {
+        const r = await llamar(h, id);
+        expect(r.status).toBe(status);
+        expect(JSON.stringify(await r.json())).not.toMatch(/Juárez|Granja/);
+      }
+      expect(fetchSpy).not.toHaveBeenCalled();
+    },
+  );
 
   it('avisos (CSV) solo para gestores: a la cuenta de baristas, 404', async () => {
     expect((await llamar(avisosFranq, '612', '?desde=2026-10-22&hasta=2026-10-22')).status).toBe(404);
   });
 
   it('el admin del módulo (nivel desarrollador) entra a cualquier sucursal configurada', async () => {
-    Object.assign(sesion, { rol: 'admin', modulos: [{ modulo: 'franquiciatarios', nivel: 'desarrollador' }], miembros: [] });
+    Object.assign(sesion, {
+      rol: 'admin',
+      modulos: [{ modulo: 'franquiciatarios', nivel: 'desarrollador' }],
+      miembros: [],
+    });
     expect((await llamar(vivoFranq, '612')).status).toBe(200);
     expect((await llamar(vivoFranq, '999')).status).toBe(404); // no configurada
   });
@@ -163,19 +186,22 @@ describe('mismas cifras que Sucursales, sin datos sensibles', () => {
       companias: [612],
     });
 
-  it.each(['todos', 'mostrador', 'app'])('en vivo (%s): KPIs, orígenes, pagos y pedidos iguales', async (origen) => {
-    ambos();
-    const q = `?origen=${origen}`;
-    const f = await cuerpo(vivoFranq, '612', q);
-    const s = await cuerpo(vivoSuc, '612', q);
-    const { netoCent: _n, ...kpisSuc } = s.kpis;
-    expect(f.kpis).toEqual(kpisSuc);
-    expect(f.origenes).toEqual(s.origenes);
-    expect(f.pagos).toEqual(s.pagos);
-    expect(f.productosTop).toEqual(s.productosTop);
-    expect(f.ultimosPedidos).toEqual(s.ultimosPedidos);
-    expect(f.conciliacion).toEqual(s.conciliacion);
-  });
+  it.each(['todos', 'mostrador', 'app'])(
+    'en vivo (%s): KPIs, orígenes, pagos y pedidos iguales',
+    async (origen) => {
+      ambos();
+      const q = `?origen=${origen}`;
+      const f = await cuerpo(vivoFranq, '612', q);
+      const s = await cuerpo(vivoSuc, '612', q);
+      const { netoCent: _n, ...kpisSuc } = s.kpis;
+      expect(f.kpis).toEqual(kpisSuc);
+      expect(f.origenes).toEqual(s.origenes);
+      expect(f.pagos).toEqual(s.pagos);
+      expect(f.productosTop).toEqual(s.productosTop);
+      expect(f.ultimosPedidos).toEqual(s.ultimosPedidos);
+      expect(f.conciliacion).toEqual(s.conciliacion);
+    },
+  );
 
   it('pedidos: mismo desglose y totales', async () => {
     ambos();
@@ -193,9 +219,9 @@ describe('mismas cifras que Sucursales, sin datos sensibles', () => {
       expect(t.totales.ventaCent).toBe(p.totales.ventaCent);
       expect(t.totales.pedidos).toBe(p.totales.pedidos);
       expect(t.totales.ticketCent).toBe(p.totales.ticketCent);
-      expect(t.productos.map((x: { clave: string; importeCent: number }) => [x.clave, x.importeCent])).toEqual(
-        p.productos.map((x: { clave: string; importeCent: number }) => [x.clave, x.importeCent]),
-      );
+      expect(
+        t.productos.map((x: { clave: string; importeCent: number }) => [x.clave, x.importeCent]),
+      ).toEqual(p.productos.map((x: { clave: string; importeCent: number }) => [x.clave, x.importeCent]));
       expect(t.parcial).toBe(false);
     }
     const hoy = await cuerpo(tiraFranq, '612', '?dia=2026-10-22');
@@ -210,6 +236,7 @@ describe('mismas cifras que Sucursales, sin datos sensibles', () => {
       await cuerpo(pedidosFranq, '612', '?desde=2026-10-22&hasta=2026-10-22'),
       await cuerpo(tiraFranq, '612', '?dia=2026-10-22'),
     ];
-    for (const r of respuestas) for (const k of claves(r)) expect(k).not.toMatch(/neto|costo|margen|utilidad|comision/i);
+    for (const r of respuestas)
+      for (const k of claves(r)) expect(k).not.toMatch(/neto|costo|margen|utilidad|comision/i);
   });
 });

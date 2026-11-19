@@ -21,8 +21,15 @@ export function Avisos({ companyId, avisos }: { companyId: number; avisos: Franq
   return (
     <div className="space-y-6">
       {dias.map((d) => (
-        <section key={d} aria-labelledby={`d-${d}`} className="rounded-2xl border border-line bg-surface shadow-card">
-          <h2 id={`d-${d}`} className="border-b border-line px-5 py-3 font-display text-base font-bold first-letter:uppercase">
+        <section
+          key={d}
+          aria-labelledby={`d-${d}`}
+          className="rounded-2xl border border-line bg-surface shadow-card"
+        >
+          <h2
+            id={`d-${d}`}
+            className="border-b border-line px-5 py-3 font-display text-base font-bold first-letter:uppercase"
+          >
             {diaLargo(d)}
           </h2>
           <ul className="divide-y divide-line">
@@ -52,7 +59,11 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
         <span
           className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${esNo ? 'bg-bad-soft text-bad' : 'bg-warn-soft text-warn'}`}
         >
-          {esNo ? <CircleAlert size={16} aria-hidden="true" /> : <MessageSquareWarning size={16} aria-hidden="true" />}
+          {esNo ? (
+            <CircleAlert size={16} aria-hidden="true" />
+          ) : (
+            <MessageSquareWarning size={16} aria-hidden="true" />
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-muted-foreground">
@@ -60,7 +71,9 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
           </p>
           {esNo && <p className="font-medium text-ink">{a.punto}</p>}
           {esNo && <p className="text-xs text-muted-foreground">Estándar: {a.estandar}</p>}
-          <p className="mt-1 whitespace-pre-line text-[15px] text-ink-2">{esNo ? `«${a.observacion}»` : a.observacion}</p>
+          <p className="mt-1 whitespace-pre-line text-[15px] text-ink-2">
+            {esNo ? `«${a.observacion}»` : a.observacion}
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {a.nombre} · {hora(a.registrado_en)}
           </p>
@@ -79,7 +92,13 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
             setError(null);
             iniciar(async () => {
               try {
-                const r = await corregir({ companyId, respuesta: a.respuesta_id!, cumple, observacion: cumple ? null : obs, motivo });
+                const r = await corregir({
+                  companyId,
+                  respuesta: a.respuesta_id!,
+                  cumple,
+                  observacion: cumple ? null : obs,
+                  motivo,
+                });
                 if ('error' in r) setError(r.error);
                 else setAbierto(false);
               } catch {
@@ -92,12 +111,22 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
             <legend className="text-sm font-medium text-ink">Respuesta correcta</legend>
             <div className="mt-2 flex gap-4 text-sm">
               <label className="flex items-center gap-2">
-                <input type="radio" name={`c-${a.respuesta_id}`} checked={cumple} onChange={() => setCumple(true)} /> Sí se
-                cumplió
+                <input
+                  type="radio"
+                  name={`c-${a.respuesta_id}`}
+                  checked={cumple}
+                  onChange={() => setCumple(true)}
+                />{' '}
+                Sí se cumplió
               </label>
               <label className="flex items-center gap-2">
-                <input type="radio" name={`c-${a.respuesta_id}`} checked={!cumple} onChange={() => setCumple(false)} /> No
-                (cambiar la observación)
+                <input
+                  type="radio"
+                  name={`c-${a.respuesta_id}`}
+                  checked={!cumple}
+                  onChange={() => setCumple(false)}
+                />{' '}
+                No (cambiar la observación)
               </label>
             </div>
           </fieldset>
@@ -123,7 +152,10 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
             />
           </label>
           <div className="flex gap-2">
-            <Button type="submit" disabled={pendiente || motivo.trim().length < 3 || (!cumple && obs.trim().length < 3)}>
+            <Button
+              type="submit"
+              disabled={pendiente || motivo.trim().length < 3 || (!cumple && obs.trim().length < 3)}
+            >
               {pendiente && <LoaderCircle className="animate-spin" aria-hidden="true" />}
               Guardar corrección
             </Button>

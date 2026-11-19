@@ -13,13 +13,18 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
   const c = await contextoSucursal(params);
   const base = `/franquiciatarios/${c.companyId}`;
   const hoy = diaOperacion();
-  const [dia, baristas] = await Promise.all([leerDia(c.db, c.companyId, hoy), leerBaristas(c.db, c.companyId)]);
+  const [dia, baristas] = await Promise.all([
+    leerDia(c.db, c.companyId, hoy),
+    leerBaristas(c.db, c.companyId),
+  ]);
   const elegido = c.rol === 'barista' ? await baristaElegido(baristas, c.companyId) : null;
   const encabezado = (
     <Encabezado
       area={c.cfg.nombre}
       titulo="Hoy"
-      descripcion={<span className="first-letter:uppercase">{diaLargo(hoy)} · día de operación (cambia a las 4:00)</span>}
+      descripcion={
+        <span className="first-letter:uppercase">{diaLargo(hoy)} · día de operación (cambia a las 4:00)</span>
+      }
     />
   );
 
@@ -44,14 +49,28 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
         <ResumenDia dia={dia} base={base} />
       </section>
       <nav aria-label="Accesos" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <Acceso href={`${base}/ventas`} icono={Activity} titulo="Ventas y pedidos" texto="Venta del día con el desglose de cada pedido." />
-        <Acceso href={`${base}/tira`} icono={ReceiptText} titulo="Tira de venta" texto="Resumen del día para imprimir o guardar en PDF." />
+        <Acceso
+          href={`${base}/ventas`}
+          icono={Activity}
+          titulo="Ventas y pedidos"
+          texto="Venta del día con el desglose de cada pedido."
+        />
+        <Acceso
+          href={`${base}/tira`}
+          icono={ReceiptText}
+          titulo="Tira de venta"
+          texto="Resumen del día para imprimir o guardar en PDF."
+        />
         {c.gestor && (
           <Acceso
             href={`${base}/avisos`}
             icono={BellRing}
             titulo="Avisos e historial"
-            texto={noes + dia.incidencias.length > 0 ? `Hoy: ${noes} «No» y ${dia.incidencias.length} incidencias.` : 'Sin «No» ni incidencias hoy.'}
+            texto={
+              noes + dia.incidencias.length > 0
+                ? `Hoy: ${noes} «No» y ${dia.incidencias.length} incidencias.`
+                : 'Sin «No» ni incidencias hoy.'
+            }
             alerta={noes + dia.incidencias.length > 0}
           />
         )}
@@ -79,12 +98,16 @@ function Acceso({
       href={href}
       className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
     >
-      <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${alerta ? 'bg-bad-soft text-bad' : 'bg-surface-2 text-ink'}`}>
+      <span
+        className={`grid size-10 shrink-0 place-items-center rounded-xl ${alerta ? 'bg-bad-soft text-bad' : 'bg-surface-2 text-ink'}`}
+      >
         <Icono size={18} aria-hidden="true" />
       </span>
       <span>
         <span className="block font-display font-bold">{titulo}</span>
-        <span className={`text-sm ${alerta ? 'font-medium text-bad' : 'text-muted-foreground'}`}>{texto}</span>
+        <span className={`text-sm ${alerta ? 'font-medium text-bad' : 'text-muted-foreground'}`}>
+          {texto}
+        </span>
       </span>
     </Link>
   );

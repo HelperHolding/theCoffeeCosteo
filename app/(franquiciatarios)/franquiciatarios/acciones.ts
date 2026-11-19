@@ -85,7 +85,8 @@ export async function responder(datos: {
   observacion?: string | null;
   motivo?: string | null;
 }): Promise<Resultado> {
-  if (!SECCIONES.includes(datos.seccion) || typeof datos.cumple !== 'boolean') return { error: 'Datos inválidos.' };
+  if (!SECCIONES.includes(datos.seccion) || typeof datos.cumple !== 'boolean')
+    return { error: 'Datos inválidos.' };
   const c = await contexto(datos.companyId);
   if (!c) return { error: SIN_ACCESO };
   const b = await barista(datos.companyId, c.rol);
@@ -147,7 +148,8 @@ export async function corregir(datos: {
   motivo: string;
 }): Promise<Resultado> {
   const c = await contexto(datos.companyId);
-  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario corrigen registros.' };
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario corrigen registros.' };
   const disp = await dispositivo();
   return ejecutar(() =>
     c.db.rpc('franq_corregir', {
@@ -167,7 +169,8 @@ export async function guardarBarista(datos: {
   activo: boolean;
 }): Promise<Resultado> {
   const c = await contexto(datos.companyId);
-  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario administran los nombres.' };
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario administran los nombres.' };
   return ejecutar(() =>
     c.db.rpc('franq_barista_guardar', {
       p_company: datos.companyId,
