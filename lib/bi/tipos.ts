@@ -15,7 +15,7 @@ export interface RpcTablero {
   promociones: { company_id: number; promocion: string; unidades: number; venta_cent: number }[];
   ranking: { codigo: string; nombre: string; mes: string; unidades: number; venta_cent: number; lineas: number }[];
   fuentes: { fuente: string; canal: string; venta_cent: number }[];
-  /** Desde la migración 73; sin ella (base anterior) no llega y la pantalla dice «sin datos». */
+  /** Desde la migración 74; sin ella (base anterior) no llega y la pantalla dice «sin datos». */
   metas?: RpcMetas;
 }
 
