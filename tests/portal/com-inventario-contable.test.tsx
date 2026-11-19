@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh() {} }) }));
 vi.mock('../../app/(comercializadora)/comercializadora/acciones', () => ({ ajustar3pl: vi.fn() }));
-import { conVentaContable, ventaDiaria30 } from '../../lib/comercializadora/inventario';
+import {
+  conCoberturaAperturas,
+  conVentaContable,
+  ventaDiaria30,
+} from '../../lib/comercializadora/inventario';
 import { Inventario } from '../../components/comercializadora/inventario';
 import { normalizarCfgMotor } from '../../supabase/functions/_shared/planDatos.ts';
 
@@ -124,20 +128,31 @@ describe('pantalla Inventario', () => {
     autorizadores: [],
     saldos3pl: {},
     ventaAviso: null,
+    aperturasMes: 10,
   };
   it('solo Nombre (con el SKU debajo), Inventario, Venta/día y Cobertura', () => {
-    const filas = conVentaContable([fila({})] as never, { A: 0.8 });
+    const filas = conCoberturaAperturas(conVentaContable([fila({})] as never, { A: 0.8 }), {}, 10);
     render(<Inventario filas={filas} {...props} />);
     const encabezados = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    expect(encabezados).toEqual(['Nombre', 'Inventario', 'Venta/día', 'Cobertura (días)']);
+    expect(encabezados).toEqual([
+      'Nombre',
+      'Inventario',
+      'Venta/día',
+      'Cobertura (días)',
+      'Cobertura c/aperturas (días)',
+    ]);
     expect(screen.getByText('Café')).toBeTruthy();
     expect(screen.getByText('A')).toBeTruthy();
-    expect(screen.getByText('15')).toBeTruthy();
+    expect(screen.getAllByText('15')).toHaveLength(2); // sin kit, las dos coberturas son iguales
   });
   it('faltantes cuenta el inventario contable ≤ 0; avisa si no hay venta de los pedidos', () => {
-    const filas = conVentaContable(
-      [fila({}), fila({ sku: 'B', nombre: 'Vasos', contable: 0, disponible: 99 })] as never,
-      null,
+    const filas = conCoberturaAperturas(
+      conVentaContable(
+        [fila({}), fila({ sku: 'B', nombre: 'Vasos', contable: 0, disponible: 99 })] as never,
+        null,
+      ),
+      {},
+      10,
     );
     render(
       <Inventario filas={filas} {...props} ventaAviso="No se pudieron leer los pedidos del sitio viejo." />,

@@ -4,6 +4,7 @@ import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { com, leerTodoCom } from '@/lib/comercializadora/consultas';
 import {
+  conCoberturaAperturas,
   conVentaContable,
   filasInventario,
   tresPlViejo,
@@ -21,7 +22,7 @@ export default async function InventarioPagina() {
   const hoy = hoyCdmx();
   // Venta/día = lo vendido en 30 días ÷ 30, sin aperturas, con los pedidos que el motor ya tiene en caché (plan 3d).
   const motor = motorPlan(db);
-  const [catalogo, minmax, ventas, lineas, sync, config, aut] = await Promise.all([
+  const [catalogo, minmax, ventas, lineas, sync, config, aut, kits] = await Promise.all([
     leerTodoCom<ArticuloInventario>(
       db,
       'com_catalogo',
@@ -57,8 +58,12 @@ export default async function InventarioPagina() {
       .limit(1),
     com(db).from('com_plan_config').select('config').eq('id', 1).maybeSingle(),
     com(db).rpc('com_autorizadores'),
+    // Kit por apertura (manual o promedio) para la cobertura con aperturas.
+    leerTodoCom<{ sku: string; kit: number | null }>(db, 'com_kit_apertura', 'sku,kit', 'sku'),
   ]);
   const editable = puedeEditarCom(accesos);
+  const aperturasMes = Number(config.data?.config?.aper?.por_mes) || 0;
+  const kit = Object.fromEntries(kits.map((k) => [k.sku, Number(k.kit) || 0]));
   const m = await motor;
   const venta30 = m.ok
     ? memoMotor(m, 'venta30', () =>
@@ -78,19 +83,24 @@ export default async function InventarioPagina() {
       <Encabezado
         area="Comercializadora"
         titulo="Inventario"
-        descripcion="Inventario contable de Zoho, venta diaria de los últimos 30 días (sin aperturas) y su cobertura."
+        descripcion="Inventario contable de Zoho, venta diaria de los últimos 30 días (sin aperturas) y su cobertura, sin y con aperturas."
       />
       <Inventario
-        filas={conVentaContable(
-          filasInventario({
-            catalogo,
-            minmax,
-            ventas,
-            lineas,
-            yulius: config.data?.config?.inv?.yulius !== false,
-          }),
-          venta30,
+        filas={conCoberturaAperturas(
+          conVentaContable(
+            filasInventario({
+              catalogo,
+              minmax,
+              ventas,
+              lineas,
+              yulius: config.data?.config?.inv?.yulius !== false,
+            }),
+            venta30,
+          ),
+          kit,
+          aperturasMes,
         )}
+        aperturasMes={aperturasMes}
         ventaAviso={m.ok ? null : m.error}
         valor={valorInventario(catalogo)}
         viejos={catalogo.filter((c) => tresPlViejo(c, hoy)).map((c) => c.sku)}

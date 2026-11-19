@@ -43,6 +43,7 @@ describe('Inventario', () => {
         autorizadores={[]}
         saldos3pl={{}}
         ventaAviso={null}
+        aperturasMes={10}
       />,
     );
     expect(screen.getByText('Café')).toBeInTheDocument();
@@ -62,6 +63,7 @@ describe('Inventario', () => {
         autorizadores={[]}
         saldos3pl={{}}
         ventaAviso={null}
+        aperturasMes={10}
       />,
     );
     expect(screen.queryByRole('button', { name: /Ajustar 3PL/ })).not.toBeInTheDocument();
