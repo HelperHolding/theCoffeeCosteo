@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Calculator,
+  ClipboardCheck,
   ShoppingCart,
   Store,
   type LucideIcon,
@@ -17,6 +18,7 @@ const iconos: Record<IdModulo, LucideIcon> = {
   sucursales: Activity,
   bi: BarChart3,
   comercializadora: ShoppingCart,
+  franquiciatarios: ClipboardCheck,
 };
 
 export function TarjetasModulos({

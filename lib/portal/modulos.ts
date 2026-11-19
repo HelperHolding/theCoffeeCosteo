@@ -2,13 +2,16 @@ import type { NivelModulo } from '../supabase/database.types';
 import { tieneCosteo } from './roles';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
-export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi' | 'comercializadora';
+export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi' | 'comercializadora' | 'franquiciatarios';
 /**
  * Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita (sale de perfiles.rol).
  * 'sucursales_costeo': ver el Costeo de sus sucursales dentro de Sucursales, sin entrar al módulo Costeo.
  */
 export type Accesos = Partial<
-  Record<'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora', NivelModulo>
+  Record<
+    'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios',
+    NivelModulo
+  >
 >;
 
 export interface Modulo {
@@ -57,6 +60,14 @@ export const modulos: Modulo[] = [
     descripcion: 'Qué pedir, órdenes de compra, mínimos, proveedores sin stock y pagos.',
     href: '/comercializadora',
     acceso: (a) => a.comercializadora !== undefined,
+  },
+  {
+    id: 'franquiciatarios',
+    nombre: 'Franquiciatarios',
+    descripcion: 'Operación diaria de la sucursal: checklists de turno, ventas del día y tira de venta.',
+    href: '/franquiciatarios',
+    // Además del módulo, cada sucursal requiere una membresía activa (franq_miembros); lo exige franq_rol.
+    acceso: (a) => a.franquiciatarios !== undefined,
   },
 ];
 

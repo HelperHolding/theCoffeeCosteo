@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ThinkingOrb } from 'thinking-orbs';
 import { LogOut, Menu, Search, X, Coffee, Layers, Store, Contact, Activity } from 'lucide-react';
-import { Navegacion, gruposDe, type Seccion } from './navegacion';
+import { Navegacion, gruposDe, type Franquicia, type Seccion } from './navegacion';
 import type { IdModulo } from '@/lib/portal/modulos';
-import { MarcaHolding } from './marca';
+import { MarcaHolding, MarcaTheCoffee } from './marca';
+import { marcaDe } from '@/lib/portal/roles';
 import { InterruptorLuz } from './interruptor-luz';
 import { Agente } from './agente';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,11 @@ const textos: Record<Seccion, { marca: [string, string]; buscar: string; registr
     registros: 'Sucursales',
   },
   bi: { marca: ['BI', 'tableros'], buscar: 'Buscar tienda o tablero…', registros: 'Tiendas' },
+  franquiciatarios: {
+    marca: ['Operación', 'sucursal'],
+    buscar: 'Buscar pantalla…',
+    registros: 'Sucursales',
+  },
 };
 
 export function Marco({
@@ -59,15 +65,21 @@ export function Marco({
   seccion,
   visibles,
   busqueda = [],
+  franquicia,
   children,
 }: {
   perfil: { nombre: string; rol: string };
   seccion: Seccion;
   visibles: IdModulo[];
   busqueda?: ItemBusqueda[];
+  /** Sucursal abierta en Franquiciatarios: arma su navegación (Hoy, Checklists, Ventas…). */
+  franquicia?: Franquicia;
   children: React.ReactNode;
 }) {
   const t = textos[seccion];
+  // Usuarios externos al grupo ven la marca The Coffee; los internos, Helper Holding.
+  const tienda = marcaDe(perfil.rol) === 'thecoffee';
+  const nombreMarca = tienda ? 'The Coffee · Inicio' : 'Helper Holding · Inicio';
   // Costeo y CRM tienen su agente de solo lectura; Inicio y Sucursales (por ahora) no.
   const modulo = seccion === 'costeo' || seccion === 'crm' ? seccion : null;
   const conAgente = modulo !== null;
@@ -99,14 +111,19 @@ export function Marco({
 
   const lateral = (
     <div className="flex h-full flex-col gap-7 px-5 py-6">
-      <Link href="/" aria-label="Helper Holding · Inicio" className="block">
-        <MarcaHolding tamano="md" />
+      <Link href="/" aria-label={nombreMarca} className="block">
+        {tienda ? <MarcaTheCoffee tamano="md" /> : <MarcaHolding tamano="md" />}
         <span className="mt-5 block border-t border-line pt-3 text-[10px] font-semibold uppercase tracking-[.24em] text-muted-foreground">
           {t.marca[0]} · {t.marca[1]}
         </span>
       </Link>
       <Suspense>
-        <Navegacion alNavegar={() => setMenu(false)} seccion={seccion} visibles={visibles} />
+        <Navegacion
+          alNavegar={() => setMenu(false)}
+          seccion={seccion}
+          visibles={visibles}
+          franquicia={franquicia}
+        />
       </Suspense>
       <div className="flex-1" />
       <div className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 text-sm">
@@ -115,7 +132,9 @@ export function Marco({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-ink">{perfil.nombre}</p>
-          <p className="capitalize text-xs text-muted-foreground">{perfil.rol}</p>
+          <p className="capitalize text-xs text-muted-foreground">
+            {perfil.rol === 'tienda' ? 'Cuenta de tienda' : perfil.rol}
+          </p>
         </div>
         <form action={salir}>
           <button
@@ -163,8 +182,8 @@ export function Marco({
             >
               {menu ? <X size={20} /> : <Menu size={20} />}
             </Button>
-            <Link href="/" className="lg:hidden" aria-label="Helper Holding · Inicio">
-              <MarcaHolding tamano="sm" />
+            <Link href="/" className="lg:hidden" aria-label={nombreMarca}>
+              {tienda ? <MarcaTheCoffee tamano="sm" /> : <MarcaHolding tamano="sm" />}
             </Link>
             <button
               onClick={() => setBuscador(true)}
@@ -213,7 +232,7 @@ export function Marco({
         <CommandList>
           <CommandEmpty>Sin resultados.</CommandEmpty>
           <CommandGroup heading="Pantallas">
-            {gruposDe(seccion, visibles).flatMap((g) =>
+            {gruposDe(seccion, visibles, franquicia).flatMap((g) =>
               g.enlaces.map(({ href, nombre, icono: Icono }) => (
                 <CommandItem key={href} value={`pantalla ${nombre}`} onSelect={() => ir(href)}>
                   <Icono aria-hidden="true" /> {nombre}

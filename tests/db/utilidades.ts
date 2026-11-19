@@ -11,7 +11,8 @@ export type Rol =
   | 'sucursales'
   | 'interno'
   | 'franquiciado'
-  | 'proveedor';
+  | 'proveedor'
+  | 'tienda';
 
 /** Ejecuta fn como el rol `authenticated` de Supabase con auth.uid() = userId. */
 export async function comoUsuario<T>(db: PGlite, userId: string, fn: () => Promise<T>): Promise<T> {
@@ -36,7 +37,7 @@ export async function crearUsuario(db: PGlite, rol: Rol): Promise<string> {
 export async function darModulo(
   db: PGlite,
   userId: string,
-  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora',
+  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios',
   nivel: 'desarrollador' | 'edicion' | 'lectura',
 ): Promise<void> {
   await db.query('insert into perfil_modulos (user_id, modulo, nivel) values ($1, $2, $3)', [userId, modulo, nivel]);
