@@ -423,7 +423,7 @@
  */
 @layer components {
   html[data-luz='noche'] .muro {
-    background: #23201d;
+    background: var(--color-ink);
   }
   /* De noche, el texto suelto sobre el fondo vuelve a ir en placa blanca. */
   html[data-luz='noche'] .muro .placa {
@@ -502,7 +502,7 @@
 
 /* Fuera de capa: la barra superior lleva utilidades de color (bg-muro/85, border-line/80) que ganan a components. */
 html[data-luz='noche'] .barra-muro {
-  background: #23201d;
+  background: var(--color-ink);
   border-color: rgb(255 255 255 / 0.08);
   color: #f1ece4;
 }
@@ -545,4 +545,38 @@ html[data-luz='noche'] .barra-muro [role='img'] > :first-child {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
   }
+}
+
+/*
+ * Modo noche: los papeles se invierten. El fondo es negro y el menú lateral, blanco con texto oscuro.
+ * Fuera de capa para ganar a las utilidades de color del menú (text-white, text-neutral-*, bg-white/*).
+ */
+html[data-luz='noche'] .lateral {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-line);
+}
+html[data-luz='noche'] .lateral .text-white {
+  color: var(--color-ink);
+}
+html[data-luz='noche'] .lateral .text-neutral-400 {
+  color: var(--color-muted-foreground);
+}
+html[data-luz='noche'] .lateral .text-neutral-500 {
+  color: #8a837b;
+}
+html[data-luz='noche'] .lateral [class*='border-white'] {
+  border-color: var(--color-line);
+}
+html[data-luz='noche'] .lateral [class~='bg-white/[.09]'],
+html[data-luz='noche'] .lateral [class~='bg-white/[.05]'] {
+  background: var(--color-surface-2);
+}
+html[data-luz='noche'] .lateral a:hover,
+html[data-luz='noche'] .lateral button:hover {
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+}
+html[data-luz='noche'] .lateral a[aria-current='page'] svg {
+  color: var(--color-crema-strong);
 }

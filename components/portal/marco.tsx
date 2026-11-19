@@ -134,7 +134,7 @@ export function Marco({
     <div
       className={`muro min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
     >
-      <aside className="hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+      <aside className="lateral hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         {lateral}
       </aside>
 
@@ -145,7 +145,7 @@ export function Marco({
             className="absolute inset-0 bg-ink/40"
             onClick={() => setMenu(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-ink shadow-2xl">
+          <aside className="lateral absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-ink shadow-2xl">
             {lateral}
           </aside>
         </div>
