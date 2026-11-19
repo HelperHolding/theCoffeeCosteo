@@ -316,3 +316,105 @@ it('ventas_bi: solo tiendas con módulo bi y en bi_opciones; montos en pesos; ho
   expect(r.tiendas).toEqual([{ company_id: A, nombre: 'Tienda A' }]);
   expect(r.tablero.kpis).toMatchObject({ venta: 1234, venta_bruta: 1300, tickets: 10 });
 });
+
+it('ventas_resumen hoy: comparable solo trae pedidos y venta (los tramos no guardan descuento ni líneas)', async () => {
+  respuestas({
+    mcp_ventas_sucursales: autorizado([{ company_id: A, modulos: ['sucursales'] }]),
+    sucursales_tablero_hoy: {
+      ultimo_corte: '2026-11-19T17:50:00Z',
+      dias: [
+        {
+          company_id: A,
+          fecha: '2026-11-19',
+          hoy: true,
+          leido_en: 'x',
+          corte_segundo: 43200,
+          completa: true,
+          origenes: { mostrador: { pedidos: 2, venta_cent: 20000, descuento_cent: 500, lineas: 3 } },
+          horas: {},
+          tramos: {
+            mostrador: [
+              Array(144)
+                .fill(0)
+                .map((_, i) => (i === 60 ? 2 : 0)),
+              Array(144)
+                .fill(0)
+                .map((_, i) => (i === 60 ? 20000 : 0)),
+            ],
+          },
+        },
+        {
+          company_id: A,
+          fecha: '2026-11-12',
+          hoy: false,
+          leido_en: 'x',
+          corte_segundo: 86400,
+          completa: true,
+          origenes: { mostrador: { pedidos: 1, venta_cent: 9000, descuento_cent: 0, lineas: 1 } },
+          horas: {},
+          tramos: {
+            mostrador: [
+              Array(144)
+                .fill(0)
+                .map((_, i) => (i === 61 ? 1 : 0)),
+              Array(144)
+                .fill(0)
+                .map((_, i) => (i === 61 ? 9000 : 0)),
+            ],
+          },
+        },
+      ],
+    },
+  });
+  const r = (await herramienta('ventas_resumen').ejecutar({})) as any;
+  const c = r.sucursales[0].comparable;
+  expect(c.hoy.mostrador).toEqual({ pedidos: 2, venta: 200 });
+  expect(c.base.mostrador).toEqual({ pedidos: 1, venta: 90 });
+  expect(r.sucursales[0].hoy.mostrador.descuento).toBe(5);
+});
+
+it('ventas_bi acota el tamaño: ranking top 50 y detalle por tienda solo si se pide', async () => {
+  const ranking = Array.from({ length: 80 }, (_, i) => ({
+    codigo: `P${i}`,
+    nombre: `P${i}`,
+    mes: '2026-11',
+    unidades: 1,
+    venta_cent: i * 100,
+    lineas: 1,
+  }));
+  const tablero = {
+    kpis: { venta_cent: 1, venta_bruta_cent: 1, tickets: 1, lineas: 1, unidades: 1 },
+    ranking,
+    promociones: [{ company_id: A, promocion: 'x', unidades: 1, venta_cent: 1 }],
+    por_pago_tienda: [{ etiqueta: 'x', company_id: A, venta_cent: 1 }],
+    por_tienda_dia: [{ company_id: A, dow: 1, venta_cent: 1, tickets: 1 }],
+  };
+  respuestas({
+    mcp_ventas_sucursales: autorizado([{ company_id: A, modulos: ['bi'] }]),
+    bi_opciones: {
+      tiendas: [{ company_id: A, store_id: 1, nombre: 'Tienda A', franquiciatario: null, tipo: 'Isla' }],
+      ultimo_corte: null,
+      tiendas_sin_rappi: 0,
+    },
+    bi_tablero: tablero,
+  });
+  const corto = (await herramienta('ventas_bi').ejecutar({
+    desde: '2026-11-01',
+    hasta: '2026-11-10',
+  })) as any;
+  expect(corto.tablero.ranking).toHaveLength(50);
+  expect(corto.tablero.ranking[0].codigo).toBe('P79');
+  expect(corto.tablero.promociones).toBeUndefined();
+  expect(corto.tablero.por_pago_tienda).toBeUndefined();
+  expect(corto.tablero.por_tienda_dia).toBeUndefined();
+  expect(corto.omitido).toEqual(
+    expect.arrayContaining(['promociones', 'por_pago_tienda', 'por_tienda_dia', 'ranking (30 filas más)']),
+  );
+  const largo = (await herramienta('ventas_bi').ejecutar({
+    desde: '2026-11-01',
+    hasta: '2026-11-10',
+    detalle: true,
+  })) as any;
+  expect(largo.tablero.promociones).toHaveLength(1);
+  expect(largo.tablero.ranking).toHaveLength(50);
+});

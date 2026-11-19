@@ -54,6 +54,15 @@ const CANALES = 'Canales: mostrador (POS en tienda), app (app The Coffee) y rapp
 const MONTOS =
   'Montos en MXN con IVA, como en el portal. Fechas AAAA-MM-DD en la hora local de cada sucursal.';
 const NO_ESTIMA = 'Un día con completa=false no se leyó entero: no se estima lo que falta.';
+const RANKING_MAX = 50;
+/** Listas del tablero BI que crecen con tiendas × promociones/pagos/días: solo con detalle=true. */
+const BI_DETALLE = ['promociones', 'por_pago_tienda', 'por_tienda_dia'] as const;
+
+/** La comparación «a esta hora» sale de tramos de 10 min, que solo guardan pedidos y venta (no descuento ni líneas). */
+const soloPedidosVenta = (c: PorOrigen<TotalesOrigen>) =>
+  Object.fromEntries(
+    Object.entries(c).map(([o, t]) => [o, { pedidos: t!.pedidos, venta_cent: t!.venta_cent }]),
+  );
 
 const cero = (): TotalesOrigen => ({ pedidos: 0, venta_cent: 0, descuento_cent: 0, lineas: 0 });
 export const sumar = (a: TotalesOrigen, b: TotalesOrigen): TotalesOrigen => ({
@@ -126,7 +135,7 @@ export function consultasVentas(db: Db): Consulta[] {
     ),
     consulta(
       'ventas_resumen',
-      `Venta, pedidos, descuentos y líneas por canal. Sin fechas: HOY en vivo por sucursal (corte cada 10 min), con la semana pasada a la misma hora (comparable). Con desde y hasta (máximo ${MAX_DIAS} días): agrupar=sucursal (por omisión), dia o sucursal_dia (paginado). sucursales: lista de company_id; si se omite, todas. ${CANALES} ${MONTOS} ${NO_ESTIMA}`,
+      `Venta, pedidos, descuentos y líneas por canal. Sin fechas: HOY en vivo por sucursal (corte cada 10 min), con la semana pasada a la misma hora (comparable: solo pedidos y venta). Con desde y hasta (máximo ${MAX_DIAS} días): agrupar=sucursal (por omisión), dia o sucursal_dia (paginado). sucursales: lista de company_id; si se omite, todas. ${CANALES} ${MONTOS} ${NO_ESTIMA}`,
       z.object({
         desde: fecha.optional(),
         hasta: fecha.optional(),
@@ -162,7 +171,10 @@ export function consultasVentas(db: Db): Consulta[] {
               completa: s.completa,
               corte_segundo: s.corteSegundo,
               hoy: s.hoy,
-              comparable: s.comparable,
+              comparable: s.comparable && {
+                hoy: soloPedidosVenta(s.comparable.hoy),
+                base: soloPedidosVenta(s.comparable.base),
+              },
               comparado_a_segundo: s.comparadoA,
             })),
           }) as Record<string, unknown>;
@@ -328,8 +340,13 @@ export function consultasVentas(db: Db): Consulta[] {
     ),
     consulta(
       'ventas_bi',
-      `Tablero BI de The Coffee México para un periodo (máximo ${MAX_DIAS} días), de las cargas del POS: KPIs (venta neta y bruta, tickets, líneas, unidades), venta por grupo, categoría, café, fecha, día de la semana, hora, método de pago, promociones, ranking de productos y fuentes. Solo tiendas con módulo bi. ${MONTOS}`,
-      z.object({ desde: fecha, hasta: fecha, sucursales: listaSucursales }),
+      `Tablero BI de The Coffee México para un periodo (máximo ${MAX_DIAS} días), de las cargas del POS: KPIs (venta neta y bruta, tickets, líneas, unidades), venta por grupo, categoría, café, fecha, día de la semana, hora, método de pago, ranking de productos (los ${RANKING_MAX} de mayor venta) y fuentes. Con detalle=true agrega promociones, pagos por tienda y venta por tienda y día de la semana (respuesta mucho más grande). Solo tiendas con módulo bi. ${MONTOS}`,
+      z.object({
+        desde: fecha,
+        hasta: fecha,
+        sucursales: listaSucursales,
+        detalle: z.boolean().default(false),
+      }),
       async (e) => {
         const p = rango(e);
         const { companias, ignoradas } = elegir(await visibles(db), 'bi', e.sucursales);
@@ -350,7 +367,18 @@ export function consultasVentas(db: Db): Consulta[] {
             }) as Json,
           }),
         ) as unknown as RpcTablero;
+        const omitido: string[] = [];
+        const ranking = [...(tablero.ranking ?? [])].sort((a, b) => b.venta_cent - a.venta_cent);
+        if (ranking.length > RANKING_MAX) omitido.push(`ranking (${ranking.length - RANKING_MAX} filas más)`);
+        const recortado: Record<string, unknown> = { ...tablero, ranking: ranking.slice(0, RANKING_MAX) };
+        if (!e.detalle)
+          for (const k of BI_DETALLE)
+            if (k in recortado) {
+              delete recortado[k];
+              omitido.push(k);
+            }
         return aPesos({
+          omitido,
           ...p,
           ignoradas: [...ignoradas, ...companias.filter((c) => !conAcceso.has(c))],
           tiendas: opciones.tiendas
@@ -358,7 +386,7 @@ export function consultasVentas(db: Db): Consulta[] {
             .map((t) => ({ company_id: t.company_id, nombre: t.nombre })),
           ultimo_corte: opciones.ultimo_corte,
           tiendas_sin_rappi: opciones.tiendas_sin_rappi,
-          tablero,
+          tablero: recortado,
         }) as Record<string, unknown>;
       },
     ),
