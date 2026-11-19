@@ -46,9 +46,11 @@ Antes de escribir herramientas, confirmar con una cuenta real:
 2. La URL de retorno (`redirect_uri`) exacta que usa Grok.
 3. Que Grok maneja `structuredContent` o, al menos, el `text` JSON que ya devuelven las herramientas.
 
-Cómo: agregar temporalmente la URL que Grok presente al consentimiento en una rama de prueba (o leerla del error
-«La solicitud no pertenece a un conector permitido», que se ampliará para mostrarla), conectar y llamar
-`buscar_recetas`. Resultado: la `redirect_uri` real queda escrita en la sección 5.3 de este spec.
+Cómo: agregar el conector en grok.com apuntando a `/mcp` de producción. Si Grok llega a la pantalla de
+consentimiento (que hoy lo rechazará), ya quedó probado que hace descubrimiento OAuth y registro dinámico; la
+`redirect_uri` se lee del cliente recién registrado en Supabase → Authentication → OAuth Apps. Resultado: la
+`redirect_uri` real queda escrita en la sección 5.3 de este spec. El punto 3 se comprueba en la verificación
+real del final.
 
 **Si Grok no soporta MCP remoto con OAuth, este diseño se detiene** y se vuelve a la lluvia de ideas
 (no se cae a REST con llave en la URL sin una nueva decisión).
@@ -63,7 +65,7 @@ Grok ──OAuth (Supabase)──► /oauth/consent  (callback de Grok permitido
                         └─► RPC de solo lectura en Postgres:
                               mcp_ventas_sucursales()
                               sucursales_tablero_hoy / sucursales_tablero_periodo   (ya existen)
-                              mcp_ventas_detalle(companias, desde, hasta)            (nueva)
+                              mcp_ventas_dias(companias, desde, hasta, horas)        (nueva)
                               bi_opciones / bi_tablero                               (ya existen)
                         todas filtran con ventas_lectura(company, modulo)
 ```
@@ -94,10 +96,10 @@ convierte centavos a pesos.
 4. **`mcp_ventas_sucursales() returns jsonb`** — `[{company_id, nombre, modulos: ['sucursales','bi']}]` de las
    sucursales de la cuenta donde `ventas_lectura` es verdadero en algún módulo. Sustituye la lectura de
    `perfil_sucursales`, que sigue cerrada a OAuth.
-5. **`mcp_ventas_detalle(p_companias integer[], p_desde date, p_hasta date) returns jsonb`** — lee
-   `sucursales_resumen_dia` de las sucursales con `ventas_lectura(c,'sucursales')`; máximo 31 días.
-   Devuelve por sucursal y día: `completa`, `corte_segundo`, `horas` y `productos` tal como están guardados.
-   La agregación (top de productos, suma por hora) se hace en TypeScript para poder probarla en vitest.
+5. **`mcp_ventas_dias(p_companias integer[], p_desde date, p_hasta date, p_horas boolean) returns jsonb`** —
+   lee `sucursales_resumen_dia` de las sucursales con `ventas_lectura(c,'sucursales')`; máximo 120 días, o 7 si
+   `p_horas`. Devuelve por sucursal y día: `completa`, `corte_segundo`, `origenes` y, si `p_horas`, `horas`.
+   Los productos ya vienen agregados en SQL por `sucursales_tablero_periodo` (no se mandan por día).
 6. `grant execute` de las funciones nuevas solo a `authenticated`.
 
 ### 5.2 Herramientas MCP — `lib/mcp/ventas.ts`
@@ -111,9 +113,9 @@ decimales** (`venta_cent / 100`). Fechas `YYYY-MM-DD` en la zona local de cada s
 | Herramienta | Entrada | Salida | Fuente |
 |---|---|---|---|
 | `ventas_sucursales` | — | sucursales visibles, zona horaria, módulos | `mcp_ventas_sucursales` + config de `lib/sucursales` |
-| `ventas_resumen` | `desde?`, `hasta?` (≤120 días), `sucursales?` | sin fechas: hoy en vivo por sucursal (venta, pedidos, descuento por canal, `corte_hora`, `completa`, mismo día semana pasada). Con fechas: por sucursal y día cerrado | `sucursales_tablero_hoy` / `_periodo`, mismos armadores que `/api/sucursales/tablero` (`lib/sucursales/resumen.ts`) |
-| `ventas_por_hora` | `fecha`, `sucursales?` | 24 horas × canal: pedidos y venta, por sucursal y total | `mcp_ventas_detalle` |
-| `ventas_por_producto` | `desde`, `hasta` (≤31 días), `sucursales?`, `canal?`, `pagina`, `limite` (≤50) | productos ordenados por importe: código, nombre, piezas, importe, por canal; paginado | `mcp_ventas_detalle` |
+| `ventas_resumen` | `desde?`, `hasta?` (≤120 días), `sucursales?` | sin fechas: hoy en vivo por sucursal (venta, pedidos, descuento por canal, `corte_segundo`, `completa`, semana pasada a la misma hora), armado con `armarHoy` de `lib/sucursales/resumen.ts`. Con fechas: `agrupar` = sucursal (por omisión), dia o sucursal_dia (paginado) | `sucursales_tablero_hoy` / `mcp_ventas_dias` |
+| `ventas_por_hora` | `fecha`, `sucursales?` | 24 horas × canal: pedidos y venta, por sucursal y total | `mcp_ventas_dias` |
+| `ventas_por_producto` | `desde`, `hasta` (≤120 días), `sucursales?`, `canal?`, `pagina`, `limite` (≤50) | productos ordenados por importe: código, nombre, líneas, importe, en cuántas sucursales se vendió; paginado | `sucursales_tablero_periodo.productos` |
 | `ventas_bi` | `desde`, `hasta`, `sucursales?` | la respuesta de `bi_tablero` (metas, ticket, punto de equilibrio, pagos) con montos en MXN | `bi_opciones` + `bi_tablero`, mismos filtros que `/api/bi/tablero` |
 
 Reglas:
@@ -125,9 +127,9 @@ Reglas:
 - Las descripciones van en español y explican canales, zona horaria y que los montos son MXN con IVA, igual que
   el portal.
 
-La lógica que hoy vive en las rutas (`app/api/sucursales/tablero/route.ts`, `app/api/bi/tablero/route.ts`) y
-que el MCP necesita (resolver «hoy» por sucursal, filtrar compañías, armar filtros BI) se mueve a funciones de
-`lib/` y ambas rutas las reutilizan, sin cambiar sus respuestas.
+Las rutas del portal no cambian: el MCP llama las mismas RPC y reusa `armarHoy`, `aJsonRpc` y `enZona`. Lo poco
+que las rutas hacen antes de la RPC (fecha local de hoy por sucursal, filtros BI mínimos) se repite en
+`lib/mcp/ventas.ts` en pocas líneas, sin mover código del portal.
 
 ### 5.3 Consentimiento OAuth — `lib/mcp/consentimiento.ts`, `app/oauth/consent/*`
 
@@ -152,18 +154,17 @@ Se documenta en `docs/mcp/grok.md`.
 - Doble llave para OAuth: cuenta con la sucursal asignada **y** cliente en la lista blanca. Un cliente OAuth
   nuevo (otro conector registrado dinámicamente) no ve ventas hasta que se autoriza.
 - Claude conectado hoy tampoco ve ventas salvo que su `client_id` se agregue: el comportamiento actual no cambia.
-- Límites de rango (120 / 31 días) y de página (50) para acotar el volumen enviado a xAI.
+- Límites de rango (120 días; 7 con horas) y de página (50) para acotar el volumen enviado a xAI.
 
 ## 7. Pruebas
 
 - **DB (`tests/db/mcp-ventas.test.ts`, arnés existente):** `ventas_lectura` con sesión normal, token OAuth sin
   lista blanca (falso), con lista blanca y sin sucursal asignada (falso), con todo (verdadero), perfil inactivo
-  (falso); las RPC de escritura siguen rechazando OAuth autorizado; `mcp_ventas_detalle` rechaza >31 días y
+  (falso); las RPC de escritura siguen rechazando OAuth autorizado; `mcp_ventas_dias` rechaza >120 días (7 con horas) y
   omite sucursales ajenas; `sucursales_tablero_periodo` sigue igual para sesión normal.
 - **Unidad (`tests/mcp/ventas.test.ts`):** validación de entradas, centavos → pesos, agregado por hora y top de
   productos con paginado, `ignoradas`, error de cliente no autorizado.
-- **Rutas:** las respuestas de `/api/sucursales/tablero` y `/api/bi/tablero` no cambian tras mover la lógica a
-  `lib/` (pruebas existentes + una de igualdad).
+- **Rutas:** las pruebas existentes de `/api/sucursales/tablero` y `/api/bi/tablero` siguen pasando.
 - **Real (manual, documentado):** Grok conectado responde el total de ayer de 2 sucursales y coincide con el
   Tablero de México.
 
@@ -171,7 +172,6 @@ Se documenta en `docs/mcp/grok.md`.
 
 1. Fase 0 (verificar Grok) → actualizar 5.3.
 2. Migración + pruebas DB.
-3. Mover lógica de rutas a `lib/` sin cambio de comportamiento.
-4. `lib/mcp/ventas.ts` + pruebas.
-5. Consentimiento para Grok.
-6. `docs/mcp/grok.md`, `supabase db push` (lo corre el administrador), alta del `client_id`, verificación real.
+3. `lib/mcp/ventas.ts` + pruebas.
+4. Consentimiento para Grok.
+5. `docs/mcp/grok.md`, `supabase db push` (lo corre el administrador), alta del `client_id`, verificación real.
