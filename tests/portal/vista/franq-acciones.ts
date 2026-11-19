@@ -169,3 +169,10 @@ export async function guardarBarista(d: {
   avisar();
   return { ok: true };
 }
+
+export async function verComo(rol: string): Promise<Resultado> {
+  await espera();
+  tienda.rol = rol === 'admin' ? 'gerente' : (rol as typeof tienda.rol);
+  avisar();
+  return { ok: true };
+}

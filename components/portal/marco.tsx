@@ -66,6 +66,7 @@ export function Marco({
   visibles,
   busqueda = [],
   franquicia,
+  marca,
   children,
 }: {
   perfil: { nombre: string; rol: string };
@@ -74,11 +75,13 @@ export function Marco({
   busqueda?: ItemBusqueda[];
   /** Sucursal abierta en Franquiciatarios: arma su navegación (Hoy, Checklists, Ventas…). */
   franquicia?: Franquicia;
+  /** Fuerza la marca (vista previa del admin como usuario de tienda). */
+  marca?: 'holding' | 'thecoffee';
   children: React.ReactNode;
 }) {
   const t = textos[seccion];
   // Usuarios externos al grupo ven la marca The Coffee; los internos, Helper Holding.
-  const tienda = marcaDe(perfil.rol) === 'thecoffee';
+  const tienda = (marca ?? marcaDe(perfil.rol)) === 'thecoffee';
   const nombreMarca = tienda ? 'The Coffee · Inicio' : 'Helper Holding · Inicio';
   // Costeo y CRM tienen su agente de solo lectura; Inicio y Sucursales (por ahora) no.
   const modulo = seccion === 'costeo' || seccion === 'crm' ? seccion : null;

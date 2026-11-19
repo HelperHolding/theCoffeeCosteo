@@ -17,6 +17,7 @@ import { construirTira, sinDatosSensibles } from '../../../lib/franquiciatarios/
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { tienda } from './franq-acciones';
 import { PropuestaGerente } from './propuesta-gerente';
+import { VerComo } from '../../../components/franquiciatarios/ver-como';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
@@ -298,6 +299,7 @@ export function VistaFranquiciatarios() {
       franquicia={{ companyId: 514, nombre: 'Essentia', gestor, varias: tienda.rol === 'franquiciatario' }}
     >
       <p className="aviso">PRUEBA VISUAL · DATOS SINTÉTICOS · Sin Auth ni conexión a bases de datos</p>
+      {p.get('admin') === '1' && <VerComo rol={tienda.rol} />}
       <Encabezado
         area="Essentia"
         titulo={titulo}

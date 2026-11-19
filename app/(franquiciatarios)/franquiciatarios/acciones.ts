@@ -1,7 +1,13 @@
 'use server';
 import { cookies, headers } from 'next/headers';
 import { refresh } from 'next/cache';
-import { sesionFranquiciatarios, esGestorFranq, type RolFranq } from '@/lib/supabase/sesion';
+import {
+  COOKIE_VER_COMO,
+  ROLES_VISTA,
+  sesionFranquiciatarios,
+  esGestorFranq,
+  type RolFranq,
+} from '@/lib/supabase/sesion';
 import { cookieBarista } from '@/lib/franquiciatarios/servidor';
 import type { SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
@@ -50,6 +56,25 @@ async function ejecutar(fn: () => PromiseLike<{ error: { message: string } | nul
   } catch (e) {
     return fallo(e);
   }
+}
+
+/** Solo el admin del módulo: elige con qué rol ver las pantallas (vista previa). Sus permisos no cambian. */
+export async function verComo(rol: RolFranq): Promise<Resultado> {
+  const s = await sesionFranquiciatarios(false).catch(() => null);
+  if (!s?.admin) return { error: 'Solo el administrador del módulo usa la vista previa.' };
+  if (!ROLES_VISTA.includes(rol)) return { error: 'Rol inválido.' };
+  const jar = await cookies();
+  if (rol === 'admin') jar.delete(COOKIE_VER_COMO);
+  else
+    jar.set(COOKIE_VER_COMO, rol, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 12,
+    });
+  refresh();
+  return { ok: true };
 }
 
 /** La cuenta de baristas declara quién está usando el dispositivo. null = cambiar de persona. */

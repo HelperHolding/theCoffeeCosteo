@@ -8,6 +8,12 @@ const sesion = vi.hoisted(() => ({
   modulos: [] as { modulo: string; nivel: string }[],
   miembros: [] as { company_id: number; rol: string }[],
   companias: [] as number[],
+  cookies: {} as Record<string, string>,
+}));
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (n: string) => (sesion.cookies[n] ? { value: sesion.cookies[n] } : undefined),
+  }),
 }));
 vi.mock('server-only', () => ({}));
 vi.mock('next/navigation', () => ({
@@ -106,6 +112,7 @@ beforeEach(() => {
     modulos: [{ modulo: 'franquiciatarios', nivel: 'lectura' }],
     miembros: [{ company_id: 612, rol: 'barista' }],
     companias: [],
+    cookies: {},
   });
   const api = apiFalsa({
     '2026-10-22': [
@@ -163,6 +170,28 @@ describe('acceso a las rutas del módulo', () => {
     });
     expect((await llamar(vivoFranq, '612')).status).toBe(200);
     expect((await llamar(vivoFranq, '999')).status).toBe(404); // no configurada
+  });
+
+  it('vista previa del admin («Ver como»): como barista, los avisos de gerencia responden 404', async () => {
+    Object.assign(sesion, {
+      rol: 'admin',
+      modulos: [{ modulo: 'franquiciatarios', nivel: 'desarrollador' }],
+      miembros: [],
+    });
+    const q = '?desde=2026-10-22&hasta=2026-10-22';
+    sesion.cookies = { franq_ver_como: 'barista' };
+    expect((await llamar(avisosFranq, '612', q)).status).toBe(404);
+    expect((await llamar(vivoFranq, '612')).status).toBe(200);
+    sesion.cookies = { franq_ver_como: 'cualquier-cosa' }; // valor inválido = sin vista previa
+    expect((await llamar(avisosFranq, '612', q)).status).not.toBe(404);
+    // Un no-admin con la cookie no gana nada: sigue siendo barista de su sucursal.
+    Object.assign(sesion, {
+      rol: 'tienda',
+      modulos: [{ modulo: 'franquiciatarios', nivel: 'lectura' }],
+      miembros: [{ company_id: 612, rol: 'barista' }],
+    });
+    sesion.cookies = { franq_ver_como: 'gerente' };
+    expect((await llamar(avisosFranq, '612', q)).status).toBe(404);
   });
 
   it('pedidos y tira: solo hoy y los 6 días anteriores', async () => {

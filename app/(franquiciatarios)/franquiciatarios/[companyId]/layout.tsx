@@ -1,5 +1,6 @@
 import { contextoSucursal } from '@/lib/franquiciatarios/pagina';
 import { MarcoFranq } from '@/components/franquiciatarios/marco-franq';
+import { VerComo } from '@/components/franquiciatarios/ver-como';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,7 @@ export default async function SucursalLayout({
         varias: c.sucursales.size > 1,
       }}
     >
+      {c.admin && <VerComo rol={c.verComo} />}
       {children}
     </MarcoFranq>
   );

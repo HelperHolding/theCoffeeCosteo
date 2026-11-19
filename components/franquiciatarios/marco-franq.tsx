@@ -35,6 +35,7 @@ export async function MarcoFranq({
       visibles={modulosVisibles(await accesos(s.db, s.perfil.user_id), s.perfil.rol)}
       busqueda={s.sucursales.size > 1 ? busqueda : []}
       franquicia={franquicia}
+      marca={s.admin && s.verComo !== 'admin' ? 'thecoffee' : undefined}
     >
       <div className="space-y-7">{children}</div>
     </Marco>
