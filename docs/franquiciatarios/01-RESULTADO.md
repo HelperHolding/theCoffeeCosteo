@@ -78,6 +78,15 @@
     `bi_metas.fecha_apertura`.
   - El PR #165 la renombra a la 73, que ya ocupa `mcp_ventas`, así que **tiene que pasar a la 74**.
 - Este PR usa la **75** para dejarle la 74 a ese arreglo.
+- **Hecho el 2026-11-20 (con el OK de Carlos para arreglar #165 primero).**
+  - #165 ahora pasa la migración de BI a la **`20261120000074_bi_metas_pe.sql`**, con un merge de `main` y sin
+    reescribir historia.
+  - Sus pruebas de BI, MCP y las guardias pasan: 89/89.
+  - Se ensayó en producción con ROLLBACK, sha256 `6c3294785a8f…`. No persistió nada y `bi_tablero` quedó idéntico.
+  - El respaldo está en `Respaldos/thecoffee-supabase/2026-11-20-migracion-74-bi-antes.sql`. Script:
+    `scripts/franquiciatarios/ensayo-74-bi.ts`.
+- **El check «Supabase Preview» de este PR falla** con «duplicate key… (version)=(20261119000072)». Es la 72
+  duplicada que viene de `main`, no la 75. Se resuelve cuando #165 entre a `main` y se traiga `main` a esta rama.
 - Mientras `main` tenga la 72 duplicada, la integración de Supabase puede fallar al hacer el merge. **Hay que revisar
   el check de Supabase del PR antes de pedir el OK.**
 - Script de solo lectura: `scripts/franquiciatarios/estado-migraciones.ts`.
@@ -152,7 +161,17 @@
   - El portal real contra producción, porque la migración no está aplicada.
   - La tablet de la tienda.
 
-## 5. Bloqueos y preguntas para Carlos (todas juntas)
+## 5. Respuestas de Carlos (2026-11-20) y bloqueos
+
+- **Corte del día:** 4:00 de CDMX ✅ (como quedó construido).
+- **Correcciones de lo firmado:** gerente y franquiciatario ✅ (y el admin del módulo).
+- **Usuarios:** por ahora **solo el acceso de Carlos**.
+  - Como admin del módulo (nivel `desarrollador`) elige con **«Ver como»** si ve la sucursal como administración,
+    franquiciatario, gerente o baristas. Solo cambia lo que se muestra; lo que registre es real y queda a su nombre.
+  - Los correos y usuarios de Essentia se asignan después.
+- **Orden de producción:** primero #165 (BI → 74), después #169.
+
+Preguntas originales:
 
 1. Nombre y correo del **franquiciatario** y del **gerente** de Essentia.
 2. **Correo para la cuenta de baristas** de Essentia. Tiene que recibir la invitación; un `@thecoffee.internal` no
@@ -163,15 +182,18 @@
 
 ## 6. Siguiente acción
 
-1. Carlos responde §5.
-2. Con el OK: merge (aplica la 75 si la integración está sana; si no, se aplica a mano registrando la versión en la
-   misma transacción).
-3. Alta de usuarios con el flujo de invitación (`docs/crm/44-CORREO-AUTENTICACION.md`; 30 correos por hora):
+1. **OK de Carlos para mergear #165.** Aplica la 74. Después hay que comprobar en `schema_migrations` que quedó
+   registrada.
+2. Traer `main` a esta rama y confirmar que el Supabase Preview pasa. Si el archivo de la 75 cambia, repetir el
+   ensayo.
+3. **OK de Carlos para mergear #169.** Aplica la 75.
+4. Dar a Carlos la fila `perfil_modulos(franquiciatarios, desarrollador)` con SQL autorizado y probar las cuatro
+   vistas de «Ver como» en Essentia.
+5. Más adelante, alta de los usuarios de Essentia con el flujo de invitación
+   (`docs/crm/44-CORREO-AUTENTICACION.md`; 30 correos por hora):
    - `perfiles` con rol `franquiciado` o `tienda`;
    - `perfil_modulos` con `franquiciatarios` en nivel `lectura`;
-   - `franq_miembros(…, 514, rol)`;
-   - Carlos con nivel `desarrollador`.
-4. Verificar con cada rol en producción, comparar con Sucursales → Essentia y hacer la prueba de impresión en tienda.
+   - `franq_miembros(…, 514, rol)`.
 
 ## 7. Pendientes del módulo
 
