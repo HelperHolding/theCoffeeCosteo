@@ -21,10 +21,13 @@ export function Pedidos({
   companyId,
   origen,
   zona,
+  base = '/api/sucursales',
 }: {
   companyId: number;
   origen: FiltroOrigen;
   zona: string;
+  /** Prefijo de la API (Franquiciatarios usa la suya, sin neto ni costos). */
+  base?: string;
 }) {
   const hoy = enZona(new Date(), zona).fecha;
   const [desde, setDesde] = useState(hoy);
@@ -41,7 +44,7 @@ export function Pedidos({
   const q = new URLSearchParams({ desde, hasta, origen, pagina: String(pagina) });
   if (pago) q.set('pago', pago);
   const { datos, error, cargando, recargar } = useLectura<RespuestaPedidos>(
-    valido ? `/api/sucursales/${companyId}/pedidos?${q}` : null,
+    valido ? `${base}/${companyId}/pedidos?${q}` : null,
   );
   // Cualquier cambio de filtro vuelve a la página 1.
   const cambiar = (fn: () => void) => {

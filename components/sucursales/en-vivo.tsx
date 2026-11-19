@@ -62,9 +62,21 @@ function useReloj(ms = 15_000) {
   return ahora;
 }
 
-export function EnVivo({ companyId, origen }: { companyId: number; origen: FiltroOrigen }) {
+export function EnVivo({
+  companyId,
+  origen,
+  base: api = '/api/sucursales',
+  conNeto = true,
+}: {
+  companyId: number;
+  origen: FiltroOrigen;
+  /** Prefijo de la API (Franquiciatarios usa la suya, sin neto ni costos). */
+  base?: string;
+  /** false: con Rappi muestra pagos en lugar del cobrado y neto de la API. */
+  conNeto?: boolean;
+}) {
   const { datos, error, cargando, recibidoEn, recargar } = useLectura<RespuestaVivo>(
-    `/api/sucursales/${companyId}/vivo?origen=${origen}`,
+    `${api}/${companyId}/vivo?origen=${origen}`,
     { intervaloMs: 60_000 },
   );
   const ahora = useReloj();
@@ -334,7 +346,7 @@ export function EnVivo({ companyId, origen }: { companyId: number; origen: Filtr
               </ConInfo>
             </div>
 
-            {origen === 'rappi' ? (
+            {origen === 'rappi' && conNeto ? (
               <NetoRappi kpis={d.kpis} moneda={m} />
             ) : (
               <ConInfo info={info.pagos}>
