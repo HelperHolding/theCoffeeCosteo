@@ -11,8 +11,10 @@ export function FilaPlegable(p: {
   celdas: React.ReactNode;
   detalle: React.ReactNode;
   claseTitulo?: string;
+  /** Abierto al montarse (p. ej. cuando el filtro deja un solo proveedor). */
+  abiertoInicial?: boolean;
 }) {
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(p.abiertoInicial ?? false);
   return (
     <>
       <tr

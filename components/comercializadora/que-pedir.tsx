@@ -10,9 +10,11 @@ import {
   ordenQuePedir,
   proveedoresQuePedir,
   type DatosQuePedir,
+  type FilaQuePedir,
 } from '@/lib/comercializadora/quepedir';
 import { AvisosCierre, type AvisoFranja } from './avisos-cierre';
 import { DescargarCsv } from './descargar-csv';
+import { FilaPlegable } from './fila-plegable';
 
 const HORIZONTES = [7, 15, 30];
 const POR_PAGINA = 25;
@@ -206,19 +208,36 @@ export function QuePedir({
             </thead>
             <tbody>
               {grupos.slice(0, ver).map((p) => (
-                <tr key={p.vendor}>
-                  <td className="font-medium">
-                    {p.nombre} {p.bajo ? <Pill estado="pierde">No llega al mínimo</Pill> : null}
-                  </td>
-                  <td className="text-right tabular-nums">
-                    {p.aPedir} de {p.skus.length}
-                  </td>
-                  <td className="text-right tabular-nums">{pesos(p.valor)}</td>
-                  <td className="text-right tabular-nums">
-                    {numero(p.dias)} / {numero(p.diasMin)}
-                  </td>
-                  <td className="text-right tabular-nums">{pesos(p.monto)}</td>
-                </tr>
+                // La llave lleva el filtro: al elegir un proveedor, su renglón se vuelve a montar ya abierto.
+                <FilaPlegable
+                  key={`${p.vendor}|${prov}`}
+                  etiqueta={p.nombre}
+                  abiertoInicial={prov === p.vendor}
+                  claseTitulo="font-medium"
+                  titulo={
+                    <>
+                      {p.nombre} {p.bajo ? <Pill estado="pierde">No llega al mínimo</Pill> : null}
+                    </>
+                  }
+                  celdas={
+                    <>
+                      <td className="text-right tabular-nums">
+                        {p.aPedir} de {p.skus.length}
+                      </td>
+                      <td className="text-right tabular-nums">{pesos(p.valor)}</td>
+                      <td className="text-right tabular-nums">
+                        {numero(p.dias)} / {numero(p.diasMin)}
+                      </td>
+                      <td className="text-right tabular-nums">{pesos(p.monto)}</td>
+                    </>
+                  }
+                  detalle={
+                    <LineasProveedor
+                      nombre={p.nombre}
+                      filas={p.skus.filter((f) => f.pedir).sort(ordenQuePedir)}
+                    />
+                  }
+                />
               ))}
             </tbody>
           </table>
@@ -234,5 +253,46 @@ export function QuePedir({
         </button>
       ) : null}
     </div>
+  );
+}
+
+/** Líneas que hay que pedirle a un proveedor, dentro de su renglón de "Por proveedor". */
+function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedir[] }) {
+  return (
+    <tr>
+      <td colSpan={5} className="bg-surface-2 p-0">
+        {filas.length === 0 ? (
+          <p className="px-4 py-3 text-sm text-muted-foreground">Nada que pedirle en este horizonte.</p>
+        ) : (
+          <table className="tabla" aria-label={`Artículos a pedir a ${nombre}`}>
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th className="text-right">Físico (Zoho)</th>
+                <th className="text-right">En camino</th>
+                <th className="text-right">Días de inventario</th>
+                <th className="text-right">Cantidad</th>
+                <th className="text-right">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((f) => (
+                <tr key={f.sku}>
+                  <td className="pl-8">
+                    <div className="font-medium">{f.nombre}</div>
+                    <div className="text-xs text-muted-foreground">{f.sku}</div>
+                  </td>
+                  <td className="text-right tabular-nums">{numero(f.disp)}</td>
+                  <td className="text-right tabular-nums">{numero(f.camino)}</td>
+                  <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
+                  <td className="text-right tabular-nums">{numero(f.cant)}</td>
+                  <td className="text-right tabular-nums">{pesos(f.monto)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </td>
+    </tr>
   );
 }
