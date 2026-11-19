@@ -1,0 +1,115 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { consultasVentas } from '../../lib/mcp/ventas';
+import { sucursalesConfiguradas } from '../../lib/sucursales/config';
+import { ErrorConsulta } from '../../lib/mcp/consulta';
+import type { Db } from '../../lib/portal/consultas';
+
+const [A, B] = sucursalesConfiguradas.slice(0, 2).map((s) => s.companyId);
+const SIN_CONFIG = 999999;
+const rpc = vi.fn();
+const db = { rpc } as unknown as Db;
+const herramienta = (nombre: string) => consultasVentas(db).find((c) => c.nombre === nombre)!;
+const autorizado = (sucursales: { company_id: number; modulos: string[]; nombre_bi?: string | null }[]) => ({
+  client_id: 'grok',
+  autorizado: true,
+  sucursales: sucursales.map((s) => ({ nombre_bi: null, ...s })),
+});
+const respuestas = (r: Record<string, unknown>) =>
+  rpc.mockImplementation(async (fn: string) => ({ data: r[fn] ?? null, error: r[fn] ? null : { message: fn } }));
+const tot = (venta_cent: number, pedidos = 1) => ({ pedidos, venta_cent, descuento_cent: 0, lineas: pedidos });
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-11-19T18:00:00Z'));
+  rpc.mockReset();
+});
+afterEach(() => vi.useRealTimers());
+
+it('cliente no autorizado: error con su client_id', async () => {
+  respuestas({ mcp_ventas_sucursales: { client_id: 'abc-123', autorizado: false, sucursales: [] } });
+  const e = await herramienta('ventas_sucursales').ejecutar({}).catch((x) => x);
+  expect(e).toBeInstanceOf(ErrorConsulta);
+  expect(e.message).toContain('abc-123');
+});
+
+it('ventas_sucursales: nombre, ciudad y zona de la configuración; nombre BI si no está configurada', async () => {
+  respuestas({
+    mcp_ventas_sucursales: autorizado([
+      { company_id: A, modulos: ['sucursales', 'bi'] },
+      { company_id: SIN_CONFIG, modulos: ['bi'], nombre_bi: 'Tienda BI' },
+    ]),
+  });
+  const r = (await herramienta('ventas_sucursales').ejecutar({})) as any;
+  expect(r.sucursales[0]).toMatchObject({ company_id: A, modulos: ['sucursales', 'bi'] });
+  expect(r.sucursales[0].zona).toBeTruthy();
+  expect(r.sucursales[1]).toEqual({ company_id: SIN_CONFIG, nombre: 'Tienda BI', ciudad: null, zona: null, modulos: ['bi'] });
+});
+
+it('ventas_resumen sin fechas: hoy en vivo por sucursal en pesos; sin configuración va a ignoradas', async () => {
+  respuestas({
+    mcp_ventas_sucursales: autorizado([
+      { company_id: A, modulos: ['sucursales'] },
+      { company_id: SIN_CONFIG, modulos: ['sucursales'] },
+    ]),
+    sucursales_tablero_hoy: {
+      ultimo_corte: '2026-11-19T17:50:00Z',
+      dias: [
+        { company_id: A, fecha: '2026-11-19', hoy: true, leido_en: 'x', corte_segundo: 43200, completa: true,
+          origenes: { mostrador: tot(25050, 3) }, horas: {}, tramos: null },
+      ],
+    },
+  });
+  const r = (await herramienta('ventas_resumen').ejecutar({})) as any;
+  const [, args] = rpc.mock.calls.find(([fn]) => fn === 'sucursales_tablero_hoy')!;
+  expect(args.p_companias).toEqual([A]);
+  expect(args.p_hoys).toHaveLength(1);
+  expect(r.modo).toBe('hoy');
+  expect(r.ignoradas).toEqual([SIN_CONFIG]);
+  expect(r.sucursales[0]).toMatchObject({ company_id: A, completa: true, corte_segundo: 43200 });
+  expect(r.sucursales[0].hoy.mostrador.venta).toBe(250.5);
+});
+
+it('ventas_resumen con fechas agrupa por sucursal (por omisión) y suma canales', async () => {
+  respuestas({
+    mcp_ventas_sucursales: autorizado([{ company_id: A, modulos: ['sucursales'] }, { company_id: B, modulos: ['sucursales'] }]),
+    mcp_ventas_dias: [
+      { company_id: A, fecha: '2026-11-10', completa: true, corte_segundo: 86400, origenes: { mostrador: tot(10000), rappi: tot(5000) } },
+      { company_id: A, fecha: '2026-11-11', completa: false, corte_segundo: 86400, origenes: { mostrador: tot(2000) } },
+      { company_id: B, fecha: '2026-11-10', completa: true, corte_segundo: 86400, origenes: { app: tot(700) } },
+    ],
+  });
+  const r = (await herramienta('ventas_resumen').ejecutar({ desde: '2026-11-10', hasta: '2026-11-11' })) as any;
+  expect(r.agrupar).toBe('sucursal');
+  const a = r.datos.find((x: any) => x.company_id === A);
+  expect(a.total.venta).toBe(170);
+  expect(a.por_canal.rappi.venta).toBe(50);
+  expect(a.dias).toBe(2);
+  expect(a.dias_incompletos).toEqual(['2026-11-11']);
+});
+
+it('ventas_resumen agrupa por día y por sucursal-día, paginado', async () => {
+  respuestas({
+    mcp_ventas_sucursales: autorizado([{ company_id: A, modulos: ['sucursales'] }, { company_id: B, modulos: ['sucursales'] }]),
+    mcp_ventas_dias: [
+      { company_id: A, fecha: '2026-11-10', completa: true, corte_segundo: 86400, origenes: { mostrador: tot(10000) } },
+      { company_id: B, fecha: '2026-11-10', completa: true, corte_segundo: 86400, origenes: { mostrador: tot(500) } },
+    ],
+  });
+  const porDia = (await herramienta('ventas_resumen').ejecutar({ desde: '2026-11-10', hasta: '2026-11-10', agrupar: 'dia' })) as any;
+  expect(porDia.datos).toEqual([expect.objectContaining({ fecha: '2026-11-10', sucursales: 2 })]);
+  expect(porDia.datos[0].total.venta).toBe(105);
+  const filas = (await herramienta('ventas_resumen').ejecutar({
+    desde: '2026-11-10', hasta: '2026-11-10', agrupar: 'sucursal_dia', limite: 1,
+  })) as any;
+  expect(filas.datos).toHaveLength(1);
+  expect(filas.siguiente_pagina).toBe(2);
+});
+
+it('ventas_resumen valida el rango y las sucursales pedidas', async () => {
+  respuestas({ mcp_ventas_sucursales: autorizado([{ company_id: A, modulos: ['sucursales'] }]) });
+  const r = herramienta('ventas_resumen');
+  await expect(r.ejecutar({ desde: '2026-11-10' })).rejects.toThrow(/desde y hasta/);
+  await expect(r.ejecutar({ desde: '2026-11-10', hasta: '2026-11-01' })).rejects.toThrow(/desde/);
+  await expect(r.ejecutar({ desde: '2026-01-01', hasta: '2026-11-01' })).rejects.toThrow(/120/);
+  await expect(r.ejecutar({ sucursales: [B] })).rejects.toThrow(/Ninguna/);
+});
