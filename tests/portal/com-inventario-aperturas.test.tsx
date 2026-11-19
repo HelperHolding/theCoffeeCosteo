@@ -87,7 +87,7 @@ describe('pantalla Inventario con aperturas', () => {
     expect(encabezados).toEqual([
       'Nombre',
       'Inventario',
-      'Venta/día',
+      'Venta diaria',
       'Cobertura (días)',
       'Cobertura c/aperturas (días)',
     ]);

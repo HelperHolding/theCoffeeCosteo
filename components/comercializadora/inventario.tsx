@@ -73,11 +73,11 @@ export function Inventario(p: {
       </p>
       {p.ventaAviso ? (
         <p role="alert" className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">
-          {p.ventaAviso} Venta/día y cobertura no se muestran.
+          {p.ventaAviso} Venta diaria y cobertura no se muestran.
         </p>
       ) : null}
       <p className="text-sm text-muted-foreground">
-        Cobertura c/aperturas suma a la venta/día el kit de apertura de cada artículo con{' '}
+        Cobertura c/aperturas suma a la venta diaria el kit de apertura de cada artículo con{' '}
         {numero(p.aperturasMes)} aperturas al mes (Configuración › Aperturas por mes; el kit se edita en Kit).
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@ export function Inventario(p: {
             ['nombre', 'Nombre'],
             ['categoria', 'Categoria'],
             ['inventario', 'Inventario (contable)'],
-            ['venta', 'Venta/dia (30 dias)'],
+            ['venta', 'Venta diaria (30 dias)'],
             ['cobertura', 'Cobertura (dias)'],
             ['kitApertura', 'Kit por apertura'],
             ['coberturaAperturas', 'Cobertura con aperturas (dias)'],
@@ -159,7 +159,7 @@ export function Inventario(p: {
               <tr>
                 <th>Nombre</th>
                 <th className="text-right">Inventario</th>
-                <th className="text-right">Venta/día</th>
+                <th className="text-right">Venta diaria</th>
                 <th className="text-right">Cobertura (días)</th>
                 <th className="text-right">Cobertura c/aperturas (días)</th>
               </tr>
