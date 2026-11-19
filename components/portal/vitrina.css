@@ -4,7 +4,7 @@
  * conservan para los estados de las tarjetas (hover, pop-up abierto).
  */
 .vitrina {
-  --vitrina-cristal: #ffffff;
+  --vitrina-cristal: var(--color-surface);
   --vitrina-borde: var(--color-line);
   --vitrina-sombra: 0 1px 2px rgb(17 17 17 / 0.04), 0 8px 24px -18px rgb(17 17 17 / 0.18);
 }
@@ -88,7 +88,7 @@
 
 /* Pop-up: blanco sólido (se lee sobre cualquier fondo) y una entrada corta desde la tarjeta. */
 .con-info-pop {
-  background: #ffffff;
+  background: var(--color-surface);
   box-shadow: 0 24px 48px -20px rgb(17 17 17 / 0.3);
 }
 .con-info-pop[data-state='open'] {

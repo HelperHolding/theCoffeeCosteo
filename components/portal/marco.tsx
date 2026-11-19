@@ -100,8 +100,8 @@ export function Marco({
   const lateral = (
     <div className="flex h-full flex-col gap-7 px-5 py-6">
       <Link href="/" aria-label="Helper Holding · Inicio" className="block">
-        <MarcaHolding negativo tamano="md" />
-        <span className="mt-5 block border-t border-white/10 pt-3 text-[10px] font-semibold uppercase tracking-[.24em] text-neutral-400">
+        <MarcaHolding tamano="md" />
+        <span className="mt-5 block border-t border-line pt-3 text-[10px] font-semibold uppercase tracking-[.24em] text-muted-foreground">
           {t.marca[0]} · {t.marca[1]}
         </span>
       </Link>
@@ -109,19 +109,19 @@ export function Marco({
         <Navegacion alNavegar={() => setMenu(false)} seccion={seccion} visibles={visibles} />
       </Suspense>
       <div className="flex-1" />
-      <div className="flex items-center gap-3 rounded-xl bg-white/[.05] p-3 text-sm">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-crema font-display font-bold text-ink">
+      <div className="flex items-center gap-3 rounded-xl bg-surface-2 p-3 text-sm">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-crema font-display font-bold text-[#111111]">
           {perfil.nombre.slice(0, 1).toUpperCase()}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-white">{perfil.nombre}</p>
-          <p className="capitalize text-xs text-neutral-400">{perfil.rol}</p>
+          <p className="truncate font-medium text-ink">{perfil.nombre}</p>
+          <p className="capitalize text-xs text-muted-foreground">{perfil.rol}</p>
         </div>
         <form action={salir}>
           <button
             aria-label="Cerrar sesión"
             title="Cerrar sesión"
-            className="grid size-8 place-items-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white"
+            className="grid size-8 place-items-center rounded-lg text-muted-foreground hover:bg-line hover:text-ink"
           >
             <LogOut size={16} aria-hidden="true" />
           </button>
@@ -134,7 +134,7 @@ export function Marco({
     <div
       className={`muro min-h-screen lg:grid ${agente && conAgente ? 'lg:grid-cols-[248px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[248px_minmax(0,1fr)]'}`}
     >
-      <aside className="lateral hidden bg-ink lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+      <aside className="lateral hidden bg-surface lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
         {lateral}
       </aside>
 
@@ -145,7 +145,7 @@ export function Marco({
             className="absolute inset-0 bg-ink/40"
             onClick={() => setMenu(false)}
           />
-          <aside className="lateral absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-ink shadow-2xl">
+          <aside className="lateral absolute inset-y-0 left-0 w-[280px] overflow-y-auto bg-surface shadow-2xl">
             {lateral}
           </aside>
         </div>
