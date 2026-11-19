@@ -42,7 +42,7 @@ Fecha de corrida `hoy` (CDMX). Todo en días de CDMX.
 
 1. **Pedidos de resurtido de la tienda**: `com_legado_pedidos` de su apertura, sin cancelados (`cancelado`,
    `cancelacion_pendiente`), sin pedidos de apertura (`com_legado_pedidos_apertura` o notas "pedido/kit de apertura"),
-   con `items_editados` cuando existan (igual que `serieDiaria`), nombres sin SKU resueltos con `com_mapeo_sku`.
+   con `items_editados` cuando existan (igual que `serieDiaria`), nombres sin SKU resueltos con `com_sku_mapping`.
 2. **Cadencia** `C`: mediana de días entre pedidos de resurtido consecutivos de los últimos 90 días, acotada a [7, 30].
    Con menos de 2 pedidos en 90 días: 14.
 3. **Consumo por receta**: ventas del POS de los últimos 28 días (`hoy-28 … hoy-1`) × recetas con el **mismo motor** que
