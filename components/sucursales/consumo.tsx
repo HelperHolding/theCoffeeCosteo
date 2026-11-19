@@ -614,7 +614,14 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
           >
             {[0, tope / 2, tope].map((t) => (
               <g key={t}>
-                <line x1={M.izq} x2={W - M.der} y1={y(t)} y2={y(t)} stroke="#e3ded4" strokeWidth={1} />
+                <line
+                  x1={M.izq}
+                  x2={W - M.der}
+                  y1={y(t)}
+                  y2={y(t)}
+                  stroke="var(--color-line)"
+                  strokeWidth={1}
+                />
                 <text
                   x={M.izq - 8}
                   y={y(t) + 4}
@@ -633,7 +640,7 @@ function TendenciaDiaria({ d }: { d: RespuestaConsumo }) {
                     y={M.arr}
                     width={slot}
                     height={H - M.arr - M.aba}
-                    fill="#efece5"
+                    fill="var(--color-surface-2)"
                     rx={3}
                   />
                 )}

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
-@theme inline {
+/* Sin «inline»: las utilidades leen var(--color-…), así el modo oscuro solo redefine las variables. */
+@theme {
   /* Marca: minimalismo cálido. Tinta y papel; crema solo como acento. */
   --color-ink: #111111;
   --color-ink-2: #2b2926;
@@ -410,6 +411,11 @@
     background: var(--color-crema);
   }
 
+  /* Menú lateral (marco.tsx): blanco con una franja negra en la orilla que lo separa del contenido. */
+  .lateral {
+    box-shadow: inset -4px 0 0 #111111;
+  }
+
   /* Ficha de color para íconos de KPI (antes con textura de madera). */
   .ficha-madera {
     background: var(--color-crema-soft);
@@ -417,33 +423,7 @@
   }
 }
 
-/*
- * Modo noche (interruptor sol/luna de la barra superior; lo aplica app/layout.tsx antes de pintar): fondo sólido
- * oscuro; tarjetas y menús siguen blancos, así que el texto no cambia.
- */
 @layer components {
-  html[data-luz='noche'] .muro {
-    background: var(--color-ink);
-  }
-  /* De noche, el texto suelto sobre el fondo vuelve a ir en placa blanca. */
-  html[data-luz='noche'] .muro .placa {
-    background: rgb(255 255 255 / 0.96);
-  }
-  html[data-luz='noche'] .muro .encabezado {
-    border-color: rgb(255 255 255 / 0.12);
-  }
-  html[data-luz='noche'] .muro .encabezado h1 {
-    color: #f6f4ef;
-  }
-  html[data-luz='noche'] .muro .encabezado .text-muted-foreground,
-  html[data-luz='noche'] .muro .encabezado nav,
-  html[data-luz='noche'] .muro .encabezado nav * {
-    color: #b8b0a4;
-  }
-  html[data-luz='noche'] .muro .encabezado-area {
-    color: #d3a679;
-  }
-
   /* Interruptor día/noche: sol · riel · luna, sin texto. */
   .interruptor-luz {
     display: inline-flex;
@@ -500,20 +480,6 @@
   }
 }
 
-/* Fuera de capa: la barra superior lleva utilidades de color (bg-muro/85, border-line/80) que ganan a components. */
-html[data-luz='noche'] .barra-muro {
-  background: var(--color-ink);
-  border-color: rgb(255 255 255 / 0.08);
-  color: #f1ece4;
-}
-html[data-luz='noche'] .barra-muro [aria-label='Abrir menú'] {
-  color: #f1ece4;
-}
-/* La marca de la barra pasa a su versión clara (como en el lateral). */
-html[data-luz='noche'] .barra-muro [role='img'] > :first-child {
-  color: #ffffff;
-}
-
 /*
  * Cambio de pantalla dentro de un módulo (TransicionPagina, React <ViewTransition>): la vieja se desvanece en 120 ms
  * y la nueva aparece subiendo 6 px. Sin desenfoque (cuesta). Los clics no se pierden durante la transición.
@@ -548,35 +514,74 @@ html[data-luz='noche'] .barra-muro [role='img'] > :first-child {
 }
 
 /*
- * Modo noche: los papeles se invierten. El fondo es negro y el menú lateral, blanco con texto oscuro.
- * Fuera de capa para ganar a las utilidades de color del menú (text-white, text-neutral-*, bg-white/*).
+ * Modo oscuro (interruptor sol/luna; app/layout.tsx lo aplica antes de pintar con html[data-luz='noche']).
+ * Tema oscuro completo: se redefinen las variables de color, así fondo, tarjetas, textos, bordes y avisos cambian
+ * juntos. Superficies en grises cálidos casi negros (no café), texto claro y crema más luminosa como acento.
  */
+html[data-luz='noche'] {
+  color-scheme: dark;
+  --color-ink: #f1ede6;
+  --color-ink-2: #d5cfc5;
+  --color-paper: #121212;
+  --color-surface: #1c1c1b;
+  --color-surface-2: #272624;
+  --color-line: #2f2e2b;
+  --color-line-strong: #46443f;
+  --color-crema: #c9935f;
+  --color-crema-strong: #dcaa78;
+  --color-crema-soft: #33281d;
+  --color-ok: #6cc592;
+  --color-ok-soft: #16291e;
+  --color-warn: #e2ad5a;
+  --color-warn-soft: #2f2514;
+  --color-bad: #ef8578;
+  --color-bad-soft: #351b18;
+  --color-muted-foreground: #a29b91;
+  --color-primary-foreground: #121212;
+  --color-muro: #121212;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 16px 32px -12px rgb(0 0 0 / 0.7);
+}
+/* Rellenos sólidos con texto blanco (botón principal, pastillas activas): el relleno se aclara, el texto se oscurece. */
+html[data-luz='noche'] :is(.bg-ink, .bg-ink-2, .bg-bad, .bg-ok, .bg-crema, .bg-crema-strong).text-white {
+  color: var(--color-paper);
+}
+/* Contenedores oscuros con texto blanco dentro (p. ej. el selector Ventas · Costeo · Consumo): gris elevado. */
+html[data-luz='noche'] .bg-ink:not(.text-white):has(*) {
+  background-color: #2a2927;
+}
+/* Blancos fijos (esqueletos de carga, chips) pasan a superficie. */
+html[data-luz='noche'] .bg-white,
+html[data-luz='noche'] [class~='bg-white/90'] {
+  background: var(--color-surface-2);
+}
+html[data-luz='noche'] :is([class~='bg-white/60'], [class~='bg-white/70']) {
+  background: rgb(255 255 255 / 0.05);
+}
+/* Hovers con color fijo de día (botones outline y secondary). */
+html[data-luz='noche'] :is([class*='hover:bg-[#fbfaf7]'], [class*='hover:bg-[#e6e1d7]']):hover {
+  background: var(--color-surface-2);
+}
+/* Selector segmentado: la pastilla elegida es un gris elevado, no un bloque claro. */
+html[data-luz='noche'] .segmentos-pastilla,
+html[data-luz='noche'] .segmentos:not([data-medido]) > button[aria-checked='true'] {
+  background: #3a3936;
+}
+/* Menú lateral de noche: un tono más oscuro que el fondo, separado por una línea fina (sin la franja negra). */
 html[data-luz='noche'] .lateral {
-  background: var(--color-surface);
-  color: var(--color-ink);
-  border-right: 1px solid var(--color-line);
+  background: #0b0b0b;
+  box-shadow: inset -1px 0 0 var(--color-line);
 }
-html[data-luz='noche'] .lateral .text-white {
-  color: var(--color-ink);
+/* Contenido claro sobre crema (pestaña activa de Sucursales y Tablero México): el texto sigue oscuro. */
+html[data-luz='noche'] .bg-crema :is(.text-ink, .text-ink-2),
+html[data-luz='noche'] .bg-crema.text-ink {
+  color: #111111;
 }
-html[data-luz='noche'] .lateral .text-neutral-400 {
+html[data-luz='noche'] .tabla th {
   color: var(--color-muted-foreground);
 }
-html[data-luz='noche'] .lateral .text-neutral-500 {
-  color: #8a837b;
-}
-html[data-luz='noche'] .lateral [class*='border-white'] {
+/* Barra superior: el logo va en claro. */
+html[data-luz='noche'] .barra-muro {
+  background: var(--color-paper);
   border-color: var(--color-line);
-}
-html[data-luz='noche'] .lateral [class~='bg-white/[.09]'],
-html[data-luz='noche'] .lateral [class~='bg-white/[.05]'] {
-  background: var(--color-surface-2);
-}
-html[data-luz='noche'] .lateral a:hover,
-html[data-luz='noche'] .lateral button:hover {
-  background: var(--color-surface-2);
-  color: var(--color-ink);
-}
-html[data-luz='noche'] .lateral a[aria-current='page'] svg {
-  color: var(--color-crema-strong);
 }

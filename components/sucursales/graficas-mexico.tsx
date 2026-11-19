@@ -19,9 +19,9 @@ import { ESTADOS_MX, MAPA_MX } from './mapa-mexico-trazos';
 
 export const ORIGENES: Origen[] = ['mostrador', 'app', 'rappi'];
 const MXN = 'MXN';
-const TINTA = '#2b2926';
-const REJILLA = '#e3ded4';
-const FANTASMA = '#e4dfd5';
+const TINTA = 'var(--color-ink-2)';
+const REJILLA = 'var(--color-line)';
+const FANTASMA = 'var(--color-line)';
 /**
  * Como compacto, con dos decimales fijos en millones: los totales semanales se parecen mucho entre sí. Los decimales
  * salen del mayor de la gráfica (`max`), para que todas las columnas se lean igual («$4.00 M», no «$4 M»).
@@ -514,7 +514,7 @@ export function ColumnasHora({
                   y={M.arr}
                   width={banda}
                   height={H - M.arr - M.aba}
-                  fill={activa === h ? '#efece5' : 'transparent'}
+                  fill={activa === h ? 'var(--color-surface-2)' : 'transparent'}
                   rx={6}
                 />
                 {base && g > 0 && (
@@ -527,7 +527,7 @@ export function ColumnasHora({
                     height={H - M.aba - y(g)}
                     rx={3}
                     fill={futura ? 'none' : FANTASMA}
-                    stroke={futura ? '#cfc8ba' : 'none'}
+                    stroke={futura ? 'var(--color-line-strong)' : 'none'}
                     strokeDasharray={futura ? '3 3' : undefined}
                   />
                 )}
@@ -616,7 +616,7 @@ export function ColumnasHora({
             ...(base
               ? [
                   {
-                    color: '#cfc8ba',
+                    color: 'var(--color-line-strong)',
                     etiqueta: activa === horaEnCurso ? `${etiquetaBase}, al mismo corte` : etiquetaBase,
                     valor: numero(gris(activa)),
                   },
@@ -871,8 +871,8 @@ export function SemanasApiladas({
               patternUnits="userSpaceOnUse"
               patternTransform="rotate(45)"
             >
-              <rect width="6" height="6" fill="#efece5" />
-              <line x1="0" y1="0" x2="0" y2="6" stroke="#cfc8ba" strokeWidth="2" />
+              <rect width="6" height="6" fill="var(--color-surface-2)" />
+              <line x1="0" y1="0" x2="0" y2="6" stroke="var(--color-line-strong)" strokeWidth="2" />
             </pattern>
           </defs>
           {marcas.map((v) => (
@@ -933,7 +933,7 @@ export function SemanasApiladas({
                   y={M.arr}
                   width={banda}
                   height={H - M.arr - M.aba}
-                  fill={activa === i ? '#efece5' : 'transparent'}
+                  fill={activa === i ? 'var(--color-surface-2)' : 'transparent'}
                   rx={6}
                 />
                 {s.parcial ? (
@@ -1128,7 +1128,7 @@ export function CalendarioVenta({
                     )}
                     style={
                       {
-                        backgroundColor: k >= 0 ? RAMPA[k] : '#efece5',
+                        backgroundColor: k >= 0 ? RAMPA[k] : 'var(--color-surface-2)',
                         '--d': s + d,
                       } as React.CSSProperties
                     }
@@ -1394,7 +1394,7 @@ export function MapaMexico({
             rx={10}
             fill="#ffffff"
             fillOpacity={0.8}
-            stroke="#cfc8ba"
+            stroke="var(--color-line-strong)"
           />
           <g clipPath={`url(#${id}-lupa)`}>
             <g transform={`translate(${marco.x - z.x0 * k} ${marco.y - z.y0 * k}) scale(${k})`}>

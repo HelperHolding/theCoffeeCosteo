@@ -154,7 +154,14 @@ export function CurvaAcumulada({
           </defs>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={M.izq} x2={W - M.der} y1={y(t)} y2={y(t)} stroke="#e3ded4" strokeWidth={1} />
+              <line
+                x1={M.izq}
+                x2={W - M.der}
+                y1={y(t)}
+                y2={y(t)}
+                stroke="var(--color-line)"
+                strokeWidth={1}
+              />
               <text x={M.izq - 8} y={y(t) + 4} textAnchor="end" className="fill-muted-foreground text-[11px]">
                 {dinero(t, moneda, false)}
               </text>
@@ -233,7 +240,7 @@ export function CurvaAcumulada({
                 x2={x(hora)}
                 y1={M.arr}
                 y2={H - M.aba}
-                stroke="#2b2926"
+                stroke="var(--color-ink-2)"
                 strokeOpacity={0.35}
                 strokeWidth={1}
               />
@@ -397,7 +404,14 @@ export function PedidosPorHora({
         >
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={M.izq} x2={W - M.der} y1={y(t)} y2={y(t)} stroke="#e3ded4" strokeWidth={1} />
+              <line
+                x1={M.izq}
+                x2={W - M.der}
+                y1={y(t)}
+                y2={y(t)}
+                stroke="var(--color-line)"
+                strokeWidth={1}
+              />
               <text x={M.izq - 8} y={y(t) + 4} textAnchor="end" className="fill-muted-foreground text-[11px]">
                 {numero(t)}
               </text>
@@ -411,7 +425,7 @@ export function PedidosPorHora({
                   y={M.arr}
                   width={slot}
                   height={H - M.arr - M.aba}
-                  fill="#efece5"
+                  fill="var(--color-surface-2)"
                   rx={4}
                 />
               )}
