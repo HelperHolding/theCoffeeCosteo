@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 const celda = (v: unknown) => {
   const s = v === null || v === undefined ? '' : String(v);
   // Evita fórmulas al abrir en Excel y escapa comillas.
-  const seguro = /^[=+\-@]/.test(s) ? `'${s}` : s;
-  return /[",\n;]/.test(seguro) ? `"${seguro.replace(/"/g, '""')}"` : seguro;
+  const seguro = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return /[",\n\r;]/.test(seguro) ? `"${seguro.replace(/"/g, '""')}"` : seguro;
 };
 
 /** CSV de avisos («No» vigentes e incidencias) para gerente, franquiciatario o admin de la sucursal. */

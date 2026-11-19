@@ -56,7 +56,7 @@ export function TiraVenta({
           >
             {dias.map((d, i) => (
               <option key={d} value={d}>
-                {i === 0 ? 'Hoy · ' : ''}
+                {i === 0 ? 'Día de operación · ' : ''}
                 {diaLargo(d)}
               </option>
             ))}

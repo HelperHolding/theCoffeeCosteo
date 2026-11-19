@@ -5,7 +5,12 @@ import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import { NOMBRE_FIRMA, type PuntoDia, type SeccionDia } from '@/lib/franquiciatarios/dia';
 import type { TipoFirma } from '@/lib/franquiciatarios/tipos';
-import { firmar, responder, type Resultado } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
+import {
+  corregir,
+  firmar,
+  responder,
+  type Resultado,
+} from '@/app/(franquiciatarios)/franquiciatarios/acciones';
 import { hora } from './formato';
 
 const SIN_RED =
@@ -38,11 +43,12 @@ export function Checklist({
   /** Nombre con el que se registra (el declarado en la cuenta de baristas, o el del perfil). */
   quien: string;
   gestor: boolean;
-  /** false en días anteriores: solo lectura (las correcciones van en Avisos e historial). */
+  /** false en días anteriores: la cuenta de baristas solo consulta; el gestor corrige con motivo lo ya respondido. */
   editable: boolean;
 }) {
   const total = seccion.puntos.length;
   const bloqueada = seccion.firmada && !gestor;
+  const pasado = !editable && gestor;
   return (
     <section aria-labelledby={`sec-${seccion.clave}`} className="space-y-4">
       <Avance seccion={seccion} />
@@ -60,8 +66,9 @@ export function Checklist({
             seccion={seccion}
             punto={p}
             total={total}
-            editable={editable && !bloqueada}
-            pideMotivo={seccion.firmada}
+            editable={(editable && !bloqueada) || (pasado && p.respuesta !== null)}
+            pideMotivo={seccion.firmada || pasado}
+            pasado={pasado}
           />
         ))}
       </ol>
@@ -111,6 +118,7 @@ function Punto({
   total,
   editable,
   pideMotivo,
+  pasado,
 }: {
   companyId: number;
   seccion: SeccionDia;
@@ -118,6 +126,8 @@ function Punto({
   total: number;
   editable: boolean;
   pideMotivo: boolean;
+  /** Día anterior: la corrección va contra el registro vigente (franq_corregir), no contra el día de hoy. */
+  pasado: boolean;
 }) {
   const r = punto.respuesta;
   const [eleccion, setEleccion] = useState<boolean | null>(null); // elección local aún sin guardar
@@ -134,14 +144,16 @@ function Punto({
     setError(null);
     iniciar(async () => {
       const res = await intentar(() =>
-        responder({
-          companyId,
-          seccion: seccion.clave,
-          punto: punto.id,
-          cumple,
-          observacion: cumple ? null : obs,
-          motivo: pideMotivo ? motivo : null,
-        }),
+        pasado && r
+          ? corregir({ companyId, respuesta: r.id, cumple, observacion: cumple ? null : obs, motivo })
+          : responder({
+              companyId,
+              seccion: seccion.clave,
+              punto: punto.id,
+              cumple,
+              observacion: cumple ? null : obs,
+              motivo: pideMotivo ? motivo : null,
+            }),
       );
       if ('error' in res) setError(res.error);
       else {

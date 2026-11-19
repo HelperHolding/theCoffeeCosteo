@@ -53,6 +53,29 @@ $$;
 revoke all on function public.franq_rol(integer) from public, anon;
 grant execute on function public.franq_rol(integer) to authenticated;
 
+-- Para las políticas RLS: se evalúan una vez por consulta (initPlan) dentro de (select …), no por renglón.
+create function public.franq_tiene_modulo() returns boolean
+language sql stable security definer set search_path = public, pg_temp as $$
+  select (auth.jwt()->>'client_id') is null and exists (
+    select 1 from public.perfiles p
+    join public.perfil_modulos m on m.user_id = p.user_id and m.modulo = 'franquiciatarios'
+    where p.user_id = auth.uid() and p.activo)
+$$;
+create function public.franq_es_admin() returns boolean
+language sql stable security definer set search_path = public, pg_temp as $$
+  select (auth.jwt()->>'client_id') is null and exists (
+    select 1 from public.perfiles p
+    join public.perfil_modulos m on m.user_id = p.user_id and m.modulo = 'franquiciatarios' and m.nivel = 'desarrollador'
+    where p.user_id = auth.uid() and p.activo)
+$$;
+create function public.franq_companias() returns integer[]
+language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce(array_agg(fm.company_id), '{}') from public.franq_miembros fm
+  where public.franq_tiene_modulo() and fm.user_id = auth.uid() and fm.activo
+$$;
+revoke all on function public.franq_tiene_modulo(), public.franq_es_admin(), public.franq_companias() from public, anon;
+grant execute on function public.franq_tiene_modulo(), public.franq_es_admin(), public.franq_companias() to authenticated;
+
 create function public.franq_es_gestor(p_company integer) returns boolean
 language sql stable security definer set search_path = public, pg_temp as $$
   select coalesce(public.franq_rol(p_company) in ('admin', 'franquiciatario', 'gerente'), false)
@@ -248,26 +271,25 @@ grant select on public.franq_miembros, public.franq_baristas, public.franq_plant
   public.franq_incidencias to authenticated;
 
 create policy lectura on public.franq_miembros for select to authenticated
-  using (user_id = (select auth.uid()) and (select auth.jwt()->>'client_id') is null);
+  using (user_id = (select auth.uid()) and ((select auth.jwt()) ->> 'client_id') is null);
+-- Por sucursal: el admin del módulo todas; los demás, las de sus membresías activas (con el módulo y sin OAuth).
 create policy lectura on public.franq_baristas for select to authenticated
-  using (public.franq_rol(company_id) is not null);
+  using ((select public.franq_es_admin()) or company_id = any ((select public.franq_companias())::integer[]));
 create policy lectura on public.franq_checklists for select to authenticated
-  using (public.franq_rol(company_id) is not null);
+  using ((select public.franq_es_admin()) or company_id = any ((select public.franq_companias())::integer[]));
 create policy lectura on public.franq_respuestas for select to authenticated
-  using (public.franq_rol(company_id) is not null);
+  using ((select public.franq_es_admin()) or company_id = any ((select public.franq_companias())::integer[]));
 create policy lectura on public.franq_firmas for select to authenticated
-  using (public.franq_rol(company_id) is not null);
+  using ((select public.franq_es_admin()) or company_id = any ((select public.franq_companias())::integer[]));
 create policy lectura on public.franq_incidencias for select to authenticated
-  using (public.franq_rol(company_id) is not null);
+  using ((select public.franq_es_admin()) or company_id = any ((select public.franq_companias())::integer[]));
 -- Plantillas: cualquiera con el módulo (no tienen datos de sucursal).
 create policy lectura on public.franq_plantillas for select to authenticated
-  using (exists (select 1 from public.perfil_modulos m join public.perfiles p on p.user_id = m.user_id
-                 where m.user_id = (select auth.uid()) and m.modulo = 'franquiciatarios' and p.activo)
-         and (select auth.jwt()->>'client_id') is null);
+  using ((select public.franq_tiene_modulo()));
 create policy lectura on public.franq_plantilla_secciones for select to authenticated
-  using (exists (select 1 from public.franq_plantillas t where t.id = plantilla_id));
+  using ((select public.franq_tiene_modulo()));
 create policy lectura on public.franq_plantilla_puntos for select to authenticated
-  using (exists (select 1 from public.franq_plantilla_secciones s where s.id = seccion_id));
+  using ((select public.franq_tiene_modulo()));
 
 -- 8. Quién registra: la cuenta de baristas debe declarar un nombre activo de SU sucursal; un gerente, franquiciatario
 --    o admin registra con el nombre de su perfil.

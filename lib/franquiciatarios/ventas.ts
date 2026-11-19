@@ -107,7 +107,16 @@ export async function construirTira(
     parcial: dia >= ahora.fecha,
     corte: textoHora(ahora.segundo),
     generadoEn: Date.now(),
-    lectura: { estado: l.estado, avisos: l.avisos },
+    // Sin el catálogo de nombres del POS, las líneas sin código pueden agruparse distinto que en Sucursales.
+    lectura: fuentes.catalogo
+      ? { estado: l.estado, avisos: l.avisos }
+      : {
+          estado: l.estado === 'error' ? 'error' : 'parcial',
+          avisos: [
+            'No se pudo leer el catálogo de nombres del POS; algunos productos pueden aparecer separados.',
+            ...l.avisos,
+          ],
+        },
     totales: {
       ventaCent: r.ventaCent,
       pedidos: r.pedidos,

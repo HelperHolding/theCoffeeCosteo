@@ -88,6 +88,7 @@ export function QuienEres({
 /** Franja con el nombre declarado y el botón para cambiar de persona. */
 export function NombreDeclarado({ companyId, nombre }: { companyId: number; nombre: string }) {
   const [pendiente, iniciar] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-card">
       <p className="flex items-center gap-3 text-sm">
@@ -102,11 +103,26 @@ export function NombreDeclarado({ companyId, nombre }: { companyId: number; nomb
       <Button
         variant="outline"
         disabled={pendiente}
-        onClick={() => iniciar(async () => void (await elegirBarista(companyId, null).catch(() => null)))}
+        onClick={() =>
+          iniciar(async () => {
+            setError(null);
+            try {
+              const r = await elegirBarista(companyId, null);
+              if ('error' in r) setError(r.error);
+            } catch {
+              setError('No hay conexión: sigue registrando a este nombre hasta que vuelva la red.');
+            }
+          })
+        }
       >
         {pendiente && <LoaderCircle className="animate-spin" aria-hidden="true" />}
         Cambiar de persona
       </Button>
+      {error && (
+        <p role="alert" className="w-full text-sm font-medium text-bad">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

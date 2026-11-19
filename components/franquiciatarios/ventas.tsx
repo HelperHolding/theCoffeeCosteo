@@ -44,7 +44,7 @@ export function VentasFranq({
       {vista === 'vivo' ? (
         <EnVivo companyId={companyId} origen={origen} base={API} conNeto={false} />
       ) : (
-        <Pedidos companyId={companyId} origen={origen} zona={zona} base={API} />
+        <Pedidos companyId={companyId} origen={origen} zona={zona} base={API} diasAtras={7} />
       )}
     </div>
   );

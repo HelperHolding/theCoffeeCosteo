@@ -11,6 +11,8 @@ const PREDICADOS = [
   /crm_ve_sensibles\(\)/,
   /sucursales_[a-z_]+\(/,
   /bi_[a-z_]+\(/,
+  // Franquiciatarios (migración 75): módulo + membresía por sucursal o admin del módulo.
+  /franq_[a-z_]+\(/,
   /user_id = (\( SELECT )?auth\.uid\(\)/,
 ];
 const TIENE_ROL_EXTERNO = /tiene_rol\([^)]*'(interno|franquiciado|proveedor)'/;

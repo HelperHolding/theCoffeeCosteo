@@ -30,10 +30,14 @@ async function barista(companyId: number, rol: RolFranq): Promise<number | null>
 
 /** Mensaje para la persona: los de la base ya vienen en español; cualquier otro, genérico. */
 const fallo = (e: unknown): { error: string } => {
-  const m = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : '';
-  if (/permission denied|42501|No tienes acceso|Solo el gerente/i.test(m))
-    return { error: m.startsWith('Solo') ? m : SIN_ACCESO };
-  if (m && !/fetch failed|network|timeout/i.test(m) && m.length < 200) return { error: m };
+  const x = (e && typeof e === 'object' ? e : {}) as { message?: unknown; code?: unknown };
+  const m = typeof x.message === 'string' ? x.message : '';
+  // P0001: mensajes que escribimos en las funciones de la migración 75 (ya en español, para la persona).
+  if (x.code === 'P0001' && m.length < 300) return { error: m };
+  if (x.code === '42501') return { error: m.startsWith('Solo') ? m : SIN_ACCESO };
+  // Dos dispositivos registraron lo mismo a la vez: lo otro ya quedó.
+  if (x.code === '23505') return { error: 'Alguien más lo acaba de registrar. Actualiza la pantalla.' };
+  if (x.code) return { error: 'No se pudo guardar. Intenta de nuevo o avisa al gerente.' };
   return { error: 'No se guardó. Revisa la conexión e intenta de nuevo.' };
 };
 

@@ -429,6 +429,34 @@ describe('migración 75 · incidencias y avisos', () => {
     expect(await filas(gerenteOtra, 'select * from franq_respuestas')).toEqual([]);
   });
 
+  it('un token OAuth (MCP) no lee ningún registro del módulo, ni como admin', async () => {
+    for (const u of [gerente, admin]) {
+      const n = await como(u, async () => {
+        await db.query(`select set_config('request.jwt.claims', $1, false)`, [
+          JSON.stringify({ sub: u, client_id: 'mcp' }),
+        ]);
+        try {
+          const t = [
+            'franq_respuestas',
+            'franq_incidencias',
+            'franq_baristas',
+            'franq_plantilla_puntos',
+            'franq_miembros',
+          ];
+          let total = 0;
+          for (const x of t)
+            total += Number((await db.query<F>(`select count(*)::int n from ${x}`)).rows[0].n);
+          return total;
+        } finally {
+          await db.query(`select set_config('request.jwt.claims', '', false)`);
+        }
+      });
+      expect(n).toBe(0);
+    }
+    // Sin OAuth, el admin sí ve la sucursal.
+    expect((await filas(admin, 'select id from franq_respuestas')).length).toBeGreaterThan(0);
+  });
+
   it('el día de operación cambia a las 4:00 de Ciudad de México', async () => {
     const d = async (t: string) =>
       (await db.query<F>('select public.franq_dia_operacion($1::timestamptz)::text d', [t])).rows[0].d;
