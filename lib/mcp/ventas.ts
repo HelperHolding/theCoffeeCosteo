@@ -1,7 +1,17 @@
 import { z } from 'zod';
 import type { Db } from '../portal/consultas';
+import type { Json } from '../supabase/database.types';
+import { aJsonRpc } from '../bi/filtros';
+import { hoyMexico } from '../bi/url';
+import type { RpcOpciones, RpcTablero } from '../bi/tipos';
 import { configDe, type ConfigSucursal } from '../sucursales/config';
-import { armarHoy, type PorOrigen, type RpcHoy, type RpcPeriodo, type TotalesOrigen } from '../sucursales/resumen';
+import {
+  armarHoy,
+  type PorOrigen,
+  type RpcHoy,
+  type RpcPeriodo,
+  type TotalesOrigen,
+} from '../sucursales/resumen';
 import { enZona } from '../sucursales/tiempo';
 import {
   aPesos,
@@ -41,7 +51,8 @@ interface DiaVentas {
 
 const MAX_DIAS = 120;
 const CANALES = 'Canales: mostrador (POS en tienda), app (app The Coffee) y rappi (portal de Rappi).';
-const MONTOS = 'Montos en MXN con IVA, como en el portal. Fechas AAAA-MM-DD en la hora local de cada sucursal.';
+const MONTOS =
+  'Montos en MXN con IVA, como en el portal. Fechas AAAA-MM-DD en la hora local de cada sucursal.';
 const NO_ESTIMA = 'Un día con completa=false no se leyó entero: no se estima lo que falta.';
 
 const cero = (): TotalesOrigen => ({ pedidos: 0, venta_cent: 0, descuento_cent: 0, lineas: 0 });
@@ -51,9 +62,11 @@ export const sumar = (a: TotalesOrigen, b: TotalesOrigen): TotalesOrigen => ({
   descuento_cent: a.descuento_cent + b.descuento_cent,
   lineas: a.lineas + b.lineas,
 });
-const totalDe = (o: PorOrigen<TotalesOrigen>) => Object.values(o).reduce<TotalesOrigen>((t, x) => sumar(t, x!), cero());
+const totalDe = (o: PorOrigen<TotalesOrigen>) =>
+  Object.values(o).reduce<TotalesOrigen>((t, x) => sumar(t, x!), cero());
 const sumarPorCanal = (acc: PorOrigen<TotalesOrigen>, o: PorOrigen<TotalesOrigen>) => {
-  for (const [k, v] of Object.entries(o) as [keyof typeof o, TotalesOrigen][]) acc[k] = sumar(acc[k] ?? cero(), v);
+  for (const [k, v] of Object.entries(o) as [keyof typeof o, TotalesOrigen][])
+    acc[k] = sumar(acc[k] ?? cero(), v);
   return acc;
 };
 
@@ -71,7 +84,8 @@ function elegir(todas: SucursalVentas[], modulo: Modulo, pedidas?: number[]) {
   const con = todas.filter((s) => s.modulos.includes(modulo)).map((s) => s.company_id);
   const companias = pedidas ? pedidas.filter((c) => con.includes(c)) : con;
   const ignoradas = pedidas ? pedidas.filter((c) => !con.includes(c)) : [];
-  if (!companias.length) throw new ErrorConsulta('Ninguna de las sucursales pedidas está disponible para esta cuenta.');
+  if (!companias.length)
+    throw new ErrorConsulta('Ninguna de las sucursales pedidas está disponible para esta cuenta.');
   return { companias, ignoradas };
 }
 
@@ -126,7 +140,8 @@ export function consultasVentas(db: Db): Consulta[] {
         const { companias, ignoradas } = elegir(todas, 'sucursales', e.sucursales);
         if (!e.desde && !e.hasta) {
           const { cfgs, sinConfig } = configuradas(companias);
-          if (!cfgs.length) throw new ErrorConsulta('Ninguna de las sucursales pedidas tiene ventas en vivo configuradas.');
+          if (!cfgs.length)
+            throw new ErrorConsulta('Ninguna de las sucursales pedidas tiene ventas en vivo configuradas.');
           const ahora = new Date();
           const rpc = exigir(
             await db.rpc('sucursales_tablero_hoy', {
@@ -154,7 +169,12 @@ export function consultasVentas(db: Db): Consulta[] {
         }
         const p = rango(e);
         const dias = exigir(
-          await db.rpc('mcp_ventas_dias', { p_companias: companias, p_desde: p.desde, p_hasta: p.hasta, p_horas: false }),
+          await db.rpc('mcp_ventas_dias', {
+            p_companias: companias,
+            p_desde: p.desde,
+            p_hasta: p.hasta,
+            p_horas: false,
+          }),
         ) as unknown as DiaVentas[];
         const nombres = new Map(todas.map((s) => [s.company_id, nombreDe(s)]));
         let filas: Record<string, unknown>[];
@@ -172,7 +192,10 @@ export function consultasVentas(db: Db): Consulta[] {
           const grupos = new Map<string, DiaVentas[]>();
           for (const d of dias) grupos.set(clave(d), [...(grupos.get(clave(d)) ?? []), d]);
           filas = [...grupos.values()].map((ds) => {
-            const por_canal = ds.reduce<PorOrigen<TotalesOrigen>>((acc, d) => sumarPorCanal(acc, d.origenes), {});
+            const por_canal = ds.reduce<PorOrigen<TotalesOrigen>>(
+              (acc, d) => sumarPorCanal(acc, d.origenes),
+              {},
+            );
             const base =
               e.agrupar === 'dia'
                 ? { fecha: ds[0].fecha, sucursales: ds.length }
@@ -188,7 +211,9 @@ export function consultasVentas(db: Db): Consulta[] {
             };
           });
           if (e.agrupar === 'sucursal')
-            filas.sort((a, b) => (b.total as TotalesOrigen).venta_cent - (a.total as TotalesOrigen).venta_cent);
+            filas.sort(
+              (a, b) => (b.total as TotalesOrigen).venta_cent - (a.total as TotalesOrigen).venta_cent,
+            );
         }
         const desde = (e.pagina - 1) * e.limite;
         return aPesos({
@@ -207,7 +232,12 @@ export function consultasVentas(db: Db): Consulta[] {
       async (e) => {
         const { companias, ignoradas } = elegir(await visibles(db), 'sucursales', e.sucursales);
         const dias = exigir(
-          await db.rpc('mcp_ventas_dias', { p_companias: companias, p_desde: e.fecha, p_hasta: e.fecha, p_horas: true }),
+          await db.rpc('mcp_ventas_dias', {
+            p_companias: companias,
+            p_desde: e.fecha,
+            p_hasta: e.fecha,
+            p_horas: true,
+          }),
         ) as unknown as DiaVentas[];
         const horas = Array.from({ length: 24 }, (_, hora) => ({
           hora,
@@ -250,21 +280,41 @@ export function consultasVentas(db: Db): Consulta[] {
         const p = rango(e);
         const { companias, ignoradas } = elegir(await visibles(db), 'sucursales', e.sucursales);
         const r = exigir(
-          await db.rpc('sucursales_tablero_periodo', { p_companias: companias, p_desde: p.desde, p_hasta: p.hasta }),
+          await db.rpc('sucursales_tablero_periodo', {
+            p_companias: companias,
+            p_desde: p.desde,
+            p_hasta: p.hasta,
+          }),
         ) as unknown as RpcPeriodo;
         const productos = new Map<
           string,
-          { codigo: string; nombre: string; lineas: number; importe_cent: number; sucursales: number; por_canal: Record<string, { lineas: number; importe_cent: number }> }
+          {
+            codigo: string;
+            nombre: string;
+            lineas: number;
+            importe_cent: number;
+            sucursales: number;
+            por_canal: Record<string, { lineas: number; importe_cent: number }>;
+          }
         >();
         for (const x of r.productos) {
           if (e.canal && x.origen !== e.canal) continue;
-          const prod = productos.get(x.clave) ?? { codigo: x.codigo, nombre: x.nombre, lineas: 0, importe_cent: 0, sucursales: x.sucursales, por_canal: {} };
+          const prod = productos.get(x.clave) ?? {
+            codigo: x.codigo,
+            nombre: x.nombre,
+            lineas: 0,
+            importe_cent: 0,
+            sucursales: x.sucursales,
+            por_canal: {},
+          };
           prod.lineas += x.lineas;
           prod.importe_cent += x.importe_cent;
           prod.por_canal[x.origen] = { lineas: x.lineas, importe_cent: x.importe_cent };
           productos.set(x.clave, prod);
         }
-        const filas = [...productos.values()].sort((a, b) => b.importe_cent - a.importe_cent || a.codigo.localeCompare(b.codigo));
+        const filas = [...productos.values()].sort(
+          (a, b) => b.importe_cent - a.importe_cent || a.codigo.localeCompare(b.codigo),
+        );
         const desde = (e.pagina - 1) * e.limite;
         return aPesos({
           ...p,
@@ -273,6 +323,42 @@ export function consultasVentas(db: Db): Consulta[] {
           dias_incompletos: r.incompletos,
           ignoradas,
           ...resultadoPagina(filas.slice(desde, desde + e.limite + 1), e.pagina, e.limite),
+        }) as Record<string, unknown>;
+      },
+    ),
+    consulta(
+      'ventas_bi',
+      `Tablero BI de The Coffee México para un periodo (máximo ${MAX_DIAS} días), de las cargas del POS: KPIs (venta neta y bruta, tickets, líneas, unidades), venta por grupo, categoría, café, fecha, día de la semana, hora, método de pago, promociones, ranking de productos y fuentes. Solo tiendas con módulo bi. ${MONTOS}`,
+      z.object({ desde: fecha, hasta: fecha, sucursales: listaSucursales }),
+      async (e) => {
+        const p = rango(e);
+        const { companias, ignoradas } = elegir(await visibles(db), 'bi', e.sucursales);
+        const opciones = exigir(
+          await db.rpc('bi_opciones', { p: p as unknown as Json }),
+        ) as unknown as RpcOpciones;
+        const conAcceso = new Set(opciones.tiendas.map((t) => t.company_id));
+        const finales = companias.filter((c) => conAcceso.has(c));
+        if (!finales.length)
+          throw new ErrorConsulta('Ninguna de las sucursales pedidas tiene datos BI para esta cuenta.');
+        const tablero = exigir(
+          await db.rpc('bi_tablero', {
+            p: aJsonRpc({
+              desde: p.desde,
+              hasta: p.hasta,
+              companias: finales,
+              hoy: hoyMexico(new Date()),
+            }) as Json,
+          }),
+        ) as unknown as RpcTablero;
+        return aPesos({
+          ...p,
+          ignoradas: [...ignoradas, ...companias.filter((c) => !conAcceso.has(c))],
+          tiendas: opciones.tiendas
+            .filter((t) => finales.includes(t.company_id))
+            .map((t) => ({ company_id: t.company_id, nombre: t.nombre })),
+          ultimo_corte: opciones.ultimo_corte,
+          tiendas_sin_rappi: opciones.tiendas_sin_rappi,
+          tablero,
         }) as Record<string, unknown>;
       },
     ),

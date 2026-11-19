@@ -77,7 +77,7 @@ it('anónimo recibe 401 con descubrimiento sin consultar datos', async () => {
   expect(meta.resource).toBe('https://the-coffee-costeo.vercel.app/mcp');
   expect(meta.authorization_servers).toEqual(['https://prueba.supabase.co/auth/v1']);
 });
-it('negocia MCP y anuncia únicamente seis herramientas de lectura', async () => {
+it('negocia MCP y anuncia únicamente once herramientas de lectura', async () => {
   const r = await rpc('initialize', {
     protocolVersion: '2025-11-25',
     capabilities: {},
@@ -86,7 +86,7 @@ it('negocia MCP y anuncia únicamente seis herramientas de lectura', async () =>
   expect(r.status).toBe(200);
   expect((await mensaje(r)).result.serverInfo.name).toBe('the-coffee-consultas');
   const tools = (await mensaje(await rpc('tools/list'))).result.tools;
-  expect(tools).toHaveLength(6);
+  expect(tools).toHaveLength(11);
   expect(tools.every((t: { annotations: { readOnlyHint: boolean } }) => t.annotations.readOnlyHint)).toBe(
     true,
   );

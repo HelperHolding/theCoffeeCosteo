@@ -4,7 +4,12 @@ import { aPesos, consulta, diasEntre, ErrorConsulta, fecha } from '../../lib/mcp
 
 it('aPesos convierte toda clave _cent a pesos, en objetos y arreglos anidados', () => {
   expect(
-    aPesos({ venta_cent: 12345, pedidos: 3, x: [{ importe_cent: 99 }], hoy: { mostrador: { descuento_cent: 0 } } }),
+    aPesos({
+      venta_cent: 12345,
+      pedidos: 3,
+      x: [{ importe_cent: 99 }],
+      hoy: { mostrador: { descuento_cent: 0 } },
+    }),
   ).toEqual({ venta: 123.45, pedidos: 3, x: [{ importe: 0.99 }], hoy: { mostrador: { descuento: 0 } } });
   expect(aPesos(null)).toBeNull();
   expect(aPesos({ venta_cent: null })).toEqual({ venta_cent: null });

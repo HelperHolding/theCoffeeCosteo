@@ -23,7 +23,8 @@ const como = <R>(user: string, client: string | null, fn: () => Promise<R>) =>
       await db.query(`select set_config('request.jwt.claims', '', false)`);
     }
   });
-const uno = async (sql: string, params: unknown[] = []) => (await db.query<{ r: any }>(sql, params)).rows[0].r;
+const uno = async (sql: string, params: unknown[] = []) =>
+  (await db.query<{ r: any }>(sql, params)).rows[0].r;
 const fila = (company: number, fecha: string) =>
   db.query(
     `insert into sucursales_resumen_dia (company_id, fecha, leido_en, corte_segundo, completa, origenes, horas, productos)
@@ -32,7 +33,16 @@ const fila = (company: number, fecha: string) =>
       company,
       fecha,
       JSON.stringify({ mostrador: { pedidos: 2, venta_cent: 15000, descuento_cent: 0, lineas: 3 } }),
-      JSON.stringify({ mostrador: [Array(24).fill(0).map((_, h) => (h === 9 ? 2 : 0)), Array(24).fill(0).map((_, h) => (h === 9 ? 15000 : 0))] }),
+      JSON.stringify({
+        mostrador: [
+          Array(24)
+            .fill(0)
+            .map((_, h) => (h === 9 ? 2 : 0)),
+          Array(24)
+            .fill(0)
+            .map((_, h) => (h === 9 ? 15000 : 0)),
+        ],
+      }),
       JSON.stringify([['5IL', '5IL', 'Iced Latte', { mostrador: [3, 15000] }]]),
     ],
   );
@@ -113,8 +123,11 @@ describe('RPC de lectura con OAuth', () => {
   it('bi_opciones: OAuth autorizado ve sus tiendas; no autorizado, ninguna', async () => {
     const tiendas = (c: string) =>
       como(conTodo, c, async () =>
-        (await uno(`select public.bi_opciones($1) r`, [JSON.stringify({ desde: '2026-11-01', hasta: '2026-11-10' })]))
-          .tiendas.map((t: T) => t.company_id),
+        (
+          await uno(`select public.bi_opciones($1) r`, [
+            JSON.stringify({ desde: '2026-11-01', hasta: '2026-11-10' }),
+          ])
+        ).tiendas.map((t: T) => t.company_id),
       );
     expect(await tiendas('grok')).toEqual([384]);
     expect(await tiendas('otro-cliente')).toEqual([]);
@@ -134,7 +147,9 @@ describe('mcp_ventas_sucursales', () => {
     const r = await como(conTodo, 'grok', () => uno('select public.mcp_ventas_sucursales() r'));
     expect(r.client_id).toBe('grok');
     expect(r.autorizado).toBe(true);
-    expect(r.sucursales).toEqual([expect.objectContaining({ company_id: 384, modulos: ['sucursales', 'bi'] })]);
+    expect(r.sucursales).toEqual([
+      expect.objectContaining({ company_id: 384, modulos: ['sucursales', 'bi'] }),
+    ]);
   });
 
   it('cliente no autorizado: autorizado false y sin sucursales', async () => {
@@ -152,7 +167,12 @@ describe('mcp_ventas_dias', () => {
   it('omite sucursales ajenas y solo manda horas si se piden', async () => {
     const sin = await dias('2026-11-10', '2026-11-10', false);
     expect(sin).toHaveLength(1);
-    expect(sin[0]).toMatchObject({ company_id: 384, fecha: '2026-11-10', completa: true, corte_segundo: 86400 });
+    expect(sin[0]).toMatchObject({
+      company_id: 384,
+      fecha: '2026-11-10',
+      completa: true,
+      corte_segundo: 86400,
+    });
     expect(sin[0].origenes.mostrador.venta_cent).toBe(15000);
     expect(sin[0].horas).toBeUndefined();
     const con = await dias('2026-11-10', '2026-11-10', true);
