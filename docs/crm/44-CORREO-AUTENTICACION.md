@@ -15,7 +15,8 @@ La contraseña de aplicación la capturó Carlos en el panel de Supabase (Authen
 
 ## Configuración de Auth (por la API de administración)
 
-- **Site URL:** `https://the-coffee-costeo.vercel.app`. Las redirecciones anteriores se conservan y se agregó `https://the-coffee-costeo.vercel.app/**`.
+- **Site URL:** `https://portal.thecoffeemexico.com`, el dominio propio (desde 2026-11-19; antes `https://the-coffee-costeo.vercel.app`). Está en `scripts/crm/sitio-auth.ts`. Las redirecciones anteriores se conservan y se agregan las dos direcciones con `/**`; `the-coffee-costeo.vercel.app` se queda porque el MCP depende de ella.
+- **Revisión antes de enviar:** `invitar-heads.ts` y `enviar-contrasena-propia.ts` se detienen si la Site URL no es la del portal. El 2026-11-18 apareció cambiada a `the-coffee-portal-helperholding.vercel.app` (con SSO de Vercel) y las invitaciones a los heads salieron rotas; se corrigió y se reenviaron el 2026-11-19.
 - **Plantillas en español:** `supabase/templates/invite.html` y `supabase/templates/recovery.html`. Llevan a `/auth/confirm?token_hash=…&type=invite|recovery`, que es lo que espera `app/auth/confirm/route.ts`.
 - **Vigencia de los enlaces:** 24 horas (`mailer_otp_exp = 86400`).
 - **Registro libre cerrado** (`disable_signup = true`): solo se entra por invitación. Todos los usuarios existentes se dieron de alta por administrador, así que no les afecta.

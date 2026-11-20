@@ -3,6 +3,7 @@
 // Uso: npx tsx --conditions=react-server scripts/crm/enviar-contrasena-propia.ts correo1 correo2 ...
 import { readFileSync } from 'node:fs';
 import { leerEnvLocal } from '../zoho/cliente';
+import { revisarSitio } from './sitio-auth';
 
 const correos = process.argv.slice(2);
 if (!correos.length) throw new Error('Pasa los correos como argumentos.');
@@ -25,6 +26,7 @@ const clave = env.get('NEXT_PUBLIC_SUPABASE_ANON_KEY') ?? env.get('NEXT_PUBLIC_S
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const normal = await config('GET');
+revisarSitio(normal.site_url);
 const original = {
   mailer_subjects_recovery: normal.mailer_subjects_recovery,
   mailer_templates_recovery_content: normal.mailer_templates_recovery_content,

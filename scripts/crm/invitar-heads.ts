@@ -11,6 +11,7 @@
 //   npx tsx --conditions=react-server scripts/crm/invitar-heads.ts <personas.json> --aplicar  → invita y da accesos
 import { readFileSync } from 'node:fs';
 import { leerEnvLocal } from '../zoho/cliente';
+import { revisarSitio } from './sitio-auth';
 
 interface Persona {
   nombre: string;
@@ -44,6 +45,11 @@ const sql = async <T = Record<string, unknown>>(query: string): Promise<T[]> => 
 };
 const lit = (v: string) => `'${v.replace(/'/g, "''")}'`;
 const aplicar = process.argv.includes('--aplicar');
+
+// Sin la Site URL correcta los enlaces de la invitación no abren el portal: se revisa también en el plan.
+const auth = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth`, { headers: admin });
+if (!auth.ok) throw new Error(`No se pudo leer la configuración de Auth: HTTP ${auth.status}`);
+revisarSitio(((await auth.json()) as { site_url?: string }).site_url);
 
 // La llave de servicio se pide a la API de administración en cada corrida y no se guarda ni se imprime.
 const llaves = (await (
