@@ -1,4 +1,5 @@
-import type { FilaDiaRpc, RpcServicio, TramoRpc } from '../../../lib/sucursales/servicio';
+import { acumular, type FilaDiaRpc, type RpcServicio, type TramoRpc } from '../../../lib/sucursales/servicio';
+import type { RpcServicioNacional } from '../../../lib/sucursales/servicio-nacional';
 import { diasEntre, sumarDias } from '../../../lib/sucursales/tiempo';
 
 /**
@@ -186,6 +187,69 @@ export function servicioSintetico(desde: string, hasta: string, hoy: string, vac
           { tienda: NORMAL, fecha: hoy, categoria: '2. Top 20%', proxima: '1. Top 5%' },
           { tienda: TURBO, fecha: hoy, categoria: '4. Beginner', proxima: '4. Beginner' },
         ],
+    leido_en: new Date().toISOString(),
+  };
+}
+
+/**
+ * Tablero de México · Nivel de servicio SINTÉTICO (?tablero-mexico&vista=servicio): cada sucursal con portal toma la
+ * misma forma de servicioSintetico con sus propios IDs y una escala distinta; 3 tiendas desactivadas ahora.
+ */
+export function servicioNacionalSintetico(
+  sucursales: { companyId: number; nombre: string; rappiPortal?: boolean }[],
+  desde: string,
+  hasta: string,
+  hoy: string,
+): RpcServicioNacional {
+  const tiendas: RpcServicioNacional['tiendas'] = [];
+  const porTienda: RpcServicioNacional['por_tienda'] = [];
+  const porDia = new Map<string, FilaDiaRpc[]>();
+  const reclamos: RpcServicio['reclamos'] = [];
+  const vigente: TramoRpc[] = [];
+  const top: RpcServicioNacional['top'] = [];
+  const CATEGORIAS = ['1. Top 5%', '2. Top 20%', 'Fuera del Top 20', '4. Beginner', '5. Warning'];
+  sucursales
+    .filter((s) => s.rappiPortal)
+    .forEach((s, i) => {
+      const base = servicioSintetico(desde, hasta, hoy, false);
+      const ids = { normal: `MX${s.companyId}01`, turbo: `MX${s.companyId}02` };
+      const conTurbo = i % 2 === 0;
+      for (const canal of conTurbo ? (['normal', 'turbo'] as const) : (['normal'] as const)) {
+        const id = ids[canal];
+        const original = canal === 'normal' ? 'MX1930270777' : 'MX1930301156';
+        tiendas.push({ id, company_id: s.companyId, nombre: `The Coffee ${s.nombre}`, canal });
+        const filas = base.dias
+          .filter((d) => d.tienda === original)
+          .map((d) => ({ ...d, tienda: id, pedidos: Math.round((d.pedidos ?? 0) * (0.5 + (i % 7) / 4)) }));
+        porTienda.push({ tienda: id, ...acumular(filas) });
+        for (const f of filas) porDia.set(f.fecha, [...(porDia.get(f.fecha) ?? []), f]);
+        reclamos.push(
+          ...base.reclamos
+            .filter((r) => r.tienda === original)
+            .map((r) => ({ ...r, tienda: id, pedido: `${r.pedido}${s.companyId}` })),
+        );
+        const apagada = i % 23 === 5 && canal === 'normal';
+        vigente.push({
+          tienda: id,
+          estado: apagada ? 'INACTIVE' : 'ACTIVE',
+          motivo: apagada ? 'Not ready to sell' : null,
+          cierra: null,
+          desde: new Date(Date.now() - (apagada ? 95 : 300) * 60_000).toISOString(),
+          visto: new Date(Date.now() - 4 * 60_000).toISOString(),
+        });
+        if (canal === 'normal')
+          top.push({ tienda: id, fecha: hoy, categoria: CATEGORIAS[i % CATEGORIAS.length], proxima: null });
+      }
+    });
+  return {
+    tiendas,
+    por_tienda: porTienda,
+    por_dia: [...porDia.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([fecha, f]) => ({ fecha, ...acumular(f) })),
+    reclamos: reclamos.sort((a, b) => b.fecha.localeCompare(a.fecha)),
+    vigente,
+    top,
     leido_en: new Date().toISOString(),
   };
 }

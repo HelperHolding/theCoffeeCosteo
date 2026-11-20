@@ -29,23 +29,23 @@ import './nivel-servicio.css';
  * del periodo (los de Rappi, sumados), el día por día, la conectividad (cinta por día, la jugada firma) y los reclamos.
  * Skills frontend-design y dataviz: un solo contenedor de KPIs, marcas finas, color solo en las marcas y nunca solo.
  */
-const CANAL: Record<CanalServicio, string> = { normal: 'Rappi', turbo: 'Rappi Turbo' };
-const COLOR_RECLAMO: Record<TipoReclamo, string> = {
+export const CANAL: Record<CanalServicio, string> = { normal: 'Rappi', turbo: 'Rappi Turbo' };
+export const COLOR_RECLAMO: Record<TipoReclamo, string> = {
   incorrecto: 'var(--recl-incorrecto)',
   faltante: 'var(--recl-faltante)',
   mal_estado: 'var(--recl-mal-estado)',
 };
 // Orden fijo de las series (el color sigue al tipo, nunca al rango).
-const ORDEN_RECLAMO: TipoReclamo[] = ['incorrecto', 'faltante', 'mal_estado'];
+export const ORDEN_RECLAMO: TipoReclamo[] = ['incorrecto', 'faltante', 'mal_estado'];
 const ORDEN_RECHAZO = Object.keys(TIPOS_RECHAZO) as TipoRechazo[];
 
-const minutos = (m: number | null) => {
+export const minutos = (m: number | null) => {
   if (m === null) return '—';
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
   return `${h} h${m % 60 ? ` ${m % 60} min` : ''}`;
 };
-const decimal = (x: number | null, d = 1) =>
+export const decimal = (x: number | null, d = 1) =>
   x === null ? '—' : x.toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
 
 export function SeccionServicio({
@@ -100,7 +100,11 @@ export function SeccionServicio({
           {error && <ErrorCarga error={error} alReintentar={recargar} />}
           <AhoraEnRappi d={datos} zona={sucursal.zona} />
           {/* Sin días de Rappi no hay indicadores: no se muestran ceros que parezcan datos. */}
-          {datos.dias.length > 0 && <Indicadores d={datos} />}
+          {datos.dias.length > 0 && (
+            <Indicadores titulo={`${tituloPeriodo(datos.desde, datos.hasta)} en Rappi`} t={datos.totales}>
+              <PorCanal d={datos} />
+            </Indicadores>
+          )}
           {datos.dias.length === 0 ? (
             <div className="rounded-2xl border border-line bg-surface shadow-card">
               <Vacio titulo="Sin indicadores de Rappi en el periodo">
@@ -189,8 +193,20 @@ function AhoraEnRappi({ d, zona }: { d: RespuestaServicio; zona: string }) {
 }
 
 // ── Indicadores del periodo ─────────────────────────────────────────────────────────────────────────────────────
-function Indicadores({ d }: { d: RespuestaServicio }) {
-  const t = d.totales;
+/** Título del periodo: «vie 20 nov» o «14 nov a 20 nov». */
+export const tituloPeriodo = (desde: string, hasta: string) =>
+  desde === hasta ? fechaCorta(desde) : `${diaMes(desde)} a ${diaMes(hasta)}`;
+
+/** Indicadores del periodo en un solo contenedor; `children` va debajo (la tabla por tienda o por canal). */
+export function Indicadores({
+  titulo,
+  t,
+  children,
+}: {
+  titulo: string;
+  t: Totales;
+  children?: React.ReactNode;
+}) {
   const hallazgo = [
     t.tasaReclamos !== null ? `Reclamos en ${porcentaje(t.tasaReclamos)} de los pedidos finalizados` : null,
     t.sinDispMinutos ? `${minutos(t.sinDispMinutos)} sin disponibilidad` : null,
@@ -231,9 +247,7 @@ function Indicadores({ d }: { d: RespuestaServicio }) {
       className="rounded-2xl border border-line bg-surface shadow-card"
     >
       <header className="px-5 pt-5">
-        <h2 id="indicadores-servicio">
-          {d.desde === d.hasta ? fechaCorta(d.desde) : `${diaMes(d.desde)} a ${diaMes(d.hasta)}`} en Rappi
-        </h2>
+        <h2 id="indicadores-servicio">{titulo}</h2>
         <p className="mt-1 text-sm text-ink-2">
           {hallazgo.length ? hallazgo.join(' · ') : 'Sin reclamos, rechazos ni tiempo sin disponibilidad.'}
         </p>
@@ -259,7 +273,7 @@ function Indicadores({ d }: { d: RespuestaServicio }) {
           </div>
         ))}
       </dl>
-      <PorCanal d={d} />
+      {children}
     </section>
   );
 }
@@ -316,7 +330,7 @@ function PorCanal({ d }: { d: RespuestaServicio }) {
 
 // ── Día por día ─────────────────────────────────────────────────────────────────────────────────────────────────
 /** Columnas por día con hover y foco de teclado (←/→); el tooltip es el de las demás gráficas de Sucursales. */
-function Columnas({
+export function Columnas({
   titulo,
   descripcion,
   leyenda,
@@ -411,7 +425,7 @@ function Columnas({
   );
 }
 
-function ReclamosPorDia({ d }: { d: RespuestaServicio }) {
+export function ReclamosPorDia({ d }: { d: { dias: { fecha: string; total: Totales }[] } }) {
   const partes = ORDEN_RECLAMO.map((k) => ({ color: COLOR_RECLAMO[k], nombre: TIPOS_RECLAMO[k] }));
   return (
     <Columnas
@@ -437,7 +451,7 @@ function ReclamosPorDia({ d }: { d: RespuestaServicio }) {
   );
 }
 
-function SinDisponibilidadPorDia({ d }: { d: RespuestaServicio }) {
+export function SinDisponibilidadPorDia({ d }: { d: { dias: { fecha: string; total: Totales }[] } }) {
   const parte = { color: 'var(--sin-disp)', nombre: 'Minutos sin disponibilidad' };
   return (
     <Columnas

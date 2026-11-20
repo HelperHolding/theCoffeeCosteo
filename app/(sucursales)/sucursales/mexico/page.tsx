@@ -25,8 +25,8 @@ export default async function TableroMexico({
         titulo="Tablero de México"
         descripcion={
           todas
-            ? `La venta (se actualiza cada 10 minutos) y el consumo por mes de las ${lista.length} sucursales.`
-            : `La venta (se actualiza cada 10 minutos) y el consumo por mes de tus ${lista.length} sucursales.`
+            ? `La venta (se actualiza cada 10 minutos), el consumo por mes y el nivel de servicio en Rappi de las ${lista.length} sucursales.`
+            : `La venta (se actualiza cada 10 minutos), el consumo por mes y el nivel de servicio en Rappi de tus ${lista.length} sucursales.`
         }
       />
       {lista.length === 0 ? (
@@ -36,7 +36,7 @@ export default async function TableroMexico({
           </Vacio>
         </Tarjeta>
       ) : (
-        <VistasMexico vistaInicial={q.vista === 'consumo' ? 'consumo' : 'ventas'} />
+        <VistasMexico vistaInicial={q.vista === 'consumo' || q.vista === 'servicio' ? q.vista : 'ventas'} />
       )}
     </>
   );

@@ -219,3 +219,42 @@ describe('sucursales_nivel_servicio', () => {
     expect((r.semana as unknown[]).length).toBe(1);
   });
 });
+
+// Migración 89: Nivel de servicio de todas las sucursales del usuario para el Tablero de México.
+describe('sucursales_servicio_nacional', () => {
+  const leer = (u: string, companias: number[], desde = '2026-11-18', hasta = '2026-11-20') =>
+    comoUsuario(
+      db,
+      u,
+      async () =>
+        (
+          await db.query<{ r: Record<string, unknown> }>(
+            'select public.sucursales_servicio_nacional($1, $2, $3) r',
+            [companias, desde, hasta],
+          )
+        ).rows[0].r,
+    );
+
+  it('solo las sucursales que el usuario ve, aunque pida otras; sumas por tienda y por día', async () => {
+    const r = await leer(gdl, [513, 384]);
+    expect((r.tiendas as { company_id: number }[]).every((t) => t.company_id === 513)).toBe(true);
+    const tienda = (r.por_tienda as Record<string, unknown>[]).find((x) => x.tienda === NORMAL)!;
+    expect([
+      num(tienda.pedidos),
+      num(tienda.recl_mal_estado),
+      num(tienda.espera_peso),
+      num(tienda.espera_suma),
+    ]).toEqual([9, 2, 8, 22.4]);
+    expect((r.por_dia as { fecha: string }[]).map((x) => x.fecha)).toEqual(['2026-11-18']);
+    expect((r.reclamos as unknown[]).length).toBe(1);
+    expect((r.vigente as unknown[]).length).toBe(1);
+    const ajeno_ = await leer(ajeno, [513]);
+    expect([(ajeno_.tiendas as unknown[]).length, (ajeno_.por_tienda as unknown[]).length]).toEqual([0, 0]);
+    await expect(leer(gdl, [513], '2026-08-01', '2026-11-20')).rejects.toThrow(/62 días/);
+    await db.exec('set role anon');
+    await expect(
+      db.query("select public.sucursales_servicio_nacional('{513}', '2026-11-18', '2026-11-20')"),
+    ).rejects.toThrow(/permission denied/);
+    await db.exec('reset role');
+  });
+});

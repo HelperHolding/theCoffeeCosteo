@@ -64,6 +64,22 @@ vi.mock('../../lib/supabase/servidor', () => ({
           data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null },
           error: null,
         };
+      // Migración 89: Nivel de servicio nacional (la base se queda con las sucursales permitidas).
+      if (fn === 'sucursales_servicio_nacional')
+        return {
+          data: {
+            tiendas: [
+              { id: 'MX1930415960', company_id: 612, nombre: 'The Coffee Cd. Juárez', canal: 'normal' },
+            ],
+            por_tienda: [],
+            por_dia: [],
+            reclamos: [],
+            vigente: [],
+            top: [],
+            leido_en: null,
+          },
+          error: null,
+        };
       // Migración 87: Nivel de servicio (la base exige la sucursal asignada).
       if (fn === 'sucursales_nivel_servicio')
         return {
@@ -213,6 +229,7 @@ import { GET as pedidosGet } from '../../app/api/sucursales/[companyId]/pedidos/
 import { GET as costeoGet } from '../../app/api/sucursales/[companyId]/costeo/route';
 import { GET as consumoGet } from '../../app/api/sucursales/[companyId]/consumo/route';
 import { GET as servicioGet } from '../../app/api/sucursales/[companyId]/servicio/route';
+import { GET as servicioNacionalGet } from '../../app/api/sucursales/servicio-nacional/route';
 import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
 import { sesionSucursales } from '../../lib/supabase/sesion';
 import { apiFalsa, envelope, pedido } from './sucursales-fixtures';
@@ -742,5 +759,24 @@ describe('Nivel de servicio (docs/rappi-portal/08)', () => {
     expect((await llamar(servicioGet, '469', '?desde=2026-10-22')).status).toBe(404);
     sesion.companias = [469];
     expect((await llamar(servicioGet, '612', '?desde=2026-10-22')).status).toBe(404);
+  });
+});
+
+describe('Nivel de servicio del Tablero de México', () => {
+  const pedir = (q = '') =>
+    servicioNacionalGet(new Request(`http://localhost/api/sucursales/servicio-nacional${q}`));
+  it('las sucursales del usuario; las que no tienen tienda en el portal van aparte', async () => {
+    sesion.companias = [612, 469];
+    const r = await pedir('?desde=2026-10-20&hasta=2026-10-22');
+    expect(r.status).toBe(200);
+    const d = await r.json();
+    expect(d.sucursales.map((s: { companyId: number }) => s.companyId)).toEqual([612]);
+    expect(d.sinPortal.map((s: { companyId: number }) => s.companyId)).toEqual([469]);
+  });
+  it('periodo inválido o futuro: 400; sin sesión: 401', async () => {
+    expect((await pedir('?desde=2026-08-01&hasta=2026-10-22')).status).toBe(400);
+    expect((await pedir('?desde=2099-01-01')).status).toBe(400);
+    sesion.usuario = null;
+    expect((await pedir()).status).toBe(401);
   });
 });

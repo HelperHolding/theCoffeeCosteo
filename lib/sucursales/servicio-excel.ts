@@ -1,4 +1,5 @@
 import { TIPOS_RECHAZO, TIPOS_RECLAMO, nombreTop, type RespuestaServicio, type Totales } from './servicio';
+import type { RespuestaServicioNacional } from './servicio-nacional';
 
 /**
  * Hojas del Excel de Nivel de servicio de una sucursal (docs/rappi-portal/08): el mismo periodo que se ve en pantalla
@@ -8,7 +9,7 @@ const CANAL = { normal: 'Rappi', turbo: 'Rappi Turbo' } as const;
 const pct = (x: number | null) => (x === null ? '' : Math.round(x * 1000) / 10);
 const dec = (x: number | null, d = 2) => (x === null ? '' : Math.round(x * 10 ** d) / 10 ** d);
 
-function filaTotales(t: Totales) {
+export function filaTotales(t: Totales) {
   return {
     'Pedidos creados': t.pedidos,
     Rechazos: t.rechazosTotal,
@@ -80,6 +81,66 @@ export function hojasServicio(d: RespuestaServicio, sucursal: string) {
       'Desde (hora local)': t.desde,
       'Hasta (hora local)': t.hasta ?? 'sigue',
       Minutos: t.minutos,
+    })),
+  };
+}
+
+/** Excel del Tablero de México · Nivel de servicio: el mismo periodo de pantalla, todas las sucursales del usuario. */
+export function hojasServicioNacional(d: RespuestaServicioNacional) {
+  const periodo = d.desde === d.hasta ? d.desde : `${d.desde} a ${d.hasta}`;
+  const hora = (iso: string) =>
+    new Intl.DateTimeFormat('es-MX', {
+      timeZone: 'America/Mexico_City',
+      dateStyle: 'short',
+      timeStyle: 'short',
+      hourCycle: 'h23',
+    }).format(new Date(iso));
+  return {
+    nombreArchivo: `nivel-servicio-mexico-${periodo.replace(' a ', '_')}.xlsx`,
+    resumen: [
+      { Concepto: 'Periodo', Valor: periodo },
+      { Concepto: 'Fuente', Valor: 'Portal de Rappi Partners (Nivel de servicio y Conectividad)' },
+      { Concepto: 'Días', Valor: 'Los de Rappi (hora del centro)' },
+      { Concepto: 'Sucursales con tienda en Rappi', Valor: d.sucursales.length },
+      {
+        Concepto: 'Sucursales sin tienda en el portal',
+        Valor: d.sinPortal.map((s) => s.nombre).join(', ') || '—',
+      },
+      ...d.ahora.map((a) => ({
+        Concepto: `Activas al descargar (${CANAL[a.canal]})`,
+        Valor: `${a.activas} de ${a.tiendas}`,
+      })),
+      ...d.top.map((x) => ({ Concepto: `Top Restaurantes: ${nombreTop(x.categoria)}`, Valor: x.tiendas })),
+      { Concepto: 'Monto compensado por reclamos', Valor: d.compensado },
+      ...Object.entries(filaTotales(d.totales)).map(([Concepto, Valor]) => ({ Concepto, Valor })),
+    ],
+    porSucursal: d.sucursales.map((s) => ({
+      Sucursal: s.nombre,
+      Ciudad: s.ciudad,
+      'ID API': s.companyId,
+      'Rappi ahora': s.ahora.normal ? (s.ahora.normal.activa ? 'Activa' : 'Desactivada') : '—',
+      'Turbo ahora': s.ahora.turbo ? (s.ahora.turbo.activa ? 'Activa' : 'Desactivada') : '—',
+      'Top Restaurantes': nombreTop(s.top) ?? '',
+      ...filaTotales(s.totales),
+    })),
+    dias: d.dias.map((x) => ({ Fecha: x.fecha, ...filaTotales(x.total) })),
+    reclamos: d.reclamos.map((r) => ({
+      Fecha: r.fecha,
+      Sucursal: r.sucursal,
+      Tienda: CANAL[r.canal],
+      Pedido: r.pedido,
+      Producto: r.producto ?? '',
+      Tipo: r.tipo ? TIPOS_RECLAMO[r.tipo] : '',
+      Detalle: r.detalle ?? '',
+      'Comentario del cliente': r.comentario ?? '',
+      'Compensado (MXN)': r.monto ?? '',
+    })),
+    desactivadas: d.desactivadas.map((x) => ({
+      Sucursal: x.sucursal,
+      Tienda: CANAL[x.canal],
+      Estado: x.estado,
+      Motivo: x.motivo ?? '',
+      'Desde (hora del centro)': hora(x.desde),
     })),
   };
 }
