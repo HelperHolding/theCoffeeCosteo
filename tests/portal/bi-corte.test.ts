@@ -18,6 +18,7 @@ const fila = (id: string, tienda: string, canal: string | null) => ({
   metodo_pago: 'rappi_pay',
   bruto: 100,
   descuento_aliado: null,
+  descuento_venta: 0,
   estado_anterior: null,
   revisar: false,
   rappi_tiendas: canal ? { canal } : null,
@@ -44,6 +45,17 @@ describe('rappiServicio: Turbo', () => {
     const pedidos = (await fuente('2026-11-03', '2026-11-03'))!;
     expect(selects[0]).toContain('rappi_tiendas(canal)');
     expect(pedidos.map((p) => p.tipo)).toEqual(['RAPPI_TURBO', 'RAPPI_PORTAL']);
+  });
+});
+
+describe('rappiServicio: venta como Zoho', () => {
+  it('pide descuento_venta y lo resta de la venta del pedido', async () => {
+    const f = { ...fila('9', 'MX1', 'normal'), descuento_venta: 17.6 };
+    const { db, selects } = clienteCon([f]);
+    const fuente = rappiServicio(db, { rappiPortal: true, companyId: 1 } as never)!;
+    const [p] = (await fuente('2026-11-03', '2026-11-03'))!;
+    expect(selects[0]).toContain('descuento_venta');
+    expect(p.ventaCent).toBe(10000 - 1760);
   });
 });
 

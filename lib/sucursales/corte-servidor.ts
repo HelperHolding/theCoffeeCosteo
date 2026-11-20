@@ -62,7 +62,7 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
     const r = await db
       .from('rappi_pedidos')
       .select(
-        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
+        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, descuento_venta, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
       )
       .eq('company_id', cfg.companyId)
       // Fecha del portal en hora del centro: fuera de esa zona se lee un día de más a cada lado (ver fuenteRappi).
@@ -87,6 +87,7 @@ export function rappiServicio(db: Servicio, cfg: ConfigSucursal): FuenteRappi | 
         metodo_pago: (x.metodo_pago as string | null) ?? null,
         bruto: Number(x.bruto),
         descuento_aliado: x.descuento_aliado === null ? null : Number(x.descuento_aliado),
+        descuento_venta: x.descuento_venta === null || x.descuento_venta === undefined ? 0 : Number(x.descuento_venta),
         estado_anterior: (x.estado_anterior as string | null) ?? null,
         revisar: Boolean(x.revisar),
         cambios: 0,
