@@ -12,7 +12,7 @@ import { cookieBarista } from '@/lib/franquiciatarios/servidor';
 import { configDe } from '@/lib/sucursales/config';
 import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
 import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
-import type { MomentoConteo, SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
+import type { MomentoArqueo, MomentoConteo, SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -334,5 +334,84 @@ export async function guardarInsumo(datos: {
       p_orden: datos.orden,
       p_activo: datos.activo,
     }),
+  );
+}
+
+/** Arqueo ciego de hoy (medio turno o cierre). Cualquier rol; no devuelve nada de lo esperado. */
+export async function arquear(datos: {
+  companyId: number;
+  momento: MomentoArqueo;
+  contado: number;
+  observacion?: string | null;
+}): Promise<Resultado> {
+  if ((datos.momento !== 'medio' && datos.momento !== 'cierre') || !Number.isFinite(datos.contado))
+    return { error: 'Datos inválidos.' };
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_arquear', {
+      p_company: datos.companyId,
+      p_momento: datos.momento,
+      p_contado: datos.contado,
+      p_observacion: datos.observacion ?? null,
+      p_barista: b,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+const SOLO_GERENCIA = 'Solo el gerente o el franquiciatario manejan la caja chica.';
+
+export async function registrarGasto(datos: {
+  companyId: number;
+  concepto: string;
+  categoria: string;
+  monto: number;
+  enEfectivo: boolean;
+  comprobante: boolean;
+  nota?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GERENCIA };
+  if (!Number.isFinite(datos.monto)) return { error: 'Escribe el monto del gasto.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto', {
+      p_company: datos.companyId,
+      p_concepto: String(datos.concepto ?? ''),
+      p_categoria: String(datos.categoria ?? ''),
+      p_monto: datos.monto,
+      p_en_efectivo: Boolean(datos.enEfectivo),
+      p_comprobante: Boolean(datos.comprobante),
+      p_nota: datos.nota ?? null,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+export async function anularGasto(companyId: number, gasto: number, motivo: string): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GERENCIA };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto_anular', { p_gasto: gasto, p_motivo: String(motivo ?? ''), p_dispositivo: disp }),
+  );
+}
+
+export async function configurarCaja(
+  companyId: number,
+  fondo: number,
+  tolerancia: number,
+): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario configuran la caja.' };
+  if (!Number.isFinite(fondo) || !Number.isFinite(tolerancia))
+    return { error: 'Revisa el fondo y la tolerancia.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_caja_configurar', { p_company: companyId, p_fondo: fondo, p_tolerancia: tolerancia }),
   );
 }

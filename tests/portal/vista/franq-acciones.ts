@@ -4,11 +4,15 @@
 import type {
   FranqBarista,
   FranqFirma,
+  FranqArqueo,
+  FranqCajaConfig,
   FranqConteo,
+  FranqGasto,
   FranqIncidencia,
   FranqInsumo,
   FranqPunto,
   FranqRecepcion,
+  MomentoArqueo,
   MomentoConteo,
   FranqRespuesta,
   SeccionClave,
@@ -35,6 +39,9 @@ export const tienda = {
   recepciones: [] as FranqRecepcion[],
   insumos: [] as FranqInsumo[],
   conteos: [] as FranqConteo[],
+  arqueos: [] as FranqArqueo[],
+  gastos: [] as FranqGasto[],
+  cajaConfig: { fondo: 1500, tolerancia: 20 } as Pick<FranqCajaConfig, 'fondo' | 'tolerancia'> | null,
   dia: '',
 };
 let id = 1000;
@@ -361,6 +368,92 @@ export async function guardarInsumo(d: {
       tienda.insumos.find((i) => i.id === d.id)!,
       { nombre, unidad: d.unidad.trim(), activo: d.activo },
     );
+  avisar();
+  return { ok: true };
+}
+
+/** Arqueo ciego con las reglas de franq_arquear (recuento corrige al vigente del mismo momento). */
+export async function arquear(d: {
+  momento: MomentoArqueo;
+  contado: number;
+  observacion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  if (!(d.contado >= 0)) return { error: 'Escribe el efectivo contado (de 0 en adelante).' };
+  const previo = tienda.arqueos
+    .filter(
+      (a) =>
+        a.dia === tienda.dia && a.momento === d.momento && !tienda.arqueos.some((x) => x.corrige_id === a.id),
+    )
+    .at(-1);
+  tienda.arqueos.push({
+    ...base(q),
+    id: ++id,
+    dia: tienda.dia,
+    momento: d.momento,
+    contado: Math.round(d.contado * 100) / 100,
+    observacion: (d.observacion ?? '').trim() || null,
+    corrige_id: previo?.id ?? null,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function registrarGasto(d: {
+  concepto: string;
+  categoria: string;
+  monto: number;
+  enEfectivo: boolean;
+  comprobante: boolean;
+}): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario manejan la caja chica.' };
+  if (d.concepto.trim().length < 3) return { error: 'Describe el gasto.' };
+  if (!(d.monto > 0)) return { error: 'Escribe el monto del gasto.' };
+  tienda.gastos.push({
+    ...base({ barista_id: null, nombre: tienda.perfil }),
+    id: ++id,
+    dia: tienda.dia,
+    concepto: d.concepto.trim(),
+    categoria: d.categoria,
+    monto: Math.round(d.monto * 100) / 100,
+    en_efectivo: d.enEfectivo,
+    comprobante: d.comprobante,
+    nota: null,
+    anula_id: null,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function anularGasto(_c: number, gasto: number, motivo: string): Promise<Resultado> {
+  await espera();
+  if (motivo.trim().length < 3) return { error: 'Escribe por qué se anula.' };
+  if (tienda.gastos.some((g) => g.anula_id === gasto)) return { error: 'Ese gasto ya está anulado.' };
+  const g = tienda.gastos.find((x) => x.id === gasto)!;
+  tienda.gastos.push({
+    ...base({ barista_id: null, nombre: tienda.perfil }),
+    id: ++id,
+    dia: g.dia,
+    concepto: null,
+    categoria: null,
+    monto: null,
+    en_efectivo: g.en_efectivo,
+    comprobante: false,
+    nota: motivo.trim(),
+    anula_id: gasto,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function configurarCaja(_c: number, fondo: number, tolerancia: number): Promise<Resultado> {
+  await espera();
+  if (!(fondo >= 0) || !(tolerancia >= 0)) return { error: 'Revisa el fondo y la tolerancia.' };
+  tienda.cajaConfig = { fondo, tolerancia };
   avisar();
   return { ok: true };
 }

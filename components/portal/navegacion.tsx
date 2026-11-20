@@ -25,6 +25,7 @@ import {
   Settings2,
   BarChart3,
   ShoppingCart,
+  Banknote,
   Boxes,
   Bot,
   ClipboardList,
@@ -73,6 +74,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/ventas`, nombre: 'Ventas y pedidos', icono: Activity },
         { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
         { href: `${b}/conteo`, nombre: 'Conteo de insumos', icono: ClipboardList },
+        { href: `${b}/caja`, nombre: 'Caja', icono: Banknote },
       ],
     },
   ];

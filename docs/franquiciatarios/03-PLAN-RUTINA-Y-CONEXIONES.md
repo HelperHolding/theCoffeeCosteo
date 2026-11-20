@@ -1,7 +1,7 @@
 # Plan: rutina operativa del gerente + conexión con Comercializadora y P&L (piloto Essentia)
 
 Fuente: «Checklist y Rutina Operativa de Turno v1.0», de Moisés (Diseño Operativo), noviembre 2026. Va dirigido a
-Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1 (#181, mig. 79), F3 (#182/#184, mig. 80/82) en producción; F2 en PR (mig. 83).**
+Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1 (mig. 79), F3 (mig. 80/82) y F2 (mig. 83) en producción; F4 en PR (mig. 84).**
 
 Leyenda: **[H]** hecho verificado (repo o producción, en solo lectura) · **[P]** propuesta · **[D]** decisión pendiente
 de Carlos.
