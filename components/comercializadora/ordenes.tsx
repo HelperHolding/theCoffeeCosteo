@@ -44,6 +44,7 @@ export function Ordenes(p: {
     (FormOc & { anterior?: string; origen?: string; omitidos?: number }) | null
   >(p.editable && p.prellenado ? p.prellenado : null);
   const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [ver, setVer] = useState(POR_PAGINA);
   const [pendiente, iniciar] = useTransition();
   const minutos = p.ultimoSync ? Math.round((Date.now() - new Date(p.ultimoSync).getTime()) / 60000) : null;
@@ -117,6 +118,11 @@ export function Ordenes(p: {
           </button>
         ) : null}
       </form>
+      {aviso ? (
+        <p role="status" className="rounded-lg bg-surface px-3 py-2 text-sm">
+          {aviso}
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">
           {error}
@@ -419,8 +425,14 @@ export function Ordenes(p: {
                               aria-label={`Reintentar WhatsApp ${g.folio}`}
                               onClick={async () => {
                                 const r = await reintentarWhatsapp(fila.zoho_po_id);
-                                if ('error' in r) setError(r.error);
-                                else router.refresh();
+                                if ('error' in r) return setError(r.error);
+                                // El reintento solo libera el registro: el envío sale cuando Zoho vuelve a mandar el aviso (spec §7).
+                                setAviso(
+                                  r.borrada
+                                    ? `Listo. Edita y guarda la OC ${g.folio} en Zoho para que se mande otra vez.`
+                                    : `No había nada que reintentar en ${g.folio}: puede que ya se haya mandado.`,
+                                );
+                                router.refresh();
                               }}
                             >
                               Reintentar WhatsApp

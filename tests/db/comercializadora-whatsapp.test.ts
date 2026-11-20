@@ -91,3 +91,29 @@ describe('migración 78: envíos de OC por WhatsApp', () => {
     expect(quedan.rows.map((x) => x.zoho_po_id)).toEqual(['12']);
   });
 });
+
+describe('migración 78: un envío atorado en reservado', () => {
+  let db: PGlite;
+  beforeAll(async () => {
+    db = await crearDbLocal();
+  });
+  afterAll(async () => db.close());
+
+  it('reintentar borra un reservado de más de 30 minutos, nunca uno reciente', async () => {
+    await comoServicio(db, () =>
+      db.query(
+        `insert into com_oc_whatsapp (zoho_po_id, po_number, estado, reservado_at) values
+           ('viejo', 'COM-OC-V', 'reservado', now() - interval '1 hour'),
+           ('nuevo', 'COM-OC-N', 'reservado', now() - interval '5 minutes')`,
+      ),
+    );
+    const editor = await crearUsuario(db, 'interno');
+    await darModulo(db, editor, 'comercializadora', 'edicion');
+    const r = (id: string) =>
+      comoUsuario(db, editor, () =>
+        db.query<{ ok: boolean }>('select public.com_oc_whatsapp_reintentar($1) ok', [id]),
+      );
+    expect((await r('viejo')).rows[0].ok).toBe(true);
+    expect((await r('nuevo')).rows[0].ok).toBe(false);
+  });
+});

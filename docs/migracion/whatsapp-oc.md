@@ -36,9 +36,10 @@ Una clave larga nueva, solo para esta función (no reutilices `COM_SECRETO`):
 
 ```powershell
 npx.cmd supabase secrets set OC_WHATSAPP_SECRETO=<clave larga nueva> --project-ref jpqkmnfjwzniptszjuli
+npx.cmd supabase secrets set META_APP_SECRETO=<app secret de la app de Meta> --project-ref jpqkmnfjwzniptszjuli
 ```
 
-No la pegues en chats, issues ni commits. La función ya se publica sola al integrar a `main`.
+`META_APP_SECRETO` es el **App secret** de la app de Meta (Configuración de la app → Básica): con él la función valida la firma `X-Hub-Signature-256` de cada aviso; sin él rechaza todos los avisos de Meta (así nadie puede inventar respuestas de proveedores). No pegues estas claves en chats, issues ni commits. La función ya se publica sola al integrar a `main`.
 
 ## 3. n8n (usuario)
 
@@ -51,7 +52,7 @@ No la pegues en chats, issues ni commits. La función ya se publica sola al inte
    - "Portal OC WhatsApp" (Header Auth: `x-oc-whatsapp-secreto` = la clave del paso 2).
 3. **Importa** los dos JSON (Workflows → Import from file), revisa que cada nodo tome su credencial y **activa** los dos.
 4. En Meta (WhatsApp → Configuración → Webhook): URL = la de producción del nodo "Webhook Meta" (`…/webhook/meta-whatsapp`),
-   token de verificación = `META_VERIFY_TOKEN`; suscríbete a **messages**.
+   token de verificación = `META_VERIFY_TOKEN`; suscríbete a **messages**. El flujo de avisos solo reenvía al portal el cuerpo crudo y su firma; el portal valida la firma, guarda los estados (entregado, leído, falló) y reenvía las respuestas a compras@.
 
 ## 4. Zoho Books (usuario)
 

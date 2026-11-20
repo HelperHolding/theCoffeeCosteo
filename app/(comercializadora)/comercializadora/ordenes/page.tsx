@@ -46,7 +46,7 @@ export default async function OrdenesPagina({
     leerTodoCom<EnvioWhatsapp>(
       db,
       'com_oc_whatsapp',
-      'zoho_po_id,po_number,estado,error,enviado_at,leido_at',
+      'zoho_po_id,po_number,estado,error,enviado_at,leido_at,reservado_at',
       'zoho_po_id',
     ),
   ]);

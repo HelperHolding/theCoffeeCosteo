@@ -3,6 +3,7 @@ import { assertEquals } from "@std/assert";
 import { autorizadoWhatsapp, manejar, mascara, normalizarTelefono, responder } from "./whatsapp.ts";
 
 type Fila = Record<string, unknown>;
+const NO_NULO = Symbol("no nulo");
 // Base falsa: com_plan_config (bandera) y com_oc_whatsapp en memoria, con la llave primaria de verdad.
 function dbFalsa(whatsapp: unknown, filas: Fila[] = [], correos = ["compras@x.mx"]) {
   const tabla = new Map<string, Fila>(filas.map((f) => [String(f.zoho_po_id), { ...f }]));
@@ -17,11 +18,12 @@ function dbFalsa(whatsapp: unknown, filas: Fila[] = [], correos = ["compras@x.mx
       if (t !== "com_oc_whatsapp") throw new Error("tabla inesperada " + t);
       const filtros: [string, unknown][] = [];
       let orden: string | null = null;
-      const coincide = (f: Fila) => filtros.every(([k, v]) => f[k] === v);
+      const coincide = (f: Fila) => filtros.every(([k, v]) => (v === NO_NULO ? f[k] != null : f[k] === v));
       const q: Record<string, unknown> = {};
       q.eq = (k: string, v: unknown) => { filtros.push([k, v]); return q; };
       q.order = (k: string) => { orden = k; return q; };
       q.limit = () => q;
+      q.not = (k: string, op: string, v: unknown) => { if (op === "is" && v === null) filtros.push([k, NO_NULO]); return q; };
       q.select = () => q;
       q.insert = (row: Fila) => {
         const id = String(row.zoho_po_id);
@@ -46,7 +48,8 @@ function dbFalsa(whatsapp: unknown, filas: Fila[] = [], correos = ["compras@x.mx
       };
       q.maybeSingle = () => {
         let xs = [...tabla.values()].filter(coincide);
-        if (orden) xs = xs.sort((a, b) => String(b[orden!] ?? "").localeCompare(String(a[orden!] ?? "")));
+        // Como Postgres en orden descendente: los null van primero.
+        if (orden) xs = xs.sort((a, b) => (a[orden!] == null ? -1 : b[orden!] == null ? 1 : String(b[orden!]).localeCompare(String(a[orden!]))));
         return Promise.resolve({ data: xs[0] ?? null, error: null });
       };
       return q;
@@ -182,4 +185,78 @@ Deno.test("responder: 401 sin secreto, 405 si no es POST, 200 con el JSON de man
   assertEquals([r.status, await r.json()], [200, { enviar: true }]);
   const e = await responder(post({ "x-oc-whatsapp-secreto": "s3creto-wa" }), deps(() => Promise.reject(new Error("detalle interno postgres://x"))));
   assertEquals([e.status, await e.json()], [500, { error: "error interno" }]);
+});
+
+// ---- Revisión final ----
+Deno.test("estado_meta: 'sent' u otro estado de Meta se ignora con 200, sin error", async () => {
+  const { db, tabla } = dbFalsa({ activo: true }, [{ zoho_po_id: "po1", po_number: "X", estado: "enviado", wa_message_id: "w1" }]);
+  const r = await manejar(db, { accion: "estado_meta", wa_message_id: "w1", estado: "sent" }, sinCorreo);
+  assertEquals([r.status, r.json], [200, { ok: true, ignorado: true }]);
+  assertEquals(tabla.get("po1")?.estado, "enviado");
+});
+
+Deno.test("respuesta de un número no reconocido se reenvía igual a compras, con 200", async () => {
+  const correos: string[] = [];
+  const correo = (_to: string[], asunto: string) => { correos.push(asunto); return Promise.resolve(true); };
+  const { db } = dbFalsa({ activo: true });
+  const r = await manejar(db, { accion: "respuesta", telefono: "14155550101", texto: "hola" }, { correo });
+  assertEquals(r.status, 200);
+  assertEquals(correos, ["WhatsApp de …0101 (número no reconocido)"]);
+});
+
+Deno.test("respuesta: liga solo a envíos que sí salieron (un fallido sin enviado_at no cuenta)", async () => {
+  const correos: string[] = [];
+  const correo = (_to: string[], asunto: string) => { correos.push(asunto); return Promise.resolve(true); };
+  const { db } = dbFalsa({ activo: true }, [
+    { zoho_po_id: "a", po_number: "COM-OC-01", vendor_name: "ODISA", telefono: "+525512345678", estado: "fallido", enviado_at: null },
+    { zoho_po_id: "b", po_number: "COM-OC-02", vendor_name: "ODISA", telefono: "+525512345678", estado: "enviado", enviado_at: "2026-11-21T10:00:00Z" },
+  ]);
+  await manejar(db, { accion: "respuesta", telefono: "5512345678", texto: "ok" }, { correo });
+  assertEquals(correos, ["WhatsApp de ODISA sobre COM-OC-02"]);
+});
+
+const firmar = async (secreto: string, cuerpo: string) => {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secreto), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const s = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(cuerpo)));
+  return "sha256=" + [...s].map((b) => b.toString(16).padStart(2, "0")).join("");
+};
+const evento = JSON.stringify({ entry: [{ changes: [{ value: {
+  statuses: [{ id: "w1", status: "sent" }, { id: "w1", status: "delivered" }],
+  messages: [{ from: "5215512345678", text: { body: "Recibido" } }],
+} }] }] });
+
+Deno.test("meta: con firma válida procesa estados y respuestas del aviso crudo", async () => {
+  Deno.env.set("META_APP_SECRETO", "app-secreto");
+  const correos: string[] = [];
+  const correo = (_to: string[], asunto: string) => { correos.push(asunto); return Promise.resolve(true); };
+  const { db, tabla } = dbFalsa({ activo: true }, [
+    { zoho_po_id: "po1", po_number: "COM-OC-01", vendor_name: "ODISA", telefono: "+525512345678", estado: "enviado", wa_message_id: "w1", enviado_at: "2026-11-21T10:00:00Z" },
+  ]);
+  const r = await manejar(db, { accion: "meta", firma: await firmar("app-secreto", evento), cuerpo: evento }, { correo });
+  assertEquals(r.status, 200);
+  assertEquals(tabla.get("po1")?.estado, "entregado");
+  assertEquals(correos, ["WhatsApp de ODISA sobre COM-OC-01"]);
+});
+
+Deno.test("meta: sin firma o con firma falsa no procesa nada (403)", async () => {
+  Deno.env.set("META_APP_SECRETO", "app-secreto");
+  let avisos = 0;
+  const correo = () => { avisos++; return Promise.resolve(true); };
+  const { db, tabla } = dbFalsa({ activo: true }, [{ zoho_po_id: "po1", po_number: "X", estado: "enviado", wa_message_id: "w1" }]);
+  for (const firma of ["", "sha256=00", await firmar("otro", evento)]) {
+    const r = await manejar(db, { accion: "meta", firma, cuerpo: evento }, { correo });
+    assertEquals(r.status, 403);
+  }
+  Deno.env.delete("META_APP_SECRETO");
+  assertEquals((await manejar(db, { accion: "meta", firma: await firmar("app-secreto", evento), cuerpo: evento }, { correo })).status, 403);
+  assertEquals([tabla.get("po1")?.estado, avisos], ["enviado", 0]);
+});
+
+Deno.test("estado_meta failed: avisa solo si sí cambió la fila", async () => {
+  let avisos = 0;
+  const correo = () => { avisos++; return Promise.resolve(true); };
+  const { db } = dbFalsa({ activo: true }, [{ zoho_po_id: "po2", po_number: "Y", estado: "enviado", wa_message_id: "w2" }]);
+  await manejar(db, { accion: "estado_meta", wa_message_id: "w2", estado: "failed" }, { correo });
+  await manejar(db, { accion: "estado_meta", wa_message_id: "w2", estado: "failed" }, { correo });
+  assertEquals(avisos, 1);
 });

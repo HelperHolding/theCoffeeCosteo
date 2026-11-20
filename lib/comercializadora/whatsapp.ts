@@ -6,6 +6,7 @@ export type EnvioWhatsapp = {
   error: string | null;
   enviado_at: string | null;
   leido_at: string | null;
+  reservado_at?: string | null;
 };
 
 const hora = (iso: string | null) =>
@@ -18,7 +19,13 @@ const hora = (iso: string | null) =>
       })
     : '';
 
-export function etiquetaWhatsapp(e: EnvioWhatsapp | undefined): {
+// Un reservado sin resultado en 30 min: n8n falló sin avisar; se revisa en WhatsApp y se puede reintentar.
+const ATORADO_MS = 30 * 60 * 1000;
+
+export function etiquetaWhatsapp(
+  e: EnvioWhatsapp | undefined,
+  ahora: Date = new Date(),
+): {
   texto: string;
   tono: 'ok' | 'bajo' | 'neutro';
   reintentable: boolean;
@@ -32,6 +39,8 @@ export function etiquetaWhatsapp(e: EnvioWhatsapp | undefined): {
     case 'leido':
       return { texto: `Leído ${hora(e.leido_at)}`.trim(), tono: 'ok', reintentable: false };
     case 'reservado':
+      if (e.reservado_at && ahora.getTime() - new Date(e.reservado_at).getTime() > ATORADO_MS)
+        return { texto: 'Sin confirmar: revisa en WhatsApp', tono: 'bajo', reintentable: true };
       return { texto: 'Enviando…', tono: 'neutro', reintentable: false };
     case 'fallido':
       return { texto: `Falló${e.error ? `: ${e.error}` : ''}`, tono: 'bajo', reintentable: true };

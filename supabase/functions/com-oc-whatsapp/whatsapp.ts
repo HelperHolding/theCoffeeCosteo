@@ -30,6 +30,59 @@ type Resp = { status: number; json: unknown };
 const ok = (json: unknown): Resp => ({ status: 200, json });
 const mal = (error: string, status = 400): Resp => ({ status, json: { error } });
 
+type Avisar = (asunto: string, html: string) => Promise<boolean>;
+
+/** Firma de Meta: sha256= + HMAC-SHA256 hex del cuerpo crudo con el secreto de la app (META_APP_SECRETO). */
+export async function firmaMetaValida(cuerpo: string, firma: string): Promise<boolean> {
+  const secreto = Deno.env.get("META_APP_SECRETO") ?? "";
+  if (!secreto || !firma.startsWith("sha256=")) return false;
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secreto), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const s = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(cuerpo)));
+  const esperado = "sha256=" + [...s].map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (esperado.length !== firma.length) return false;
+  let dif = 0;
+  for (let i = 0; i < esperado.length; i++) dif |= esperado.charCodeAt(i) ^ firma.charCodeAt(i);
+  return dif === 0;
+}
+
+/** Estado de entrega de Meta: solo avanza; "sent" y desconocidos se ignoran (Meta siempre manda "sent" primero). */
+async function estadoMeta(db: SupabaseClient, wid: string, estadoMetaTxt: string, error: string, avisar: Avisar) {
+  const nuevo = META[estadoMetaTxt];
+  if (!wid || !nuevo) return { ok: true, ignorado: true };
+  const { data: f } = await db.from("com_oc_whatsapp").select("*").eq("wa_message_id", wid).maybeSingle();
+  const fila = f as Record<string, unknown> | null;
+  if (!fila) return { ok: false, motivo: "mensaje desconocido" };
+  const actual = String(fila.estado);
+  const avanza = nuevo === "fallido" ? actual === "enviado" || actual === "entregado" : (ORDEN[nuevo] ?? -1) > (ORDEN[actual] ?? 99);
+  if (!avanza) return { ok: true, sin_cambio: true };
+  const ahora = new Date().toISOString();
+  const { data: hechas, error: e } = await db.from("com_oc_whatsapp").update({ estado: nuevo, actualizado_at: ahora,
+    ...(nuevo === "entregado" ? { entregado_at: ahora } : nuevo === "leido" ? { leido_at: ahora } : { error: error || "Meta: no entregado" }) })
+    .eq("wa_message_id", wid).eq("estado", actual).select();
+  if (e) throw e;
+  // Solo quien sí cambió la fila avisa: dos "failed" simultáneos no mandan dos correos.
+  if (nuevo === "fallido" && (hechas as unknown[] | null)?.length) {
+    await avisar(`WhatsApp: no se entregó la OC ${fila.po_number}`,
+      `<p>Meta no entregó la OC <b>${esc(fila.po_number)}</b> a ${esc(fila.vendor_name)} (${esc(mascara(fila.telefono as string))}): ${esc(error)}.</p><p>Mándala a mano.</p>`);
+  }
+  return { ok: true };
+}
+
+/** Respuesta de un proveedor: se liga al último envío que sí salió a ese número y se reenvía a compras. */
+async function respuesta(db: SupabaseClient, telefono: unknown, texto: string, avisar: Avisar) {
+  const cuerpo = `<p>${esc(texto || "(mensaje sin texto: puede traer un adjunto; revísalo en el panel de WhatsApp)")}</p>`;
+  const tel = normalizarTelefono(telefono);
+  if (!tel) {
+    await avisar(`WhatsApp de ${mascara(String(telefono ?? "").replace(/D/g, ""))} (número no reconocido)`, cuerpo);
+    return null;
+  }
+  const { data } = await db.from("com_oc_whatsapp").select("zoho_po_id,po_number,vendor_name")
+    .eq("telefono", tel).not("enviado_at", "is", null).order("enviado_at", { ascending: false }).limit(1).maybeSingle();
+  const f = data as { zoho_po_id: string; po_number: string; vendor_name: string | null } | null;
+  await avisar(f ? `WhatsApp de ${f.vendor_name ?? mascara(tel)} sobre ${f.po_number}` : `WhatsApp de ${mascara(tel)} sin OC ligada`, cuerpo);
+  return f ?? null;
+}
+
 export async function manejar(db: SupabaseClient, body: Record<string, unknown>,
   deps: { correo?: typeof enviarCorreo } = {}): Promise<Resp> {
   const correo = deps.correo ?? enviarCorreo;
@@ -77,34 +130,29 @@ export async function manejar(db: SupabaseClient, body: Record<string, unknown>,
       }
       return ok({ ok: true });
     }
-    case "estado_meta": {
-      const wid = txt("wa_message_id"), nuevo = META[txt("estado")];
-      if (!wid || !nuevo) return mal("estado de Meta inválido");
-      const { data: f } = await db.from("com_oc_whatsapp").select("*").eq("wa_message_id", wid).maybeSingle();
-      const fila = f as Record<string, unknown> | null;
-      if (!fila) return ok({ ok: false, motivo: "mensaje desconocido" });
-      const actual = String(fila.estado);
-      const avanza = nuevo === "fallido" ? actual === "enviado" || actual === "entregado" : (ORDEN[nuevo] ?? -1) > (ORDEN[actual] ?? 99);
-      if (!avanza) return ok({ ok: true, sin_cambio: true });
-      const ahora = new Date().toISOString();
-      await db.from("com_oc_whatsapp").update({ estado: nuevo, actualizado_at: ahora,
-        ...(nuevo === "entregado" ? { entregado_at: ahora } : nuevo === "leido" ? { leido_at: ahora } : { error: txt("error") || "Meta: no entregado" }) })
-        .eq("wa_message_id", wid).eq("estado", actual).select();
-      if (nuevo === "fallido") {
-        await avisar(`WhatsApp: no se entregó la OC ${fila.po_number}`,
-          `<p>Meta no entregó la OC <b>${esc(fila.po_number)}</b> a ${esc(fila.vendor_name)} (${esc(mascara(fila.telefono as string))}): ${esc(txt("error"))}.</p><p>Mándala a mano.</p>`);
+    case "estado_meta":
+      return ok(await estadoMeta(db, txt("wa_message_id"), txt("estado"), txt("error"), avisar));
+    case "respuesta":
+      return ok(await respuesta(db, body.telefono, txt("texto"), avisar));
+    case "meta": {
+      // Aviso crudo de Meta reenviado por n8n: se valida la firma X-Hub-Signature-256 antes de leer nada (spec §6).
+      const cuerpo = typeof body.cuerpo === "string" ? body.cuerpo : "";
+      if (!(await firmaMetaValida(cuerpo, txt("firma")))) return mal("firma de Meta inválida", 403);
+      // deno-lint-ignore no-explicit-any
+      let ev: any;
+      try { ev = JSON.parse(cuerpo); } catch { return mal("aviso de Meta ilegible"); }
+      let estados = 0, mensajes = 0;
+      for (const e of ev?.entry ?? []) for (const c of e?.changes ?? []) {
+        for (const st of c?.value?.statuses ?? []) {
+          await estadoMeta(db, String(st?.id ?? ""), String(st?.status ?? ""), String(st?.errors?.[0]?.title ?? ""), avisar);
+          estados++;
+        }
+        for (const m of c?.value?.messages ?? []) {
+          await respuesta(db, m?.from, String(m?.text?.body ?? m?.button?.text ?? ""), avisar);
+          mensajes++;
+        }
       }
-      return ok({ ok: true });
-    }
-    case "respuesta": {
-      const tel = normalizarTelefono(body.telefono);
-      if (!tel) return mal("teléfono inválido");
-      const { data } = await db.from("com_oc_whatsapp").select("zoho_po_id,po_number,vendor_name")
-        .eq("telefono", tel).order("enviado_at", { ascending: false }).limit(1).maybeSingle();
-      const f = data as { zoho_po_id: string; po_number: string; vendor_name: string | null } | null;
-      const asunto = f ? `WhatsApp de ${f.vendor_name ?? mascara(tel)} sobre ${f.po_number}` : `WhatsApp de ${mascara(tel)} sin OC ligada`;
-      await avisar(asunto, `<p>${esc(txt("texto") || "(mensaje sin texto: puede traer un adjunto; revísalo en el panel de WhatsApp)")}</p>`);
-      return ok(f ?? null);
+      return ok({ ok: true, estados, mensajes });
     }
     default:
       return mal("acción desconocida");

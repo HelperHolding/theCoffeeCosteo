@@ -142,15 +142,20 @@ const envio = {
         ".vendor_name || '') }",
     ),
     si('¿Enviar?', '={{ $json.enviar === true }}'),
-    zoho('Leer OC en Zoho', '/purchaseorders/{{ ' + W + '.purchaseorder_id }}'),
+    zoho('Leer OC en Zoho', '/purchaseorders/{{ ' + W + '.purchaseorder_id }}', {
+      onError: 'continueErrorOutput',
+    }),
     si('¿Sigue emitida?', "={{ $json.purchaseorder.status === 'open' }}"),
-    zoho('Leer proveedor en Zoho', "/contacts/{{ $('Leer OC en Zoho').item.json.purchaseorder.vendor_id }}"),
+    zoho('Leer proveedor en Zoho', "/contacts/{{ $('Leer OC en Zoho').item.json.purchaseorder.vendor_id }}", {
+      onError: 'continueErrorOutput',
+    }),
     {
       name: 'Preparar datos',
       type: 'n8n-nodes-base.code',
       typeVersion: 2,
       position: pos(),
       parameters: { mode: 'runOnceForEachItem', jsCode: prepararCodigo },
+      onError: 'continueErrorOutput',
     },
     si('¿Tiene número?', "={{ $json.telefono !== '' }}"),
     zoho(
@@ -223,11 +228,14 @@ const envio = {
     ['Webhook Zoho', 'Reservar en portal'],
     ['Reservar en portal', '¿Enviar?'],
     ['¿Enviar?', 'Leer OC en Zoho', 0],
-    ['Leer OC en Zoho', '¿Sigue emitida?'],
+    ['Leer OC en Zoho', '¿Sigue emitida?', 0],
+    ['Leer OC en Zoho', 'Resultado fallido', 1],
     ['¿Sigue emitida?', 'Leer proveedor en Zoho', 0],
     ['¿Sigue emitida?', 'Resultado fallido', 1],
-    ['Leer proveedor en Zoho', 'Preparar datos'],
-    ['Preparar datos', '¿Tiene número?'],
+    ['Leer proveedor en Zoho', 'Preparar datos', 0],
+    ['Leer proveedor en Zoho', 'Resultado fallido', 1],
+    ['Preparar datos', '¿Tiene número?', 0],
+    ['Preparar datos', 'Resultado fallido', 1],
     ['¿Tiene número?', 'PDF de la OC', 0],
     ['¿Tiene número?', 'Resultado sin número', 1],
     ['PDF de la OC', 'Subir PDF a WhatsApp', 0],
@@ -242,15 +250,12 @@ const envio = {
 
 // ---------- Flujo 2: avisos de Meta ----------
 x = 0;
-const separar = (lista, linea) =>
-  [
-    'const out = [];',
-    'for (const e of $json.body?.entry ?? []) for (const c of e.changes ?? []) for (const it of c.value?.' +
-      lista +
-      ' ?? [])',
-    '  out.push({ json: ' + linea + ' });',
-    'return out;',
-  ].join('\n');
+const crudoCodigo = [
+  '// Cuerpo crudo del aviso y su firma: el portal valida X-Hub-Signature-256 con el secreto de la app de Meta.',
+  "const buf = await this.helpers.getBinaryDataBuffer(0, 'data');",
+  'const h = $input.first().json.headers || {};',
+  "return [{ json: { accion: 'meta', firma: String(h['x-hub-signature-256'] || ''), cuerpo: buf.toString('utf8') } }];",
+].join('\n');
 const tokenOk = "$json.query['hub.verify_token'] === $vars.META_VERIFY_TOKEN";
 const avisos = {
   name: 'Avisos de WhatsApp (Meta) → portal',
@@ -278,41 +283,28 @@ const avisos = {
       type: 'n8n-nodes-base.webhook',
       typeVersion: 2,
       position: pos(),
-      parameters: { httpMethod: 'POST', path: 'meta-whatsapp', responseMode: 'onReceived', options: {} },
+      parameters: {
+        httpMethod: 'POST',
+        path: 'meta-whatsapp',
+        responseMode: 'onReceived',
+        options: { rawBody: true },
+      },
     },
     {
-      name: 'Separar estados',
+      name: 'Cuerpo crudo',
       type: 'n8n-nodes-base.code',
       typeVersion: 2,
       position: pos(),
-      parameters: {
-        jsCode: separar(
-          'statuses',
-          "{ accion: 'estado_meta', wa_message_id: it.id, estado: it.status, error: it.errors?.[0]?.title ?? null }",
-        ),
-      },
+      parameters: { jsCode: crudoCodigo },
     },
-    portal('Estados a portal', '$json'),
-    {
-      name: 'Separar respuestas',
-      type: 'n8n-nodes-base.code',
-      typeVersion: 2,
-      position: pos(),
-      parameters: {
-        jsCode: separar(
-          'messages',
-          "{ accion: 'respuesta', telefono: it.from, texto: it.text?.body ?? it.button?.text ?? '' }",
-        ),
-      },
-    },
-    portal('Respuestas a portal', '$json'),
+    portal('Reenviar a portal', "{ accion: 'meta', firma: $json.firma, cuerpo: $json.cuerpo }", {
+      onError: 'continueRegularOutput',
+    }),
   ],
   connections: conecta([
     ['Webhook Meta verificación', 'Verificar Meta'],
-    ['Webhook Meta', 'Separar estados'],
-    ['Webhook Meta', 'Separar respuestas'],
-    ['Separar estados', 'Estados a portal'],
-    ['Separar respuestas', 'Respuestas a portal'],
+    ['Webhook Meta', 'Cuerpo crudo'],
+    ['Cuerpo crudo', 'Reenviar a portal'],
   ]),
   settings: { executionOrder: 'v1' },
 };

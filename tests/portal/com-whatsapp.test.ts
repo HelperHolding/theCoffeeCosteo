@@ -50,4 +50,18 @@ describe('WhatsApp de OCs (pantalla)', () => {
       solo_vendor_ids: ['v1', '3'],
     });
   });
+
+  it('un reservado de más de 30 minutos se marca para revisar y se puede reintentar', () => {
+    const ahora = new Date('2026-11-24T16:00:00Z');
+    expect(etiquetaWhatsapp(e({ estado: 'reservado', reservado_at: '2026-11-24T15:00:00Z' }), ahora)).toEqual(
+      {
+        texto: 'Sin confirmar: revisa en WhatsApp',
+        tono: 'bajo',
+        reintentable: true,
+      },
+    );
+    expect(
+      etiquetaWhatsapp(e({ estado: 'reservado', reservado_at: '2026-11-24T15:45:00Z' }), ahora).texto,
+    ).toBe('Enviando…');
+  });
 });

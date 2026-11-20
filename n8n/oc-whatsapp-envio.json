@@ -86,7 +86,8 @@
         "oAuth2Api": {
           "name": "Zoho Books OAuth2"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "name": "¿Sigue emitida?",
@@ -140,7 +141,8 @@
         "oAuth2Api": {
           "name": "Zoho Books OAuth2"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "name": "Preparar datos",
@@ -150,7 +152,8 @@
       "parameters": {
         "mode": "runOnceForEachItem",
         "jsCode": "// Número del campo 'WhatsApp OCs' del proveedor, a 52 + 10 dígitos (formato de la API de WhatsApp, sin +).\nconst po = $('Leer OC en Zoho').item.json.purchaseorder;\nconst cf = ($json.contact.custom_fields || []).find((c) => c.label === 'WhatsApp OCs');\nlet d = String(cf?.value ?? '').replace(/\\D/g, '');\nif (d.length === 13 && /^(044|045|521)/.test(d)) d = d.slice(3);\nelse if (d.length === 12 && d.startsWith('52')) d = d.slice(2);\nconst total = Number(po.total || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });\nreturn { json: { zoho_po_id: String(po.purchaseorder_id), po_number: po.purchaseorder_number,\n  vendor_name: po.vendor_name, total, entrega: po.delivery_date || 'por confirmar',\n  telefono: d.length === 10 ? '52' + d : '' } };"
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "name": "¿Tiene número?",
@@ -384,6 +387,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -413,6 +423,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -421,6 +438,13 @@
         [
           {
             "node": "¿Tiene número?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
             "type": "main",
             "index": 0
           }

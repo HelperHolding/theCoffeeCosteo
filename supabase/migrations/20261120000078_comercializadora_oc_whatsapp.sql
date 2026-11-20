@@ -26,7 +26,7 @@ grant select on public.com_oc_whatsapp to authenticated;
 create policy lectura on public.com_oc_whatsapp for select to authenticated using ((select public.com_puede_leer()));
 
 -- Reintento desde Órdenes: borra la fila para que el siguiente webhook de Zoho la vuelva a reservar.
--- Nunca borra un envío que sí salió.
+-- Nunca borra un envío que sí salió; un reservado solo si lleva más de 30 minutos sin resultado.
 create function public.com_oc_whatsapp_reintentar(p_zoho_po_id text) returns boolean
 language plpgsql security definer set search_path = public, pg_temp as $$
 begin
@@ -34,7 +34,11 @@ begin
     raise exception 'sin permiso de edición' using errcode = '42501';
   end if;
   delete from public.com_oc_whatsapp
-  where zoho_po_id = p_zoho_po_id and estado in ('fallido', 'sin_numero', 'omitido');
+  where zoho_po_id = p_zoho_po_id
+    and (estado in ('fallido', 'sin_numero', 'omitido')
+         -- n8n falló sin avisar (Zoho caído, error a media corrida): tras 30 min se puede liberar.
+         -- Quien reintenta revisa antes en WhatsApp que no haya salido.
+         or (estado = 'reservado' and reservado_at < now() - interval '30 minutes'));
   return found;
 end $$;
 revoke all on function public.com_oc_whatsapp_reintentar(text) from public, anon;

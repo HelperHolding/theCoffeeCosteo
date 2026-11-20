@@ -87,4 +87,32 @@ describe('Órdenes: columna WhatsApp', () => {
     );
     expect(screen.queryByRole('button', { name: /Reintentar WhatsApp/ })).toBeNull();
   });
+
+  it('al reintentar explica qué sigue, o que no había nada que reintentar', async () => {
+    const fallida = {
+      'COM-OC-2': {
+        zoho_po_id: 'p2',
+        po_number: 'COM-OC-2',
+        estado: 'fallido',
+        error: 'x',
+        enviado_at: null,
+        leido_at: null,
+      },
+    };
+    m.reintentar.mockResolvedValueOnce({ ok: true, borrada: true });
+    const { unmount } = render(
+      <Ordenes {...base} editable grupos={[grupo('COM-OC-2')]} whatsapp={fallida} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Reintentar WhatsApp/ }));
+    expect(
+      await screen.findByText('Listo. Edita y guarda la OC COM-OC-2 en Zoho para que se mande otra vez.'),
+    ).toBeTruthy();
+    unmount();
+    m.reintentar.mockResolvedValueOnce({ ok: true, borrada: false });
+    render(<Ordenes {...base} editable grupos={[grupo('COM-OC-2')]} whatsapp={fallida} />);
+    fireEvent.click(screen.getByRole('button', { name: /Reintentar WhatsApp/ }));
+    expect(
+      await screen.findByText('No había nada que reintentar en COM-OC-2: puede que ya se haya mandado.'),
+    ).toBeTruthy();
+  });
 });

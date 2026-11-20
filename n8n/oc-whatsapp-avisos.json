@@ -35,20 +35,22 @@
         "httpMethod": "POST",
         "path": "meta-whatsapp",
         "responseMode": "onReceived",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       }
     },
     {
-      "name": "Separar estados",
+      "name": "Cuerpo crudo",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1040, 300],
       "parameters": {
-        "jsCode": "const out = [];\nfor (const e of $json.body?.entry ?? []) for (const c of e.changes ?? []) for (const it of c.value?.statuses ?? [])\n  out.push({ json: { accion: 'estado_meta', wa_message_id: it.id, estado: it.status, error: it.errors?.[0]?.title ?? null } });\nreturn out;"
+        "jsCode": "// Cuerpo crudo del aviso y su firma: el portal valida X-Hub-Signature-256 con el secreto de la app de Meta.\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst h = $input.first().json.headers || {};\nreturn [{ json: { accion: 'meta', firma: String(h['x-hub-signature-256'] || ''), cuerpo: buf.toString('utf8') } }];"
       }
     },
     {
-      "name": "Estados a portal",
+      "name": "Reenviar a portal",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1300, 300],
@@ -60,43 +62,14 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        "jsonBody": "={{ JSON.stringify({ accion: 'meta', firma: $json.firma, cuerpo: $json.cuerpo }) }}"
       },
       "credentials": {
         "httpHeaderAuth": {
           "name": "Portal OC WhatsApp"
         }
-      }
-    },
-    {
-      "name": "Separar respuestas",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1560, 300],
-      "parameters": {
-        "jsCode": "const out = [];\nfor (const e of $json.body?.entry ?? []) for (const c of e.changes ?? []) for (const it of c.value?.messages ?? [])\n  out.push({ json: { accion: 'respuesta', telefono: it.from, texto: it.text?.body ?? it.button?.text ?? '' } });\nreturn out;"
-      }
-    },
-    {
-      "name": "Respuestas a portal",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1820, 300],
-      "parameters": {
-        "options": {},
-        "method": "POST",
-        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
       },
-      "credentials": {
-        "httpHeaderAuth": {
-          "name": "Portal OC WhatsApp"
-        }
-      }
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -115,34 +88,18 @@
       "main": [
         [
           {
-            "node": "Separar estados",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Separar respuestas",
+            "node": "Cuerpo crudo",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Separar estados": {
+    "Cuerpo crudo": {
       "main": [
         [
           {
-            "node": "Estados a portal",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Separar respuestas": {
-      "main": [
-        [
-          {
-            "node": "Respuestas a portal",
+            "node": "Reenviar a portal",
             "type": "main",
             "index": 0
           }
