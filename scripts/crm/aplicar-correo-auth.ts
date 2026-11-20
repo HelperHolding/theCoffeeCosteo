@@ -1,9 +1,10 @@
 // Configura los correos de Supabase Auth por la API de administración (con OK de Carlos, 2026-11-17):
-// URL del sitio en el dominio público, redirecciones y plantillas en español de invitación y recuperación.
+// URL del sitio en el dominio propio (sitio-auth.ts), redirecciones y plantillas en español de invitación y recuperación.
 // Guarda un respaldo de los valores anteriores (sin secretos) para revertir con --revertir <archivo>.
 // El SMTP no se toca: lo configuró Carlos en el panel.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { leerEnvLocal } from '../zoho/cliente';
+import { SITIO, SITIOS_PERMITIDOS } from './sitio-auth';
 
 const env = await leerEnvLocal();
 const ref = new URL(env.get('NEXT_PUBLIC_SUPABASE_URL')!).hostname.split('.')[0];
@@ -37,7 +38,6 @@ if (i > 0) {
   process.exit(0);
 }
 
-const SITIO = 'https://the-coffee-costeo.vercel.app';
 const actual = await api('GET');
 const respaldo = Object.fromEntries(CAMPOS.map((k) => [k, actual[k]]));
 const archivo = `respaldo-auth-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
@@ -46,7 +46,8 @@ writeFileSync(process.argv[2] ?? archivo, JSON.stringify(respaldo, null, 2));
 const lista = String(actual.uri_allow_list ?? '')
   .split(',')
   .filter(Boolean);
-for (const u of [`${SITIO}/`, `${SITIO}/**`]) if (!lista.includes(u)) lista.push(u);
+for (const sitio of SITIOS_PERMITIDOS)
+  for (const u of [`${sitio}/`, `${sitio}/**`]) if (!lista.includes(u)) lista.push(u);
 
 await api('PATCH', {
   site_url: SITIO,
