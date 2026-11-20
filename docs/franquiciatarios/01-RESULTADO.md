@@ -367,3 +367,45 @@ corregimos y afinamos».
 
 **Siguiente paso tras el merge (con OK):** cargar la lista sugerida de Essentia desde Inventario (botón) o
 ejecutando `franq_sugerir_insumos(514)` como administrador.
+
+## 12. Arqueo y caja chica — F4 del plan
+
+> Rama `feat/franq-caja` (2026-11-20). Migración **20261120000084** ensayada con rollback y **sin aplicar**; se aplica
+> al mergear, con el OK de Carlos.
+
+- **Arqueo ciego** («Caja», todos los roles), a medio turno y al cierre (los puntos de corte del checklist enlazan
+  aquí):
+  - Se cuenta todo el efectivo de la caja y se captura el total **sin ver lo esperado**.
+  - Un recuento reemplaza al anterior. Es de solo inserción y la hora la pone el servidor.
+  - La cuenta de baristas no lee `franq_arqueos`; solo ve quién arqueó y a qué hora (`franq_arqueo_estado`).
+- **Cuadre** (gerencia):
+  - Esperado = fondo de caja + efectivo del POS (pago `DINHEIRO`) **hasta la hora del arqueo** − gastos de caja
+    chica pagados en efectivo hasta esa hora.
+  - El efectivo cuenta dentro del día de operación (4:00 a 4:00), así que un cierre de madrugada incluye lo vendido
+    después de medianoche.
+  - La diferencia sale en rojo si pasa la tolerancia.
+  - Se pueden consultar días anteriores.
+- **Caja chica** (gerencia):
+  - Cada gasto lleva concepto, categoría (insumos, limpieza, mantenimiento, papelería, transporte u otro), monto, si
+    se pagó con efectivo de la caja y si hay comprobante.
+  - No se borra: se **anula** una sola vez con motivo, y quedan el original y la anulación.
+- **Fondo y tolerancia** por sucursal (gerencia). Si no se configuran, el fondo es $0 y la tolerancia $20.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-caja.test.ts`: 7 pruebas. Arqueo ciego con nombre declarado; el barista no ve montos,
+    solo el estado; recuento; validaciones; otra sucursal; gastos solo de gerencia; validaciones de gasto; anulación
+    única con motivo; configuración; OAuth.
+  - `tests/portal/franquiciatarios-caja.test.ts`: 4 pruebas. Efectivo por día de operación y hora, incluida la
+    madrugada; gastos vigentes en efectivo; esperado y tolerancia.
+- **Ensayo** `scripts/franquiciatarios/ensayo-84.ts` (sha `297d8051…`):
+  - Dentro de la transacción: 3 tablas con RLS, 3 políticas, 5 funciones y 2 triggers.
+  - En la consulta nueva no quedó nada.
+- **Arnés visual:**
+  - El gerente ve el cuadre: fondo $1,500 + POS $637.50 − $80 = $2,057.50 contra $2,050, con diferencia de −$7.50
+    en verde. También ve la caja chica con un gasto anulado y la configuración.
+  - El barista solo ve la captura, sin ningún monto.
+  - A 375 px no hay scroll horizontal.
+
+**Pendiente:** Carlos o el gerente fijan el fondo de caja real de Essentia en «Caja → Fondo y tolerancia».

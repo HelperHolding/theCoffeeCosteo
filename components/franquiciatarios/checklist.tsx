@@ -2,6 +2,7 @@
 import { useId, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
+  Banknote,
   Check,
   CircleAlert,
   ClipboardList,
@@ -240,7 +241,12 @@ function Punto({
             {punto.actividad}
           </h3>
           <p className="mt-1 text-sm text-ink-2">{punto.estandar}</p>
-          {punto.corte && <EnlaceCorte companyId={companyId} parcial={punto.corte === 'parcial'} />}
+          {punto.corte && (
+            <span className="flex flex-wrap gap-2">
+              <EnlaceCorte companyId={companyId} parcial={punto.corte === 'parcial'} />
+              <EnlaceArqueo companyId={companyId} />
+            </span>
+          )}
           {momentoConteo(seccion.clave, punto) && (
             <EnlaceConteo companyId={companyId} momento={momentoConteo(seccion.clave, punto)!} />
           )}
@@ -387,6 +393,19 @@ function CampoDato({
 }
 
 /** Enlace del punto «Enviar corte» a la tira de venta del día (parcial a medio día). */
+/** Punto de corte: el arqueo de caja va junto con la tira. */
+function EnlaceArqueo({ companyId }: { companyId: number }) {
+  return (
+    <Link
+      href={`/franquiciatarios/${companyId}/caja`}
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-ventas/40 bg-ventas-soft px-2.5 py-1 text-sm font-semibold text-ink hover:border-ventas focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
+    >
+      <Banknote size={14} aria-hidden="true" />
+      Hacer el arqueo de caja
+    </Link>
+  );
+}
+
 /** Punto de conteo de insumos (apertura o medio turno de la v2): enlaza a la captura del conteo. */
 const momentoConteo = (clave: SeccionDia['clave'], punto: PuntoDia): 'apertura' | 'medio' | null =>
   (clave === 'apertura' || clave === 'medio') && punto.dato && /contad/i.test(punto.dato) ? clave : null;

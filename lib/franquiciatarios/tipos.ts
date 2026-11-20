@@ -178,7 +178,88 @@ export interface EstadoConteo {
   insumos: number;
 }
 
+/** Caja (migración 84): todo esto solo lo lee la gerencia. */
+export interface FranqCajaConfig {
+  company_id: number;
+  fondo: number;
+  tolerancia: number;
+  actualizado_por: string;
+  actualizado_en: string;
+}
+export type MomentoArqueo = 'medio' | 'cierre';
+export interface FranqArqueo {
+  id: number;
+  company_id: number;
+  dia: string;
+  momento: MomentoArqueo;
+  contado: number;
+  observacion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+  corrige_id: number | null;
+}
+export interface FranqGasto {
+  id: number;
+  company_id: number;
+  dia: string;
+  concepto: string | null;
+  categoria: string | null;
+  monto: number | null;
+  en_efectivo: boolean;
+  comprobante: boolean;
+  nota: string | null;
+  anula_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+}
+/** Estado de un arqueo sin montos (lo ve también la cuenta de baristas). */
+export interface EstadoArqueo {
+  momento: MomentoArqueo;
+  nombre: string;
+  registrado_en: string;
+}
+
 export interface FuncionesFranq {
+  franq_arquear: {
+    Args: {
+      p_company: number;
+      p_momento: MomentoArqueo;
+      p_contado: number;
+      p_observacion: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_arqueo_estado: { Args: { p_company: number; p_dia: string }; Returns: EstadoArqueo[] };
+  franq_gasto: {
+    Args: {
+      p_company: number;
+      p_concepto: string;
+      p_categoria: string;
+      p_monto: number;
+      p_en_efectivo: boolean;
+      p_comprobante: boolean;
+      p_nota: string | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_gasto_anular: {
+    Args: { p_gasto: number; p_motivo: string; p_dispositivo: string | null };
+    Returns: number;
+  };
+  franq_caja_configurar: {
+    Args: { p_company: number; p_fondo: number; p_tolerancia: number };
+    Returns: undefined;
+  };
   franq_sugerir_insumos: { Args: { p_company: number }; Returns: number };
   franq_insumo_guardar: {
     Args: {

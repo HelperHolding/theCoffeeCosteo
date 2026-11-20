@@ -28,13 +28,16 @@ import { PedidosFranq } from '../../../components/franquiciatarios/pedidos';
 import { ConteoFranq } from '../../../components/franquiciatarios/conteo';
 import { InventarioFranq } from '../../../components/franquiciatarios/inventario';
 import { armarHistorial } from '../../../lib/franquiciatarios/conteos';
+import { ArqueoCaptura, CajaChica, ConfigCaja, ResumenCaja } from '../../../components/franquiciatarios/caja';
+import { gastosEfectivoHasta, gastosVigentes, resumenArqueo } from '../../../lib/franquiciatarios/caja';
+import type { CajaDia } from '../../../lib/franquiciatarios/caja-servidor';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
  * reglas de las migraciones 75 y 79; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
  * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|conteo|inventario|equipo|avisos&rol=barista|gerente|franquiciatario
- * &momento=apertura|medio (conteo); &sinlista=1 (inventario sin lista: botón de sugerido)
+ * &momento=apertura|medio (conteo); vista=caja (arqueo ciego; gerencia ve cuadre, caja chica y fondo); &sinlista=1 (inventario sin lista: botón de sugerido)
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  */
 const p = new URLSearchParams(window.location.search);
@@ -341,6 +344,102 @@ if (p.get('sinlista') !== '1') {
         }),
       );
 }
+// Caja sintética: fondo $1,500, tolerancia $20 y efectivo del POS que crece $90 por hora desde las 7:00 (CDMX).
+function sembrarCaja() {
+  if (estado === 'vacio') return;
+  tienda.gastos.push(
+    {
+      id: 1,
+      company_id: 514,
+      dia: tienda.dia,
+      concepto: '2 bolsas de hielo',
+      categoria: 'insumos',
+      monto: 80,
+      en_efectivo: true,
+      comprobante: true,
+      nota: null,
+      anula_id: null,
+      nombre: 'Laura Méndez (gerente)',
+      registrado_por: 'g',
+      registrado_en: hora(10, 15),
+      sesion: 's',
+      dispositivo: 'tablet',
+    },
+    {
+      id: 2,
+      company_id: 514,
+      dia: tienda.dia,
+      concepto: 'Papel para ticket',
+      categoria: 'papeleria',
+      monto: 120,
+      en_efectivo: true,
+      comprobante: false,
+      nota: null,
+      anula_id: null,
+      nombre: 'Laura Méndez (gerente)',
+      registrado_por: 'g',
+      registrado_en: hora(11, 0),
+      sesion: 's',
+      dispositivo: 'tablet',
+    },
+    {
+      id: 3,
+      company_id: 514,
+      dia: tienda.dia,
+      concepto: null,
+      categoria: null,
+      monto: null,
+      en_efectivo: true,
+      comprobante: false,
+      nota: 'Se capturó doble',
+      anula_id: 2,
+      nombre: 'Laura Méndez (gerente)',
+      registrado_por: 'g',
+      registrado_en: hora(11, 5),
+      sesion: 's',
+      dispositivo: 'tablet',
+    },
+  );
+  tienda.arqueos.push({
+    id: 1,
+    company_id: 514,
+    dia: tienda.dia,
+    momento: 'medio',
+    contado: 2050,
+    observacion: null,
+    barista_id: 1,
+    nombre: 'Ana López',
+    registrado_por: 'cuenta',
+    registrado_en: hora(14, 5),
+    sesion: 's',
+    dispositivo: 'tablet',
+    corrige_id: null,
+  });
+}
+const efectivoArnes = (iso: string) => {
+  const h = (Date.parse(iso) - Date.parse(hora(7, 0))) / 3_600_000;
+  return Math.max(0, Math.round(h * 9000));
+};
+const cajaDia = (): CajaDia => {
+  const vig = tienda.arqueos.filter((a) => !tienda.arqueos.some((x) => x.corrige_id === a.id));
+  return {
+    config: tienda.cajaConfig,
+    posOk: true,
+    gastos: [...tienda.gastos].sort((a, b) => b.registrado_en.localeCompare(a.registrado_en)),
+    totalGastos: gastosVigentes(tienda.gastos).reduce((s, g) => s + Number(g.monto ?? 0), 0),
+    arqueos: vig.map((a) => ({
+      momento: a.momento,
+      arqueo: a,
+      resumen: resumenArqueo({
+        contado: Number(a.contado),
+        fondo: tienda.cajaConfig?.fondo ?? 0,
+        tolerancia: tienda.cajaConfig?.tolerancia ?? 20,
+        efectivoCent: efectivoArnes(a.registrado_en),
+        gastos: gastosEfectivoHasta(tienda.gastos, a.registrado_en),
+      }),
+    })),
+  };
+};
 const estadosConteo = (dia: string) =>
   (['apertura', 'medio'] as const).flatMap((m) => {
     const hoy = tienda.conteos.filter((c) => c.dia === dia && c.momento === m);
@@ -535,6 +634,8 @@ function avisosDe(dia: ReturnType<typeof armarDia>): FranqAviso[] {
   return out;
 }
 
+sembrarCaja();
+
 export function VistaFranquiciatarios() {
   const [, forzar] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
@@ -571,6 +672,7 @@ export function VistaFranquiciatarios() {
       propuesta: 'Propuesta: apartados del gerente',
       pedidos: 'Pedidos a la Comercializadora',
       conteo: 'Conteo de insumos',
+      caja: 'Caja',
       inventario: 'Inventario',
     }[vista] ?? 'Hoy';
   const actual = dia.secciones.find((s) => s.clave === seccionPedida) ?? dia.secciones[0];
@@ -640,6 +742,23 @@ export function VistaFranquiciatarios() {
           estados={estadosConteo(tienda.dia)}
           gestor={gestor}
         />
+      ) : vista === 'caja' ? (
+        <>
+          <ArqueoCaptura
+            companyId={514}
+            estados={tienda.arqueos
+              .filter((a) => !tienda.arqueos.some((x) => x.corrige_id === a.id))
+              .map((a) => ({ momento: a.momento, nombre: a.nombre, registrado_en: a.registrado_en }))}
+            editable
+          />
+          {gestor && (
+            <>
+              <ResumenCaja caja={cajaDia()} />
+              <CajaChica companyId={514} caja={cajaDia()} editable />
+              <ConfigCaja companyId={514} caja={cajaDia()} />
+            </>
+          )}
+        </>
       ) : vista === 'inventario' ? (
         <InventarioFranq
           companyId={514}
