@@ -46,10 +46,10 @@ descuentos que paga la tienda, sin restar los premios Pro Rewards**. Hoy el port
 - La carga histórica de Rappi previa a octubre de 2026 (doc 08): cuando se haga, la regla le aplica igual.
 - Imitar los casos sueltos de Zoho.
 
-## 1. La regla en la base (migración 79)
+## 1. La regla en la base (migración 90)
 
-`supabase/migrations/20261120000079_rappi_descuento_venta.sql`, aplicada a mano por el usuario y registrada con
-`insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');`.
+`supabase/migrations/20261120000090_rappi_descuento_venta.sql`, aplicada a mano por el usuario y registrada con
+`insert into supabase_migrations.schema_migrations (version, name) values ('20261120000090','rappi_descuento_venta');`.
 
 ```sql
 create function public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric
@@ -78,7 +78,7 @@ $$;
 ## 2. Conversión y módulos
 
 **`lib/sucursales/rappi-portal.ts`**
-- `PedidoRappi` gana `descuento_venta?: number`. Opcional: si falta (base sin la 79), vale 0.
+- `PedidoRappi` gana `descuento_venta?: number`. Opcional: si falta (base sin la 90), vale 0.
 - `resumir…` (totales de la pestaña Rappi): `ventaCent` suma `cent(bruto − descuento_venta)`. Los cancelados siguen
   sumando su bruto.
 
@@ -112,11 +112,11 @@ $$;
 ## 3. Orden, recálculo y verificación
 
 **Orden:**
-1. El usuario aplica y registra la migración 79.
+1. El usuario aplica y registra la migración 90.
 2. Merge del PR.
 3. Recálculo.
 
-Si se fusionara antes de la 79, `rappiServicio` pediría una columna que no existe: la lectura de Rappi fallaría y el
+Si se fusionara antes de la 90, `rappiServicio` pediría una columna que no existe: la lectura de Rappi fallaría y el
 corte marcaría esos días como carga incompleta, sin escribir ceros. El orden evita eso.
 
 **Recálculo:**

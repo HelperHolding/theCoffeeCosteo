@@ -34,8 +34,8 @@ export interface PedidoRappi {
   bruto: number;
   descuento_aliado: number | null;
   /**
-   * Descuento que se resta de la venta, como Zoho: el de la tienda sin los premios Pro Rewards (migración 79,
-   * rappi_descuento_venta). Ausente (base sin la 79) cuenta como 0: la venta es el bruto.
+   * Descuento que se resta de la venta, como Zoho: el de la tienda sin los premios Pro Rewards (migración 90,
+   * rappi_descuento_venta). Ausente (base sin la 90) cuenta como 0: la venta es el bruto.
    */
   descuento_venta?: number;
   estado_anterior: string | null;

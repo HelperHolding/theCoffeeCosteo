@@ -8,7 +8,7 @@ La venta de cada pedido de Rappi leído del portal es la que cuenta Zoho: **el b
 que paga la tienda, sin restar los premios Pro Rewards**. Antes se contaba el bruto (`order_product_total_price`,
 antes de descuentos) y quedaba ~13 % arriba de Zoho.
 
-`venta = bruto − descuento_venta`, con `descuento_venta` calculado en la base (migración 79,
+`venta = bruto − descuento_venta`, con `descuento_venta` calculado en la base (migración 90,
 `rappi_descuento_venta(p rappi_pedidos)`). PostgREST la expone como columna calculada `rappi_descuento_venta`; el
 corte la pide con el alias `descuento_venta:rappi_descuento_venta`. La migración termina con
 `notify pgrst, 'reload schema';` para que se vea al aplicarla:
@@ -29,14 +29,14 @@ corte la pide con el alias `descuento_venta:rappi_descuento_venta`. La migració
 
 ## Orden de entrada
 
-1. Aplicar y registrar la migración 79 (`supabase/migrations/20261120000079_rappi_descuento_venta.sql`):
+1. Aplicar y registrar la migración 90 (`supabase/migrations/20261120000090_rappi_descuento_venta.sql`):
    ```sql
-   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');
+   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000090','rappi_descuento_venta');
    ```
 2. Merge del PR.
-3. Recálculo, **corrido desde el código ya fusionado** (con la 79 aplicada): el comando usa el `select` con el alias.
+3. Recálculo, **corrido desde el código ya fusionado** (con la 90 aplicada): el comando usa el `select` con el alias.
 
-Si se fusiona antes de la 79, `rappiServicio` pide una columna que no existe: la lectura de Rappi falla y el corte
+Si se fusiona antes de la 90, `rappiServicio` pide una columna que no existe: la lectura de Rappi falla y el corte
 marca esos días como carga incompleta, sin escribir ceros.
 
 ## Recálculo

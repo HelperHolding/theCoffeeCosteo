@@ -4,7 +4,7 @@
 
 **Goal:** Que la venta de cada pedido de Rappi del portal sea `bruto − descuento_venta` (descuentos de la tienda sin premios Pro Rewards), igual que Zoho, en todo el portal.
 
-**Architecture:** Una función de SQL (`rappi_descuento_venta`, migración 79) calcula el descuento por pedido y se expone en las dos lecturas existentes. `sucursales_rappi_portal` lo agrega a cada pedido y el corte lo pide como columna calculada `rappi_descuento_venta` con el alias `descuento_venta`. `pedidoRappiAPos` resta ese descuento y lo reparte entre las líneas; la pestaña Rappi suma la venta nueva.
+**Architecture:** Una función de SQL (`rappi_descuento_venta`, migración 90) calcula el descuento por pedido y se expone en las dos lecturas existentes. `sucursales_rappi_portal` lo agrega a cada pedido y el corte lo pide como columna calculada `rappi_descuento_venta` con el alias `descuento_venta`. `pedidoRappiAPos` resta ese descuento y lo reparte entre las líneas; la pestaña Rappi suma la venta nueva.
 
 **Tech Stack:** Supabase Postgres (PGlite en pruebas), TypeScript, Vitest.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Regla: `descuento_venta = least(bruto, greatest(coalesce(descuento_aliado, 0) − Σ descuentos.value con type_description = 'order_discount', 0))`; `descuentos` nulo o no arreglo cuenta como `[]`.
-- Migración `supabase/migrations/20261120000079_rappi_descuento_venta.sql`; la aplica el usuario y la registra con `insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');`. Nunca se ejecuta `supabase` CLI ni nada contra la base real; no se toca `.env.local`.
+- Migración `supabase/migrations/20261120000090_rappi_descuento_venta.sql`; la aplica el usuario y la registra con `insert into supabase_migrations.schema_migrations (version, name) values ('20261120000090','rappi_descuento_venta');`. Nunca se ejecuta `supabase` CLI ni nada contra la base real; no se toca `.env.local`.
 - `rappi_descuento_venta`: `revoke all … from public, anon, authenticated`; `grant execute … to service_role`; no es security definer.
 - `sucursales_rappi_portal` se reemplaza (`create or replace`) con su definición actual de la migración 28 **sin otro cambio** que el campo `'descuento_venta'`; conserva `revoke … from public, anon` y `grant … to authenticated`.
 - No se tocan `rappi_importar`, `rappi_huella` ni las tablas `rappi_*`.
@@ -31,10 +31,10 @@
 
 ---
 
-### Task 1: Migración 79 — `rappi_descuento_venta` y la lectura de Rappi
+### Task 1: Migración 90 — `rappi_descuento_venta` y la lectura de Rappi
 
 **Files:**
-- Create: `supabase/migrations/20261120000079_rappi_descuento_venta.sql`
+- Create: `supabase/migrations/20261120000090_rappi_descuento_venta.sql`
 - Test: `tests/db/rappi-descuento-venta.test.ts`
 
 **Interfaces:**
@@ -51,7 +51,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario } from './utilidades';
 
-// Migración 79: el descuento que se resta de la venta de un pedido de Rappi, como Zoho
+// Migración 90: el descuento que se resta de la venta de un pedido de Rappi, como Zoho
 // (docs/superpowers/specs/2026-11-20-rappi-como-zoho-design.md §1).
 let db: PGlite;
 let usuario: string;
@@ -110,7 +110,7 @@ beforeAll(async () => {
 });
 afterAll(async () => db.close());
 
-describe('migración 79: rappi_descuento_venta', () => {
+describe('migración 90: rappi_descuento_venta', () => {
   it('resta los descuentos de la tienda y nunca los premios Pro Rewards', async () => {
     const r = await db.query<{ id: string; d: string }>(
       'select rappi_pedido_id::text id, public.rappi_descuento_venta(p)::text d from public.rappi_pedidos p',
@@ -158,11 +158,11 @@ Expected: FAIL — `function public.rappi_descuento_venta(...) does not exist`.
 Copia **literalmente** el bloque `create function public.sucursales_rappi_portal … end $$;` de `supabase/migrations/20261029000028_rappi_portal.sql` (líneas ~244–278). Antes confirma con `grep -ln "function public.sucursales_rappi_portal" supabase/migrations/*.sql` que la 28 sigue siendo la única que la define; si hay otra posterior, parte de la más reciente. Cambia solo `create function` por `create or replace function` y agrega `'descuento_venta', public.rappi_descuento_venta(p),` justo después de `'descuento_aliado', p.descuento_aliado,`.
 
 ```sql
--- Migración 79: la venta de un pedido de Rappi del portal es la de Zoho
+-- Migración 90: la venta de un pedido de Rappi del portal es la de Zoho
 -- (docs/superpowers/specs/2026-11-20-rappi-como-zoho-design.md): bruto menos los descuentos que paga la tienda,
 -- sin restar los premios Pro Rewards («Premio The Coffee», type_description = 'order_discount').
 -- Se aplica a mano en el SQL Editor y se registra:
---   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');
+--   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000090','rappi_descuento_venta');
 
 -- 1. Descuento que se resta de la venta. Sin detalle (descuento_aliado nulo) es 0: la venta queda en el bruto.
 --    Ofertas repetidas en `descuentos`: manda descuento_aliado (la suma del portal). Nunca negativo ni mayor que el bruto.
@@ -199,8 +199,8 @@ Expected: PASS (las pruebas existentes de la 28 siguen verdes).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/20261120000079_rappi_descuento_venta.sql tests/db/rappi-descuento-venta.test.ts
-git commit -m "Rappi como Zoho: migración 79 rappi_descuento_venta y descuento_venta en la lectura del portal"
+git add supabase/migrations/20261120000090_rappi_descuento_venta.sql tests/db/rappi-descuento-venta.test.ts
+git commit -m "Rappi como Zoho: migración 90 rappi_descuento_venta y descuento_venta en la lectura del portal"
 ```
 
 ---
@@ -244,7 +244,7 @@ describe('venta de Rappi como Zoho (bruto menos descuento_venta)', () => {
     expect(conD.lineas).toHaveLength(sin.lineas.length);
   });
 
-  it('sin descuento_venta (base sin la migración 79) queda idéntico a hoy', () => {
+  it('sin descuento_venta (base sin la migración 90) queda idéntico a hoy', () => {
     const base = pedido('12', 'finished', [producto('Iced Latte', 89)]);
     expect(pedidoRappiAPos(con(base, undefined))).toEqual(pedidoRappiAPos(con(base, 0)));
     expect(pedidoRappiAPos(con(base, 0))!.ventaCent).toBe(8900);
@@ -312,8 +312,8 @@ Expected: FAIL (venta = bruto y `descuentoCent` = `descuento_aliado`).
 
 ```ts
   /**
-   * Descuento que se resta de la venta, como Zoho: el de la tienda sin los premios Pro Rewards (migración 79,
-   * rappi_descuento_venta). Ausente (base sin la 79) cuenta como 0: la venta es el bruto.
+   * Descuento que se resta de la venta, como Zoho: el de la tienda sin los premios Pro Rewards (migración 90,
+   * rappi_descuento_venta). Ausente (base sin la 90) cuenta como 0: la venta es el bruto.
    */
   descuento_venta?: number;
 ```
@@ -435,7 +435,7 @@ y en el objeto que se pasa a `pedidoRappiAPos`, debajo de `descuento_aliado: …
 
 Crea `docs/rappi-portal/09-VENTA-COMO-ZOHO.md` con:
 - la regla (texto del spec §1) y por qué (evidencia del spec: 19-nov pedido por pedido y 5-oct por tienda);
-- **orden de entrada:** 1) aplicar y registrar la migración 79 (SQL de registro de las Global Constraints); 2) merge; 3) recálculo;
+- **orden de entrada:** 1) aplicar y registrar la migración 90 (SQL de registro de las Global Constraints); 2) merge; 3) recálculo;
 - **recálculo:** `npx.cmd tsx --conditions=react-server scripts/sucursales/corte.ts --desde 2026-10-01 --hasta <ayer>` (escribe en la base; lo corre el usuario) y que el corte diario re-corta 8 días para los pedidos que lleguen sin detalle;
 - **verificación:** cotejo contra Zoho del Rappi por tienda el 5-oct, 25-oct y 19-nov (≤ 0.5 % por día), pestaña Rappi y Ventas de una sucursal, Consumo sin cambio, BI del 19-nov cerca de $756,124;
 - los 3 casos sueltos de Zoho que no se imitan (spec, «Evidencia»).

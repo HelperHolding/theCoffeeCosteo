@@ -4,7 +4,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario } from './utilidades';
 
-// Migración 79: el descuento que se resta de la venta de un pedido de Rappi, como Zoho
+// Migración 90: el descuento que se resta de la venta de un pedido de Rappi, como Zoho
 // (docs/superpowers/specs/2026-11-20-rappi-como-zoho-design.md §1).
 let db: PGlite;
 let usuario: string;
@@ -68,7 +68,7 @@ beforeAll(async () => {
 });
 afterAll(async () => db.close());
 
-describe('migración 79: rappi_descuento_venta', () => {
+describe('migración 90: rappi_descuento_venta', () => {
   it('resta los descuentos de la tienda y nunca los premios Pro Rewards', async () => {
     const r = await db.query<{ id: string; d: string }>(
       'select rappi_pedido_id::text id, public.rappi_descuento_venta(p)::text d from public.rappi_pedidos p',

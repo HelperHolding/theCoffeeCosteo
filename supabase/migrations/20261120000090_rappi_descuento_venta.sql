@@ -1,8 +1,8 @@
--- Migración 79: la venta de un pedido de Rappi del portal es la de Zoho
+-- Migración 90: la venta de un pedido de Rappi del portal es la de Zoho
 -- (docs/superpowers/specs/2026-11-20-rappi-como-zoho-design.md): bruto menos los descuentos que paga la tienda,
 -- sin restar los premios Pro Rewards («Premio The Coffee», type_description = 'order_discount').
 -- Se aplica a mano en el SQL Editor y se registra:
---   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');
+--   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000090','rappi_descuento_venta');
 
 -- 1. Descuento que se resta de la venta. Sin detalle (descuento_aliado nulo) es 0: la venta queda en el bruto.
 --    Un premio con value vacío o no numérico se ignora (no truena la lectura).

@@ -272,7 +272,7 @@ describe('venta de Rappi como Zoho (bruto menos descuento_venta)', () => {
     expect(conD.lineas).toHaveLength(sin.lineas.length);
   });
 
-  it('sin descuento_venta (base sin la migración 79) queda idéntico a hoy', () => {
+  it('sin descuento_venta (base sin la migración 90) queda idéntico a hoy', () => {
     const base = pedido('12', 'finished', [producto('Iced Latte', 89)]);
     expect(pedidoRappiAPos(con(base, undefined))).toEqual(pedidoRappiAPos(con(base, 0)));
     expect(pedidoRappiAPos(con(base, 0))!.ventaCent).toBe(8900);
