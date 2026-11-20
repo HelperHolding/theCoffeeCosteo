@@ -37,10 +37,14 @@ describe('migración 78: envíos de OC por WhatsApp', () => {
   });
 
   it('wa_message_id es único', async () => {
-    await comoServicio(db, () => db.query(`update com_oc_whatsapp set wa_message_id = 'w1' where zoho_po_id = '1'`));
+    await comoServicio(db, () =>
+      db.query(`update com_oc_whatsapp set wa_message_id = 'w1' where zoho_po_id = '1'`),
+    );
     await fila(db, '3', 'enviado');
     await expect(
-      comoServicio(db, () => db.query(`update com_oc_whatsapp set wa_message_id = 'w1' where zoho_po_id = '3'`)),
+      comoServicio(db, () =>
+        db.query(`update com_oc_whatsapp set wa_message_id = 'w1' where zoho_po_id = '3'`),
+      ),
     ).rejects.toThrow();
   });
 
@@ -48,13 +52,19 @@ describe('migración 78: envíos de OC por WhatsApp', () => {
     const lector = await crearUsuario(db, 'interno');
     await darModulo(db, lector, 'comercializadora', 'lectura');
     const otro = await crearUsuario(db, 'admin');
-    const n = await comoUsuario(db, lector, () => db.query<{ n: number }>('select count(*)::int n from com_oc_whatsapp'));
+    const n = await comoUsuario(db, lector, () =>
+      db.query<{ n: number }>('select count(*)::int n from com_oc_whatsapp'),
+    );
     expect(n.rows[0].n).toBeGreaterThan(0);
-    const m = await comoUsuario(db, otro, () => db.query<{ n: number }>('select count(*)::int n from com_oc_whatsapp'));
+    const m = await comoUsuario(db, otro, () =>
+      db.query<{ n: number }>('select count(*)::int n from com_oc_whatsapp'),
+    );
     expect(m.rows[0].n).toBe(0);
     await expect(
       comoUsuario(db, lector, () =>
-        db.query(`insert into com_oc_whatsapp (zoho_po_id, po_number, estado) values ('9', 'X', 'reservado')`),
+        db.query(
+          `insert into com_oc_whatsapp (zoho_po_id, po_number, estado) values ('9', 'X', 'reservado')`,
+        ),
       ),
     ).rejects.toThrow(/permission denied/);
   });
@@ -68,7 +78,9 @@ describe('migración 78: envíos de OC por WhatsApp', () => {
     const lector = await crearUsuario(db, 'interno');
     await darModulo(db, lector, 'comercializadora', 'lectura');
     const r = (u: string, id: string) =>
-      comoUsuario(db, u, () => db.query<{ ok: boolean }>('select public.com_oc_whatsapp_reintentar($1) ok', [id]));
+      comoUsuario(db, u, () =>
+        db.query<{ ok: boolean }>('select public.com_oc_whatsapp_reintentar($1) ok', [id]),
+      );
     expect((await r(editor, '10')).rows[0].ok).toBe(true);
     expect((await r(editor, '11')).rows[0].ok).toBe(true);
     expect((await r(editor, '12')).rows[0].ok).toBe(false);
