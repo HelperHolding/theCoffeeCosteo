@@ -35,7 +35,6 @@ import {
   conectividadDe,
   diasDeMetricas,
   esperaDia,
-  indisponibilidadDia,
   matrizSemana,
   planServicio,
   reclamosDe,
@@ -94,7 +93,6 @@ const SALIDAS = [
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/rests-stores-config\/orders\/by-stores\?country=MX$/,
   // Consultas de Nivel de servicio y Conectividad (periodo + tiendas; visto el 2026-11-20, docs/rappi-portal/08).
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/v2\/summary\/metrics$/,
-  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/unavailability\/metrics$/,
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/summary\/sales\/indicators\?with_variation=false$/,
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/defects$/,
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/api\/rest-aliados-state-ms\/store-status-detail\/retrieve\?country=MX$/,
@@ -105,7 +103,6 @@ const LECTURAS = [
   { metodo: 'GET', ruta: /^\/rests-stores-config\/orders\/\d+\?country=MX&language=es$/ },
   // Nivel de servicio y Conectividad (docs/rappi-portal/08).
   { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/v2\/summary\/metrics$/ },
-  { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/unavailability\/metrics$/ },
   { metodo: 'POST', ruta: /^\/partners-indicators\/summary\/sales\/indicators\?with_variation=false$/ },
   { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/defects$/ },
   { metodo: 'POST', ruta: /^\/api\/rest-aliados-state-ms\/store-status-detail\/retrieve\?country=MX$/ },
@@ -407,15 +404,8 @@ async function leerServicio(pagina, plan, { tiendas, inicio, tiendaDePedido, tie
       }
     });
     agregar(porTienda.flat());
-    const indisp = await enParalelo(diasEntre(desde, hasta), CONCURRENCIA, async (d) => {
-      const j = await consulta(
-        'POST',
-        '/partners-indicators/indicators/unavailability/metrics',
-        cuerpo(d, d, tiendas),
-      );
-      return j ? indisponibilidadDia(d, j).filter((x) => tiendas.includes(x.tienda)) : [];
-    });
-    agregar(indisp.flat());
+    // Sin unavailability/metrics: con varias tiendas devuelve casi puros ceros y sus minutos no son el % del portal
+    // (2026-11-20). El tiempo sin disponibilidad es `indisponibilidad` (%), que viene en las métricas de arriba.
   }
   if (plan.espera.length) {
     const pares = tiendas.flatMap((t) => plan.espera.map((d) => ({ t, d })));

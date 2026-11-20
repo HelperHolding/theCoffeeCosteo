@@ -62,21 +62,6 @@ export function diasDeMetricas(tienda, j) {
   return [...dias.values()];
 }
 
-/** indicators/unavailability/metrics de UN día (todas las tiendas) → minutos y eventos por franja. */
-export const indisponibilidadDia = (fecha, j) =>
-  (Array.isArray(j) ? j : []).map((x) => ({
-    tienda: tiendaMX(x.store_id),
-    fecha,
-    sin_disp_minutos: entero(x.total_unavailability) ?? 0,
-    sin_disp_franjas: {
-      madrugada: entero(x.early_morning) ?? 0,
-      manana: entero(x.morning) ?? 0,
-      mediodia: entero(x.noon) ?? 0,
-      tarde: entero(x.afternoon) ?? 0,
-      noche: entero(x.night) ?? 0,
-    },
-  }));
-
 /** summary/sales/indicators de UNA tienda y UN día → espera promedio del repartidor (minutos). */
 export function esperaDia(tienda, fecha, j) {
   const v = decimal(j?.rt_wait_time?.average?.value);
@@ -154,8 +139,9 @@ const sumarDias = (fecha, n) => {
 
 /**
  * Qué lee de Nivel de servicio cada corrida (docs/rappi-portal/08 §2). `hoy` es la fecha en México y `minuto` el minuto
- * de la hora en México: en vivo, los indicadores de hoy solo en la corrida de cada hora (la de :07).
- * - vivo: conectividad siempre; cada hora, indicadores, espera del repartidor y reclamos de hoy, y Top Restaurantes.
+ * de la hora en México. Rappi publica los indicadores con retraso y para el día en curso responde CEROS, no vacío (visto
+ * el 2026-11-20: hoy 0 pedidos y 0 % de disponibilidad, ayer ya completo): ninguna corrida pide indicadores de hoy.
+ * - vivo: conectividad siempre; cada hora (la de :07), indicadores y espera de AYER, reclamos de ayer y hoy, y Top.
  * - cierre: conectividad; indicadores y reclamos de los 7 días anteriores (Rappi corrige tarde), espera de ayer, calor de
  *   15 días y Top Restaurantes.
  * - repaso: conectividad; indicadores y reclamos de los 14 días anteriores.
@@ -165,13 +151,14 @@ const sumarDias = (fecha, n) => {
  */
 export function planServicio({ tipo, desde, hasta, servicio = false, espera = false, hoy, minuto }) {
   const rango = (d, h) => ({ desde: d, hasta: h });
+  const ayer = sumarDias(hoy, -1);
   if (tipo === 'vivo') {
     const cadaHora = minuto < 10;
     return {
       conectividad: true,
-      dias: cadaHora ? rango(hoy, hoy) : null,
-      espera: cadaHora ? [hoy] : [],
-      reclamos: cadaHora ? rango(hoy, hoy) : null,
+      dias: cadaHora ? rango(ayer, ayer) : null,
+      espera: cadaHora ? [ayer] : [],
+      reclamos: cadaHora ? rango(ayer, hoy) : null,
       semana: false,
       top: cadaHora,
     };
@@ -192,11 +179,22 @@ export function planServicio({ tipo, desde, hasta, servicio = false, espera = fa
     return { conectividad: true, dias: r, espera: [], reclamos: r, semana: false, top: false };
   }
   if (tipo === 'manual' && servicio) {
+    // Los indicadores llegan hasta ayer (hoy serían ceros); los reclamos sí se piden hasta `hasta`.
+    const fin = hasta < hoy ? hasta : ayer;
+    if (desde > fin)
+      return {
+        conectividad: false,
+        dias: null,
+        espera: [],
+        reclamos: rango(desde, hasta),
+        semana: false,
+        top: false,
+      };
     const dias = [];
-    for (let d = desde; d <= hasta; d = sumarDias(d, 1)) dias.push(d);
+    for (let d = desde; d <= fin; d = sumarDias(d, 1)) dias.push(d);
     return {
       conectividad: false,
-      dias: rango(desde, hasta),
+      dias: rango(desde, fin),
       espera: espera ? dias : [],
       reclamos: rango(desde, hasta),
       semana: false,
