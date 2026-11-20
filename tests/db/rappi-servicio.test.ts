@@ -7,6 +7,7 @@ import { comoUsuario, crearUsuario, num } from './utilidades';
 // rappi_importar_servicio; nadie lee las tablas directo.
 let db: PGlite;
 let usuario: string;
+let gdl: string, ajeno: string;
 
 const NORMAL = 'MX1930270777'; // Namóra
 const TURBO = 'MX1930301156';
@@ -29,6 +30,17 @@ const filas = async <T = Record<string, unknown>>(sql: string, args: unknown[] =
 beforeAll(async () => {
   db = await crearDbLocal();
   usuario = await crearUsuario(db, 'sucursales');
+  gdl = await crearUsuario(db, 'sucursales');
+  ajeno = await crearUsuario(db, 'sucursales');
+  for (const u of [gdl, ajeno])
+    await db.query(
+      `insert into perfil_modulos (user_id, modulo, nivel) values ($1, 'sucursales', 'lectura')`,
+      [u],
+    );
+  await db.query('insert into perfil_sucursales (user_id, company_id) values ($1, 513), ($2, 384)', [
+    gdl,
+    ajeno,
+  ]);
 });
 afterAll(async () => db.close());
 
@@ -160,5 +172,50 @@ describe('rappi_importar_servicio', () => {
       categoria: '4. Beginner',
       proxima: '1. Top 5%',
     });
+  });
+});
+
+// Migración 87: lectura para la sección «Nivel de servicio» de la sucursal.
+describe('sucursales_nivel_servicio', () => {
+  const leer = (u: string, c = 513, desde = '2026-11-18', hasta = '2026-11-20') =>
+    comoUsuario(
+      db,
+      u,
+      async () =>
+        (
+          await db.query<{ r: Record<string, unknown> | null }>(
+            'select public.sucursales_nivel_servicio($1, $2, $3) r',
+            [c, desde, hasta],
+          )
+        ).rows[0].r,
+    );
+
+  it('quien ve la sucursal lee sus dos tiendas; otra sucursal o anon no', async () => {
+    const r = (await leer(gdl))!;
+    expect((r.tiendas as { canal: string }[]).map((t) => t.canal)).toEqual(['normal', 'turbo']);
+    expect((r.dias as unknown[]).length).toBe(1);
+    expect((r.reclamos as { pedido: string }[]).map((x) => x.pedido)).toEqual(['2489855527']);
+    expect((r.vigente as { estado: string }[]).map((x) => x.estado)).toEqual(['ACTIVE']);
+    expect((r.conectividad as unknown[]).length).toBe(3);
+    expect((r.semana as unknown[]).length).toBe(1);
+    expect((r.top as { categoria: string }[])[0].categoria).toBe('4. Beginner');
+    expect(await leer(ajeno)).toBeNull();
+    await expect(leer(gdl, 513, '2026-08-01', '2026-11-20')).rejects.toThrow(/62 días/);
+    await db.exec('set role anon');
+    await expect(
+      db.query("select public.sucursales_nivel_servicio(513, '2026-11-18', '2026-11-20')"),
+    ).rejects.toThrow(/permission denied/);
+    await db.exec('reset role');
+  });
+
+  it('el periodo filtra días y reclamos; el estado vigente y el calor de 15 días no dependen del periodo', async () => {
+    const r = (await leer(gdl, 513, '2026-11-01', '2026-11-02'))!;
+    expect([
+      (r.dias as unknown[]).length,
+      (r.reclamos as unknown[]).length,
+      (r.conectividad as unknown[]).length,
+    ]).toEqual([0, 0, 0]);
+    expect((r.vigente as unknown[]).length).toBe(1);
+    expect((r.semana as unknown[]).length).toBe(1);
   });
 });

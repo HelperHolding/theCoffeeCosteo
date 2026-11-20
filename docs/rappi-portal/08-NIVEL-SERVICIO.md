@@ -165,3 +165,32 @@ La credencial de «Guardar servicio» es la misma de «Guardar en Supabase»; el
 - Colores de `colores.tsx`: Rappi `#1baf7a`.
 - Reutilizar `CalendarioVenta`, `MapaMexico` y `Tooltip` de `graficas-mexico.tsx`, avisando a su dueño.
 - KPI de 40 px como máximo; nada estimado se muestra como dato.
+
+## 7. Fase 2: sección «Nivel de servicio» de cada sucursal
+
+- **Lectura:** `sucursales_nivel_servicio(p_company, p_desde, p_hasta)` (migración 87), `security definer` con el
+  candado `sucursales_acceso`, hasta 62 días. Devuelve:
+  - días, reclamos y tramos del periodo (con un día de margen);
+  - estado vigente, primera foto, el calor de 15 días y el Top Restaurantes más recientes.
+- **Ruta:** `app/api/sucursales/[companyId]/servicio`. Responde 404 si la sucursal no tiene tienda en el portal.
+  Arma con `construirServicio` (`lib/sucursales/servicio.ts`).
+- **Pantalla:** `components/sucursales/nivel-servicio.tsx`, 4.ª sección en `secciones.tsx` (`?seccion=servicio`). Solo
+  aparece si `rappiPortal` y no usa el filtro de origen. De arriba abajo:
+  1. Ahora en Rappi, por tienda: activa o desactivada, hora de cierre y última foto; avisa si pasan 30 min sin
+     confirmar.
+  2. Indicadores del periodo en un solo bloque, con Rappi y Turbo por separado y los rechazos por tipo.
+  3. Reclamos por día, apilados por tipo, y tiempo sin disponibilidad por día.
+  4. Cinta de conectividad por día en hora local (hasta 7 días; rayado = sin foto) y calor de 15 días.
+  5. Tabla de reclamos con el comentario del cliente y productos con más reclamos.
+- **Cifras:** solo sumas de Rappi.
+  - Las tasas se calculan sobre sumas.
+  - La disponibilidad es el promedio de los días, y la espera del repartidor se pondera por pedidos finalizados; así
+    lo dice la pantalla.
+  - Sin días de Rappi no se muestran ceros.
+- **Colores** (skill dataviz, `validate_palette.js`):
+  - Tipos de reclamo: `#2a78d6` / `#eda100` / `#e87ba4` de día y `#3987e5` / `#c98500` / `#d55181` de noche; siempre
+    con etiqueta.
+  - Estado de la tienda: `--color-ok` / `--color-bad`, con texto.
+- **Excel:** `hojasServicio` (`lib/sucursales/servicio-excel.ts`) con el periodo de pantalla; un día con «Hoy», «Ayer» o
+  el rango de un día. Hojas: Resumen, Por día, Por tienda, Reclamos y Conectividad.
+- **Prueba visual:** `?sucursales&gdl=1&portal=1&seccion=servicio[&servicio=vacio][&noche]`, con datos sintéticos.

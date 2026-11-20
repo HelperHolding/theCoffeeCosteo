@@ -59,7 +59,50 @@ vi.mock('../../lib/supabase/servidor', () => ({
     },
     rpc: async (fn: string, args: { p_company: number }) => {
       // Juárez lee su Rappi del portal desde el 2026-11-15: aquí sin pedidos (migración 28, ya en prod).
-      if (fn === 'sucursales_rappi_portal') return { data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null }, error: null };
+      if (fn === 'sucursales_rappi_portal')
+        return {
+          data: { tiendas: [], conteos: [], pedidos: [], ultima_corrida: null, ultima_ok: null },
+          error: null,
+        };
+      // Migración 87: Nivel de servicio (la base exige la sucursal asignada).
+      if (fn === 'sucursales_nivel_servicio')
+        return {
+          data: sesion.companias.includes(args.p_company)
+            ? {
+                tiendas: [{ id: 'MX1930415960', nombre: 'The Coffee Cd. Juárez', canal: 'normal' }],
+                dias: [
+                  {
+                    tienda: 'MX1930415960',
+                    fecha: '2026-10-21',
+                    pedidos: 10,
+                    rech_cbpi: 0,
+                    rech_cbpr: 0,
+                    rech_tienda_cerrada: 1,
+                    rech_sin_stock: 0,
+                    rech_demora: 0,
+                    finalizados: 9,
+                    recl_mal_estado: 1,
+                    recl_faltante: 0,
+                    recl_incorrecto: 0,
+                    disponibilidad: 90,
+                    indisponibilidad: 10,
+                    cocina_pedidos: 9,
+                    cocina_demorada: 2,
+                    sin_disp_minutos: 45,
+                    espera_repartidor: 3,
+                  },
+                ],
+                reclamos: [],
+                conectividad: [],
+                vigente: [],
+                primera_foto: null,
+                semana: [],
+                top: [],
+                leido_en: null,
+              }
+            : null,
+          error: null,
+        };
       if (!sesion.migrada) return { data: null, error: { code: 'PGRST202', message: 'no existe' } };
       // La base exige perfil activo, módulo Sucursales y la sucursal asignada (migración 24).
       const ve = sesion.activo && sesion.companias.includes(args.p_company);
@@ -169,6 +212,7 @@ import { GET as productosGet } from '../../app/api/sucursales/[companyId]/produc
 import { GET as pedidosGet } from '../../app/api/sucursales/[companyId]/pedidos/route';
 import { GET as costeoGet } from '../../app/api/sucursales/[companyId]/costeo/route';
 import { GET as consumoGet } from '../../app/api/sucursales/[companyId]/consumo/route';
+import { GET as servicioGet } from '../../app/api/sucursales/[companyId]/servicio/route';
 import { __reiniciarParaPruebas } from '../../lib/sucursales/datos';
 import { sesionSucursales } from '../../lib/supabase/sesion';
 import { apiFalsa, envelope, pedido } from './sucursales-fixtures';
@@ -674,5 +718,29 @@ describe('Productos y Pedidos', () => {
     const ef = await (await llamar(pedidosGet, '612', '?desde=2026-10-20&pago=DINHEIRO')).json();
     expect(ef.total).toBe(10);
     expect(ef.metodos.map((m: { etiqueta: string }) => m.etiqueta)).toEqual(['Efectivo', 'Tarjeta']);
+  });
+});
+
+describe('Nivel de servicio (docs/rappi-portal/08)', () => {
+  it('con tienda en el portal: los indicadores de Rappi de la sucursal, sin tocar la API del POS', async () => {
+    const r = await llamar(servicioGet, '612', '?desde=2026-10-20&hasta=2026-10-22');
+    expect(r.status).toBe(200);
+    const d = await r.json();
+    expect([
+      d.totales.pedidos,
+      d.totales.reclamosTotal,
+      d.totales.rechazos.tienda_cerrada,
+      d.totales.sinDispMinutos,
+    ]).toEqual([10, 1, 1, 45]);
+    expect(d.diasEnHoraCentro).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('periodo inválido: 400; sucursal sin tienda en el portal: 404; ajena: 404', async () => {
+    expect((await llamar(servicioGet, '612', '?desde=2026-08-01&hasta=2026-10-22')).status).toBe(400);
+    sesion.companias = [612, 469];
+    expect((await llamar(servicioGet, '469', '?desde=2026-10-22')).status).toBe(404);
+    sesion.companias = [469];
+    expect((await llamar(servicioGet, '612', '?desde=2026-10-22')).status).toBe(404);
   });
 });

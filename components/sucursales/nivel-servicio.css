@@ -1,0 +1,33 @@
+/*
+ * Nivel de servicio (docs/rappi-portal/08). Colores de los tipos de reclamo validados con validate_palette.js (skill
+ * dataviz): de día #2a78d6 / #eda100 / #e87ba4 sobre #fcfcfb (contraste < 3:1 en amarillo y magenta → siempre con
+ * etiqueta); de noche los pasos oscuros de la misma rampa (#3987e5 / #c98500 / #d55181), PASS sobre #1a1a19.
+ * El estado de la tienda usa los colores de estado del portal (--color-ok / --color-bad), siempre con texto.
+ */
+.servicio {
+  --recl-incorrecto: #2a78d6;
+  --recl-faltante: #eda100;
+  --recl-mal-estado: #e87ba4;
+  --rechazo: #6250d6;
+  --sin-disp: #86b6ef;
+}
+html[data-luz='noche'] .servicio {
+  --recl-incorrecto: #3987e5;
+  --recl-faltante: #c98500;
+  --recl-mal-estado: #d55181;
+  --rechazo: #8a7cf0;
+  --sin-disp: #2a78d6;
+}
+/* «Sin dato» en la cinta: rayado tenue (no es un estado de Rappi, es que no hubo foto). */
+.servicio .sin-dato {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-line-strong) 0 2px,
+    transparent 2px 6px
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .servicio .barra-dia {
+    transition: height 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}

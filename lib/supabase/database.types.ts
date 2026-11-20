@@ -332,6 +332,11 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      /** Migración 87: Nivel de servicio y Conectividad de Rappi de una sucursal. */
+      sucursales_nivel_servicio: {
+        Args: { p_company: number; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
       sucursales_consumo_desglose: {
         Args: { p_mes: string; p_companias: number[]; p_insumo: string | null };
         Returns: Json;
