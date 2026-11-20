@@ -554,20 +554,24 @@ export function BarraApilada({
   titulo,
   segmentos,
   moneda,
+  apilada = false,
 }: {
-  titulo: string;
+  /** Sin título (mosaico BI): el de la tarjeta es el único visible. */
+  titulo?: string;
   segmentos: Segmento[];
   moneda: string;
+  /** Leyenda de un renglón por segmento (nombre completo, monto debajo): para tarjetas angostas del BI. */
+  apilada?: boolean;
 }) {
   const [activo, setActivo] = useState<string | null>(null);
   const visibles = segmentos.filter((s) => (s.participacion ?? 0) > 0);
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-ink-2">{titulo}</p>
+      {titulo && <p className="text-sm font-semibold text-ink-2">{titulo}</p>}
       <div
         className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-[4px]"
         role="img"
-        aria-label={`${titulo}: ${visibles.map((s) => `${s.etiqueta} ${porcentaje(s.participacion, 0)}`).join(', ')}`}
+        aria-label={`${titulo ?? 'Participación'}: ${visibles.map((s) => `${s.etiqueta} ${porcentaje(s.participacion, 0)}`).join(', ')}`}
       >
         {visibles.map((s) => (
           <span
@@ -583,22 +587,22 @@ export function BarraApilada({
           />
         ))}
       </div>
-      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+      <ul className={`grid gap-x-6 gap-y-2 ${apilada ? '' : 'sm:grid-cols-2'}`}>
         {segmentos.map((s) => (
           <li
             key={s.clave}
             onPointerEnter={() => setActivo(s.clave)}
             onPointerLeave={() => setActivo(null)}
-            className={`flex flex-wrap items-center gap-x-2 rounded-lg px-1.5 py-1 text-sm transition-colors sm:flex-nowrap ${activo === s.clave ? 'bg-surface-2' : ''}`}
+            className={`flex flex-wrap items-center gap-x-2 rounded-lg px-1.5 py-1 text-sm transition-colors ${apilada ? '' : 'sm:flex-nowrap'} ${activo === s.clave ? 'bg-surface-2' : ''}`}
           >
             <span
               aria-hidden="true"
               className="size-3 shrink-0 rounded-[3px]"
               style={{ backgroundColor: s.color }}
             />
-            <span className="min-w-0 flex-1 truncate font-medium">{s.etiqueta}</span>
+            <span className={`min-w-0 flex-1 font-medium ${apilada ? 'break-words' : 'truncate'}`}>{s.etiqueta}</span>
             {/* En celular el monto baja a su renglón: el nombre usa todo el ancho y no se corta («CONTINGENCY - …»). */}
-            <span className="order-last basis-full pl-5 text-xs tabular text-ink-2 sm:order-none sm:basis-auto sm:pl-0 sm:text-sm">
+            <span className={`order-last basis-full pl-5 text-xs tabular text-ink-2 ${apilada ? '' : 'sm:order-none sm:basis-auto sm:pl-0 sm:text-sm'}`}>
               {dinero(s.ventaCent, moneda, false)}
               {s.pedidos === null ? null : ` · ${numero(s.pedidos)} ped.`}
             </span>

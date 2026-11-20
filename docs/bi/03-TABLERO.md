@@ -69,6 +69,47 @@ mismo paso. **Solo con OK de Sebastián.**
 
 La etiqueta de pago por fecha **resuelve el pendiente** del doc 02 (`lib/bi/cotejo.ts` ya la resuelve por fecha).
 
+## Comparación contra el periodo anterior (migración 76)
+
+Cada KPI (Ventas Netas, Ticket Promedio, # de Tickets, Promedio UPT, Total Products) muestra su cambio contra el
+periodo anterior. Los totales anteriores salen de `bi_kpis` y se calculan con las mismas fórmulas que el número
+principal.
+
+Periodo que se compara (función `periodoAnterior`, `lib/bi/comparacion.ts`):
+
+| Periodo actual | Periodo anterior |
+|---|---|
+| Hoy, Ayer | el día previo |
+| Esta semana (lun → hoy) | mismos días de la semana pasada |
+| Semana anterior, 2/3/4 semanas anteriores | la semana previa a esa |
+| Últimas 4 semanas | las 4 semanas previas |
+| Este mes (día 1 → hoy) | día 1 → mismo día del mes anterior (recortado al fin de mes) |
+| Mes anterior | el mes calendario previo completo |
+| Últimos 3 meses | los 3 meses calendario previos |
+| Este trimestre (inicio → hoy) | mismo tramo del trimestre anterior |
+| Trimestre anterior | el trimestre calendario previo |
+| Este año (1 ene → hoy) | 1 ene → mismo día del año anterior |
+| Año anterior | el año previo completo |
+| Rango libre de N días | los N días inmediatamente anteriores |
+
+**Día en curso.** Si el periodo actual termina hoy y el último corte es de hoy a la hora H, el último día del periodo
+anterior solo cuenta las líneas con `hora < H`. Es aproximado a la hora. Si el periodo termina hoy y aún no hay
+corte de hoy, H = 0: el último día anterior no aporta líneas (evita un ▼ falso antes del primer corte). `hora` es la
+hora local de cada tienda y el corte es hora CDMX; en tiendas de otra zona (Tijuana, Hermosillo, Cancún) el recorte
+puede variar 1–2 h.
+
+### Aplicar la migración 76
+
+Solo con OK de Sebastián. Pegar `supabase/migrations/20261120000076_bi_kpis.sql` completo en el SQL Editor y luego
+registrarla:
+
+```sql
+insert into supabase_migrations.schema_migrations (version, name) values ('20261120000076','bi_kpis');
+```
+
+**Sin la 76 aplicada** el tablero funciona igual: la ruta de comparación responde 503 y solo la línea de comparación
+de los KPI lo refleja, con «Sin comparación».
+
 ## Dar el permiso `bi`
 
 A quienes ya tienen el módulo Sucursales con rol admin. **Revisar antes de correr** (cambia permisos):

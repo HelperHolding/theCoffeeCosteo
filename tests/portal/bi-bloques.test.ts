@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  avisos, cociente, conShare, contraMeta, filtrosDeLinea, kpiTiendas, numerosClave, pagoPorTienda, promociones, rankingPorMes, tendenciaAnual,
+  avisos, cociente, conShare, contraMeta, estadoComparacion, filtrosDeLinea, kpiTiendas, numerosClave, pagoPorTienda, promociones, rankingPorMes, tendenciaAnual,
   tendenciaSemanal,
 } from '@/lib/bi/bloques';
 import type { RpcMetas, RpcOpciones, RpcTablero, TiendaBi } from '@/lib/bi/tipos';
@@ -154,5 +154,28 @@ describe('metas y P.E. (F5)', () => {
   it('filtros de línea: solo los que recortan la venta de la tienda', () => {
     expect(filtrosDeLinea(leerUrl(new URLSearchParams('tiendas=384&dias=1&comp=si')))).toEqual([]);
     expect(filtrosDeLinea(leerUrl(new URLSearchParams('prod=Latte&hora=9&min=10')))).toEqual(['producto', 'hora', 'monto']);
+  });
+});
+
+describe('estadoComparacion', () => {
+  const kpis = { venta_cent: 1000, venta_bruta_cent: 1100, tickets: 10, lineas: 15, unidades: 18 };
+  const periodo = { desde: '2026-11-09', hasta: '2026-11-11' };
+  it('cargando, error y semanas', () => {
+    expect(estadoComparacion(null, false)).toEqual({ estado: 'cargando' });
+    expect(estadoComparacion(null, true)).toEqual({ estado: 'error' });
+    expect(estadoComparacion({ sinComparacion: 'semanas' }, false)).toEqual({ estado: 'semanas' });
+  });
+  it('sin tiendas (kpis null) es error, no ceros', () => {
+    expect(estadoComparacion({ periodo, horaCorte: null, kpis: null, cargas: null }, false)).toEqual({ estado: 'error' });
+  });
+  it('días faltantes o incompletos en el periodo anterior: faltan', () => {
+    expect(estadoComparacion({ periodo, horaCorte: null, kpis, cargas: { esperados: 3, con_carga: 2, incompletos: 0 } }, false))
+      .toEqual({ estado: 'faltan', periodo });
+    expect(estadoComparacion({ periodo, horaCorte: null, kpis, cargas: { esperados: 3, con_carga: 3, incompletos: 1 } }, false))
+      .toEqual({ estado: 'faltan', periodo });
+  });
+  it('ok: el anterior pasa por numerosClave', () => {
+    expect(estadoComparacion({ periodo, horaCorte: 11, kpis, cargas: { esperados: 3, con_carga: 3, incompletos: 0 } }, false))
+      .toEqual({ estado: 'ok', periodo, anterior: numerosClave({ kpis }) });
   });
 });

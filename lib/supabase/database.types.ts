@@ -336,6 +336,8 @@ export interface Database {
       };
       bi_opciones: { Args: { p: Json }; Returns: Json };
       bi_tablero: { Args: { p: Json }; Returns: Json };
+      /** Migración 76: kpis y cargas de un periodo, con recorte opcional por hora en el último día. */
+      bi_kpis: { Args: { p: Json; p_hora_corte?: number | null }; Returns: Json };
       bi_tendencias: { Args: { p: Json }; Returns: Json };
       /** Migración 73: ventas de solo lectura para el MCP (clientes OAuth en mcp_ventas_clientes). */
       mcp_ventas_sucursales: { Args: Record<string, never>; Returns: Json };

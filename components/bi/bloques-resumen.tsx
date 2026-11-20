@@ -1,44 +1,93 @@
 'use client';
 // Bloques 1 a 3 del tablero BI: números clave, contra meta y P.E. y mezcla de venta.
-import { Banknote, Layers, Package, Receipt, Ticket } from 'lucide-react';
-import { Barra, Insignia, Kpi, Tarjeta } from '@/components/portal/piezas';
+import { Barra, Insignia } from '@/components/portal/piezas';
 import { cn } from 'cn';
 import { AZUL } from '@/components/sucursales/colores';
 import { BarraApilada } from '@/components/sucursales/graficas';
-import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
+import { dinero, fechaCorta, numero, porcentaje } from '@/components/sucursales/formato';
 import { Cifra } from '@/components/sucursales/graficas-mexico';
-import { alcanza, type contraMeta, type numerosClave } from '@/lib/bi/bloques';
+import { cambio } from '@/lib/bi/comparacion';
+import { alcanza, type contraMeta, type EstadoComparacion, type numerosClave } from '@/lib/bi/bloques';
+import { TarjetaBi } from './tarjeta-bi';
 import { CAFE, colorDe, enOrden, GRUPOS, SIN_COLOR } from './colores-bi';
 
 const decimales = new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+type Clave = 'ventaCent' | 'ticketPromedioCent' | 'tickets' | 'upt' | 'unidades';
+
+function LineaComparacion({
+  actual,
+  clave,
+  formato,
+  c,
+}: {
+  actual: number | null;
+  clave: Clave;
+  formato: (x: number) => string;
+  c: EstadoComparacion;
+}) {
+  if (c.estado === 'cargando')
+    return <span aria-hidden="true" className="block h-4 w-32 animate-pulse rounded bg-surface-2" />;
+  if (c.estado === 'semanas') return <p className="text-xs text-muted-foreground">Sin comparación con filtro de semanas</p>;
+  if (c.estado === 'faltan')
+    return (
+      <p className="text-xs text-muted-foreground">
+        Sin comparación: faltan días en {fechaCorta(c.periodo.desde)} – {fechaCorta(c.periodo.hasta)}
+      </p>
+    );
+  if (c.estado === 'error') return <p className="text-xs text-muted-foreground">Sin comparación</p>;
+  const anterior = c.anterior[clave];
+  const d = cambio(actual, anterior);
+  if (!d || anterior === null) return <p className="text-xs text-muted-foreground">Sin comparación</p>;
+  const signo = d.dir === 'sube' ? '▲' : d.dir === 'baja' ? '▼' : '=';
+  const color = d.dir === 'sube' ? 'text-ok' : d.dir === 'baja' ? 'text-bad' : 'text-muted-foreground';
+  return (
+    <div className="space-y-0.5 text-xs">
+      <p>
+        <span className={`font-semibold ${color}`}>
+          <span aria-hidden="true">{signo}</span>
+          <span className="sr-only">{d.dir}</span>{' '}
+          {porcentaje(d.dir === 'igual' ? 0 : Math.abs(d.pct))}
+        </span>{' '}
+        <span className="text-muted-foreground">vs {formato(anterior)}</span>
+      </p>
+      <p className="text-muted-foreground">
+        {fechaCorta(c.periodo.desde)} – {fechaCorta(c.periodo.hasta)}
+      </p>
+    </div>
+  );
+}
+
 /**
- * Bloque 1. Los cocientes sin base (0 tickets) llegan como null y se ven «—». Las cifras cuentan hasta el valor nuevo
- * al cambiar un filtro (Cifra: el lector de pantalla oye solo el valor final; con movimiento reducido no cuentan).
+ * Bloque 1, estilo Metabase: título chico, número grande y su cambio contra el periodo anterior (mismas fórmulas:
+ * el anterior también pasa por numerosClave). Los cocientes sin base llegan null y se ven «—».
  */
-export function NumerosClave({ n }: { n: ReturnType<typeof numerosClave> }) {
-  const animada = (v: number | null, formato: (x: number) => string) =>
-    v === null ? '—' : <Cifra valor={v} formato={formato} />;
+export function NumerosClave({ n, comparacion }: { n: ReturnType<typeof numerosClave>; comparacion: EstadoComparacion }) {
+  const pesos = (x: number) => dinero(Math.round(x), 'MXN', false);
+  const conCentavos = (x: number) => dinero(Math.round(x));
+  const entero = (x: number) => numero(Math.round(x));
+  const tarjetas: { etiqueta: string; clave: Clave; formato: (x: number) => string; nota?: string }[] = [
+    { etiqueta: 'Ventas Netas', clave: 'ventaCent', formato: pesos, nota: `Cobrado: ${dinero(n.cobradoCent)}` },
+    { etiqueta: 'Ticket Promedio', clave: 'ticketPromedioCent', formato: conCentavos },
+    { etiqueta: '# de Tickets', clave: 'tickets', formato: entero },
+    { etiqueta: 'Promedio UPT', clave: 'upt', formato: (x) => decimales.format(x) },
+    { etiqueta: 'Total Products', clave: 'unidades', formato: entero },
+  ];
   return (
     <section aria-label="Números clave" className="kpis-bi">
-      <Kpi
-        etiqueta="Ventas Netas"
-        valor={animada(n.ventaCent, (x) => dinero(Math.round(x), 'MXN', false))}
-        icono={Banknote}
-        nota={`Cobrado: ${dinero(n.cobradoCent)}`}
-      />
-      <Kpi
-        etiqueta="Ticket Promedio"
-        valor={animada(n.ticketPromedioCent, (x) => dinero(Math.round(x)))}
-        icono={Receipt}
-      />
-      <Kpi etiqueta="# de Tickets" valor={animada(n.tickets, (x) => numero(Math.round(x)))} icono={Ticket} />
-      <Kpi etiqueta="Promedio UPT" valor={animada(n.upt, (x) => decimales.format(x))} icono={Layers} />
-      <Kpi
-        etiqueta="Total Products"
-        valor={animada(n.unidades, (x) => numero(Math.round(x)))}
-        icono={Package}
-      />
+      {tarjetas.map((t) => {
+        const v = n[t.clave];
+        return (
+          <div key={t.clave} className="min-w-0 space-y-2 rounded-2xl border border-line bg-surface p-4 shadow-card">
+            <h2 className="text-sm font-semibold text-ink-2">{t.etiqueta}</h2>
+            <p className="font-display text-[clamp(1.5rem,2.2vw,2.25rem)] leading-none font-black tabular">
+              {v === null ? '—' : <Cifra valor={v} formato={t.formato} />}
+            </p>
+            <LineaComparacion actual={v} clave={t.clave} formato={t.formato} c={comparacion} />
+            {t.nota && <p className="text-[11px] text-muted-foreground">{t.nota}</p>}
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -55,11 +104,12 @@ export function ContraMeta({ datos, filtrosLinea }: { datos: ReturnType<typeof c
   const { meta, pe, diasSinMeta } = datos;
   const sinComparar = filtrosLinea.length > 0;
   return (
-    <Tarjeta
+    <TarjetaBi
+      ancho={4}
       titulo="Contra meta y punto de equilibrio"
       descripcion="Venta de los días con corte del POS contra su meta y su P.E. La meta del periodo incluye los días que faltan."
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <Panel
           titulo="Meta de venta"
           tiendas={meta?.tiendas}
@@ -125,7 +175,7 @@ export function ContraMeta({ datos, filtrosLinea }: { datos: ReturnType<typeof c
           )}
         </ul>
       )}
-    </Tarjeta>
+    </TarjetaBi>
   );
 }
 
@@ -208,11 +258,11 @@ export interface FilaShare {
 }
 
 /** Barras horizontales de magnitud (un solo tono) con venta y porcentaje, en la escala de la fila mayor. */
-export function BarrasShare({ titulo, filas }: { titulo: string; filas: FilaShare[] }) {
+export function BarrasShare({ titulo, filas }: { titulo?: string; filas: FilaShare[] }) {
   const max = Math.max(0, ...filas.map((f) => f.share ?? 0));
   return (
     <div className="min-w-0 space-y-3">
-      <h3 className="text-sm font-semibold text-ink-2">{titulo}</h3>
+      {titulo && <h3 className="text-sm font-semibold text-ink-2">{titulo}</h3>}
       {filas.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
       ) : (
@@ -249,63 +299,72 @@ export function BarrasShare({ titulo, filas }: { titulo: string; filas: FilaShar
 
 const NOMBRE_CAFE: Record<string, string> = { Sí: 'Con café', No: 'Sin café' };
 
-/** Bloque 3. Recibe las filas ya con su share (conShare). Grupos y café: composición con color fijo por entidad. */
-export function Mezcla({
-  grupos,
-  cafe,
-  master,
-}: {
-  grupos: { grupo: string; venta_cent: number; share: number | null }[];
-  cafe: { cafe: string; venta_cent: number; share: number | null }[];
-  master: { categoria: string; venta_cent: number; share: number | null }[];
-}) {
+type Grupos = { grupo: string; venta_cent: number; share: number | null }[];
+type Cafes = { cafe: string; venta_cent: number; share: number | null }[];
+type Masters = { categoria: string; venta_cent: number; share: number | null }[];
+
+/** Bloque 3, tarjeta 1. Recibe las filas ya con su share (conShare). Composición con color fijo por entidad. */
+export function MezclaGrupos({ grupos }: { grupos: Grupos }) {
   return (
-    <Tarjeta titulo="Mezcla de venta" descripcion="Venta neta y su participación.">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-8">
-          {grupos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
-          ) : (
-            <BarraApilada
-              titulo="Comida, Bebida, Combo y Merch"
-              moneda="MXN"
-              segmentos={enOrden(grupos, GRUPOS, (g) => g.grupo).map((g) => ({
-                clave: g.grupo,
-                etiqueta: g.grupo,
-                color: colorDe(GRUPOS, g.grupo),
-                ventaCent: g.venta_cent,
-                pedidos: null,
-                participacion: g.share,
-              }))}
-            />
-          )}
-          {cafe.length === 0 ? null : (
-            <BarraApilada
-              titulo="Bebidas con café y sin café"
-              moneda="MXN"
-              segmentos={[...cafe]
-                .sort((a, b) => (a.cafe === 'Sí' ? -1 : b.cafe === 'Sí' ? 1 : 0))
-                .map((c) => ({
-                  clave: c.cafe,
-                  etiqueta: NOMBRE_CAFE[c.cafe] ?? c.cafe,
-                  color: CAFE[c.cafe] ?? SIN_COLOR,
-                  ventaCent: c.venta_cent,
-                  pedidos: null,
-                  participacion: c.share,
-                }))}
-            />
-          )}
-        </div>
-        <BarrasShare
-          titulo="Categoría Master Franchise MX"
-          filas={master.map((m) => ({
-            clave: m.categoria,
-            etiqueta: m.categoria,
-            ventaCent: m.venta_cent,
-            share: m.share,
+    <TarjetaBi ancho={4} titulo="Comida, Bebida, Combo y Merch" descripcion="Venta neta y su participación.">
+      {grupos.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
+      ) : (
+        <BarraApilada
+          apilada
+          moneda="MXN"
+          segmentos={enOrden(grupos, GRUPOS, (g) => g.grupo).map((g) => ({
+            clave: g.grupo,
+            etiqueta: g.grupo,
+            color: colorDe(GRUPOS, g.grupo),
+            ventaCent: g.venta_cent,
+            pedidos: null,
+            participacion: g.share,
           }))}
         />
-      </div>
-    </Tarjeta>
+      )}
+    </TarjetaBi>
+  );
+}
+
+/** Bloque 3, tarjeta 2: bebidas con café y sin café. */
+export function MezclaCafe({ cafe }: { cafe: Cafes }) {
+  return (
+    <TarjetaBi ancho={4} titulo="Bebidas con café y sin café" descripcion="Venta neta y su participación.">
+      {cafe.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
+      ) : (
+        <BarraApilada
+          apilada
+          moneda="MXN"
+          segmentos={[...cafe]
+            .sort((a, b) => (a.cafe === 'Sí' ? -1 : b.cafe === 'Sí' ? 1 : 0))
+            .map((c) => ({
+              clave: c.cafe,
+              etiqueta: NOMBRE_CAFE[c.cafe] ?? c.cafe,
+              color: CAFE[c.cafe] ?? SIN_COLOR,
+              ventaCent: c.venta_cent,
+              pedidos: null,
+              participacion: c.share,
+            }))}
+        />
+      )}
+    </TarjetaBi>
+  );
+}
+
+/** Bloque 3, tarjeta 3: categoría Master Franchise MX. */
+export function CategoriaMaster({ master }: { master: Masters }) {
+  return (
+    <TarjetaBi ancho={6} titulo="Categoría Master Franchise MX" descripcion="Venta neta y su participación.">
+      <BarrasShare
+        filas={master.map((m) => ({
+          clave: m.categoria,
+          etiqueta: m.categoria,
+          ventaCent: m.venta_cent,
+          share: m.share,
+        }))}
+      />
+    </TarjetaBi>
   );
 }

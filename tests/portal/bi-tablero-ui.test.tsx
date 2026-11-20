@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const replace = vi.fn();
 // La URL del navegador; una prueba la cambia para revisar las claves de fecha.
@@ -51,13 +51,23 @@ const tablero = {
     fuentes: [],
   },
 };
+const COMPARACION_OK = {
+  periodo: { desde: '2026-10-26', hasta: '2026-10-29' },
+  horaCorte: null,
+  kpis: { venta_cent: 25000, venta_bruta_cent: 26000, tickets: 5, lineas: 6, unidades: 7 },
+  cargas: { esperados: 4, con_carga: 4, incompletos: 0 },
+};
+const comparacion = { valor: COMPARACION_OK as unknown };
 beforeEach(() => {
   nav.qs = 'cafe=si';
+  comparacion.valor = { ...COMPARACION_OK };
   global.fetch = vi.fn(
     async (url: string) =>
       new Response(
         JSON.stringify(
-          String(url).includes('tendencias')
+          String(url).includes('/api/bi/kpis')
+            ? comparacion.valor
+            : String(url).includes('tendencias')
             ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
             : tablero,
         ),
@@ -205,7 +215,7 @@ describe('<TableroMexico> con errores de lectura', () => {
 });
 
 describe('<TableroMexico> con datos en todos los bloques', () => {
-  it('pinta gráficas, ranking (20 y «Ver todos») y tendencias por año', async () => {
+  it('pinta gráficas, ranking (10 y «Ver todas») y tendencias por año', async () => {
     const ranking = Array.from({ length: 25 }, (_, i) => ({
       codigo: `P${i}`,
       nombre: `Producto ${i}`,
@@ -257,17 +267,57 @@ describe('<TableroMexico> con datos en todos los bloques', () => {
         ),
     ) as never;
     render(<TableroMexico />);
-    await waitFor(() => expect(screen.getByText('Ventas por Año')).toBeTruthy());
-    expect(screen.getByText('Producto 24')).toBeTruthy(); // el de mayor venta
-    expect(screen.queryByText('Producto 0')).toBeNull(); // fuera de los 20 primeros
-    fireEvent.click(screen.getByRole('button', { name: /Ver todos/ }));
-    expect(screen.getByText('Producto 0')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas por año' })).toBeTruthy());
+    const ranking10 = within(screen.getByRole('region', { name: 'Ranking de Productos' }));
+    expect(ranking10.getByText('Producto 24')).toBeTruthy(); // el de mayor venta
+    expect(ranking10.getByText('Producto 15')).toBeTruthy(); // el décimo
+    expect(ranking10.queryByText('Producto 14')).toBeNull(); // fuera de los 10 primeros
+    fireEvent.click(ranking10.getByRole('button', { name: /Ver todas \(\d+\)/ }));
+    expect(ranking10.getByText('Producto 0')).toBeTruthy();
     expect(screen.getByRole('img', { name: /Venta neta por mes, una línea por año/ })).toBeTruthy();
     expect(
       screen.getByRole('img', { name: /Venta neta \(columnas\) y tickets \(línea\) por día\./ }),
     ).toBeTruthy();
     expect(screen.getAllByText('Ticket promedio').length).toBeGreaterThan(0);
     expect(screen.getByText('Con café')).toBeTruthy();
+  });
+
+  it('cada gráfica y tabla es su propia tarjeta del mosaico', async () => {
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas vs transacciones por día' })).toBeTruthy());
+    for (const t of ['Contra meta y punto de equilibrio', 'Comida, Bebida, Combo y Merch', 'Bebidas con café y sin café',
+      'Método de pago', 'Categoría Master Franchise MX', 'Ranking de Productos', 'Venta por día de la semana',
+      'Venta por hora', 'Venta por tienda agrupada por tipo', 'Promociones', 'Promociones por tienda',
+      'Método de pago por tienda', 'Ventas por año', 'Ventas por semana'])
+      expect(screen.getByRole('region', { name: t })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Tiempo y pago' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Mezcla de venta' })).toBeNull();
+  });
+
+  it('cada gráfica conserva su tabla equivalente con nombre accesible', async () => {
+    const conDias = {
+      ...tablero,
+      tablero: { ...tablero.tablero, por_fecha: [{ fecha: '2026-11-02', venta_cent: 30000, tickets: 4 }] },
+    };
+    global.fetch = vi.fn(
+      async (url: string) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes('/api/bi/kpis')
+              ? comparacion.valor
+              : String(url).includes('tendencias')
+              ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
+              : conDias,
+          ),
+          { status: 200 },
+        ),
+    ) as never;
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas vs transacciones por día' })).toBeTruthy());
+    const r = screen.getByRole('region', { name: 'Ventas vs transacciones por día' });
+    const resumen = within(r).getByText('Ver como tabla');
+    fireEvent.click(resumen);
+    expect(within(r).getByRole('table')).toBeTruthy();
   });
 });
 
@@ -282,5 +332,37 @@ describe('<TableroMexico> con periodo rechazado (400)', () => {
     await waitFor(() => expect(screen.getByText(/Revisa el filtro Rango de Fechas/)).toBeTruthy());
     expect(screen.getByText(/El periodo no es válido/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull();
+  });
+});
+
+describe('<TableroMexico> comparación de KPI', () => {
+  it('pide /api/bi/kpis con los mismos filtros y pinta ▲/▼ contra el periodo anterior', async () => {
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText('▲').length).toBeGreaterThan(0)); // venta 300.00 vs 250.00
+    expect(screen.getAllByText('sube').length).toBeGreaterThan(0);
+    expect((global.fetch as any).mock.calls.map((c: unknown[]) => String(c[0]))).toContain('/api/bi/kpis?cafe=si');
+    expect(screen.getAllByText('▼').length).toBeGreaterThan(0); // tickets 4 vs 5
+    expect(screen.getAllByText('baja').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^20\.0/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/lun 26 de oct.*jue 29 de oct/).length).toBeGreaterThan(0);
+  });
+
+  it('días faltantes en el periodo anterior: «Sin comparación: faltan días»', async () => {
+    comparacion.valor = { ...COMPARACION_OK, cargas: { esperados: 4, con_carga: 3, incompletos: 0 } };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText(/Sin comparación: faltan días/).length).toBe(5));
+  });
+
+  it('periodo anterior sin venta: «Sin comparación», nunca infinito', async () => {
+    comparacion.valor = { ...COMPARACION_OK, kpis: { venta_cent: 0, venta_bruta_cent: 0, tickets: 0, lineas: 0, unidades: 0 } };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText('Sin comparación').length).toBe(5));
+    expect(screen.queryByText(/∞|Infinity|NaN/)).toBeNull();
+  });
+
+  it('con filtro de semanas lo dice', async () => {
+    comparacion.valor = { sinComparacion: 'semanas' };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText('Sin comparación con filtro de semanas').length).toBe(5));
   });
 });

@@ -19,6 +19,22 @@ export interface RpcTablero {
   metas?: RpcMetas;
 }
 
+/** bi_kpis (migración 76): los mismos kpis y cargas de bi_tablero para otro periodo. */
+export interface RpcKpis {
+  kpis: RpcTablero['kpis'];
+  cargas: RpcTablero['cargas'];
+}
+
+/** /api/bi/kpis: KPI del periodo anterior. Con filtro de semanas no hay periodo anterior claro. */
+export type RespuestaKpis =
+  | { sinComparacion: 'semanas' }
+  | {
+      periodo: { desde: string; hasta: string };
+      horaCorte: number | null;
+      kpis: RpcKpis['kpis'] | null;
+      cargas: RpcKpis['cargas'] | null;
+    };
+
 /**
  * Metas y P.E. de las tiendas filtradas (solo filtros de tienda, día de la semana y semana). «Corriente» = solo los
  * días de tienda con carga del POS, con la venta de esos mismos días.

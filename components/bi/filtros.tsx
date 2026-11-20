@@ -1,14 +1,14 @@
 'use client';
 
-// Barra de filtros del tablero BI: 5 visibles + 12 desplegables, chips y Limpiar. Controlada:
+// Barra de filtros del tablero BI en píldoras: 5 visibles + 12 tras «Más filtros», con Limpiar. Controlada:
 // el orquestador escribe la URL a partir de `alCambiar`.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { RpcOpciones } from '@/lib/bi/tipos';
 import { FR_POR_OMISION, hoyMexico, leerUrl, OPCIONES_FR, resolverPeriodo, type FiltrosUrl } from '@/lib/bi/url';
-import { Button } from '@/components/ui/button';
-import { SelectorMultiple } from './selector-multiple';
+import { fechaCorta } from '@/components/sucursales/formato';
+import { Pildora, ListaUnica } from './pildora-filtro';
+import { ListaMultiple } from './selector-multiple';
 
-const RETRASO_MS = 400;
 const DIAS_SEMANA = [
   { v: 1, n: 'Lunes' }, { v: 2, n: 'Martes' }, { v: 3, n: 'Miércoles' }, { v: 4, n: 'Jueves' },
   { v: 5, n: 'Viernes' }, { v: 6, n: 'Sábado' }, { v: 0, n: 'Domingo' },
@@ -21,7 +21,7 @@ const CAFE = ['Sí', 'No'];
 const MADURACION = ['Menor de 3 meses', 'Mayor de 3 meses'];
 
 const CLASE_CAMPO = 'w-full rounded-md border border-line bg-surface px-3 py-2 text-sm';
-const CLASE_ETIQUETA = 'mb-1 block text-xs font-semibold text-ink-2';
+const CLASE_BOTON = 'rounded-md bg-ink px-3 py-1.5 text-sm font-semibold text-surface';
 
 const dinero = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
 const textoMonto = (min?: number, max?: number) =>
@@ -31,29 +31,20 @@ const textoMonto = (min?: number, max?: number) =>
       ? `desde ${dinero(min)}`
       : `hasta ${dinero(max ?? 0)}`;
 
-interface Chip {
-  id: string;
-  filtro: string;
-  valor: string;
-  quitar: () => FiltrosUrl;
-}
+/** Texto de una píldora de lista: «Etiqueta», «Etiqueta: Ventura» o «Etiqueta: 3». */
+const textoLista = (etiqueta: string, valores: (string | number)[], nombre: (v: string) => string) =>
+  valores.length === 0 ? etiqueta : valores.length === 1 ? `${etiqueta}: ${nombre(String(valores[0]))}` : `${etiqueta}: ${valores.length}`;
 
-function CampoSelect(props: {
+type FiltroLista = {
   id: string;
   etiqueta: string;
-  value: string;
-  onChange: (v: string) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-w-0">
-      <label htmlFor={props.id} className={CLASE_ETIQUETA}>{props.etiqueta}</label>
-      <select id={props.id} value={props.value} onChange={(e) => props.onChange(e.target.value)} className={CLASE_CAMPO}>
-        {props.children}
-      </select>
-    </div>
-  );
-}
+  valores: string[];
+  elegidos: string[];
+  nombres?: Record<string, string>;
+  buscar?: boolean;
+  poner: (v: string[]) => Partial<FiltrosUrl>;
+  extra: boolean;
+};
 
 export function FiltrosBi({
   filtros,
@@ -68,8 +59,6 @@ export function FiltrosBi({
   const [errorRango, setErrorRango] = useState<string | null>(null);
   const [rango, setRango] = useState({ desde: filtros.desde ?? '', hasta: filtros.hasta ?? '' });
   const [monto, setMonto] = useState({ min: filtros.montoMin?.toString() ?? '', max: filtros.montoMax?.toString() ?? '' });
-  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendiente = useRef<Partial<FiltrosUrl> | null>(null);
 
   // La URL manda: si cambia desde fuera, los borradores se alinean.
   useEffect(() => setRango({ desde: filtros.desde ?? '', hasta: filtros.hasta ?? '' }), [filtros.desde, filtros.hasta]);
@@ -77,32 +66,15 @@ export function FiltrosBi({
     () => setMonto({ min: filtros.montoMin?.toString() ?? '', max: filtros.montoMax?.toString() ?? '' }),
     [filtros.montoMin, filtros.montoMax],
   );
-  useEffect(() => () => { if (temporizador.current) clearTimeout(temporizador.current); }, []);
 
-  const cancelarPendiente = () => {
-    if (temporizador.current) clearTimeout(temporizador.current);
-    temporizador.current = null;
-    pendiente.current = null;
-  };
   const sincronizarBorradores = (f: FiltrosUrl) => {
     setRango({ desde: f.desde ?? '', hasta: f.hasta ?? '' });
     setMonto({ min: f.montoMin?.toString() ?? '', max: f.montoMax?.toString() ?? '' });
   };
   const aplicar = (cambio: Partial<FiltrosUrl>) => {
-    // Un monto por aplicar viaja en esta misma llamada en vez de perderse.
-    const siguiente = { ...filtros, ...pendiente.current, ...cambio };
-    cancelarPendiente();
+    const siguiente = { ...filtros, ...cambio };
     sincronizarBorradores(siguiente);
     alCambiar(siguiente);
-  };
-  const aplicarConRetraso = (cambio: Partial<FiltrosUrl>) => {
-    cancelarPendiente();
-    pendiente.current = cambio;
-    temporizador.current = setTimeout(() => {
-      temporizador.current = null;
-      pendiente.current = null;
-      alCambiar({ ...filtros, ...cambio });
-    }, RETRASO_MS);
   };
 
   const tiendas = useMemo(() => {
@@ -113,222 +85,244 @@ export function FiltrosBi({
 
   const num = (v: string[]) => v.map(Number);
 
-  const cambiarRango = (desde: string, hasta: string) => {
-    setRango({ desde, hasta });
-    if (desde && hasta) {
-      // Periodo inválido o de más de 1,100 días: mensaje junto al filtro y sin llamar a la base.
-      const p = resolverPeriodo({ ...filtros, fr: undefined, desde, hasta }, hoyMexico(new Date()));
-      if (!p.ok) {
-        setErrorRango(p.error);
-        return;
-      }
+  const aplicarRango = (cerrar: () => void) => {
+    const { desde, hasta } = rango;
+    if (!desde && !hasta) {
       setErrorRango(null);
-      aplicar({ fr: undefined, desde, hasta });
-    } else {
-      setErrorRango(null);
-      if (!desde && !hasta && filtros.desde) aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined });
+      if (filtros.desde) aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined });
+      cerrar();
+      return;
     }
+    if (!desde || !hasta) {
+      setErrorRango('Elige las dos fechas.');
+      return;
+    }
+    // Periodo inválido o de más de 1,100 días: mensaje dentro del recuadro y sin llamar a la base.
+    const p = resolverPeriodo({ ...filtros, fr: undefined, desde, hasta }, hoyMexico(new Date()));
+    if (!p.ok) {
+      setErrorRango(p.error);
+      return;
+    }
+    setErrorRango(null);
+    aplicar({ fr: undefined, desde, hasta });
+    cerrar();
   };
-  const cambiarMonto = (lado: 'min' | 'max', texto: string) => {
-    const siguiente = { ...monto, [lado]: texto };
-    setMonto(siguiente);
+  const aplicarMonto = (cerrar: () => void) => {
     const leer = (s: string) => (s.trim() !== '' && Number.isFinite(Number(s)) && Number(s) >= 0 ? Number(s) : undefined);
-    aplicarConRetraso({ montoMin: leer(siguiente.min), montoMax: leer(siguiente.max) });
+    aplicar({ montoMin: leer(monto.min), montoMax: leer(monto.max) });
+    cerrar();
   };
 
-  const chips: Chip[] = [];
-  const sinFr = { fr: FR_POR_OMISION, desde: undefined, hasta: undefined };
-  if (filtros.desde && filtros.hasta)
-    chips.push({ id: 'rango', filtro: 'Rango de Fechas', valor: `${filtros.desde} – ${filtros.hasta}`, quitar: () => ({ ...filtros, ...sinFr }) });
-  else if (filtros.fr && filtros.fr !== FR_POR_OMISION)
-    chips.push({
-      id: 'fr',
-      filtro: 'Fecha Relativa',
-      valor: OPCIONES_FR.find((o) => o.clave === filtros.fr)?.etiqueta ?? filtros.fr,
-      quitar: () => ({ ...filtros, fr: FR_POR_OMISION }),
-    });
-  if (filtros.comparable !== undefined)
-    chips.push({
-      id: 'comp',
-      filtro: 'Comparable',
-      valor: filtros.comparable ? 'Comparable' : 'No Comparable',
-      quitar: () => ({ ...filtros, comparable: undefined }),
-    });
-  const chipsLista = <T extends string | number>(
-    clave: string,
-    filtro: string,
-    valores: T[],
-    texto: (v: T) => string,
-    sin: (resto: T[]) => Partial<FiltrosUrl>,
-  ) =>
-    valores.forEach((v) =>
-      chips.push({
-        id: `${clave}-${v}`,
-        filtro,
-        valor: texto(v),
-        quitar: () => ({ ...filtros, ...sin(valores.filter((x) => x !== v)) }),
-      }),
-    );
-  chipsLista('anios', 'Años Operando', filtros.aniosOperando, String, (r) => ({ aniosOperando: r }));
-  chipsLista('dias', 'Día de la Semana', filtros.dias, (d) => NOMBRE_DIA[String(d)] ?? String(d), (r) => ({ dias: r }));
-  chipsLista('tiendas', 'Nombre de Tienda', filtros.companias, (c) => tiendas[String(c)] ?? `Tienda ${c}`, (r) => ({ companias: r }));
-  chipsLista('franq', 'Franquiciatario', filtros.franquiciatarios, String, (r) => ({ franquiciatarios: r }));
-  chipsLista('tipo', 'Franquicia o Sucursales Propias', filtros.tipos, String, (r) => ({ tipos: r }));
-  chipsLista('cat', 'Categoría Master Franchise MX', filtros.categorias, String, (r) => ({ categorias: r }));
-  chipsLista('grupo', 'Comida, Bebida, Combo y Merch', filtros.grupos, String, (r) => ({ grupos: r }));
-  chipsLista('cafe', 'Contiene Café', filtros.cafe, String, (r) => ({ cafe: r }));
-  chipsLista('prod', 'Product', filtros.productos, String, (r) => ({ productos: r }));
-  chipsLista('pago', 'Método de Pago', filtros.pagos, String, (r) => ({ pagos: r }));
-  chipsLista('hora', 'Hora', filtros.horas, (h) => NOMBRE_HORA[String(h)] ?? String(h), (r) => ({ horas: r }));
-  chipsLista('mad', 'Estatus de Maduración', filtros.maduracion, String, (r) => ({ maduracion: r }));
-  if (filtros.montoMin !== undefined || filtros.montoMax !== undefined)
-    chips.push({
-      id: 'monto',
-      filtro: 'Net Amount (Local)',
-      valor: textoMonto(filtros.montoMin, filtros.montoMax),
-      quitar: () => ({ ...filtros, montoMin: undefined, montoMax: undefined }),
-    });
-  chipsLista('sem', 'Semanas y año', filtros.semanas, String, (r) => ({ semanas: r }));
+  // Estado de «hay algo activo» (los chips ya no se pintan).
+  const chips: { id: string }[] = [];
+  const hayRango = Boolean(filtros.desde && filtros.hasta);
+  if (hayRango) chips.push({ id: 'rango' });
+  else if (filtros.fr && filtros.fr !== FR_POR_OMISION) chips.push({ id: 'fr' });
+  if (filtros.comparable !== undefined) chips.push({ id: 'comp' });
 
   const o = opciones;
+  const listas: FiltroLista[] = [
+    { id: 'anios', etiqueta: 'Años Operando', valores: ANIOS, elegidos: filtros.aniosOperando.map(String), poner: (v) => ({ aniosOperando: num(v) }), extra: false },
+    { id: 'dias', etiqueta: 'Día de la Semana', valores: DIAS_SEMANA.map((d) => String(d.v)), nombres: NOMBRE_DIA, elegidos: filtros.dias.map(String), poner: (v) => ({ dias: num(v) }), extra: false },
+    { id: 'tiendas', etiqueta: 'Nombre de Tienda', valores: Object.keys(tiendas), nombres: tiendas, buscar: true, elegidos: filtros.companias.map(String), poner: (v) => ({ companias: num(v) }), extra: true },
+    { id: 'franq', etiqueta: 'Franquiciatario', valores: o?.franquiciatarios ?? [], buscar: true, elegidos: filtros.franquiciatarios, poner: (v) => ({ franquiciatarios: v }), extra: true },
+    { id: 'tipo', etiqueta: 'Franquicia o Sucursales Propias', valores: o?.tipos ?? [], elegidos: filtros.tipos, poner: (v) => ({ tipos: v }), extra: true },
+    { id: 'cat', etiqueta: 'Categoría Master Franchise MX', valores: o?.categorias ?? [], elegidos: filtros.categorias, poner: (v) => ({ categorias: v }), extra: true },
+    { id: 'grupo', etiqueta: 'Comida, Bebida, Combo y Merch', valores: o?.grupos ?? [], elegidos: filtros.grupos, poner: (v) => ({ grupos: v }), extra: true },
+    { id: 'cafe', etiqueta: 'Contiene Café', valores: CAFE, elegidos: filtros.cafe, poner: (v) => ({ cafe: v as ('Sí' | 'No')[] }), extra: true },
+    { id: 'prod', etiqueta: 'Product', valores: o?.productos ?? [], buscar: true, elegidos: filtros.productos, poner: (v) => ({ productos: v }), extra: true },
+    { id: 'pago', etiqueta: 'Método de Pago', valores: o?.pagos ?? [], elegidos: filtros.pagos, poner: (v) => ({ pagos: v }), extra: true },
+    { id: 'hora', etiqueta: 'Hora', valores: HORAS, nombres: NOMBRE_HORA, elegidos: filtros.horas.map(String), poner: (v) => ({ horas: num(v) }), extra: true },
+    { id: 'mad', etiqueta: 'Estatus de Maduración', valores: MADURACION, elegidos: filtros.maduracion, poner: (v) => ({ maduracion: v }), extra: true },
+    { id: 'sem', etiqueta: 'Semanas y año', valores: o?.semanas ?? [], buscar: true, elegidos: filtros.semanas, poner: (v) => ({ semanas: v }), extra: true },
+  ];
+  const hayMonto = filtros.montoMin !== undefined || filtros.montoMax !== undefined;
+  const activosExtra = listas.filter((l) => l.extra && l.elegidos.length > 0).length + (hayMonto ? 1 : 0);
+  const hayActivos = chips.length > 0 || listas.some((l) => l.elegidos.length > 0) || hayMonto;
+
+  const pildoraLista = (id: string) => {
+    const l = listas.find((x) => x.id === id)!;
+    const nombre = (v: string) => l.nombres?.[v] ?? v;
+    const texto = textoLista(l.etiqueta, l.elegidos, nombre);
+    return (
+      <Pildora
+        key={l.id}
+        etiqueta={l.etiqueta}
+        texto={texto}
+        activa={l.elegidos.length > 0}
+        alQuitar={() => aplicar(l.poner([]))}
+        quitarEtiqueta={`Quitar ${texto}`}
+      >
+        {() => (
+          <ListaMultiple
+            etiqueta={l.etiqueta}
+            valores={l.valores}
+            elegidos={l.elegidos}
+            nombres={l.nombres}
+            buscar={l.buscar}
+            alCambiar={(v) => aplicar(l.poner(v))}
+          />
+        )}
+      </Pildora>
+    );
+  };
+
+  const frActual = filtros.fr ?? FR_POR_OMISION;
+  const textoRango = hayRango ? `${fechaCorta(filtros.desde!)} – ${fechaCorta(filtros.hasta!)}` : '';
+  const textoFr = hayRango ? textoRango : (OPCIONES_FR.find((op) => op.clave === frActual)?.etiqueta ?? frActual);
+  const compValor = filtros.comparable === undefined ? '' : filtros.comparable ? 'si' : 'no';
+  const OPCIONES_COMP = [
+    { valor: '', texto: 'Todas' },
+    { valor: 'si', texto: 'Comparable' },
+    { valor: 'no', texto: 'No Comparable' },
+  ];
+
   return (
-    <section aria-label="Filtros" className="z-20 rounded-2xl border border-line bg-surface px-4 py-3 lg:sticky lg:top-[65px]">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <CampoSelect
-          id="bi-fr"
+    <section aria-label="Filtros" className="relative z-20 rounded-2xl border border-line bg-surface px-4 py-3 lg:sticky lg:top-[65px]">
+      <div className="flex flex-wrap items-center gap-2">
+        <Pildora
           etiqueta="Fecha Relativa"
-          value={filtros.desde && filtros.hasta ? '' : (filtros.fr ?? FR_POR_OMISION)}
-          onChange={(v) => aplicar({ fr: v, desde: undefined, hasta: undefined })}
+          texto={textoFr}
+          activa={hayRango || frActual !== FR_POR_OMISION}
+          alQuitar={() => aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined })}
+          quitarEtiqueta={`Quitar Fecha Relativa: ${textoFr}`}
         >
-          {filtros.desde && filtros.hasta && <option value="" disabled>Rango personalizado</option>}
-          {OPCIONES_FR.map((op) => <option key={op.clave} value={op.clave}>{op.etiqueta}</option>)}
-        </CampoSelect>
-        <CampoSelect
-          id="bi-comp"
-          etiqueta="Comparable"
-          value={filtros.comparable === undefined ? '' : filtros.comparable ? 'si' : 'no'}
-          onChange={(v) => aplicar({ comparable: v === 'si' ? true : v === 'no' ? false : undefined })}
-        >
-          <option value="">Todas</option>
-          <option value="si">Comparable</option>
-          <option value="no">No Comparable</option>
-        </CampoSelect>
-        <SelectorMultiple
-          etiqueta="Años Operando"
-          valores={ANIOS}
-          elegidos={filtros.aniosOperando.map(String)}
-          alCambiar={(v) => aplicar({ aniosOperando: num(v) })}
-        />
-        <fieldset className="min-w-0">
-          <legend className={CLASE_ETIQUETA}>Rango de Fechas</legend>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="min-w-0">
-              <label htmlFor="bi-desde" className="sr-only">Desde</label>
-              <input id="bi-desde" type="date" value={rango.desde} onChange={(e) => cambiarRango(e.target.value, rango.hasta)} className={CLASE_CAMPO} />
-            </div>
-            <div className="min-w-0">
-              <label htmlFor="bi-hasta" className="sr-only">Hasta</label>
-              <input id="bi-hasta" type="date" value={rango.hasta} onChange={(e) => cambiarRango(rango.desde, e.target.value)} className={CLASE_CAMPO} />
-            </div>
-          </div>
-          {errorRango && (
-            <p role="alert" className="mt-1 text-xs font-semibold text-bad">
-              {errorRango}
-            </p>
+          {(cerrar) => (
+            <ListaUnica
+              opciones={OPCIONES_FR.map((op) => ({ valor: op.clave, texto: op.etiqueta }))}
+              valor={hayRango ? '' : frActual}
+              alElegir={(v) => {
+                aplicar({ fr: v, desde: undefined, hasta: undefined });
+                cerrar();
+              }}
+            />
           )}
-        </fieldset>
-        <SelectorMultiple
-          etiqueta="Día de la Semana"
-          valores={DIAS_SEMANA.map((d) => String(d.v))}
-          nombres={NOMBRE_DIA}
-          elegidos={filtros.dias.map(String)}
-          alCambiar={(v) => aplicar({ dias: num(v) })}
-        />
-      </div>
-
-      {masFiltros && (
-        <div id="bi-mas-filtros" className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SelectorMultiple
-            etiqueta="Nombre de Tienda"
-            valores={Object.keys(tiendas)}
-            nombres={tiendas}
-            buscar
-            elegidos={filtros.companias.map(String)}
-            alCambiar={(v) => aplicar({ companias: num(v) })}
-          />
-          <SelectorMultiple etiqueta="Franquiciatario" valores={o?.franquiciatarios ?? []} buscar elegidos={filtros.franquiciatarios} alCambiar={(v) => aplicar({ franquiciatarios: v })} />
-          <SelectorMultiple etiqueta="Franquicia o Sucursales Propias" valores={o?.tipos ?? []} elegidos={filtros.tipos} alCambiar={(v) => aplicar({ tipos: v })} />
-          <SelectorMultiple etiqueta="Categoría Master Franchise MX" valores={o?.categorias ?? []} elegidos={filtros.categorias} alCambiar={(v) => aplicar({ categorias: v })} />
-          <SelectorMultiple etiqueta="Comida, Bebida, Combo y Merch" valores={o?.grupos ?? []} elegidos={filtros.grupos} alCambiar={(v) => aplicar({ grupos: v })} />
-          <SelectorMultiple etiqueta="Contiene Café" valores={CAFE} elegidos={filtros.cafe} alCambiar={(v) => aplicar({ cafe: v as ('Sí' | 'No')[] })} />
-          <SelectorMultiple etiqueta="Product" valores={o?.productos ?? []} buscar elegidos={filtros.productos} alCambiar={(v) => aplicar({ productos: v })} />
-          <SelectorMultiple etiqueta="Método de Pago" valores={o?.pagos ?? []} elegidos={filtros.pagos} alCambiar={(v) => aplicar({ pagos: v })} />
-          <SelectorMultiple
-            etiqueta="Hora"
-            valores={HORAS}
-            nombres={NOMBRE_HORA}
-            elegidos={filtros.horas.map(String)}
-            alCambiar={(v) => aplicar({ horas: num(v) })}
-          />
-          <SelectorMultiple etiqueta="Estatus de Maduración" valores={MADURACION} elegidos={filtros.maduracion} alCambiar={(v) => aplicar({ maduracion: v })} />
-          <fieldset className="min-w-0">
-            <legend className={CLASE_ETIQUETA}>Net Amount (Local)</legend>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="min-w-0">
-                <label htmlFor="bi-monto-min" className="sr-only">Net Amount mínimo</label>
-                <input id="bi-monto-min" type="number" min={0} step={0.01} placeholder="Mín." value={monto.min} onChange={(e) => cambiarMonto('min', e.target.value)} className={CLASE_CAMPO} />
-              </div>
-              <div className="min-w-0">
-                <label htmlFor="bi-monto-max" className="sr-only">Net Amount máximo</label>
-                <input id="bi-monto-max" type="number" min={0} step={0.01} placeholder="Máx." value={monto.max} onChange={(e) => cambiarMonto('max', e.target.value)} className={CLASE_CAMPO} />
-              </div>
+        </Pildora>
+        <Pildora
+          etiqueta="Comparable"
+          texto={compValor ? `Comparable: ${OPCIONES_COMP.find((c) => c.valor === compValor)?.texto}` : 'Comparable'}
+          activa={compValor !== ''}
+          alQuitar={() => aplicar({ comparable: undefined })}
+          quitarEtiqueta={`Quitar Comparable: ${OPCIONES_COMP.find((c) => c.valor === compValor)?.texto}`}
+        >
+          {(cerrar) => (
+            <ListaUnica
+              opciones={OPCIONES_COMP}
+              valor={compValor}
+              alElegir={(v) => {
+                aplicar({ comparable: v === 'si' ? true : v === 'no' ? false : undefined });
+                cerrar();
+              }}
+            />
+          )}
+        </Pildora>
+        {pildoraLista('anios')}
+        <Pildora
+          etiqueta="Rango de Fechas"
+          texto={hayRango ? `Rango de Fechas: ${textoRango}` : 'Rango de Fechas'}
+          activa={hayRango}
+          alQuitar={() => aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined })}
+          quitarEtiqueta={`Quitar Rango de Fechas: ${textoRango}`}
+        >
+          {(cerrar) => (
+            <div className="grid gap-2">
+              <input
+                type="date"
+                aria-label="Desde"
+                value={rango.desde}
+                onChange={(e) => {
+                  setErrorRango(null);
+                  setRango({ ...rango, desde: e.target.value });
+                }}
+                className={CLASE_CAMPO}
+              />
+              <input
+                type="date"
+                aria-label="Hasta"
+                value={rango.hasta}
+                onChange={(e) => {
+                  setErrorRango(null);
+                  setRango({ ...rango, hasta: e.target.value });
+                }}
+                className={CLASE_CAMPO}
+              />
+              {errorRango && (
+                <p role="alert" className="text-xs font-semibold text-bad">
+                  {errorRango}
+                </p>
+              )}
+              <button type="button" onClick={() => aplicarRango(cerrar)} className={CLASE_BOTON}>
+                Aplicar
+              </button>
             </div>
-          </fieldset>
-          <SelectorMultiple etiqueta="Semanas y año" valores={o?.semanas ?? []} buscar elegidos={filtros.semanas} alCambiar={(v) => aplicar({ semanas: v })} />
-        </div>
-      )}
-
-      {/* Debajo de los filtros extra: en el celular quedan al final de la lista desplegada, no a la mitad. */}
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
+          )}
+        </Pildora>
+        {pildoraLista('dias')}
+        <button
+          type="button"
           aria-expanded={masFiltros}
           aria-controls="bi-mas-filtros"
           onClick={() => setMasFiltros((m) => !m)}
+          className="rounded-full border border-dashed border-line px-3 py-1.5 text-sm font-semibold text-ink-2"
         >
-          {masFiltros ? 'Mostrar menos filtros' : 'Mostrar más filtros'}
-        </Button>
-        <button
-          type="button"
-          onClick={() => {
-            cancelarPendiente();
-            const limpio = leerUrl(new URLSearchParams());
-            sincronizarBorradores(limpio);
-            alCambiar(limpio);
-          }}
-          className="rounded-md px-3 py-1.5 text-sm font-semibold text-crema-strong underline"
-        >
-          Limpiar
+          {`Más filtros${activosExtra > 0 ? ` · ${activosExtra} activo${activosExtra > 1 ? 's' : ''}` : ''}`} ▾
         </button>
+        {hayActivos && (
+          <button
+            type="button"
+            onClick={() => {
+              const limpio = leerUrl(new URLSearchParams());
+              sincronizarBorradores(limpio);
+              setErrorRango(null);
+              alCambiar(limpio);
+            }}
+            className="px-2 py-1.5 text-sm font-semibold text-crema-strong underline"
+          >
+            Limpiar
+          </button>
+        )}
       </div>
 
-      {chips.length > 0 && (
-        <ul aria-label="Filtros activos" className="mt-3 flex flex-wrap gap-2">
-          {chips.map((c) => (
-            <li key={c.id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-crema-soft px-3 py-1 text-xs text-ink">
-              <span className="min-w-0 truncate">{c.filtro}: {c.valor}</span>
-              <button
-                type="button"
-                aria-label={`Quitar ${c.filtro}: ${c.valor}`}
-                onClick={() => aplicar(c.quitar())}
-                className="font-bold text-crema-strong"
-              >
-                <span aria-hidden="true">✕</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      {masFiltros && (
+        <div id="bi-mas-filtros" className="mt-2 flex flex-wrap gap-2">
+          {['tiendas', 'franq', 'tipo', 'cat', 'grupo', 'cafe', 'prod', 'pago', 'hora', 'mad'].map(pildoraLista)}
+          <Pildora
+            etiqueta="Net Amount (Local)"
+            texto={hayMonto ? `Net Amount (Local): ${textoMonto(filtros.montoMin, filtros.montoMax)}` : 'Net Amount (Local)'}
+            activa={hayMonto}
+            alQuitar={() => aplicar({ montoMin: undefined, montoMax: undefined })}
+            quitarEtiqueta={`Quitar Net Amount (Local): ${textoMonto(filtros.montoMin, filtros.montoMax)}`}
+          >
+            {(cerrar) => (
+              <div className="grid gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="Mín."
+                  aria-label="Net Amount mínimo"
+                  value={monto.min}
+                  onChange={(e) => setMonto({ ...monto, min: e.target.value })}
+                  className={CLASE_CAMPO}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="Máx."
+                  aria-label="Net Amount máximo"
+                  value={monto.max}
+                  onChange={(e) => setMonto({ ...monto, max: e.target.value })}
+                  className={CLASE_CAMPO}
+                />
+                <button type="button" onClick={() => aplicarMonto(cerrar)} className={CLASE_BOTON}>
+                  Aplicar
+                </button>
+              </div>
+            )}
+          </Pildora>
+          {pildoraLista('sem')}
+        </div>
       )}
     </section>
   );

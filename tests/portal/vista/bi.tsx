@@ -284,6 +284,21 @@ window.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   const url = String(entrada);
   const json = (cuerpo: unknown) =>
     new Response(JSON.stringify(cuerpo), { status: 200, headers: { 'content-type': 'application/json' } });
+  if (url.includes('/api/bi/kpis')) {
+    const k = respuestaTablero().tablero!.kpis;
+    return json({
+      periodo: { desde: '2026-10-29', hasta: '2026-11-11' },
+      horaCorte: 11,
+      kpis: {
+        venta_cent: Math.round(k.venta_cent * 0.94),
+        venta_bruta_cent: 0,
+        tickets: Math.round(k.tickets * 1.03),
+        lineas: k.lineas,
+        unidades: k.unidades,
+      },
+      cargas: { esperados: 1, con_carga: 1, incompletos: 0 },
+    });
+  }
   if (url.includes('/api/bi/tablero')) return json(respuestaTablero());
   if (url.includes('/api/bi/tendencias')) return json(tendencias());
   return fetchReal(entrada, init);
