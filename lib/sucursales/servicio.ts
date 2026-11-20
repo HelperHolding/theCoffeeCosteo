@@ -312,12 +312,15 @@ export function totalesDeSuma(x: SumaServicio): Totales {
   return {
     dias: s.dias,
     pedidos: s.pedidos,
-    finalizados: s.finalizados,
+    // «Pedidos finalizados» como los cuenta el portal: `cocina_pedidos` (cooking_time_metrics). La columna `finalizados`
+    // (error_metrics) es otro conteo y hasta supera a los creados: Essentia normal del 21-oct al 19-nov da 298 frente a
+    // los 284 del portal; con 284, los reclamos dan 4.93 %, igual que en el portal (docs/rappi-portal/08 §9).
+    finalizados: s.cocina_pedidos,
     rechazos,
     rechazosTotal,
     reclamos,
     reclamosTotal,
-    tasaReclamos: div(reclamosTotal, s.finalizados),
+    tasaReclamos: div(reclamosTotal, s.cocina_pedidos),
     tasaRechazos: div(rechazosTotal, s.pedidos),
     sinDispMinutos: s.sin_disp_minutos,
     disponibilidad: s.disp_n ? s.disp_suma / s.disp_n : null,
