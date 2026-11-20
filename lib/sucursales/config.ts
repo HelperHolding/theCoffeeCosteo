@@ -266,6 +266,15 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(cdmx(735, 651, 'Uruguay 20', 'Cuauhtémoc · Centro Histórico')),
   conPortal(delPos('Chihuahua', 'America/Chihuahua')(716, 629, 'Plaza Cumbres', 'Plaza Cumbres')),
   conPortal(cdmx(770, 676, 'Puente Churubusco', 'Coyoacán · Del Carmen')),
+  // Lote 8 (2026-11-20): las 4 que Zoho ya cuenta y el portal no tenía (eran −$54,163 y −335 tickets contra Zoho el
+  // 19-nov). Validadas con el 19 de noviembre (scripts/sucursales/validar-sucursal.ts): venta = suma por productos al
+  // centavo y horario posible en su zona. Puerto Paraíso (Los Cabos): último pedido del 20-nov 10:31 a las 10:37 de
+  // Mazatlán. San Felipe (Chihuahua): coincide con America/Chihuahua. Plaza Toscana (Querétaro) y Guadalupe (Zacatecas),
+  // hora del centro. Entran solo con el POS; su Rappi del portal se prende después (docs/sucursales/15, paso 4).
+  delPos('Zacatecas')(681, 594, 'Guadalupe Zacatecas', 'Guadalupe'),
+  queretaro(777, 680, 'Plaza Toscana', 'Plaza Toscana'),
+  delPos('Los Cabos', 'America/Mazatlan')(690, 602, 'Puerto Paraíso', 'Cabo San Lucas'),
+  delPos('Chihuahua', 'America/Chihuahua')(795, 702, 'San Felipe', 'San Felipe'),
 ];
 
 export const configDe = (companyId: number) =>

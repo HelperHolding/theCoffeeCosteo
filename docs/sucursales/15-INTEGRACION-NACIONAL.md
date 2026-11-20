@@ -192,3 +192,57 @@ Con el lote 7 quedan configuradas las **79 sucursales** que vendieron entre el 2
 
 **Pendiente en el CRM:** llenar el número Jestor de esas 10 tiendas y corregir el de El Campanario. Es un cambio de datos
 del CRM, con OK de Carlo.
+
+## Lote 8: las 4 que Zoho ya cuenta (2026-11-20)
+
+El cotejo del 19 de noviembre contra Zoho dio −$54,163 y −335 tickets en el portal. Esa diferencia era de 4
+sucursales que Zoho ya cuenta y el portal no tenía configuradas.
+
+De las 48 sucursales de `/company/list/all` sin configurar, solo estas 4 vendieron del 13 al 19 de noviembre. San Juan
+de los Lagos (778) tuvo 10 pedidos y Vía San Ángel Puebla (797) uno; se revisan cuando vendan en forma.
+
+| Sucursal (company_id / Jestor) | Ciudad | Zona | 19-nov (API) | Zoho 19-nov |
+| --- | --- | --- | --- | --- |
+| Guadalupe Zacatecas (681 / 594) | Zacatecas | hora del centro | 89 pedidos · $14,873.00 | 90 · $14,985 |
+| Plaza Toscana (777 / 680) | Querétaro | hora del centro | 101 · $16,219.00 | 103 · $16,630 |
+| Puerto Paraíso (690 / 602) | Los Cabos | `America/Mazatlan` | 89 · $14,504.50 | 89 · $14,504 |
+| San Felipe (795 / 702) | Chihuahua | `America/Chihuahua` | 53 · $8,058.40 | 53 · $8,044 |
+
+- **Validación** con `scripts/sucursales/validar-sucursal.ts` y el 19 de noviembre: las 4 son APTAS. La venta es igual
+  a la suma por productos (0 ¢ de diferencia) y el horario es posible en su zona.
+- **Puerto Paraíso:** el último pedido del 20 de noviembre fue a las 10:31, cuando eran las 10:37 en Mazatlán.
+- **Ciudad de Plaza Toscana:** la confirmó Sebastián.
+- **Rappi:** entran solo con el POS; su Rappi del portal va en el paso 4.
+- **Diferencias pequeñas con Zoho** en Toscana y Guadalupe (1 a 2 tickets): probablemente es el Rappi que Zoho importa.
+
+**Después del merge, en el SQL Editor:**
+
+1. Accesos para quien hoy ve las 79 sucursales (vista nacional). Primero la vista previa; luego el `insert`:
+
+   ```sql
+   with nacionales as (
+     select user_id from public.perfil_sucursales group by user_id having count(*) >= 79
+   )
+   select p.nombre, p.rol, u.email
+   from nacionales n join public.perfiles p using (user_id) join auth.users u on u.id = n.user_id;
+   ```
+
+   ```sql
+   with nacionales as (
+     select user_id from public.perfil_sucursales group by user_id having count(*) >= 79
+   )
+   insert into public.perfil_sucursales (user_id, company_id)
+   select n.user_id, c.company_id
+   from nacionales n cross join (values (681), (777), (690), (795)) c(company_id)
+   on conflict do nothing;
+   ```
+
+2. **BI:** el siguiente corte da de alta las 4 en `bi_tiendas` como «Franquicia», sin franquiciatario ni apertura
+   (`asegurarTiendasBi`). Zoho también las lista en Franquicia. Falta llenar el franquiciatario y la fecha de apertura,
+   que usan los filtros «Franquiciatario» y «Años Operando».
+
+3. **Historial del BI** desde el 27 de octubre de 2025. El script escribe con la conexión de la base:
+
+   ```
+   npx.cmd tsx --conditions=react-server scripts/sucursales/corte.ts --companias 681,777,690,795 --desde 2025-10-27 --hasta <ayer>
+   ```
