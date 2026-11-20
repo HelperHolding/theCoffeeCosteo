@@ -180,3 +180,9 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - **Bitácora:** `select inicio, ok, error, resumen from com_sync_log where proceso = 'com-ovs' order by inicio desc limit 5;`
 - **Correr a mano**: `curl.exe -H "Authorization: Bearer <CRON_SECRET>" https://<dominio del portal>/api/comercializadora/ov-sugerida`. Las tiendas que ya tienen corrida buena esta semana se **omiten** (no se reemplaza la sugerencia ya enviada, que es contra la que se mide la semana siguiente); solo se calculan las que faltan o fallaron. Para recalcular todo, agregar `?forzar=1` (reemplaza la del lunes). Lo hace el usuario; el secreto no se pega en chats ni en commits.
 - **Apagar el piloto:** `update com_ovs_tiendas set activo = false;` (la ruta corre y no hace nada) o quitar el cron de `vercel.json`.
+
+## 16. OCs por WhatsApp (spec 2026-11-20)
+
+- Cuando una OC pasa a emitida en Zoho, n8n manda su PDF por WhatsApp al número del campo "WhatsApp OCs" del proveedor, una sola vez por OC. Registro en `com_oc_whatsapp` (migración 78), columna "WhatsApp" en Órdenes e interruptor en Configuración (`config.whatsapp`, apagado por omisión).
+- La Edge Function `com-oc-whatsapp` solo acepta su propio secreto (`OC_WHATSAPP_SECRETO`, header `x-oc-whatsapp-secreto`); `COM_SECRETO` no la abre. Sus correos a compras@ pasan por `COM_EFECTOS_EXTERNOS` como los demás.
+- Puesta en marcha (Meta, n8n, Zoho y la prueba): `docs/migracion/whatsapp-oc.md`.
