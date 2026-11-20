@@ -86,6 +86,11 @@ export class ZohoClient {
     return this.pedir<T>("PUT", path, {}, body);
   }
 
+  /** DELETE: igual que post, no reintenta 5xx. */
+  del<T>(path: string): Promise<T> {
+    return this.pedir<T>("DELETE", path, {});
+  }
+
   async listAll<T>(path: string, key: string, params: Record<string, string> = {}): Promise<T[]> {
     const out: T[] = [];
     for (let page = 1; ; page++) {

@@ -7,7 +7,8 @@ export type PlanCfg = {
   compra: { lt_default: number; excluir_cafe: boolean; min_prov: "consolidar" | "avisar"; min_ventana_dias: number };
   inv: { yulius: boolean };
   auto: { modo: "simulacion" | "real"; cobertura_dias: number; max_edad_sync_horas: number; yulius_alerta_dias: number; correos: string[];
-    pagos_horizonte: number; pagos_base: "llegada" | "oc"; sync_catalogo: "aplicar" | "registrar"; zoho_cf_minimo: string };
+    pagos_horizonte: number; pagos_base: "llegada" | "oc"; sync_catalogo: "aplicar" | "registrar"; zoho_cf_minimo: string;
+    consolidar: boolean };
 };
 
 export function admin(): SupabaseClient {
@@ -49,6 +50,7 @@ export function aPlanCfg(c: any): PlanCfg {
       pagos_base: c.auto?.pagos_base === "oc" ? "oc" : "llegada",
       sync_catalogo: c.auto?.sync_catalogo === "aplicar" ? "aplicar" : "registrar",
       zoho_cf_minimo: typeof c.auto?.zoho_cf_minimo === "string" && c.auto.zoho_cf_minimo ? c.auto.zoho_cf_minimo : "cf_minimo_de_compra_mxn",
+      consolidar: c.auto?.consolidar === true,
     },
   };
 }

@@ -5,7 +5,7 @@ import { calcular, curvasDemanda, type Entradas, escribir } from "./minmax.ts";
 const cfg = {
   seg: { dias: 10 }, consumo: { ventana: 30 }, aper: { antelacion: 30, vencida_max: 45 },
   compra: { lt_default: 7, excluir_cafe: true, min_prov: "consolidar" as const, min_ventana_dias: 14 }, inv: { yulius: true },
-  auto: { modo: "simulacion" as const, cobertura_dias: 15, max_edad_sync_horas: 2, yulius_alerta_dias: 15, correos: [], pagos_horizonte: 90, pagos_base: "llegada" as const, sync_catalogo: "registrar" as const, zoho_cf_minimo: "cf_minimo_de_compra_mxn" },
+  auto: { modo: "simulacion" as const, cobertura_dias: 15, max_edad_sync_horas: 2, yulius_alerta_dias: 15, correos: [], pagos_horizonte: 90, pagos_base: "llegada" as const, sync_catalogo: "registrar" as const, zoho_cf_minimo: "cf_minimo_de_compra_mxn", consolidar: false },
 };
 // Configuración de producción (2026-11): promedio 30 días, divisor por vida, sin crecimiento; el Plan cuenta aperturas.
 const produccion = { consumo: { metodo: "promedio", ventana: 30, crecimiento: 0, divisor: "vida", items: "editados",
