@@ -18,7 +18,10 @@ export function asuntoConsolidar(fecha: string, modo: "simulacion" | "real"): st
 export function correoConsolidarHtml(a: { fecha: string; modo: "simulacion" | "real"; consolidadas: ResultadoConsolidada[]; alertas: Alerta[] }): string {
   const cons = a.consolidadas.map((c) => {
     const viejas = c.borradores.map((b) => esc(b.po_number)).join(", ");
-    const manos = c.borradores.filter((b) => !b.cancelada).map((b) => `<li><b>cancelar a mano ${esc(b.po_number)}</b>${b.error ? ` (${esc(b.error)})` : ""}</li>`).join("");
+    // Solo hay algo que cancelar a mano si la OC nueva sí se creó.
+    const manos = c.nueva ? c.borradores.filter((b) => !b.cancelada).map((b) => b.error?.startsWith("ya no es borrador")
+      ? `<li><b>revisar a mano ${esc(b.po_number)}</b>: ${esc(b.error)}</li>`
+      : `<li><b>cancelar a mano ${esc(b.po_number)}</b>${b.error ? ` (${esc(b.error)})` : ""}</li>`).join("") : "";
     const filas = c.lineas.map((l) =>
       `<tr><td>${esc(l.sku)} ${esc(l.nombre)}</td><td>${l.antes == null ? "—" : l.antes} → ${l.ahora}</td><td>${l.origen === "nuevo" ? "nuevo" : l.origen === "recalculado" ? (l.antes === l.ahora ? "sin cambio" : "recalculado") : "del borrador"}</td></tr>`)
       .concat(c.quitados.map((q) => `<tr><td>${esc(q.sku)} ${esc(q.nombre)}</td><td>${q.antes} → 0</td><td>quitado: ya no hace falta</td></tr>`)).join("");
@@ -36,7 +39,7 @@ ${manos ? `<ul>${manos}</ul>` : ""}
   return `<div style="font-family:sans-serif;font-size:14px">
 <h2>${esc(asuntoConsolidar(a.fecha, a.modo))}</h2>
 ${a.modo === "simulacion" ? "<p><b>SIMULACIÓN — no se creó ni canceló nada en Zoho</b></p>" : ""}
-${cons ? `<h2>Consolidadas (se cancelaron los borradores viejos)</h2>${cons}` : ""}
+${cons ? `<h2>${a.modo === "simulacion" ? "Consolidaciones (simulación: se cancelarían los borradores viejos)" : "Consolidadas (la OC nueva reemplaza a los borradores viejos)"}</h2>${cons}` : ""}
 ${alertas ? `<h2>Alertas: proveedor con OC emitida</h2>${alertas}` : ""}
 </div>`;
 }

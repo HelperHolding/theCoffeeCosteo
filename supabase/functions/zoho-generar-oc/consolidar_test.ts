@@ -86,3 +86,23 @@ Deno.test("vendoresConBorrador: solo proveedores con líneas propuestas y algún
   const v = vendoresConBorrador(proponer(filas, true), [oc({ sku: "A" }), oc({ vendor_id: "v2", sku: "Z" }), oc({ vendor_id: "v3", sku: "Q", status: "open" })]);
   assertEquals([...v], ["v1"]);
 });
+
+Deno.test("revisión: el pendiente que se resta es el sincronizado, no el vivo (borrador bajado después del sync)", () => {
+  const filas = [f({ sku: "A", enCamino: 100, enOcAbierta: true }), f({ sku: "B" })];
+  const vivo = [oc({ sku: "A", cantidad: 80, pendiente: 80 })];
+  const p = planConsolidar({ filas, ocs: vivo, sincronizadas: [oc({ sku: "A" })], prop: proponer(filas, true), proponerCon: (x) => proponer(x, true) });
+  assertEquals(lineas(p.porProveedor[0]), [["A", 640, "recalculado", 80], ["B", 640, "nuevo", null]]);
+  assertEquals(p.consolidadas[0].quitados, []);
+});
+
+Deno.test("revisión: proveedor con cobertura por cierre o adelanto por mínimo no se consolida (queda como antes)", () => {
+  const filas = [f({ sku: "A", enCamino: 100, enOcAbierta: true }), f({ sku: "B" })];
+  const ajuste = { cerrados: new Set<string>(), cobertura: new Map([["A", { cantidad: 50, cierre_id: 1, adelanto: true, tarde: false }]]) };
+  const prop = proponer(filas, true, ajuste);
+  const p = planConsolidar({ filas, ocs: [oc({ sku: "A" })], prop, proponerCon: (x) => proponer(x, true, ajuste) });
+  assertEquals([p.consolidadas, p.porProveedor], [[], prop.porProveedor]);
+  const minimos = { extra: new Map([["B", 10]]), bajo: new Set<string>() };
+  const prop2 = proponer(filas, true, undefined, minimos);
+  const p2 = planConsolidar({ filas, ocs: [oc({ sku: "A" })], prop: prop2, proponerCon: (x) => proponer(x, true, undefined, minimos) });
+  assertEquals([p2.consolidadas, p2.porProveedor], [[], prop2.porProveedor]);
+});

@@ -18,22 +18,34 @@ export type PlanConsolidar = { porProveedor: Grupo[]; consolidadas: Consolidada[
 
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
-/** Proveedores con algo nuevo que pedir hoy y al menos un borrador abierto. */
+/**
+ * Proveedores con algo nuevo que pedir hoy y al menos un borrador abierto. Se dejan fuera (quedan como antes: OC aparte)
+ * los que traen compras de cobertura por cierre o adelantos por mínimo, o un SKU de sus borradores ya en la propuesta:
+ * esas cantidades se calcularon contando que el borrador llega, y al cancelarlo se pediría de menos o de más.
+ */
 export function vendoresConBorrador(prop: Propuesta, ocs: OcProveedor[]): Set<string> {
-  const conLineas = new Set(prop.porProveedor.filter((g) => g.lineas.length).map((g) => g.vendor_id));
+  const lineasDe = new Map(prop.porProveedor.filter((g) => g.lineas.length).map((g) => [g.vendor_id, g.lineas]));
+  const fuera = new Set<string>();
+  for (const [v, ls] of lineasDe) if (ls.some((l) => l.adelanto_cierre || l.cierre_tarde || l.adelanto_minimo)) fuera.add(v);
+  for (const o of ocs) if (esBorrador(o.status) && lineasDe.get(o.vendor_id)?.some((l) => l.sku === o.sku)) fuera.add(o.vendor_id);
   const out = new Set<string>();
-  for (const o of ocs) if (esBorrador(o.status) && conLineas.has(o.vendor_id)) out.add(o.vendor_id);
+  for (const o of ocs) if (esBorrador(o.status) && lineasDe.has(o.vendor_id) && !fuera.has(o.vendor_id)) out.add(o.vendor_id);
   return out;
 }
 
 export function planConsolidar(a: {
   filas: Fila[]; ocs: OcProveedor[]; prop: Propuesta; proponerCon: (filas: Fila[]) => Propuesta;
+  /** Líneas tal como las sincronizó zoho-sync (de ahí sale enCamino); si faltan, se usan `ocs`. */
+  sincronizadas?: OcProveedor[];
 }): PlanConsolidar {
   const vendores = vendoresConBorrador(a.prop, a.ocs);
   const borradores = a.ocs.filter((o) => esBorrador(o.status) && vendores.has(o.vendor_id));
   const filaDe = new Map(a.filas.map((x) => [x.sku, x]));
   const manejado = (o: OcProveedor) => o.sku !== SKU_MARCADOR && filaDe.get(o.sku)?.zoho_vendor_id === o.vendor_id;
-  const prop2 = vendores.size ? a.proponerCon(sinBorradores(a.filas, borradores)) : a.prop;
+  // Se resta lo que se sumó a enCamino (lo sincronizado), no lo que dice Zoho en vivo.
+  const ids = new Set(borradores.map((o) => o.zoho_po_id));
+  const quitar = (a.sincronizadas ?? a.ocs).filter((o) => ids.has(o.zoho_po_id));
+  const prop2 = vendores.size ? a.proponerCon(sinBorradores(a.filas, quitar)) : a.prop;
   const grupo2 = new Map(prop2.porProveedor.map((g) => [g.vendor_id, g]));
 
   const consolidadas: Consolidada[] = [];

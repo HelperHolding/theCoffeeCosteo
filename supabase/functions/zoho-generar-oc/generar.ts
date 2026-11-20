@@ -247,7 +247,8 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
   let zCons: ZohoClient | null = null;
   let plan: PlanConsolidar | null = null;
   if (cfg.auto.consolidar) {
-    let ocs = await cargarOcsProveedor(db);
+    const sincronizadas = await cargarOcsProveedor(db);
+    let ocs = sincronizadas;
     const candidatos = vendoresConBorrador(prop, ocs);
     if (modo === "real" && candidatos.size) {
       if (!crearZoho) throw new Error("modo real sin cliente de Zoho");
@@ -255,7 +256,7 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
       ocs = v.ocs;
       errores.push(...v.avisos);
     }
-    plan = planConsolidar({ filas, ocs, prop, proponerCon: (x) => proponer(x, cfg.inv.yulius, ajuste, ajusteMin) });
+    plan = planConsolidar({ filas, ocs, sincronizadas, prop, proponerCon: (x) => proponer(x, cfg.inv.yulius, ajuste, ajusteMin) });
     for (const g of plan.porProveedor) { const m = minimoDe.get(g.vendor_id); if (m) g.minimo = m; }
   }
   const grupos = plan?.porProveedor ?? prop.porProveedor;
@@ -320,7 +321,9 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
         b.cancelada = true;
       } catch (e) {
         b.error = (e as Error).message;
-        errores.push(`${g.vendor_name}: cancelar a mano ${b.po_number} (${b.error}); la OC nueva ${po.purchaseorder_number} ya está creada`);
+        errores.push(b.error.startsWith("ya no es borrador")
+          ? `${g.vendor_name}: ${b.po_number} ${b.error}; revisa a mano si duplica la OC nueva ${po.purchaseorder_number}`
+          : `${g.vendor_name}: cancelar a mano ${b.po_number} (${b.error}); la OC nueva ${po.purchaseorder_number} ya está creada`);
       }
     }
     // La OC ya existe en Zoho: si no se puede registrar, se reporta en el correo en vez de perderla.
@@ -354,12 +357,11 @@ export async function verificarBorradores(z: ZohoClient, ocs: OcProveedor[], ven
     try {
       po = (await z.get<{ purchaseorder: PoVivo }>(`/purchaseorders/${id}`)).purchaseorder;
     } catch (e) {
-      if (e instanceof ZohoError && e.status === 404) {
-        out = out.filter((o) => o.zoho_po_id !== id);
-        avisos.push(`${po0.po_number}: ya no existe en Zoho`);
-        continue;
-      }
-      throw e;
+      // Un borrador que no se puede revisar no se reemplaza; los demás proveedores siguen (spec §8).
+      out = out.filter((o) => o.zoho_po_id !== id);
+      avisos.push(e instanceof ZohoError && e.status === 404 ? `${po0.po_number}: ya no existe en Zoho`
+        : `${po0.vendor_name ?? po0.vendor_id}: no se pudo revisar ${po0.po_number} en Zoho (${(e as Error).message}); no se reemplazó`);
+      continue;
     }
     const status = String(po.status ?? "").toLowerCase();
     if (!ocAbierta(status)) {
@@ -372,13 +374,24 @@ export async function verificarBorradores(z: ZohoClient, ocs: OcProveedor[], ven
       pendiente: Number(l.quantity) - Number(l.quantity_received ?? 0), precio: Number(l.rate),
     }));
     if (status !== "draft") avisos.push(`${po0.po_number}: ya no es borrador (${status}); no se reemplaza`);
+    else if (vivas.some((l) => !l.item_id)) {
+      // Una línea libre (sin artículo de Zoho) no se puede volver a crear: ese borrador se queda y lo nuevo sale aparte.
+      out = out.filter((o) => o.zoho_po_id !== id);
+      avisos.push(`${po0.vendor_name ?? po0.vendor_id}: ${po0.po_number} tiene una línea sin artículo de Zoho; no se reemplazó`);
+      continue;
+    }
     out = [...out.filter((o) => o.zoho_po_id !== id), ...vivas];
   }
   return { ocs: out, avisos };
 }
 
-/** Cancela un borrador; si Zoho no permite cancelar (4xx), lo borra: nunca se envió al proveedor. Un 5xx se relanza. */
+/**
+ * Cancela un borrador; si Zoho no permite cancelar (4xx), lo borra: nunca se envió al proveedor. Un 5xx se relanza.
+ * Antes vuelve a revisar en Zoho que siga en borrador: si alguien lo emitió mientras tanto, no se toca.
+ */
 export async function cancelarBorrador(z: ZohoClient, id: string): Promise<void> {
+  const st = String((await z.get<{ purchaseorder: { status: string } }>(`/purchaseorders/${id}`)).purchaseorder?.status ?? "").toLowerCase();
+  if (st !== "draft") throw new Error(`ya no es borrador (${st}); no se canceló`);
   try {
     await z.post(`/purchaseorders/${id}/status/cancelled`, {});
   } catch (e) {

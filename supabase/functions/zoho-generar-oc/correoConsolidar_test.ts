@@ -38,3 +38,15 @@ Deno.test("alerta: OC emitida y lo pedido aparte", () => {
   assertStringIncludes(h, "ya tiene la OC emitida COM-OC-9 del 2026-11-16");
   assertStringIncludes(h, "B Tapa (50)");
 });
+
+Deno.test("revisión: sin OC nueva (simulación o creación fallida) no pide cancelar a mano", () => {
+  const sim = correoConsolidarHtml({ fecha: "2026-11-26", modo: "simulacion", alertas: [],
+    consolidadas: [{ ...base, nueva: null, borradores: [{ po_number: "COM-OC-1", cancelada: false }] }] });
+  assertEquals(sim.includes("cancelar a mano"), false);
+  assertEquals(sim.includes("se cancelaron los borradores"), false);
+  assertStringIncludes(sim, "se cancelarían");
+  const fallo = correoConsolidarHtml({ fecha: "2026-11-26", modo: "real", alertas: [],
+    consolidadas: [{ ...base, nueva: null, error: "Zoho 500", borradores: [{ po_number: "COM-OC-1", cancelada: false }] }] });
+  assertEquals(fallo.includes("cancelar a mano"), false);
+  assertStringIncludes(fallo, "No se canceló nada");
+});
