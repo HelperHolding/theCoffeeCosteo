@@ -180,3 +180,16 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
 - **Bitácora:** `select inicio, ok, error, resumen from com_sync_log where proceso = 'com-ovs' order by inicio desc limit 5;`
 - **Correr a mano**: `curl.exe -H "Authorization: Bearer <CRON_SECRET>" https://<dominio del portal>/api/comercializadora/ov-sugerida`. Las tiendas que ya tienen corrida buena esta semana se **omiten** (no se reemplaza la sugerencia ya enviada, que es contra la que se mide la semana siguiente); solo se calculan las que faltan o fallaron. Para recalcular todo, agregar `?forzar=1` (reemplaza la del lunes). Lo hace el usuario; el secreto no se pega en chats ni en commits.
 - **Apagar el piloto:** `update com_ovs_tiendas set activo = false;` (la ruta corre y no hace nada) o quitar el cron de `vercel.json`.
+
+## 17. OC automática: consolidar borradores y alertar OCs emitidas (bandera `auto.consolidar`)
+
+- **Qué hace** (spec `docs/superpowers/specs/2026-11-20-oc-consolidar-borradores-design.md`): si un proveedor tiene uno o varios borradores en Zoho y hoy hay algo nuevo que pedirle, `zoho-generar-oc` crea **una sola OC** con lo nuevo y los SKUs de los borradores recalculados (los que el sistema no maneja pasan con la cantidad y precio del borrador) y **después** cancela los borradores viejos (si Zoho no deja cancelar un borrador, lo borra). Antes revisa cada borrador en vivo: si alguien ya lo emitió, no se reemplaza. Si el proveedor ya tiene una OC **emitida**, no se toca: lo nuevo sale aparte y se alerta. Correo aparte: "OC automática <fecha>: consolidaciones y alertas".
+- **Bandera:** `com_plan_config.config.auto.consolidar` (por omisión `false`; apagada, la corrida es igual que antes). Durante la ventana de paridad debe valer lo mismo en el viejo y en el portal; lo previsto es prenderla en el T-0 junto con `auto.modo = real` del portal.
+- **Registro:** `com_oc_auto.reemplaza` (`[{zoho_po_id, po_number, cancelada, error?}]`) y `com_oc_auto.alerta_emitidas` (migración `20261120000077`). En el viejo, `supabase/migrations/20261120000001_oc_consolidar.sql` se corre a mano en su SQL Editor **antes** de prender la bandera allá.
+- **Prender (SQL Editor, con OK del usuario), con historial:**
+  ```sql
+  insert into com_plan_config_historial (ambito, clave, valor_anterior, valor_nuevo, modificado_por)
+  select 'config', 'auto.consolidar', config #> '{auto,consolidar}', 'true'::jsonb, '<quién>' from com_plan_config where id = 1;
+  update com_plan_config set config = jsonb_set(config, '{auto,consolidar}', 'true'::jsonb), version = version + 1 where id = 1;
+  ```
+- **Si el correo dice "cancelar a mano COM-OC-xxxx":** la OC nueva sí se creó; cancela o borra ese borrador en Zoho Books.
