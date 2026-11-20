@@ -89,8 +89,8 @@ describe('tamaño verificado', () => {
     ).toBeNull();
     // La lista no incluye los pendientes de E1; suma los 6 del recetario oficial (doc 42), el combo Matcha Iced
     // Latte + Lemon Cake (doc 44), los 4 combos con vaso Regular y Large (doc 45) y Cold Drip V60 solo en Chica (el vaso
-    // chico que le pone Rappi, 2026-11-03).
-    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(43);
+    // chico que le pone Rappi, 2026-11-03) y los 4 Peppermint Mocha (alta 2026-11-17, docs/bi/04).
+    expect(Object.keys(TAMANOS_VERIFICADOS)).toHaveLength(47);
     expect(TAMANOS_VERIFICADOS[CHAI_FRAP]).toEqual({ Regular: 'Chica' });
     expect(TAMANOS_VERIFICADOS['7799a6fe-bf6f-4247-842c-a071588cd9ac']).toEqual({ Regular: 'Chica' });
   });
