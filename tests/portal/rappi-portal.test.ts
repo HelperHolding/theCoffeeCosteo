@@ -174,4 +174,10 @@ describe('pestaña Rappi', () => {
     for (const id of [717, 733, 547, 754, 719, 715, 771, 735, 716, 770])
       expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
   });
+
+  it('lote 8: 3 con el portal; San Felipe, sin tienda en el portal, solo con el POS', () => {
+    for (const id of [681, 777, 690])
+      expect(sucursalInfo(configDe(id)!)).toMatchObject({ rappi: true, rappiPortal: true });
+    expect(sucursalInfo(configDe(795)!)).toMatchObject({ rappi: false, rappiPortal: false });
+  });
 });
