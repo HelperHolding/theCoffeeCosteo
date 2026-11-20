@@ -8,9 +8,15 @@ import type { SeccionClave } from '@/lib/franquiciatarios/tipos';
  * colores de estado (ok/warn/bad) se reservan para estados: completa, en curso, «No».
  * Las clases van escritas completas para que Tailwind las genere.
  */
-export type Tono = SeccionClave | 'ventas' | 'tira' | 'incidencia' | 'alerta';
+export type Tono = SeccionClave | 'ventas' | 'tira' | 'pedidos' | 'incidencia' | 'alerta';
 
 export const TONO: Record<Tono, { suave: string; brillo: string; borde: string; marca: string }> = {
+  pedidos: {
+    suave: 'bg-pedidos-soft',
+    brillo: 'bg-linear-to-t from-pedidos/25 via-pedidos/8 via-45% to-surface',
+    borde: 'border-pedidos/40',
+    marca: 'bg-pedidos',
+  },
   apertura: {
     suave: 'bg-apertura-soft',
     brillo: 'bg-linear-to-t from-apertura/25 via-apertura/8 via-45% to-surface',

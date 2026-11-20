@@ -9,6 +9,9 @@ import {
   type RolFranq,
 } from '@/lib/supabase/sesion';
 import { cookieBarista } from '@/lib/franquiciatarios/servidor';
+import { configDe } from '@/lib/sucursales/config';
+import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
+import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
 import type { SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
@@ -210,6 +213,66 @@ export async function guardarBarista(datos: {
       p_id: datos.id,
       p_nombre: String(datos.nombre ?? ''),
       p_activo: datos.activo,
+    }),
+  );
+}
+
+/**
+ * Recepción de un pedido a la Comercializadora. El servidor vuelve a leer el pedido de ESTA sucursal (candado de
+ * apertura) y arma las diferencias contra sus cantidades: del navegador solo llega lo recibido por renglón.
+ */
+export async function recibirPedido(datos: {
+  companyId: number;
+  pedido: string;
+  /** Cantidad recibida por renglón, en el orden en que se mostraron las líneas del pedido. */
+  recibidos: number[];
+  observacion?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const cfg = configDe(datos.companyId);
+  if (!cfg) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  const lectura = await leerPedidosSucursal(cfg);
+  if (!lectura.ok) return { error: lectura.error };
+  const recepciones = await c.db
+    .from('franq_recepciones')
+    .select('*')
+    .eq('company_id', datos.companyId)
+    .eq('pedido_id', String(datos.pedido));
+  if (recepciones.error) return { error: 'No se pudo revisar el pedido. Intenta de nuevo.' };
+  const pedido = armarPedidos(
+    lectura.filas.filter((f) => f.id === datos.pedido),
+    recepciones.data ?? [],
+    { conMontos: false },
+  )[0];
+  if (!pedido) return { error: 'Ese pedido no es de esta sucursal.' };
+  if (!pedido.recibible)
+    return {
+      error: pedido.recepcion
+        ? 'Este pedido ya tiene su recepción registrada.'
+        : 'Este pedido aún no se puede recibir.',
+    };
+  const rec = Array.isArray(datos.recibidos) ? datos.recibidos : [];
+  if (
+    rec.length !== pedido.lineas.length ||
+    rec.some((x) => typeof x !== 'number' || !Number.isFinite(x) || x < 0)
+  )
+    return { error: 'Revisa las cantidades recibidas.' };
+  const diferencias = pedido.lineas
+    .map((l, i) => ({ nombre: l.nombre, sku: l.sku, pedido: l.cantidad, recibido: rec[i] }))
+    .filter((d) => d.pedido !== d.recibido);
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_recibir', {
+      p_company: datos.companyId,
+      p_pedido: pedido.id,
+      p_folio: pedido.folio,
+      p_diferencias: diferencias,
+      p_observacion: datos.observacion ?? null,
+      p_barista: b,
+      p_dispositivo: disp,
     }),
   );
 }

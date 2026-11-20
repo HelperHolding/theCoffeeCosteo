@@ -6,10 +6,13 @@ import type {
   FranqFirma,
   FranqIncidencia,
   FranqPunto,
+  FranqRecepcion,
   FranqRespuesta,
   SeccionClave,
   TipoFirma,
 } from '../../../lib/franquiciatarios/tipos';
+
+import { armarPedidos, type FilaPedidoLegado } from '../../../lib/franquiciatarios/pedidos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -25,6 +28,8 @@ export const tienda = {
   /** checklist id por sección y puntos por sección; meta = el punto completo (tipo y dato). */
   puntos: {} as Record<SeccionClave, number[]>,
   meta: {} as Record<number, FranqPunto>,
+  pedidos: [] as FilaPedidoLegado[],
+  recepciones: [] as FranqRecepcion[],
   dia: '',
 };
 let id = 1000;
@@ -211,6 +216,40 @@ export async function guardarBarista(d: {
 export async function verComo(rol: string): Promise<Resultado> {
   await espera();
   tienda.rol = rol === 'admin' ? 'gerente' : (rol as typeof tienda.rol);
+  avisar();
+  return { ok: true };
+}
+
+/** Recepción con las reglas de franq_recibir y de recibirPedido (diferencias contra lo pedido, observación). */
+export async function recibirPedido(d: {
+  pedido: string;
+  recibidos: number[];
+  observacion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const p = armarPedidos(
+    tienda.pedidos.filter((x) => x.id === d.pedido),
+    tienda.recepciones,
+    { conMontos: false },
+  )[0];
+  if (!p) return { error: 'Ese pedido no es de esta sucursal.' };
+  if (!p.recibible) return { error: 'Este pedido ya tiene su recepción registrada.' };
+  const diferencias = p.lineas
+    .map((l, i) => ({ nombre: l.nombre, sku: l.sku, pedido: l.cantidad, recibido: d.recibidos[i] }))
+    .filter((x) => x.pedido !== x.recibido);
+  if (diferencias.length && (d.observacion ?? '').trim().length < 3)
+    return { error: 'Explica qué pasó con lo que llegó distinto.' };
+  tienda.recepciones.push({
+    ...base(q),
+    id: ++id,
+    pedido_id: p.id,
+    folio: p.folio,
+    completo: diferencias.length === 0,
+    diferencias,
+    observacion: (d.observacion ?? '').trim() || null,
+  });
   avisar();
   return { ok: true };
 }
