@@ -61,10 +61,11 @@ const UMBRAL = 0.03;
 const CIUDADES_VISIBLES = 8;
 
 /**
- * Estado de cada ciudad configurada, para el mapa. Una ciudad nueva (doc 15, lotes) se agrega aquí; si falta, el
- * tablero la lista como «sin estado» y no la pierde.
+ * Estado de cada ciudad configurada, para el mapa. Una ciudad nueva (doc 15, lotes) se agrega aquí. Si falta, el
+ * tablero la avisa arriba y bajo el mapa (cuenta en los totales, pero no se pinta). La prueba
+ * «cada ciudad configurada tiene estado» falla antes de llegar a producción.
  */
-const ESTADO_DE_CIUDAD: Record<string, string> = {
+export const ESTADO_DE_CIUDAD: Record<string, string> = {
   Guadalajara: 'JAL',
   'Puerto Vallarta': 'JAL',
   Tepatitlán: 'JAL',
@@ -95,6 +96,7 @@ const ESTADO_DE_CIUDAD: Record<string, string> = {
   Durango: 'DGO',
   Torreón: 'COAH',
   Tijuana: 'BC',
+  'Los Cabos': 'BCS',
   Hermosillo: 'SON',
   Monterrey: 'NL',
   Morelia: 'MICH',
@@ -1477,6 +1479,10 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
       ? `${d.periodo.incompletos} ${d.periodo.incompletos === 1 ? 'día de sucursal' : 'días de sucursal'} del periodo con lectura incompleta.`
       : '',
     f === 'rappi' ? 'Rappi solo está en las sucursales que ya leen el portal de Rappi.' : '',
+    // Una ciudad sin estado cuenta en los totales pero no se pinta en el mapa: que no pase sin aviso.
+    sinEstado.size
+      ? `${lista([...sinEstado])} no ${sinEstado.size === 1 ? 'tiene' : 'tienen'} estado en el mapa: su venta cuenta en los totales, pero no se pinta.`
+      : '',
   ].filter(Boolean);
 
   return {
