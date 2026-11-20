@@ -15,6 +15,8 @@ export type Linea = {
   sku: string; nombre: string; item_id: string; cantidad: number; costo: number; disponible: number; enCamino: number;
   minimo: number; maximo: number; venta_diaria: number; kits: number;
   adelanto_cierre?: boolean; cierre_tarde?: boolean; adelanto_minimo?: boolean;
+  /** Consolidación de borradores: cantidad que tenía el borrador viejo y de dónde sale la línea. */
+  antes?: number; origen?: "nuevo" | "recalculado" | "borrador";
 };
 export type Propuesta = {
   porProveedor: { vendor_id: string; vendor_name: string; lineas: Linea[]; monto: number; bajo_minimo?: boolean; minimo?: number }[];
