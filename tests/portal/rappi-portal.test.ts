@@ -90,6 +90,23 @@ describe('construirRappiPortal', () => {
     expect(v.porCanal.turbo).toMatchObject({ pedidos: 1, ventaCent: 21_200, cancelados: 1 });
   });
 
+  it('los totales de la pestaña usan bruto menos descuento_venta; los cancelados, su bruto', () => {
+    const r = construirRappiPortal(
+      {
+        ...rpc,
+        pedidos: [
+          { ...pedido('a', 'MX1', 'finished', 200, [producto('Brownie', 200)]), descuento_venta: 39.8 },
+          pedido('b', 'MX1', 'finished', 100, [producto('Brownie', 100)]),
+          { ...pedido('c', 'MX1', 'canceled_by_user', 150, [producto('Brownie', 150)]), descuento_venta: 30 },
+        ],
+      },
+      '2026-10-27',
+      '2026-10-27',
+    );
+    expect(r.totales.ventaCent).toBe(20000 - 3980 + 10000);
+    expect(r.totales.canceladosCent).toBe(15000);
+  });
+
   it('agrupa productos sin espacios sobrantes y cuenta sus opciones por categoría', () => {
     const crea = v.productos.find((p) => p.nombre === 'Crea tu The Coffee');
     expect(crea).toMatchObject({ unidades: 2, ventaCent: 43_300, porCanal: { normal: 1, turbo: 1 } });

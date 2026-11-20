@@ -411,6 +411,35 @@ export function mismaHoraQueRappi(zona: string, fecha: string): boolean {
 }
 
 /**
+ * Escala los importes de líneas y personalizaciones de bruto a venta (factor venta ÷ bruto). Si las líneas sumaban el
+ * bruto, la última con importe > 0 absorbe el redondeo y la suma queda exactamente en la venta; si no lo sumaban (el
+ * pedido no cuadraba de origen), solo se escala cada importe. Sin descuento devuelve las mismas líneas.
+ */
+function escalarLineas<L extends LineaNormal>(lineas: L[], brutoCent: number, ventaCent: number): L[] {
+  if (ventaCent === brutoCent || brutoCent <= 0) return lineas;
+  const f = ventaCent / brutoCent;
+  const total = (ls: L[]) =>
+    ls.reduce((s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0), 0);
+  const cuadraba = total(lineas) === brutoCent;
+  const escaladas = lineas.map((l) => ({
+    ...l,
+    importeCent: Math.round(l.importeCent * f),
+    customs: l.customs.map((c) => ({ ...c, importeCent: Math.round(c.importeCent * f) })),
+  }));
+  if (!cuadraba) return escaladas;
+  const diferencia = ventaCent - total(escaladas);
+  if (diferencia !== 0) {
+    for (let i = escaladas.length - 1; i >= 0; i--) {
+      if (escaladas[i].importeCent + diferencia >= 0 && escaladas[i].importeCent > 0) {
+        escaladas[i] = { ...escaladas[i], importeCent: escaladas[i].importeCent + diferencia };
+        break;
+      }
+    }
+  }
+  return escaladas;
+}
+
+/**
  * Un pedido de Rappi en la forma del POS (origen «rappi»), o null si fue cancelado o rechazado. `zona` es la de la
  * sucursal (config): la hora del portal se convierte a ella.
  */
@@ -423,8 +452,10 @@ export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): Pedi
   const mm = String(Math.floor((local.segundo % 3600) / 60)).padStart(2, '0');
   const ss = String(local.segundo % 60).padStart(2, '0');
   const m = [p.creado, local.fecha, hh, mm, ss] as const;
-  const lineas = p.productos.flatMap(lineasDe);
-  const ventaCent = cent(p.bruto);
+  const brutoCent = cent(p.bruto);
+  const descuentoCent = Math.min(brutoCent, Math.max(0, cent(p.descuento_venta ?? 0)));
+  const ventaCent = brutoCent - descuentoCent;
+  const lineas = escalarLineas(p.productos.flatMap(lineasDe), brutoCent, ventaCent);
   const suma = lineas.reduce(
     (s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0),
     0,
@@ -437,7 +468,7 @@ export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): Pedi
     origen: 'rappi',
     ventaCent,
     netoCent: null,
-    descuentoCent: p.descuento_aliado === null ? 0 : cent(p.descuento_aliado),
+    descuentoCent,
     metodo: 'RAPPI',
     tipo: 'RAPPI_PORTAL',
     lineas,

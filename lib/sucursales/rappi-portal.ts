@@ -1,7 +1,8 @@
 /**
  * Rappi leído del portal de Partners (docs/rappi-portal): lo que devuelve la RPC sucursales_rappi_portal y su resumen
- * para la pestaña Rappi. Solo datos del portal: venta = suma de productos antes de descuentos
- * (order_product_total_price); nada se estima ni se renombra (no hay comisión ni neto por pedido).
+ * para la pestaña Rappi. Solo datos del portal: venta = suma de productos menos los descuentos de la tienda, sin premios
+ * Pro Rewards (como Zoho); el bruto (order_product_total_price) se conserva. Nada se estima ni se renombra (no hay
+ * comisión ni neto por pedido).
  */
 
 export type CanalRappi = 'normal' | 'turbo';
@@ -32,6 +33,11 @@ export interface PedidoRappi {
   metodo_pago: string | null;
   bruto: number;
   descuento_aliado: number | null;
+  /**
+   * Descuento que se resta de la venta, como Zoho: el de la tienda sin los premios Pro Rewards (migración 79,
+   * rappi_descuento_venta). Ausente (base sin la 79) cuenta como 0: la venta es el bruto.
+   */
+  descuento_venta?: number;
   estado_anterior: string | null;
   revisar: boolean;
   cambios: number;
@@ -127,7 +133,7 @@ export function construirRappiPortal(r: RpcRappiPortal, desde: string, hasta: st
       } else if (p.clase === 'otro') t.otros++;
       else {
         t.pedidos++;
-        t.ventaCent += cent(p.bruto);
+        t.ventaCent += Math.max(0, cent(p.bruto) - cent(p.descuento_venta ?? 0));
         t.unidades += p.productos.reduce((s, x) => s + x.unidades, 0);
       }
     }

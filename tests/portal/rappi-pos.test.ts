@@ -224,7 +224,7 @@ describe('líneas de un producto de Rappi', () => {
 });
 
 describe('pedido de Rappi en la forma del POS', () => {
-  it('origen rappi, hora local del portal, ID de Rappi y descuento del aliado; cancelados fuera', () => {
+  it('origen rappi, hora local del portal, ID de Rappi y descuento del aliado; cancelados fuera; sin descuento_venta la venta es el bruto', () => {
     const p = pedidoRappiAPos(
       pedido('2950000001', 'finished', [producto('Iced Latte', 89), producto('Brownie', 59)]),
     )!;
@@ -236,7 +236,7 @@ describe('pedido de Rappi en la forma del POS', () => {
       metodo: 'RAPPI',
       tipo: 'RAPPI_PORTAL',
       ventaCent: 14800,
-      descuentoCent: 1250,
+      descuentoCent: 0,
       netoCent: null,
       numeroPedidoRappi: '2950000001',
       cuadra: true,
@@ -246,6 +246,61 @@ describe('pedido de Rappi en la forma del POS', () => {
     expect(
       pedidoRappiAPos({ ...pedido('3', 'finished', [producto('Iced Latte', 89)]), bruto: 90 })!.cuadra,
     ).toBe(false);
+  });
+});
+
+describe('venta de Rappi como Zoho (bruto menos descuento_venta)', () => {
+  const con = (p: PedidoRappi, d?: number) => ({ ...p, descuento_venta: d });
+  const suma = (x: ReturnType<typeof pedidoRappiAPos>) =>
+    x!.lineas.reduce((s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0), 0);
+
+  it('resta el descuento y lo reparte: la suma de líneas es exactamente la venta', () => {
+    const p = pedidoRappiAPos(
+      con(pedido('10', 'finished', [producto('Iced Latte', 89), producto('Brownie', 59), producto('Iced Latte', 89)]), 23.4),
+    )!;
+    expect(p.ventaCent).toBe(23700 - 2340);
+    expect(p.descuentoCent).toBe(2340);
+    expect(suma(p)).toBe(p.ventaCent);
+    expect(p.cuadra).toBe(true);
+  });
+
+  it('las unidades y los códigos no cambian', () => {
+    const base = pedido('11', 'finished', [producto('Iced Latte', 89, [], 2)]);
+    const sin = pedidoRappiAPos(base)!;
+    const conD = pedidoRappiAPos(con(base, 17.6))!;
+    expect(conD.lineas.map((l) => l.codigo)).toEqual(sin.lineas.map((l) => l.codigo));
+    expect(conD.lineas).toHaveLength(sin.lineas.length);
+  });
+
+  it('sin descuento_venta (base sin la migración 79) queda idéntico a hoy', () => {
+    const base = pedido('12', 'finished', [producto('Iced Latte', 89)]);
+    expect(pedidoRappiAPos(con(base, undefined))).toEqual(pedidoRappiAPos(con(base, 0)));
+    expect(pedidoRappiAPos(con(base, 0))!.ventaCent).toBe(8900);
+  });
+
+  it('descuento igual al bruto: venta 0 y todas las líneas en 0', () => {
+    const p = pedidoRappiAPos(con(pedido('13', 'finished', [producto('Brownie', 59)]), 59))!;
+    expect(p.ventaCent).toBe(0);
+    expect(suma(p)).toBe(0);
+    expect(p.lineas.every((l) => l.importeCent >= 0)).toBe(true);
+  });
+
+  it('el redondeo lo absorbe la última línea con importe, nunca una en 0', () => {
+    // Iced Latte sin tamaño lleva el vaso del POS con 0 ¢ como personalización.
+    const p = pedidoRappiAPos(con(pedido('14', 'finished', [producto('Iced Latte', 33.33), producto('Iced Latte', 33.33), producto('Iced Latte', 33.34)]), 10))!;
+    expect(suma(p)).toBe(p.ventaCent);
+    for (const l of p.lineas) {
+      expect(l.importeCent).toBeGreaterThanOrEqual(0);
+      for (const c of l.customs) expect(c.importeCent).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('pedido que no cuadraba de origen: solo se escala cada importe, sin forzar la suma', () => {
+    const base = { ...pedido('15', 'finished', [producto('Iced Latte', 89)]), bruto: 90 };
+    const p = pedidoRappiAPos(con(base, 9))!;
+    expect(p.ventaCent).toBe(8100);
+    expect(p.cuadra).toBe(false);
+    expect(p.lineas[0].importeCent).toBe(Math.round(8900 * (8100 / 9000)));
   });
 });
 
