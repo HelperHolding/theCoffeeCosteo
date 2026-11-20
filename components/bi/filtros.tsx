@@ -176,13 +176,14 @@ export function FiltrosBi({
   ];
 
   return (
-    <section aria-label="Filtros" className="z-20 rounded-2xl border border-line bg-surface px-4 py-3 lg:sticky lg:top-[65px]">
+    <section aria-label="Filtros" className="relative z-20 rounded-2xl border border-line bg-surface px-4 py-3 lg:sticky lg:top-[65px]">
       <div className="flex flex-wrap items-center gap-2">
         <Pildora
           etiqueta="Fecha Relativa"
           texto={textoFr}
           activa={hayRango || frActual !== FR_POR_OMISION}
           alQuitar={() => aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined })}
+          quitarEtiqueta={`Quitar Fecha Relativa: ${textoFr}`}
         >
           {(cerrar) => (
             <ListaUnica
@@ -200,6 +201,7 @@ export function FiltrosBi({
           texto={compValor ? `Comparable: ${OPCIONES_COMP.find((c) => c.valor === compValor)?.texto}` : 'Comparable'}
           activa={compValor !== ''}
           alQuitar={() => aplicar({ comparable: undefined })}
+          quitarEtiqueta={`Quitar Comparable: ${OPCIONES_COMP.find((c) => c.valor === compValor)?.texto}`}
         >
           {(cerrar) => (
             <ListaUnica
@@ -218,6 +220,7 @@ export function FiltrosBi({
           texto={hayRango ? `Rango de Fechas: ${filtros.desde} – ${filtros.hasta}` : 'Rango de Fechas'}
           activa={hayRango}
           alQuitar={() => aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined })}
+          quitarEtiqueta={`Quitar Rango de Fechas: ${filtros.desde} – ${filtros.hasta}`}
         >
           {(cerrar) => (
             <div className="grid gap-2">
@@ -225,14 +228,20 @@ export function FiltrosBi({
                 type="date"
                 aria-label="Desde"
                 value={rango.desde}
-                onChange={(e) => setRango({ ...rango, desde: e.target.value })}
+                onChange={(e) => {
+                  setErrorRango(null);
+                  setRango({ ...rango, desde: e.target.value });
+                }}
                 className={CLASE_CAMPO}
               />
               <input
                 type="date"
                 aria-label="Hasta"
                 value={rango.hasta}
-                onChange={(e) => setRango({ ...rango, hasta: e.target.value })}
+                onChange={(e) => {
+                  setErrorRango(null);
+                  setRango({ ...rango, hasta: e.target.value });
+                }}
                 className={CLASE_CAMPO}
               />
               {errorRango && (
@@ -280,6 +289,7 @@ export function FiltrosBi({
             texto={hayMonto ? `Net Amount (Local): ${textoMonto(filtros.montoMin, filtros.montoMax)}` : 'Net Amount (Local)'}
             activa={hayMonto}
             alQuitar={() => aplicar({ montoMin: undefined, montoMax: undefined })}
+            quitarEtiqueta={`Quitar Net Amount (Local): ${textoMonto(filtros.montoMin, filtros.montoMax)}`}
           >
             {(cerrar) => (
               <div className="grid gap-2">

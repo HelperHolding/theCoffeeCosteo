@@ -40,7 +40,7 @@ export function Pildora({
   return (
     <div
       ref={raiz}
-      className="relative"
+      className="sm:relative"
       onKeyDown={(e) => {
         if (abierta && e.key === 'Escape') {
           e.stopPropagation();
@@ -81,7 +81,7 @@ export function Pildora({
           ref={recuadro}
           role="dialog"
           aria-label={etiqueta}
-          className="absolute left-0 z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-line-strong bg-surface p-3 text-ink shadow-lg"
+          className="absolute left-0 z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] max-sm:inset-x-0 max-sm:w-auto rounded-xl border border-line-strong bg-surface p-3 text-ink shadow-lg"
         >
           {children(() => cerrar())}
         </div>

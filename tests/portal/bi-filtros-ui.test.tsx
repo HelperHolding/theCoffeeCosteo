@@ -136,6 +136,30 @@ describe('<FiltrosBi> en píldoras', () => {
     expect(alCambiar).toHaveBeenLastCalledWith(url());
   });
 
+  it('✕ de todas las píldoras dice «Quitar <filtro>: <valor>»', () => {
+    pintar('comp=no&min=10&max=20&desde=2026-10-01&hasta=2026-10-07');
+    fireEvent.click(pildora(/^Más filtros/));
+    for (const n of [
+      'Quitar Comparable: No Comparable',
+      'Quitar Net Amount (Local): $10 – $20',
+      'Quitar Rango de Fechas: 2026-10-01 – 2026-10-07',
+      'Quitar Fecha Relativa: 2026-10-01 – 2026-10-07',
+    ])
+      expect(screen.getByRole('button', { name: n })).toBeTruthy();
+  });
+
+  it('cambiar una fecha limpia el error del rango', () => {
+    pintar();
+    fireEvent.click(pildora(/^Rango de Fechas/));
+    const d = screen.getByRole('dialog', { name: 'Rango de Fechas' });
+    fireEvent.change(within(d).getByLabelText('Desde'), { target: { value: '2026-10-10' } });
+    fireEvent.change(within(d).getByLabelText('Hasta'), { target: { value: '2026-10-01' } });
+    fireEvent.click(within(d).getByRole('button', { name: 'Aplicar' }));
+    expect(within(d).getByRole('alert')).toBeTruthy();
+    fireEvent.change(within(d).getByLabelText('Hasta'), { target: { value: '2026-10-12' } });
+    expect(within(d).queryByRole('alert')).toBeNull();
+  });
+
   it('ya no hay fila de chips', () => {
     pintar('cafe=si');
     expect(screen.queryByRole('list', { name: 'Filtros activos' })).toBeNull();
