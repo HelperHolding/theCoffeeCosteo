@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calcular } from '../../components/sucursales/tablero-mexico';
-import { configDe } from '../../lib/sucursales/config';
+import { ESTADO_DE_CIUDAD, calcular } from '../../components/sucursales/tablero-mexico';
+import { ESTADOS_MX } from '../../components/sucursales/mapa-mexico-trazos';
+import { configDe, sucursalesConfiguradas } from '../../lib/sucursales/config';
 import type { TableroMexico } from '../../lib/sucursales/contratos';
 import type { Origen } from '../../lib/sucursales/normalizar';
 import {
@@ -333,5 +334,41 @@ describe('Tablero de México: un día cerrado y un rango', () => {
     expect(v.rango!.porDia).toBeCloseTo(650_00 / 7);
     expect(v.ultimaHora).toBeNull();
     expect(v.avisos.some((a) => /no tienen venta de Rappi del portal/.test(a))).toBe(true);
+  });
+});
+
+describe('Tablero de México: estado de cada ciudad en el mapa', () => {
+  it('cada ciudad configurada tiene un estado que existe en el mapa (un lote nuevo no se queda fuera)', () => {
+    const claves = new Set(ESTADOS_MX.map((e) => e.clave));
+    const sinEstado = sucursalesConfiguradas
+      .filter((s) => !claves.has(ESTADO_DE_CIUDAD[s.ciudad] ?? ''))
+      .map((s) => `${s.companyId} ${s.nombre} (${s.ciudad})`);
+    expect(sinEstado).toEqual([]);
+  });
+
+  it('Los Cabos va en Baja California Sur', () => {
+    expect(ESTADO_DE_CIUDAD['Los Cabos']).toBe('BCS');
+  });
+
+  it('una ciudad sin estado se avisa arriba y bajo el mapa, y su venta cuenta en los totales', () => {
+    const cfg = { ...configDe(513)!, ciudad: 'Ciudad Nueva' };
+    const hoy = armarHoy(
+      { ultimo_corte: '2026-11-15T22:10:00Z', dias: [dia(513, '2026-11-15', true, 16 * 3600)] },
+      [cfg],
+    );
+    const v = calcular(
+      {
+        generadoEn: '2026-11-15T22:12:00Z',
+        semanas: 8,
+        hoy,
+        periodo: armarPeriodo(periodoVacio, '2026-09-14', '2026-11-08', [cfg]),
+      },
+      'todos',
+    );
+    expect(v.sinEstado).toEqual(['Ciudad Nueva']);
+    expect(v.avisos).toContain(
+      'Ciudad Nueva no tiene estado en el mapa: su venta cuenta en los totales, pero no se pinta.',
+    );
+    expect(v.hoy.venta).toBeGreaterThan(0);
   });
 });
