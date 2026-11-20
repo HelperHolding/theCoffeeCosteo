@@ -100,7 +100,7 @@ export function ConInfo({ info, children }: { info: InfoTablero; children: React
         }}
         onPointerEnter={cancelar}
         onPointerLeave={(e) => e.pointerType === 'mouse' && programar(false, CERRAR_MS)}
-        className="con-info-pop w-80 rounded-2xl border-white/70 p-0 text-sm"
+        className="con-info-pop w-80 rounded-2xl border-line p-0 text-sm"
       >
         <div className="flex items-start justify-between gap-3 px-4 pt-4">
           <p className="font-display text-base font-bold">{info.titulo}</p>

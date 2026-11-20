@@ -218,7 +218,7 @@ const Columna = memo(function Columna({
       {total > Math.min(cards.length, POR_COLUMNA) && (
         <Link
           href={`/crm/pipeline?vista=tabla&etapa=${etapa.clave}`}
-          className="mx-2 mb-2 rounded-lg px-3 py-2 text-center text-xs font-semibold text-ink-2 hover:bg-white/70 hover:text-ink"
+          className="mx-2 mb-2 rounded-lg px-3 py-2 text-center text-xs font-semibold text-ink-2 hover:bg-surface/70 hover:text-ink"
         >
           Ver las {total.toLocaleString('es-MX')} en tabla
         </Link>
