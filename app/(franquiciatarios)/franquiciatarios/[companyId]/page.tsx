@@ -8,6 +8,8 @@ import { ResumenDia } from '@/components/franquiciatarios/resumen-dia';
 import { Incidencias } from '@/components/franquiciatarios/incidencias';
 import { NombreDeclarado, QuienEres } from '@/components/franquiciatarios/quien-eres';
 import { diaLargo } from '@/components/franquiciatarios/formato';
+import { TONO, type Tono } from '@/components/franquiciatarios/colores';
+import { cn } from 'cn';
 
 export default async function Hoy({ params }: { params: Promise<{ companyId: string }> }) {
   const c = await contextoSucursal(params);
@@ -52,12 +54,14 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
         <Acceso
           href={`${base}/ventas`}
           icono={Activity}
+          tono="ventas"
           titulo="Ventas y pedidos"
           texto="Venta del día con el desglose de cada pedido."
         />
         <Acceso
           href={`${base}/tira`}
           icono={ReceiptText}
+          tono="tira"
           titulo="Tira de venta"
           texto="Resumen del día para imprimir o guardar en PDF."
         />
@@ -65,6 +69,7 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
           <Acceso
             href={`${base}/avisos`}
             icono={BellRing}
+            tono={noes + dia.incidencias.length > 0 ? 'alerta' : 'incidencia'}
             titulo="Avisos e historial"
             texto={
               noes + dia.incidencias.length > 0
@@ -83,31 +88,36 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
 function Acceso({
   href,
   icono: Icono,
+  tono,
   titulo,
   texto,
   alerta = false,
 }: {
   href: string;
   icono: typeof Activity;
+  tono: Tono;
   titulo: string;
   texto: string;
   alerta?: boolean;
 }) {
+  const t = TONO[tono];
   return (
     <Link
       href={href}
-      className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
+      className={cn(
+        'flex items-start gap-4 rounded-2xl border p-5 shadow-card transition-[border-color,box-shadow] hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
+        t.suave,
+        t.borde,
+      )}
     >
       <span
-        className={`grid size-10 shrink-0 place-items-center rounded-xl ${alerta ? 'bg-bad-soft text-bad' : 'bg-surface-2 text-ink'}`}
+        className={cn('grid size-10 shrink-0 place-items-center rounded-xl text-primary-foreground', t.marca)}
       >
         <Icono size={18} aria-hidden="true" />
       </span>
       <span>
         <span className="block font-display font-bold">{titulo}</span>
-        <span className={`text-sm ${alerta ? 'font-medium text-bad' : 'text-muted-foreground'}`}>
-          {texto}
-        </span>
+        <span className={`text-sm ${alerta ? 'font-medium text-bad' : 'text-ink-2'}`}>{texto}</span>
       </span>
     </Link>
   );

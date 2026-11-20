@@ -3,8 +3,9 @@ import { useState, useTransition } from 'react';
 import { CircleAlert, LoaderCircle, MessageSquareWarning, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { corregir } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
-import type { FranqAviso } from '@/lib/franquiciatarios/tipos';
+import type { FranqAviso, SeccionClave } from '@/lib/franquiciatarios/tipos';
 import { diaLargo, hora } from './formato';
+import { Franja } from './colores';
 
 const SECCION: Record<string, string> = { apertura: 'Apertura', cambio: 'Cambio de turno', cierre: 'Cierre' };
 
@@ -24,7 +25,7 @@ export function Avisos({ companyId, avisos }: { companyId: number; avisos: Franq
         <section
           key={d}
           aria-labelledby={`d-${d}`}
-          className="rounded-2xl border border-line bg-surface shadow-card"
+          className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card"
         >
           <h2
             id={`d-${d}`}
@@ -54,10 +55,11 @@ function Aviso({ companyId, a }: { companyId: number; a: FranqAviso }) {
   const [pendiente, iniciar] = useTransition();
   const esNo = a.tipo === 'no';
   return (
-    <li className="px-5 py-4">
+    <li className="relative px-5 py-4 pl-6">
+      <Franja tono={esNo ? ((a.seccion ?? 'apertura') as SeccionClave) : 'incidencia'} />
       <div className="flex items-start gap-3">
         <span
-          className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${esNo ? 'bg-bad-soft text-bad' : 'bg-warn-soft text-warn'}`}
+          className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${esNo ? 'bg-bad-soft text-bad' : 'bg-incidencia text-primary-foreground'}`}
         >
           {esNo ? (
             <CircleAlert size={16} aria-hidden="true" />
