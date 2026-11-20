@@ -1,4 +1,5 @@
 'use server';
+import { leerBanderaWhatsapp } from '@/lib/comercializadora/whatsapp';
 import { revalidatePath } from 'next/cache';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
@@ -509,6 +510,40 @@ export async function guardarConfig(
       : null;
     revalidatePath('/comercializadora', 'layout');
     return { ok: true, version: Number(version) + 1, cambios: cambios.length, recalculo: re ? re.ok : null };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
+/** Bandera de WhatsApp de OCs (spec §3): fuera de CAMPOS_CONFIG para no tocar planCfgDef. Con historial. */
+export async function guardarWhatsapp(activo: boolean, soloVendorIds: string[]): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const actual = await com(s.db).from('com_plan_config').select('config,version').eq('id', 1).maybeSingle();
+    if (actual.error) return fallo(actual.error);
+    if (!actual.data) return { error: 'No hay configuración guardada todavía' };
+    const antes = leerBanderaWhatsapp(actual.data.config);
+    const despues = {
+      activo: activo === true,
+      solo_vendor_ids: [...new Set(soloVendorIds.map(String).filter(Boolean))],
+    };
+    if (JSON.stringify(antes) === JSON.stringify(despues)) return { error: 'No hay cambios que guardar' };
+    const version = Number(actual.data.version);
+    const r = await com(s.db)
+      .from('com_plan_config')
+      .update({ config: { ...(actual.data.config ?? {}), whatsapp: despues }, version: version + 1 })
+      .eq('id', 1)
+      .eq('version', version)
+      .select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length)
+      return { error: 'Otra persona guardó la configuración. Recarga y vuelve a intentarlo.' };
+    await com(s.db)
+      .from('com_plan_config_historial')
+      .insert({ ambito: 'config', clave: 'whatsapp', valor_anterior: antes, valor_nuevo: despues });
+    revalidatePath('/comercializadora/configuracion');
+    return { ok: true };
   } catch (e) {
     return fallo(e);
   }
