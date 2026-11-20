@@ -72,6 +72,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/checklist`, nombre: 'Checklists', icono: ClipboardCheck },
         { href: `${b}/ventas`, nombre: 'Ventas y pedidos', icono: Activity },
         { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
+        { href: `${b}/pedidos`, nombre: 'Pedidos', icono: Truck },
       ],
     },
   ];

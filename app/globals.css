@@ -21,6 +21,8 @@
   /* Franquiciatarios: un color fijo por tipo de información (marcas, barras y fondos suaves; el texto sigue en tinta). */
   --color-apertura: #c27c0e;
   --color-apertura-soft: #fcf0d6;
+  --color-pedidos: #7a7f1d;
+  --color-pedidos-soft: #f0f2d8;
   --color-durante: #3f8a3a;
   --color-durante-soft: #e3f2df;
   --color-cambio: #6250d6;
@@ -551,6 +553,8 @@ html[data-luz='noche'] {
   --color-bad-soft: #351b18;
   --color-apertura: #f0b545;
   --color-apertura-soft: #2e2410;
+  --color-pedidos: #c3c962;
+  --color-pedidos-soft: #262812;
   --color-durante: #7fcb74;
   --color-durante-soft: #15281a;
   --color-cambio: #a397f2;

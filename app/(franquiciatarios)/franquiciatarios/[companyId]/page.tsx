@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, BellRing, ReceiptText } from 'lucide-react';
+import { Activity, BellRing, ReceiptText, Truck } from 'lucide-react';
 import { contextoSucursal } from '@/lib/franquiciatarios/pagina';
 import { baristaElegido, leerBaristas, leerDia } from '@/lib/franquiciatarios/servidor';
 import { diaOperacion } from '@/lib/franquiciatarios/dia';
@@ -65,6 +65,13 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
           tono="tira"
           titulo="Tira de venta"
           texto="Resumen del día para imprimir o guardar en PDF."
+        />
+        <Acceso
+          href={`${base}/pedidos`}
+          icono={Truck}
+          tono="pedidos"
+          titulo="Pedidos"
+          texto="Lo pedido a la Comercializadora y su recepción."
         />
         {c.gestor && (
           <Acceso

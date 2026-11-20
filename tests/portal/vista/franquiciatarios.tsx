@@ -24,11 +24,13 @@ import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { tienda } from './franq-acciones';
 import { PropuestaGerente } from './propuesta-gerente';
 import { VerComo } from '../../../components/franquiciatarios/ver-como';
+import { PedidosFranq } from '../../../components/franquiciatarios/pedidos';
+import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
  * reglas de las migraciones 75 y 79; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
- * ?franquiciatarios&vista=hoy|checklist|ventas|tira|equipo|avisos&rol=barista|gerente|franquiciatario
+ * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|equipo|avisos&rol=barista|gerente|franquiciatario (&montos=1)
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  */
 const p = new URLSearchParams(window.location.search);
@@ -194,6 +196,83 @@ PLANTILLA.forEach(([clave, nombre, firmas, ps], i) => {
     tienda.meta[pt.id] = pt;
   });
 });
+
+// Pedidos sintéticos a la Comercializadora (forma del sitio viejo: items con sku, nombre, precio, cantidad).
+const hace = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString();
+const it = (
+  sku: string,
+  nombre: string,
+  precio: number,
+  cantidad: number,
+  variante: string | null = null,
+) => ({
+  sku,
+  nombre,
+  precio: precio.toFixed(2),
+  cantidad,
+  variante,
+});
+tienda.pedidos = [
+  {
+    id: '04598135-cfcd-428c-96f8-4f9e8627bab4',
+    apertura_id: '397',
+    fecha_pedido: hace(0.2),
+    status: 'enviado',
+    monto: '3542.00',
+    items: [
+      it('INS-CAF-005', 'Café en Grano Kraft 250g', 122, 2),
+      it('INS-BEB-009', 'Cocoa en Polvo Premium 1 Kg', 485, 1),
+      it('INS-DES-008', 'Tapa Para Vasos Fríos Chico/Grande (1,000 Pzs)', 1200, 2),
+      it('INS-LIM-018', 'Polvo Limpiador Cafiza Urnex 566g', 372, 1),
+    ],
+    items_editados: null,
+    shopify_order_number: '#CMS3245',
+  },
+  {
+    id: '1f48253a-28bf-4f73-9ef3-9b52cf3d89a7',
+    apertura_id: '397',
+    fecha_pedido: hace(7),
+    status: 'recibido',
+    monto: '12807.00',
+    items: [
+      it('INS-BEB-067', 'Isopure Vainilla Zero Carb 7.5 Lb', 2550, 1),
+      it('INS-BEB-045', 'Matcha Orgánico 1kg', 1300, 1),
+      it('INS-CAF-003', 'Café en Grano White 1.5 Kg', 600, 7),
+      it('UNI-PLA-023', 'Playera Unisex Manga Larga Negra', 152, 1, 'M'),
+    ],
+    items_editados: null,
+    shopify_order_number: '#CMS3178',
+  },
+  {
+    id: '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f',
+    apertura_id: '397',
+    fecha_pedido: hace(14),
+    status: 'terminado',
+    monto: '9870.50',
+    items: [
+      it('INS-LEC-001', 'Leche Entera 1 L (12 pzs)', 310, 12),
+      it('INS-CAF-003', 'Café en Grano White 1.5 Kg', 600, 6),
+    ],
+    items_editados: null,
+    shopify_order_number: '#CMS3101',
+  },
+];
+if (estado !== 'vacio')
+  tienda.recepciones.push({
+    id: 1,
+    company_id: 514,
+    pedido_id: '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f',
+    folio: '#CMS3101',
+    completo: false,
+    diferencias: [{ nombre: 'Leche Entera 1 L (12 pzs)', sku: 'INS-LEC-001', pedido: 12, recibido: 10 }],
+    observacion: 'Llegaron 10 cajas; se avisó a la Comercializadora',
+    barista_id: 2,
+    nombre: 'Beto Ruiz',
+    registrado_por: 'cuenta',
+    registrado_en: hace(13.8),
+    sesion: 's',
+    dispositivo: 'tablet',
+  });
 
 // Nombres y estado inicial según ?estado.
 const alta = (id: number, nombre: string, activo = true) => ({
@@ -407,6 +486,7 @@ export function VistaFranquiciatarios() {
       equipo: 'Baristas',
       avisos: 'Avisos e historial',
       propuesta: 'Propuesta: apartados del gerente',
+      pedidos: 'Pedidos a la Comercializadora',
     }[vista] ?? 'Hoy';
   const actual = dia.secciones.find((s) => s.clave === seccionPedida) ?? dia.secciones[0];
   const hoyVentas = enZona(new Date(), cfgVentas.zona).fecha;
@@ -459,6 +539,12 @@ export function VistaFranquiciatarios() {
           companyId={514}
           rappi
           dias={Array.from({ length: 7 }, (_, i) => sumarDias(hoyVentas, -i))}
+        />
+      ) : vista === 'pedidos' ? (
+        <PedidosFranq
+          companyId={514}
+          conMontos={p.get('montos') === '1'}
+          pedidos={armarPedidos(tienda.pedidos, tienda.recepciones, { conMontos: p.get('montos') === '1' })}
         />
       ) : vista === 'propuesta' ? (
         <PropuestaGerente />
