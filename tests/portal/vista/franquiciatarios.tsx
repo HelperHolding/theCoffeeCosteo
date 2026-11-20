@@ -25,12 +25,16 @@ import { tienda } from './franq-acciones';
 import { PropuestaGerente } from './propuesta-gerente';
 import { VerComo } from '../../../components/franquiciatarios/ver-como';
 import { PedidosFranq } from '../../../components/franquiciatarios/pedidos';
+import { ConteoFranq } from '../../../components/franquiciatarios/conteo';
+import { InventarioFranq } from '../../../components/franquiciatarios/inventario';
+import { armarHistorial } from '../../../lib/franquiciatarios/conteos';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
  * reglas de las migraciones 75 y 79; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
- * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|equipo|avisos&rol=barista|gerente|franquiciatario
+ * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|conteo|inventario|equipo|avisos&rol=barista|gerente|franquiciatario
+ * &momento=apertura|medio (conteo); &sinlista=1 (inventario sin lista: botón de sugerido)
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  */
 const p = new URLSearchParams(window.location.search);
@@ -274,6 +278,85 @@ if (estado !== 'vacio')
     dispositivo: 'tablet',
   });
 
+// Lista sugerida de Essentia (la misma que dio el ensayo de la migración 83) y conteos de la última semana.
+const LISTA_SUGERIDA: [string, string][] = [
+  ['Café Tostado En Grano White 1.5 Kg', 'paquete de 1500 gr'],
+  ['Leche Deslactosadas', 'paquete de 1000 ml'],
+  ['Chobani D.creamer Pumpkin Spice', 'paquete de 710 ml'],
+  ['Leche Entera', 'paquete de 2000 ml'],
+  ['Brioche Trenza', 'pza'],
+  ['Pechuga De Pavo', 'paquete de 3000 gr'],
+  ['Croissant Tradicional', 'pza'],
+  ['Vaso Frío Pet 20 Oz (1,000 Pzs)', 'paquete de 1000 pza'],
+  ['Vaso Frío Pet 14 Oz (1,000 Pzs)', 'paquete de 1000 pza'],
+  ['Panque De Platano', 'pza'],
+  ['Vaso Caliente Papel Kraft 12 Oz (1,000 Pzs)', 'paquete de 500 pza'],
+  ['Tapa Frio Pet (1,000 Pzs)', 'paquete de 1000 pza'],
+  ['Panqué De Limón', 'pza'],
+  ['Vaso Caliente Papel Kraft 8 Oz (500 Pzs)', 'paquete de 500 pza'],
+  ['Brownie', 'pza'],
+  ['Queso Mozarella', 'paquete de 2270 gr'],
+  ['Isopure', 'paquete de 3400 gr'],
+  ['Leche Avena', 'paquete de 1000 ml'],
+  ['Matcha Gourmet Orgánico 1 Kg', 'paquete de 1000 gr'],
+  ['Bolsas Para Pan Paquete (1000 Piezas)', 'paquete de 1000 pza'],
+];
+const momentoConteo = p.get('momento') === 'medio' ? ('medio' as const) : ('apertura' as const);
+if (p.get('sinlista') !== '1') {
+  LISTA_SUGERIDA.forEach(([nombre, unidad], i) =>
+    tienda.insumos.push({
+      id: 700 + i,
+      company_id: 514,
+      insumo_id: null,
+      nombre,
+      unidad,
+      orden: i + 1,
+      activo: true,
+      origen: 'sugerido',
+      creado_por: 'g',
+      creado_en: '2026-11-20T15:00:00Z',
+      actualizado_por: null,
+      actualizado_en: null,
+    }),
+  );
+  let cid = 1;
+  for (let d = 1; d <= 3; d++)
+    for (const momento of ['apertura', 'medio'] as const)
+      tienda.insumos.forEach((ins, i) =>
+        tienda.conteos.push({
+          id: cid++,
+          company_id: 514,
+          dia: sumarDias(diaOperacion(), -d),
+          momento,
+          insumo_id: ins.id,
+          cantidad:
+            Math.max(0, ((i * 7 + d * 3) % 12) - (momento === 'medio' ? 2 : 0)) + (i % 3 === 0 ? 0.5 : 0),
+          barista_id: 1,
+          nombre: 'Ana López',
+          registrado_por: 'cuenta',
+          registrado_en: `${sumarDias(diaOperacion(), -d)}T${momento === 'apertura' ? '13:10' : '20:30'}:00Z`,
+          sesion: 's',
+          dispositivo: 'tablet',
+          corrige_id: null,
+        }),
+      );
+}
+const estadosConteo = (dia: string) =>
+  (['apertura', 'medio'] as const).flatMap((m) => {
+    const hoy = tienda.conteos.filter((c) => c.dia === dia && c.momento === m);
+    const ultimo = hoy.at(-1);
+    return ultimo
+      ? [
+          {
+            momento: m,
+            nombre: ultimo.nombre,
+            registrado_en: ultimo.registrado_en,
+            insumos: new Set(hoy.map((c) => c.insumo_id)).size,
+          },
+        ]
+      : [];
+  });
+
 // Nombres y estado inicial según ?estado.
 const alta = (id: number, nombre: string, activo = true) => ({
   id,
@@ -487,6 +570,8 @@ export function VistaFranquiciatarios() {
       avisos: 'Avisos e historial',
       propuesta: 'Propuesta: apartados del gerente',
       pedidos: 'Pedidos a la Comercializadora',
+      conteo: 'Conteo de insumos',
+      inventario: 'Inventario',
     }[vista] ?? 'Hoy';
   const actual = dia.secciones.find((s) => s.clave === seccionPedida) ?? dia.secciones[0];
   const hoyVentas = enZona(new Date(), cfgVentas.zona).fecha;
@@ -545,6 +630,21 @@ export function VistaFranquiciatarios() {
           companyId={514}
           conMontos={gestor}
           pedidos={armarPedidos(tienda.pedidos, tienda.recepciones, { conMontos: gestor })}
+        />
+      ) : vista === 'conteo' ? (
+        <ConteoFranq
+          key={momentoConteo}
+          companyId={514}
+          momento={momentoConteo}
+          insumos={tienda.insumos.filter((i) => i.activo).sort((a, b) => a.orden - b.orden)}
+          estados={estadosConteo(tienda.dia)}
+          gestor={gestor}
+        />
+      ) : vista === 'inventario' ? (
+        <InventarioFranq
+          companyId={514}
+          insumos={tienda.insumos}
+          {...armarHistorial(tienda.insumos, tienda.conteos)}
         />
       ) : vista === 'propuesta' ? (
         <PropuestaGerente />

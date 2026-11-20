@@ -12,7 +12,7 @@ import { cookieBarista } from '@/lib/franquiciatarios/servidor';
 import { configDe } from '@/lib/sucursales/config';
 import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
 import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
-import type { SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
+import type { MomentoConteo, SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -273,6 +273,66 @@ export async function recibirPedido(datos: {
       p_observacion: datos.observacion ?? null,
       p_barista: null,
       p_dispositivo: disp,
+    }),
+  );
+}
+
+/** Conteo de insumos críticos de hoy (apertura o medio turno). Cualquier rol de la sucursal; la base exige completo. */
+export async function contar(datos: {
+  companyId: number;
+  momento: MomentoConteo;
+  conteos: { insumo: number; cantidad: number }[];
+}): Promise<Resultado> {
+  if (datos.momento !== 'apertura' && datos.momento !== 'medio') return { error: 'Datos inválidos.' };
+  const lista = Array.isArray(datos.conteos) ? datos.conteos : [];
+  if (
+    lista.some(
+      (c) =>
+        !Number.isSafeInteger(c?.insumo) || typeof c?.cantidad !== 'number' || !Number.isFinite(c.cantidad),
+    )
+  )
+    return { error: 'Revisa las cantidades.' };
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_contar', {
+      p_company: datos.companyId,
+      p_momento: datos.momento,
+      p_conteos: lista.map((x) => ({ insumo: x.insumo, cantidad: x.cantidad })),
+      p_barista: b,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+/** Arma la lista de insumos críticos sugerida por el consumo teórico (solo si la sucursal no tiene lista). */
+export async function sugerirInsumos(companyId: number): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario arman la lista.' };
+  return ejecutar(() => c.db.rpc('franq_sugerir_insumos', { p_company: companyId }));
+}
+
+export async function guardarInsumo(datos: {
+  companyId: number;
+  id: number | null;
+  nombre: string;
+  unidad: string;
+  orden: number | null;
+  activo: boolean;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario ajustan la lista.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_insumo_guardar', {
+      p_company: datos.companyId,
+      p_id: datos.id,
+      p_nombre: String(datos.nombre ?? ''),
+      p_unidad: String(datos.unidad ?? ''),
+      p_orden: datos.orden,
+      p_activo: datos.activo,
     }),
   );
 }

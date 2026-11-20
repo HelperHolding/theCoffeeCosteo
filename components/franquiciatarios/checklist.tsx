@@ -1,7 +1,17 @@
 'use client';
 import { useId, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Check, CircleAlert, Clock, History, LoaderCircle, PenLine, ReceiptText, X } from 'lucide-react';
+import {
+  Check,
+  CircleAlert,
+  ClipboardList,
+  Clock,
+  History,
+  LoaderCircle,
+  PenLine,
+  ReceiptText,
+  X,
+} from 'lucide-react';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import { nombreFirma, type PuntoDia, type SeccionDia } from '@/lib/franquiciatarios/dia';
@@ -231,6 +241,9 @@ function Punto({
           </h3>
           <p className="mt-1 text-sm text-ink-2">{punto.estandar}</p>
           {punto.corte && <EnlaceCorte companyId={companyId} parcial={punto.corte === 'parcial'} />}
+          {momentoConteo(seccion.clave, punto) && (
+            <EnlaceConteo companyId={companyId} momento={momentoConteo(seccion.clave, punto)!} />
+          )}
         </div>
         <div role="group" aria-labelledby={`${id}-t`} className="grid shrink-0 grid-cols-2 gap-2 sm:w-56">
           <BotonRespuesta
@@ -374,6 +387,22 @@ function CampoDato({
 }
 
 /** Enlace del punto «Enviar corte» a la tira de venta del día (parcial a medio día). */
+/** Punto de conteo de insumos (apertura o medio turno de la v2): enlaza a la captura del conteo. */
+const momentoConteo = (clave: SeccionDia['clave'], punto: PuntoDia): 'apertura' | 'medio' | null =>
+  (clave === 'apertura' || clave === 'medio') && punto.dato && /contad/i.test(punto.dato) ? clave : null;
+
+function EnlaceConteo({ companyId, momento }: { companyId: number; momento: 'apertura' | 'medio' }) {
+  return (
+    <Link
+      href={`/franquiciatarios/${companyId}/conteo?momento=${momento}`}
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-pedidos/40 bg-pedidos-soft px-2.5 py-1 text-sm font-semibold text-ink hover:border-pedidos focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
+    >
+      <ClipboardList size={14} aria-hidden="true" />
+      Capturar el conteo de {momento === 'apertura' ? 'apertura' : 'medio turno'}
+    </Link>
+  );
+}
+
 function EnlaceCorte({ companyId, parcial }: { companyId: number; parcial: boolean }) {
   return (
     <Link

@@ -4,9 +4,12 @@
 import type {
   FranqBarista,
   FranqFirma,
+  FranqConteo,
   FranqIncidencia,
+  FranqInsumo,
   FranqPunto,
   FranqRecepcion,
+  MomentoConteo,
   FranqRespuesta,
   SeccionClave,
   TipoFirma,
@@ -30,6 +33,8 @@ export const tienda = {
   meta: {} as Record<number, FranqPunto>,
   pedidos: [] as FilaPedidoLegado[],
   recepciones: [] as FranqRecepcion[],
+  insumos: [] as FranqInsumo[],
+  conteos: [] as FranqConteo[],
   dia: '',
 };
 let id = 1000;
@@ -252,6 +257,110 @@ export async function recibirPedido(d: {
     diferencias,
     observacion: (d.observacion ?? '').trim() || null,
   });
+  avisar();
+  return { ok: true };
+}
+
+/** Conteo con las reglas de franq_contar: todos los insumos activos, cantidades ≥ 0, un recuento corrige al vigente. */
+export async function contar(d: {
+  momento: MomentoConteo;
+  conteos: { insumo: number; cantidad: number }[];
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const activos = tienda.insumos.filter((i) => i.activo);
+  const faltan = activos.filter((i) => !d.conteos.some((c) => c.insumo === i.id)).length;
+  if (faltan) return { error: `Faltan ${faltan} insumos por contar.` };
+  if (d.conteos.some((c) => c.cantidad < 0)) return { error: 'Las cantidades van de 0 en adelante.' };
+  for (const c of d.conteos) {
+    const previo = tienda.conteos
+      .filter(
+        (x) =>
+          x.dia === tienda.dia &&
+          x.momento === d.momento &&
+          x.insumo_id === c.insumo &&
+          !tienda.conteos.some((y) => y.corrige_id === x.id),
+      )
+      .at(-1);
+    tienda.conteos.push({
+      ...base(q),
+      id: ++id,
+      dia: tienda.dia,
+      momento: d.momento,
+      insumo_id: c.insumo,
+      cantidad: c.cantidad,
+      corrige_id: previo?.id ?? null,
+    });
+  }
+  avisar();
+  return { ok: true };
+}
+
+export async function sugerirInsumos(): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista') return { error: 'Solo el gerente o el franquiciatario arman la lista.' };
+  if (tienda.insumos.some((i) => i.activo)) return { error: 'La sucursal ya tiene su lista de insumos.' };
+  [
+    'Café Tostado En Grano White 1.5 Kg',
+    'Leche Deslactosadas',
+    'Leche Entera',
+    'Croissant Tradicional',
+  ].forEach((nombre, i) =>
+    tienda.insumos.push({
+      id: ++id,
+      company_id: 514,
+      insumo_id: null,
+      nombre,
+      unidad: i === 3 ? 'pza' : 'paquete',
+      orden: i + 1,
+      activo: true,
+      origen: 'sugerido',
+      creado_por: 'g',
+      creado_en: ahora(),
+      actualizado_por: null,
+      actualizado_en: null,
+    }),
+  );
+  avisar();
+  return { ok: true };
+}
+
+export async function guardarInsumo(d: {
+  id: number | null;
+  nombre: string;
+  unidad: string;
+  orden: number | null;
+  activo: boolean;
+}): Promise<Resultado> {
+  await espera();
+  const nombre = d.nombre.trim().replace(/\s+/g, ' ');
+  if (nombre.length < 2 || !d.unidad.trim())
+    return { error: 'Escribe el nombre y la unidad en que se cuenta.' };
+  if (
+    tienda.insumos.some((i) => i.activo && i.id !== d.id && i.nombre.toLowerCase() === nombre.toLowerCase())
+  )
+    return { error: 'Ya hay un insumo activo con ese nombre.' };
+  if (d.id === null)
+    tienda.insumos.push({
+      id: ++id,
+      company_id: 514,
+      insumo_id: null,
+      nombre,
+      unidad: d.unidad.trim(),
+      orden: tienda.insumos.length + 1,
+      activo: true,
+      origen: 'manual',
+      creado_por: 'g',
+      creado_en: ahora(),
+      actualizado_por: null,
+      actualizado_en: null,
+    });
+  else
+    Object.assign(
+      tienda.insumos.find((i) => i.id === d.id)!,
+      { nombre, unidad: d.unidad.trim(), activo: d.activo },
+    );
   avisar();
   return { ok: true };
 }
