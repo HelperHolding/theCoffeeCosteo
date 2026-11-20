@@ -304,3 +304,21 @@ críticos para la F2.
 - Si el gerente o el franquiciatario ven los montos.
 - Dar de alta a Essentia en la OV sugerida de Comercializadora: renglón `514 → 397` en `com_ovs_tiendas`, que es una
   escritura en producción.
+
+## 10. Pedidos solo para gerencia (decisión de Carlos, 2026-11-20)
+
+> Rama `feat/franq-pedidos-gestores`. Migración **20261120000082** (la 81 ya era de Rappi) ensayada con respaldo y
+> rollback; **sin aplicar** hasta el merge con OK.
+
+- **Gerente y franquiciatario ven los pedidos con montos** (precio por producto y total) y registran las recepciones
+  con el nombre de su perfil.
+- **La cuenta de baristas no ve pedidos, inventario ni P&L.** «Pedidos» pasa al grupo Gerencia y la tarjeta de Hoy
+  solo la ven los gestores. La página le responde 404 a la cuenta de baristas, como Avisos y Baristas.
+- **En la base (migración 82):** la lectura de `franq_recepciones` queda solo para gestores
+  (`franq_companias_gestor()`), y `franq_recibir` rechaza a quien no sea gerente, franquiciatario o admin.
+- **Evidencia:**
+  - `tests/db/franquiciatarios-recepciones.test.ts`: 7 pruebas. El barista no registra ni lee; el gerente de otra
+    sucursal tampoco.
+  - Ensayo `scripts/franquiciatarios/ensayo-82.ts` (sha `46628ad2…`): la política queda limitada a gestores y
+    `franq_recibir` exige gestor; en la consulta nueva todo sigue igual. Había 0 recepciones en producción.
+  - Respaldo: `Respaldos/thecoffee-supabase/2026-11-20-migracion-82-antes.sql`.

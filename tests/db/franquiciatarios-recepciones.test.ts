@@ -3,7 +3,8 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario, darModulo } from './utilidades';
 
-// Migración 80: recepción de pedidos de la Comercializadora (solo inserción, una por pedido y sucursal).
+// Migraciones 80 y 82: recepción de pedidos de la Comercializadora (solo inserción, una por pedido y sucursal),
+// solo para gerente, franquiciatario y admin.
 let db: PGlite;
 let gerente: string;
 let tienda: string;
@@ -63,18 +64,31 @@ beforeAll(async () => {
 });
 afterAll(async () => db.close());
 
-describe('migración 80 · recepciones', () => {
-  it('la cuenta de baristas registra una recepción completa con su nombre y la hora del servidor', async () => {
+describe('migraciones 80 y 82 · recepciones', () => {
+  it('migración 82: la cuenta de baristas no registra recepciones (ni con nombre declarado)', async () => {
     expect(
-      await falla(tienda, 'select public.franq_recibir(514,$1,null,$2::jsonb,null,null,$3)', [P1, '[]', 'x']),
-    ).toMatch(/Elige tu nombre/);
-    const r = await recibir(tienda, E, P1, [], null, ana);
+      await falla(tienda, 'select public.franq_recibir(514,$1,null,$2::jsonb,null,$3,$4)', [
+        P1,
+        '[]',
+        ana,
+        'x',
+      ]),
+    ).toMatch(/Solo el gerente o el franquiciatario/);
+  });
+
+  it('el gerente registra una recepción completa con el nombre de su perfil y la hora del servidor', async () => {
+    const r = await recibir(gerente, E, P1, [], null, ana);
     const f = await uno(
-      tienda,
-      'select completo, nombre, folio, registrado_en from franq_recepciones where id = $1',
+      gerente,
+      'select completo, nombre, folio, barista_id, registrado_en from franq_recepciones where id = $1',
       [r.id],
     );
-    expect(f).toMatchObject({ completo: true, nombre: 'Ana', folio: '#CMS3245' });
+    expect(f).toMatchObject({
+      completo: true,
+      nombre: 'Usuario franquiciado',
+      folio: '#CMS3245',
+      barista_id: null,
+    });
     expect(f.registrado_en).toBeTruthy();
   });
 
@@ -132,11 +146,13 @@ describe('migración 80 · recepciones', () => {
         '[]',
         'x',
       ]),
-    ).toMatch(/No tienes acceso/);
+    ).toMatch(/Solo el gerente o el franquiciatario/);
   });
 
   it('se leen solo por sucursal; nadie las edita ni las borra; escritura directa cerrada', async () => {
     expect((await filas(gerente, 'select id from franq_recepciones')).length).toBe(2);
+    // Migración 82: la cuenta de baristas de la misma sucursal tampoco las lee.
+    expect(await filas(tienda, 'select id from franq_recepciones')).toEqual([]);
     expect(await filas(gerenteOtra, 'select id from franq_recepciones')).toEqual([]);
     expect(await filas(costeo, 'select id from franq_recepciones')).toEqual([]);
     expect(await falla(null, 'delete from franq_recepciones')).toMatch(/no se editan ni se borran/);
