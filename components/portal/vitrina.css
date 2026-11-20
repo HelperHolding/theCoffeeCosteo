@@ -76,13 +76,19 @@
 }
 .con-info-boton:focus-visible {
   opacity: 1;
-  background: rgb(255 255 255 / 0.8);
+  background: color-mix(in srgb, var(--color-surface) 85%, transparent);
 }
+/* Pantallas táctiles: el botón siempre se ve, así que la tarjeta le reserva su esquina inferior para que no tape
+   el último renglón ni las cifras. */
 @media (hover: none) {
   .con-info-boton {
     opacity: 1;
     pointer-events: auto;
-    background: rgb(255 255 255 / 0.8);
+    background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+  .con-info > :first-child {
+    padding-bottom: 2.75rem;
   }
 }
 

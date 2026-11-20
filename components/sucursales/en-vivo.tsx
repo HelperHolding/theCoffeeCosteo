@@ -324,7 +324,7 @@ export function EnVivo({
                           <button
                             type="button"
                             onClick={() => setPedido(p)}
-                            className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-sm hover:bg-[#faf8f4] focus-visible:outline-2 focus-visible:outline-ink"
+                            className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-sm hover:bg-surface-2/70 focus-visible:outline-2 focus-visible:outline-ink"
                           >
                             <span className="tabular w-12 shrink-0 font-semibold">{p.hora.slice(0, 5)}</span>
                             <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
