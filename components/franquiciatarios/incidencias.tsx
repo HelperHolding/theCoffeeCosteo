@@ -23,7 +23,7 @@ export function Incidencias({
   return (
     <section
       aria-labelledby="incidencias"
-      className="rounded-2xl border border-incidencia/40 bg-incidencia-soft p-4 shadow-card sm:p-5"
+      className="rounded-2xl border border-incidencia/40 bg-linear-to-t from-incidencia/25 via-incidencia/8 via-45% to-surface p-4 shadow-card sm:p-5"
     >
       <div className="flex items-start gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-incidencia text-primary-foreground">
