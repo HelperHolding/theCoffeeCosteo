@@ -14,8 +14,9 @@ export function Marca({ negativo = false, className = '' }: { negativo?: boolean
 }
 
 /**
- * Marca de la plataforma: «helper holding.» con la misma tipografía del logo de The Coffee (minúsculas, negrita
- * apretada, punto final) y, debajo y en pequeño, «the coffee. ザ・コーヒー».
+ * Marca de la plataforma: logo de Helper Holding (public/helper-holding.png, blanco sobre transparente) y, debajo y
+ * en pequeño, «the coffee. ザ・コーヒー». En tema claro el logo se invierte a negro (.logo-holding en globals.css);
+ * sobre fondo oscuro (`negativo` o modo noche) queda blanco.
  */
 export function MarcaHolding({
   negativo = false,
@@ -27,9 +28,9 @@ export function MarcaHolding({
   className?: string;
 }) {
   const t = {
-    sm: { nombre: 'text-[1.05rem]', sub: 'text-[9px] mt-1' },
-    md: { nombre: 'text-2xl', sub: 'text-[10px] mt-1.5' },
-    lg: { nombre: 'text-[2.6rem]', sub: 'text-xs mt-2.5' },
+    sm: { logo: 'h-7', sub: 'text-[9px] mt-1' },
+    md: { logo: 'h-9', sub: 'text-[10px] mt-1.5' },
+    lg: { logo: 'h-16', sub: 'text-xs mt-2.5' },
   }[tamano];
   return (
     <span
@@ -37,14 +38,14 @@ export function MarcaHolding({
       aria-label="Helper Holding · The Coffee"
       className={cn('inline-flex flex-col', negativo ? 'text-white' : 'text-ink', className)}
     >
-      <span
+      <img
+        src="/helper-holding.png"
+        alt=""
         aria-hidden="true"
-        className={cn('font-display font-black lowercase tracking-[-0.035em]', t.nombre, 'leading-[0.9]')}
-      >
-        helper
-        <br />
-        holding.
-      </span>
+        width={656}
+        height={243}
+        className={cn('logo-holding w-auto self-start object-contain', negativo && 'logo-holding-negativo', t.logo)}
+      />
       <span
         aria-hidden="true"
         className={cn(

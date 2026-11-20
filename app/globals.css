@@ -526,6 +526,15 @@
   }
 }
 
+/* Logo de Helper Holding (blanco sobre transparente): negro en tema claro, blanco sobre fondo oscuro o en modo noche. */
+.logo-holding {
+  filter: invert(1);
+}
+.logo-holding.logo-holding-negativo,
+html[data-luz='noche'] .logo-holding {
+  filter: none;
+}
+
 /*
  * Modo oscuro (interruptor sol/luna; app/layout.tsx lo aplica antes de pintar con html[data-luz='noche']).
  * Tema oscuro completo: se redefinen las variables de color, así fondo, tarjetas, textos, bordes y avisos cambian
