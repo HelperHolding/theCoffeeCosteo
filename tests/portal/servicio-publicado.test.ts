@@ -129,3 +129,15 @@ describe('Nivel de servicio: último día que Rappi ya publicó', () => {
     expect(await leerPublicadoHasta(db([]), [], '2026-11-20')).toBeNull();
   });
 });
+
+describe('Nivel de servicio: pedidos finalizados como los cuenta el portal', () => {
+  it('finalizados y la tasa de reclamos salen de cocina_pedidos, no de la columna finalizados', async () => {
+    const { sumar } = await import('../../lib/sucursales/servicio');
+    // Essentia normal, 21-oct a 19-nov: la columna finalizados suma 298 (más que los 297 creados); el portal dice 284.
+    const t = sumar([
+      { ...fila('2026-11-19', 297, 98.5), finalizados: 298, cocina_pedidos: 284, recl_faltante: 14 },
+    ]);
+    expect(t.finalizados).toBe(284);
+    expect(t.tasaReclamos).toBeCloseTo(14 / 284);
+  });
+});

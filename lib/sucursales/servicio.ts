@@ -115,12 +115,13 @@ export interface Totales {
   /** Tienda-días con dato de Rappi. */
   dias: number;
   pedidos: number;
+  /** Pedidos finalizados como los cuenta el portal (`cocina_pedidos`; ver totalesDeSuma). */
   finalizados: number;
   rechazos: Record<TipoRechazo, number>;
   rechazosTotal: number;
   reclamos: Record<TipoReclamo, number>;
   reclamosTotal: number;
-  /** Reclamos / pedidos finalizados. */
+  /** Reclamos / pedidos finalizados (los del portal). */
   tasaReclamos: number | null;
   /** Rechazos / pedidos creados. */
   tasaRechazos: number | null;
@@ -312,12 +313,15 @@ export function totalesDeSuma(x: SumaServicio): Totales {
   return {
     dias: s.dias,
     pedidos: s.pedidos,
-    finalizados: s.finalizados,
+    // Finalizados como los cuenta el portal (summary/sales/indicators → error.total_orders): es cocina_pedidos
+    // (cooking_time_metrics.total_orders). La columna `finalizados` (error_metrics) es otro conteo y llega a pasar a
+    // los creados: Essentia normal, 21-oct a 19-nov, 298 contra 284 del portal; con 284, 14 reclamos = 4.93 %, igual.
+    finalizados: s.cocina_pedidos,
     rechazos,
     rechazosTotal,
     reclamos,
     reclamosTotal,
-    tasaReclamos: div(reclamosTotal, s.finalizados),
+    tasaReclamos: div(reclamosTotal, s.cocina_pedidos),
     tasaRechazos: div(rechazosTotal, s.pedidos),
     sinDispMinutos: s.sin_disp_minutos,
     disponibilidad: s.disp_n ? s.disp_suma / s.disp_n : null,

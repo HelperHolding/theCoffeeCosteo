@@ -253,3 +253,7 @@ horas». Mientras tanto el importador ya guarda el renglón del día, pero en ce
 - **Sin disponibilidad:** `sin_disp_minutos` llega vacío del portal. El indicador, la gráfica por día y el ranking
   nacional usan el porcentaje del horario, 100 − disponibilidad, como el portal (1.48 % en Essentia, del 21 oct al 19
   nov). Los minutos solo se muestran si llegan.
+- **Pedidos finalizados** (cotejo de la sección 9): `totalesDeSuma` usa `cocina_pedidos` como finalizados y como
+  denominador de la tasa de reclamos. Es lo que cuenta el portal (284 en Essentia; 14 reclamos = 4.93 %). La columna
+  `finalizados` (`error_metrics`) llega a superar a los creados (298 contra 297). La espera del repartidor se sigue
+  ponderando con esa columna.
