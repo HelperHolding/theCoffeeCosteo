@@ -1,5 +1,5 @@
 import { cn } from 'cn';
-import { ArrowLeftRight, MoonStar, Sunrise, type LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, MoonStar, Sunrise, Timer, type LucideIcon } from 'lucide-react';
 import type { SeccionClave } from '@/lib/franquiciatarios/tipos';
 
 /**
@@ -17,7 +17,20 @@ export const TONO: Record<Tono, { suave: string; brillo: string; borde: string; 
     borde: 'border-apertura/40',
     marca: 'bg-apertura',
   },
+  durante: {
+    suave: 'bg-durante-soft',
+    brillo: 'bg-linear-to-t from-durante/25 via-durante/8 via-45% to-surface',
+    borde: 'border-durante/40',
+    marca: 'bg-durante',
+  },
   cambio: {
+    suave: 'bg-cambio-soft',
+    brillo: 'bg-linear-to-t from-cambio/25 via-cambio/8 via-45% to-surface',
+    borde: 'border-cambio/40',
+    marca: 'bg-cambio',
+  },
+  // Medio turno (v2) es la misma fase que el cambio de turno (v1): mismo color.
+  medio: {
     suave: 'bg-cambio-soft',
     brillo: 'bg-linear-to-t from-cambio/25 via-cambio/8 via-45% to-surface',
     borde: 'border-cambio/40',
@@ -57,7 +70,9 @@ export const TONO: Record<Tono, { suave: string; brillo: string; borde: string; 
 
 export const ICONO_SECCION: Record<SeccionClave, LucideIcon> = {
   apertura: Sunrise,
+  durante: Timer,
   cambio: ArrowLeftRight,
+  medio: ArrowLeftRight,
   cierre: MoonStar,
 };
 

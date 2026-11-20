@@ -36,18 +36,41 @@ export const NOMBRE_FIRMA: Record<TipoFirma, string> = {
   responsable: 'Responsable',
   entrega: 'Entrega',
   recibe: 'Recibe',
+  visto_bueno: 'Visto bueno del gerente',
 };
+
+/** Nombre de la firma según la fase (rutina v2: turno de mañana, turno de tarde / cierre y gerente). */
+export function nombreFirma(clave: SeccionClave, tipo: TipoFirma): string {
+  if (clave === 'apertura' && tipo === 'responsable') return 'Barista turno mañana';
+  if (clave === 'cierre' && tipo === 'responsable') return 'Barista tarde / cierre';
+  if (clave === 'medio' && tipo === 'entrega') return 'Entrega · turno mañana';
+  if (clave === 'medio' && tipo === 'recibe') return 'Recibe · turno tarde';
+  return NOMBRE_FIRMA[tipo];
+}
+
+/** Orden de las fases en el día (la v1 «cambio» ocupa el lugar de «medio»). */
+const ORDEN_FASE: Record<SeccionClave, number> = { apertura: 1, durante: 2, cambio: 3, medio: 3, cierre: 4 };
 
 export type EstadoSeccion = 'pendiente' | 'en-curso' | 'completa';
 
-export interface PuntoDia extends Pick<FranqPunto, 'id' | 'orden' | 'actividad' | 'estandar'> {
-  /** Respuesta vigente (la más reciente). */
-  respuesta: Pick<
-    FranqRespuesta,
-    'id' | 'cumple' | 'observacion' | 'nombre' | 'registrado_en' | 'motivo' | 'corrige_id'
-  > | null;
-  /** Renglones anteriores del mismo punto (correcciones), del más reciente al más antiguo. */
-  anteriores: Pick<FranqRespuesta, 'id' | 'cumple' | 'observacion' | 'nombre' | 'registrado_en'>[];
+export type Registro = Pick<
+  FranqRespuesta,
+  'id' | 'cumple' | 'observacion' | 'dato' | 'nombre' | 'registrado_en' | 'motivo' | 'corrige_id'
+>;
+
+export interface PuntoDia extends Pick<
+  FranqPunto,
+  'id' | 'orden' | 'actividad' | 'estandar' | 'tipo' | 'cada_min' | 'margen_min' | 'dato' | 'corte'
+> {
+  /** Registro vigente: en un punto único, el más reciente; en una ronda, la última ronda. */
+  respuesta: Registro | null;
+  /** Punto único: renglones anteriores (correcciones), del más reciente al más antiguo. */
+  anteriores: Pick<FranqRespuesta, 'id' | 'cumple' | 'observacion' | 'dato' | 'nombre' | 'registrado_en'>[];
+  /** Ronda: registros vigentes del día, del más antiguo al más reciente. */
+  rondas: Registro[];
+  /** Ronda con frecuencia: cuándo toca la siguiente (ISO) y si ya pasó su tolerancia. Solo el día en curso. */
+  proxima: string | null;
+  atrasada: boolean;
 }
 
 export interface SeccionDia {
@@ -58,7 +81,10 @@ export interface SeccionDia {
   firmas: Pick<FranqFirma, 'tipo' | 'nombre' | 'registrado_en'>[];
   puntos: PuntoDia[];
   respondidos: number;
+  /** «No» vigentes (en las rondas, cada ronda en «No» cuenta). */
   noes: number;
+  /** Rondas atrasadas en este momento. */
+  atrasos: number;
   estado: EstadoSeccion;
   /** Con al menos una firma, el barista ya no cambia respuestas. */
   firmada: boolean;
@@ -70,9 +96,23 @@ export interface Dia {
   incidencias: Pick<FranqIncidencia, 'id' | 'texto' | 'nombre' | 'registrado_en'>[];
 }
 
+const MIN = 60_000;
+const aRegistro = (r: FranqRespuesta): Registro => ({
+  id: r.id,
+  cumple: r.cumple,
+  observacion: r.observacion,
+  dato: r.dato ?? null,
+  nombre: r.nombre,
+  registrado_en: r.registrado_en,
+  motivo: r.motivo,
+  corrige_id: r.corrige_id,
+});
+
 /**
- * Arma el estado del día (puro, sin base): por sección, la plantilla con que se llenó (o la vigente si aún no se
- * empieza), la respuesta vigente de cada punto, sus correcciones, firmas e incidencias.
+ * Arma el estado del día (puro, sin base). Por fase, la plantilla con que se empezó (o la vigente si aún no se
+ * empieza): así conviven la v1 y la v2 el día del cambio. Un registro vale mientras ningún otro lo corrija (igual que
+ * en la base). Las rondas con frecuencia cuentan desde la última ronda o, si no hay, desde la firma de apertura; con
+ * `ahora` (solo el día en curso) se marcan atrasadas al pasar frecuencia + tolerancia, hasta que firma el cierre.
  */
 export function armarDia(entrada: {
   dia: string;
@@ -84,10 +124,36 @@ export function armarDia(entrada: {
   incidencias: FranqIncidencia[];
   /** id de la plantilla vigente (para las secciones sin checklist ese día). */
   vigente: number | null;
+  /** Momento actual; solo se pasa para el día en curso (activa próxima ronda y atrasos). */
+  ahora?: Date;
 }): Dia {
   const porClave = new Map(entrada.checklists.map((c) => [c.seccion, c]));
+  // Un día anterior que se llenó con otra versión muestra solo sus fases (no las vacías de la vigente). El día en curso
+  // muestra la vigente completa más lo que ya se empezó con la anterior.
+  const plantillasDelDia = new Set(
+    entrada.checklists.map((c) => entrada.secciones.find((x) => x.id === c.seccion_id)?.plantilla_id),
+  );
+  const conVigente =
+    entrada.ahora !== undefined || plantillasDelDia.size === 0 || plantillasDelDia.has(entrada.vigente ?? -1);
+  const claves = new Set<SeccionClave>([
+    ...(conVigente
+      ? entrada.secciones.filter((x) => x.plantilla_id === entrada.vigente).map((x) => x.clave)
+      : []),
+    ...entrada.checklists.map((c) => c.seccion),
+  ]);
+  // «cambio» (v1) y «medio» (v2) son la misma fase: si el día empezó con «cambio», no se muestra también «medio».
+  if (porClave.has('cambio') && !porClave.has('medio')) claves.delete('medio');
+  const corregidos = new Set(entrada.respuestas.map((r) => r.corrige_id).filter((x) => x !== null));
+  const firmaDe = (clave: SeccionClave, tipo: TipoFirma) => {
+    const c = porClave.get(clave);
+    return c ? entrada.firmas.find((f) => f.checklist_id === c.id && f.tipo === tipo) : undefined;
+  };
+  const inicioRondas = firmaDe('apertura', 'responsable')?.registrado_en ?? null;
+  const cerrado = Boolean(firmaDe('cierre', 'responsable'));
+  const ahora = entrada.ahora && !cerrado ? entrada.ahora : null;
+
   const secciones: SeccionDia[] = [];
-  for (const clave of ['apertura', 'cambio', 'cierre'] as const) {
+  for (const clave of claves) {
     const c = porClave.get(clave);
     const s = entrada.secciones.find((x) =>
       c ? x.id === c.seccion_id : x.plantilla_id === entrada.vigente && x.clave === clave,
@@ -98,31 +164,51 @@ export function armarDia(entrada: {
       .filter((p) => p.seccion_id === s.id)
       .sort((a, b) => a.orden - b.orden)
       .map((p) => {
+        const tipo = p.tipo ?? 'unico';
         const hist = resp.filter((r) => r.punto_id === p.id).sort((a, b) => b.id - a.id);
-        const [vig, ...ant] = hist;
-        return {
+        const vigentes = hist.filter((r) => !corregidos.has(r.id));
+        const base = {
           id: p.id,
           orden: p.orden,
           actividad: p.actividad,
           estandar: p.estandar,
-          respuesta: vig
-            ? {
-                id: vig.id,
-                cumple: vig.cumple,
-                observacion: vig.observacion,
-                nombre: vig.nombre,
-                registrado_en: vig.registrado_en,
-                motivo: vig.motivo,
-                corrige_id: vig.corrige_id,
-              }
-            : null,
-          anteriores: ant.map((a) => ({
-            id: a.id,
-            cumple: a.cumple,
-            observacion: a.observacion,
-            nombre: a.nombre,
-            registrado_en: a.registrado_en,
-          })),
+          tipo,
+          cada_min: p.cada_min ?? null,
+          margen_min: p.margen_min ?? null,
+          dato: p.dato ?? null,
+          corte: p.corte ?? null,
+        };
+        if (tipo === 'recurrente') {
+          const rondas = [...vigentes].reverse().map(aRegistro);
+          const desde = rondas.at(-1)?.registrado_en ?? inicioRondas;
+          const proximaMs = ahora && p.cada_min && desde ? Date.parse(desde) + p.cada_min * MIN : null;
+          return {
+            ...base,
+            respuesta: rondas.at(-1) ?? null,
+            anteriores: [],
+            rondas,
+            proxima: proximaMs === null ? null : new Date(proximaMs).toISOString(),
+            atrasada:
+              proximaMs !== null && ahora !== null && ahora.getTime() > proximaMs + (p.margen_min ?? 0) * MIN,
+          };
+        }
+        const vig = vigentes[0];
+        return {
+          ...base,
+          respuesta: vig ? aRegistro(vig) : null,
+          anteriores: hist
+            .filter((r) => r.id !== vig?.id)
+            .map((a) => ({
+              id: a.id,
+              cumple: a.cumple,
+              observacion: a.observacion,
+              dato: a.dato ?? null,
+              nombre: a.nombre,
+              registrado_en: a.registrado_en,
+            })),
+          rondas: [],
+          proxima: null,
+          atrasada: false,
         };
       });
     const firmas = c
@@ -131,16 +217,26 @@ export function armarDia(entrada: {
           .map((f) => ({ tipo: f.tipo, nombre: f.nombre, registrado_en: f.registrado_en }))
       : [];
     const respondidos = puntos.filter((p) => p.respuesta).length;
-    const completa = s.firmas.every((t) => firmas.some((f) => f.tipo === t));
+    const completa = s.firmas.length > 0 && s.firmas.every((t) => firmas.some((f) => f.tipo === t));
     secciones.push({
       clave,
       nombre: s.nombre,
-      orden: s.orden,
+      orden: ORDEN_FASE[clave],
       firmasRequeridas: s.firmas,
       firmas,
       puntos,
       respondidos,
-      noes: puntos.filter((p) => p.respuesta && !p.respuesta.cumple).length,
+      noes: puntos.reduce(
+        (n, p) =>
+          n +
+          (p.tipo === 'recurrente'
+            ? p.rondas.filter((r) => !r.cumple).length
+            : p.respuesta && !p.respuesta.cumple
+              ? 1
+              : 0),
+        0,
+      ),
+      atrasos: puntos.filter((p) => p.atrasada).length,
       estado: completa ? 'completa' : respondidos > 0 || firmas.length > 0 ? 'en-curso' : 'pendiente',
       firmada: firmas.length > 0,
     });

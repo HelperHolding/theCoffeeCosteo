@@ -13,8 +13,8 @@ import type { SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
-const SECCIONES: SeccionClave[] = ['apertura', 'cambio', 'cierre'];
-const FIRMAS: TipoFirma[] = ['responsable', 'entrega', 'recibe'];
+const SECCIONES: SeccionClave[] = ['apertura', 'durante', 'cambio', 'medio', 'cierre'];
+const FIRMAS: TipoFirma[] = ['responsable', 'entrega', 'recibe', 'visto_bueno'];
 const SIN_ACCESO = 'No tienes acceso a esta sucursal.';
 
 /** Sesión del módulo y rol en la sucursal pedida; null si no la tiene (la base lo vuelve a exigir). */
@@ -38,7 +38,7 @@ async function barista(companyId: number, rol: RolFranq): Promise<number | null>
 const fallo = (e: unknown): { error: string } => {
   const x = (e && typeof e === 'object' ? e : {}) as { message?: unknown; code?: unknown };
   const m = typeof x.message === 'string' ? x.message : '';
-  // P0001: mensajes que escribimos en las funciones de la migración 75 (ya en español, para la persona).
+  // P0001: mensajes que escribimos en las funciones de las migraciones 75 y 79 (ya en español, para la persona).
   if (x.code === 'P0001' && m.length < 300) return { error: m };
   if (x.code === '42501') return { error: m.startsWith('Solo') ? m : SIN_ACCESO };
   // Dos dispositivos registraron lo mismo a la vez: lo otro ya quedó.
@@ -113,6 +113,7 @@ export async function responder(datos: {
   cumple: boolean;
   observacion?: string | null;
   motivo?: string | null;
+  dato?: string | null;
 }): Promise<Resultado> {
   if (!SECCIONES.includes(datos.seccion) || typeof datos.cumple !== 'boolean')
     return { error: 'Datos inválidos.' };
@@ -131,6 +132,7 @@ export async function responder(datos: {
       p_barista: b,
       p_dispositivo: disp,
       p_motivo: datos.motivo ?? null,
+      p_dato: datos.dato ?? null,
     }),
   );
 }
@@ -175,6 +177,7 @@ export async function corregir(datos: {
   cumple: boolean;
   observacion?: string | null;
   motivo: string;
+  dato?: string | null;
 }): Promise<Resultado> {
   const c = await contexto(datos.companyId);
   if (!c || !esGestorFranq(c.rol))
@@ -187,6 +190,7 @@ export async function corregir(datos: {
       p_observacion: datos.observacion ?? null,
       p_motivo: String(datos.motivo ?? ''),
       p_dispositivo: disp,
+      p_dato: datos.dato ?? null,
     }),
   );
 }

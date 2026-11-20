@@ -40,6 +40,7 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
     );
 
   const noes = dia.secciones.reduce((n, s) => n + s.noes, 0);
+  const atrasos = dia.secciones.reduce((n, s) => n + s.atrasos, 0);
   return (
     <>
       {encabezado}
@@ -69,14 +70,14 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
           <Acceso
             href={`${base}/avisos`}
             icono={BellRing}
-            tono={noes + dia.incidencias.length > 0 ? 'alerta' : 'incidencia'}
+            tono={noes + dia.incidencias.length + atrasos > 0 ? 'alerta' : 'incidencia'}
             titulo="Avisos e historial"
             texto={
-              noes + dia.incidencias.length > 0
-                ? `Hoy: ${noes} «No» y ${dia.incidencias.length} incidencias.`
-                : 'Sin «No» ni incidencias hoy.'
+              noes + dia.incidencias.length + atrasos > 0
+                ? `Hoy: ${noes} «No», ${dia.incidencias.length} incidencias${atrasos ? ` y ${atrasos} rondas atrasadas` : ''}.`
+                : 'Sin «No», incidencias ni rondas atrasadas hoy.'
             }
-            alerta={noes + dia.incidencias.length > 0}
+            alerta={noes + dia.incidencias.length + atrasos > 0}
           />
         )}
       </nav>

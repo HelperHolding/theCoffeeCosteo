@@ -7,7 +7,13 @@ import type { FranqAviso, SeccionClave } from '@/lib/franquiciatarios/tipos';
 import { diaLargo, hora } from './formato';
 import { Franja } from './colores';
 
-const SECCION: Record<string, string> = { apertura: 'Apertura', cambio: 'Cambio de turno', cierre: 'Cierre' };
+const SECCION: Record<string, string> = {
+  apertura: 'Apertura',
+  durante: 'Durante la operación',
+  cambio: 'Cambio de turno',
+  medio: 'Medio turno',
+  cierre: 'Fin de turno',
+};
 
 /** «No» vigentes e incidencias, agrupados por día. El gerente o el franquiciatario corrigen un «No» con motivo. */
 export function Avisos({ companyId, avisos }: { companyId: number; avisos: FranqAviso[] }) {

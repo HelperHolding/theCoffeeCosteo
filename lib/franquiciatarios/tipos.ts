@@ -1,7 +1,10 @@
-// Contrato de las tablas y funciones del módulo Franquiciatarios (migración 75).
+// Contrato de las tablas y funciones del módulo Franquiciatarios (migraciones 75 y 79).
 
-export type SeccionClave = 'apertura' | 'cambio' | 'cierre';
-export type TipoFirma = 'responsable' | 'entrega' | 'recibe';
+/** Fases del checklist. v1 (Excel): apertura, cambio, cierre. v2 (PDF): apertura, durante, medio, cierre. */
+export type SeccionClave = 'apertura' | 'durante' | 'cambio' | 'medio' | 'cierre';
+export type TipoFirma = 'responsable' | 'entrega' | 'recibe' | 'visto_bueno';
+export type TipoPunto = 'unico' | 'recurrente';
+export type TipoCorte = 'parcial' | 'dia';
 
 export interface FranqMiembro {
   user_id: string;
@@ -42,6 +45,15 @@ export interface FranqPunto {
   orden: number;
   actividad: string;
   estandar: string;
+  /** unico = una vez por día; recurrente = rondas (varias veces al día). */
+  tipo: TipoPunto;
+  /** Frecuencia de la ronda en minutos y tolerancia antes de marcarla atrasada (null = según demanda). */
+  cada_min: number | null;
+  margen_min: number | null;
+  /** Etiqueta del dato que pide un «Sí» (null = no pide dato). */
+  dato: string | null;
+  /** Punto de «enviar corte»: enlaza a la tira parcial o del día. */
+  corte: TipoCorte | null;
 }
 export interface FranqChecklist {
   id: number;
@@ -66,6 +78,7 @@ export interface FranqRespuesta {
   dispositivo: string | null;
   corrige_id: number | null;
   motivo: string | null;
+  dato: string | null;
 }
 export interface FranqFirma {
   id: number;
@@ -116,6 +129,7 @@ export interface FuncionesFranq {
       p_barista: number | null;
       p_dispositivo: string | null;
       p_motivo?: string | null;
+      p_dato?: string | null;
     };
     Returns: number;
   };
@@ -126,6 +140,7 @@ export interface FuncionesFranq {
       p_observacion: string | null;
       p_motivo: string;
       p_dispositivo: string | null;
+      p_dato?: string | null;
     };
     Returns: number;
   };

@@ -11,7 +11,13 @@ import { VentasFranq } from '../../../components/franquiciatarios/ventas';
 import { TiraVenta } from '../../../components/franquiciatarios/tira';
 import { diaLargo } from '../../../components/franquiciatarios/formato';
 import { armarDia, diaOperacion } from '../../../lib/franquiciatarios/dia';
-import type { FranqAviso, FranqPunto, FranqSeccion, SeccionClave } from '../../../lib/franquiciatarios/tipos';
+import type {
+  FranqAviso,
+  FranqPunto,
+  FranqSeccion,
+  SeccionClave,
+  TipoFirma,
+} from '../../../lib/franquiciatarios/tipos';
 import { configDe } from '../../../lib/sucursales/config';
 import { construirTira, sinDatosSensibles } from '../../../lib/franquiciatarios/ventas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
@@ -21,9 +27,9 @@ import { VerComo } from '../../../components/franquiciatarios/ver-como';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
- * reglas de la migración 75; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
+ * reglas de las migraciones 75 y 79; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
  * ?franquiciatarios&vista=hoy|checklist|ventas|tira|equipo|avisos&rol=barista|gerente|franquiciatario
- * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|cambio|cierre&sinred=1
+ * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  */
 const p = new URLSearchParams(window.location.search);
 const vista = p.get('vista') ?? 'hoy';
@@ -33,71 +39,160 @@ tienda.rol = (p.get('rol') ?? 'barista') as typeof tienda.rol;
 tienda.sinRed = p.get('sinred') === '1';
 tienda.dia = diaOperacion();
 
-// Plantilla v1 (la misma de la migración 75, resumida a actividad y estándar).
-const PLANTILLA: [SeccionClave, string, ('responsable' | 'entrega' | 'recibe')[], [string, string][]][] = [
+// Plantilla v2 (la misma de la migración 79: rutina de turno del PDF de Operaciones).
+type PuntoArnes = {
+  a: string;
+  e: string;
+  tipo?: 'recurrente';
+  cada?: number;
+  margen?: number;
+  dato?: string;
+  corte?: 'parcial' | 'dia';
+};
+const PLANTILLA: [SeccionClave, string, TipoFirma[], PuntoArnes[]][] = [
   [
     'apertura',
     'Apertura',
     ['responsable'],
     [
-      ['Registro de entrada', 'Todo el personal checó entrada a tiempo'],
-      ['Recorrido de seguridad', 'Accesos, alarma, gas, luz y agua sin incidencias'],
-      ['Sistemas y delivery', 'POS, tablets y apps operando; tienda abierta en plataformas'],
-      ['Arqueo de caja', 'Fondo completo; cambio solicitado si aplica'],
-      ['Montado de barra', 'Insumos a la mano y espresso calibrado'],
-      ['Conteo de inventario', 'Registrado en libro de control de turno'],
-      ['Inocuidad alimentaria', 'Retenes a concentración, temperaturas, etiquetado y PEPS'],
-      ['Baños', 'Limpios, surtidos (papel, jabón, toallas) y bitácora de baño llenada'],
-      ['Comedor', 'Mesas, sillas, cristales y piso limpios, sin huellas ni marcas'],
-      ['Vitrina', 'Limpia, mejor pan al frente, preparados antojables'],
-      ['Imagen de personal', 'Todo el equipo con uniforme completo'],
-      ['Junta de arranque', 'Posiciones, metas y pendientes del día comunicados'],
+      { a: 'Encender equipos', e: 'Maquinaria · espresso y periféricos: encendido y calibración térmica' },
+      {
+        a: 'Revisar etiquetas y caducidades',
+        e: 'Inocuidad · control de insumos: fechas de vencimiento revisadas',
+        dato: 'Qué caduca hoy o mañana (o «nada»)',
+      },
+      { a: 'Hacer PEPS', e: 'Inventario · almacenamiento: rotación de leche, granos y jarabes' },
+      {
+        a: 'Colocar sanitizantes',
+        e: 'Higiene · estaciones de trabajo: soluciones desinfectantes preparadas',
+      },
+      { a: 'Verificar limpieza de tienda', e: 'Imagen · salón y barra: superficies e insumos limpios' },
+      {
+        a: 'Revisar existencias y actualizar tabletas',
+        e: 'Digital · stock y POS: conteo rápido y sincronización en App/POS',
+      },
+      {
+        a: 'Realizar conteos y llenar bitácoras',
+        e: 'Inventario · registro: insumos críticos capturados',
+        dato: 'Insumos críticos contados',
+      },
+      { a: 'Encender música', e: 'Ambiente · experiencia de cliente: playlist y volumen oficial' },
     ],
   ],
   [
-    'cambio',
-    'Cambio de turno',
+    'durante',
+    'Durante la operación',
+    [],
+    [
+      {
+        a: 'Reabastecer barra',
+        e: 'Logística · insumos de barra: desechables, leches y café; según demanda',
+        tipo: 'recurrente',
+      },
+      {
+        a: 'Hacer previas',
+        e: 'Preparación · mise en place: jarabes, toppings y bases; según consumo',
+        tipo: 'recurrente',
+      },
+      {
+        a: 'Hacer preparados',
+        e: 'Producción · recetas base: mezclas estándar de la casa; por lote o demanda',
+        tipo: 'recurrente',
+        dato: 'Qué se preparó',
+      },
+      {
+        a: 'Revisar cold brew',
+        e: 'Calidad · bebidas frías: tiempo de extracción y nivel; cada 2 a 4 horas',
+        tipo: 'recurrente',
+        cada: 120,
+        margen: 120,
+        dato: 'Inicio de extracción y nivel',
+      },
+      {
+        a: 'Cambiar sanitizantes',
+        e: 'Higiene · inocuidad: reemplazo total de la solución; cada 2 horas',
+        tipo: 'recurrente',
+        cada: 120,
+        margen: 15,
+      },
+      {
+        a: 'Revisar baños',
+        e: 'Servicio · experiencia de cliente: limpieza, papel y jabón; cada hora',
+        tipo: 'recurrente',
+        cada: 60,
+        margen: 15,
+      },
+    ],
+  ],
+  [
+    'medio',
+    'Medio turno',
     ['entrega', 'recibe'],
     [
-      ['Conteo de cambio de turno', 'Registrado en libro de control de turno'],
-      ['Arqueo y corte parcial', 'Caja cuadrada, diferencias reportadas'],
-      ['Delivery', 'Conectividad y cancelaciones revisadas'],
-      ['Re-stock de barra', 'Productos, previas e insumos completos'],
-      ['Inocuidad alimentaria', 'Retenes a concentración, temperaturas, etiquetado y PEPS'],
-      ['Comedor y baños', 'Barra de servicio surtida, baño limpio y surtido, piso y mesas'],
-      ['Vitrina', 'Limpia y surtida con el mejor pan al frente'],
-      ['Imagen de personal', 'Todo el equipo con uniforme completo'],
-      ['Mermas del turno', 'Capturadas en formato de mermas'],
-      ['Entrega de turno', 'Pendientes e incidencias comunicadas al turno entrante'],
+      { a: 'Limpieza de tienda', e: 'Mantenimiento · salón y barra: sanitización rápida de mesas y barra' },
+      { a: 'Reabastecer barra', e: 'Logística · insumos: reabastecimiento general para el turno vespertino' },
+      {
+        a: 'Enviar corte de medio día',
+        e: 'Administración · ventas: reporte de caja/POS generado y enviado',
+        corte: 'parcial',
+      },
+      {
+        a: 'Revisar y cambiar bolsas de basura',
+        e: 'Higiene · residuos: botes vaciados y bolsas reemplazadas',
+      },
+      { a: 'Lavar loza', e: 'Sanidad · utensilios: loza acumulada lavada y desinfectada' },
+      {
+        a: 'Conteos',
+        e: 'Inventario · control parcial: existencias de alto valor y rotación auditadas',
+        dato: 'Insumos contados',
+      },
+      { a: 'Revisar baños', e: 'Servicio · mantenimiento: inspección profunda y limpieza' },
     ],
   ],
   [
     'cierre',
-    'Cierre',
-    ['responsable'],
+    'Fin de turno',
+    ['responsable', 'visto_bueno'],
     [
-      ['Conteo de cierre', 'Registrado en libro de control de turno'],
-      ['Arqueo y corte de turno', 'Caja cuadrada y efectivo resguardado'],
-      ['Plataformas y tablets', 'Delivery cerrado y tablets apagadas o cargando'],
-      ['Mermas del día', 'Capturadas en formato de mermas'],
-      ['Barra y bodega', 'Limpias; insumos acomodados por PEPS'],
-      ['Limpieza de equipos', 'Según calendario de limpieza profunda'],
-      ['Temperaturas', 'Tomadas y registradas en bitácora'],
-      ['Baño y comedor', 'Limpieza profunda realizada'],
-      ['Listo para apertura', 'Basura retirada, áreas ordenadas y surtidas'],
-      ['Registro de salida', 'Todo el personal checó salida'],
-      ['Cierre de la unidad', 'Equipos apagados, gas, luz, puertas y alarma'],
+      { a: 'Limpieza de equipos', e: 'Mantenimiento · maquinaria: purga, backflush de espresso y molinos' },
+      { a: 'Lavar loza', e: 'Sanidad · utensilios: lavado total y secado de loza y jarras' },
+      { a: 'Limpieza de áreas de preparación', e: 'Sanitización · superficies: barras y tarjas a fondo' },
+      { a: 'Limpieza de tienda', e: 'Mantenimiento · general: pisos barridos y trapeados, salón barrido' },
+      { a: 'Apagar música', e: 'Operaciones · cierre: sistema de audio desconectado' },
+      { a: 'Apagar equipos', e: 'Mantenimiento · ahorro de energía: maquinaria desconectada' },
+      {
+        a: 'Enviar corte del día',
+        e: 'Administración · conciliación: cierre de caja y métricas enviados',
+        corte: 'dia',
+      },
+      { a: 'Revisar baños', e: 'Higiene · entrega de instalaciones: limpieza profunda y desinfección final' },
+      { a: 'Apagar luces y guardar mobiliario', e: 'Seguridad · resguardo: terraza, mobiliario y luces' },
+      { a: 'Sacar basura y cambiar bolsas', e: 'Residuos · sanidad: depósito final en contenedor externo' },
+      { a: 'Cerrar', e: 'Seguridad · protocolo de entrega: accesos asegurados y alarma activada' },
     ],
   ],
 ];
 const secciones: FranqSeccion[] = [];
 const puntos: FranqPunto[] = [];
 PLANTILLA.forEach(([clave, nombre, firmas, ps], i) => {
-  secciones.push({ id: i + 1, plantilla_id: 1, clave, nombre, orden: i + 1, firmas });
+  secciones.push({ id: i + 1, plantilla_id: 2, clave, nombre, orden: i + 1, firmas });
   tienda.puntos[clave] = ps.map((_, j) => (i + 1) * 100 + j + 1);
-  ps.forEach(([actividad, estandar], j) =>
-    puntos.push({ id: (i + 1) * 100 + j + 1, seccion_id: i + 1, orden: j + 1, actividad, estandar }),
-  );
+  ps.forEach((x, j) => {
+    const pt: FranqPunto = {
+      id: (i + 1) * 100 + j + 1,
+      seccion_id: i + 1,
+      orden: j + 1,
+      actividad: x.a,
+      estandar: x.e,
+      tipo: x.tipo ?? 'unico',
+      cada_min: x.cada ?? null,
+      margen_min: x.margen ?? null,
+      dato: x.dato ?? null,
+      corte: x.corte ?? null,
+    };
+    puntos.push(pt);
+    tienda.meta[pt.id] = pt;
+  });
 });
 
 // Nombres y estado inicial según ?estado.
@@ -125,7 +220,15 @@ if (p.get('elegido') === '1') tienda.elegido = 1;
 const hora = (h: number, m: number) =>
   new Date(`${tienda.dia}T${String(h + 6).padStart(2, '0')}:${String(m).padStart(2, '0')}:00Z`).toISOString();
 let rid = 1;
-const resp = (ch: number, punto: number, cumple: boolean, observacion: string | null, b: number, t: string) =>
+const resp = (
+  ch: number,
+  punto: number,
+  cumple: boolean,
+  observacion: string | null,
+  b: number,
+  t: string,
+  dato: string | null = null,
+) =>
   tienda.respuestas.push({
     id: rid++,
     checklist_id: ch,
@@ -141,20 +244,36 @@ const resp = (ch: number, punto: number, cumple: boolean, observacion: string | 
     dispositivo: 'tablet',
     corrige_id: null,
     motivo: null,
+    dato,
   });
+const DATO_EJEMPLO: Record<string, string> = {
+  'Qué caduca hoy o mañana (o «nada»)': 'Leche de avena (mañana)',
+  'Insumos críticos contados': 'Leche entera 18 L · espresso 4 kg',
+  'Inicio de extracción y nivel': '7:30 · 3/4',
+};
 if (estado !== 'vacio') {
-  const n = estado === 'curso' ? 5 : 12;
+  const n = estado === 'curso' ? 5 : 8;
   tienda.puntos.apertura.slice(0, n).forEach((pt, i) => {
-    const no = estado !== 'curso' && i === 1;
+    const no = estado !== 'curso' && i === 2;
+    const etiqueta = tienda.meta[pt].dato;
     resp(
       1,
       pt,
       !no,
-      no ? 'La alarma no armó; se avisó a seguridad' : null,
+      no ? 'No llegó la leche del pedido; se rotó la que había' : null,
       i % 2 ? 2 : 1,
       hora(7, 2 + i * 3),
+      !no && etiqueta ? (DATO_EJEMPLO[etiqueta] ?? 'ok') : null,
     );
   });
+  // Rondas de «Durante la operación» (en la mañana: según la hora real del arnés, algunas salen atrasadas).
+  const [, , preparados, cold, sanit, banos] = tienda.puntos.durante;
+  resp(2, banos, true, null, 1, hora(8, 5));
+  resp(2, banos, true, null, 2, hora(9, 2));
+  resp(2, sanit, true, null, 1, hora(8, 0));
+  resp(2, cold, true, null, 2, hora(7, 40), DATO_EJEMPLO['Inicio de extracción y nivel']);
+  resp(2, preparados, true, null, 1, hora(8, 30), 'Base de chai · 2 L');
+  if (estado !== 'curso') resp(2, banos, false, 'Sin papel; se pidió a bodega', 2, hora(10, 1));
   if (estado === 'no' || estado === 'firmado')
     tienda.incidencias.push({
       id: 900,
@@ -181,10 +300,12 @@ if (estado !== 'vacio') {
       sesion: 's',
       dispositivo: 'tablet',
     });
-    tienda.puntos.cambio.forEach((pt, i) => resp(2, pt, true, null, 2, hora(15, i * 2)));
+    tienda.puntos.medio.forEach((pt, i) =>
+      resp(3, pt, true, null, 2, hora(15, i * 2), tienda.meta[pt].dato ? 'Leche 9 L · espresso 2 kg' : null),
+    );
     tienda.firmas.push({
       id: 951,
-      checklist_id: 2,
+      checklist_id: 3,
       company_id: 514,
       tipo: 'entrega',
       barista_id: 2,
@@ -262,7 +383,7 @@ export function VistaFranquiciatarios() {
     dia: tienda.dia,
     secciones,
     puntos,
-    checklists: (['apertura', 'cambio', 'cierre'] as const).map((s, i) => ({
+    checklists: (['apertura', 'durante', 'medio', 'cierre'] as const).map((s, i) => ({
       id: i + 1,
       seccion: s,
       seccion_id: i + 1,
@@ -270,7 +391,8 @@ export function VistaFranquiciatarios() {
     respuestas: tienda.respuestas,
     firmas: tienda.firmas,
     incidencias: tienda.incidencias,
-    vigente: 1,
+    vigente: 2,
+    ahora: new Date(),
   });
   const gestor = tienda.rol !== 'barista';
   const elegido = tienda.baristas.find((b) => b.id === tienda.elegido && b.activo) ?? null;

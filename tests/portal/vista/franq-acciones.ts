@@ -1,9 +1,11 @@
 // Arnés visual: sustituye las server actions de Franquiciatarios por un estado en memoria con las MISMAS reglas que la
-// migración 75 (observación en «No», firma con todo respondido, recibe ≠ entrega, firmada = solo gestores con motivo).
+// migraciones 75 y 79 (observación en «No», dato en el «Sí» si el punto lo pide, rondas = renglón propio, firma con los
+// puntos únicos respondidos, recibe ≠ entrega, visto bueno solo gestores, firmada = solo gestores con motivo).
 import type {
   FranqBarista,
   FranqFirma,
   FranqIncidencia,
+  FranqPunto,
   FranqRespuesta,
   SeccionClave,
   TipoFirma,
@@ -20,14 +22,20 @@ export const tienda = {
   respuestas: [] as FranqRespuesta[],
   firmas: [] as FranqFirma[],
   incidencias: [] as FranqIncidencia[],
-  /** checklist id por sección (1, 2, 3) y puntos por sección. */
+  /** checklist id por sección y puntos por sección; meta = el punto completo (tipo y dato). */
   puntos: {} as Record<SeccionClave, number[]>,
+  meta: {} as Record<number, FranqPunto>,
   dia: '',
 };
 let id = 1000;
 const ahora = () => new Date().toISOString();
 const avisar = () => window.dispatchEvent(new Event('franq-cambio'));
-const CHECK: Record<SeccionClave, number> = { apertura: 1, cambio: 2, cierre: 3 };
+const CHECK: Record<SeccionClave, number> = { apertura: 1, durante: 2, cambio: 3, medio: 3, cierre: 4 };
+const vigentes = (ch: number, punto: number) =>
+  tienda.respuestas.filter(
+    (r) =>
+      r.checklist_id === ch && r.punto_id === punto && !tienda.respuestas.some((x) => x.corrige_id === r.id),
+  );
 const quien = (): { barista_id: number | null; nombre: string } | string => {
   if (tienda.rol !== 'barista') return { barista_id: null, nombre: tienda.perfil };
   const b = tienda.baristas.find((x) => x.id === tienda.elegido && x.activo);
@@ -59,6 +67,7 @@ export async function responder(d: {
   cumple: boolean;
   observacion?: string | null;
   motivo?: string | null;
+  dato?: string | null;
 }): Promise<Resultado> {
   await espera();
   const q = quien();
@@ -66,7 +75,25 @@ export async function responder(d: {
   const ch = CHECK[d.seccion];
   if (!d.cumple && (d.observacion ?? '').trim().length < 3)
     return { error: 'Todo «No» se explica en Observaciones.' };
-  const previa = tienda.respuestas.filter((r) => r.checklist_id === ch && r.punto_id === d.punto).at(-1);
+  const punto = tienda.meta[d.punto];
+  const dato = (d.dato ?? '').trim() || null;
+  if (d.cumple && punto?.dato && !dato) return { error: `Anota ${punto.dato.toLowerCase()}.` };
+  if (punto?.tipo === 'recurrente') {
+    tienda.respuestas.push({
+      ...base(q),
+      id: ++id,
+      checklist_id: ch,
+      punto_id: d.punto,
+      cumple: d.cumple,
+      observacion: d.cumple ? null : (d.observacion ?? '').trim(),
+      corrige_id: null,
+      motivo: null,
+      dato,
+    });
+    avisar();
+    return { ok: true };
+  }
+  const previa = vigentes(ch, d.punto).at(-1);
   const firmada = tienda.firmas.some((f) => f.checklist_id === ch);
   if (firmada && tienda.rol === 'barista')
     return { error: 'La sección ya está firmada; pide al gerente que registre la corrección.' };
@@ -80,6 +107,7 @@ export async function responder(d: {
     observacion: d.cumple ? null : (d.observacion ?? '').trim(),
     corrige_id: previa?.id ?? null,
     motivo: firmada ? (d.motivo ?? '').trim() : null,
+    dato,
   });
   avisar();
   return { ok: true };
@@ -90,8 +118,16 @@ export async function firmar(_c: number, seccion: SeccionClave, tipo: TipoFirma)
   const q = quien();
   if (typeof q === 'string') return { error: q };
   const ch = CHECK[seccion];
+  if (tipo === 'visto_bueno') {
+    if (tienda.rol === 'barista') return { error: 'El visto bueno lo da el gerente o el franquiciatario.' };
+    if (!tienda.firmas.some((f) => f.checklist_id === ch && f.tipo === 'responsable'))
+      return { error: 'Primero firma el responsable del cierre.' };
+  }
   const faltan = tienda.puntos[seccion].filter(
-    (p) => !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p),
+    (p) =>
+      tipo !== 'visto_bueno' &&
+      tienda.meta[p]?.tipo !== 'recurrente' &&
+      !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p),
   );
   if (faltan.length) return { error: `Faltan ${faltan.length} puntos por responder antes de firmar.` };
   if (tipo === 'recibe') {
@@ -120,6 +156,7 @@ export async function corregir(d: {
   cumple: boolean;
   observacion?: string | null;
   motivo: string;
+  dato?: string | null;
 }): Promise<Resultado> {
   await espera();
   const previa = tienda.respuestas.find((r) => r.id === d.respuesta);
@@ -133,6 +170,7 @@ export async function corregir(d: {
     observacion: d.cumple ? null : (d.observacion ?? '').trim(),
     corrige_id: previa.id,
     motivo: d.motivo.trim(),
+    dato: (d.dato ?? '').trim() || previa.dato,
   });
   avisar();
   return { ok: true };
