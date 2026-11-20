@@ -31,6 +31,9 @@ import { armarHistorial } from '../../../lib/franquiciatarios/conteos';
 import { ArqueoCaptura, CajaChica, ConfigCaja, ResumenCaja } from '../../../components/franquiciatarios/caja';
 import { gastosEfectivoHasta, gastosVigentes, resumenArqueo } from '../../../lib/franquiciatarios/caja';
 import type { CajaDia } from '../../../lib/franquiciatarios/caja-servidor';
+import { PylFranq } from '../../../components/franquiciatarios/pyl';
+import { armarPyl, fijosVigentes, metasDe } from '../../../lib/franquiciatarios/pyl';
+import type { PylMes } from '../../../lib/franquiciatarios/pyl-servidor';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
 
 /**
@@ -440,6 +443,58 @@ const cajaDia = (): CajaDia => {
     })),
   };
 };
+// P&L con las cifras reales de Essentia del 1 al 20 de noviembre (script pyl-essentia.ts) y fijos de Zoho.
+const pylArnes = (): PylMes => {
+  const fijos = fijosVigentes(
+    Object.entries({
+      renta: 38381,
+      nomina: 53000,
+      energia: 5300,
+      servicios: 2000,
+      pos: 2000,
+      suscripciones: 550,
+    }).map(([concepto, monto], i) => ({
+      id: i + 1,
+      concepto,
+      monto,
+      origen: 'zoho',
+      nombre: 'Importado de Zoho',
+      registrado_en: 'x',
+    })),
+  );
+  const diarias = Array.from({ length: 30 }, (_, i) => ({
+    fecha: `2026-11-${String(i + 1).padStart(2, '0')}`,
+    venta_cent: 1_048_970,
+    tickets: 70,
+  }));
+  return {
+    mes: '2026-11',
+    desde: '2026-11-01',
+    hasta: '2026-11-20',
+    hoy: '2026-11-20',
+    fijos,
+    pyl: armarPyl({
+      diasMes: 30,
+      diasTranscurridos: 20,
+      ventaCent: 18_829_425,
+      descuentoCent: 1_849_504,
+      ventaRappiCent: 6_000_000,
+      comisionPosCent: 300_000,
+      iva: 0.16,
+      comisionRappi: 0.18,
+      compras: 38_275.33,
+      cajaChica: 80,
+      fijos,
+    }),
+    metas: metasDe(
+      '2026-11-20',
+      p.get('sinmeta') === '1' ? [] : diarias,
+      p.get('sinmeta') === '1' ? null : 31_469_100,
+    ),
+    venta: { dia: 10508.6, semana: 41416.92, mes: 188294.25 },
+    avisos: p.get('sinmeta') === '1' ? ['Sin meta de venta cargada para este mes (Zoho → BI).'] : [],
+  };
+};
 const estadosConteo = (dia: string) =>
   (['apertura', 'medio'] as const).flatMap((m) => {
     const hoy = tienda.conteos.filter((c) => c.dia === dia && c.momento === m);
@@ -673,6 +728,7 @@ export function VistaFranquiciatarios() {
       pedidos: 'Pedidos a la Comercializadora',
       conteo: 'Conteo de insumos',
       caja: 'Caja',
+      pyl: 'P&L y metas',
       inventario: 'Inventario',
     }[vista] ?? 'Hoy';
   const actual = dia.secciones.find((s) => s.clave === seccionPedida) ?? dia.secciones[0];
@@ -759,6 +815,8 @@ export function VistaFranquiciatarios() {
             </>
           )}
         </>
+      ) : vista === 'pyl' ? (
+        <PylFranq companyId={514} datos={pylArnes()} enCurso />
       ) : vista === 'inventario' ? (
         <InventarioFranq
           companyId={514}

@@ -409,3 +409,64 @@ ejecutando `franq_sugerir_insumos(514)` como administrador.
   - A 375 px no hay scroll horizontal.
 
 **Pendiente:** Carlos o el gerente fijan el fondo de caja real de Essentia en «Caja → Fondo y tolerancia».
+
+## 13. P&L y metas de venta — F5 del plan
+
+> Rama `feat/franq-pyl` (2026-11-20). Migración **20261120000088**: la 85 y la 86 quedaron saltadas en `main` y la 87
+> es de Sucursales. Está ensayada con rollback y **sin aplicar**; se aplica al mergear, con el OK de Carlos.
+
+**Decisiones de Carlos:**
+
+- El P&L lo ven el gerente, el franquiciatario y el admin; el barista no.
+- Los gastos fijos salen de **Zoho**.
+- Las metas de día, semana y mes se traen de una vez.
+
+**Fuentes**
+
+| Línea                     | Fuente                                                                                                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venta con IVA, descuentos | POS + Rappi del portal, con las mismas funciones que Sucursales                                                                                                                                                         |
+| Comisiones                | Rappi: 18 % de su venta (`canales`, confirmada) más la comisión de cobro que reporta el POS (venta − neto)                                                                                                              |
+| Compras                   | Pedidos del mes a la Comercializadora (sitio viejo, apertura con candado), ÷ 1.16                                                                                                                                       |
+| Caja chica                | `franq_gastos` vigentes del mes                                                                                                                                                                                         |
+| Gastos fijos              | **Zoho Analytics «Gastos Sucursales Por Meses»**: renta, labor cost, energía, agua y teléfono, POS fee y suscripciones. La gerencia corrige y gana la captura más reciente (`franq_gastos_fijos`, origen zoho o manual) |
+| Metas                     | BI (`bi_metas`, `bi_metas_diarias`), que se cargan de Zoho «Metas Mensuales 2026». La semana va de lunes a domingo                                                                                                      |
+
+- **Cálculo:** líneas sin IVA → margen bruto → contribución → utilidad de operación.
+- **Proyección al cierre:** escala lo variable con los días del mes y deja los fijos completos.
+- **Punto de equilibrio:** en venta con IVA = fijos ÷ (contribución ÷ venta).
+
+**Essentia, noviembre del 1 al 20 (datos reales, solo lectura, `scripts/franquiciatarios/pyl-essentia.ts --zoho`):**
+
+- Venta con IVA $188,294; venta neta $162,323.
+- Comisiones $14,746; compras $32,996.
+- Contribución $114,581.
+- Fijos de Zoho $101,231 al mes: renta $38,381, nómina $53,000, energía $5,300, agua y teléfono $2,000, POS $2,000 y
+  suscripciones $550.
+- **Utilidad de operación $13,350 a la fecha, $70,641 proyectada al cierre.**
+- **Punto de equilibrio $166,356 de venta al mes**, con un margen de contribución de 61 %.
+
+**Metas:** Zoho trae la meta de Essentia (noviembre: $314,691, 2,098 tickets y ticket promedio de $150), pero **la tabla
+de metas de BI está vacía en producción para todas las sucursales**.
+
+- La carga en prueba (`scripts/bi/metas.ts metas`) subiría 728 metas de 82 sucursales, de enero a noviembre, y las
+  repartiría por día.
+- Guardarlas es una escritura en producción que requiere el OK de Carlos.
+- Mientras tanto la pantalla dice «sin meta», nunca cero.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-gastos-fijos.test.ts`: 3 pruebas.
+  - `tests/portal/franquiciatarios-pyl.test.ts`: 6 pruebas (fijos vigentes, líneas sin IVA, proyección, punto de
+    equilibrio, metas de día, semana y mes, y «sin meta → null»).
+- **Ensayo** `scripts/franquiciatarios/ensayo-88.ts` (sha `044868a5…`): dentro de la transacción, tabla con RLS,
+  política, función y trigger; en la consulta nueva no quedó nada.
+- **Cargador** `scripts/franquiciatarios/zoho-gastos-fijos.ts` (en prueba): Essentia 72 montos; todas las sucursales
+  58 con 4,176 montos.
+- **Arnés visual:** P&L con metas y tabla; en celular sin scroll horizontal.
+
+**Después del merge (con OK):**
+
+1. Cargar los gastos fijos de Essentia: `zoho-gastos-fijos.ts --tienda 514 --aplicar`.
+2. Cargar las metas de BI: `scripts/bi/metas.ts metas --aplicar`.

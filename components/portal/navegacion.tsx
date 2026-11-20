@@ -84,6 +84,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
       enlaces: [
         { href: `${b}/pedidos`, nombre: 'Pedidos', icono: Truck },
         { href: `${b}/inventario`, nombre: 'Inventario', icono: Boxes },
+        { href: `${b}/pyl`, nombre: 'P&L y metas', icono: BarChart3 },
         { href: `${b}/avisos`, nombre: 'Avisos e historial', icono: BellRing },
         { href: `${b}/equipo`, nombre: 'Baristas', icono: UsersRound },
       ],

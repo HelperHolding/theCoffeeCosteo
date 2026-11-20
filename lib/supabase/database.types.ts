@@ -202,6 +202,7 @@ export interface Database {
       franq_caja_config: Tabla<Franq.FranqCajaConfig>;
       franq_arqueos: Tabla<Franq.FranqArqueo>;
       franq_gastos: Tabla<Franq.FranqGasto>;
+      franq_gastos_fijos: Tabla<Franq.FranqGastoFijo>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -272,6 +273,7 @@ export interface Database {
       franq_gasto: Franq.FuncionesFranq['franq_gasto'];
       franq_gasto_anular: Franq.FuncionesFranq['franq_gasto_anular'];
       franq_caja_configurar: Franq.FuncionesFranq['franq_caja_configurar'];
+      franq_gasto_fijo: Franq.FuncionesFranq['franq_gasto_fijo'];
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
       mcp_lectura_habilitada: { Args: Record<string, never>; Returns: boolean };
       reservar_consulta_chat: { Args: Record<string, never>; Returns: boolean };
