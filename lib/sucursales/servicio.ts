@@ -173,6 +173,13 @@ export interface RespuestaServicio {
   /** El portal cuenta los días en hora del centro; en otra zona el corte del día no coincide con el local. */
   diasEnHoraCentro: boolean;
   leidoEn: string | null;
+  /** Último día que Rappi ya publicó (servicio-publicado.ts); null si no se pudo saber. */
+  publicadoHasta?: string | null;
+  /**
+   * Hasta dónde llegan los indicadores (el menor entre `hasta` y `publicadoHasta`); null si Rappi aún no publica
+   * ningún día del periodo. La conectividad sí llega hasta `hasta`.
+   */
+  indicadoresHasta?: string | null;
   canales: {
     canal: CanalServicio;
     id: string;

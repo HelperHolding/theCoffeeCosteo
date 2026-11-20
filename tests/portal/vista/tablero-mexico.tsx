@@ -302,16 +302,23 @@ window.fetch = async (entrada, init) => {
   if (url.pathname === '/api/sucursales/servicio-nacional') {
     await new Promise((r) => setTimeout(r, 200));
     const hoyMx = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date());
-    const desde = url.searchParams.get('desde') ?? hoyMx;
-    const hasta = url.searchParams.get('hasta') ?? desde;
-    return Response.json(
-      construirServicioNacional(
-        servicioNacionalSintetico(sucursalesConfiguradas, desde, hasta, hoyMx),
+    // Como en producción: Rappi publica con retraso (aquí, hasta ayer) y ?ultimo=1 abre en ese día.
+    const publicadoHasta = sumarDias(hoyMx, -1);
+    const ultimoDia = url.searchParams.get('ultimo') === '1';
+    const desde = ultimoDia ? publicadoHasta : (url.searchParams.get('desde') ?? hoyMx);
+    const hasta = ultimoDia ? publicadoHasta : (url.searchParams.get('hasta') ?? desde);
+    const corte = publicadoHasta < hasta ? publicadoHasta : hasta;
+    const rpc = servicioNacionalSintetico(sucursalesConfiguradas, desde, corte < desde ? hasta : corte, hoyMx);
+    return Response.json({
+      ...construirServicioNacional(
+        corte < desde ? { ...rpc, por_tienda: [], por_dia: [], reclamos: [] } : rpc,
         desde,
         hasta,
         sucursalesConfiguradas,
       ),
-    );
+      publicadoHasta,
+      indicadoresHasta: corte < desde ? null : corte,
+    });
   }
   if (url.pathname === '/api/sucursales/consumo-nacional/desglose') {
     await new Promise((r) => setTimeout(r, 150));

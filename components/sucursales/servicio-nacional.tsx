@@ -10,14 +10,16 @@ import { Tarjeta, Vacio } from '@/components/portal/piezas';
 import { ErrorCarga, Esqueleto } from './estados';
 import { hace, horaDe, numero, porcentaje } from './formato';
 import {
+  AlDiaRappi,
   CANAL,
   COLOR_RECLAMO,
   decimal,
   Indicadores,
-  minutos,
   ORDEN_RECLAMO,
   ReclamosPorDia,
   SinDisponibilidadPorDia,
+  sinDisponibilidad,
+  SinPublicar,
   tituloPeriodo,
 } from './nivel-servicio';
 import { rango, SelectorPeriodo, type Periodo } from './periodo';
@@ -34,14 +36,19 @@ const ZONA = 'America/Mexico_City';
 
 export function ServicioNacionalVista() {
   const [periodo, setPeriodo] = useState<Periodo>({ id: '7d' });
+  // Rappi publica cada día con 1 a 2 días de retraso: abre en el último día que ya publicó y avanza solo (se relee
+  // cada 5 min). Al elegir otro periodo se usa ese.
+  const [ultimo, setUltimo] = useState(true);
   const { desde, hasta } = rango(periodo, ZONA);
   const { datos, error, cargando, recargar } = useLectura<RespuestaServicioNacional>(
-    `/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`,
+    ultimo
+      ? '/api/sucursales/servicio-nacional?ultimo=1'
+      : `/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`,
     { intervaloMs: 5 * 60_000 },
   );
   const descargar = async () => {
     if (!datos) return;
-    const h = hojasServicioNacional(datos);
+    const h = hojasServicioNacional({ ...datos, hasta: datos.indicadoresHasta ?? datos.hasta });
     const XLSX = await import('xlsx');
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(h.resumen), 'Resumen');
@@ -54,7 +61,15 @@ export function ServicioNacionalVista() {
   return (
     <div className="servicio space-y-6" aria-busy={cargando}>
       <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
-        <SelectorPeriodo periodo={periodo} zona={ZONA} alCambiar={setPeriodo} />
+        <SelectorPeriodo
+          periodo={periodo}
+          zona={ZONA}
+          alCambiar={(p) => {
+            setUltimo(false);
+            setPeriodo(p);
+          }}
+          ultimo={{ activo: ultimo, fecha: datos?.publicadoHasta ?? null, alElegir: () => setUltimo(true) }}
+        />
         <button
           type="button"
           onClick={descargar}
@@ -64,6 +79,14 @@ export function ServicioNacionalVista() {
           <Download size={15} aria-hidden="true" />
           Descargar Excel
         </button>
+        {datos && (
+          <AlDiaRappi
+            publicadoHasta={datos.publicadoHasta}
+            hasta={datos.hasta}
+            indicadoresHasta={datos.indicadoresHasta}
+            ultimo={ultimo}
+          />
+        )}
       </div>
       {!datos ? (
         error ? (
@@ -76,15 +99,16 @@ export function ServicioNacionalVista() {
           {error && <ErrorCarga error={error} alReintentar={recargar} />}
           <AhoraEnMexico d={datos} />
           {datos.dias.length === 0 ? (
-            <div className="rounded-2xl border border-line bg-surface shadow-card">
-              <Vacio titulo="Sin indicadores de Rappi en el periodo">
-                Rappi todavía no publica datos de estos días. Elige otro periodo.
-              </Vacio>
-            </div>
+            <SinPublicar
+              desde={datos.desde}
+              hasta={datos.hasta}
+              publicadoHasta={datos.publicadoHasta}
+              alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+            />
           ) : (
             <>
               <Indicadores
-                titulo={`${tituloPeriodo(datos.desde, datos.hasta)} en Rappi, ${datos.sucursales.length} sucursales`}
+                titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi, ${datos.sucursales.length} sucursales`}
                 t={datos.totales}
               />
               <div className="grid gap-6 lg:grid-cols-2">
@@ -97,8 +121,8 @@ export function ServicioNacionalVista() {
           <ReclamosMexico d={datos} />
           <p className="placa px-3 py-2 text-xs text-muted-foreground">
             Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners (Rappi y Rappi Turbo),
-            leídos cada 10 min (conectividad) y cada hora (indicadores de hoy). Los días son los de Rappi, en
-            hora del centro.
+            leídos cada 10 min (conectividad) y cada hora (indicadores). Rappi publica los indicadores de cada
+            día con 1 a 2 días de retraso. Los días son los de Rappi, en hora del centro.
             {datos.leidoEn &&
               ` Última lectura de indicadores ${hace(Math.round((Date.now() - new Date(datos.leidoEn).getTime()) / 1000))}.`}
           </p>
@@ -196,19 +220,28 @@ function AhoraEnMexico({ d }: { d: RespuestaServicioNacional }) {
 }
 
 // ── Ranking de sucursales ───────────────────────────────────────────────────────────────────────────────────────
-type Orden = 'pedidos' | 'tasaReclamos' | 'rechazosTotal' | 'sinDispMinutos' | 'espera' | 'nombre';
+type Orden = 'pedidos' | 'tasaReclamos' | 'rechazosTotal' | 'sinDisp' | 'espera' | 'nombre';
+// Sin disponibilidad: % del horario (Rappi no manda los minutos; ver sinDisponibilidad en nivel-servicio.tsx).
+const valorDe = (t: Totales, o: Exclude<Orden, 'nombre'>) => (o === 'sinDisp' ? sinDisponibilidad(t) : t[o]);
 const COLUMNAS: { id: Orden; nombre: string; valor: (t: Totales) => string }[] = [
   { id: 'pedidos', nombre: 'Pedidos', valor: (t) => numero(t.pedidos) },
   { id: 'tasaReclamos', nombre: 'Reclamos', valor: (t) => porcentaje(t.tasaReclamos) },
   { id: 'rechazosTotal', nombre: 'Rechazos', valor: (t) => numero(t.rechazosTotal) },
-  { id: 'sinDispMinutos', nombre: 'Sin disponibilidad', valor: (t) => minutos(t.sinDispMinutos) },
+  {
+    id: 'sinDisp',
+    nombre: 'Sin disponibilidad',
+    valor: (t) => {
+      const s = sinDisponibilidad(t);
+      return s === null ? '—' : `${decimal(s, 2)} %`;
+    },
+  },
   { id: 'espera', nombre: 'Espera', valor: (t) => (t.espera === null ? '—' : `${decimal(t.espera)} min`) },
 ];
 
 function Ranking({ d }: { d: RespuestaServicioNacional }) {
   const [orden, setOrden] = useState<Orden>('tasaReclamos');
   const filas = useMemo(() => {
-    const v = (t: Totales) => (orden === 'nombre' ? 0 : (t[orden] ?? -1));
+    const v = (t: Totales) => (orden === 'nombre' ? 0 : (valorDe(t, orden) ?? -1));
     return [...d.sucursales].sort((a, b) =>
       orden === 'nombre'
         ? a.nombre.localeCompare(b.nombre)

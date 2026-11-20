@@ -43,6 +43,10 @@ export interface RespuestaServicioNacional {
   desde: string;
   hasta: string;
   leidoEn: string | null;
+  /** Último día que Rappi ya publicó; null si no se pudo saber (servicio-publicado.ts). */
+  publicadoHasta?: string | null;
+  /** Hasta dónde llegan los indicadores; null si Rappi aún no publica ningún día del periodo. */
+  indicadoresHasta?: string | null;
   totales: Totales;
   dias: { fecha: string; total: Totales }[];
   ahora: {
