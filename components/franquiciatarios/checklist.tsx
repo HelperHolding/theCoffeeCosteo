@@ -12,6 +12,7 @@ import {
   type Resultado,
 } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
 import { hora } from './formato';
+import { Franja, ICONO_SECCION, TONO } from './colores';
 
 const SIN_RED =
   'No se guardó: no hay conexión. Lo que escribiste sigue aquí; reintenta cuando vuelva la red.';
@@ -80,10 +81,15 @@ export function Checklist({
 function Avance({ seccion }: { seccion: SeccionDia }) {
   const total = seccion.puntos.length;
   const pct = total ? Math.round((seccion.respondidos / total) * 100) : 0;
+  const t = TONO[seccion.clave];
+  const Icono = ICONO_SECCION[seccion.clave];
   return (
     <div className="sticky top-16 z-10 -mx-4 border-b border-line bg-paper/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id={`sec-${seccion.clave}`} className="text-lg">
+        <h2 id={`sec-${seccion.clave}`} className="flex items-center gap-2.5 text-lg">
+          <span className={cn('grid size-8 place-items-center rounded-lg text-primary-foreground', t.marca)}>
+            <Icono size={16} aria-hidden="true" />
+          </span>
           {seccion.nombre}
         </h2>
         <p className="text-sm tabular text-ink-2">
@@ -92,7 +98,7 @@ function Avance({ seccion }: { seccion: SeccionDia }) {
         </p>
       </div>
       <div
-        className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2"
+        className={cn('mt-2 h-2 overflow-hidden rounded-full', t.suave)}
         role="progressbar"
         aria-label={`Avance de ${seccion.nombre}`}
         aria-valuemin={0}
@@ -102,7 +108,7 @@ function Avance({ seccion }: { seccion: SeccionDia }) {
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-300',
-            seccion.estado === 'completa' ? 'bg-ok' : 'bg-ink',
+            seccion.estado === 'completa' ? 'bg-ok' : t.marca,
           )}
           style={{ width: `${pct}%` }}
         />
@@ -181,10 +187,15 @@ function Punto({
   return (
     <li
       className={cn(
-        'rounded-2xl border bg-surface p-4 shadow-card transition-colors sm:p-5',
-        valor === false ? 'border-bad/40' : valor === true ? 'border-ok/30' : 'border-line',
+        'relative overflow-hidden rounded-2xl border p-4 pl-5 shadow-card transition-colors sm:p-5 sm:pl-6',
+        valor === false
+          ? 'border-bad/40 bg-bad-soft/60'
+          : valor === true
+            ? 'border-ok/30 bg-surface'
+            : 'border-line bg-surface',
       )}
     >
+      <Franja tono={seccion.clave} />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs tabular text-muted-foreground">
@@ -355,9 +366,17 @@ function Firmas({
 }) {
   const faltan = seccion.puntos.length - seccion.respondidos;
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5">
-      <h3 className="font-display text-base font-bold">Firmas de {seccion.nombre.toLowerCase()}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <div
+      className={cn(
+        'rounded-2xl border p-4 shadow-card sm:p-5',
+        TONO[seccion.clave].suave,
+        TONO[seccion.clave].borde,
+      )}
+    >
+      <h3 className="flex items-center gap-2 font-display text-base font-bold">
+        <PenLine size={16} aria-hidden="true" /> Firmas de {seccion.nombre.toLowerCase()}
+      </h3>
+      <p className="mt-1 text-sm text-ink-2">
         {seccion.clave === 'cambio'
           ? 'Firma primero quien entrega el turno y después quien lo recibe (otra persona).'
           : `Firma el responsable de ${seccion.nombre.toLowerCase()} al terminar; queda la hora de término.`}
@@ -418,7 +437,7 @@ function Firma({
         : null;
 
   return (
-    <li className="rounded-xl border border-dashed border-line-strong px-4 py-3">
+    <li className="rounded-xl border border-dashed border-line-strong bg-surface px-4 py-3">
       <p className="text-xs font-semibold text-muted-foreground">{NOMBRE_FIRMA[tipo]}</p>
       {motivo ? (
         <p className="mt-1 text-sm text-ink-2">{motivo}</p>

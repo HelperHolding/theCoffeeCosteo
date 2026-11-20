@@ -1,10 +1,11 @@
 'use client';
 import { useState, useTransition } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, MessageSquareWarning } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { registrarIncidencia } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
 import type { Dia } from '@/lib/franquiciatarios/dia';
 import { hora } from './formato';
+import { Franja } from './colores';
 
 /** Incidencias y pendientes del día: texto libre con nombre y hora. No se editan ni se borran. */
 export function Incidencias({
@@ -22,14 +23,19 @@ export function Incidencias({
   return (
     <section
       aria-labelledby="incidencias"
-      className="rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5"
+      className="rounded-2xl border border-incidencia/40 bg-incidencia-soft p-4 shadow-card sm:p-5"
     >
-      <h2 id="incidencias" className="text-lg">
-        Incidencias y pendientes del día
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Lo que el gerente y el siguiente turno deben saber.
-      </p>
+      <div className="flex items-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-incidencia text-primary-foreground">
+          <MessageSquareWarning size={18} aria-hidden="true" />
+        </span>
+        <div>
+          <h2 id="incidencias" className="text-lg">
+            Incidencias y pendientes del día
+          </h2>
+          <p className="mt-0.5 text-sm text-ink-2">Lo que el gerente y el siguiente turno deben saber.</p>
+        </div>
+      </div>
       {editable && (
         <form
           className="mt-4 space-y-2"
@@ -72,11 +78,12 @@ export function Incidencias({
         </form>
       )}
       {incidencias.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">Sin incidencias registradas.</p>
+        <p className="mt-4 text-sm text-ink-2">Sin incidencias registradas.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-line">
+        <ul className="mt-4 space-y-2">
           {incidencias.map((i) => (
-            <li key={i.id} className="py-3">
+            <li key={i.id} className="relative overflow-hidden rounded-xl bg-surface px-4 py-3 pl-5">
+              <Franja tono="incidencia" />
               <p className="whitespace-pre-line text-[15px] text-ink">{i.texto}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {i.nombre} · {hora(i.registrado_en)}

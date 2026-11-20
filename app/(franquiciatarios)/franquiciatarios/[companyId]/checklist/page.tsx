@@ -8,6 +8,7 @@ import { Encabezado } from '@/components/portal/piezas';
 import { Checklist } from '@/components/franquiciatarios/checklist';
 import { NombreDeclarado, QuienEres } from '@/components/franquiciatarios/quien-eres';
 import { diaLargo } from '@/components/franquiciatarios/formato';
+import { ICONO_SECCION, TONO } from '@/components/franquiciatarios/colores';
 
 const CLAVES: SeccionClave[] = ['apertura', 'cambio', 'cierre'];
 
@@ -86,30 +87,37 @@ export default async function PaginaChecklist({
       ) : (
         <>
           <nav aria-label="Secciones del checklist" className="grid grid-cols-3 gap-2">
-            {estado.secciones.map((s) => (
-              <Link
-                key={s.clave}
-                href={`${base}/checklist?seccion=${s.clave}${consultaDia}`}
-                aria-current={s.clave === actual.clave ? 'page' : undefined}
-                className={cn(
-                  'flex min-h-14 flex-col justify-center rounded-xl border px-3 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
-                  s.clave === actual.clave
-                    ? 'border-ink bg-ink text-white'
-                    : 'border-line bg-surface text-ink hover:border-line-strong',
-                )}
-              >
-                <span className="text-sm font-bold leading-tight">{s.nombre}</span>
-                <span
+            {estado.secciones.map((s) => {
+              const t = TONO[s.clave];
+              const Icono = ICONO_SECCION[s.clave];
+              const activa = s.clave === actual.clave;
+              return (
+                <Link
+                  key={s.clave}
+                  href={`${base}/checklist?seccion=${s.clave}${consultaDia}`}
+                  aria-current={activa ? 'page' : undefined}
                   className={cn(
-                    'text-xs tabular',
-                    s.clave === actual.clave ? 'text-white/75' : 'text-muted-foreground',
+                    'relative flex min-h-14 flex-col items-center justify-center overflow-hidden rounded-xl border px-3 py-2 text-center text-ink transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
+                    activa
+                      ? cn(t.suave, t.borde, 'shadow-card')
+                      : 'border-line bg-surface hover:border-line-strong',
                   )}
                 >
-                  {s.estado === 'completa' ? 'Completa' : `${s.respondidos}/${s.puntos.length}`}
-                  {s.noes > 0 && ` · ${s.noes} No`}
-                </span>
-              </Link>
-            ))}
+                  <span
+                    aria-hidden="true"
+                    className={cn('absolute inset-x-0 top-0', activa ? 'h-1' : 'h-0.5', t.marca)}
+                  />
+                  <span className="flex items-center gap-1.5 text-sm font-bold leading-tight">
+                    <Icono size={14} aria-hidden="true" className="hidden sm:block" />
+                    {s.nombre}
+                  </span>
+                  <span className="text-xs tabular text-ink-2">
+                    {s.estado === 'completa' ? 'Completa' : `${s.respondidos}/${s.puntos.length}`}
+                    {s.noes > 0 && ` · ${s.noes} No`}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
           <Checklist
             key={`${actual.clave}-${dia}`}
