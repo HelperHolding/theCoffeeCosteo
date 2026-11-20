@@ -1,6 +1,6 @@
 // supabase/functions/com-oc-whatsapp/whatsapp_test.ts
 import { assertEquals } from "@std/assert";
-import { autorizadoWhatsapp, manejar, mascara, normalizarTelefono } from "./whatsapp.ts";
+import { autorizadoWhatsapp, manejar, mascara, normalizarTelefono, responder } from "./whatsapp.ts";
 
 type Fila = Record<string, unknown>;
 // Base falsa: com_plan_config (bandera) y com_oc_whatsapp en memoria, con la llave primaria de verdad.
@@ -170,4 +170,16 @@ Deno.test("acción desconocida o datos faltantes → 400", async () => {
   const { db } = dbFalsa({ activo: true });
   assertEquals((await manejar(db, { accion: "x" }, sinCorreo)).status, 400);
   assertEquals((await manejar(db, { accion: "reservar", zoho_po_id: "" }, sinCorreo)).status, 400);
+});
+
+Deno.test("responder: 401 sin secreto, 405 si no es POST, 200 con el JSON de manejar, 500 sin filtrar el error", async () => {
+  Deno.env.set("OC_WHATSAPP_SECRETO", "s3creto-wa");
+  const deps = (m: () => Promise<{ status: number; json: unknown }>) => ({ db: () => ({}) as never, manejar: m as never });
+  const post = (h: Record<string, string>) => new Request("https://x", { method: "POST", headers: h, body: JSON.stringify({ accion: "reservar" }) });
+  assertEquals((await responder(post({}), deps(() => Promise.resolve({ status: 200, json: {} })))).status, 401);
+  assertEquals((await responder(new Request("https://x", { headers: { "x-oc-whatsapp-secreto": "s3creto-wa" } }), deps(() => Promise.resolve({ status: 200, json: {} })))).status, 405);
+  const r = await responder(post({ "x-oc-whatsapp-secreto": "s3creto-wa" }), deps(() => Promise.resolve({ status: 200, json: { enviar: true } })));
+  assertEquals([r.status, await r.json()], [200, { enviar: true }]);
+  const e = await responder(post({ "x-oc-whatsapp-secreto": "s3creto-wa" }), deps(() => Promise.reject(new Error("detalle interno postgres://x"))));
+  assertEquals([e.status, await e.json()], [500, { error: "error interno" }]);
 });

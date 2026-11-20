@@ -110,3 +110,17 @@ export async function manejar(db: SupabaseClient, body: Record<string, unknown>,
       return mal("acción desconocida");
   }
 }
+export async function responder(req: Request,
+  deps: { db: () => SupabaseClient; manejar: typeof manejar }): Promise<Response> {
+  const json = (status: number, x: unknown) => new Response(JSON.stringify(x), { status, headers: { "Content-Type": "application/json" } });
+  if (!autorizadoWhatsapp(req)) return json(401, { error: "No autorizado" });
+  if (req.method !== "POST") return json(405, { error: "Solo POST" });
+  const body = await req.json().catch(() => ({}));
+  try {
+    const r = await deps.manejar(deps.db(), (body ?? {}) as Record<string, unknown>);
+    return json(r.status, r.json);
+  } catch (e) {
+    console.error("com-oc-whatsapp:", (e as Error).message?.slice(0, 200));
+    return json(500, { error: "error interno" });
+  }
+}
