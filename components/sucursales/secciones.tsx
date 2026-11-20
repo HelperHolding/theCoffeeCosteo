@@ -1,15 +1,16 @@
 'use client';
 import { useState } from 'react';
-import { Calculator, Milk, ReceiptText, type LucideIcon } from 'lucide-react';
+import { Calculator, Gauge, Milk, ReceiptText, type LucideIcon } from 'lucide-react';
 import { cn } from 'cn';
 import type { SucursalInfo } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, filtrosOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
 import { VentasPos } from './ventas-pos';
 import { SeccionCosteo } from './seccion-costeo';
 import { SeccionConsumo } from './consumo';
+import { SeccionServicio } from './nivel-servicio';
 import { guardarPeriodoEnUrl, type Periodo } from './periodo';
 
-export type IdSeccion = 'ventas' | 'costeo' | 'consumo';
+export type IdSeccion = 'ventas' | 'costeo' | 'consumo' | 'servicio';
 const SECCIONES: { id: IdSeccion; nombre: string; detalle: string; icono: LucideIcon }[] = [
   { id: 'ventas', nombre: 'Ventas', detalle: 'En vivo, tendencias, productos y pedidos', icono: ReceiptText },
   {
@@ -19,6 +20,12 @@ const SECCIONES: { id: IdSeccion; nombre: string; detalle: string; icono: Lucide
     icono: Calculator,
   },
   { id: 'consumo', nombre: 'Consumo', detalle: 'Insumos que piden las recetas de lo vendido', icono: Milk },
+  {
+    id: 'servicio',
+    nombre: 'Nivel de servicio',
+    detalle: 'Rappi: conectividad, reclamos y rechazos',
+    icono: Gauge,
+  },
 ];
 
 /** Sin Rappi en la API no hay filtro de Rappi, y «todos» es Mostrador + App. */
@@ -35,8 +42,9 @@ const conParametro = (nombre: string, valor: string | null) => {
 };
 
 /**
- * Una sucursal en tres secciones (docs/sucursales/13): Ventas (sin cambios), Costeo (solo con permiso; lo decide el
- * servidor y la API lo vuelve a exigir) y Consumo. El origen y el periodo son de la sucursal: se conservan al cambiar
+ * Una sucursal en cuatro secciones (docs/sucursales/13; Nivel de servicio en docs/rappi-portal/08): Ventas, Costeo (solo con permiso; lo decide el
+ * servidor y la API lo vuelve a exigir), Consumo y Nivel de servicio (solo con tienda en el portal de Rappi). El origen
+ * y el periodo son de la sucursal: se conservan al cambiar
  * de sección y viajan en la URL (?seccion, ?origen, ?periodo o ?desde/&hasta), así que un enlace abre lo mismo.
  */
 export function SeccionesSucursal({
@@ -54,7 +62,11 @@ export function SeccionesSucursal({
   origenInicial: FiltroOrigen;
   periodoInicial: Periodo;
 }) {
-  const visibles = SECCIONES.filter((s) => s.id !== 'costeo' || puedeCostear);
+  // Costeo solo con permiso; Nivel de servicio solo si la sucursal tiene tienda en el portal de Rappi
+  // (docs/rappi-portal/08; la API responde 404 si no).
+  const visibles = SECCIONES.filter(
+    (s) => (s.id !== 'costeo' || puedeCostear) && (s.id !== 'servicio' || sucursal.rappiPortal),
+  );
   const [seccion, setSeccion] = useState<IdSeccion>(
     visibles.some((s) => s.id === seccionInicial) ? seccionInicial : 'ventas',
   );
@@ -77,7 +89,8 @@ export function SeccionesSucursal({
     setPeriodo(p);
     guardarPeriodoEnUrl(p);
   };
-  const sinOrigen = seccion === 'ventas' && tab === 'rappi';
+  // La pestaña Rappi y Nivel de servicio son solo de Rappi: el filtro de origen no aplica.
+  const sinOrigen = (seccion === 'ventas' && tab === 'rappi') || seccion === 'servicio';
 
   return (
     <div className="space-y-6">
@@ -168,7 +181,10 @@ export function SeccionesSucursal({
           </div>
         </fieldset>
       </div>
-      <p className="placa px-3 py-2 text-xs text-muted-foreground">{sucursal.alcance}</p>
+      {/* El alcance habla de Ventas POS y del filtro de origen: en Nivel de servicio no aplica (lleva su propia fuente). */}
+      {seccion !== 'servicio' && (
+        <p className="placa px-3 py-2 text-xs text-muted-foreground">{sucursal.alcance}</p>
+      )}
 
       {seccion === 'ventas' ? (
         <VentasPos
@@ -184,6 +200,13 @@ export function SeccionesSucursal({
           key={`${sucursal.companyId}-${origen}`}
           sucursal={sucursal}
           origen={origen}
+          periodo={periodo}
+          alCambiarPeriodo={elegirPeriodo}
+        />
+      ) : seccion === 'servicio' ? (
+        <SeccionServicio
+          key={sucursal.companyId}
+          sucursal={sucursal}
           periodo={periodo}
           alCambiarPeriodo={elegirPeriodo}
         />

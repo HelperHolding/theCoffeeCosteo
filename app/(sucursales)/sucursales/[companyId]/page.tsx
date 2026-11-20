@@ -22,7 +22,8 @@ export default async function Sucursal({
   const q = await searchParams;
   // La sección Costeo solo se ofrece con permiso (la API /costeo lo vuelve a exigir: 403).
   const costeo = await puedeCostear(db, cfg.companyId, perfil);
-  const seccion: IdSeccion = q.seccion === 'costeo' || q.seccion === 'consumo' ? q.seccion : 'ventas';
+  const seccion: IdSeccion =
+    q.seccion === 'costeo' || q.seccion === 'consumo' || q.seccion === 'servicio' ? q.seccion : 'ventas';
   const busqueda = new URLSearchParams(
     Object.entries(q).filter((e): e is [string, string] => typeof e[1] === 'string'),
   );
