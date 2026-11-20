@@ -82,10 +82,10 @@ describe('correo de la OV sugerida', () => {
       }),
     ]).html;
     expect(con).toContain(
-      `La semana pasada (9 nov 2026) sugerimos ${pesos(5460)}; desde entonces pidió ${pesos(5040)}.`,
+      `En la corrida anterior (9 nov 2026) sugerimos ${pesos(5460)}; desde entonces pidió ${pesos(5040)}.`,
     );
     expect(con).toMatch(/>-1</);
-    expect(correoOvs(SEMANA, [tienda()]).html).toContain('Primera semana del piloto para esta tienda');
+    expect(correoOvs(SEMANA, [tienda()]).html).toContain('Primera corrida del piloto para esta tienda');
   });
 
   it('avisos: inactivos, insumos sin SKU, cadencia por omisión, lectura incompleta y tienda que falló', () => {
