@@ -1,6 +1,6 @@
 'use client';
 // Bloques 1 a 3 del tablero BI: números clave, contra meta y P.E. y mezcla de venta.
-import { Barra, Insignia, Tarjeta } from '@/components/portal/piezas';
+import { Barra, Insignia } from '@/components/portal/piezas';
 import { cn } from 'cn';
 import { AZUL } from '@/components/sucursales/colores';
 import { BarraApilada } from '@/components/sucursales/graficas';
@@ -8,6 +8,7 @@ import { dinero, fechaCorta, numero, porcentaje } from '@/components/sucursales/
 import { Cifra } from '@/components/sucursales/graficas-mexico';
 import { cambio } from '@/lib/bi/comparacion';
 import { alcanza, type contraMeta, type EstadoComparacion, type numerosClave } from '@/lib/bi/bloques';
+import { TarjetaBi } from './tarjeta-bi';
 import { CAFE, colorDe, enOrden, GRUPOS, SIN_COLOR } from './colores-bi';
 
 const decimales = new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -101,11 +102,12 @@ export function ContraMeta({ datos, filtrosLinea }: { datos: ReturnType<typeof c
   const { meta, pe, diasSinMeta } = datos;
   const sinComparar = filtrosLinea.length > 0;
   return (
-    <Tarjeta
+    <TarjetaBi
+      ancho={4}
       titulo="Contra meta y punto de equilibrio"
       descripcion="Venta de los días con corte del POS contra su meta y su P.E. La meta del periodo incluye los días que faltan."
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <Panel
           titulo="Meta de venta"
           tiendas={meta?.tiendas}
@@ -171,7 +173,7 @@ export function ContraMeta({ datos, filtrosLinea }: { datos: ReturnType<typeof c
           )}
         </ul>
       )}
-    </Tarjeta>
+    </TarjetaBi>
   );
 }
 
@@ -254,11 +256,11 @@ export interface FilaShare {
 }
 
 /** Barras horizontales de magnitud (un solo tono) con venta y porcentaje, en la escala de la fila mayor. */
-export function BarrasShare({ titulo, filas }: { titulo: string; filas: FilaShare[] }) {
+export function BarrasShare({ titulo, filas }: { titulo?: string; filas: FilaShare[] }) {
   const max = Math.max(0, ...filas.map((f) => f.share ?? 0));
   return (
     <div className="min-w-0 space-y-3">
-      <h3 className="text-sm font-semibold text-ink-2">{titulo}</h3>
+      {titulo && <h3 className="text-sm font-semibold text-ink-2">{titulo}</h3>}
       {filas.length === 0 ? (
         <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
       ) : (
@@ -295,63 +297,70 @@ export function BarrasShare({ titulo, filas }: { titulo: string; filas: FilaShar
 
 const NOMBRE_CAFE: Record<string, string> = { Sí: 'Con café', No: 'Sin café' };
 
-/** Bloque 3. Recibe las filas ya con su share (conShare). Grupos y café: composición con color fijo por entidad. */
-export function Mezcla({
-  grupos,
-  cafe,
-  master,
-}: {
-  grupos: { grupo: string; venta_cent: number; share: number | null }[];
-  cafe: { cafe: string; venta_cent: number; share: number | null }[];
-  master: { categoria: string; venta_cent: number; share: number | null }[];
-}) {
+type Grupos = { grupo: string; venta_cent: number; share: number | null }[];
+type Cafes = { cafe: string; venta_cent: number; share: number | null }[];
+type Masters = { categoria: string; venta_cent: number; share: number | null }[];
+
+/** Bloque 3, tarjeta 1. Recibe las filas ya con su share (conShare). Composición con color fijo por entidad. */
+export function MezclaGrupos({ grupos }: { grupos: Grupos }) {
   return (
-    <Tarjeta titulo="Mezcla de venta" descripcion="Venta neta y su participación.">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-8">
-          {grupos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
-          ) : (
-            <BarraApilada
-              titulo="Comida, Bebida, Combo y Merch"
-              moneda="MXN"
-              segmentos={enOrden(grupos, GRUPOS, (g) => g.grupo).map((g) => ({
-                clave: g.grupo,
-                etiqueta: g.grupo,
-                color: colorDe(GRUPOS, g.grupo),
-                ventaCent: g.venta_cent,
-                pedidos: null,
-                participacion: g.share,
-              }))}
-            />
-          )}
-          {cafe.length === 0 ? null : (
-            <BarraApilada
-              titulo="Bebidas con café y sin café"
-              moneda="MXN"
-              segmentos={[...cafe]
-                .sort((a, b) => (a.cafe === 'Sí' ? -1 : b.cafe === 'Sí' ? 1 : 0))
-                .map((c) => ({
-                  clave: c.cafe,
-                  etiqueta: NOMBRE_CAFE[c.cafe] ?? c.cafe,
-                  color: CAFE[c.cafe] ?? SIN_COLOR,
-                  ventaCent: c.venta_cent,
-                  pedidos: null,
-                  participacion: c.share,
-                }))}
-            />
-          )}
-        </div>
-        <BarrasShare
-          titulo="Categoría Master Franchise MX"
-          filas={master.map((m) => ({
-            clave: m.categoria,
-            etiqueta: m.categoria,
-            ventaCent: m.venta_cent,
-            share: m.share,
+    <TarjetaBi ancho={4} titulo="Comida, Bebida, Combo y Merch" descripcion="Venta neta y su participación.">
+      {grupos.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
+      ) : (
+        <BarraApilada
+          moneda="MXN"
+          segmentos={enOrden(grupos, GRUPOS, (g) => g.grupo).map((g) => ({
+            clave: g.grupo,
+            etiqueta: g.grupo,
+            color: colorDe(GRUPOS, g.grupo),
+            ventaCent: g.venta_cent,
+            pedidos: null,
+            participacion: g.share,
           }))}
         />
-      </div>
-    </Tarjeta>
+      )}
+    </TarjetaBi>
+  );
+}
+
+/** Bloque 3, tarjeta 2: bebidas con café y sin café. */
+export function MezclaCafe({ cafe }: { cafe: Cafes }) {
+  return (
+    <TarjetaBi ancho={4} titulo="Bebidas con café y sin café" descripcion="Venta neta y su participación.">
+      {cafe.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
+      ) : (
+        <BarraApilada
+          moneda="MXN"
+          segmentos={[...cafe]
+            .sort((a, b) => (a.cafe === 'Sí' ? -1 : b.cafe === 'Sí' ? 1 : 0))
+            .map((c) => ({
+              clave: c.cafe,
+              etiqueta: NOMBRE_CAFE[c.cafe] ?? c.cafe,
+              color: CAFE[c.cafe] ?? SIN_COLOR,
+              ventaCent: c.venta_cent,
+              pedidos: null,
+              participacion: c.share,
+            }))}
+        />
+      )}
+    </TarjetaBi>
+  );
+}
+
+/** Bloque 3, tarjeta 3: categoría Master Franchise MX. */
+export function CategoriaMaster({ master }: { master: Masters }) {
+  return (
+    <TarjetaBi ancho={6} titulo="Categoría Master Franchise MX" descripcion="Venta neta y su participación.">
+      <BarrasShare
+        filas={master.map((m) => ({
+          clave: m.categoria,
+          etiqueta: m.categoria,
+          ventaCent: m.venta_cent,
+          share: m.share,
+        }))}
+      />
+    </TarjetaBi>
   );
 }

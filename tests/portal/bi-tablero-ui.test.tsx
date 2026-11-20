@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const replace = vi.fn();
 // La URL del navegador; una prueba la cambia para revisar las claves de fecha.
@@ -215,7 +215,7 @@ describe('<TableroMexico> con errores de lectura', () => {
 });
 
 describe('<TableroMexico> con datos en todos los bloques', () => {
-  it('pinta gráficas, ranking (20 y «Ver todos») y tendencias por año', async () => {
+  it('pinta gráficas, ranking (10 y «Ver todas») y tendencias por año', async () => {
     const ranking = Array.from({ length: 25 }, (_, i) => ({
       codigo: `P${i}`,
       nombre: `Producto ${i}`,
@@ -267,17 +267,31 @@ describe('<TableroMexico> con datos en todos los bloques', () => {
         ),
     ) as never;
     render(<TableroMexico />);
-    await waitFor(() => expect(screen.getByText('Ventas por Año')).toBeTruthy());
-    expect(screen.getByText('Producto 24')).toBeTruthy(); // el de mayor venta
-    expect(screen.queryByText('Producto 0')).toBeNull(); // fuera de los 20 primeros
-    fireEvent.click(screen.getByRole('button', { name: /Ver todos/ }));
-    expect(screen.getByText('Producto 0')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas por año' })).toBeTruthy());
+    const ranking10 = within(screen.getByRole('region', { name: 'Ranking de Productos' }));
+    expect(ranking10.getByText('Producto 24')).toBeTruthy(); // el de mayor venta
+    expect(ranking10.getByText('Producto 15')).toBeTruthy(); // el décimo
+    expect(ranking10.queryByText('Producto 14')).toBeNull(); // fuera de los 10 primeros
+    fireEvent.click(ranking10.getByRole('button', { name: /Ver todas \(\d+\)/ }));
+    expect(ranking10.getByText('Producto 0')).toBeTruthy();
     expect(screen.getByRole('img', { name: /Venta neta por mes, una línea por año/ })).toBeTruthy();
     expect(
       screen.getByRole('img', { name: /Venta neta \(columnas\) y tickets \(línea\) por día\./ }),
     ).toBeTruthy();
     expect(screen.getAllByText('Ticket promedio').length).toBeGreaterThan(0);
     expect(screen.getByText('Con café')).toBeTruthy();
+  });
+
+  it('cada gráfica y tabla es su propia tarjeta del mosaico', async () => {
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas vs transacciones por día' })).toBeTruthy());
+    for (const t of ['Contra meta y punto de equilibrio', 'Comida, Bebida, Combo y Merch', 'Bebidas con café y sin café',
+      'Método de pago', 'Categoría Master Franchise MX', 'Ranking de Productos', 'Venta por día de la semana',
+      'Venta por hora', 'Venta por tienda agrupada por tipo', 'Promociones', 'Promociones por tienda',
+      'Método de pago por tienda', 'Ventas por año', 'Ventas por semana'])
+      expect(screen.getByRole('region', { name: t })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Tiempo y pago' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Mezcla de venta' })).toBeNull();
   });
 });
 

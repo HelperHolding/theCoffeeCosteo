@@ -24,11 +24,17 @@ import {
   tendenciaAnual,
   tendenciaSemanal,
 } from '@/lib/bi/bloques';
-import type { RespuestaKpis, RespuestaTablero, RespuestaTendencias, RpcOpciones, RpcTablero } from '@/lib/bi/tipos';
+import type {
+  RespuestaKpis,
+  RespuestaTablero,
+  RespuestaTendencias,
+  RpcOpciones,
+  RpcTablero,
+} from '@/lib/bi/tipos';
 import { escribirUrl, leerUrl, type FiltrosUrl } from '@/lib/bi/url';
-import { ContraMeta, Mezcla, NumerosClave } from './bloques-resumen';
-import { KpiVentaTiendas, Promociones } from './bloques-tiendas';
-import { TiempoYPago } from './bloques-tiempo';
+import { CategoriaMaster, ContraMeta, MezclaCafe, MezclaGrupos, NumerosClave } from './bloques-resumen';
+import { KpiVentaTiendas, Promociones, PromocionesPorTienda } from './bloques-tiendas';
+import { MetodoPago, PagoPorTienda, VentaDiaSemana, VentaPorHora, VentasPorDia } from './bloques-tiempo';
 import { RankingProductos, Tendencias } from './bloques-productos';
 import { AvisoDesactualizado, Cargando } from './estados-bi';
 import { FiltrosBi } from './filtros';
@@ -69,55 +75,68 @@ export function TableroMexico() {
     <div className="tablero-bi space-y-6">
       <FiltrosBi filtros={filtros} opciones={opciones} alCambiar={alCambiar} />
 
-      {tablero.datos ? (
-        <>
-          {tablero.error && (
-            <AvisoDesactualizado
-              key={tablero.recibidoEn}
-              recibidoEn={tablero.recibidoEn}
-              alReintentar={tablero.recargar}
-            />
-          )}
-          {tablero.datos.tablero ? (
-            <Bloques
-              respuesta={tablero.datos}
-              tablero={tablero.datos.tablero}
-              filtrosLinea={filtrosDeLinea(filtros)}
-              comparacion={estadoComparacion(comparacion.datos, !!comparacion.error)}
-              alActualizar={() => {
-                void tablero.recargar();
-                void tendencias.recargar();
-                void comparacion.recargar();
-              }}
-            />
-          ) : (
-            <Tarjeta>
-              <Vacio titulo="Ninguna de tus tiendas pasa estos filtros">
-                Cambia o limpia los filtros para ver cifras.
-              </Vacio>
-            </Tarjeta>
-          )}
-        </>
-      ) : tablero.error?.status === 400 ? (
-        // El periodo o los filtros de la URL no valen: reintentar no cambiaría nada.
-        <div role="alert" className="rounded-2xl border border-bad/30 bg-bad-soft p-4 text-sm">
-          <p className="font-semibold text-bad">Revisa el filtro Rango de Fechas</p>
-          <p className="mt-1 text-ink-2">{tablero.error.mensaje} Corrígelo en los filtros de arriba.</p>
-        </div>
-      ) : tablero.error ? (
-        <ErrorCarga error={tablero.error} alReintentar={tablero.recargar} />
-      ) : (
-        <Cargando texto="Cargando el tablero…" />
-      )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+        {tablero.datos ? (
+          <>
+            {tablero.error && (
+              <div className="sm:col-span-2 lg:col-span-12">
+                <AvisoDesactualizado
+                  key={tablero.recibidoEn}
+                  recibidoEn={tablero.recibidoEn}
+                  alReintentar={tablero.recargar}
+                />
+              </div>
+            )}
+            {tablero.datos.tablero ? (
+              <Bloques
+                respuesta={tablero.datos}
+                tablero={tablero.datos.tablero}
+                filtrosLinea={filtrosDeLinea(filtros)}
+                comparacion={estadoComparacion(comparacion.datos, !!comparacion.error)}
+                alActualizar={() => {
+                  void tablero.recargar();
+                  void tendencias.recargar();
+                  void comparacion.recargar();
+                }}
+              />
+            ) : (
+              <div className="sm:col-span-2 lg:col-span-12">
+                <Tarjeta>
+                  <Vacio titulo="Ninguna de tus tiendas pasa estos filtros">
+                    Cambia o limpia los filtros para ver cifras.
+                  </Vacio>
+                </Tarjeta>
+              </div>
+            )}
+          </>
+        ) : tablero.error?.status === 400 ? (
+          // El periodo o los filtros de la URL no valen: reintentar no cambiaría nada.
+          <div
+            role="alert"
+            className="rounded-2xl border border-bad/30 bg-bad-soft p-4 text-sm sm:col-span-2 lg:col-span-12"
+          >
+            <p className="font-semibold text-bad">Revisa el filtro Rango de Fechas</p>
+            <p className="mt-1 text-ink-2">{tablero.error.mensaje} Corrígelo en los filtros de arriba.</p>
+          </div>
+        ) : tablero.error ? (
+          <div className="sm:col-span-2 lg:col-span-12">
+            <ErrorCarga error={tablero.error} alReintentar={tablero.recargar} />
+          </div>
+        ) : (
+          <div className="sm:col-span-2 lg:col-span-12">
+            <Cargando texto="Cargando el tablero…" />
+          </div>
+        )}
 
-      <Tendencias
-        anual={armadoTendencias?.anual ?? null}
-        semanal={armadoTendencias?.semanal ?? null}
-        vacio={!!tendencias.datos && !tendencias.datos.tendencias}
-        error={tendencias.error}
-        recibidoEn={tendencias.recibidoEn}
-        alReintentar={tendencias.recargar}
-      />
+        <Tendencias
+          anual={armadoTendencias?.anual ?? null}
+          semanal={armadoTendencias?.semanal ?? null}
+          vacio={!!tendencias.datos && !tendencias.datos.tendencias}
+          error={tendencias.error}
+          recibidoEn={tendencias.recibidoEn}
+          alReintentar={tendencias.recargar}
+        />
+      </div>
     </div>
   );
 }
@@ -161,43 +180,48 @@ function Bloques({
 
   return (
     <>
-      <section aria-label="Frescura de los datos" className="space-y-2">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink-2 shadow-card">
-          <span className="inline-flex items-center gap-2 font-semibold">
-            <Clock size={16} aria-hidden="true" />
-            {a.ultimoCorte
-              ? `Actualizado al corte de las ${horaDe(Date.parse(a.ultimoCorte), ZONA)}`
-              : 'Sin cortes registrados'}
-          </span>
-          <span className="text-muted-foreground">
-            Del {fechaCorta(respuesta.periodo.desde)} al {fechaCorta(respuesta.periodo.hasta)}
-          </span>
-          <Button variant="outline" size="xs" className="ml-auto" onClick={alActualizar}>
-            <RotateCcw aria-hidden="true" />
-            Actualizar
-          </Button>
-        </p>
-        {cargas.length > 0 && <Aviso>{cargas.join('; ')} (nunca se cuentan como cero).</Aviso>}
-        {a.rappiPendiente && (
-          <Aviso>
-            El Rappi de Zoho todavía no se carga: en las tiendas sin portal de Rappi falta su venta de Rappi.
-          </Aviso>
-        )}
-      </section>
+      <div className="space-y-4 sm:col-span-2 lg:col-span-12">
+        <section aria-label="Frescura de los datos" className="space-y-2">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink-2 shadow-card">
+            <span className="inline-flex items-center gap-2 font-semibold">
+              <Clock size={16} aria-hidden="true" />
+              {a.ultimoCorte
+                ? `Actualizado al corte de las ${horaDe(Date.parse(a.ultimoCorte), ZONA)}`
+                : 'Sin cortes registrados'}
+            </span>
+            <span className="text-muted-foreground">
+              Del {fechaCorta(respuesta.periodo.desde)} al {fechaCorta(respuesta.periodo.hasta)}
+            </span>
+            <Button variant="outline" size="xs" className="ml-auto" onClick={alActualizar}>
+              <RotateCcw aria-hidden="true" />
+              Actualizar
+            </Button>
+          </p>
+          {cargas.length > 0 && <Aviso>{cargas.join('; ')} (nunca se cuentan como cero).</Aviso>}
+          {a.rappiPendiente && (
+            <Aviso>
+              El Rappi de Zoho todavía no se carga: en las tiendas sin portal de Rappi falta su venta de
+              Rappi.
+            </Aviso>
+          )}
+        </section>
 
-      <NumerosClave n={b.numeros} comparacion={comparacion} />
+        <NumerosClave n={b.numeros} comparacion={comparacion} />
+      </div>
+
+      <VentasPorDia porFecha={t.por_fecha} />
       <ContraMeta datos={b.metas} filtrosLinea={filtrosLinea} />
-      <Mezcla grupos={b.grupos} cafe={b.cafe} master={b.master} />
+      <MezclaGrupos grupos={b.grupos} />
+      <MezclaCafe cafe={b.cafe} />
+      <MetodoPago porPago={b.pago} />
+      <CategoriaMaster master={b.master} />
+      <RankingProductos meses={b.ranking} />
+      <VentaDiaSemana porDia={t.por_dia} />
+      <VentaPorHora porHora={t.por_hora} />
       <KpiVentaTiendas grupos={b.kpi} comparar={filtrosLinea.length === 0} />
       <Promociones datos={b.promos} />
-      <TiempoYPago
-        porFecha={t.por_fecha}
-        porPago={b.pago}
-        pagoTienda={b.pagoTienda}
-        porDia={t.por_dia}
-        porHora={t.por_hora}
-      />
-      <RankingProductos meses={b.ranking} />
+      <PagoPorTienda porPago={b.pago} pagoTienda={b.pagoTienda} />
+      <PromocionesPorTienda datos={b.promos} />
     </>
   );
 }

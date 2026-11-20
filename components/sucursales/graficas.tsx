@@ -555,7 +555,8 @@ export function BarraApilada({
   segmentos,
   moneda,
 }: {
-  titulo: string;
+  /** Sin título (mosaico BI): el de la tarjeta es el único visible. */
+  titulo?: string;
   segmentos: Segmento[];
   moneda: string;
 }) {
@@ -563,11 +564,11 @@ export function BarraApilada({
   const visibles = segmentos.filter((s) => (s.participacion ?? 0) > 0);
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-ink-2">{titulo}</p>
+      {titulo && <p className="text-sm font-semibold text-ink-2">{titulo}</p>}
       <div
         className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-[4px]"
         role="img"
-        aria-label={`${titulo}: ${visibles.map((s) => `${s.etiqueta} ${porcentaje(s.participacion, 0)}`).join(', ')}`}
+        aria-label={`${titulo ?? 'Participación'}: ${visibles.map((s) => `${s.etiqueta} ${porcentaje(s.participacion, 0)}`).join(', ')}`}
       >
         {visibles.map((s) => (
           <span

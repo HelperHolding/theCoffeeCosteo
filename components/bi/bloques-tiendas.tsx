@@ -1,10 +1,10 @@
 'use client';
-// Bloques 4 y 5 del tablero BI: KPI Venta The Coffee por tienda y promociones.
-import { Fragment } from 'react';
-import { Barra, Insignia, Tarjeta } from '@/components/portal/piezas';
+// Bloques 4 y 5 del tablero BI: venta por tienda agrupada por tipo y promociones (una tarjeta cada uno).
+import { Barra, Insignia } from '@/components/portal/piezas';
 import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
-import { AZUL } from '@/components/sucursales/colores';
 import { alcanza, cociente, type kpiTiendas, type promociones } from '@/lib/bi/bloques';
+import { BarraEnCelda, TablaBi, type ColumnaBi } from './tabla-bi';
+import { TarjetaBi } from './tarjeta-bi';
 
 /** Sin meta cargada (o sin comparación posible): se ve «—», nunca cero. */
 const Guion = ({ titulo }: { titulo: string }) => (
@@ -13,130 +13,95 @@ const Guion = ({ titulo }: { titulo: string }) => (
   </span>
 );
 
-/** Meta del periodo y cumplimiento (venta ÷ meta de los días con corte). */
-function CeldasMeta({
-  metaCent,
-  cumplimiento,
-  comparar,
-}: {
-  metaCent: number | null;
-  cumplimiento: number | null;
-  comparar: boolean;
-}) {
-  if (metaCent === null)
-    return (
-      <>
-        <td className="numero">
-          <Guion titulo="Sin meta cargada" />
-        </td>
-        <td className="numero">
-          <Guion titulo="Sin meta cargada" />
-        </td>
-      </>
-    );
+/** Meta del periodo (o «—» sin meta cargada). */
+const contenidoMeta = (metaCent: number | null) =>
+  metaCent === null ? <Guion titulo="Sin meta cargada" /> : dinero(metaCent);
+
+/** Cumplimiento (venta ÷ meta de los días con corte): verde si alcanza, rojo si no, «—» si no se puede comparar. */
+function contenidoVsMeta(metaCent: number | null, cumplimiento: number | null, comparar: boolean) {
+  if (metaCent === null) return <Guion titulo="Sin meta cargada" />;
+  if (!comparar) return <Guion titulo="Con filtros de producto, pago, hora o monto la meta no se compara" />;
+  if (cumplimiento === null) return <Guion titulo="Todavía no hay días con corte" />;
   return (
-    <>
-      <td className="numero">{dinero(metaCent)}</td>
-      <td className="numero">
-        {!comparar ? (
-          <Guion titulo="Con filtros de producto, pago, hora o monto la meta no se compara" />
-        ) : cumplimiento === null ? (
-          <Guion titulo="Todavía no hay días con corte" />
-        ) : (
-          <span className={alcanza(cumplimiento) ? 'font-semibold text-ok' : 'font-semibold text-bad'}>
-            {porcentaje(cumplimiento)}
-          </span>
-        )}
-      </td>
-    </>
+    <span className={alcanza(cumplimiento) ? 'font-semibold text-ok' : 'font-semibold text-bad'}>
+      {porcentaje(cumplimiento)}
+    </span>
   );
 }
 
+type Grupos = ReturnType<typeof kpiTiendas>;
+type FilaTienda = Grupos[number]['tiendas'][number];
+
 /** Bloque 4: Propias/Franquicia → tienda, con venta, tickets, ticket promedio, share de la red y meta. */
-export function KpiVentaTiendas({ grupos, comparar }: { grupos: ReturnType<typeof kpiTiendas>; comparar: boolean }) {
+export function KpiVentaTiendas({ grupos, comparar }: { grupos: Grupos; comparar: boolean }) {
   const total = grupos.reduce((s, g) => s + g.ventaCent, 0);
   const maxShare = Math.max(0, ...grupos.flatMap((g) => g.tiendas.map((t) => t.share ?? 0)));
+  const columnas: ColumnaBi<FilaTienda>[] = [
+    { clave: 'tienda', titulo: 'Tienda', celda: (t) => <span className="pl-3">{t.nombre}</span> },
+    { clave: 'venta', titulo: 'Venta', numero: true, orden: (t) => t.ventaCent, celda: (t) => dinero(t.ventaCent) },
+    { clave: 'tickets', titulo: 'Tickets', numero: true, orden: (t) => t.tickets, celda: (t) => numero(t.tickets) },
+    {
+      clave: 'ticket',
+      titulo: 'Ticket prom.',
+      numero: true,
+      orden: (t) => t.ticketPromedioCent,
+      celda: (t) => dinero(t.ticketPromedioCent),
+    },
+    {
+      clave: 'share',
+      titulo: 'Share',
+      numero: true,
+      orden: (t) => t.share,
+      celda: (t) => (
+        <BarraEnCelda valor={t.share} max={maxShare}>
+          {porcentaje(t.share)}
+        </BarraEnCelda>
+      ),
+    },
+    { clave: 'meta', titulo: 'Meta', numero: true, celda: (t) => contenidoMeta(t.metaCent) },
+    {
+      clave: 'vs',
+      titulo: 'Vs meta',
+      numero: true,
+      orden: (t) => t.cumplimiento,
+      celda: (t) => contenidoVsMeta(t.metaCent, t.cumplimiento, comparar),
+    },
+  ];
   return (
-    <Tarjeta
-      titulo="KPI Venta The Coffee"
+    <TarjetaBi
+      ancho={8}
+      titulo="Venta por tienda agrupada por tipo"
       descripcion="Share: participación de cada tienda en la venta neta del filtro. Vs meta: venta de los días con corte contra su meta."
       cuerpo={false}
     >
       {grupos.length === 0 ? (
-        <p className="p-5 text-sm text-muted-foreground">Sin venta por tienda en el periodo.</p>
+        <p className="px-4 pb-4 text-sm text-muted-foreground">Sin venta por tienda en el periodo.</p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="tabla tabla-bi min-w-[44rem]">
-            <caption className="sr-only">Venta por tienda agrupada por tipo</caption>
-            <thead>
-              <tr>
-                <th scope="col">Tienda</th>
-                <th scope="col" className="numero">
-                  Venta
-                </th>
-                <th scope="col" className="numero">
-                  Tickets
-                </th>
-                <th scope="col" className="numero">
-                  Ticket prom.
-                </th>
-                <th scope="col" className="numero">
-                  Share
-                </th>
-                <th scope="col" className="numero">
-                  Meta
-                </th>
-                <th scope="col" className="numero">
-                  Vs meta
-                </th>
+        <TablaBi
+          resumen="Venta por tienda agrupada por tipo"
+          columnas={columnas}
+          secciones={grupos.map((g) => ({
+            clave: g.tipo,
+            cabecera: (
+              <tr className="bg-surface-2/60 font-semibold">
+                <th scope="rowgroup">{g.tipo}</th>
+                <td className="numero">{dinero(g.ventaCent)}</td>
+                <td className="numero">{numero(g.tickets)}</td>
+                <td className="numero">{dinero(cociente(g.ventaCent, g.tickets))}</td>
+                <td className="numero">{porcentaje(cociente(g.ventaCent, total))}</td>
+                <td className="numero">{contenidoMeta(g.metaCent)}</td>
+                <td className="numero">{contenidoVsMeta(g.metaCent, g.cumplimiento, comparar)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {grupos.map((g) => (
-                <Fragment key={g.tipo}>
-                  <tr className="bg-surface-2/60 font-semibold">
-                    <th scope="rowgroup">{g.tipo}</th>
-                    <td className="numero">{dinero(g.ventaCent)}</td>
-                    <td className="numero">{numero(g.tickets)}</td>
-                    <td className="numero">{dinero(cociente(g.ventaCent, g.tickets))}</td>
-                    <td className="numero">{porcentaje(cociente(g.ventaCent, total))}</td>
-                    <CeldasMeta metaCent={g.metaCent} cumplimiento={g.cumplimiento} comparar={comparar} />
-                  </tr>
-                  {g.tiendas.map((t) => (
-                    <tr key={t.companyId}>
-                      <th scope="row" className="pl-7 font-medium">
-                        {t.nombre}
-                      </th>
-                      <td className="numero">{dinero(t.ventaCent)}</td>
-                      <td className="numero">{numero(t.tickets)}</td>
-                      <td className="numero">{dinero(t.ticketPromedioCent)}</td>
-                      <td className="numero">
-                        <span className="inline-flex items-center justify-end gap-2">
-                          <span
-                            aria-hidden="true"
-                            className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-surface-2 sm:block"
-                          >
-                            <span
-                              className="block h-full rounded-full"
-                              style={{
-                                width: `${maxShare > 0 ? ((t.share ?? 0) / maxShare) * 100 : 0}%`,
-                                backgroundColor: AZUL.fuerte,
-                              }}
-                            />
-                          </span>
-                          {porcentaje(t.share)}
-                        </span>
-                      </td>
-                      <CeldasMeta metaCent={t.metaCent} cumplimiento={t.cumplimiento} comparar={comparar} />
-                    </tr>
-                  ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ),
+            filas: g.tiendas,
+          }))}
+          claveFila={(t) => String(t.companyId)}
+          ordenInicial="venta"
+          primeras={5}
+          minimo="min-w-[44rem]"
+        />
       )}
-    </Tarjeta>
+    </TarjetaBi>
   );
 }
 
@@ -145,12 +110,14 @@ const CORTO: Record<string, string> = {
   'Promoción café': 'Café',
 };
 
-/** Bloque 5: share de cada promoción contra su meta (6 % y 1 %), por tienda y cantidad vendida. */
-export function Promociones({ datos }: { datos: ReturnType<typeof promociones> }) {
-  const nombres = datos.red.map((r) => r.promocion);
+type DatosPromos = ReturnType<typeof promociones>;
+type FilaPromo = DatosPromos['porTienda'][number];
+
+/** Bloque 5, indicadores: share de cada promoción contra su meta (6 % y 1 %). */
+export function Promociones({ datos }: { datos: DatosPromos }) {
   return (
-    <Tarjeta titulo="Promociones" descripcion="Share de la venta neta de cada promoción contra su meta.">
-      <div className="grid gap-6 sm:grid-cols-2">
+    <TarjetaBi ancho={4} titulo="Promociones" descripcion="Share de la venta neta de cada promoción contra su meta.">
+      <div className="grid gap-4">
         {datos.red.map((r) => {
           const estado = r.share === null ? 'neutro' : r.share >= r.meta ? 'ok' : 'bajo';
           return (
@@ -170,46 +137,54 @@ export function Promociones({ datos }: { datos: ReturnType<typeof promociones> }
           );
         })}
       </div>
-      <h3 className="mt-6 text-sm font-semibold text-ink-2">Resultados por tienda</h3>
+    </TarjetaBi>
+  );
+}
+
+/** Bloque 5, tabla: share y cantidad vendida de cada promoción por tienda. */
+export function PromocionesPorTienda({ datos }: { datos: DatosPromos }) {
+  const nombres = datos.red.map((r) => r.promocion);
+  const columnas: ColumnaBi<FilaPromo>[] = [
+    { clave: 'tienda', titulo: 'Tienda', celda: (t) => t.nombre },
+    ...nombres.flatMap((p): ColumnaBi<FilaPromo>[] => [
+      {
+        clave: `share-${p}`,
+        titulo: `${CORTO[p] ?? p} · share`,
+        numero: true,
+        orden: (t) => t.promos[p].share,
+        celda: (t) => porcentaje(t.promos[p].share),
+      },
+      {
+        clave: `unidades-${p}`,
+        titulo: `${CORTO[p] ?? p} · unidades`,
+        numero: true,
+        orden: (t) => t.promos[p].unidades,
+        celda: (t) => numero(t.promos[p].unidades),
+      },
+    ]),
+  ];
+  return (
+    <TarjetaBi
+      ancho={12}
+      titulo="Promociones por tienda"
+      descripcion="Share y cantidad vendida de cada promoción por tienda."
+      cuerpo={false}
+    >
       {datos.porTienda.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">Ninguna tienda vendió promociones en el periodo.</p>
+        <p className="px-4 pb-4 text-sm text-muted-foreground">
+          Ninguna tienda vendió promociones en el periodo.
+        </p>
       ) : (
-        <div className="mt-2 overflow-x-auto">
-          <table className="tabla tabla-bi min-w-[40rem]">
-            <caption className="sr-only">Share y cantidad vendida de cada promoción por tienda</caption>
-            <thead>
-              <tr>
-                <th scope="col">Tienda</th>
-                {nombres.map((p) => (
-                  <Fragment key={p}>
-                    <th scope="col" className="numero">
-                      {CORTO[p] ?? p} · share
-                    </th>
-                    <th scope="col" className="numero">
-                      {CORTO[p] ?? p} · unidades
-                    </th>
-                  </Fragment>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {datos.porTienda.map((t) => (
-                <tr key={t.companyId}>
-                  <th scope="row" className="font-medium">
-                    {t.nombre}
-                  </th>
-                  {nombres.map((p) => (
-                    <Fragment key={p}>
-                      <td className="numero">{porcentaje(t.promos[p].share)}</td>
-                      <td className="numero">{numero(t.promos[p].unidades)}</td>
-                    </Fragment>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TablaBi
+          resumen="Share y cantidad vendida de cada promoción por tienda"
+          columnas={columnas}
+          secciones={[{ clave: 'todas', filas: datos.porTienda }]}
+          claveFila={(t) => String(t.companyId)}
+          ordenInicial={`share-${nombres[0]}`}
+          primeras={10}
+          minimo="min-w-[40rem]"
+        />
       )}
-    </Tarjeta>
+    </TarjetaBi>
   );
 }
