@@ -3,6 +3,8 @@ import '../../../components/portal/vitrina.css';
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
 import { VistasMexico } from '../../../components/sucursales/vistas-mexico';
+import { construirServicioNacional } from '../../../lib/sucursales/servicio-nacional';
+import { servicioNacionalSintetico } from './servicio-sintetico';
 import { sucursalesConfiguradas as configuradas, type ConfigSucursal } from '../../../lib/sucursales/config';
 import { armarConsumoNacional, type RpcConsumoNacional } from '../../../lib/sucursales/consumo-nacional';
 import { diaLunes } from '../../../lib/sucursales/metricas';
@@ -226,7 +228,9 @@ const INSUMOS_CONSUMO: [string, string, string, string, number | null, number][]
   ['POLVO DE CHAI', 'gr', 'POLVOS Y JARABES', 'pc', 1000, 3600],
   ['CACAO EN POLVO', 'gr', 'POLVOS Y JARABES', 'ca', null, 1500],
 ];
-const PESOS_CONSUMO = new Map(sucursalesConfiguradas.map((c, i) => [c.companyId, 0.6 + ((i * 37) % 100) / 100]));
+const PESOS_CONSUMO = new Map(
+  sucursalesConfiguradas.map((c, i) => [c.companyId, 0.6 + ((i * 37) % 100) / 100]),
+);
 const sumaPesos = [...PESOS_CONSUMO.values()].reduce((a, b) => a + b, 0);
 const factorMes = (mes: string) => (mes === '2026-10-01' ? 1 : mes === '2026-09-01' ? 0.92 : 0.85);
 const CUOTA_ORIGEN = { mostrador: 0.72, rappi: 0.2, app: 0.08 } as const;
@@ -241,7 +245,15 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
       calculado_en: '2026-11-01T06:00:00Z',
       recetas_leidas_en: '2026-11-01T05:00:00Z',
       completa: c.companyId !== 518,
-      cobertura: { mostrador: { lineas: 400 + i * 10, incluidas: 372 + i * 10, generico: 4, sinCodigo: 6, sinEnlace: 18 } },
+      cobertura: {
+        mostrador: {
+          lineas: 400 + i * 10,
+          incluidas: 372 + i * 10,
+          generico: 4,
+          sinCodigo: 6,
+          sinEnlace: 18,
+        },
+      },
       sin_receta: {
         mostrador: [
           { nombre: 'Sandwich del día', unidades: 14 + i, sinCodigo: false },
@@ -275,7 +287,9 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
           ORIGENES_CONSUMO.map((origen) => ({
             insumo_id: clave,
             origen,
-            cantidad: Math.round(base * factorMes(anterior) * CUOTA_ORIGEN[origen] * (clave === 'ce' ? 1.4 : 1)),
+            cantidad: Math.round(
+              base * factorMes(anterior) * CUOTA_ORIGEN[origen] * (clave === 'ce' ? 1.4 : 1),
+            ),
           })),
         )
       : [],
@@ -285,6 +299,20 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
+  if (url.pathname === '/api/sucursales/servicio-nacional') {
+    await new Promise((r) => setTimeout(r, 200));
+    const hoyMx = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date());
+    const desde = url.searchParams.get('desde') ?? hoyMx;
+    const hasta = url.searchParams.get('hasta') ?? desde;
+    return Response.json(
+      construirServicioNacional(
+        servicioNacionalSintetico(sucursalesConfiguradas, desde, hasta, hoyMx),
+        desde,
+        hasta,
+        sucursalesConfiguradas,
+      ),
+    );
+  }
   if (url.pathname === '/api/sucursales/consumo-nacional/desglose') {
     await new Promise((r) => setTimeout(r, 150));
     const insumoId = url.searchParams.get('insumo');
@@ -306,7 +334,14 @@ window.fetch = async (entrada, init) => {
     await new Promise((r) => setTimeout(r, 250));
     const generadoEn = new Date().toISOString();
     if (parametros.get('consumo-vacio') === '1') {
-      const vacioRpc: RpcConsumoNacional = { meses: [], sucursales: [], insumos: [], anterior: [], actual_comun: [], sucursales_anterior: 0 };
+      const vacioRpc: RpcConsumoNacional = {
+        meses: [],
+        sucursales: [],
+        insumos: [],
+        anterior: [],
+        actual_comun: [],
+        sucursales_anterior: 0,
+      };
       return Response.json(armarConsumoNacional(vacioRpc, null, sucursalesConfiguradas, generadoEn));
     }
     const pedido = url.searchParams.get('mes');
@@ -328,7 +363,12 @@ window.fetch = async (entrada, init) => {
     periodo: armarPeriodo(rpcPeriodo(desde, hasta), desde, hasta, sucursalesConfiguradas),
   };
   if (consulta.modo === 'rango') {
-    const actual = armarPeriodo(rpcPeriodo(consulta.desde, consulta.hasta), consulta.desde, consulta.hasta, sucursalesConfiguradas);
+    const actual = armarPeriodo(
+      rpcPeriodo(consulta.desde, consulta.hasta),
+      consulta.desde,
+      consulta.hasta,
+      sucursalesConfiguradas,
+    );
     const previo = armarPeriodo(
       rpcPeriodo(consulta.previoDesde, consulta.previoHasta),
       consulta.previoDesde,
@@ -353,7 +393,12 @@ window.fetch = async (entrada, init) => {
     });
   }
   if (consulta.modo === 'dia')
-    return Response.json({ ...base, modo: 'dia', fecha: consulta.dia, hoy: armarHoy(rpcHoy(consulta.dia), sucursalesConfiguradas) });
+    return Response.json({
+      ...base,
+      modo: 'dia',
+      fecha: consulta.dia,
+      hoy: armarHoy(rpcHoy(consulta.dia), sucursalesConfiguradas),
+    });
   return Response.json({ ...base, hoy: armarHoy(rpcHoy(), sucursalesConfiguradas) });
 };
 
@@ -373,7 +418,11 @@ export function VistaTableroMexico() {
           titulo="Tablero de México"
           descripcion={`La venta (se actualiza cada 10 minutos) y el consumo por mes de las ${sucursalesConfiguradas.length} sucursales.`}
         />
-        <VistasMexico vistaInicial={parametros.get('vista') === 'consumo' ? 'consumo' : 'ventas'} />
+        <VistasMexico
+          vistaInicial={
+            (['consumo', 'servicio'] as const).find((v) => v === parametros.get('vista')) ?? 'ventas'
+          }
+        />
       </div>
     </Marco>
   );

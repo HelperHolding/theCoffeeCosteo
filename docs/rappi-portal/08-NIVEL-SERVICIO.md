@@ -194,3 +194,27 @@ La credencial de «Guardar servicio» es la misma de «Guardar en Supabase»; el
 - **Excel:** `hojasServicio` (`lib/sucursales/servicio-excel.ts`) con el periodo de pantalla; un día con «Hoy», «Ayer» o
   el rango de un día. Hojas: Resumen, Por día, Por tienda, Reclamos y Conectividad.
 - **Prueba visual:** `?sucursales&gdl=1&portal=1&seccion=servicio[&servicio=vacio][&noche]`, con datos sintéticos.
+
+## 8. Fase 3: «Nivel de servicio» en el Tablero de México
+
+- **Lectura:** `sucursales_servicio_nacional(p_companias, p_desde, p_hasta)` (migración 89), `security definer`. Se
+  queda solo con las compañías que pasan `sucursales_acceso`, como `sucursales_tablero_periodo`. Devuelve **sumas**
+  por tienda y por día (claves de `SumaServicio`), no tienda-días, para que 73 sucursales × 62 días no pesen. Trae
+  además:
+  - reclamos, estado vigente y Top del periodo.
+- **Ruta:** `app/api/sucursales/servicio-nacional`. Usa las sucursales asignadas y configuradas del usuario, en una sola
+  llamada, hasta 62 días en fechas de Rappi (hora del centro). Arma con `construirServicioNacional`
+  (`lib/sucursales/servicio-nacional.ts`).
+  - Los mismos cocientes que la sucursal: `totalesDeSuma`.
+- **Pantalla:** tercera vista de `vistas-mexico.tsx` (`?vista=servicio`), `components/sucursales/servicio-nacional.tsx`.
+  De arriba abajo:
+  1. Ahora en Rappi: tiendas activas de N, por Rappi y Turbo; tabla de desactivadas con motivo y desde cuándo; las
+     sucursales sin tienda en el portal se listan aparte y no cuentan como cero.
+  2. Indicadores nacionales.
+  3. Reclamos y tiempo sin disponibilidad por día.
+  4. Tabla de sucursales ordenable (pedidos, % de reclamos, rechazos, sin disponibilidad, espera); cada una abre su
+     sección.
+  5. Reclamos (se ven los 200 más recientes; el Excel trae todos), productos con más reclamos y tiendas por categoría
+     de Top Restaurantes.
+- **Excel:** `hojasServicioNacional`, con las hojas Resumen, Por sucursal, Por día, Reclamos y Desactivadas ahora.
+- **Prueba visual:** `?tablero-mexico&vista=servicio[&noche]`, con datos sintéticos sobre la lista real de sucursales.
