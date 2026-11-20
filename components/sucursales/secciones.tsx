@@ -22,8 +22,8 @@ const SECCIONES: { id: IdSeccion; nombre: string; detalle: string; icono: Lucide
 ];
 
 /** Sin Rappi en la API no hay filtro de Rappi, y «todos» es Mostrador + App. */
-const opcionesOrigen = (rappi: boolean) => filtrosOrigen.filter((o) => rappi || o !== 'rappi');
-const nombreOrigen = (o: FiltroOrigen, rappi: boolean) =>
+export const opcionesOrigen = (rappi: boolean) => filtrosOrigen.filter((o) => rappi || o !== 'rappi');
+export const nombreOrigen = (o: FiltroOrigen, rappi: boolean) =>
   o === 'todos' && !rappi ? 'Mostrador + App' : etiquetaOrigen[o];
 
 const conParametro = (nombre: string, valor: string | null) => {

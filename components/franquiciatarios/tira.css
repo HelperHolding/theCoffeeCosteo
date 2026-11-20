@@ -1,0 +1,49 @@
+/* Tira de venta: en pantalla, un ticket centrado; al imprimir, solo el ticket (80 mm o A4, lo fija el botón). */
+.tira-ticket {
+  font-variant-numeric: tabular-nums;
+}
+.tira-ticket .tira-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.tira-ticket .tira-regla {
+  border-top: 1px dashed var(--color-line-strong);
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .tira-ticket,
+  .tira-ticket * {
+    visibility: visible !important;
+  }
+  .tira-ticket {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+  }
+  .tira-ticket * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+  .tira-ticket .tira-regla {
+    border-top-color: #000 !important;
+  }
+  html[data-tira='80mm'] .tira-ticket {
+    width: 72mm;
+    font-size: 10.5pt;
+  }
+  html[data-tira='a4'] .tira-ticket {
+    width: 120mm;
+    font-size: 11pt;
+  }
+}

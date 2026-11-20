@@ -1,7 +1,16 @@
 // Contrato basado en las migraciones locales. numeric llega como número vía PostgREST.
 import type * as Crm from '../crm/tipos';
+import type * as Franq from '../franquiciatarios/tipos';
 export type Rol =
-  'compras' | 'operaciones' | 'finanzas' | 'admin' | 'sucursales' | 'interno' | 'franquiciado' | 'proveedor';
+  | 'compras'
+  | 'operaciones'
+  | 'finanzas'
+  | 'admin'
+  | 'sucursales'
+  | 'interno'
+  | 'franquiciado'
+  | 'proveedor'
+  | 'tienda';
 export type Unidad = 'gr' | 'ml' | 'pza';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
 export interface Catalogo {
@@ -18,7 +27,7 @@ export interface Perfil {
 export type NivelModulo = 'desarrollador' | 'edicion' | 'lectura';
 export interface PerfilModulo {
   user_id: string;
-  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora';
+  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios';
   nivel: NivelModulo;
   creado_en: string;
 }
@@ -178,6 +187,15 @@ export interface Database {
       perfiles: Tabla<Perfil>;
       perfil_modulos: Tabla<PerfilModulo>;
       perfil_sucursales: Tabla<PerfilSucursal>;
+      franq_miembros: Tabla<Franq.FranqMiembro>;
+      franq_baristas: Tabla<Franq.FranqBarista>;
+      franq_plantillas: Tabla<Franq.FranqPlantilla>;
+      franq_plantilla_secciones: Tabla<Franq.FranqSeccion>;
+      franq_plantilla_puntos: Tabla<Franq.FranqPunto>;
+      franq_checklists: Tabla<Franq.FranqChecklist>;
+      franq_respuestas: Tabla<Franq.FranqRespuesta>;
+      franq_firmas: Tabla<Franq.FranqFirma>;
+      franq_incidencias: Tabla<Franq.FranqIncidencia>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -230,6 +248,14 @@ export interface Database {
       crm_v_vencimientos: { Row: Registro<Crm.VencimientoCard>; Relationships: [] };
     };
     Functions: {
+      franq_rol: Franq.FuncionesFranq['franq_rol'];
+      franq_dia_operacion: Franq.FuncionesFranq['franq_dia_operacion'];
+      franq_responder: Franq.FuncionesFranq['franq_responder'];
+      franq_corregir: Franq.FuncionesFranq['franq_corregir'];
+      franq_firmar: Franq.FuncionesFranq['franq_firmar'];
+      franq_incidencia: Franq.FuncionesFranq['franq_incidencia'];
+      franq_barista_guardar: Franq.FuncionesFranq['franq_barista_guardar'];
+      franq_avisos: Franq.FuncionesFranq['franq_avisos'];
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
       mcp_lectura_habilitada: { Args: Record<string, never>; Returns: boolean };
       reservar_consulta_chat: { Args: Record<string, never>; Returns: boolean };

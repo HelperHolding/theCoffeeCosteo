@@ -59,3 +59,50 @@ export function MarcaHolding({
     </span>
   );
 }
+
+/**
+ * Marca de la tienda para usuarios externos al grupo (franquiciatarios, gerentes y baristas): «the coffee.» con la
+ * tipografía del logo y, debajo y en pequeño, «ザ・コーヒー». Mismo estilo formal que MarcaHolding.
+ */
+export function MarcaTheCoffee({
+  negativo = false,
+  tamano = 'md',
+  className,
+}: {
+  negativo?: boolean;
+  tamano?: 'sm' | 'md' | 'lg';
+  className?: string;
+}) {
+  const t = {
+    sm: { nombre: 'text-[1.05rem]', sub: 'text-[9px] mt-1' },
+    md: { nombre: 'text-2xl', sub: 'text-[10px] mt-1.5' },
+    lg: { nombre: 'text-[2.6rem]', sub: 'text-xs mt-2.5' },
+  }[tamano];
+  return (
+    <span
+      role="img"
+      aria-label="The Coffee"
+      className={cn('inline-flex flex-col', negativo ? 'text-white' : 'text-ink', className)}
+    >
+      <span
+        aria-hidden="true"
+        className={cn('font-display font-black lowercase tracking-[-0.035em]', t.nombre, 'leading-[0.9]')}
+      >
+        the
+        <br />
+        coffee.
+      </span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          'font-display font-bold tracking-[0.12em]',
+          negativo ? 'text-neutral-400' : 'text-muted-foreground',
+          t.sub,
+          'leading-none',
+        )}
+      >
+        ザ・コーヒー
+      </span>
+    </span>
+  );
+}

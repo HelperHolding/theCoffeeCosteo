@@ -1,9 +1,11 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { servidor } from './servidor';
 import { puede, type Area } from '../portal/permisos';
 import { tieneCosteo } from '../portal/roles';
 import type { Accesos } from '../portal/modulos';
+import { sucursalesConfiguradas } from '../sucursales/config';
 
 type Db = Awaited<ReturnType<typeof servidor>>;
 
@@ -51,7 +53,10 @@ export async function sesion(
     throw new Error('Tu cuenta necesita un perfil activo.');
   }
   if (!sinCosteo && !tieneCosteo(r.data.rol)) {
-    if (redirigir) redirect(r.data.rol === 'sucursales' ? '/sucursales' : '/');
+    if (redirigir)
+      redirect(
+        r.data.rol === 'sucursales' ? '/sucursales' : r.data.rol === 'tienda' ? '/franquiciatarios' : '/',
+      );
     throw new Error('Tu perfil no tiene acceso a Costeo.');
   }
   if (area && !puede(r.data.rol, area)) throw new Error('No tienes permiso para esta acción');
@@ -155,6 +160,83 @@ export async function accesoBi(): Promise<
 /** Sesión de páginas del BI: redirige como el resto del portal. */
 export async function sesionBi(redirigir = true) {
   const a = await accesoBi();
+  if (!a.ok) {
+    if (redirigir) redirect(a.destino);
+    throw new Error(a.mensaje);
+  }
+  return a;
+}
+
+/** Rol dentro del módulo Franquiciatarios en una sucursal. 'admin' = fila del módulo con nivel desarrollador. */
+export type RolFranq = 'admin' | 'franquiciatario' | 'gerente' | 'barista';
+export const esGestorFranq = (rol: RolFranq) => rol !== 'barista';
+/** Vista previa del admin del módulo: con qué rol ve las pantallas (sus permisos en la base no cambian). */
+export const COOKIE_VER_COMO = 'franq_ver_como';
+export const ROLES_VISTA: RolFranq[] = ['admin', 'franquiciatario', 'gerente', 'barista'];
+
+async function verComoAdmin(): Promise<RolFranq> {
+  try {
+    const v = (await cookies()).get(COOKIE_VER_COMO)?.value as RolFranq | undefined;
+    return v && ROLES_VISTA.includes(v) ? v : 'admin';
+  } catch {
+    return 'admin'; // fuera de una petición (pruebas): sin vista previa
+  }
+}
+
+/**
+ * Acceso al módulo Franquiciatarios sin redirigir (para route handlers): perfil activo, fila del módulo y, por
+ * sucursal, una membresía activa en franq_miembros (el admin del módulo ve todas las configuradas). Falla cerrado:
+ * cualquier error al leer las membresías = ninguna sucursal. La base vuelve a exigirlo con franq_rol.
+ */
+export async function accesoFranquiciatarios(): Promise<
+  | {
+      ok: true;
+      db: Db;
+      perfil: { user_id: string; nombre: string; rol: string };
+      /** company_id → rol del usuario en esa sucursal. */
+      sucursales: Map<number, RolFranq>;
+      admin: boolean;
+      /** Solo el admin: rol con el que está viendo las pantallas ('admin' = sin vista previa). */
+      verComo: RolFranq;
+    }
+  | DenegacionSucursales
+> {
+  const c = await contexto();
+  if (!c.usuario) return { ok: false, status: 401, destino: '/login', mensaje: 'La sesión venció.' };
+  if (c.perfil.error || !c.perfil.data?.activo)
+    return {
+      ok: false,
+      status: 403,
+      destino: '/login?aviso=perfil',
+      mensaje: 'Tu cuenta necesita un perfil activo.',
+    };
+  const nivel = c.accesos.franquiciatarios;
+  if (!nivel)
+    return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Franquiciatarios.' };
+  const sucursales = new Map<number, RolFranq>();
+  const admin = nivel === 'desarrollador';
+  const verComo: RolFranq = admin ? await verComoAdmin() : 'admin';
+  if (admin) {
+    for (const s of sucursalesConfiguradas) sucursales.set(s.companyId, verComo);
+  } else {
+    const r = await c.db
+      .from('franq_miembros')
+      .select('company_id,rol')
+      .eq('user_id', c.usuario.id)
+      .eq('activo', true);
+    if (r && !r.error && Array.isArray(r.data))
+      for (const f of r.data) {
+        const id = Number(f.company_id);
+        if (Number.isSafeInteger(id) && id > 0 && ['franquiciatario', 'gerente', 'barista'].includes(f.rol))
+          sucursales.set(id, f.rol as RolFranq);
+      }
+  }
+  return { ok: true, db: c.db, perfil: c.perfil.data, sucursales, admin, verComo };
+}
+
+/** Sesión de páginas de Franquiciatarios: redirige como el resto del portal. */
+export async function sesionFranquiciatarios(redirigir = true) {
+  const a = await accesoFranquiciatarios();
   if (!a.ok) {
     if (redirigir) redirect(a.destino);
     throw new Error(a.mensaje);

@@ -21,12 +21,19 @@ export function Pedidos({
   companyId,
   origen,
   zona,
+  base = '/api/sucursales',
+  diasAtras,
 }: {
   companyId: number;
   origen: FiltroOrigen;
   zona: string;
+  /** Prefijo de la API (Franquiciatarios usa la suya, sin neto ni costos). */
+  base?: string;
+  /** Solo hoy y los N−1 días anteriores (Franquiciatarios: 7). Sin valor, cualquier fecha pasada. */
+  diasAtras?: number;
 }) {
   const hoy = enZona(new Date(), zona).fecha;
+  const minimo = diasAtras ? sumarDias(hoy, -(diasAtras - 1)) : undefined;
   const [desde, setDesde] = useState(hoy);
   const [hasta, setHasta] = useState(hoy);
   const [pago, setPago] = useState('');
@@ -37,11 +44,12 @@ export function Pedidos({
     fechaValida(hasta) &&
     desde <= hasta &&
     hasta <= hoy &&
+    (minimo === undefined || desde >= minimo) &&
     diasEntre(desde, hasta) < MAX_DIAS;
   const q = new URLSearchParams({ desde, hasta, origen, pagina: String(pagina) });
   if (pago) q.set('pago', pago);
   const { datos, error, cargando, recargar } = useLectura<RespuestaPedidos>(
-    valido ? `/api/sucursales/${companyId}/pedidos?${q}` : null,
+    valido ? `${base}/${companyId}/pedidos?${q}` : null,
   );
   // Cualquier cambio de filtro vuelve a la página 1.
   const cambiar = (fn: () => void) => {
@@ -59,6 +67,7 @@ export function Pedidos({
           <input
             type="date"
             value={desde}
+            min={minimo}
             max={hoy}
             onChange={(e) => cambiar(() => setDesde(e.target.value))}
             className={`${claseCampo} w-44`}
@@ -69,6 +78,7 @@ export function Pedidos({
           <input
             type="date"
             value={hasta}
+            min={minimo}
             max={hoy}
             onChange={(e) => cambiar(() => setHasta(e.target.value))}
             className={`${claseCampo} w-44`}

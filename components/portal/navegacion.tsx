@@ -39,12 +39,18 @@ import {
   Ship,
   CalendarRange,
   Waypoints,
+  ClipboardCheck,
+  Sun,
+  ReceiptText,
+  BellRing,
 } from 'lucide-react';
 import type { IdModulo } from '@/lib/portal/modulos';
 
 type Enlace = { href: string; nombre: string; icono: LucideIcon; exacto?: boolean };
 type Grupo = { titulo: string; enlaces: Enlace[] };
 export type Seccion = 'inicio' | IdModulo;
+/** Sucursal abierta en Franquiciatarios. gestor = gerente, franquiciatario o admin del módulo. */
+export type Franquicia = { companyId: number; nombre: string; gestor: boolean; varias: boolean };
 
 const entradaModulo: Record<IdModulo, Enlace> = {
   costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
@@ -52,7 +58,38 @@ const entradaModulo: Record<IdModulo, Enlace> = {
   sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
   bi: { href: '/bi', nombre: 'BI', icono: BarChart3 },
   comercializadora: { href: '/comercializadora', nombre: 'Comercializadora', icono: ShoppingCart },
+  franquiciatarios: { href: '/franquiciatarios', nombre: 'Franquiciatarios', icono: ClipboardCheck },
 };
+
+/** Navegación de una sucursal en Franquiciatarios: la operación del día y, para gestores, avisos y equipo. */
+export function gruposFranquicia(f: Franquicia): Grupo[] {
+  const b = `/franquiciatarios/${f.companyId}`;
+  const g: Grupo[] = [
+    {
+      titulo: f.nombre,
+      enlaces: [
+        { href: b, nombre: 'Hoy', icono: Sun, exacto: true },
+        { href: `${b}/checklist`, nombre: 'Checklists', icono: ClipboardCheck },
+        { href: `${b}/ventas`, nombre: 'Ventas y pedidos', icono: Activity },
+        { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
+      ],
+    },
+  ];
+  if (f.gestor)
+    g.push({
+      titulo: 'Gerencia',
+      enlaces: [
+        { href: `${b}/avisos`, nombre: 'Avisos e historial', icono: BellRing },
+        { href: `${b}/equipo`, nombre: 'Baristas', icono: UsersRound },
+      ],
+    });
+  if (f.varias)
+    g.push({
+      titulo: 'Sucursales',
+      enlaces: [{ href: '/franquiciatarios', nombre: 'Mis sucursales', icono: LayoutGrid, exacto: true }],
+    });
+  return g;
+}
 
 export const grupos: Grupo[] = [
   {
@@ -173,14 +210,18 @@ const gruposPorSeccion: Record<Seccion, Grupo[]> = {
   sucursales: gruposSucursales,
   bi: gruposBi,
   comercializadora: gruposComercializadora,
+  franquiciatarios: [],
 };
 
 /**
  * Grupos de la sección: primero "Portal", luego los del módulo. En Inicio los módulos solo se
  * muestran como tarjetas; dentro de un módulo, "Portal" lleva a Inicio y a los otros módulos visibles.
  */
-export function gruposDe(seccion: Seccion, visibles: IdModulo[]): Grupo[] {
+export function gruposDe(seccion: Seccion, visibles: IdModulo[], franquicia?: Franquicia): Grupo[] {
   const otros = seccion === 'inicio' ? [] : visibles.filter((m) => m !== seccion);
+  // Franquiciatarios sin otros módulos: el grupo «Portal» no lleva a nada útil (Inicio regresa aquí).
+  if (seccion === 'franquiciatarios' && otros.length === 0)
+    return franquicia ? gruposFranquicia(franquicia) : [];
   const portal: Grupo = {
     titulo: 'Portal',
     enlaces: [
@@ -188,6 +229,7 @@ export function gruposDe(seccion: Seccion, visibles: IdModulo[]): Grupo[] {
       ...otros.map((m) => entradaModulo[m]),
     ],
   };
+  if (seccion === 'franquiciatarios') return [portal, ...(franquicia ? gruposFranquicia(franquicia) : [])];
   return [portal, ...gruposPorSeccion[seccion]];
 }
 
@@ -207,16 +249,18 @@ export function Navegacion({
   alNavegar,
   seccion = 'costeo',
   visibles = [],
+  franquicia,
 }: {
   alNavegar?: () => void;
   seccion?: Seccion;
   visibles?: IdModulo[];
+  franquicia?: Franquicia;
 }) {
   const pathname = usePathname();
   const tab = useSearchParams().get('tab');
   return (
     <nav aria-label="Principal" className="flex flex-col gap-5">
-      {gruposDe(seccion, visibles).map((g) => (
+      {gruposDe(seccion, visibles, franquicia).map((g) => (
         <div key={g.titulo}>
           <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[.22em] text-muted-foreground">
             {g.titulo}
