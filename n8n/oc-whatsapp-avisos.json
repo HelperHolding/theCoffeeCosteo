@@ -1,0 +1,113 @@
+{
+  "name": "Avisos de WhatsApp (Meta) → portal",
+  "nodes": [
+    {
+      "name": "Webhook Meta verificación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "meta-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Verificar Meta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [520, 300],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.verify_token'] === $vars.META_VERIFY_TOKEN ? $json.query['hub.challenge'] : 'no' }}",
+        "options": {
+          "responseCode": "={{ $json.query['hub.verify_token'] === $vars.META_VERIFY_TOKEN ? 200 : 403 }}"
+        }
+      }
+    },
+    {
+      "name": "Webhook Meta",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meta-whatsapp",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "name": "Cuerpo crudo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 300],
+      "parameters": {
+        "jsCode": "// Cuerpo crudo del aviso y su firma: el portal valida X-Hub-Signature-256 con el secreto de la app de Meta.\nconst buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst h = $input.first().json.headers || {};\nreturn [{ json: { accion: 'meta', firma: String(h['x-hub-signature-256'] || ''), cuerpo: buf.toString('utf8') } }];"
+      }
+    },
+    {
+      "name": "Reenviar a portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ accion: 'meta', firma: $json.firma, cuerpo: $json.cuerpo }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook Meta verificación": {
+      "main": [
+        [
+          {
+            "node": "Verificar Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Meta": {
+      "main": [
+        [
+          {
+            "node": "Cuerpo crudo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cuerpo crudo": {
+      "main": [
+        [
+          {
+            "node": "Reenviar a portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

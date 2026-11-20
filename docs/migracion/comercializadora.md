@@ -193,3 +193,9 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
   update com_plan_config set config = jsonb_set(config, '{auto,consolidar}', 'true'::jsonb), version = version + 1 where id = 1;
   ```
 - **Si el correo dice "cancelar a mano COM-OC-xxxx":** la OC nueva sí se creó; cancela o borra ese borrador en Zoho Books.
+
+## 17. OCs por WhatsApp (spec 2026-11-20)
+
+- Cuando una OC pasa a emitida en Zoho, n8n manda su PDF por WhatsApp al número del campo "WhatsApp OCs" del proveedor, una sola vez por OC. Registro en `com_oc_whatsapp` (migración 78), columna "WhatsApp" en Órdenes e interruptor en Configuración (`config.whatsapp`, apagado por omisión).
+- La Edge Function `com-oc-whatsapp` solo acepta su propio secreto (`OC_WHATSAPP_SECRETO`, header `x-oc-whatsapp-secreto`); `COM_SECRETO` no la abre. Sus correos a compras@ pasan por `COM_EFECTOS_EXTERNOS` como los demás.
+- Puesta en marcha (Meta, n8n, Zoho y la prueba): `docs/migracion/whatsapp-oc.md`.

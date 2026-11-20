@@ -1,5 +1,7 @@
 import { Encabezado, Vacio } from '@/components/portal/piezas';
 import { Configuracion } from '@/components/comercializadora/configuracion';
+import { WhatsappConfig } from '@/components/comercializadora/whatsapp-config';
+import { leerBanderaWhatsapp } from '@/lib/comercializadora/whatsapp';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { com, leerTodoCom } from '@/lib/comercializadora/consultas';
@@ -48,6 +50,7 @@ export default async function ConfiguracionPagina() {
         <Vacio titulo="Todavía no hay configuración guardada" />
       </>
     );
+  const whatsapp = leerBanderaWhatsapp(cfg.data.config);
   return (
     <>
       {encabezado}
@@ -63,6 +66,13 @@ export default async function ConfiguracionPagina() {
         credito={credito
           .filter((c) => c.dias_credito > 0)
           .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'))}
+        editable={puedeEditarCom(accesos)}
+      />
+      {/* Bandera fuera de normalizarConfig: se lee del documento guardado tal cual (spec OC por WhatsApp §3). */}
+      <WhatsappConfig
+        activo={whatsapp.activo}
+        solo={whatsapp.solo_vendor_ids}
+        proveedores={[...credito].sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'))}
         editable={puedeEditarCom(accesos)}
       />
     </>

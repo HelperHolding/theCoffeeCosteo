@@ -7,7 +7,13 @@ import { claseCampo } from '@/lib/crm/formato';
 import { pesos } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
 import { textoDestino, validarOc, type FormOc, type OcGrupo } from '@/lib/comercializadora/ordenes';
-import { eliminarOc, guardarOc, recibirOc } from '@/app/(comercializadora)/comercializadora/acciones';
+import {
+  eliminarOc,
+  guardarOc,
+  recibirOc,
+  reintentarWhatsapp,
+} from '@/app/(comercializadora)/comercializadora/acciones';
+import { etiquetaWhatsapp, type EnvioWhatsapp } from '@/lib/comercializadora/whatsapp';
 import type { FormPrellenado } from '@/lib/comercializadora/crearOc';
 
 const TONO: Record<OcGrupo['estado'], Estado> = { emitida: 'neutro', parcial: 'bajo', recibida: 'ok' };
@@ -28,6 +34,7 @@ export function Ordenes(p: {
   editable: boolean;
   hoy: string;
   prellenado?: FormPrellenado | null;
+  whatsapp?: Record<string, EnvioWhatsapp>;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState<string | null>(null);
@@ -37,6 +44,7 @@ export function Ordenes(p: {
     (FormOc & { anterior?: string; origen?: string; omitidos?: number }) | null
   >(p.editable && p.prellenado ? p.prellenado : null);
   const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [ver, setVer] = useState(POR_PAGINA);
   const [pendiente, iniciar] = useTransition();
   const minutos = p.ultimoSync ? Math.round((Date.now() - new Date(p.ultimoSync).getTime()) / 60000) : null;
@@ -110,6 +118,11 @@ export function Ordenes(p: {
           </button>
         ) : null}
       </form>
+      {aviso ? (
+        <p role="status" className="rounded-lg bg-surface px-3 py-2 text-sm">
+          {aviso}
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">
           {error}
@@ -297,6 +310,7 @@ export function Ordenes(p: {
                 <th>Destino</th>
                 <th>F. Arribo</th>
                 <th>Estado</th>
+                <th>WhatsApp</th>
               </tr>
             </thead>
             <tbody>
@@ -396,6 +410,37 @@ export function Ordenes(p: {
                   <td>{g.fecha_arribo ? fechaCorta(g.fecha_arribo) : '—'}</td>
                   <td>
                     <Pill estado={TONO[g.estado]}>{NOMBRE[g.estado]}</Pill>
+                  </td>
+                  <td>
+                    {(() => {
+                      const fila = p.whatsapp?.[g.folio];
+                      const w = etiquetaWhatsapp(fila);
+                      return (
+                        <div className="space-y-1">
+                          <Pill estado={w.tono}>{w.texto}</Pill>
+                          {p.editable && w.reintentable && fila ? (
+                            <button
+                              type="button"
+                              className="block text-xs underline"
+                              aria-label={`Reintentar WhatsApp ${g.folio}`}
+                              onClick={async () => {
+                                const r = await reintentarWhatsapp(fila.zoho_po_id);
+                                if ('error' in r) return setError(r.error);
+                                // El reintento solo libera el registro: el envío sale cuando Zoho vuelve a mandar el aviso (spec §7).
+                                setAviso(
+                                  r.borrada
+                                    ? `Listo. Edita y guarda la OC ${g.folio} en Zoho para que se mande otra vez.`
+                                    : `No había nada que reintentar en ${g.folio}: puede que ya se haya mandado.`,
+                                );
+                                router.refresh();
+                              }}
+                            >
+                              Reintentar WhatsApp
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
