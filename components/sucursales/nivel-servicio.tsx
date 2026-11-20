@@ -19,6 +19,7 @@ import { ErrorCarga, Esqueleto } from './estados';
 import { AZUL } from './colores';
 import { Tooltip } from './graficas';
 import { diaMes, fechaCorta, hace, horaDe, numero, porcentaje } from './formato';
+import { sumarDias } from '@/lib/sucursales/tiempo';
 import { rango, SelectorPeriodo, type Periodo } from './periodo';
 import { useLectura } from './use-lectura';
 import './nivel-servicio.css';
@@ -47,6 +48,12 @@ export const minutos = (m: number | null) => {
 };
 export const decimal = (x: number | null, d = 1) =>
   x === null ? '—' : x.toLocaleString('es-MX', { minimumFractionDigits: d, maximumFractionDigits: d });
+/**
+ * Parte del horario sin disponibilidad (%): 100 − disponibilidad promedio, el dato que Rappi sí manda (su portal lo
+ * muestra así). Los minutos llegan vacíos del portal, así que no pueden ser el número principal.
+ */
+export const sinDisponibilidad = (t: Totales) =>
+  t.disponibilidad === null ? null : Math.max(0, 100 - t.disponibilidad);
 
 export function SeccionServicio({
   sucursal,
@@ -58,14 +65,20 @@ export function SeccionServicio({
   alCambiarPeriodo: (p: Periodo) => void;
 }) {
   const { desde, hasta } = rango(periodo, sucursal.zona);
-  // La conectividad se fotografía cada 10 min y los indicadores de hoy cada hora: se refresca cada 5 min.
+  // Rappi publica cada día con 1 a 2 días de retraso: la sección abre en el último día que ya publicó (el periodo
+  // compartido no cambia). Al elegir otro periodo se usa ese.
+  const [ultimo, setUltimo] = useState(true);
+  // La conectividad se fotografía cada 10 min y los indicadores cada hora: se refresca cada 5 min, así que el último
+  // día con datos avanza solo cuando Rappi publica el siguiente.
   const { datos, error, cargando, recargar } = useLectura<RespuestaServicio>(
-    `/api/sucursales/${sucursal.companyId}/servicio?desde=${desde}&hasta=${hasta}`,
+    ultimo
+      ? `/api/sucursales/${sucursal.companyId}/servicio?ultimo=1`
+      : `/api/sucursales/${sucursal.companyId}/servicio?desde=${desde}&hasta=${hasta}`,
     { intervaloMs: 5 * 60_000 },
   );
   const descargar = async () => {
     if (!datos) return;
-    const h = hojasServicio(datos, sucursal.nombre);
+    const h = hojasServicio({ ...datos, hasta: datos.indicadoresHasta ?? datos.hasta }, sucursal.nombre);
     const XLSX = await import('xlsx');
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(h.resumen), 'Resumen');
@@ -78,7 +91,15 @@ export function SeccionServicio({
   return (
     <div className="servicio space-y-6" aria-busy={cargando}>
       <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
-        <SelectorPeriodo periodo={periodo} zona={sucursal.zona} alCambiar={alCambiarPeriodo} />
+        <SelectorPeriodo
+          periodo={periodo}
+          zona={sucursal.zona}
+          alCambiar={(p) => {
+            setUltimo(false);
+            alCambiarPeriodo(p);
+          }}
+          ultimo={{ activo: ultimo, fecha: datos?.publicadoHasta ?? null, alElegir: () => setUltimo(true) }}
+        />
         <button
           type="button"
           onClick={descargar}
@@ -88,6 +109,14 @@ export function SeccionServicio({
           <Download size={15} aria-hidden="true" />
           Descargar Excel
         </button>
+        {datos && (
+          <AlDiaRappi
+            publicadoHasta={datos.publicadoHasta}
+            hasta={datos.hasta}
+            indicadoresHasta={datos.indicadoresHasta}
+            ultimo={ultimo}
+          />
+        )}
       </div>
       {!datos ? (
         error ? (
@@ -101,16 +130,20 @@ export function SeccionServicio({
           <AhoraEnRappi d={datos} zona={sucursal.zona} />
           {/* Sin días de Rappi no hay indicadores: no se muestran ceros que parezcan datos. */}
           {datos.dias.length > 0 && (
-            <Indicadores titulo={`${tituloPeriodo(datos.desde, datos.hasta)} en Rappi`} t={datos.totales}>
+            <Indicadores
+              titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi`}
+              t={datos.totales}
+            >
               <PorCanal d={datos} />
             </Indicadores>
           )}
           {datos.dias.length === 0 ? (
-            <div className="rounded-2xl border border-line bg-surface shadow-card">
-              <Vacio titulo="Sin indicadores de Rappi en el periodo">
-                Rappi todavía no publica datos de estos días. Elige otro periodo.
-              </Vacio>
-            </div>
+            <SinPublicar
+              desde={datos.desde}
+              hasta={datos.hasta}
+              publicadoHasta={datos.publicadoHasta}
+              alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+            />
           ) : (
             <div className="grid gap-6 lg:grid-cols-2">
               <ReclamosPorDia d={datos} />
@@ -121,13 +154,86 @@ export function SeccionServicio({
           <Reclamos d={datos} />
           <p className="placa px-3 py-2 text-xs text-muted-foreground">
             Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners, leídos cada 10 min
-            (conectividad) y cada hora (indicadores de hoy); el cierre de las 5:07 vuelve a leer los últimos 7
-            días porque Rappi corrige tarde.
+            (conectividad) y cada hora (indicadores). Rappi publica los indicadores de cada día con 1 a 2 días
+            de retraso; el cierre de las 5:07 vuelve a leer los últimos 7 días porque Rappi corrige tarde.
             {datos.diasEnHoraCentro &&
               ' Rappi cuenta los días en hora del centro: el corte del día no coincide con la hora local; las horas de conectividad sí van en hora local.'}
           </p>
         </>
       )}
+    </div>
+  );
+}
+
+// ── Hasta qué día publicó Rappi ─────────────────────────────────────────────────────────────────────────────────
+/** Leyenda bajo el selector: hasta qué día hay datos y, si el periodo va más allá, desde cuándo faltan. */
+export function AlDiaRappi({
+  publicadoHasta,
+  hasta,
+  indicadoresHasta,
+  ultimo,
+}: {
+  publicadoHasta: string | null | undefined;
+  hasta: string;
+  indicadoresHasta: string | null | undefined;
+  /** En «Último día con datos» no hace falta decir qué días faltan. */
+  ultimo?: boolean;
+}) {
+  // Sin el dato (lectura fallida o respuesta vieja) no se dice nada que no se sepa.
+  if (publicadoHasta === undefined) return null;
+  return (
+    <p className="basis-full text-xs text-muted-foreground" aria-live="polite">
+      {publicadoHasta ? (
+        <>
+          Datos de Rappi actualizados hasta el{' '}
+          <span className="font-semibold text-ink-2">{fechaCorta(publicadoHasta)}</span>.
+        </>
+      ) : (
+        'Rappi todavía no publica datos de nivel de servicio.'
+      )}{' '}
+      Rappi publica cada día con 1 a 2 días de retraso; esta vista avanza sola cuando llega el siguiente.
+      {!ultimo && publicadoHasta && indicadoresHasta && hasta > publicadoHasta
+        ? ` Del ${diaMes(sumarDias(publicadoHasta, 1))} en adelante todavía no hay datos.`
+        : ''}
+    </p>
+  );
+}
+
+/** Periodo que Rappi aún no publica: lo dice, sin ceros que parezcan datos, y lleva al último día con datos. */
+export function SinPublicar({
+  desde,
+  hasta,
+  publicadoHasta,
+  alVerUltimo,
+}: {
+  desde: string;
+  hasta: string;
+  publicadoHasta: string | null | undefined;
+  alVerUltimo?: () => void;
+}) {
+  const pendiente = !!publicadoHasta && desde > publicadoHasta;
+  return (
+    <div className="rounded-2xl border border-line bg-surface shadow-card">
+      <Vacio
+        titulo={
+          pendiente
+            ? `Rappi todavía no publica ${desde === hasta ? 'el' : 'del'} ${tituloPeriodo(desde, hasta)}`
+            : 'Sin indicadores de Rappi en el periodo'
+        }
+      >
+        {pendiente
+          ? `Los datos llegan hasta el ${fechaCorta(publicadoHasta!)}.`
+          : 'Rappi todavía no publica datos de estos días. Elige otro periodo.'}
+        {alVerUltimo && publicadoHasta && (
+          <button
+            type="button"
+            onClick={alVerUltimo}
+            className="ml-2 mt-3 inline-flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            Ver el {fechaCorta(publicadoHasta)}
+          </button>
+        )}
+      </Vacio>
     </div>
   );
 }
@@ -207,9 +313,10 @@ export function Indicadores({
   t: Totales;
   children?: React.ReactNode;
 }) {
+  const sinDisp = sinDisponibilidad(t);
   const hallazgo = [
     t.tasaReclamos !== null ? `Reclamos en ${porcentaje(t.tasaReclamos)} de los pedidos finalizados` : null,
-    t.sinDispMinutos ? `${minutos(t.sinDispMinutos)} sin disponibilidad` : null,
+    sinDisp ? `${decimal(sinDisp, 2)} % del horario sin disponibilidad` : null,
     t.rechazosTotal ? `${numero(t.rechazosTotal)} rechazos` : null,
   ].filter(Boolean);
   const celdas: { titulo: string; valor: string; detalle: string }[] = [
@@ -225,10 +332,15 @@ export function Indicadores({
       detalle: `${porcentaje(t.tasaRechazos)} de creados`,
     },
     {
+      // Rappi da el porcentaje del horario (como su portal); los minutos solo si los trae.
       titulo: 'Sin disponibilidad',
-      valor: minutos(t.sinDispMinutos),
+      valor: sinDisp === null ? '—' : `${decimal(sinDisp, 2)} %`,
       detalle:
-        t.disponibilidad === null ? '—' : `${decimal(t.disponibilidad)} % disponible, promedio de los días`,
+        sinDisp === null
+          ? '—'
+          : t.sinDispMinutos
+            ? `del horario (${minutos(t.sinDispMinutos)} en total)`
+            : 'del horario, promedio de los días',
     },
     {
       titulo: 'Espera del repartidor',
@@ -452,24 +564,27 @@ export function ReclamosPorDia({ d }: { d: { dias: { fecha: string; total: Total
 }
 
 export function SinDisponibilidadPorDia({ d }: { d: { dias: { fecha: string; total: Totales }[] } }) {
-  const parte = { color: 'var(--sin-disp)', nombre: 'Minutos sin disponibilidad' };
+  const parte = { color: 'var(--sin-disp)', nombre: 'Sin disponibilidad (% del horario)' };
   return (
     <Columnas
       titulo="Tiempo sin disponibilidad por día"
-      descripcion="Minutos que Rappi contó la tienda sin recibir pedidos dentro de su horario (Rappi y Turbo)."
+      descripcion="Parte del horario en que Rappi contó la tienda sin recibir pedidos (promedio de Rappi y Turbo), como en su portal."
       leyenda={[]}
       partes={[parte]}
-      dias={d.dias.map((x) => ({ fecha: x.fecha, valores: [x.total.sinDispMinutos ?? 0] }))}
-      formatear={(m) => minutos(m)}
+      dias={d.dias.map((x) => ({ fecha: x.fecha, valores: [sinDisponibilidad(x.total) ?? 0] }))}
+      formatear={(p) => `${decimal(p, 2)} %`}
       filas={(i) => {
         const t = d.dias[i].total;
+        const s = sinDisponibilidad(t);
         return [
-          { color: parte.color, etiqueta: 'Sin disponibilidad', valor: minutos(t.sinDispMinutos) },
           {
-            color: 'transparent',
-            etiqueta: 'Disponible',
-            valor: t.disponibilidad === null ? '—' : `${decimal(t.disponibilidad)} %`,
+            color: parte.color,
+            etiqueta: 'Sin disponibilidad',
+            valor: s === null ? '—' : `${decimal(s, 2)} %`,
           },
+          ...(t.sinDispMinutos
+            ? [{ color: 'transparent', etiqueta: 'Minutos', valor: minutos(t.sinDispMinutos) }]
+            : []),
           {
             color: 'transparent',
             etiqueta: 'Espera del repartidor',

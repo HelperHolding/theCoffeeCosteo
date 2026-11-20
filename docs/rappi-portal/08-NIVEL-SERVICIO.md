@@ -226,3 +226,34 @@ La credencial de «Guardar servicio» es la misma de «Guardar en Supabase»; el
 | Pedidos finalizados       | 298 (suma de `finalizados` = `error_metrics.total_orders`) | 284                         | Usar `cocina_pedidos` (`cooking_time_metrics.total_orders`), que suma 284; los reclamos dan 14/284 = 4.93 %, igual al portal (`summary/sales/indicators` → `error`). Cambio en la pantalla; los datos no se reimportan. |
 | Tiempo sin disponibilidad | Minutos de `unavailability/metrics` (casi todos 0)         | 1.48 %                      | El portal muestra el %: usar `indisponibilidad` (nuestro promedio de días da 1.44 %). El lector deja de pedir los minutos; con OK, `sin_disp_minutos` y `sin_disp_franjas` pasan a null.                                |
 | Día de hoy                | Renglón con 0 pedidos y 0 % de disponibilidad              | (Rappi publica con retraso) | La corrida de cada hora lee AYER; una reposición manual pide indicadores solo hasta ayer. Con OK, se borran los renglones de hoy ya guardados.                                                                          |
+
+## 10. Último día con datos (2026-11-20, pedido de Carlos)
+
+Rappi publica el nivel de servicio de cada día con 1 a 2 días de retraso; su portal dice que «puede demorar hasta 48
+horas». Mientras tanto el importador ya guarda el renglón del día, pero en ceros. La sección lo mostraba como dato real
+(«0 pedidos», «0.0 % disponible»), porque abría en «Hoy».
+
+- **Día publicado** (`lib/sucursales/servicio-publicado.ts`): alguna tienda trae pedidos, finalizados o
+  disponibilidad > 0.
+  - Se mide sobre todas las sucursales del usuario, con la RPC nacional: primero la última semana y, si no hay nada,
+    62 días. Así una sucursal con un día de verdad sin pedidos no confunde.
+  - Si la lectura falla, todo queda como antes, sin recorte.
+- **Ambas rutas** (`/api/sucursales/[id]/servicio` y `/api/sucursales/servicio-nacional`):
+  - devuelven `publicadoHasta` e `indicadoresHasta`;
+  - cortan los indicadores en el último día publicado: los días siguientes no cuentan (ni sus ceros en la
+    disponibilidad promedio);
+  - con `?ultimo=1`, el periodo es ese día.
+  - En la sucursal la conectividad sigue llegando hasta hoy, porque es en vivo.
+- **Pantalla** (sección de cada sucursal y vista nacional):
+  - abre en «Último día con datos», una opción nueva del selector solo aquí; el periodo compartido no cambia;
+  - una leyenda dice «Datos de Rappi actualizados hasta el …» y, si el periodo elegido va más allá, desde qué día
+    faltan;
+  - un periodo todavía sin publicar dice «Rappi todavía no publica el …» y ofrece ir al último día con datos.
+  - Se relee cada 5 minutos, así que avanza sola cuando Rappi publica el día siguiente.
+- **Sin disponibilidad:** `sin_disp_minutos` llega vacío del portal. El indicador, la gráfica por día y el ranking
+  nacional usan el porcentaje del horario, 100 − disponibilidad, como el portal (1.48 % en Essentia, del 21 oct al 19
+  nov). Los minutos solo se muestran si llegan.
+- **Pedidos finalizados** (cotejo de la sección 9): `totalesDeSuma` usa `cocina_pedidos` como finalizados y como
+  denominador de la tasa de reclamos. Es lo que cuenta el portal (284 en Essentia; 14 reclamos = 4.93 %). La columna
+  `finalizados` (`error_metrics`) llega a superar a los creados (298 contra 297). La espera del repartidor se sigue
+  ponderando con esa columna.

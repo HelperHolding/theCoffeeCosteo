@@ -21,6 +21,7 @@ import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
 import { construirServicio } from '../../../lib/sucursales/servicio';
+import { recortarAlPublicado } from '../../../lib/sucursales/servicio-publicado';
 import { servicioSintetico } from './servicio-sintetico';
 
 /**
@@ -397,8 +398,16 @@ window.fetch = async (entrada, init) => {
   if (m[2] === 'servicio') {
     if (!portal)
       return Response.json({ error: 'Esta sucursal no está conectada al portal de Rappi.' }, { status: 404 });
-    const rpc = servicioSintetico(desde, hasta, hoy, parametros.get('servicio') === 'vacio');
-    return Response.json(construirServicio(rpc, desde, hasta, cfg.zona, false));
+    // Como en producción: Rappi publica con retraso (aquí, hasta ayer) y ?ultimo=1 abre en ese día.
+    const publicadoHasta = sumarDias(hoy, -1);
+    const [d, h] = q.get('ultimo') === '1' ? [publicadoHasta, hoy] : [desde, hasta];
+    const corte = publicadoHasta < h ? publicadoHasta : h;
+    const rpc = recortarAlPublicado(servicioSintetico(d, h, hoy, parametros.get('servicio') === 'vacio'), corte);
+    return Response.json({
+      ...construirServicio(rpc, d, h, cfg.zona, false),
+      publicadoHasta,
+      indicadoresHasta: corte < d ? null : corte,
+    });
   }
   if (m[2] === 'costeo' && !costeo)
     return Response.json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, { status: 403 });

@@ -76,14 +76,27 @@ describe('Nivel de servicio · armado', () => {
   it('suma de Rappi: tasas sobre sumas, espera ponderada por finalizados, un dato faltante no es cero', () => {
     const t = sumar([
       fila({}),
-      fila({ tienda: 'T', pedidos: 5, finalizados: 3, espera_repartidor: 6, sin_disp_minutos: null }),
+      fila({
+        tienda: 'T',
+        pedidos: 5,
+        finalizados: 3,
+        cocina_pedidos: 3,
+        espera_repartidor: 6,
+        sin_disp_minutos: null,
+      }),
     ]);
     expect([t.pedidos, t.finalizados, t.reclamosTotal, t.rechazosTotal]).toEqual([15, 12, 2, 2]);
     expect(t.tasaReclamos).toBeCloseTo(2 / 12);
     expect(t.espera).toBeCloseTo((2 * 9 + 6 * 3) / 12);
     expect(t.sinDispMinutos).toBe(30);
     const vacio = sumar([
-      fila({ sin_disp_minutos: null, espera_repartidor: null, disponibilidad: null, finalizados: 0 }),
+      fila({
+        sin_disp_minutos: null,
+        espera_repartidor: null,
+        disponibilidad: null,
+        finalizados: 0,
+        cocina_pedidos: 0,
+      }),
     ]);
     expect([vacio.sinDispMinutos, vacio.espera, vacio.disponibilidad, vacio.tasaReclamos]).toEqual([
       null,
