@@ -309,6 +309,7 @@ export function MezclaGrupos({ grupos }: { grupos: Grupos }) {
         <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
       ) : (
         <BarraApilada
+          apilada
           moneda="MXN"
           segmentos={enOrden(grupos, GRUPOS, (g) => g.grupo).map((g) => ({
             clave: g.grupo,
@@ -332,6 +333,7 @@ export function MezclaCafe({ cafe }: { cafe: Cafes }) {
         <p className="text-sm text-muted-foreground">Sin venta en el periodo.</p>
       ) : (
         <BarraApilada
+          apilada
           moneda="MXN"
           segmentos={[...cafe]
             .sort((a, b) => (a.cafe === 'Sí' ? -1 : b.cafe === 'Sí' ? 1 : 0))

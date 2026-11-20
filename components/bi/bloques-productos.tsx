@@ -175,7 +175,7 @@ export function Tendencias({
         ) : (
           <Lineas
             resumen="Venta neta por mes, una línea por año"
-            anchoMinimo="min-w-[30rem]"
+            anchoMinimo="min-w-[30rem] lg:min-w-0"
             alto={220}
             categorias={MESES}
             series={seriesPorAnio(anual.map((a) => ({ anio: a.anio, valores: a.meses })))}
@@ -189,7 +189,7 @@ export function Tendencias({
         ) : (
           <Lineas
             resumen="Venta neta por semana, una línea por año"
-            anchoMinimo="min-w-[40rem]"
+            anchoMinimo="min-w-[40rem] lg:min-w-0"
             alto={220}
             categorias={SEMANAS}
             series={seriesPorAnio(semanal.map((s) => ({ anio: s.anio, valores: s.semanas })))}
