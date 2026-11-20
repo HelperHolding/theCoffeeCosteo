@@ -303,6 +303,40 @@ describe('sucursales_rappi_portal', () => {
     expect(await leer(ajeno)).toBeNull();
   });
 
+  it('descuento_venta: el descuento del aliado sin las recompensas que paga Rappi (order_discount), entre 0 y el bruto', async () => {
+    const d = (type_description: string, value: unknown) => ({ type_description, value });
+    await importar(
+      lote([
+        pedido('2485177707', {
+          bruto: 211,
+          descuento_aliado: 161.64,
+          descuentos: [
+            d('charge.fast_lane', 26.9),
+            d('offer_by_product', 39.8),
+            d('offer_by_product', 39.8),
+            d('shipping', 20),
+            d('order_discount', 121.84),
+            d('service_fee', 6.9),
+          ],
+        }),
+        pedido('2485177708', { bruto: 100, descuento_aliado: 250, descuentos: [d('offer_by_product', 250)] }),
+        pedido('2485177709', { bruto: 100, descuento_aliado: 10, descuentos: [d('order_discount', '30')] }),
+      ]),
+    );
+    const pedidos = (await leer(gdl))?.pedidos as { id: string; descuento_venta: number }[];
+    const dv = (id: string) => num(pedidos.find((p) => p.id === id)?.descuento_venta);
+    expect(dv('2485177707')).toBeCloseTo(39.8, 2);
+    expect(dv('2485177708')).toBe(100);
+    expect(dv('2485177709')).toBe(0);
+    expect(dv('2483799559')).toBe(0);
+    // La función sola es de la llave de servicio (columna calculada del corte); el portal la ve por la RPC.
+    await expect(
+      comoUsuario(db, gdl, () =>
+        db.query('select public.rappi_descuento_venta(p) from rappi_pedidos p limit 1'),
+      ),
+    ).rejects.toThrow(/permission denied/);
+  });
+
   it('el periodo es de 62 días como máximo', async () => {
     await expect(leer(gdl, 513, '2026-08-01', '2026-10-27')).rejects.toThrow(/Periodo inválido/);
   });

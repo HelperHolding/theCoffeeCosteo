@@ -151,7 +151,12 @@ function rappiPortalSintetico(desde: string, hasta: string): RpcRappiPortal {
           estado_disputa: null,
           metodo_pago: azar() < 0.6 ? 'Tarjeta de Crédito' : 'Efectivo contraentrega',
           bruto: productos.reduce((a, x) => a + x.precio, 0),
-          descuento_aliado: azar() < 0.3 ? 20 : null,
+          // 30 % con descuento de la tienda ($20); la mitad de esos, además, con «Pro Rewards» de Rappi ($35).
+          ...(() => {
+            const tienda = azar() < 0.3 ? 20 : 0;
+            const rappi = tienda && azar() < 0.5 ? 35 : 0;
+            return { descuento_aliado: tienda + rappi || null, descuento_venta: tienda };
+          })(),
           estado_anterior: null,
           revisar: false,
           cambios: 0,

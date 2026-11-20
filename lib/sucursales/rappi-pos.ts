@@ -1,4 +1,4 @@
-import type { CustomNormal, LineaNormal, PedidoNormal } from './normalizar';
+import { prorratear, type CustomNormal, type LineaNormal, type PedidoNormal } from './normalizar';
 import type { PedidoRappi, ProductoRappi } from './rappi-portal';
 import { enZona } from './tiempo';
 
@@ -423,12 +423,18 @@ export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): Pedi
   const mm = String(Math.floor((local.segundo % 3600) / 60)).padStart(2, '0');
   const ss = String(local.segundo % 60).padStart(2, '0');
   const m = [p.creado, local.fecha, hh, mm, ss] as const;
-  const lineas = p.productos.flatMap(lineasDe);
-  const ventaCent = cent(p.bruto);
-  const suma = lineas.reduce(
+  const lineasLista = p.productos.flatMap(lineasDe);
+  const brutoCent = cent(p.bruto);
+  // Venta neta (decisión de Carlos, 2026-11-20): bruto − descuento que paga la tienda. Las promociones que paga Rappi
+  // («Pro Rewards») no se restan. Las líneas se prorratean para que Σ líneas = venta, como en el POS.
+  const tiendaCent = Math.min(brutoCent, Math.max(0, cent(p.descuento_venta ?? 0)));
+  const rappiCent = Math.max(0, (p.descuento_aliado === null ? 0 : cent(p.descuento_aliado)) - tiendaCent);
+  const ventaCent = brutoCent - tiendaCent;
+  const suma = lineasLista.reduce(
     (s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0),
     0,
   );
+  const lineas = suma === brutoCent ? prorratear(lineasLista, ventaCent) : lineasLista;
   return {
     id: Number(p.id),
     fecha: m[1],
@@ -437,11 +443,14 @@ export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): Pedi
     origen: 'rappi',
     ventaCent,
     netoCent: null,
-    descuentoCent: p.descuento_aliado === null ? 0 : cent(p.descuento_aliado),
+    descuentoCent: tiendaCent,
     metodo: 'RAPPI',
     tipo: 'RAPPI_PORTAL',
     lineas,
     numeroPedidoRappi: p.id,
-    cuadra: suma === ventaCent,
+    // Σ productos del portal = bruto (antes de prorratear): si no, la conciliación lo reporta.
+    cuadra: suma === brutoCent,
+    brutoCent,
+    ...(rappiCent > 0 ? { descuentoRappiCent: rappiCent } : {}),
   };
 }

@@ -227,23 +227,20 @@ export function infoPedidos(d: RespuestaPedidos): InfoTablero {
 }
 
 export function infoNetoRappi(kpis: Resumen, moneda: string, periodo: string): InfoTablero {
-  const dif = kpis.netoCent === null ? null : kpis.ventaCent - kpis.netoCent;
   return {
-    titulo: 'Cobrado y neto de Rappi',
-    mide: 'Lo que Rappi cobró al cliente y el neto que reporta la API, tal cual.',
+    titulo: 'Venta de Rappi: completa y neta',
+    mide: 'La venta de Rappi antes de descuentos y después del descuento que paga la tienda.',
     cifras: [
       { etiqueta: `Pedidos (${periodo})`, valor: numero(kpis.pedidos) },
+      { etiqueta: 'Venta completa', valor: dinero(kpis.brutoCent, moneda) },
+      { etiqueta: 'Venta neta', valor: dinero(kpis.ventaCent, moneda) },
       {
-        etiqueta: 'Ticket promedio',
+        etiqueta: 'Ticket promedio (neto)',
         valor: kpis.ticketCent === null ? '—' : dinero(kpis.ticketCent, moneda),
-      },
-      {
-        etiqueta: 'Diferencia por pedido',
-        valor: dif === null || !kpis.pedidos ? '—' : dinero(Math.round(dif / kpis.pedidos), moneda),
       },
     ],
     calculo:
-      'El proveedor no ha documentado qué incluye el neto, así que la diferencia no se presenta como comisión ni como liquidación.',
+      'Venta completa = suma de productos con precio Rappi. Venta neta = completa − descuento que paga la tienda; es la que suma a la venta de la sucursal, al P&L y al BI, como en Zoho. Las promociones que paga Rappi («Pro Rewards») no se restan.',
   };
 }
 

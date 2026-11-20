@@ -235,8 +235,11 @@ describe('pedido de Rappi en la forma del POS', () => {
       origen: 'rappi',
       metodo: 'RAPPI',
       tipo: 'RAPPI_PORTAL',
+      // Sin descuento_venta (la RPC no lo trae), nada se resta: el descuento del aliado queda como de Rappi.
       ventaCent: 14800,
-      descuentoCent: 1250,
+      brutoCent: 14800,
+      descuentoCent: 0,
+      descuentoRappiCent: 1250,
       netoCent: null,
       numeroPedidoRappi: '2950000001',
       cuadra: true,
@@ -246,6 +249,25 @@ describe('pedido de Rappi en la forma del POS', () => {
     expect(
       pedidoRappiAPos({ ...pedido('3', 'finished', [producto('Iced Latte', 89)]), bruto: 90 })!.cuadra,
     ).toBe(false);
+  });
+  it('venta neta = bruto − descuento que paga la tienda; Pro Rewards aparte; líneas prorrateadas a la venta', () => {
+    const base = pedido('2950000002', 'finished', [producto('Iced Latte', 89), producto('Brownie', 59)]);
+    const p = pedidoRappiAPos({ ...base, descuento_aliado: 30, descuento_venta: 12.5 })!;
+    expect(p).toMatchObject({
+      ventaCent: 13550,
+      brutoCent: 14800,
+      descuentoCent: 1250,
+      descuentoRappiCent: 1750,
+      cuadra: true,
+    });
+    const suma = p.lineas.reduce(
+      (s, l) => s + l.importeCent + l.customs.reduce((t, c) => t + c.importeCent, 0),
+      0,
+    );
+    expect(suma).toBe(13550);
+    // Nunca más descuento que el bruto ni negativo.
+    expect(pedidoRappiAPos({ ...base, descuento_aliado: 500, descuento_venta: 500 })!.ventaCent).toBe(0);
+    expect(pedidoRappiAPos({ ...base, descuento_aliado: 5, descuento_venta: -3 })!.ventaCent).toBe(14800);
   });
 });
 

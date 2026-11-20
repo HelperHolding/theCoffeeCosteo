@@ -173,7 +173,7 @@ export function RappiPortal({
           ) : (
             <>
               {t && (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                   <Kpi
                     etiqueta="Pedidos terminados"
                     valor={numero(t.pedidos)}
@@ -185,10 +185,16 @@ export function RappiPortal({
                     }
                   />
                   <Kpi
-                    etiqueta="Venta en Rappi"
+                    etiqueta="Venta completa (sin descuentos)"
                     valor={dinero(t.ventaCent, moneda, false)}
                     icono={ReceiptText}
                     nota="Suma de productos con precio Rappi, antes de descuentos."
+                  />
+                  <Kpi
+                    etiqueta="Venta neta (con descuentos)"
+                    valor={dinero(t.ventaNetaCent, moneda, false)}
+                    icono={ReceiptText}
+                    nota={`Menos ${dinero(t.descuentoTiendaCent, moneda, false)} que paga la tienda${t.descuentoRappiCent ? `; Rappi pone ${dinero(t.descuentoRappiCent, moneda, false)} más` : ''}. Es la que suma a la venta de la sucursal.`}
                   />
                   <Kpi
                     etiqueta="Cancelados o rechazados"
@@ -440,23 +446,34 @@ function ProductosPedido({ p, pesos }: { p: PedidoVista; pesos: (valor: number) 
   );
 }
 
-/** Subtotal, descuento del aliado y total después de descuentos (subtotal − total_discount_by_partner). */
+/**
+ * Subtotal (venta completa), descuento que paga la tienda, promoción que paga Rappi y venta neta (subtotal − descuento de
+ * la tienda), la que suma a la venta de la sucursal.
+ */
 function TotalesPedido({ p, pesos }: { p: PedidoVista; pesos: (valor: number) => string }) {
+  const tienda = Math.min(p.bruto, Math.max(0, p.descuento_venta ?? 0));
+  const rappi = Math.max(0, (p.descuento_aliado ?? 0) - tienda);
   return (
     <dl className="space-y-0.5 text-xs">
       <div className="flex justify-between gap-3">
-        <dt className="text-ink-2">Subtotal</dt>
+        <dt className="text-ink-2">Venta completa</dt>
         <dd className="tabular">{pesos(p.bruto)}</dd>
       </div>
       {p.descuento_aliado !== null ? (
         <>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-2">Descuento del aliado</dt>
-            <dd className="tabular">−{pesos(p.descuento_aliado)}</dd>
+            <dt className="text-ink-2">Descuento de la tienda</dt>
+            <dd className="tabular">−{pesos(tienda)}</dd>
           </div>
+          {rappi > 0 && (
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-2">Promoción que paga Rappi</dt>
+              <dd className="tabular text-ink-2">{pesos(rappi)}</dd>
+            </div>
+          )}
           <div className="flex justify-between gap-3 border-t border-line pt-1 text-sm">
-            <dt className="font-semibold">Total</dt>
-            <dd className="font-semibold tabular">{pesos(p.bruto - p.descuento_aliado)}</dd>
+            <dt className="font-semibold">Venta neta</dt>
+            <dd className="font-semibold tabular">{pesos(p.bruto - tienda)}</dd>
           </div>
         </>
       ) : (

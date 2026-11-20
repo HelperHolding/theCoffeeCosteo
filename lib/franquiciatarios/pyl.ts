@@ -61,13 +61,8 @@ export interface EntradaPyl {
   ventaCent: number;
   descuentoCent: number;
   ventaRappiCent: number;
-  /** Comisión de cobro que reporta el POS (venta − neto) de los pedidos con tarjeta o app; sin el saldo de la app. */
+  /** Comisión de cobro que reporta el POS (venta − neto) de los pedidos con tarjeta o app. */
   comisionPosCent: number;
-  /**
-   * Pedidos pagados con saldo de la app (WALLET_BALANCE): venta − neto de la API. Zoho no lo cuenta como venta (cotejo
-   * 2026-11-20); se muestra aparte hasta que Finanzas defina si es beneficio o prepago.
-   */
-  saldoAppCent?: number;
   iva: number;
   comisionRappi: number;
   /** Compras a la Comercializadora del mes, con IVA (pesos). */
@@ -107,9 +102,8 @@ export function armarPyl(e: EntradaPyl): Pyl {
   const venta = e.ventaCent / 100;
   const netas = sinIva(venta);
   const comisiones = sinIva((e.ventaRappiCent / 100) * e.comisionRappi + e.comisionPosCent / 100);
-  const saldoApp = sinIva((e.saldoAppCent ?? 0) / 100);
   const compras = sinIva(e.compras);
-  const bruto = netas - comisiones - saldoApp - compras;
+  const bruto = netas - comisiones - compras;
   const contribucion = bruto - e.cajaChica;
   const fijos = e.fijos.reduce((s, f) => s + f.monto, 0);
   const utilidad = contribucion - fijos;
@@ -129,7 +123,14 @@ export function armarPyl(e: EntradaPyl): Pyl {
     ...(nota ? { nota } : {}),
   });
   const lineas: LineaPyl[] = [
-    L('venta', 'Venta con IVA', venta, 'ingreso', false, 'POS y Rappi, igual que Sucursales'),
+    L(
+      'venta',
+      'Venta con IVA',
+      venta,
+      'ingreso',
+      false,
+      'POS y Rappi neto de descuentos, sin saldo de la app; igual que Sucursales y Zoho',
+    ),
     L(
       'descuentos',
       'Descuentos otorgados',
@@ -146,14 +147,6 @@ export function armarPyl(e: EntradaPyl): Pyl {
       'costo',
       false,
       `Rappi ${Math.round(e.comisionRappi * 100)} % estimado + cobro del POS`,
-    ),
-    L(
-      'saldo-app',
-      'Saldo de la app (beneficios)',
-      saldoApp,
-      'costo',
-      false,
-      'Pagos con saldo de la app que la API no cobra; Zoho no los cuenta como venta. Por confirmar con Finanzas',
     ),
     L('compras', 'Compras a la Comercializadora', compras, 'costo', false, 'Pedidos del mes, sin IVA'),
     L('bruto', 'Margen bruto', bruto, 'subtotal'),
@@ -180,7 +173,7 @@ export function armarPyl(e: EntradaPyl): Pyl {
   // Margen de contribución por peso vendido (con IVA) → venta necesaria para cubrir los fijos.
   const margen = venta > 0 ? contribucion / venta : null;
   return {
-    lineas: lineas.filter((l) => (l.clave !== 'descuentos' && l.clave !== 'saldo-app') || l.real > 0),
+    lineas: lineas.filter((l) => l.clave !== 'descuentos' || l.real > 0),
     puntoEquilibrio: margen && margen > 0 ? r2(fijos / margen) : null,
     margenContribucion: margen,
     avanceMes: avance,

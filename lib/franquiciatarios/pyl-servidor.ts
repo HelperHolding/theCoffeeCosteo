@@ -86,16 +86,11 @@ export async function leerPyl(db: Db, cfg: ConfigSucursal, mes: string): Promise
   const delMes = lectura.pedidos.filter((p) => p.fecha >= desde && p.fecha <= hasta);
   const r = resumen(delMes);
   const ventaRappiCent = delMes.filter((p) => p.origen === 'rappi').reduce((s, p) => s + p.ventaCent, 0);
-  // Comisión de cobro (tarjeta y app) aparte del saldo de la app: ese no es comisión (cotejo con Zoho, 2026-11-20).
-  const diferenciaNeto = (p: (typeof delMes)[number]) =>
-    Math.max(0, p.ventaCent - (p.netoCent ?? p.ventaCent));
-  const conNeto = delMes.filter((p) => p.origen !== 'rappi' && p.netoCent !== null);
-  const comisionPosCent = conNeto
-    .filter((p) => p.metodo !== 'WALLET_BALANCE')
-    .reduce((s, p) => s + diferenciaNeto(p), 0);
-  const saldoAppCent = conNeto
-    .filter((p) => p.metodo === 'WALLET_BALANCE')
-    .reduce((s, p) => s + diferenciaNeto(p), 0);
+  // Comisión de cobro del POS (tarjeta y app): venta − neto de la API. El saldo de la app ya no es venta (su venta es el
+  // neto), así que no deja diferencia ni se confunde con comisión. Rappi del portal no trae neto: va por su %.
+  const comisionPosCent = delMes
+    .filter((p) => p.origen !== 'rappi' && p.netoCent !== null)
+    .reduce((s, p) => s + Math.max(0, p.ventaCent - p.netoCent!), 0);
 
   let comprasMonto = 0;
   if (compras.ok)
@@ -135,7 +130,6 @@ export async function leerPyl(db: Db, cfg: ConfigSucursal, mes: string): Promise
       descuentoCent: r.descuentoCent,
       ventaRappiCent,
       comisionPosCent,
-      saldoAppCent,
       iva,
       comisionRappi,
       compras: comprasMonto,

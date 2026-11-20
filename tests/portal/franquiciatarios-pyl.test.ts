@@ -72,12 +72,7 @@ describe('armarPyl', () => {
       armarPyl({ ...base, ventaCent: 0, ventaRappiCent: 0, comisionPosCent: 0 }).puntoEquilibrio,
     ).toBeNull();
   });
-  it('el saldo de la app va en su propia línea (no es comisión) y baja el margen', () => {
-    const p = armarPyl({ ...base, saldoAppCent: 232_000 }); // $2,320 → $2,000 sin IVA
-    const v = Object.fromEntries(p.lineas.map((l) => [l.clave, l]));
-    expect(v.comisiones.real).toBe(4600);
-    expect(v['saldo-app'].real).toBe(2000);
-    expect(v.bruto.real).toBe(63400);
+  it('no hay línea de saldo de la app: ya no es venta (llega restado desde Sucursales)', () => {
     expect(armarPyl(base).lineas.some((l) => l.clave === 'saldo-app')).toBe(false);
   });
   it('sin descuentos no muestra la línea; mes cerrado: proyección = real', () => {

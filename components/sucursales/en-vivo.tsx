@@ -66,14 +66,11 @@ export function EnVivo({
   companyId,
   origen,
   base: api = '/api/sucursales',
-  conNeto = true,
 }: {
   companyId: number;
   origen: FiltroOrigen;
   /** Prefijo de la API (Franquiciatarios usa la suya, sin neto ni costos). */
   base?: string;
-  /** false: con Rappi muestra pagos en lugar del cobrado y neto de la API. */
-  conNeto?: boolean;
 }) {
   const { datos, error, cargando, recibidoEn, recargar } = useLectura<RespuestaVivo>(
     `${api}/${companyId}/vivo?origen=${origen}`,
@@ -346,7 +343,7 @@ export function EnVivo({
               </ConInfo>
             </div>
 
-            {origen === 'rappi' && conNeto ? (
+            {origen === 'rappi' ? (
               <NetoRappi kpis={d.kpis} moneda={m} />
             ) : (
               <ConInfo info={info.pagos}>

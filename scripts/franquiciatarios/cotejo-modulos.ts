@@ -71,7 +71,7 @@ const cargas = await db
   .lte('fecha', hasta);
 const completas = new Map((cargas.data ?? []).map((c) => [c.fecha, c.completa]));
 
-// C) Zoho «Looker Sucursales» (POS cargado a Zoho; Rappi no viene por aquí)
+// C) Zoho «Looker Sucursales»: POS y Rappi juntos (Rappi del archivo manual), así que se compara contra A POS + A Rappi.
 const C = new Map<string, Fila>();
 let zohoError: string | null = null;
 try {
@@ -99,8 +99,10 @@ try {
     if (!r.ok) throw new Error(`Zoho ${r.status}: ${(await r.text()).slice(0, 300)}`);
     return r;
   };
+  // «Date» trae hora: el último día entra completo con «< día siguiente».
+  const manana = new Date(Date.parse(`${hasta}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
   const sql = `select "Date", count(distinct "Order ID"), sum("Net Amount (Local)") from "Looker Sucursales"
-    where "Store ID" = ${cfg.lookerStoreId} and "Date" >= '${desde}' and "Date" <= '${hasta}' group by "Date"`;
+    where "Store ID" = ${cfg.lookerStoreId} and "Date" >= '${desde}' and "Date" < '${manana}' group by "Date"`;
   const job = (
     (await (await get('/data', { sqlQuery: sql, responseFormat: 'csv' })).json()) as {
       data?: { jobId?: string };
@@ -141,7 +143,7 @@ const f2 = (n: number) => n.toLocaleString('es-MX', { minimumFractionDigits: 2, 
 const dif = (a: number, b: number) => (Math.abs(a - b) < 0.02 ? '=' : f2(b - a));
 console.log(`${cfg.nombre} (${cfg.companyId}, tienda ${cfg.lookerStoreId}) · ${desde} a ${hasta}`);
 console.log(
-  'día        | A POS      A Rappi  A ped | BI POS (dif)        BI Rappi (dif)    BI ped | Zoho POS (dif vs A)  Zoho ped | BI carga',
+  'día        | A POS      A Rappi  A ped | BI POS (dif)        BI Rappi (dif)    BI ped | Zoho total (dif vs A POS+Rappi)  Zoho ped | BI carga',
 );
 const tot = { a: vacia(), b: vacia(), c: vacia() };
 for (const d of dias) {
@@ -157,13 +159,13 @@ for (const d of dias) {
   console.log(
     `${d} | ${f2(a.pos).padStart(9)} ${f2(a.rappi).padStart(8)} ${String(a.pedidos).padStart(4)} | ` +
       `${f2(b.pos).padStart(9)} (${dif(a.pos, b.pos).padStart(8)}) ${f2(b.rappi).padStart(8)} (${dif(a.rappi, b.rappi).padStart(8)}) ${String(b.pedidos).padStart(4)} | ` +
-      `${f2(c.pos).padStart(9)} (${dif(a.pos, c.pos).padStart(8)}) ${String(c.pedidos).padStart(4)} | ${completas.has(d) ? (completas.get(d) ? 'completa' : 'parcial') : 'SIN CARGA'}`,
+      `${f2(c.pos).padStart(9)} (${dif(a.pos + a.rappi, c.pos).padStart(8)}) ${String(c.pedidos).padStart(4)} | ${completas.has(d) ? (completas.get(d) ? 'completa' : 'parcial') : 'SIN CARGA'}`,
   );
 }
 console.log(
   `TOTAL      | ${f2(tot.a.pos).padStart(9)} ${f2(tot.a.rappi).padStart(8)} ${String(tot.a.pedidos).padStart(4)} | ` +
     `${f2(tot.b.pos).padStart(9)} (${dif(tot.a.pos, tot.b.pos).padStart(8)}) ${f2(tot.b.rappi).padStart(8)} (${dif(tot.a.rappi, tot.b.rappi).padStart(8)}) ${String(tot.b.pedidos).padStart(4)} | ` +
-    `${f2(tot.c.pos).padStart(9)} (${dif(tot.a.pos, tot.c.pos).padStart(8)}) ${String(tot.c.pedidos).padStart(4)}`,
+    `${f2(tot.c.pos).padStart(9)} (${dif(tot.a.pos + tot.a.rappi, tot.c.pos).padStart(8)}) ${String(tot.c.pedidos).padStart(4)}`,
 );
 if (zohoError) console.log(`Zoho: ${zohoError}`);
 console.log(`Lectura POS: ${lectura.estado}; avisos: ${lectura.avisos.join(' | ') || '—'}`);

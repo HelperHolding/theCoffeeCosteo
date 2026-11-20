@@ -61,7 +61,8 @@ const rappiDe = async (companyId: number) =>
       `select p.rappi_pedido_id::text id, p.rappi_tienda_id tienda,
          to_char(p.creado_local, 'YYYY-MM-DD"T"HH24:MI:SS') creado, p.fecha_local::text fecha, p.estado,
          p.estado_nombre, p.en_disputa, p.estado_disputa, p.metodo_pago, p.bruto::float8 bruto,
-         p.descuento_aliado::float8 descuento_aliado, p.estado_anterior, p.revisar, 0 cambios,
+         p.descuento_aliado::float8 descuento_aliado,
+         public.rappi_descuento_venta(p)::float8 descuento_venta, p.estado_anterior, p.revisar, 0 cambios,
          coalesce((select json_agg(json_build_object('nombre', x.nombre, 'unidades', x.unidades,
              'precio', x.precio::float8, 'opciones', x.opciones) order by x.linea)
            from rappi_pedido_productos x where x.rappi_pedido_id = p.rappi_pedido_id), '[]') productos

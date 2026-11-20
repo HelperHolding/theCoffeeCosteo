@@ -62,3 +62,27 @@ npx tsx --conditions=react-server scripts/franquiciatarios/cotejo-modulos.ts --d
 
 El script lee las tres fuentes por día: Sucursales/Franquiciatarios, BI y Zoho «Looker Sucursales». Usa una sola
 renovación de token de Zoho.
+
+## 5. Definición de venta aplicada (2026-11-20, decisión de Carlos)
+
+- **Rappi:** la venta que suma a la sucursal, al P&L, a las metas, a BI y al cotejo es la **neta** = bruto − descuento
+  que paga la tienda (`descuento_venta`). Las vistas de Rappi muestran también la **venta completa** (sin descuentos),
+  que es la que sigue el equipo de delivery, y las promociones que paga Rappi («Pro Rewards») aparte, sin restarlas.
+  - `rappi_descuento_venta` ya estaba en producción, aplicada a mano y sin migración (ninguna sesión de Claude de esta
+    máquina la creó). La migración 90 la registra tal cual, junto con `sucursales_rappi_portal`.
+  - Las líneas de cada pedido se prorratean a la venta neta, así que productos, Costeo, Consumo y BI usan la misma cifra.
+- **Saldo de la app (WALLET_BALANCE):** la venta es el neto de la API (lo que no se pagó con saldo). Lo pagado con saldo
+  queda en `saldoAppCent`, no como venta. El P&L ya no tiene la línea «Saldo de la app».
+- **Cotejo después del cambio** (Essentia, 1 al 18 de noviembre; Zoho «Looker Sucursales» trae POS y Rappi juntos):
+
+  |                                                  | Módulos   | Zoho     | Diferencia      |
+  | ------------------------------------------------ | --------- | -------- | --------------- |
+  | Antes (Rappi bruto y saldo de la app como venta) | ~$168,000 | $155,465 | ~−$12,500       |
+  | Ahora                                            | $157,279  | $155,465 | −$1,814 (1.2 %) |
+
+  Lo que queda: los 22 pedidos de Rappi en los que Zoho resta dos veces el mismo descuento (~$1,000), un pedido del 18
+  que Zoho no tiene (−$537) y un pedido con tarjeta (−$304).
+
+- **Pendiente después del merge, con OK de Carlos:** recalcular el historial ya guardado (`sucursales_resumen_dia` del
+  Tablero México y `bi_lineas`) con `scripts/sucursales/corte.ts`, porque esos días se guardaron con la definición
+  anterior. Mientras tanto, la página de cada sucursal (que lee en vivo) ya usa la nueva.
