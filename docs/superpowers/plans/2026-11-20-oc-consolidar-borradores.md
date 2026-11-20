@@ -659,7 +659,7 @@ ${manos ? `<ul>${manos}</ul>` : ""}
   const alertas = a.alertas.map((x) => {
     const emi = x.emitidas.map((e) => `${esc(e.po_number)}${e.fecha_oc ? ` del ${esc(e.fecha_oc)}` : ""}`).join(", ");
     const skus = x.skus.map((s) => `<li>${esc(s.sku)} ${esc(s.nombre)} (${s.cantidad})</li>`).join("");
-    return `<h3>${esc(x.vendor_name)}</h3><p>Ya tiene la OC emitida ${emi}; se pidió aparte:</p><ul>${skus}</ul>`;
+    return `<p><b>${esc(x.vendor_name)}</b> ya tiene la OC emitida ${emi}; se pidió aparte:</p><ul>${skus}</ul>`;
   }).join("");
   return `<div style="font-family:sans-serif;font-size:14px">
 <h2>${esc(asuntoConsolidar(a.fecha, a.modo))}</h2>
@@ -669,8 +669,6 @@ ${alertas ? `<h2>Alertas: proveedor con OC emitida</h2>${alertas}` : ""}
 </div>`;
 }
 ```
-
-Nota: la prueba busca `"ya tiene la OC emitida"` en minúscula; el texto dice "Ya tiene" con mayúscula. Ajustar el HTML a `ya tiene la OC emitida` dentro de la oración: `<p>${esc(x.vendor_name)} ya tiene la OC emitida ${emi}; se pidió aparte:</p>` y quitar el `<h3>` de alertas. (Se deja escrito así para que la prueba mande.)
 
 - [ ] **Step 4: correr y ver que pasan; suite**
 
@@ -884,7 +882,8 @@ Deno.test("consolidar real: borrador borrado en Zoho (404) se ignora", async () 
   const { z } = zohoGrabador({ pos: {} });
   await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
   const v1 = inserts.find((i) => i.vendor_id === "v1")!;
-  assertEquals((v1.lineas as { sku: string }[]).map((l) => l.sku), ["A", "C"]);
+  // A sigue bloqueado por com_zoho_oc_lineas hasta el siguiente sync; se pide en la próxima corrida.
+  assertEquals((v1.lineas as { sku: string }[]).map((l) => l.sku), ["C"]);
   assertEquals("reemplaza" in v1, false);
 });
 
@@ -966,7 +965,7 @@ describe('migración: columnas de consolidación en com_oc_auto', () => {
     expect(sql).toMatch(/add column if not exists alerta_emitidas jsonb/i);
   });
   it('no prende la bandera auto.consolidar', () => {
-    expect(sql).not.toMatch(/consolidar/i.source.replace('consolidar', 'auto,consolidar'));
+    expect(sql).not.toMatch(/\{auto,consolidar\}/);
     expect(sql).not.toMatch(/jsonb_set\(config/);
   });
 });
