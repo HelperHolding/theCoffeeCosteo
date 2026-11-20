@@ -105,6 +105,7 @@ type Datos = {
   minmax: Record<string, unknown>[]; catalogo: Record<string, unknown>[]; ocLineas?: Record<string, unknown>[];
   ocAuto?: Record<string, unknown>[]; creadasHoy?: number; correos?: string[];
   cierres?: Record<string, unknown>[]; pagos?: Record<string, unknown>[]; proveedores?: Record<string, unknown>[];
+  consolidar?: boolean;
   sinMigracion?: boolean; // las columnas de mínimos no existen: las consultas que las piden devuelven 42703
 };
 const ERR_COLUMNA = { code: "42703", message: "column does not exist" };
@@ -125,7 +126,7 @@ function dbModelo(d: Datos) {
   const db = {
     from(t: string) {
       switch (t) {
-        case "com_plan_config": return cadena({ data: { config: { auto: { modo: d.modo, max_edad_sync_horas: 2, correos: d.correos ?? [] } } }, error: null });
+        case "com_plan_config": return cadena({ data: { config: { auto: { modo: d.modo, max_edad_sync_horas: 2, correos: d.correos ?? [], ...(d.consolidar ? { consolidar: true } : {}) } } }, error: null });
         case "com_sync_log": return cadena({ data: { inicio: "2026-10-30T12:45:00Z", fin: "2026-10-30T12:50:00Z", ok: true }, error: null });
         case "com_minmax": return cadena({ data: d.minmax, error: null });
         case "com_catalogo": return cadena({ data: d.catalogo, error: null });
@@ -554,4 +555,157 @@ Deno.test("generar: recalcula sin mandar el aviso de OCs en borrador (ese correo
   await generar(db, null, { origen: "manual", ahora, recalcular: espia });
   assertEquals(llamadas.length, 1);
   assertEquals(llamadas[0][2], { borradores: false });
+});
+
+function zohoGrabador(o: { pos?: Record<string, unknown>; fallaCrear?: boolean; fallaCancelar?: number; fallaGet?: number; luego?: Record<string, unknown> } = {}) {
+  const llamadas: string[] = [];
+  const z = {
+    get: (p: string) => {
+      llamadas.push("GET " + p);
+      const id = p.split("/").pop()!;
+      if (o.fallaGet) return Promise.reject(new ZohoError("Zoho " + o.fallaGet, o.fallaGet));
+      const visto = llamadas.filter((l) => l === "GET " + p).length > 1;
+      const po = visto && o.luego?.[id] ? o.luego[id] : o.pos?.[id];
+      return po ? Promise.resolve({ purchaseorder: po }) : Promise.reject(new ZohoError("no existe", 404));
+    },
+    post: (p: string, body: Record<string, unknown>) => {
+      llamadas.push("POST " + p);
+      if (p === "/purchaseorders") {
+        if (o.fallaCrear) return Promise.reject(new ZohoError("Zoho 500", 500));
+        return Promise.resolve({ purchaseorder: { purchaseorder_id: "nueva-" + body.vendor_id, purchaseorder_number: "COM-OC-NUEVA" } });
+      }
+      if (o.fallaCancelar) return Promise.reject(new ZohoError("no se puede", o.fallaCancelar));
+      return Promise.resolve({});
+    },
+    del: (p: string) => { llamadas.push("DELETE " + p); return Promise.resolve({}); },
+  } as unknown as ZohoClient;
+  return { z, llamadas };
+}
+const borradorA = { zoho_po_id: "po1", po_number: "COM-OC-1", status: "draft", vendor_id: "v1", vendor_name: "P-v1", sku: "A",
+  cantidad: 100, cantidad_recibida: 0, precio: 10, fecha_oc: "2026-10-28" };
+const vivoA = { status: "draft", purchaseorder_number: "COM-OC-1", line_items: [{ item_id: "item-A", sku: "A", quantity: 100, rate: 10 }] };
+// A (v1) en borrador; C (v1) nuevo; B (v2) nuevo.
+const conBorrador = (): Pick<Datos, "minmax" | "catalogo"> =>
+  ({ minmax: [mm("A"), mm("B"), mm("C")], catalogo: [cat("A", "v1"), cat("B", "v2"), cat("C", "v1")] });
+
+Deno.test("consolidar apagado: igual que hoy, sin GET a Zoho ni columnas nuevas", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA } });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas, ["POST /purchaseorders", "POST /purchaseorders"]);
+  assertEquals(inserts.every((i) => !("reemplaza" in i) && !("alerta_emitidas" in i)), true);
+  assertEquals([r.consolidadas, r.alertas], [0, 0]);
+});
+
+Deno.test("consolidar real: verifica, crea una OC con A recalculado y C, y cancela el borrador", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA } });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas, ["GET /purchaseorders/po1", "POST /purchaseorders", "GET /purchaseorders/po1", "POST /purchaseorders/po1/status/cancelled", "POST /purchaseorders"]);
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals((v1.lineas as { sku: string; cantidad: number; origen: string }[]).map((l) => [l.sku, l.cantidad, l.origen]), [["A", 640, "recalculado"], ["C", 640, "nuevo"]]);
+  assertEquals(v1.reemplaza, [{ zoho_po_id: "po1", po_number: "COM-OC-1", cancelada: true }]);
+  assertEquals(r.consolidadas, 1);
+});
+
+Deno.test("consolidar real: si Zoho no deja cancelar (4xx) se borra el borrador", async () => {
+  const { db } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA }, fallaCancelar: 400 });
+  await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.includes("DELETE /purchaseorders/po1"), true);
+});
+
+Deno.test("consolidar real: si cancelar falla con 5xx queda 'cancelar a mano' y la OC nueva registrada", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA }, fallaCancelar: 500 });
+  await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.includes("DELETE /purchaseorders/po1"), false);
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals(v1.estado, "creada");
+  assertEquals((v1.reemplaza as { cancelada: boolean }[])[0].cancelada, false);
+});
+
+Deno.test("consolidar real: si crear falla no se cancela nada", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA }, fallaCrear: true });
+  await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.some((l) => l.includes("cancelled") || l.startsWith("DELETE")), false);
+  assertEquals(inserts.find((i) => i.vendor_id === "v1")!.estado, "error");
+});
+
+Deno.test("consolidar real: borrador que en vivo ya está open → no se reemplaza y hay alerta", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: { ...vivoA, status: "open" } } });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.some((l) => l.includes("cancelled")), false);
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals((v1.lineas as { sku: string }[]).map((l) => l.sku), ["C"]);
+  assertEquals((v1.alerta_emitidas as { po_number: string }[])[0].po_number, "COM-OC-1");
+  assertEquals(r.alertas, 1);
+});
+
+Deno.test("consolidar real: borrador borrado en Zoho (404) se ignora", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z } = zohoGrabador({ pos: {} });
+  await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  // A sigue bloqueado por com_zoho_oc_lineas hasta el siguiente sync; se pide en la próxima corrida.
+  assertEquals((v1.lineas as { sku: string }[]).map((l) => l.sku), ["C"]);
+  assertEquals("reemplaza" in v1, false);
+});
+
+Deno.test("consolidar real: borrador con línea sin artículo de Zoho no se reemplaza; lo nuevo sí se pide", async () => {
+  const sinItem = { ...borradorA, sku: "ENV" };
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [sinItem] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: { ...vivoA, line_items: [{ item_id: "", sku: "ENV", quantity: 1, rate: 250 }] } } });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.some((l) => l.includes("cancelled") || l.startsWith("DELETE")), false);
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals([v1.estado, (v1.lineas as { sku: string }[]).map((l) => l.sku), "reemplaza" in v1], ["creada", ["A", "C"], false]); // A no está en el borrador (solo ENV): se pide normal
+  assertStringIncludes(r.errores.join(" "), "línea sin artículo de Zoho");
+});
+
+Deno.test("revisión: un GET fallido (no 404) no tumba la corrida; ese proveedor sale sin consolidar", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA }, fallaGet: 500 });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.some((l) => l.includes("cancelled")), false);
+  assertEquals(inserts.map((i) => [i.vendor_id, i.estado, (i.lineas as { sku: string }[]).map((l) => l.sku)]), [["v1", "creada", ["C"]], ["v2", "creada", ["B"]]]);
+  assertStringIncludes(r.errores.join(" "), "no se pudo revisar COM-OC-1");
+});
+
+Deno.test("revisión: si justo antes de cancelar el borrador ya no es draft, no se cancela ni se borra", async () => {
+  const { db, inserts } = dbModelo({ modo: "real", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  const { z, llamadas } = zohoGrabador({ pos: { po1: vivoA }, luego: { po1: { ...vivoA, status: "open" } } });
+  const r = await generar(db, () => z, { origen: "manual", ahora, recalcular: sinRecalcular });
+  assertEquals(llamadas.some((l) => l.includes("cancelled") || l.startsWith("DELETE")), false);
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals((v1.reemplaza as { cancelada: boolean }[])[0].cancelada, false);
+  assertStringIncludes(r.errores.join(" "), "ya no es borrador");
+});
+
+Deno.test("consolidar en simulación: no llama a Zoho y guarda reemplaza con cancelada=false", async () => {
+  const { db, inserts } = dbModelo({ modo: "simulacion", consolidar: true, ...conBorrador(), ocLineas: [borradorA] });
+  await generar(db, () => { throw new Error("no debe crear Zoho"); }, { origen: "manual", ahora, recalcular: sinRecalcular });
+  const v1 = inserts.find((i) => i.vendor_id === "v1")!;
+  assertEquals(v1.estado, "simulada");
+  assertEquals(v1.reemplaza, [{ zoho_po_id: "po1", po_number: "COM-OC-1", cancelada: false }]);
+});
+
+Deno.test("cuerpoOc con reemplazo lo dice en las notas", () => {
+  const p = proponer([f({ sku: "A" })], true).porProveedor[0];
+  assertStringIncludes(String(cuerpoOc(p, "2026-10-30", null, ["COM-OC-1", "COM-OC-2"]).notes), "Reemplaza a COM-OC-1, COM-OC-2");
+});
+
+Deno.test("consolidar: el correo de consolidaciones sale aparte, y solo si hubo algo", async () => {
+  const asuntos = async (d: Datos) => {
+    const enviados: string[] = [];
+    await conFetch((_u, init) => { enviados.push(String(JSON.parse(String(init?.body)).subject)); return Promise.resolve(new Response("{}")); },
+      () => generar(dbModelo(d).db, null, { origen: "manual", ahora, recalcular: sinRecalcular }));
+    return enviados;
+  };
+  const con = await asuntos({ modo: "simulacion", consolidar: true, correos: ["a@x.com"], ...conBorrador(), ocLineas: [borradorA] });
+  assertEquals(con.some((s) => s === "OC automática 2026-10-30: consolidaciones y alertas (simulación)"), true);
+  const sin = await asuntos({ modo: "simulacion", consolidar: true, correos: ["a@x.com"], ...dosProveedores() });
+  assertEquals(sin.some((s) => s.includes("consolidaciones")), false);
 });

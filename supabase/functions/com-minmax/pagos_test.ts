@@ -75,7 +75,7 @@ const cfgP = {
   seg: { dias: 10 }, consumo: { ventana: 30 }, aper: { antelacion: 30, vencida_max: 45 },
   compra: { lt_default: 7, excluir_cafe: true, min_prov: "consolidar" as const, min_ventana_dias: 14 }, inv: { yulius: true },
   auto: { modo: "simulacion" as const, cobertura_dias: 15, max_edad_sync_horas: 2, yulius_alerta_dias: 15, correos: [], pagos_horizonte: 30,
-    pagos_base: "llegada" as const, sync_catalogo: "registrar" as const, zoho_cf_minimo: "cf_minimo_de_compra_mxn" },
+    pagos_base: "llegada" as const, sync_catalogo: "registrar" as const, zoho_cf_minimo: "cf_minimo_de_compra_mxn", consolidar: false },
 };
 const entradasP: Entradas = {
   hoy: "2026-10-30", cfg: cfgP, plan: mergeCfg({ consumo: { ventana: 30 } }),

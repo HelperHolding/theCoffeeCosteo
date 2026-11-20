@@ -19,3 +19,9 @@ Deno.test("aPlanCfg: defaults de mínimos de proveedor (consolidar, 14 días, ca
   assertEquals([d.compra.min_prov, d.compra.min_ventana_dias, d.auto.zoho_cf_minimo], ["avisar", 21, "cf_x"]);
   assertEquals(aPlanCfg({ compra: { min_prov: "otro", min_ventana_dias: "abc" } }).compra.min_ventana_dias, 14);
 });
+
+Deno.test("aPlanCfg: auto.consolidar solo es true si la configuración lo dice explícitamente", () => {
+  assertEquals(aPlanCfg({}).auto.consolidar, false);
+  assertEquals(aPlanCfg({ auto: { consolidar: "si" } }).auto.consolidar, false);
+  assertEquals(aPlanCfg({ auto: { consolidar: true } }).auto.consolidar, true);
+});

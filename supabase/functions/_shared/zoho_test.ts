@@ -99,3 +99,17 @@ Deno.test("soloLectura: GET pasa; POST y PUT se bloquean sin llamar a Zoho", asy
   await assertRejects(() => z.put("/contacts/1", {}), ZohoError, "sin efectos externos");
   assertEquals(log.filter((l) => !l.includes("/oauth/")).map((l) => l.split(" ")[0]), ["GET"]);
 });
+
+Deno.test("del manda DELETE y no reintenta un 5xx", async () => {
+  const log: string[] = [];
+  const z = new ZohoClient(cfg([tok, { status: 500, body: {} }], log));
+  await assertRejects(() => z.del("/purchaseorders/1"), ZohoError);
+  assertEquals(log.filter((l) => !l.includes("oauth")).map((l) => l.split(" ")[0]), ["DELETE"]);
+});
+
+Deno.test("del en solo lectura no llama a Zoho", async () => {
+  const log: string[] = [];
+  const z = new ZohoClient({ ...cfg([], log), soloLectura: true });
+  await assertRejects(() => z.del("/purchaseorders/1"), ZohoError, "sin efectos externos");
+  assertEquals(log.length, 0);
+});
