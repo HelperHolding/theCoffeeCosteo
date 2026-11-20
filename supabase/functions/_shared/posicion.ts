@@ -79,3 +79,48 @@ export async function cargarAbiertas(db: SupabaseClient): Promise<LineaAbierta[]
   }
   return out;
 }
+
+export type OcProveedor = {
+  zoho_po_id: string; po_number: string; status: string; vendor_id: string; vendor_name: string | null;
+  sku: string; item_id: string | null; cantidad: number; pendiente: number; precio: number | null; fecha_oc: string | null;
+};
+
+export const esBorrador = (status: string) => String(status ?? "").toLowerCase() === "draft";
+
+/** Líneas de OCs abiertas con proveedor, para consolidar borradores y alertar emitidas. Incluye marcadores (ENV…). */
+export async function cargarOcsProveedor(db: SupabaseClient): Promise<OcProveedor[]> {
+  const filas = await todo<Record<string, unknown>>((a, b) =>
+    db.from("com_zoho_oc_lineas")
+      .select("zoho_po_id,po_number,status,vendor_id,vendor_name,sku,cantidad,cantidad_recibida,precio,fecha_oc")
+      .order("zoho_po_id").order("sku").range(a, b));
+  const out: OcProveedor[] = [];
+  for (const l of filas) {
+    const status = String(l.status ?? "");
+    if (!ocAbierta(status) || !l.vendor_id) continue;
+    const cantidad = Number(l.cantidad);
+    out.push({
+      zoho_po_id: String(l.zoho_po_id), po_number: String(l.po_number ?? ""), status, vendor_id: String(l.vendor_id),
+      vendor_name: (l.vendor_name as string) ?? null, sku: String(l.sku ?? ""), item_id: null, cantidad,
+      pendiente: cantidad - Number(l.cantidad_recibida ?? 0), precio: l.precio == null ? null : Number(l.precio),
+      fecha_oc: (l.fecha_oc as string) ?? null,
+    });
+  }
+  return out;
+}
+
+/** Posición como si los borradores `quitar` no existieran (solo para SKUs de ese mismo proveedor). No muta. */
+export function sinBorradores(filas: Fila[], quitar: OcProveedor[]): Fila[] {
+  const menos = new Map<string, number>();
+  const porSku = new Map(filas.map((f) => [f.sku, f]));
+  for (const l of quitar) {
+    const f = porSku.get(l.sku);
+    if (!f || f.zoho_vendor_id !== l.vendor_id || !(l.pendiente > 0)) continue;
+    menos.set(l.sku, (menos.get(l.sku) ?? 0) + l.pendiente);
+  }
+  return filas.map((f) => {
+    const m = menos.get(f.sku);
+    if (!m) return f;
+    const enCamino = Math.max(0, f.enCamino - m);
+    return { ...f, enCamino, enOcAbierta: enCamino > 0 };
+  });
+}
