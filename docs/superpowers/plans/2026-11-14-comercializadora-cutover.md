@@ -99,7 +99,7 @@ La guía de operación es `docs/migracion/comercializadora.md`, secciones 1–13
    - Lleva `set local app.origen = 'migracion'`, y las columnas generadas del portal (`com_minmax.minimo/maximo`) van como columnas normales del viejo.
    - `com_oc_auto` del portal no regresa: las OCs reales siguen en Zoho y el viejo las vuelve a ver con su `zoho-sync`.
 9. **`provider-notifications` no cambia en el cutover. Corrige al spec (línea 86, "leen del Supabase nuevo en el cutover"):** `netlify/functions/provider-notifications.mjs` no lee ninguna tabla `com_*`, solo `/rest/v1/rpc`. Tampoco cambian `aperturas-sync`, Apps Script ni n8n (sin `com_` en el código).
-10. **El aviso del sitio viejo enlaza a `https://the-coffee-costeo.vercel.app`.** Es el dominio público del portal documentado en `docs/conciliacion-brasil/13-TAREA-AUTH-SITE-URL.md`. Se confirma con el usuario antes de la Tarea 5 (pregunta abierta 1).
+10. **El aviso del sitio viejo enlaza a `https://portal.thecoffeemexico.com`.** Es el dominio público del portal documentado en `docs/conciliacion-brasil/13-TAREA-AUTH-SITE-URL.md`. Se confirma con el usuario antes de la Tarea 5 (pregunta abierta 1).
 11. **Quién hace qué en producción:**
     - **Agente:** lee los dos lados (`conLegado`, `conPortalLectura`) y prepara archivos.
     - **Agente con OK:** escribe en el portal (copia, migración, SQL del runbook con `sql-portal.mts`), hace merge, push y despliegues.
@@ -110,7 +110,7 @@ La guía de operación es `docs/migracion/comercializadora.md`, secciones 1–13
 
 **Respuestas del usuario (2026-11-14, al revisar el plan):**
 
-- **Dominio del portal en el aviso:** `https://the-coffee-costeo.vercel.app` (confirmado).
+- **Dominio del portal en el aviso:** `https://portal.thecoffeemexico.com` (lo cambió el usuario el 2026-11-19; antes `the-coffee-costeo.vercel.app`, que sigue respondiendo).
 - **Base de las Tareas 5 y 6 (repo viejo):** primero se mergean en `main` los PRs #17 y #18 (seguridad del login) y la rama `feat/proveedores-sin-stock`; la rama del cutover sale de ese `main`. Si al aplicar los cambios del HTML hay conflictos con esos merges, se resuelven en la Tarea 5 conservando lo de `main` y se vuelve a correr su prueba (`node:test`).
 - **Secretos `ZOHO_*` del proyecto viejo:** el usuario los tiene guardados en un lugar seguro; la reversa (Tarea 12) puede volver a ponerlos.
 - **Quedan para el día del cambio (Tareas 8 a 10):** fecha y ventana, quién corre cada paso de producción, un OK por día o uno para toda la rutina de la ventana, y los límites diarios de la API de Zoho con dos sistemas sincronizando.
@@ -1703,7 +1703,7 @@ Repo: `C:\Users\sebcm\OneDrive\Documents\thecoffee-comercializadora`. **No se de
 - Consumes: rutas del portal que ya existen (`/comercializadora`, `inicio`, `inventario`, `envios`, `traspasos`, `doh`, `indicadores`, `mapeo`, `plan-abastos`); `navTo`, `_pageAllowed` y `_sbItem` del HTML.
 - Produces (funciones globales del HTML, las usa la Tarea 6):
   - `_comRutaPortal(p): string | null`: la ruta del portal de una página migrada, o null;
-  - `_comUrlPortal(ruta): string`: `https://the-coffee-costeo.vercel.app` + ruta;
+  - `_comUrlPortal(ruta): string`: `https://portal.thecoffeemexico.com` + ruta;
   - `_comAbrirPortal(ruta): void`: `window.open(…, '_blank', 'noopener')`;
   - `_comAvisoMigrado(p): void`: pinta el aviso en `#page-<p>`.
 
@@ -1748,7 +1748,7 @@ function extraer(nombre){
   for(;j<html.length;j++){const ch=html[j];if(ch==='{')prof++;else if(ch==='}'&&--prof===0)break;}
   return html.slice(m.index,j+1);
 }
-const PORTAL='https://the-coffee-costeo.vercel.app';
+const PORTAL='https://portal.thecoffeemexico.com';
 function cargar(dom={}){
   const ayudantes=['_comRutaPortal','_comUrlPortal','_comAbrirPortal','_comAvisoMigrado'].map(extraer).join('\n');
   const abiertas=[];
@@ -1829,7 +1829,7 @@ function _comRutaPortal(p){
     'com-traspasos':'/comercializadora/traspasos','com-doh':'/comercializadora/doh','com-kpis':'/comercializadora/indicadores',
     'com-mapeo':'/comercializadora/mapeo','forecast':'/comercializadora/plan-abastos'}[p]||null;
 }
-function _comUrlPortal(ruta){return 'https://the-coffee-costeo.vercel.app'+(ruta||'/comercializadora');}
+function _comUrlPortal(ruta){return 'https://portal.thecoffeemexico.com'+(ruta||'/comercializadora');}
 function _comAbrirPortal(ruta){window.open(_comUrlPortal(ruta),'_blank','noopener');}
 function _comAvisoMigrado(p){
   const el=document.getElementById('page-'+p);if(!el)return;
@@ -2802,7 +2802,7 @@ Expected:
 Texto sugerido (lo manda el usuario; el agente no envía mensajes):
 
 ```text
-Desde hoy Comercializadora (Qué pedir, Órdenes, Inventario, Envíos, Traspasos, DOH, KPIs, Mapeo y el Forecast) vive en el portal The Coffee: https://the-coffee-costeo.vercel.app/comercializadora
+Desde hoy Comercializadora (Qué pedir, Órdenes, Inventario, Envíos, Traspasos, DOH, KPIs, Mapeo y el Forecast) vive en el portal The Coffee: https://portal.thecoffeemexico.com/comercializadora
 Entra con tu mismo usuario y contraseña. Pedidos y Crédito siguen en thecoffeemexico.com.
 Si tienes abierta una pestaña de thecoffeemexico.com, recárgala (Ctrl+F5) antes de seguir.
 ```

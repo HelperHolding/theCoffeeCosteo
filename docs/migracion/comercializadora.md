@@ -140,7 +140,7 @@ El cron sigue inactivo: `select jobname, active from cron.job;` debe mostrar los
   - reglas: pedidos con apertura; `pagado`/`empacado` → `por_enviar`, `enviado`/`entregado`/`terminado` → `enviado`, `cancelado` → `cancelado`. Inserta solo folios sin filas y de los últimos 45 días. Solo avanza, nunca regresa (respeta "Marcar enviado"). `reabierto` y `ambiguo` se reportan y no se tocan;
   - job `com-ov-pedidos` (`10,40 * * * *`), activo desde el cutover. Cada corrida deja una fila en `com_sync_log` (`proceso = 'com-ov-pedidos'`) con lo que hizo. `com_ov_plan(filas)` dice qué haría sin escribir.
 - **Paridad diaria:**
-  - `npx.cmd tsx scripts/migracion-legado/paridad-comercializadora.ts --guardar`, después de las 13:05 UTC. Lee los dos lados en solo lectura y compara el mín/máx, la OC del cron por proveedor y SKU, y las OVs (lo que `com_ov_plan` haría sobre las filas del viejo);
+  - `npx.cmd tsx scripts/migracion-legado/paridad-comercializadora.ts --guardar`, después de las 14:00 UTC (las OCs automáticas son lunes y jueves). Lee los dos lados en solo lectura y compara el mín/máx, la OC del cron por proveedor y SKU, y las OVs (lo que `com_ov_plan` haría sobre las filas del viejo);
   - "no comparable" = entradas distintas (copiar editables). Las diferencias aceptadas van en `docs/migracion/paridad/explicadas.json`;
   - se avanza al cutover con 3 días seguidos verdes (`docs/migracion/paridad/<fecha>.json`).
 - **Sombra:** los crons del portal corren con `auto.modo = 'simulacion'` y sin `COM_EFECTOS_EXTERNOS`. Durante la ventana solo se copia `--solo-editables`, después de la paridad.
