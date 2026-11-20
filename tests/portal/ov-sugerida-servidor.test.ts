@@ -284,3 +284,58 @@ describe('revisión final: una semana ya calculada no se recalcula sin forzar', 
     expect(f.guardadas.map((g) => g.company_id)).toEqual([519, 460]);
   });
 });
+
+describe('cada 14 días (pedido del usuario 2026-11-20)', () => {
+  // Cliente falso que registra los filtros de cada consulta y responde según la tabla.
+  function dbConsultas(respuestas: Record<string, unknown>) {
+    const filtros: string[][] = [];
+    const db = {
+      from: (tabla: string) => {
+        const f: string[] = [tabla];
+        filtros.push(f);
+        const q: Record<string, unknown> = {};
+        for (const m of ['select', 'eq', 'gt', 'lt', 'lte', 'order', 'limit'])
+          q[m] = (...a: unknown[]) => {
+            f.push(`${m}:${a.map((x) => (typeof x === 'object' ? JSON.stringify(x) : String(x))).join('=')}`);
+            return q;
+          };
+        q.maybeSingle = async () => respuestas[tabla] ?? { data: null, error: null };
+        q.then = (r: (x: unknown) => unknown) =>
+          Promise.resolve(respuestas[tabla] ?? { data: [], error: null }).then(r);
+        return q;
+      },
+    };
+    return { db, filtros };
+  }
+
+  it('yaCalculada: hay corrida ok de la tienda en los últimos 14 días (semana > lunes − 14)', async () => {
+    const { db, filtros } = dbConsultas({ com_ovs_corridas: { data: [{ id: 'x' }], error: null } });
+    expect(await depsReales(db as never).yaCalculada(519, '2026-11-23')).toBe(true);
+    expect(filtros[0]).toEqual(
+      expect.arrayContaining([
+        'eq:company_id=519',
+        'eq:estado=ok',
+        'gt:semana=2026-11-09',
+        'lte:semana=2026-11-23',
+      ]),
+    );
+  });
+
+  it('yaCalculada: sin corridas en ese rango da false', async () => {
+    const { db } = dbConsultas({ com_ovs_corridas: { data: [], error: null } });
+    expect(await depsReales(db as never).yaCalculada(519, '2026-11-30')).toBe(false);
+  });
+
+  it('anterior: la corrida ok más reciente antes de este lunes, no la de hace 7 días', async () => {
+    const { db, filtros } = dbConsultas({
+      com_ovs_corridas: { data: { id: 'c1', semana: '2026-11-16' }, error: null },
+      com_ovs_lineas: { data: [{ sku: 'A', sugerido: 2, arrastre: 0.1 }], error: null },
+    });
+    const a = await depsReales(db as never).anterior(519, '2026-11-30');
+    expect(a).toEqual({ semana: '2026-11-16', lineas: [{ sku: 'A', sugerido: 2, arrastre: 0.1 }] });
+    expect(filtros[0]).toEqual(
+      expect.arrayContaining(['eq:company_id=519', 'eq:estado=ok', 'lt:semana=2026-11-30', 'limit:1']),
+    );
+    expect(filtros[0].some((x) => x.startsWith('order:semana'))).toBe(true);
+  });
+});

@@ -154,34 +154,22 @@ describe('pedidos de resurtido (§4.1)', () => {
   });
 });
 
-describe('cadencia (§4.2)', () => {
+describe('cadencia (pedido del usuario 2026-11-20: fija en 14 días)', () => {
   const HOY = '2026-11-16';
-  it('mediana de días entre pedidos de los últimos 90 días', () => {
-    expect(cadencia([pt('2026-10-05'), pt('2026-10-15'), pt('2026-10-29'), pt('2026-11-09')], HOY)).toEqual({
-      dias: 11,
-      porDefecto: false,
-      diasConPedido: 4,
-    });
-  });
-  it('acotada a [7, 30]', () => {
-    expect(cadencia([pt('2026-11-01'), pt('2026-11-04'), pt('2026-11-07')], HOY).dias).toBe(7);
-    expect(cadencia([pt('2026-08-20'), pt('2026-10-01')], HOY).dias).toBe(30);
-  });
-  it('dos pedidos el mismo día cuentan como uno', () => {
-    expect(cadencia([pt('2026-11-01', {}, 'a'), pt('2026-11-01', {}, 'b'), pt('2026-11-15')], HOY)).toEqual({
+  it('siempre 14 días, aunque la tienda pida más seguido o más espaciado', () => {
+    expect(cadencia([pt('2026-11-01'), pt('2026-11-04'), pt('2026-11-07')], HOY)).toEqual({
       dias: 14,
       porDefecto: false,
-      diasConPedido: 2,
+      diasConPedido: 3,
     });
+    expect(cadencia([pt('2026-08-20'), pt('2026-10-01')], HOY).dias).toBe(14);
   });
-  it('con menos de 2 días con pedido en 90 días: 14 por omisión', () => {
-    expect(cadencia([pt('2026-11-01')], HOY)).toEqual({ dias: 14, porDefecto: true, diasConPedido: 1 });
-    expect(cadencia([pt('2026-08-01'), pt('2026-11-01')], HOY)).toEqual({
-      dias: 14,
-      porDefecto: true,
-      diasConPedido: 1,
-    });
-    expect(cadencia([], HOY)).toEqual({ dias: 14, porDefecto: true, diasConPedido: 0 });
+  it('cuenta los días con pedido de los últimos 90 días (dos el mismo día son uno)', () => {
+    expect(
+      cadencia([pt('2026-11-01', {}, 'a'), pt('2026-11-01', {}, 'b'), pt('2026-11-15')], HOY).diasConPedido,
+    ).toBe(2);
+    expect(cadencia([pt('2026-08-01'), pt('2026-11-01')], HOY).diasConPedido).toBe(1);
+    expect(cadencia([], HOY)).toEqual({ dias: 14, porDefecto: false, diasConPedido: 0 });
   });
   it('último pedido y compras por ventana', () => {
     const ps = [pt('2026-10-05', { A: 1 }), pt('2026-11-09', { A: 2, B: 1 }), pt('2026-11-20', { A: 9 })];

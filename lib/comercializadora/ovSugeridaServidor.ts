@@ -15,6 +15,7 @@ import { consumoVentana, type ConsumoTienda } from './ovConsumo';
 import { correoOvs, type TiendaCorreo } from './ovCorreo';
 import {
   CORREOS_OVS,
+  CADENCIA_DIAS,
   DIAS_CONSUMO,
   DIAS_HISTORIA,
   cadencia,
@@ -75,9 +76,9 @@ export interface DepsOvs {
   /** Pedidos vigentes de una apertura con fecha_pedido ≥ desde. */
   pedidos: (aperturaId: string, desde: string) => Promise<PedidoPlan[]>;
   consumo: (companyId: number, desde: string, hasta: string) => Promise<ConsumoTienda>;
-  /** La corrida 'ok' de la semana anterior (semana − 7) de la tienda, o null. */
+  /** La corrida 'ok' más reciente de la tienda antes de `semana`, o null. */
   anterior: (companyId: number, semana: string) => Promise<CorridaAnterior | null>;
-  /** ¿La tienda ya tiene una corrida 'ok' de esta semana? (revisión final: no se recalcula sin forzar). */
+  /** ¿La tienda ya tiene una corrida 'ok' en los últimos CADENCIA_DIAS? (no se recalcula sin forzar). */
   yaCalculada: (companyId: number, semana: string) => Promise<boolean>;
   guardar: (c: CorridaGuardar) => Promise<void>;
   bitacora: (f: FilaBitacora) => Promise<void>;
@@ -367,35 +368,39 @@ export function depsReales(db: SupabaseClient): DepsOvs {
         deps: { leer: leerDias, rappi: (c) => rappiServicio(db, c) },
       });
     },
+    // Cada CADENCIA_DIAS: una corrida ok de los últimos 14 días (lunes − 14 < semana ≤ lunes) cubre este periodo.
     yaCalculada: async (companyId, semana) => {
       const c = await com(db)
         .from('com_ovs_corridas')
         .select('id')
         .eq('company_id', companyId)
-        .eq('semana', semana)
         .eq('estado', 'ok')
-        .maybeSingle();
-      if (c.error) throw new Error('No se pudo leer la corrida de esta semana.');
-      return !!c.data;
+        .gt('semana', masDias(semana, -CADENCIA_DIAS))
+        .lte('semana', semana)
+        .limit(1);
+      if (c.error) throw new Error('No se pudo leer la corrida de este periodo.');
+      return (c.data ?? []).length > 0;
     },
+    // La corrida ok más reciente antes de este lunes (con corridas cada 14 días ya no es la de hace 7).
     anterior: async (companyId, semana) => {
-      const previa = masDias(semana, -7);
       const c = await com(db)
         .from('com_ovs_corridas')
-        .select('id')
+        .select('id,semana')
         .eq('company_id', companyId)
-        .eq('semana', previa)
         .eq('estado', 'ok')
+        .lt('semana', semana)
+        .order('semana', { ascending: false })
+        .limit(1)
         .maybeSingle();
-      if (c.error) throw new Error('No se pudo leer la corrida de la semana anterior.');
+      if (c.error) throw new Error('No se pudo leer la corrida anterior.');
       if (!c.data) return null;
       const l = await com(db)
         .from('com_ovs_lineas')
         .select('sku,sugerido,arrastre')
         .eq('corrida_id', c.data.id);
-      if (l.error) throw new Error('No se pudieron leer las líneas de la semana anterior.');
+      if (l.error) throw new Error('No se pudieron leer las líneas de la corrida anterior.');
       return {
-        semana: previa,
+        semana: String(c.data.semana),
         lineas: (l.data ?? []).map((x: { sku: string; sugerido: unknown; arrastre: unknown }) => ({
           sku: x.sku,
           sugerido: Number(x.sugerido),

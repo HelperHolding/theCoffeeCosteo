@@ -3,7 +3,7 @@ import { pesos } from './formato';
 import type { LineaOv, Medicion } from './ovSugerida';
 
 /**
- * Correo semanal del piloto de OV sugerida (spec §7). Todo texto que viene de datos (nombres, motivos) pasa por esc.
+ * Correo quincenal del piloto de OV sugerida (spec §7). Todo texto que viene de datos (nombres, motivos) pasa por esc.
  * Sin datos de clientes del POS: solo cantidades y montos por SKU.
  */
 export interface TiendaCorreo {
@@ -41,7 +41,7 @@ function tablaSugerido(lineas: LineaOv[]): string {
   const filas = lineas
     .filter((l) => l.sugerido > 0)
     .sort((x, y) => (y.monto ?? 0) - (x.monto ?? 0) || x.sku.localeCompare(y.sku));
-  if (!filas.length) return '<p>Esta semana no hay nada que sugerir.</p>';
+  if (!filas.length) return '<p>En estos 14 días no hay nada que sugerir.</p>';
   const total = filas.reduce((s, l) => s + (l.monto ?? 0), 0);
   const sinCosto = filas.filter((l) => l.monto == null).length;
   const cuerpo = filas
@@ -63,8 +63,8 @@ function tablaSugerido(lineas: LineaOv[]): string {
 
 function tablaMedicion(m: Medicion | null): string {
   if (!m)
-    return '<p>Primera semana del piloto para esta tienda: todavía no hay sugerencia anterior con qué comparar.</p>';
-  const resumen = `<p>La semana pasada (${fechaLarga(m.desde)}) sugerimos ${esc(pesos(m.montoSugerido))}; desde entonces pidió ${esc(
+    return '<p>Primera corrida del piloto para esta tienda: todavía no hay sugerencia anterior con qué comparar.</p>';
+  const resumen = `<p>En la corrida anterior (${fechaLarga(m.desde)}) sugerimos ${esc(pesos(m.montoSugerido))}; desde entonces pidió ${esc(
     pesos(m.montoPedido),
   )}.</p>`;
   if (!m.filas.length) return resumen;
