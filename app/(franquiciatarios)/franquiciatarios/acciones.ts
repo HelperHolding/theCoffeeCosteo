@@ -415,3 +415,26 @@ export async function configurarCaja(
     c.db.rpc('franq_caja_configurar', { p_company: companyId, p_fondo: fondo, p_tolerancia: tolerancia }),
   );
 }
+
+/** Gasto fijo del mes (renta, nómina…): corrige o completa lo que vino de Zoho. Solo gerencia. */
+export async function guardarGastoFijo(datos: {
+  companyId: number;
+  mes: string;
+  concepto: string;
+  monto: number;
+  nota?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario capturan los gastos fijos.' };
+  if (!/^\d{4}-\d{2}$/.test(datos.mes) || !Number.isFinite(datos.monto)) return { error: 'Datos inválidos.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto_fijo', {
+      p_company: datos.companyId,
+      p_mes: `${datos.mes}-01`,
+      p_concepto: String(datos.concepto ?? ''),
+      p_monto: datos.monto,
+      p_nota: datos.nota ?? null,
+    }),
+  );
+}

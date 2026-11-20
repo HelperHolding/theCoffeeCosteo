@@ -457,3 +457,13 @@ export async function configurarCaja(_c: number, fondo: number, tolerancia: numb
   avisar();
   return { ok: true };
 }
+
+/** Gasto fijo (franq_gasto_fijo): en el arnés solo valida; el P&L sintético no cambia. */
+export async function guardarGastoFijo(d: { concepto: string; monto: number }): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario capturan los gastos fijos.' };
+  if (!(d.monto >= 0)) return { error: 'Escribe el monto (de 0 en adelante).' };
+  avisar();
+  return { ok: true };
+}

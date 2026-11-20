@@ -1,7 +1,7 @@
 # Plan: rutina operativa del gerente + conexión con Comercializadora y P&L (piloto Essentia)
 
 Fuente: «Checklist y Rutina Operativa de Turno v1.0», de Moisés (Diseño Operativo), noviembre 2026. Va dirigido a
-Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1 (mig. 79), F3 (mig. 80/82) y F2 (mig. 83) en producción; F4 en PR (mig. 84).**
+Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1–F4 en producción (mig. 79–84); F5 P&L en PR (mig. 88).**
 
 Leyenda: **[H]** hecho verificado (repo o producción, en solo lectura) · **[P]** propuesta · **[D]** decisión pendiente
 de Carlos.
@@ -162,8 +162,7 @@ también en la base). Los baristas sí capturan los conteos del checklist (F2), 
 3. ~~Insumos críticos~~: lista **sugerida por las ventas** (decisión de Carlos), que el gerente afina después.
 4. ~~Montos de pedidos~~ (gerente y franquiciatario sí; barista no ve pedidos).
 5. ~~Alta de Essentia en la OV sugerida~~ (hecha 2026-11-20 con OK de Carlos).
-6. **P&L:** lo ven **gerente y franquiciatario** (y el admin); el barista no. Pendiente: ¿de dónde salen renta y
-   nómina: captura manual o Zoho?
+6. ~~P&L~~: lo ven gerente y franquiciatario (y admin); fijos de **Zoho** («Gastos Sucursales»), corregibles por la gerencia.
 7. **Hora de turnos:** ¿a qué hora es el cambio mañana/tarde en Essentia? Define cuándo toca «medio turno».
 
 Prompt de ejecución de la F1: `04-PROMPT-F1-RUTINA-V2.md`.

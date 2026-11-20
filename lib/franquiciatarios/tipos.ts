@@ -226,7 +226,25 @@ export interface EstadoArqueo {
   registrado_en: string;
 }
 
+/** Gasto fijo mensual (migración 88): de Zoho o capturado por la gerencia; el último por concepto y mes manda. */
+export interface FranqGastoFijo {
+  id: number;
+  company_id: number;
+  mes: string;
+  concepto: string;
+  monto: number;
+  nota: string | null;
+  origen: 'manual' | 'zoho';
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+}
+
 export interface FuncionesFranq {
+  franq_gasto_fijo: {
+    Args: { p_company: number; p_mes: string; p_concepto: string; p_monto: number; p_nota: string | null };
+    Returns: number;
+  };
   franq_arquear: {
     Args: {
       p_company: number;
