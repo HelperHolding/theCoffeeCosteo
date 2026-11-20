@@ -1,44 +1,90 @@
 'use client';
 // Bloques 1 a 3 del tablero BI: números clave, contra meta y P.E. y mezcla de venta.
-import { Banknote, Layers, Package, Receipt, Ticket } from 'lucide-react';
-import { Barra, Insignia, Kpi, Tarjeta } from '@/components/portal/piezas';
+import { Barra, Insignia, Tarjeta } from '@/components/portal/piezas';
 import { cn } from 'cn';
 import { AZUL } from '@/components/sucursales/colores';
 import { BarraApilada } from '@/components/sucursales/graficas';
-import { dinero, numero, porcentaje } from '@/components/sucursales/formato';
+import { dinero, fechaCorta, numero, porcentaje } from '@/components/sucursales/formato';
 import { Cifra } from '@/components/sucursales/graficas-mexico';
-import { alcanza, type contraMeta, type numerosClave } from '@/lib/bi/bloques';
+import { cambio } from '@/lib/bi/comparacion';
+import { alcanza, type contraMeta, type EstadoComparacion, type numerosClave } from '@/lib/bi/bloques';
 import { CAFE, colorDe, enOrden, GRUPOS, SIN_COLOR } from './colores-bi';
 
 const decimales = new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+type Clave = 'ventaCent' | 'ticketPromedioCent' | 'tickets' | 'upt' | 'unidades';
+
+function LineaComparacion({
+  actual,
+  clave,
+  formato,
+  c,
+}: {
+  actual: number | null;
+  clave: Clave;
+  formato: (x: number) => string;
+  c: EstadoComparacion;
+}) {
+  if (c.estado === 'cargando')
+    return <span aria-hidden="true" className="block h-4 w-32 animate-pulse rounded bg-surface-2" />;
+  if (c.estado === 'semanas') return <p className="text-xs text-muted-foreground">Sin comparación con filtro de semanas</p>;
+  if (c.estado === 'faltan')
+    return (
+      <p className="text-xs text-muted-foreground">
+        Sin comparación: faltan días en {fechaCorta(c.periodo.desde)} – {fechaCorta(c.periodo.hasta)}
+      </p>
+    );
+  if (c.estado === 'error') return <p className="text-xs text-muted-foreground">Sin comparación</p>;
+  const anterior = c.anterior[clave];
+  const d = cambio(actual, anterior);
+  if (!d || anterior === null) return <p className="text-xs text-muted-foreground">Sin comparación</p>;
+  const signo = d.dir === 'sube' ? '▲' : d.dir === 'baja' ? '▼' : '=';
+  const color = d.dir === 'sube' ? 'text-ok' : d.dir === 'baja' ? 'text-bad' : 'text-muted-foreground';
+  return (
+    <div className="space-y-0.5 text-xs">
+      <p>
+        <span className={`font-semibold ${color}`}>
+          {signo} {porcentaje(d.dir === 'igual' ? 0 : Math.abs(d.pct))}
+        </span>{' '}
+        <span className="text-muted-foreground">vs {formato(anterior)}</span>
+      </p>
+      <p className="text-muted-foreground">
+        {fechaCorta(c.periodo.desde)} – {fechaCorta(c.periodo.hasta)}
+      </p>
+    </div>
+  );
+}
+
 /**
- * Bloque 1. Los cocientes sin base (0 tickets) llegan como null y se ven «—». Las cifras cuentan hasta el valor nuevo
- * al cambiar un filtro (Cifra: el lector de pantalla oye solo el valor final; con movimiento reducido no cuentan).
+ * Bloque 1, estilo Metabase: título chico, número grande y su cambio contra el periodo anterior (mismas fórmulas:
+ * el anterior también pasa por numerosClave). Los cocientes sin base llegan null y se ven «—».
  */
-export function NumerosClave({ n }: { n: ReturnType<typeof numerosClave> }) {
-  const animada = (v: number | null, formato: (x: number) => string) =>
-    v === null ? '—' : <Cifra valor={v} formato={formato} />;
+export function NumerosClave({ n, comparacion }: { n: ReturnType<typeof numerosClave>; comparacion: EstadoComparacion }) {
+  const pesos = (x: number) => dinero(Math.round(x), 'MXN', false);
+  const conCentavos = (x: number) => dinero(Math.round(x));
+  const entero = (x: number) => numero(Math.round(x));
+  const tarjetas: { etiqueta: string; clave: Clave; formato: (x: number) => string; nota?: string }[] = [
+    { etiqueta: 'Ventas Netas', clave: 'ventaCent', formato: pesos, nota: `Cobrado: ${dinero(n.cobradoCent)}` },
+    { etiqueta: 'Ticket Promedio', clave: 'ticketPromedioCent', formato: conCentavos },
+    { etiqueta: '# de Tickets', clave: 'tickets', formato: entero },
+    { etiqueta: 'Promedio UPT', clave: 'upt', formato: (x) => decimales.format(x) },
+    { etiqueta: 'Total Products', clave: 'unidades', formato: entero },
+  ];
   return (
     <section aria-label="Números clave" className="kpis-bi">
-      <Kpi
-        etiqueta="Ventas Netas"
-        valor={animada(n.ventaCent, (x) => dinero(Math.round(x), 'MXN', false))}
-        icono={Banknote}
-        nota={`Cobrado: ${dinero(n.cobradoCent)}`}
-      />
-      <Kpi
-        etiqueta="Ticket Promedio"
-        valor={animada(n.ticketPromedioCent, (x) => dinero(Math.round(x)))}
-        icono={Receipt}
-      />
-      <Kpi etiqueta="# de Tickets" valor={animada(n.tickets, (x) => numero(Math.round(x)))} icono={Ticket} />
-      <Kpi etiqueta="Promedio UPT" valor={animada(n.upt, (x) => decimales.format(x))} icono={Layers} />
-      <Kpi
-        etiqueta="Total Products"
-        valor={animada(n.unidades, (x) => numero(Math.round(x)))}
-        icono={Package}
-      />
+      {tarjetas.map((t) => {
+        const v = n[t.clave];
+        return (
+          <div key={t.clave} className="min-w-0 space-y-2 rounded-2xl border border-line bg-surface p-4 shadow-card">
+            <h2 className="text-sm font-semibold text-ink-2">{t.etiqueta}</h2>
+            <p className="font-display text-[clamp(1.5rem,2.2vw,2.25rem)] leading-none font-black tabular">
+              {v === null ? '—' : <Cifra valor={v} formato={t.formato} />}
+            </p>
+            <LineaComparacion actual={v} clave={t.clave} formato={t.formato} c={comparacion} />
+            {t.nota && <p className="text-[11px] text-muted-foreground">{t.nota}</p>}
+          </div>
+        );
+      })}
     </section>
   );
 }

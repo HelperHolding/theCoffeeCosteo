@@ -51,13 +51,23 @@ const tablero = {
     fuentes: [],
   },
 };
+const COMPARACION_OK = {
+  periodo: { desde: '2026-10-26', hasta: '2026-10-29' },
+  horaCorte: null,
+  kpis: { venta_cent: 25000, venta_bruta_cent: 26000, tickets: 5, lineas: 6, unidades: 7 },
+  cargas: { esperados: 4, con_carga: 4, incompletos: 0 },
+};
+const comparacion = { valor: COMPARACION_OK as unknown };
 beforeEach(() => {
   nav.qs = 'cafe=si';
+  comparacion.valor = { ...COMPARACION_OK };
   global.fetch = vi.fn(
     async (url: string) =>
       new Response(
         JSON.stringify(
-          String(url).includes('tendencias')
+          String(url).includes('/api/bi/kpis')
+            ? comparacion.valor
+            : String(url).includes('tendencias')
             ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
             : tablero,
         ),
@@ -282,5 +292,34 @@ describe('<TableroMexico> con periodo rechazado (400)', () => {
     await waitFor(() => expect(screen.getByText(/Revisa el filtro Rango de Fechas/)).toBeTruthy());
     expect(screen.getByText(/El periodo no es válido/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull();
+  });
+});
+
+describe('<TableroMexico> comparación de KPI', () => {
+  it('pide /api/bi/kpis con los mismos filtros y pinta ▲/▼ contra el periodo anterior', async () => {
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByText(/▲ 20\.0/)).toBeTruthy()); // venta 300.00 vs 250.00
+    expect((global.fetch as any).mock.calls.map((c: unknown[]) => String(c[0]))).toContain('/api/bi/kpis?cafe=si');
+    expect(screen.getByText(/▼ 20\.0/)).toBeTruthy(); // tickets 4 vs 5
+    expect(screen.getAllByText(/lun 26 de oct.*jue 29 de oct/).length).toBeGreaterThan(0);
+  });
+
+  it('días faltantes en el periodo anterior: «Sin comparación: faltan días»', async () => {
+    comparacion.valor = { ...COMPARACION_OK, cargas: { esperados: 4, con_carga: 3, incompletos: 0 } };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText(/Sin comparación: faltan días/).length).toBe(5));
+  });
+
+  it('periodo anterior sin venta: «Sin comparación», nunca infinito', async () => {
+    comparacion.valor = { ...COMPARACION_OK, kpis: { venta_cent: 0, venta_bruta_cent: 0, tickets: 0, lineas: 0, unidades: 0 } };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText('Sin comparación').length).toBe(5));
+    expect(screen.queryByText(/∞|Infinity|NaN/)).toBeNull();
+  });
+
+  it('con filtro de semanas lo dice', async () => {
+    comparacion.valor = { sinComparacion: 'semanas' };
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getAllByText('Sin comparación con filtro de semanas').length).toBe(5));
   });
 });

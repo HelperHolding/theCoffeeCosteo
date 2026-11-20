@@ -1,6 +1,6 @@
 // Funciones puras que convierten el resultado de las RPC en bloques del tablero.
 // Promedios y porcentajes siempre son cociente de sumas; nunca se promedian promedios.
-import type { RpcOpciones, RpcTablero, RpcTendencias, TiendaBi } from './tipos';
+import type { RespuestaKpis, RpcOpciones, RpcTablero, RpcTendencias, TiendaBi } from './tipos';
 import type { FiltrosUrl } from './url';
 
 export const cociente = (a: number, b: number): number | null => (b > 0 ? a / b : null);
@@ -10,12 +10,28 @@ const nombreDe = (tiendas: TiendaBi[], c: number) => tiendas.find((x) => x.compa
 const tipoDe = (tiendas: TiendaBi[], c: number) => tiendas.find((x) => x.company_id === c)?.tipo ?? 'Sin tipo';
 const ORDEN_TIPO = ['Sucursales Propias', 'Franquicia', 'Sin tipo'];
 
-export function numerosClave(t: RpcTablero) {
+export function numerosClave(t: Pick<RpcTablero, 'kpis'>) {
   const k = t.kpis;
   return {
     ventaCent: k.venta_cent, cobradoCent: k.venta_bruta_cent, tickets: k.tickets,
     ticketPromedioCent: cociente(k.venta_cent, k.tickets), upt: cociente(k.lineas, k.tickets), unidades: k.unidades,
   };
+}
+
+export type EstadoComparacion =
+  | { estado: 'cargando' }
+  | { estado: 'error' }
+  | { estado: 'semanas' }
+  | { estado: 'faltan'; periodo: { desde: string; hasta: string } }
+  | { estado: 'ok'; periodo: { desde: string; hasta: string }; anterior: ReturnType<typeof numerosClave> };
+
+/** Estado de la comparación de los KPI: nunca compara contra días faltantes ni incompletos (serían ceros falsos). */
+export function estadoComparacion(r: RespuestaKpis | null, error: boolean): EstadoComparacion {
+  if (!r) return error ? { estado: 'error' } : { estado: 'cargando' };
+  if ('sinComparacion' in r) return { estado: 'semanas' };
+  if (!r.kpis || !r.cargas) return { estado: 'error' };
+  if (r.cargas.con_carga < r.cargas.esperados || r.cargas.incompletos > 0) return { estado: 'faltan', periodo: r.periodo };
+  return { estado: 'ok', periodo: r.periodo, anterior: numerosClave({ kpis: r.kpis }) };
 }
 
 /**

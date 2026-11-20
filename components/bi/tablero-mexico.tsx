@@ -13,6 +13,8 @@ import {
   avisos,
   conShare,
   contraMeta,
+  type EstadoComparacion,
+  estadoComparacion,
   filtrosDeLinea,
   kpiTiendas,
   numerosClave,
@@ -22,7 +24,7 @@ import {
   tendenciaAnual,
   tendenciaSemanal,
 } from '@/lib/bi/bloques';
-import type { RespuestaTablero, RespuestaTendencias, RpcOpciones, RpcTablero } from '@/lib/bi/tipos';
+import type { RespuestaKpis, RespuestaTablero, RespuestaTendencias, RpcOpciones, RpcTablero } from '@/lib/bi/tipos';
 import { escribirUrl, leerUrl, type FiltrosUrl } from '@/lib/bi/url';
 import { ContraMeta, Mezcla, NumerosClave } from './bloques-resumen';
 import { KpiVentaTiendas, Promociones } from './bloques-tiendas';
@@ -49,6 +51,7 @@ export function TableroMexico() {
 
   const tablero = useLectura<RespuestaTablero>(`/api/bi/tablero?${qs}`);
   const tendencias = useLectura<RespuestaTendencias>(`/api/bi/tendencias?${qsSinFechas}`);
+  const comparacion = useLectura<RespuestaKpis>(`/api/bi/kpis?${qs}`);
 
   // Las opciones de los filtros sobreviven mientras se lee la siguiente combinación.
   const [opciones, setOpciones] = useState<RpcOpciones | null>(null);
@@ -80,9 +83,11 @@ export function TableroMexico() {
               respuesta={tablero.datos}
               tablero={tablero.datos.tablero}
               filtrosLinea={filtrosDeLinea(filtros)}
+              comparacion={estadoComparacion(comparacion.datos, !!comparacion.error)}
               alActualizar={() => {
                 void tablero.recargar();
                 void tendencias.recargar();
+                void comparacion.recargar();
               }}
             />
           ) : (
@@ -122,11 +127,13 @@ function Bloques({
   respuesta,
   tablero: t,
   filtrosLinea,
+  comparacion,
   alActualizar,
 }: {
   respuesta: RespuestaTablero;
   tablero: RpcTablero;
   filtrosLinea: string[];
+  comparacion: EstadoComparacion;
   alActualizar: () => void;
 }) {
   const tiendas = respuesta.opciones.tiendas;
@@ -178,7 +185,7 @@ function Bloques({
         )}
       </section>
 
-      <NumerosClave n={b.numeros} />
+      <NumerosClave n={b.numeros} comparacion={comparacion} />
       <ContraMeta datos={b.metas} filtrosLinea={filtrosLinea} />
       <Mezcla grupos={b.grupos} cafe={b.cafe} master={b.master} />
       <KpiVentaTiendas grupos={b.kpi} comparar={filtrosLinea.length === 0} />
