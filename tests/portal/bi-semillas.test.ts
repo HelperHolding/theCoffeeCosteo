@@ -145,6 +145,13 @@ describe('generarSemillas', () => {
   });
 });
 
+/**
+ * Sucursales dadas de alta después de escribir la migración 41 (lote 8, 2026-11-20). La 41 es una foto ya aplicada:
+ * se compara contra las sucursales configuradas de entonces, y las nuevas entran a bi_tiendas por el corte
+ * (asegurarTiendasBi), no por la semilla.
+ */
+const ALTAS_DESPUES_DE_LA_41 = [681, 690, 777, 795];
+
 describe('migración 41 contra la evidencia', () => {
   it('coincide con lo que genera el script desde docs/bi/zoho/ (sin desvíos a mano)', () => {
     const raiz = join(__dirname, '..', '..');
@@ -154,7 +161,7 @@ describe('migración 41 contra la evidencia', () => {
       tiendas: leer('docs/bi/zoho/tiendas-zoho.psv'),
       productos: leer('docs/bi/zoho/productos-zoho.psv'),
       pagos: JSON.parse(leer('docs/bi/zoho/pagos.json')),
-      configuradas: sucursalesConfiguradas,
+      configuradas: sucursalesConfiguradas.filter((c) => !ALTAS_DESPUES_DE_LA_41.includes(c.companyId)),
     });
     expect(lf(leer('supabase/migrations/20261105000041_bi_semillas.sql'))).toBe(lf(r.sql));
   });
