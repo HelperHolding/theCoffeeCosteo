@@ -3,7 +3,6 @@ import {
   conectividadDe,
   diasDeMetricas,
   esperaDia,
-  indisponibilidadDia,
   matrizSemana,
   planServicio,
   reclamosDe,
@@ -73,27 +72,7 @@ describe('servicio del lector de Rappi', () => {
     expect(() => diasDeMetricas('MX1', { ...metricas, display_mode: 'MONTHS' })).toThrow(/DAYS/);
   });
 
-  it('indisponibilidad, espera, conectividad, calor de 15 días y Top Restaurantes', () => {
-    expect(
-      indisponibilidadDia('2026-11-18', [
-        {
-          store_id: 1930384164,
-          early_morning: 0,
-          morning: 0,
-          noon: 1,
-          afternoon: 1,
-          night: 1,
-          total_unavailability: 30,
-        },
-      ]),
-    ).toEqual([
-      {
-        tienda: 'MX1930384164',
-        fecha: '2026-11-18',
-        sin_disp_minutos: 30,
-        sin_disp_franjas: { madrugada: 0, manana: 0, mediodia: 1, tarde: 1, noche: 1 },
-      },
-    ]);
+  it('espera, conectividad, calor de 15 días y Top Restaurantes', () => {
     expect(esperaDia('MX1', '2026-11-18', { rt_wait_time: { average: { value: 2.8 } } })).toEqual({
       tienda: 'MX1',
       fecha: '2026-11-18',
@@ -174,10 +153,11 @@ describe('servicio del lector de Rappi', () => {
       espera: [],
       top: false,
     });
+    // Rappi responde ceros para el día en curso: la corrida de cada hora lee los indicadores de AYER.
     expect(planServicio({ tipo: 'vivo', hoy, minuto: 7 })).toMatchObject({
-      dias: { desde: hoy, hasta: hoy },
-      espera: [hoy],
-      reclamos: { desde: hoy, hasta: hoy },
+      dias: { desde: '2026-11-19', hasta: '2026-11-19' },
+      espera: ['2026-11-19'],
+      reclamos: { desde: '2026-11-19', hasta: hoy },
       top: true,
     });
     expect(planServicio({ tipo: 'cierre', hoy, minuto: 7 })).toMatchObject({
@@ -199,5 +179,28 @@ describe('servicio del lector de Rappi', () => {
         minuto: 0,
       }),
     ).toMatchObject({ conectividad: false, espera: ['2026-08-10', '2026-08-11', '2026-08-12'] });
+    // Una reposición que llega a hoy pide indicadores solo hasta ayer; si es solo hoy, solo reclamos.
+    expect(
+      planServicio({
+        tipo: 'manual',
+        desde: '2026-11-18',
+        hasta: hoy,
+        servicio: true,
+        espera: true,
+        hoy,
+        minuto: 0,
+      }),
+    ).toMatchObject({
+      dias: { desde: '2026-11-18', hasta: '2026-11-19' },
+      espera: ['2026-11-18', '2026-11-19'],
+      reclamos: { desde: '2026-11-18', hasta: hoy },
+    });
+    expect(
+      planServicio({ tipo: 'manual', desde: hoy, hasta: hoy, servicio: true, hoy, minuto: 0 }),
+    ).toMatchObject({
+      dias: null,
+      espera: [],
+      reclamos: { desde: hoy, hasta: hoy },
+    });
   });
 });

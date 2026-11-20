@@ -342,6 +342,11 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      /** Migración 89: Nivel de servicio de Rappi de todas las sucursales del usuario (Tablero de México). */
+      sucursales_servicio_nacional: {
+        Args: { p_companias: number[]; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
       /** Migración 87: Nivel de servicio y Conectividad de Rappi de una sucursal. */
       sucursales_nivel_servicio: {
         Args: { p_company: number; p_desde: string; p_hasta: string };

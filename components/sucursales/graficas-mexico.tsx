@@ -1185,11 +1185,21 @@ export function CalendarioVenta({
 
 export interface EstadoMapa {
   clave: string;
+  /** Sucursales que cuentan en el canal elegido. */
   sucursales: number;
   venta: number;
   delta: number | null;
   nombres: string[];
+  /** Con el filtro Rappi: sucursales del estado sin tienda en Rappi (no suman). Si todas lo son, va rayado. */
+  sinCanal?: number;
+  nombresSinCanal?: string[];
 }
+
+/** Estado cuyas sucursales no tienen tienda en Rappi: rayado, distinto de «sin sucursales» y de «sin venta». */
+const SIN_CANAL_TEXTO = 'sin tienda en Rappi';
+const soloSinCanal = (e: EstadoMapa | undefined) => !!e && !e.sucursales && !!e.sinCanal;
+const RAYADO_CSS = 'repeating-linear-gradient(45deg, #c9c0b0 0 1.5px, #e9e4da 1.5px 5px)';
+const capitalizar = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Cambio contra la semana pasada en 5 pasos: rojo y verde (estado), gris al centro. */
 export const DIVERGENTE = [
@@ -1251,12 +1261,19 @@ export function MapaMexico({
   const [activo, setActivo] = useState<string | null>(null);
   const { color, leyenda } = pintura(estados, modo, momento.cuando);
   const de = (c: string) => estados.find((e) => e.clave === c);
+  // Rayado (patrón SVG) para los estados sin tienda en Rappi; el id sin caracteres raros para usarlo en CSS.
+  const rayado = `${id.replace(/[^a-zA-Z0-9_-]/g, '')}-sin-canal`;
+  const relleno = (e: EstadoMapa | undefined) => (soloSinCanal(e) ? `url(#${rayado})` : color(e).fondo);
+  const marcado = (e: EstadoMapa | undefined) => !!e?.sucursales || soloSinCanal(e);
+  const haySinCanal = estados.some((e) => e.sinCanal);
   const valor = (e: EstadoMapa) =>
-    modo === 'venta'
-      ? compacto(e.venta)
-      : e.delta === null
-        ? '—'
-        : `${e.delta > 0 ? '+' : ''}${Math.round(e.delta * 100)} %`;
+    soloSinCanal(e)
+      ? 'sin Rappi'
+      : modo === 'venta'
+        ? compacto(e.venta)
+        : e.delta === null
+          ? '—'
+          : `${e.delta > 0 ? '+' : ''}${Math.round(e.delta * 100)} %`;
   // Caja de la lupa en el mapa y su marco ampliado (esquina inferior izquierda, sobre el Pacífico).
   const cajas = ESTADOS_MX.filter((e) => LUPA.includes(e.clave)).map((e) => e.caja);
   const z = {
@@ -1280,10 +1297,13 @@ export function MapaMexico({
           onBlur: () => setActivo(null),
         }
       : {};
+  const sinCanalDe = (e: EstadoMapa) =>
+    e.sinCanal ? `${e.sinCanal} ${e.sinCanal === 1 ? 'sucursal' : 'sucursales'} ${SIN_CANAL_TEXTO}` : '';
   const etiquetaDe = (clave: string) => {
     const e = de(clave);
+    if (e && soloSinCanal(e)) return `${nombreEstado(clave)}: ${sinCanalDe(e)}`;
     if (!e?.sucursales) return `${nombreEstado(clave)}: sin sucursales en el tablero`;
-    return `${nombreEstado(clave)}: ${e.sucursales} ${e.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${dinero(e.venta, MXN, false)} ${momento.cuando}${e.delta === null ? '' : `, ${porcentaje(e.delta, 1)} contra ${momento.contra}`}`;
+    return `${nombreEstado(clave)}: ${e.sucursales} ${e.sucursales === 1 ? 'sucursal' : 'sucursales'}, ${dinero(e.venta, MXN, false)} ${momento.cuando}${e.delta === null ? '' : `, ${porcentaje(e.delta, 1)} contra ${momento.contra}`}${e.sinCanal ? `; ${sinCanalDe(e)}` : ''}`;
   };
   const trazoDe = (clave: string) => ESTADOS_MX.find((s) => s.clave === clave)!.d;
   return (
@@ -1299,16 +1319,26 @@ export function MapaMexico({
             <clipPath id={`${id}-lupa`}>
               <rect x={marco.x} y={marco.y} width={marco.w} height={marco.h} rx={10} />
             </clipPath>
+            <pattern
+              id={rayado}
+              width="5"
+              height="5"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width="5" height="5" fill={SIN_SUCURSALES.fondo} />
+              <line x1="0" y1="0" x2="0" y2="5" stroke="#c9c0b0" strokeWidth="1.5" />
+            </pattern>
           </defs>
           {ESTADOS_MX.map((s) => {
             const e = de(s.clave);
-            const con = !!e?.sucursales;
+            const con = marcado(e);
             return (
               <path
                 key={s.clave}
                 d={s.d}
                 className={cn('mx-estado outline-none', con && 'cursor-pointer')}
-                style={{ fill: color(e).fondo, '--d': onda(s.x) } as React.CSSProperties}
+                style={{ fill: relleno(e), '--d': onda(s.x) } as React.CSSProperties}
                 stroke="#ffffff"
                 strokeWidth={0.9}
                 strokeLinejoin="round"
@@ -1329,7 +1359,7 @@ export function MapaMexico({
               pointerEvents="none"
             />
           )}
-          {ESTADOS_MX.filter((s) => !LUPA.includes(s.clave) && de(s.clave)?.sucursales && s.radio >= 10).map(
+          {ESTADOS_MX.filter((s) => !LUPA.includes(s.clave) && marcado(de(s.clave)) && s.radio >= 10).map(
             (s) => {
               const e = de(s.clave)!;
               const c = color(e);
@@ -1400,12 +1430,12 @@ export function MapaMexico({
             <g transform={`translate(${marco.x - z.x0 * k} ${marco.y - z.y0 * k}) scale(${k})`}>
               {ESTADOS_MX.map((s) => {
                 const e = de(s.clave);
-                const con = !!e?.sucursales && LUPA.includes(s.clave);
+                const con = marcado(e) && LUPA.includes(s.clave);
                 return (
                   <path
                     key={s.clave}
                     d={s.d}
-                    style={{ fill: color(e).fondo, '--d': 14 } as React.CSSProperties}
+                    style={{ fill: relleno(e), '--d': 14 } as React.CSSProperties}
                     className={cn('mx-estado outline-none', con && 'cursor-pointer')}
                     stroke="#ffffff"
                     strokeWidth={1.2 / k}
@@ -1427,7 +1457,7 @@ export function MapaMexico({
                 />
               )}
             </g>
-            {ESTADOS_MX.filter((s) => LUPA.includes(s.clave) && de(s.clave)?.sucursales).map((s) => {
+            {ESTADOS_MX.filter((s) => LUPA.includes(s.clave) && marcado(de(s.clave))).map((s) => {
               const e = de(s.clave)!;
               const c = color(e);
               const [lx, ly] = enLupa(s.x, s.y);
@@ -1475,19 +1505,28 @@ export function MapaMexico({
             className="pointer-events-none absolute right-1 top-1 z-10 w-56 rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-lift"
           >
             <p className="font-semibold text-ink">{nombreEstado(info.clave)}</p>
-            <p className="mt-1 tabular text-ink-2">
-              {numero(info.sucursales)} {info.sucursales === 1 ? 'sucursal' : 'sucursales'} ·{' '}
-              {dinero(info.venta, MXN, false)} {momento.cuando}
-            </p>
-            {info.delta !== null && (
-              <p className="tabular text-muted-foreground">
-                {porcentaje(info.delta, 1)} contra {momento.contra}
+            {info.sucursales > 0 && (
+              <>
+                <p className="mt-1 tabular text-ink-2">
+                  {numero(info.sucursales)} {info.sucursales === 1 ? 'sucursal' : 'sucursales'} ·{' '}
+                  {dinero(info.venta, MXN, false)} {momento.cuando}
+                </p>
+                {info.delta !== null && (
+                  <p className="tabular text-muted-foreground">
+                    {porcentaje(info.delta, 1)} contra {momento.contra}
+                  </p>
+                )}
+                <p className="mt-1 text-muted-foreground">
+                  {info.nombres.slice(0, 6).join(', ')}
+                  {info.nombres.length > 6 ? ` y ${info.nombres.length - 6} más` : ''}
+                </p>
+              </>
+            )}
+            {!!info.sinCanal && (
+              <p className="mt-1 text-muted-foreground">
+                {capitalizar(sinCanalDe(info))}: {(info.nombresSinCanal ?? []).join(', ')}
               </p>
             )}
-            <p className="mt-1 text-muted-foreground">
-              {info.nombres.slice(0, 6).join(', ')}
-              {info.nombres.length > 6 ? ` y ${info.nombres.length - 6} más` : ''}
-            </p>
           </div>
         )}
       </div>
@@ -1510,6 +1549,16 @@ export function MapaMexico({
           />
           sin sucursales
         </li>
+        {haySinCanal && (
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="h-2.5 w-4 rounded-[3px] border border-line"
+              style={{ backgroundImage: RAYADO_CSS }}
+            />
+            {SIN_CANAL_TEXTO}
+          </li>
+        )}
       </ul>
     </div>
   );
@@ -1518,42 +1567,64 @@ export function MapaMexico({
 /** Los estados con sucursales, de más a menos venta, con el mismo color del mapa (también es su vista de tabla). */
 export function ListaEstados({ estados, modo }: { estados: EstadoMapa[]; modo: 'venta' | 'cambio' }) {
   const { color } = pintura(estados, modo);
-  const filas = estados
-    .filter((e) => e.sucursales)
-    .sort((a, b) => b.venta - a.venta || a.clave.localeCompare(b.clave));
+  // Los que cuentan en el canal, de más a menos venta; al final, los que solo tienen sucursales sin tienda en Rappi.
+  const filas = [
+    ...estados
+      .filter((e) => e.sucursales)
+      .sort((a, b) => b.venta - a.venta || a.clave.localeCompare(b.clave)),
+    ...estados.filter(soloSinCanal).sort((a, b) => a.clave.localeCompare(b.clave)),
+  ];
   const max = Math.max(1, ...filas.map((e) => e.venta));
   return (
     <ol className="divide-y divide-line">
-      {filas.map((e) => (
-        <li
-          key={e.clave}
-          className="grid grid-cols-[0.75rem_minmax(0,1fr)_auto_4.5rem] items-center gap-x-3 py-2 text-sm"
-        >
-          <span
-            aria-hidden="true"
-            className="size-3 rounded-[4px] border border-black/5"
-            style={{ backgroundColor: color(e).fondo }}
-          />
-          <span className="min-w-0">
+      {filas.map((e) =>
+        soloSinCanal(e) ? (
+          <li
+            key={e.clave}
+            className="grid grid-cols-[0.75rem_minmax(0,1fr)_auto] items-center gap-x-3 py-2 text-sm text-muted-foreground"
+          >
+            <span
+              aria-hidden="true"
+              className="size-3 rounded-[4px] border border-black/5"
+              style={{ backgroundImage: RAYADO_CSS }}
+            />
             <span className="block truncate font-medium">{nombreEstado(e.clave)}</span>
-            <span className="mt-1 block h-1 overflow-hidden rounded-full bg-surface-2">
-              <span
-                className="mx-barra block h-full rounded-full bg-ink/60"
-                style={{ width: `${(e.venta / max) * 100}%` }}
-              />
+            <span className="text-right text-[11px]">
+              {e.sinCanal} {e.sinCanal === 1 ? 'sucursal' : 'sucursales'} {SIN_CANAL_TEXTO}
             </span>
-          </span>
-          <span className="text-right">
-            <span className="block font-semibold tabular">{dinero(e.venta, MXN, false)}</span>
-            <span className="block text-[11px] text-muted-foreground tabular">
-              {e.sucursales} {e.sucursales === 1 ? 'sucursal' : 'sucursales'}
+          </li>
+        ) : (
+          <li
+            key={e.clave}
+            className="grid grid-cols-[0.75rem_minmax(0,1fr)_auto_4.5rem] items-center gap-x-3 py-2 text-sm"
+          >
+            <span
+              aria-hidden="true"
+              className="size-3 rounded-[4px] border border-black/5"
+              style={{ backgroundColor: color(e).fondo }}
+            />
+            <span className="min-w-0">
+              <span className="block truncate font-medium">{nombreEstado(e.clave)}</span>
+              <span className="mt-1 block h-1 overflow-hidden rounded-full bg-surface-2">
+                <span
+                  className="mx-barra block h-full rounded-full bg-ink/60"
+                  style={{ width: `${(e.venta / max) * 100}%` }}
+                />
+              </span>
             </span>
-          </span>
-          <span className="text-right">
-            <Cambio valor={e.delta} umbral={0.03} />
-          </span>
-        </li>
-      ))}
+            <span className="text-right">
+              <span className="block font-semibold tabular">{dinero(e.venta, MXN, false)}</span>
+              <span className="block text-[11px] text-muted-foreground tabular">
+                {e.sucursales} {e.sucursales === 1 ? 'sucursal' : 'sucursales'}
+                {e.sinCanal ? ` · ${e.sinCanal} sin Rappi` : ''}
+              </span>
+            </span>
+            <span className="text-right">
+              <Cambio valor={e.delta} umbral={0.03} />
+            </span>
+          </li>
+        ),
+      )}
     </ol>
   );
 }

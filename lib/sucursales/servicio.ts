@@ -25,7 +25,7 @@ export const TIPOS_RECHAZO: Record<TipoRechazo, string> = {
   sin_stock: 'Sin producto',
   demora: 'Demora en tienda',
 };
-const MOTIVO_TIPO: Record<string, TipoReclamo> = {
+export const MOTIVO_TIPO: Record<string, TipoReclamo> = {
   damaged_item: 'mal_estado',
   missing_item: 'faltante',
   wrong_item: 'incorrecto',
@@ -115,12 +115,13 @@ export interface Totales {
   /** Tienda-días con dato de Rappi. */
   dias: number;
   pedidos: number;
+  /** Pedidos finalizados como los cuenta el portal (`cocina_pedidos`; ver totalesDeSuma). */
   finalizados: number;
   rechazos: Record<TipoRechazo, number>;
   rechazosTotal: number;
   reclamos: Record<TipoReclamo, number>;
   reclamosTotal: number;
-  /** Reclamos / pedidos finalizados. */
+  /** Reclamos / pedidos finalizados (los del portal). */
   tasaReclamos: number | null;
   /** Rechazos / pedidos creados. */
   tasaRechazos: number | null;
@@ -173,6 +174,13 @@ export interface RespuestaServicio {
   /** El portal cuenta los días en hora del centro; en otra zona el corte del día no coincide con el local. */
   diasEnHoraCentro: boolean;
   leidoEn: string | null;
+  /** Último día que Rappi ya publicó (servicio-publicado.ts); null si no se pudo saber. */
+  publicadoHasta?: string | null;
+  /**
+   * Hasta dónde llegan los indicadores (el menor entre `hasta` y `publicadoHasta`); null si Rappi aún no publica
+   * ningún día del periodo. La conectividad sí llega hasta `hasta`.
+   */
+  indicadoresHasta?: string | null;
   canales: {
     canal: CanalServicio;
     id: string;
@@ -203,66 +211,129 @@ export interface RespuestaServicio {
 
 const cero = <K extends string>(claves: readonly K[]) =>
   Object.fromEntries(claves.map((k) => [k, 0])) as Record<K, number>;
-const CLAVES_RECHAZO = Object.keys(TIPOS_RECHAZO) as TipoRechazo[];
 const CLAVES_RECLAMO = Object.keys(TIPOS_RECLAMO) as TipoReclamo[];
 const div = (a: number, b: number) => (b > 0 ? a / b : null);
 
-/** Suma de tienda-días de Rappi (los cocientes se calculan sobre las sumas). */
-export function sumar(filas: FilaDiaRpc[]): Totales {
-  const rechazos = cero(CLAVES_RECHAZO);
-  const reclamos = cero(CLAVES_RECLAMO);
-  let pedidos = 0;
-  let finalizados = 0;
-  let cocinaPedidos = 0;
-  let cocinaDemorada = 0;
-  let sinDisp: number | null = null;
-  let dispSuma = 0;
-  let dispN = 0;
-  let esperaSuma = 0;
-  let esperaPeso = 0;
+/**
+ * Sumas crudas de tienda-días de Rappi: lo que la RPC nacional ya devuelve sumado por tienda y por día, y lo que
+ * `sumar` acumula de las filas de una sucursal. `totalesDeSuma` saca los cocientes de las sumas, igual en los dos.
+ */
+export interface SumaServicio {
+  dias: number;
+  pedidos: number;
+  rech_cbpi: number;
+  rech_cbpr: number;
+  rech_tienda_cerrada: number;
+  rech_sin_stock: number;
+  rech_demora: number;
+  finalizados: number;
+  recl_mal_estado: number;
+  recl_faltante: number;
+  recl_incorrecto: number;
+  cocina_pedidos: number;
+  cocina_demorada: number;
+  /** null si ningún día trajo el dato. */
+  sin_disp_minutos: number | null;
+  disp_suma: number;
+  disp_n: number;
+  espera_suma: number;
+  espera_peso: number;
+}
+
+const n = (x: number | string | null | undefined) => (x === null || x === undefined ? 0 : Number(x));
+
+export function acumular(filas: FilaDiaRpc[]): SumaServicio {
+  const s: SumaServicio = {
+    dias: filas.length,
+    pedidos: 0,
+    rech_cbpi: 0,
+    rech_cbpr: 0,
+    rech_tienda_cerrada: 0,
+    rech_sin_stock: 0,
+    rech_demora: 0,
+    finalizados: 0,
+    recl_mal_estado: 0,
+    recl_faltante: 0,
+    recl_incorrecto: 0,
+    cocina_pedidos: 0,
+    cocina_demorada: 0,
+    sin_disp_minutos: null,
+    disp_suma: 0,
+    disp_n: 0,
+    espera_suma: 0,
+    espera_peso: 0,
+  };
   for (const f of filas) {
-    pedidos += f.pedidos ?? 0;
-    finalizados += f.finalizados ?? 0;
-    rechazos.cbpi += f.rech_cbpi ?? 0;
-    rechazos.cbpr += f.rech_cbpr ?? 0;
-    rechazos.tienda_cerrada += f.rech_tienda_cerrada ?? 0;
-    rechazos.sin_stock += f.rech_sin_stock ?? 0;
-    rechazos.demora += f.rech_demora ?? 0;
-    reclamos.mal_estado += f.recl_mal_estado ?? 0;
-    reclamos.faltante += f.recl_faltante ?? 0;
-    reclamos.incorrecto += f.recl_incorrecto ?? 0;
-    cocinaPedidos += f.cocina_pedidos ?? 0;
-    cocinaDemorada += f.cocina_demorada ?? 0;
-    if (f.sin_disp_minutos !== null) sinDisp = (sinDisp ?? 0) + f.sin_disp_minutos;
+    for (const k of [
+      'pedidos',
+      'rech_cbpi',
+      'rech_cbpr',
+      'rech_tienda_cerrada',
+      'rech_sin_stock',
+      'rech_demora',
+      'finalizados',
+      'recl_mal_estado',
+      'recl_faltante',
+      'recl_incorrecto',
+      'cocina_pedidos',
+      'cocina_demorada',
+    ] as const)
+      s[k] += n(f[k]);
+    if (f.sin_disp_minutos !== null) s.sin_disp_minutos = (s.sin_disp_minutos ?? 0) + n(f.sin_disp_minutos);
     if (f.disponibilidad !== null) {
-      dispSuma += Number(f.disponibilidad);
-      dispN++;
+      s.disp_suma += n(f.disponibilidad);
+      s.disp_n++;
     }
-    if (f.espera_repartidor !== null && (f.finalizados ?? 0) > 0) {
-      esperaSuma += Number(f.espera_repartidor) * f.finalizados!;
-      esperaPeso += f.finalizados!;
+    if (f.espera_repartidor !== null && n(f.finalizados) > 0) {
+      s.espera_suma += n(f.espera_repartidor) * n(f.finalizados);
+      s.espera_peso += n(f.finalizados);
     }
   }
+  return s;
+}
+
+export function totalesDeSuma(x: SumaServicio): Totales {
+  const s = Object.fromEntries(
+    Object.entries(x).map(([k, v]) => [k, v === null ? null : Number(v)]),
+  ) as unknown as SumaServicio;
+  const rechazos: Record<TipoRechazo, number> = {
+    cbpi: s.rech_cbpi,
+    cbpr: s.rech_cbpr,
+    tienda_cerrada: s.rech_tienda_cerrada,
+    sin_stock: s.rech_sin_stock,
+    demora: s.rech_demora,
+  };
+  const reclamos: Record<TipoReclamo, number> = {
+    mal_estado: s.recl_mal_estado,
+    faltante: s.recl_faltante,
+    incorrecto: s.recl_incorrecto,
+  };
   const rechazosTotal = Object.values(rechazos).reduce((a, b) => a + b, 0);
   const reclamosTotal = Object.values(reclamos).reduce((a, b) => a + b, 0);
   return {
-    dias: filas.length,
-    pedidos,
-    finalizados,
+    dias: s.dias,
+    pedidos: s.pedidos,
+    // Finalizados como los cuenta el portal (summary/sales/indicators → error.total_orders): es cocina_pedidos
+    // (cooking_time_metrics.total_orders). La columna `finalizados` (error_metrics) es otro conteo y llega a pasar a
+    // los creados: Essentia normal, 21-oct a 19-nov, 298 contra 284 del portal; con 284, 14 reclamos = 4.93 %, igual.
+    finalizados: s.cocina_pedidos,
     rechazos,
     rechazosTotal,
     reclamos,
     reclamosTotal,
-    tasaReclamos: div(reclamosTotal, finalizados),
-    tasaRechazos: div(rechazosTotal, pedidos),
-    sinDispMinutos: sinDisp,
-    disponibilidad: dispN ? dispSuma / dispN : null,
-    cocinaPedidos,
-    cocinaDemorada,
-    tasaCocina: div(cocinaDemorada, cocinaPedidos),
-    espera: esperaPeso ? esperaSuma / esperaPeso : null,
+    tasaReclamos: div(reclamosTotal, s.cocina_pedidos),
+    tasaRechazos: div(rechazosTotal, s.pedidos),
+    sinDispMinutos: s.sin_disp_minutos,
+    disponibilidad: s.disp_n ? s.disp_suma / s.disp_n : null,
+    cocinaPedidos: s.cocina_pedidos,
+    cocinaDemorada: s.cocina_demorada,
+    tasaCocina: div(s.cocina_demorada, s.cocina_pedidos),
+    espera: s.espera_peso ? s.espera_suma / s.espera_peso : null,
   };
 }
+
+/** Suma de tienda-días de Rappi (los cocientes se calculan sobre las sumas). */
+export const sumar = (filas: FilaDiaRpc[]): Totales => totalesDeSuma(acumular(filas));
 
 const hhmm = (instante: string, zona: string) => {
   const s = enZona(new Date(instante), zona).segundo;

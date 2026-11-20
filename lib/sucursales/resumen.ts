@@ -142,6 +142,11 @@ export interface SucursalTablero {
   companyId: number;
   nombre: string;
   ciudad: string;
+  /**
+   * Tiene tienda en el portal de Rappi (`rappiPortal`). Sin ella, con el filtro Rappi no cuenta como «sin venta»: va
+   * aparte como «sin tienda en Rappi». Opcional por las respuestas guardadas antes de este campo.
+   */
+  rappi?: boolean;
   /** Sin renglón de hoy: el corte aún no la lee (o falló); no se cuenta como venta cero. */
   sinCorte: boolean;
   completa: boolean;
@@ -312,6 +317,7 @@ export function armarHoy(rpc: RpcHoy, sucursales: ConfigSucursal[]): TableroHoy 
       companyId: cfg.companyId,
       nombre: cfg.nombre,
       ciudad: cfg.ciudad,
+      rappi: !!cfg.rappiPortal,
       sinCorte: !hoy,
       completa: hoy?.completa ?? false,
       corteSegundo: hoy?.corte_segundo ?? null,
@@ -410,6 +416,7 @@ export function armarRango(
         companyId: cfg.companyId,
         nombre: cfg.nombre,
         ciudad: cfg.ciudad,
+        rappi: !!cfg.rappiPortal,
         sinCorte: false,
         completa: true,
         corteSegundo: null,
