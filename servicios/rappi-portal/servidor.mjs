@@ -1,13 +1,15 @@
 // Lector del portal de Rappi Partners para el cron de n8n (docs/rappi-portal/02). Contenedor junto a n8n.
-//   POST /sincronizar {tipo: vivo|cierre|repaso|manual, desde?, hasta?}  (header x-api-key)
-//   → el lote de public.rappi_importar; n8n lo manda tal cual a Supabase.
+//   POST /sincronizar {tipo: vivo|cierre|repaso|manual, desde?, hasta?, servicio?, espera?}  (header x-api-key)
+//   → el lote de public.rappi_importar; n8n lo manda a Supabase. Si trae `servicio` (Nivel de servicio y
+//   Conectividad, docs/rappi-portal/08), n8n lo guarda aparte con rappi_importar_servicio.
 //   GET /salud
 // SOLO LECTURA (pedido expreso de Carlo, 2026-10-29). El lector usa una cuenta real del portal, así que nunca debe
 // cambiar nada en Rappi (pedidos, menú, tienda, horarios, promociones, usuarios, datos bancarios). Dos candados:
 //   1. Navegador: toda petición que no sea GET/HEAD/OPTIONS se bloquea, salvo la autenticación (Auth0 en
-//      login.partners.rappi.com y el login del portal en rs-platform-security) y la consulta del historial (by-stores,
-//      un POST que solo busca). Ver SALIDAS.
-//   2. Código: pedirApi solo acepta las dos lecturas de LECTURAS (historial y detalle de un pedido).
+//      login.partners.rappi.com y el login del portal en rs-platform-security) y las CONSULTAS por POST (historial
+//      by-stores y las de Nivel de servicio y Conectividad: solo buscan). Ver SALIDAS.
+//   2. Código: pedirApi solo acepta las lecturas de LECTURAS. Los endpoints que abren o cierran tiendas
+//      (switch-stores, on-hold) existen en el portal y no están en ninguna de las dos listas.
 // Fuera del formulario de login, el lector no hace clic en nada. Sin datos personales en la respuesta.
 //
 // Sesión: storageState de Playwright en DATOS/sesion.json, reescrito tras cada corrida. Si Rappi la cierra, entra solo
@@ -29,6 +31,17 @@ import {
   pedidoDeListado,
   reintentable,
 } from './lote.mjs';
+import {
+  conectividadDe,
+  diasDeMetricas,
+  esperaDia,
+  indisponibilidadDia,
+  matrizSemana,
+  planServicio,
+  reclamosDe,
+  tiendaNum,
+  topDe,
+} from './servicio.mjs';
 
 const PORTAL = 'https://partners.rappi.com';
 const API = 'https://services.rappi.com/rests-partners-gateway/cauth';
@@ -39,6 +52,7 @@ const {
   RAPPI_TIENDAS = 'MX1930270777,MX1930301156',
   RAPPI_CLIENTE_VERSION = '4.6.7',
   RAPPI_CONCURRENCIA = '3',
+  RAPPI_MARCA = '575472',
   DATOS = '/datos',
   PUERTO = '3101',
   CHROMIUM,
@@ -63,6 +77,10 @@ const MAX_DETALLES = { vivo: 80, cierre: 400, repaso: 400, manual: 1000 };
 const CONCURRENCIA = Math.min(6, Math.max(1, Number(RAPPI_CONCURRENCIA) || 3));
 /** Tope de una reposición manual (días × tiendas), para que termine antes de los 10 min que espera n8n. */
 const MAX_CONSULTAS_MANUAL = 400;
+/** Nivel de servicio: por encima de ~45 días Rappi agrupa por mes; se pide en tramos de a lo más 31 días. */
+const MAX_DIAS_SERVICIO = 31;
+/** La corrida completa debe terminar antes de los 10 min que espera n8n: el servicio se corta a los 8. */
+const LIMITE_CORRIDA_MS = 8 * 60_000;
 
 /** El portal respondió 401/403, o no respondió tras los reintentos: la sesión ya no sirve (o no se puede usar). */
 class SesionCaducada extends Error {}
@@ -74,11 +92,28 @@ const SALIDAS = [
   // Solo autenticación (login y renovación del token): no toca datos de la tienda.
   /^https:\/\/services\.mxgrability\.rappi\.com\/api\/rs-platform-gateway\/rs-platform-security\//,
   /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/rests-stores-config\/orders\/by-stores\?country=MX$/,
+  // Consultas de Nivel de servicio y Conectividad (periodo + tiendas; visto el 2026-11-20, docs/rappi-portal/08).
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/v2\/summary\/metrics$/,
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/unavailability\/metrics$/,
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/summary\/sales\/indicators\?with_variation=false$/,
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/partners-indicators\/indicators\/defects$/,
+  /^https:\/\/services\.rappi\.com\/rests-partners-gateway\/cauth\/api\/rest-aliados-state-ms\/store-status-detail\/retrieve\?country=MX$/,
 ];
-/** Candado 2: las ÚNICAS llamadas al API de Rappi que hace el lector, ambas de lectura. */
+/** Candado 2: las ÚNICAS llamadas al API de Rappi que hace el lector, todas de lectura. */
 const LECTURAS = [
   { metodo: 'POST', ruta: /^\/rests-stores-config\/orders\/by-stores\?country=MX$/ },
   { metodo: 'GET', ruta: /^\/rests-stores-config\/orders\/\d+\?country=MX&language=es$/ },
+  // Nivel de servicio y Conectividad (docs/rappi-portal/08).
+  { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/v2\/summary\/metrics$/ },
+  { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/unavailability\/metrics$/ },
+  { metodo: 'POST', ruta: /^\/partners-indicators\/summary\/sales\/indicators\?with_variation=false$/ },
+  { metodo: 'POST', ruta: /^\/partners-indicators\/indicators\/defects$/ },
+  { metodo: 'POST', ruta: /^\/api\/rest-aliados-state-ms\/store-status-detail\/retrieve\?country=MX$/ },
+  {
+    metodo: 'GET',
+    ruta: /^\/partners-indicators\/indicators\/store\/availability-monitoring\/\d+\?country=MX$/,
+  },
+  { metodo: 'GET', ruta: /^\/api\/rests-score\/performance-system\/find\/brandId\/\d+\?country=MX$/ },
 ];
 
 const escribir = (ruta, datos) => {
@@ -313,7 +348,138 @@ async function renovarSesion(pagina) {
   return iniciarSesion(pagina);
 }
 
-async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
+/**
+ * Nivel de servicio y Conectividad según el plan de la corrida (planServicio). Nunca tumba la corrida: lo que falle se
+ * cuenta en `fallas` y se reporta en el mensaje; lo que sí se leyó se guarda. Se corta al llegar a LIMITE_CORRIDA_MS.
+ * `tiendaDePedido` y `tiendaDeNombre` salen del historial de esta corrida (los reclamos solo traen pedido y nombre).
+ */
+async function leerServicio(pagina, plan, { tiendas, inicio, tiendaDePedido, tiendaDeNombre }) {
+  const servicio = { momento: new Date().toISOString() };
+  const fallas = [];
+  const partes = [];
+  let cortado = false;
+  const consulta = async (metodo, ruta, cuerpo) => {
+    if (Date.now() - inicio > LIMITE_CORRIDA_MS) {
+      cortado = true;
+      return null;
+    }
+    let r;
+    for (let intento = 0; ; intento++) {
+      r = await pedirApi(pagina, metodo, ruta, cuerpo);
+      if (!reintentable(r.status) || intento === 2) break;
+      await esperar(2000 * (intento + 1));
+    }
+    if (r.status === 200 && r.json !== null) return r.json;
+    fallas.push(`${ruta.split('?')[0].split('/').slice(-2).join('/')} ${r.status}`);
+    return null;
+  };
+  const cuerpo = (desde, hasta, ids) => ({ country_code: 'MX', from: desde, to: hasta, store_ids: ids });
+
+  if (plan.conectividad) {
+    const grupos = [];
+    for (let i = 0; i < tiendas.length; i += 10) grupos.push(tiendas.slice(i, i + 10).map(tiendaNum));
+    const fotos = await enParalelo(grupos, CONCURRENCIA, (g) =>
+      consulta('POST', '/api/rest-aliados-state-ms/store-status-detail/retrieve?country=MX', g),
+    );
+    servicio.conectividad = fotos.flatMap((j) => (j ? conectividadDe(j) : []));
+    const apagadas = servicio.conectividad.filter((c) => c.estado !== 'ACTIVE').length;
+    partes.push(`conectividad de ${servicio.conectividad.length} tiendas (${apagadas} sin activar)`);
+  }
+
+  const dias = new Map();
+  const agregar = (filas) => {
+    for (const f of filas)
+      dias.set(`${f.tienda}|${f.fecha}`, { ...dias.get(`${f.tienda}|${f.fecha}`), ...f });
+  };
+  if (plan.dias) {
+    const { desde, hasta } = plan.dias;
+    const porTienda = await enParalelo(tiendas, CONCURRENCIA, async (t) => {
+      const j = await consulta(
+        'POST',
+        '/partners-indicators/indicators/v2/summary/metrics',
+        cuerpo(desde, hasta, [t]),
+      );
+      try {
+        return j ? diasDeMetricas(t, j) : [];
+      } catch (e) {
+        fallas.push(String(e.message).slice(0, 120));
+        return [];
+      }
+    });
+    agregar(porTienda.flat());
+    const indisp = await enParalelo(diasEntre(desde, hasta), CONCURRENCIA, async (d) => {
+      const j = await consulta(
+        'POST',
+        '/partners-indicators/indicators/unavailability/metrics',
+        cuerpo(d, d, tiendas),
+      );
+      return j ? indisponibilidadDia(d, j).filter((x) => tiendas.includes(x.tienda)) : [];
+    });
+    agregar(indisp.flat());
+  }
+  if (plan.espera.length) {
+    const pares = tiendas.flatMap((t) => plan.espera.map((d) => ({ t, d })));
+    const esperas = await enParalelo(pares, CONCURRENCIA, async ({ t, d }) => {
+      const j = await consulta(
+        'POST',
+        '/partners-indicators/summary/sales/indicators?with_variation=false',
+        cuerpo(d, d, [t]),
+      );
+      return j ? esperaDia(t, d, j) : null;
+    });
+    agregar(esperas.filter(Boolean));
+  }
+  if (dias.size) {
+    servicio.dias = [...dias.values()];
+    partes.push(`indicadores de ${servicio.dias.length} tienda-días`);
+  }
+
+  if (plan.reclamos) {
+    const ordenes = [];
+    for (let pagina_ = 0; pagina_ < 20; pagina_++) {
+      const j = await consulta('POST', '/partners-indicators/indicators/defects', {
+        ...cuerpo(plan.reclamos.desde, plan.reclamos.hasta, tiendas),
+        order_by: 'DATE',
+        order_id: '',
+        ordering: 'DESC',
+        page: pagina_,
+        size: 200,
+      });
+      if (!j) break;
+      ordenes.push(...(j.result?.orders ?? []));
+      if (pagina_ + 1 >= (j.result?.total_pages ?? 0)) break;
+    }
+    const { reclamos, sinTienda } = reclamosDe(ordenes, { tiendaDePedido, tiendaDeNombre });
+    servicio.reclamos = reclamos;
+    partes.push(`${reclamos.length} reclamos`);
+    if (sinTienda.length)
+      fallas.push(`${sinTienda.length} reclamos sin tienda (${sinTienda.slice(0, 5).join(', ')})`);
+  }
+
+  const hoy = fechaMX(0);
+  if (plan.semana) {
+    const matrices = await enParalelo(tiendas, CONCURRENCIA, async (t) => {
+      const j = await consulta(
+        'GET',
+        `/partners-indicators/indicators/store/availability-monitoring/${tiendaNum(t)}?country=MX`,
+      );
+      return j ? { tienda: t, fecha: hoy, matriz: matrizSemana(j) } : null;
+    });
+    servicio.disponibilidad_semana = matrices.filter((m) => m && Object.keys(m.matriz).length);
+    partes.push(`calor de 15 días de ${servicio.disponibilidad_semana.length} tiendas`);
+  }
+  if (plan.top) {
+    const j = await consulta(
+      'GET',
+      `/api/rests-score/performance-system/find/brandId/${RAPPI_MARCA}?country=MX`,
+    );
+    servicio.top = j ? topDe(hoy, j).filter((x) => tiendas.includes(x.tienda)) : [];
+  }
+  if (cortado) fallas.push('se cortó para no pasar de 8 min');
+  return { servicio, partes, fallas };
+}
+
+async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS, plan = null }) {
   const base = { tipo, desde, hasta, estado: 'ok', mensaje: '', tiendas: [], pedidos: [] };
   const inicio = Date.now();
   const navegador = await chromium.launch({
@@ -424,6 +590,32 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
       nombres.size ? { ...t, nombre: [...nombres].join(' / ') } : t,
     );
 
+    // Nivel de servicio y Conectividad (docs/rappi-portal/08): aparte del lote de pedidos; si falla no lo tumba.
+    let resumenServicio = '';
+    if (plan) {
+      const tiendaDePedido = new Map(listados.flatMap((l) => l.ordenes.map((o) => [idDe(o), l.tienda])));
+      const tiendaDeNombre = new Map(
+        [...porTienda.values()].flatMap((t) => [...t.nombres].map((n) => [n, t.rappi_tienda_id])),
+      );
+      try {
+        const { servicio, partes, fallas } = await leerServicio(pagina, plan, {
+          tiendas,
+          inicio,
+          tiendaDePedido,
+          tiendaDeNombre,
+        });
+        base.servicio = servicio;
+        resumenServicio = `Servicio: ${partes.join(', ') || 'nada'}.`;
+        if (fallas.length) {
+          base.servicio_error = `Nivel de servicio con fallas: ${fallas.slice(0, 8).join('; ')}.`;
+          resumenServicio += ` ${base.servicio_error}`;
+        }
+      } catch (e) {
+        base.servicio_error = `Nivel de servicio no se pudo leer: ${String(e?.message ?? e).slice(0, 200)}`;
+        resumenServicio = base.servicio_error;
+      }
+    }
+
     // Caché de detalles: solo lo de los últimos 30 días.
     const limite = Date.now() - 30 * 86_400_000;
     for (const [k, v] of Object.entries(cache)) if (v.t < limite) delete cache[k];
@@ -457,6 +649,7 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS }) {
         faltan.length
           ? `El listado devolvió menos de lo que contó (Rappi tampoco los muestra en su historial ni en su descarga): ${faltan.join(', ')}.`
           : '',
+        resumenServicio,
       ]
         .filter(Boolean)
         .join(' ');
@@ -525,10 +718,32 @@ createServer(async (req, res) => {
     return responder(res, 400, {
       error: `Reposición muy larga para ${tiendas.length} tiendas: a lo más ${Math.floor(MAX_CONSULTAS_MANUAL / tiendas.length)} días por corrida.`,
     });
+  // Nivel de servicio (docs/rappi-portal/08): en las corridas programadas, siempre; en las manuales, solo si se pide
+  // (`servicio`, y `espera` para la espera del repartidor por tienda y día, que es una consulta por cada par).
+  const servicio = datos.servicio === true;
+  const espera = datos.espera === true;
+  if (tipo === 'manual' && servicio && diasEntre(v.desde, v.hasta).length > MAX_DIAS_SERVICIO)
+    return responder(res, 400, {
+      error: `Nivel de servicio: a lo más ${MAX_DIAS_SERVICIO} días por corrida.`,
+    });
+  if (
+    tipo === 'manual' &&
+    espera &&
+    diasEntre(v.desde, v.hasta).length * tiendas.length > MAX_CONSULTAS_MANUAL
+  )
+    return responder(res, 400, {
+      error: `Espera del repartidor para ${tiendas.length} tiendas: a lo más ${Math.floor(MAX_CONSULTAS_MANUAL / tiendas.length)} días por corrida.`,
+    });
+  const minuto = Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/Mexico_City', minute: 'numeric' }).format(
+      new Date(),
+    ),
+  );
+  const plan = planServicio({ tipo, ...v, servicio, espera, hoy: fechaMX(0), minuto });
   const vacio = { tipo, ...v, tiendas: [], pedidos: [] };
   if (enCurso)
     return responder(res, 200, { ...vacio, estado: 'ocupado', mensaje: 'Ya había una corrida en curso.' });
-  enCurso = sincronizar({ tipo, ...v, tiendas });
+  enCurso = sincronizar({ tipo, ...v, tiendas, plan });
   try {
     responder(res, 200, await enCurso);
   } catch (e) {
