@@ -66,13 +66,15 @@ export default async function Hoy({ params }: { params: Promise<{ companyId: str
           titulo="Tira de venta"
           texto="Resumen del día para imprimir o guardar en PDF."
         />
-        <Acceso
-          href={`${base}/pedidos`}
-          icono={Truck}
-          tono="pedidos"
-          titulo="Pedidos"
-          texto="Lo pedido a la Comercializadora y su recepción."
-        />
+        {c.gestor && (
+          <Acceso
+            href={`${base}/pedidos`}
+            icono={Truck}
+            tono="pedidos"
+            titulo="Pedidos"
+            texto="Lo pedido a la Comercializadora y su recepción."
+          />
+        )}
         {c.gestor && (
           <Acceso
             href={`${base}/avisos`}

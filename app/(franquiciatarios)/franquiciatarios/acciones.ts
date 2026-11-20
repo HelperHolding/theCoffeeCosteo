@@ -229,11 +229,11 @@ export async function recibirPedido(datos: {
   observacion?: string | null;
 }): Promise<Resultado> {
   const c = await contexto(datos.companyId);
-  if (!c) return { error: SIN_ACCESO };
+  // Pedidos y recepciones son de gerencia (la base también lo exige: migración 82).
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario registran recepciones.' };
   const cfg = configDe(datos.companyId);
   if (!cfg) return { error: SIN_ACCESO };
-  const b = await barista(datos.companyId, c.rol);
-  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
   const lectura = await leerPedidosSucursal(cfg);
   if (!lectura.ok) return { error: lectura.error };
   const recepciones = await c.db
@@ -271,7 +271,7 @@ export async function recibirPedido(datos: {
       p_folio: pedido.folio,
       p_diferencias: diferencias,
       p_observacion: datos.observacion ?? null,
-      p_barista: b,
+      p_barista: null,
       p_dispositivo: disp,
     }),
   );

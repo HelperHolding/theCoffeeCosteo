@@ -227,6 +227,8 @@ export async function recibirPedido(d: {
   observacion?: string | null;
 }): Promise<Resultado> {
   await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario registran recepciones.' };
   const q = quien();
   if (typeof q === 'string') return { error: q };
   const p = armarPedidos(

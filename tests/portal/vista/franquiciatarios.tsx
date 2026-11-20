@@ -30,7 +30,7 @@ import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
  * reglas de las migraciones 75 y 79; ventas y tira usan el pipeline real de Sucursales sobre el fetch falso del arnés.
- * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|equipo|avisos&rol=barista|gerente|franquiciatario (&montos=1)
+ * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|equipo|avisos&rol=barista|gerente|franquiciatario
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  */
 const p = new URLSearchParams(window.location.search);
@@ -543,8 +543,8 @@ export function VistaFranquiciatarios() {
       ) : vista === 'pedidos' ? (
         <PedidosFranq
           companyId={514}
-          conMontos={p.get('montos') === '1'}
-          pedidos={armarPedidos(tienda.pedidos, tienda.recepciones, { conMontos: p.get('montos') === '1' })}
+          conMontos={gestor}
+          pedidos={armarPedidos(tienda.pedidos, tienda.recepciones, { conMontos: gestor })}
         />
       ) : vista === 'propuesta' ? (
         <PropuestaGerente />

@@ -113,7 +113,7 @@ Cada actividad cae en uno de estos tipos. De eso depende cómo se registra en la
 
 Con eso salen la utilidad de operación y el punto de equilibrio con desglose.
 
-**[D] Visibilidad.** La regla vigente del módulo es «nada de costos ni márgenes para usuarios del módulo».
+**[D → parcialmente decidido 2026-11-20: el barista no ve el P&L] Visibilidad.** La regla vigente del módulo es «nada de costos ni márgenes para usuarios del módulo».
 Essentia es **Sucursal Propia**, así que su «franquiciatario» es la propia empresa. Propuesta: el P&L se ve **solo
 como administrador** (Carlos y Finanzas) hasta que Carlos decida si el franquiciatario puede verlo.
 
@@ -152,14 +152,18 @@ leerlos.
 
 ## 6. Decisiones pendientes [D]
 
-1. **Aprobar este plan** y autorizar la F1.
+**Decididas por Carlos (2026-11-20):** plan aprobado y F1 autorizada (#181). Pedidos, montos e inventario: los
+ven **gerente y franquiciatario**; la **cuenta de baristas no ve pedidos, inventario ni P&L** (migración 82 lo cierra
+también en la base). Los baristas sí capturan los conteos del checklist (F2), sin ver valores.
+
+1. ~~Aprobar este plan~~ (aprobado).
 2. **Durante la operación:** ¿la ronda de baños cada hora y la de sanitizante cada 2 h son **obligatorias**, con un
    aviso al gerente si se atrasan, o solo de registro?
 3. **Insumos críticos y de alto valor** para los conteos: lista del gerente (Moisés).
-4. **Pedidos en la tienda:** ¿el gerente o el franquiciatario ven **montos** de sus pedidos, o solo productos y
-   cantidades?
+4. ~~Montos de pedidos~~ (gerente y franquiciatario sí; barista no ve pedidos).
 5. **Alta de Essentia en la OV sugerida** (`514 → 397`): escritura en producción.
-6. **P&L:** ¿solo administrador? ¿De dónde salen renta y nómina: captura manual o Zoho?
+6. **P&L:** el barista no lo ve; ¿lo ven gerente y franquiciatario o solo el administrador? ¿De dónde salen renta y
+   nómina: captura manual o Zoho?
 7. **Hora de turnos:** ¿a qué hora es el cambio mañana/tarde en Essentia? Define cuándo toca «medio turno».
 
 Prompt de ejecución de la F1: `04-PROMPT-F1-RUTINA-V2.md`.
