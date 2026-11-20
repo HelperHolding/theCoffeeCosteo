@@ -12,6 +12,13 @@ const filas = (pre: string, k: number) => Array.from({ length: k }, (_, i) => ({
 const nombres = () => screen.getAllByRole('row').slice(1).map((r) => r.textContent);
 
 describe('<TablaBi>', () => {
+  it('columnaFila elige el encabezado de fila y alinea a la derecha la primera si es numérica', () => {
+    const c: ColumnaBi<F>[] = [{ clave: 'v', titulo: '#', numero: true, celda: (f) => String(f.v) }, { clave: 'n', titulo: 'Tienda', celda: (f) => f.n }];
+    render(<TablaBi resumen="x" columnas={c} secciones={[{ clave: 'a', filas: filas('T', 1) }]} claveFila={(f) => f.n} ordenInicial="v" primeras={10} columnaFila="n" />);
+    expect(screen.getByRole('rowheader').textContent).toBe('T0');
+    expect(screen.getByRole('cell', { name: '10' }).className).toContain('numero');
+  });
+
   it('ordena por la columna inicial (mayor a menor) y alterna con clic, con aria-sort', () => {
     render(<TablaBi resumen="x" columnas={col} secciones={[{ clave: 'a', filas: filas('T', 3) }]} claveFila={(f) => f.n} ordenInicial="v" primeras={10} />);
     expect(nombres()).toEqual(['T2', 'T1', 'T0'].map((p) => expect.stringContaining(p))); // venta 30, 20, 10

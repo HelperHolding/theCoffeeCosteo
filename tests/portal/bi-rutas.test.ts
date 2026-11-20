@@ -134,6 +134,15 @@ describe('/api/bi/kpis', () => {
     expect(s.llamadas.find((x) => x.fn === 'bi_kpis')!.hora).toBeNull();
   });
 
+  it('sin corte de hoy y con el periodo terminando hoy, la hora de corte es 0', async () => {
+    s.ultimoCorte = null;
+    await pedir(kpis);
+    expect(s.llamadas.find((x) => x.fn === 'bi_kpis')!.hora).toBe(0);
+    s.llamadas = [];
+    await pedir(kpis, '?fr=semana-anterior');
+    expect(s.llamadas.find((x) => x.fn === 'bi_kpis')!.hora).toBeNull();
+  });
+
   it('con filtro de semanas no compara ni consulta', async () => {
     const r = await pedir(kpis, '?sem=W45%202026');
     expect(await r.json()).toEqual({ sinComparacion: 'semanas' });

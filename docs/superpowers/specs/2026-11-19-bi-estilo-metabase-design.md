@@ -100,7 +100,10 @@ periodo resuelto `{desde, hasta}` y `hoy`; devuelve `{desde, hasta}` del periodo
 **Día en curso.** Si el periodo actual termina hoy (México) y el último corte es de hoy a la hora H (de
 `bi_opciones.ultimo_corte`), el **último día** del periodo anterior solo cuenta las líneas con `hora < H`. Así
 «Esta semana» un miércoles a las 11:30 no se compara contra un miércoles completo. Es aproximado a la hora (hoy
-incluye 11:00–11:30 y el día comparado no), y se documenta así. Si no hay corte de hoy, no se recorta.
+incluye 11:00–11:30 y el día comparado no), y se documenta así. Si el periodo termina hoy y aún no hay corte de hoy (faltante, ilegible o de otro día), la hora
+de corte es 0: el último día del periodo anterior no aporta líneas, igual que hoy aún no tiene ninguna (evita un ▼
+falso antes del primer corte). `bi_lineas.hora` es la hora local de cada tienda y el corte es hora CDMX: el recorte
+es aproximado a la hora y en tiendas de otra zona (Tijuana, Hermosillo, Cancún) puede variar 1–2 h.
 
 ## 3. Filtros como píldoras
 

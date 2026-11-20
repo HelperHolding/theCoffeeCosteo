@@ -338,9 +338,12 @@ describe('<TableroMexico> con periodo rechazado (400)', () => {
 describe('<TableroMexico> comparación de KPI', () => {
   it('pide /api/bi/kpis con los mismos filtros y pinta ▲/▼ contra el periodo anterior', async () => {
     render(<TableroMexico />);
-    await waitFor(() => expect(screen.getByText(/▲ 20\.0/)).toBeTruthy()); // venta 300.00 vs 250.00
+    await waitFor(() => expect(screen.getAllByText('▲').length).toBeGreaterThan(0)); // venta 300.00 vs 250.00
+    expect(screen.getAllByText('sube').length).toBeGreaterThan(0);
     expect((global.fetch as any).mock.calls.map((c: unknown[]) => String(c[0]))).toContain('/api/bi/kpis?cafe=si');
-    expect(screen.getByText(/▼ 20\.0/)).toBeTruthy(); // tickets 4 vs 5
+    expect(screen.getAllByText('▼').length).toBeGreaterThan(0); // tickets 4 vs 5
+    expect(screen.getAllByText('baja').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^20\.0/).length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText(/lun 26 de oct.*jue 29 de oct/).length).toBeGreaterThan(0);
   });
 

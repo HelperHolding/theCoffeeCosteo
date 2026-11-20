@@ -93,7 +93,10 @@ Periodo que se compara (función `periodoAnterior`, `lib/bi/comparacion.ts`):
 | Rango libre de N días | los N días inmediatamente anteriores |
 
 **Día en curso.** Si el periodo actual termina hoy y el último corte es de hoy a la hora H, el último día del periodo
-anterior solo cuenta las líneas con `hora < H`. Es aproximado a la hora.
+anterior solo cuenta las líneas con `hora < H`. Es aproximado a la hora. Si el periodo termina hoy y aún no hay
+corte de hoy, H = 0: el último día anterior no aporta líneas (evita un ▼ falso antes del primer corte). `hora` es la
+hora local de cada tienda y el corte es hora CDMX; en tiendas de otra zona (Tijuana, Hermosillo, Cancún) el recorte
+puede variar 1–2 h.
 
 ### Aplicar la migración 76
 

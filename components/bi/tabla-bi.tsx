@@ -27,6 +27,7 @@ export function TablaBi<F>({
   ordenInicial,
   primeras,
   minimo = 'min-w-[36rem]',
+  columnaFila,
 }: {
   resumen: string;
   columnas: ColumnaBi<F>[];
@@ -36,6 +37,8 @@ export function TablaBi<F>({
   /** Filas visibles por sección antes de «Ver todas». */
   primeras: number;
   minimo?: string;
+  /** Clave de la columna que se anuncia como encabezado de fila (<th scope="row">); por omisión, la primera. */
+  columnaFila?: string;
 }) {
   const [orden, setOrden] = useState<{ clave: string; desc: boolean }>({ clave: ordenInicial, desc: true });
   const [todas, setTodas] = useState(false);
@@ -46,6 +49,7 @@ export function TablaBi<F>({
     return [...filas].sort((a, b) => {
       const x = v(a);
       const y = v(b);
+      if (x === null && y === null) return 0;
       if (x === null) return 1;
       if (y === null) return -1;
       return orden.desc ? y - x : x - y;
@@ -96,9 +100,9 @@ export function TablaBi<F>({
                   {s.cabecera}
                   {(todas ? filas : filas.slice(0, primeras)).map((f) => (
                     <tr key={claveFila(f)}>
-                      {columnas.map((c, i) =>
-                        i === 0 ? (
-                          <th key={c.clave} scope="row" className="font-medium">
+                      {columnas.map((c) =>
+                        c.clave === (columnaFila ?? columnas[0].clave) ? (
+                          <th key={c.clave} scope="row" className={c.numero ? 'numero font-medium' : 'font-medium'}>
                             {c.celda(f)}
                           </th>
                         ) : (

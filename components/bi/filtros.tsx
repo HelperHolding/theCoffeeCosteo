@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RpcOpciones } from '@/lib/bi/tipos';
 import { FR_POR_OMISION, hoyMexico, leerUrl, OPCIONES_FR, resolverPeriodo, type FiltrosUrl } from '@/lib/bi/url';
+import { fechaCorta } from '@/components/sucursales/formato';
 import { Pildora, ListaUnica } from './pildora-filtro';
 import { ListaMultiple } from './selector-multiple';
 
@@ -167,7 +168,8 @@ export function FiltrosBi({
   };
 
   const frActual = filtros.fr ?? FR_POR_OMISION;
-  const textoFr = hayRango ? `${filtros.desde} – ${filtros.hasta}` : (OPCIONES_FR.find((op) => op.clave === frActual)?.etiqueta ?? frActual);
+  const textoRango = hayRango ? `${fechaCorta(filtros.desde!)} – ${fechaCorta(filtros.hasta!)}` : '';
+  const textoFr = hayRango ? textoRango : (OPCIONES_FR.find((op) => op.clave === frActual)?.etiqueta ?? frActual);
   const compValor = filtros.comparable === undefined ? '' : filtros.comparable ? 'si' : 'no';
   const OPCIONES_COMP = [
     { valor: '', texto: 'Todas' },
@@ -217,10 +219,10 @@ export function FiltrosBi({
         {pildoraLista('anios')}
         <Pildora
           etiqueta="Rango de Fechas"
-          texto={hayRango ? `Rango de Fechas: ${filtros.desde} – ${filtros.hasta}` : 'Rango de Fechas'}
+          texto={hayRango ? `Rango de Fechas: ${textoRango}` : 'Rango de Fechas'}
           activa={hayRango}
           alQuitar={() => aplicar({ fr: FR_POR_OMISION, desde: undefined, hasta: undefined })}
-          quitarEtiqueta={`Quitar Rango de Fechas: ${filtros.desde} – ${filtros.hasta}`}
+          quitarEtiqueta={`Quitar Rango de Fechas: ${textoRango}`}
         >
           {(cerrar) => (
             <div className="grid gap-2">

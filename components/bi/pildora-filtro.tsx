@@ -69,7 +69,10 @@ export function Pildora({
           <button
             type="button"
             aria-label={quitarEtiqueta ?? `Quitar ${etiqueta}`}
-            onClick={alQuitar}
+            onClick={() => {
+              alQuitar();
+              boton.current?.focus();
+            }}
             className="py-1.5 pr-3 pl-1 font-bold opacity-80 hover:opacity-100"
           >
             <span aria-hidden="true">✕</span>

@@ -74,15 +74,18 @@ const enMexico = (ms: number) => {
 };
 
 /**
- * Hora (CDMX) del último corte si el periodo termina hoy y ese corte es de hoy; si no, null (sin recorte).
+ * Hora (CDMX) del último corte si el periodo termina hoy y ese corte es de hoy; si el periodo termina hoy y no hay
+ * corte de hoy (ausente, ilegible o de otro día) devuelve 0 (hoy aún no tiene líneas, el último día anterior
+ * tampoco aporta); si el periodo no termina hoy, null (sin recorte).
  * El último día del periodo anterior solo cuenta las líneas con hora < esta hora.
  */
 export function horaCorte(ultimoCorte: string | null, hasta: string, hoy: string): number | null {
-  if (!ultimoCorte || hasta !== hoy) return null;
+  if (hasta !== hoy) return null;
+  if (!ultimoCorte) return 0;
   const ms = Date.parse(ultimoCorte);
-  if (!Number.isFinite(ms)) return null;
+  if (!Number.isFinite(ms)) return 0;
   const c = enMexico(ms);
-  return c.fecha === hoy ? c.hora : null;
+  return c.fecha === hoy ? c.hora : 0;
 }
 
 /** Cambio relativo; sin base (anterior 0 o nulo) no hay comparación. «igual» si |cambio| < 0.1 %. */

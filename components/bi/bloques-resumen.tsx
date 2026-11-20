@@ -45,7 +45,9 @@ function LineaComparacion({
     <div className="space-y-0.5 text-xs">
       <p>
         <span className={`font-semibold ${color}`}>
-          {signo} {porcentaje(d.dir === 'igual' ? 0 : Math.abs(d.pct))}
+          <span aria-hidden="true">{signo}</span>
+          <span className="sr-only">{d.dir}</span>{' '}
+          {porcentaje(d.dir === 'igual' ? 0 : Math.abs(d.pct))}
         </span>{' '}
         <span className="text-muted-foreground">vs {formato(anterior)}</span>
       </p>

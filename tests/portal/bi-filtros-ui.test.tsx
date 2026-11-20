@@ -37,7 +37,7 @@ describe('<FiltrosBi> en píldoras', () => {
 
   it('Fecha Relativa: 15 opciones, aplica al elegir y limpia el rango', () => {
     const alCambiar = pintar('desde=2026-10-01&hasta=2026-10-07');
-    fireEvent.click(pildora(/^2026-10-01 – 2026-10-07|^Fecha Relativa/));
+    fireEvent.click(pildora(/^Fecha Relativa|^jue 1 de oct – mié 7 de oct/));
     const dialogo = screen.getByRole('dialog', { name: 'Fecha Relativa' });
     expect(within(dialogo).getAllByRole('option')).toHaveLength(15);
     fireEvent.click(within(dialogo).getByRole('option', { name: 'Mes anterior' }));
@@ -136,14 +136,21 @@ describe('<FiltrosBi> en píldoras', () => {
     expect(alCambiar).toHaveBeenLastCalledWith(url());
   });
 
+  it('tras quitar con ✕ el foco pasa al botón principal de la píldora', () => {
+    pintar('tiendas=384&cafe=si');
+    fireEvent.click(pildora(/^Más filtros/));
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar Nombre de Tienda: Ventura' }));
+    expect(document.activeElement).toBe(pildora(/^Nombre de Tienda/));
+  });
+
   it('✕ de todas las píldoras dice «Quitar <filtro>: <valor>»', () => {
     pintar('comp=no&min=10&max=20&desde=2026-10-01&hasta=2026-10-07');
     fireEvent.click(pildora(/^Más filtros/));
     for (const n of [
       'Quitar Comparable: No Comparable',
       'Quitar Net Amount (Local): $10 – $20',
-      'Quitar Rango de Fechas: 2026-10-01 – 2026-10-07',
-      'Quitar Fecha Relativa: 2026-10-01 – 2026-10-07',
+      'Quitar Rango de Fechas: jue 1 de oct – mié 7 de oct',
+      'Quitar Fecha Relativa: jue 1 de oct – mié 7 de oct',
     ])
       expect(screen.getByRole('button', { name: n })).toBeTruthy();
   });

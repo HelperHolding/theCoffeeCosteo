@@ -44,12 +44,14 @@ describe('horaCorte', () => {
     // 17:30 UTC = 11:30 en CDMX
     expect(horaCorte('2026-11-19T17:30:00Z', '2026-11-19', '2026-11-19')).toBe(11);
     expect(horaCorte('2026-11-19T17:30:00Z', '2026-11-18', '2026-11-19')).toBeNull();
-    expect(horaCorte(null, '2026-11-19', '2026-11-19')).toBeNull();
   });
 
-  it('el corte de ayer (madrugada, antes del primer corte de hoy) no recorta', () => {
+  it('sin corte de hoy (de ayer, ausente o ilegible) el último día anterior no aporta líneas: 0', () => {
     // 03:00 UTC del 19 = 21:00 del 18 en CDMX
-    expect(horaCorte('2026-11-19T03:00:00Z', '2026-11-19', '2026-11-19')).toBeNull();
+    expect(horaCorte('2026-11-19T03:00:00Z', '2026-11-19', '2026-11-19')).toBe(0);
+    expect(horaCorte(null, '2026-11-19', '2026-11-19')).toBe(0);
+    expect(horaCorte('basura', '2026-11-19', '2026-11-19')).toBe(0);
+    expect(horaCorte(null, '2026-11-18', '2026-11-19')).toBeNull();
   });
 });
 

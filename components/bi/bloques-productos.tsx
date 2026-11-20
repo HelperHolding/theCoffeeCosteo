@@ -87,6 +87,7 @@ export function RankingProductos({ meses }: { meses: ReturnType<typeof rankingPo
           columnas={columnas}
           secciones={[{ clave: actual.mes, filas }]}
           claveFila={(p) => p.codigo}
+          columnaFila="producto"
           ordenInicial="venta"
           primeras={PRIMEROS}
           minimo="min-w-[30rem]"

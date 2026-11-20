@@ -63,7 +63,7 @@ export function KpiVentaTiendas({ grupos, comparar }: { grupos: Grupos; comparar
       clave: 'vs',
       titulo: 'Vs meta',
       numero: true,
-      orden: (t) => t.cumplimiento,
+      orden: (t) => (comparar ? t.cumplimiento : null),
       celda: (t) => contenidoVsMeta(t.metaCent, t.cumplimiento, comparar),
     },
   ];
