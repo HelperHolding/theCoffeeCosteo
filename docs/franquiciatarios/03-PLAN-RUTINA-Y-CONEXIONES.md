@@ -1,7 +1,7 @@
 # Plan: rutina operativa del gerente + conexión con Comercializadora y P&L (piloto Essentia)
 
 Fuente: «Checklist y Rutina Operativa de Turno v1.0», de Moisés (Diseño Operativo), noviembre 2026. Va dirigido a
-Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1 mergeada (#181, migración 79 en producción); F3 en PR (migración 80).**
+Tecnología e Inventarios. Fecha de este plan: 2026-11-20. Estado: **F1 (#181, mig. 79), F3 (#182/#184, mig. 80/82) en producción; F2 en PR (mig. 83).**
 
 Leyenda: **[H]** hecho verificado (repo o producción, en solo lectura) · **[P]** propuesta · **[D]** decisión pendiente
 de Carlos.
@@ -159,10 +159,10 @@ también en la base). Los baristas sí capturan los conteos del checklist (F2), 
 1. ~~Aprobar este plan~~ (aprobado).
 2. **Durante la operación:** ¿la ronda de baños cada hora y la de sanitizante cada 2 h son **obligatorias**, con un
    aviso al gerente si se atrasan, o solo de registro?
-3. **Insumos críticos y de alto valor** para los conteos: lista del gerente (Moisés).
+3. ~~Insumos críticos~~: lista **sugerida por las ventas** (decisión de Carlos), que el gerente afina después.
 4. ~~Montos de pedidos~~ (gerente y franquiciatario sí; barista no ve pedidos).
-5. **Alta de Essentia en la OV sugerida** (`514 → 397`): escritura en producción.
-6. **P&L:** el barista no lo ve; ¿lo ven gerente y franquiciatario o solo el administrador? ¿De dónde salen renta y
+5. ~~Alta de Essentia en la OV sugerida~~ (hecha 2026-11-20 con OK de Carlos).
+6. **P&L:** lo ven **gerente y franquiciatario** (y el admin); el barista no. Pendiente: ¿de dónde salen renta y
    nómina: captura manual o Zoho?
 7. **Hora de turnos:** ¿a qué hora es el cambio mañana/tarde en Essentia? Define cuándo toca «medio turno».
 

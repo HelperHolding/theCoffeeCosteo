@@ -197,6 +197,8 @@ export interface Database {
       franq_firmas: Tabla<Franq.FranqFirma>;
       franq_incidencias: Tabla<Franq.FranqIncidencia>;
       franq_recepciones: Tabla<Franq.FranqRecepcion>;
+      franq_insumos: Tabla<Franq.FranqInsumo>;
+      franq_conteos: Tabla<Franq.FranqConteo>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -258,6 +260,10 @@ export interface Database {
       franq_barista_guardar: Franq.FuncionesFranq['franq_barista_guardar'];
       franq_avisos: Franq.FuncionesFranq['franq_avisos'];
       franq_recibir: Franq.FuncionesFranq['franq_recibir'];
+      franq_sugerir_insumos: Franq.FuncionesFranq['franq_sugerir_insumos'];
+      franq_insumo_guardar: Franq.FuncionesFranq['franq_insumo_guardar'];
+      franq_contar: Franq.FuncionesFranq['franq_contar'];
+      franq_conteo_estado: Franq.FuncionesFranq['franq_conteo_estado'];
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
       mcp_lectura_habilitada: { Args: Record<string, never>; Returns: boolean };
       reservar_consulta_chat: { Args: Record<string, never>; Returns: boolean };

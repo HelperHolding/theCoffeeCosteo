@@ -138,7 +138,70 @@ export interface FranqRecepcion {
   dispositivo: string | null;
 }
 
+/** Insumo a contar en la sucursal (migración 83). Sin valores: el costo nunca sale de la base. */
+export interface FranqInsumo {
+  id: number;
+  company_id: number;
+  insumo_id: string | null;
+  nombre: string;
+  unidad: string;
+  orden: number;
+  activo: boolean;
+  origen: 'sugerido' | 'manual';
+  creado_por: string;
+  creado_en: string;
+  actualizado_por: string | null;
+  actualizado_en: string | null;
+}
+export type MomentoConteo = 'apertura' | 'medio';
+/** Solo la gerencia lee los conteos (RLS). */
+export interface FranqConteo {
+  id: number;
+  company_id: number;
+  dia: string;
+  momento: MomentoConteo;
+  insumo_id: number;
+  cantidad: number;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+  corrige_id: number | null;
+}
+/** Estado de un momento del día sin cantidades (lo ve también la cuenta de baristas). */
+export interface EstadoConteo {
+  momento: MomentoConteo;
+  nombre: string;
+  registrado_en: string;
+  insumos: number;
+}
+
 export interface FuncionesFranq {
+  franq_sugerir_insumos: { Args: { p_company: number }; Returns: number };
+  franq_insumo_guardar: {
+    Args: {
+      p_company: number;
+      p_id: number | null;
+      p_nombre: string;
+      p_unidad: string;
+      p_orden: number | null;
+      p_activo: boolean;
+    };
+    Returns: number;
+  };
+  franq_contar: {
+    Args: {
+      p_company: number;
+      p_momento: MomentoConteo;
+      p_conteos: { insumo: number; cantidad: number }[];
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_conteo_estado: { Args: { p_company: number; p_dia: string }; Returns: EstadoConteo[] };
   franq_recibir: {
     Args: {
       p_company: number;

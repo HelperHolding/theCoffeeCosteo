@@ -322,3 +322,48 @@ críticos para la F2.
   - Ensayo `scripts/franquiciatarios/ensayo-82.ts` (sha `46628ad2…`): la política queda limitada a gestores y
     `franq_recibir` exige gestor; en la consulta nueva todo sigue igual. Había 0 recepciones en producción.
   - Respaldo: `Respaldos/thecoffee-supabase/2026-11-20-migracion-82-antes.sql`.
+
+## 11. Conteos de insumos críticos — F2 del plan
+
+> Rama `feat/franq-conteos` (2026-11-20). Migración **20261120000083** ensayada con rollback y **sin aplicar**; se
+> aplica al mergear, con el OK de Carlos.
+
+**Decisión de Carlos:** «usa un sugerido tomando en cuenta las ventas para el inventario crítico; después
+corregimos y afinamos».
+
+- **Lista sugerida** (`franq_sugerir_insumos`, solo gestores; solo si la sucursal no tiene lista):
+  - Sale del consumo teórico (receta × ventas) del último mes de `sucursales_consumo_mes`.
+  - Toma los insumos que acumulan el **80 % del valor consumido**, con un mínimo de 10 y un máximo de 20, ordenados
+    por peso.
+  - Unidad de conteo: el paquete de compra (presentación del insumo); lo que se vende por pieza, en piezas.
+  - El valor solo se usa dentro de la base para ordenar; la lista no lleva costos.
+- **Para Essentia** (corrido dentro del ensayo sobre producción, sin guardar nada), salen 20 insumos: café White,
+  leches deslactosada, entera y de avena, creamer Pumpkin, brioche, croissant, panqués, brownie, pavo, mozzarella,
+  vasos y tapas, Isopure, matcha y bolsas para pan.
+- **Ajustes.** El gerente afina la lista en «Inventario» (gerencia): agrega a mano, renombra, cambia la unidad y da
+  de baja. Los insumos nunca se borran.
+- **Conteo** («Conteo de insumos», todos los roles), en la apertura y a medio turno:
+  - Se cuentan todos los insumos activos; si de algo no hay, se escribe 0.
+  - Un recuento del mismo momento corrige al anterior. Es de solo inserción y la hora la pone el servidor.
+  - Los puntos «Realizar conteos…» y «Conteos» del checklist enlazan a esta captura.
+- **Quién ve qué:**
+  - La **cuenta de baristas no ve inventario**. Captura en blanco y no puede leer `franq_conteos`; solo ve quién
+    contó y a qué hora, sin cantidades (`franq_conteo_estado`).
+  - El historial de 7 días (insumo × día y momento) lo ve solo la gerencia.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-conteos.test.ts`: 10 pruebas (Pareto con mínimo 10 y tope 20, unidad por paquete o
+    pieza, sin consumo → manual, sin valores, ajustes, conteo completo, el barista no ve cantidades, recuento,
+    validaciones, OAuth).
+  - `tests/portal/franquiciatarios-conteos.test.ts`: 2 pruebas del historial.
+- **Ensayo** `scripts/franquiciatarios/ensayo-83.ts` (sha `1b6e2a12…`):
+  - Dentro de la transacción: 2 tablas con RLS y 4 funciones, y el sugerido de Essentia corrido como administrador.
+  - En la consulta nueva no quedó nada.
+- **Arnés visual:**
+  - Conteo de 20 insumos en celular, guardado («contó 20 insumos a las …»).
+  - Inventario con su lista, el historial y el estado sin lista (botón «Usar la lista sugerida»).
+
+**Siguiente paso tras el merge (con OK):** cargar la lista sugerida de Essentia desde Inventario (botón) o
+ejecutando `franq_sugerir_insumos(514)` como administrador.
