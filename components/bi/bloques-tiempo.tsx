@@ -71,6 +71,7 @@ export function VentasPorDia({ porFecha }: { porFecha: RpcTablero['por_fecha'] }
         <ColumnasYLinea
           resumen="Venta neta (columnas) y tickets (línea) por día"
           categorias={fechas}
+          alto={260}
           {...ventaYTickets(porFecha)}
         />
       )}
@@ -113,6 +114,7 @@ export function VentaDiaSemana({ porDia }: { porDia: RpcTablero['por_dia'] }) {
         <ColumnasYLinea
           resumen="Venta neta (columnas) y tickets (línea) por día de la semana"
           anchoMinimo="min-w-[20rem]"
+          alto={220}
           categorias={DIAS.map((d) => ({ clave: String(d.dow), eje: d.corto, titulo: d.largo }))}
           {...ventaYTickets(DIAS.map((d) => dia.get(d.dow)))}
         />
@@ -137,6 +139,7 @@ export function VentaPorHora({ porHora }: { porHora: RpcTablero['por_hora'] }) {
         <ColumnasYLinea
           resumen="Venta neta (columnas) y tickets (línea) por hora del día"
           anchoMinimo="min-w-[24rem]"
+          alto={220}
           categorias={rango.map((h) => ({
             clave: String(h),
             eje: hh(h),

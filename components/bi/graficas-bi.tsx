@@ -57,9 +57,10 @@ export function ColumnasYLinea({
   linea,
   extra,
   anchoMinimo = 'min-w-[34rem]',
+  alto: altoProp,
 }: PropsGrafica & { columnas: SerieConEje; linea?: SerieConEje; extra?: Serie }) {
   const { ref: caja, ancho: W } = useAncho<HTMLDivElement>();
-  const H = 264;
+  const H = altoProp ?? 264;
   const M = { izq: 56, der: linea ? 48 : 12, arr: 34, aba: 26 };
   const n = categorias.length;
   const slot = (W - M.izq - M.der) / Math.max(1, n);
@@ -223,9 +224,10 @@ export function Lineas({
   series,
   eje,
   anchoMinimo = 'min-w-[34rem]',
+  alto,
 }: PropsGrafica & { series: Serie[]; eje: (v: number) => string }) {
   const { ref: caja, ancho: W } = useAncho<HTMLDivElement>();
-  const H = 240;
+  const H = alto ?? 240;
   const M = { izq: 60, der: 12, arr: 14, aba: 28 };
   const n = categorias.length;
   const xDe = (i: number) => M.izq + (n <= 1 ? 0.5 : i / (n - 1)) * (W - M.izq - M.der);

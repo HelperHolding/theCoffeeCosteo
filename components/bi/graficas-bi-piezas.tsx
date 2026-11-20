@@ -1,6 +1,7 @@
 'use client';
 // Piezas comunes de las gráficas del tablero BI (graficas-bi.tsx): tipos, paleta, escalas, interacción,
 // leyenda y tabla equivalente.
+import { Table2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AZUL, COLOR_ORIGEN, SERIE_BASE, TIPOS } from '@/components/sucursales/colores';
 
@@ -159,7 +160,10 @@ export function TablaEquivalente({
 }) {
   return (
     <details className="text-sm">
-      <summary className="cursor-pointer font-semibold text-ink-2">Ver como tabla</summary>
+      <summary className="ml-auto flex w-fit cursor-pointer list-none items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-ink-2 hover:bg-surface-2">
+        <Table2 size={14} aria-hidden />
+        Ver como tabla
+      </summary>
       <div className="mt-2 max-h-96 overflow-auto">
         <table className="tabla tabla-bi w-full">
           <caption className="sr-only">{resumen}</caption>
@@ -199,4 +203,6 @@ export interface PropsGrafica {
   categorias: Categoria[];
   /** Ancho mínimo en pantallas angostas (clase de Tailwind). */
   anchoMinimo?: string;
+  /** Alto del lienzo en px (por omisión el de cada gráfica). */
+  alto?: number;
 }

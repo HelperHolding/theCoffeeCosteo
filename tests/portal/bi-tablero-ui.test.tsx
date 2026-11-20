@@ -293,6 +293,32 @@ describe('<TableroMexico> con datos en todos los bloques', () => {
     expect(screen.queryByRole('heading', { name: 'Tiempo y pago' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Mezcla de venta' })).toBeNull();
   });
+
+  it('cada gráfica conserva su tabla equivalente con nombre accesible', async () => {
+    const conDias = {
+      ...tablero,
+      tablero: { ...tablero.tablero, por_fecha: [{ fecha: '2026-11-02', venta_cent: 30000, tickets: 4 }] },
+    };
+    global.fetch = vi.fn(
+      async (url: string) =>
+        new Response(
+          JSON.stringify(
+            String(url).includes('/api/bi/kpis')
+              ? comparacion.valor
+              : String(url).includes('tendencias')
+              ? { hoy: '2026-11-05', tendencias: { por_mes: [], por_semana: [] } }
+              : conDias,
+          ),
+          { status: 200 },
+        ),
+    ) as never;
+    render(<TableroMexico />);
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Ventas vs transacciones por día' })).toBeTruthy());
+    const r = screen.getByRole('region', { name: 'Ventas vs transacciones por día' });
+    const resumen = within(r).getByText('Ver como tabla');
+    fireEvent.click(resumen);
+    expect(within(r).getByRole('table')).toBeTruthy();
+  });
 });
 
 describe('<TableroMexico> con periodo rechazado (400)', () => {
