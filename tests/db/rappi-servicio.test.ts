@@ -3,7 +3,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario, num } from './utilidades';
 
-// Migración 80: Nivel de servicio y Conectividad de Rappi (docs/rappi-portal/08). Escribe n8n (service_role) con
+// Migración 81: Nivel de servicio y Conectividad de Rappi (docs/rappi-portal/08). Escribe n8n (service_role) con
 // rappi_importar_servicio; nadie lee las tablas directo.
 let db: PGlite;
 let usuario: string;

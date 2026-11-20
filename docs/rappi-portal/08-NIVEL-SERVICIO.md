@@ -110,7 +110,7 @@ El lector agrega `servicio` (y `servicio_error`, si hubo fallas) al lote de pedi
 **De qué tienda es cada reclamo.** Se busca primero por el pedido, si lo trajo el historial de esa corrida. Si no, por el
 nombre de la tienda. Si no se sabe, se reporta como «sin tienda»: no se adivina.
 
-## 4. Tablas (migración 80)
+## 4. Tablas (migración 81)
 
 Todas tienen RLS sin políticas y quedan cerradas para anon y authenticated. Solo `service_role` las escribe, por
 `rappi_importar_servicio`.
