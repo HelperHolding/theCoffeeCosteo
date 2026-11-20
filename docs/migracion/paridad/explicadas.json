@@ -1,1 +1,2670 @@
-[]
+[
+  {
+    "clave": "ov:avanzar:#CMS2128:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2146:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2147:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2158:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2164:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2165:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2174:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2185:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2186:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2187:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2189:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2191:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2195:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2203:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2206:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2211:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2212:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2221:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2229:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2231:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2232:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2242:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2247:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2261:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2263:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2264:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2266:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2267:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2269:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2270:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2271:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2272:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2275:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2276:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2388:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2389:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2394:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2396:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2404:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2407:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2409:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2410:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2429:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2431:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2434:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2435:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2436:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2438:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2843:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2849:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2850:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2851:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2856:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2857:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2858:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2859:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:avanzar:#CMS2862:por_enviar>enviado",
+    "motivo": "En el viejo la OV sigue en por_enviar aunque el pedido ya está enviado; el portal la avanza (decisión 1, solo avanza). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:EQ-DEL-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:EQ-TAB-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:EQ-TAB-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:EQ-TAB-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-038",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-044",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-068",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-071",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-035",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-036",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-038",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-041",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-050",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DEL-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DEL-011",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-015",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-018",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-019",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-023",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-024",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-025",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-026",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-027",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-028",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-029",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:INS-LIM-035",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-DRI-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-PAR-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-PAR-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-TAZ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-TAZ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-TER-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-TOT-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MER-TOT-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-015",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-016",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-017",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-018",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-024",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-035",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-036",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:MP-OPE-041",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2801:UNI-PIN-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:INS-CAF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2803:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-038",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2804:MER-DRI-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BA-068",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:INS-LIM-018",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:MER-TOT-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2805:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-BEB-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2806:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:INS-BEB-050",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2807:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2808:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BA-071",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-LIM-023",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2809:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2810:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BA-071",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2811:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BA-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-DEL-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-LIM-026",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-LIM-027",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2812:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2813:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2813:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2813:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2813:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-DEL-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2814:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2815:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2816:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:EQ-TAB-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-LIM-025",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2817:INS-LIM-035",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:EQ-DEL-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BA-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-041",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-050",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2818:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-036",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:MER-TER-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2819:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2820:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2821:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2821:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2821:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2822:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2823:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2824:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2824:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2824:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2824:MER-DRI-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2824:MER-TAZ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2825:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:EQ-DEL-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:INS-LIM-026",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:MP-OPE-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2826:MP-OPE-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2827:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2827:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2827:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2827:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2828:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2828:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2828:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2828:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BA-020",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BEB-057",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-LIM-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:INS-LIM-037",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:MP-OPE-018",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:MP-OPE-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2829:MP-OPE-040",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BA-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BA-020",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BA-023",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BA-071",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-035",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-057",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-DEL-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-FOD-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-LIM-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-LIM-027",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-LIM-029",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:INS-PAP-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:RTD-PER-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:UNI-COF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:UNI-MAN-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:UNI-PLA-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2830:UNI-PLA-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:EQ-BA-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:EQ-DEL-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BA-020",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-057",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-DES-010",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-FOD-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-LIM-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-LIM-019",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:INS-LIM-037",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2831:UNI-PLA-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:EQ-DEL-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2832:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BA-020",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BEB-053",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-CAF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-DES-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-FOD-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-LIM-017",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:INS-PAP-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2834:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-BA-071",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2835:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:EQ-DEL-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BA-020",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BA-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BA-072",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BEB-039",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-FOD-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:INS-LIM-037",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:MP-OPE-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:RTD-PER-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:RTD-ZOÉ-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2836:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2839:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2839:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2839:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-BA-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-DES-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-DES-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-DES-015",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2840:INS-LIM-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2860:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2860:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2860:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2860:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2860:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-050",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-DES-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2922:INS-DES-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2931:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2931:INS-BEB-032",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2931:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-BEB-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-BEB-051",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-CAF-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-DEL-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-LIM-027",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2943:INS-LIM-029",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2966:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BA-076",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-BEB-065",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-DES-013",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-DES-021",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:INS-LIM-036",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS2987:RTD-PER-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-BA-076",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:INS-FOD-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3048:RTD-FEL-004",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BEB-052",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-BEB-067",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-CAF-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-CAF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:INS-DES-025",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:MER-TOT-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:MER-TOT-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3062:UNI-PLA-007",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3064:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3064:INS-BEB-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3064:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-BEB-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3071:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-BA-076",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-BEB-009",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-BEB-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-LIM-022",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:INS-LIM-034",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3078:MER-PAR-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3109:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3109:INS-BEB-049",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3109:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3109:INS-DES-008",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BA-076",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BEB-030",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BEB-047",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BEB-056",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-BEB-070",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-DEL-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:INS-DEL-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3115:MER-TOT-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-BA-069",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-BA-076",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-BEB-045",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-CAF-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-CAF-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:INS-LIM-033",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:MER-TER-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3139:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-BEB-046",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-CAF-005",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-CAF-006",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-DEL-011",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-DEL-012",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:INS-LIM-026",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:MER-TOT-001",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:MER-TOT-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:RTD-ZOÉ-002",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  },
+  {
+    "clave": "ov:insertar:#CMS3145:RTD-ZOÉ-003",
+    "motivo": "El viejo nunca registró la OV de este pedido enviado (dentro de los 45 días); el portal la deriva del pedido (decisión 1). Revisado 2026-11-19."
+  }
+]
