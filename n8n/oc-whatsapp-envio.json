@@ -1,0 +1,506 @@
+{
+  "name": "OC emitida → WhatsApp al proveedor",
+  "nodes": [
+    {
+      "name": "Webhook Zoho",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "oc-whatsapp",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "name": "Reservar en portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ accion: 'reservar', zoho_po_id: String($('Webhook Zoho').item.json.body.purchaseorder_id), po_number: String($('Webhook Zoho').item.json.body.purchaseorder_number), vendor_id: String($('Webhook Zoho').item.json.body.vendor_id || ''), vendor_name: String($('Webhook Zoho').item.json.body.vendor_name || '') }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    },
+    {
+      "name": "¿Enviar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.enviar === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Leer OC en Zoho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 300],
+      "parameters": {
+        "options": {},
+        "method": "GET",
+        "url": "=https://www.zohoapis.com/books/v3/purchaseorders/{{ $('Webhook Zoho').item.json.body.purchaseorder_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "organization_id",
+              "value": "={{ $vars.ZOHO_ORG_ID }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "name": "Zoho Books OAuth2"
+        }
+      }
+    },
+    {
+      "name": "¿Sigue emitida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.purchaseorder.status === 'open' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Leer proveedor en Zoho",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300],
+      "parameters": {
+        "options": {},
+        "method": "GET",
+        "url": "=https://www.zohoapis.com/books/v3/contacts/{{ $('Leer OC en Zoho').item.json.purchaseorder.vendor_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "organization_id",
+              "value": "={{ $vars.ZOHO_ORG_ID }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "name": "Zoho Books OAuth2"
+        }
+      }
+    },
+    {
+      "name": "Preparar datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1820, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Número del campo 'WhatsApp OCs' del proveedor, a 52 + 10 dígitos (formato de la API de WhatsApp, sin +).\nconst po = $('Leer OC en Zoho').item.json.purchaseorder;\nconst cf = ($json.contact.custom_fields || []).find((c) => c.label === 'WhatsApp OCs');\nlet d = String(cf?.value ?? '').replace(/\\D/g, '');\nif (d.length === 13 && /^(044|045|521)/.test(d)) d = d.slice(3);\nelse if (d.length === 12 && d.startsWith('52')) d = d.slice(2);\nconst total = Number(po.total || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });\nreturn { json: { zoho_po_id: String(po.purchaseorder_id), po_number: po.purchaseorder_number,\n  vendor_name: po.vendor_name, total, entrega: po.delivery_date || 'por confirmar',\n  telefono: d.length === 10 ? '52' + d : '' } };"
+      }
+    },
+    {
+      "name": "¿Tiene número?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2080, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.telefono !== '' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "PDF de la OC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2340, 300],
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "pdf"
+            }
+          }
+        },
+        "method": "GET",
+        "url": "=https://www.zohoapis.com/books/v3/purchaseorders/{{ $('Preparar datos').item.json.zoho_po_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "organization_id",
+              "value": "={{ $vars.ZOHO_ORG_ID }}"
+            },
+            {
+              "name": "accept",
+              "value": "pdf"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "oAuth2Api": {
+          "name": "Zoho Books OAuth2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Subir PDF a WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2600, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $vars.WA_PHONE_NUMBER_ID }}/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "pdf"
+            },
+            {
+              "name": "type",
+              "value": "application/pdf"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WhatsApp Cloud"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Mandar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2860, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $vars.WA_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Preparar datos').item.json.telefono, type: 'template', template: { name: 'oc_emitida', language: { code: 'es_MX' }, components: [ { type: 'header', parameters: [ { type: 'document', document: { id: $json.id, filename: $('Preparar datos').item.json.po_number + '.pdf' } } ] }, { type: 'body', parameters: [ { type: 'text', text: $('Preparar datos').item.json.vendor_name }, { type: 'text', text: $('Preparar datos').item.json.po_number }, { type: 'text', text: $('Preparar datos').item.json.total }, { type: 'text', text: $('Preparar datos').item.json.entrega } ] } ] } }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "WhatsApp Cloud"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Resultado enviado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3120, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ accion: 'resultado', zoho_po_id: $('Preparar datos').item.json.zoho_po_id, estado: 'enviado', telefono: $('Preparar datos').item.json.telefono, wa_message_id: $json.messages[0].id }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    },
+    {
+      "name": "Resultado sin número",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3380, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ accion: 'resultado', zoho_po_id: $('Preparar datos').item.json.zoho_po_id, estado: 'sin_numero' }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    },
+    {
+      "name": "Resultado fallido",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3640, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ accion: 'resultado', zoho_po_id: String($('Webhook Zoho').item.json.body.purchaseorder_id), estado: 'fallido', telefono: $('Preparar datos').isExecuted ? $('Preparar datos').item.json.telefono : null, error: String($json.error?.message || $json.error || 'la OC ya no está emitida').slice(0, 300) }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Zoho": {
+      "main": [
+        [
+          {
+            "node": "Reservar en portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reservar en portal": {
+      "main": [
+        [
+          {
+            "node": "¿Enviar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Enviar?": {
+      "main": [
+        [
+          {
+            "node": "Leer OC en Zoho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer OC en Zoho": {
+      "main": [
+        [
+          {
+            "node": "¿Sigue emitida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Sigue emitida?": {
+      "main": [
+        [
+          {
+            "node": "Leer proveedor en Zoho",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer proveedor en Zoho": {
+      "main": [
+        [
+          {
+            "node": "Preparar datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar datos": {
+      "main": [
+        [
+          {
+            "node": "¿Tiene número?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Tiene número?": {
+      "main": [
+        [
+          {
+            "node": "PDF de la OC",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado sin número",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF de la OC": {
+      "main": [
+        [
+          {
+            "node": "Subir PDF a WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir PDF a WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Mandar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mandar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Resultado enviado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resultado fallido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

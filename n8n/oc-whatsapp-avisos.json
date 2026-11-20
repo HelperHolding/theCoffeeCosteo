@@ -1,0 +1,156 @@
+{
+  "name": "Avisos de WhatsApp (Meta) → portal",
+  "nodes": [
+    {
+      "name": "Webhook Meta verificación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "meta-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Verificar Meta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [520, 300],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.verify_token'] === $vars.META_VERIFY_TOKEN ? $json.query['hub.challenge'] : 'no' }}",
+        "options": {
+          "responseCode": "={{ $json.query['hub.verify_token'] === $vars.META_VERIFY_TOKEN ? 200 : 403 }}"
+        }
+      }
+    },
+    {
+      "name": "Webhook Meta",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meta-whatsapp",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "name": "Separar estados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 300],
+      "parameters": {
+        "jsCode": "const out = [];\nfor (const e of $json.body?.entry ?? []) for (const c of e.changes ?? []) for (const it of c.value?.statuses ?? [])\n  out.push({ json: { accion: 'estado_meta', wa_message_id: it.id, estado: it.status, error: it.errors?.[0]?.title ?? null } });\nreturn out;"
+      }
+    },
+    {
+      "name": "Estados a portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    },
+    {
+      "name": "Separar respuestas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "parameters": {
+        "jsCode": "const out = [];\nfor (const e of $json.body?.entry ?? []) for (const c of e.changes ?? []) for (const it of c.value?.messages ?? [])\n  out.push({ json: { accion: 'respuesta', telefono: it.from, texto: it.text?.body ?? it.button?.text ?? '' } });\nreturn out;"
+      }
+    },
+    {
+      "name": "Respuestas a portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1820, 300],
+      "parameters": {
+        "options": {},
+        "method": "POST",
+        "url": "={{ $vars.PORTAL_FUNCIONES_URL }}/com-oc-whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Portal OC WhatsApp"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Meta verificación": {
+      "main": [
+        [
+          {
+            "node": "Verificar Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Meta": {
+      "main": [
+        [
+          {
+            "node": "Separar estados",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Separar respuestas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar estados": {
+      "main": [
+        [
+          {
+            "node": "Estados a portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar respuestas": {
+      "main": [
+        [
+          {
+            "node": "Respuestas a portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
