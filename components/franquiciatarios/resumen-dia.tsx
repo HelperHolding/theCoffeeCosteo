@@ -27,7 +27,7 @@ export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: strin
               href={`${base}/checklist?seccion=${s.clave}${consulta}`}
               className={cn(
                 'group flex h-full flex-col rounded-2xl border p-5 shadow-card transition-[border-color,box-shadow] hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
-                t.suave,
+                t.brillo,
                 t.borde,
               )}
             >

@@ -369,7 +369,7 @@ function Firmas({
     <div
       className={cn(
         'rounded-2xl border p-4 shadow-card sm:p-5',
-        TONO[seccion.clave].suave,
+        TONO[seccion.clave].brillo,
         TONO[seccion.clave].borde,
       )}
     >

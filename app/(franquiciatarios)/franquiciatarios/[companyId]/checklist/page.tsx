@@ -99,7 +99,7 @@ export default async function PaginaChecklist({
                   className={cn(
                     'relative flex min-h-14 flex-col items-center justify-center overflow-hidden rounded-xl border px-3 py-2 text-center text-ink transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
                     activa
-                      ? cn(t.suave, t.borde, 'shadow-card')
+                      ? cn(t.brillo, t.borde, 'shadow-card')
                       : 'border-line bg-surface hover:border-line-strong',
                   )}
                 >

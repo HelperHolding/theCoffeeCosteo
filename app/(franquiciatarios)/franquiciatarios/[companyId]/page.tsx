@@ -106,7 +106,7 @@ function Acceso({
       href={href}
       className={cn(
         'flex items-start gap-4 rounded-2xl border p-5 shadow-card transition-[border-color,box-shadow] hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45',
-        t.suave,
+        t.brillo,
         t.borde,
       )}
     >
