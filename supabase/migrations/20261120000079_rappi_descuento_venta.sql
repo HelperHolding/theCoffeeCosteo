@@ -5,11 +5,15 @@
 --   insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');
 
 -- 1. Descuento que se resta de la venta. Sin detalle (descuento_aliado nulo) es 0: la venta queda en el bruto.
+--    Un premio con value vacío o no numérico se ignora (no truena la lectura).
 --    Ofertas repetidas en `descuentos`: manda descuento_aliado (la suma del portal). Nunca negativo ni mayor que el bruto.
 create function public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric
 language sql stable set search_path = public, pg_temp as $$
   select least(p.bruto, greatest(coalesce(p.descuento_aliado, 0) - coalesce((
-    select sum((d->>'value')::numeric)
+    select sum(case
+      when jsonb_typeof(d->'value') = 'number' then (d->'value')::text::numeric
+      when jsonb_typeof(d->'value') = 'string' and d->>'value' ~ '^[[:space:]]*-?[0-9]+([.][0-9]+)?[[:space:]]*$' then (d->>'value')::numeric
+    end)
     from jsonb_array_elements(case when jsonb_typeof(p.descuentos) = 'array' then p.descuentos else '[]'::jsonb end) d
     where d->>'type_description' = 'order_discount'), 0), 0))
 $$;
@@ -54,3 +58,7 @@ end $$;
 
 revoke all on function public.sucursales_rappi_portal(integer, date, date) from public, anon;
 grant execute on function public.sucursales_rappi_portal(integer, date, date) to authenticated;
+
+-- PostgREST expone la función como columna calculada `rappi_descuento_venta` (se pide con alias descuento_venta);
+-- se recarga el esquema para que se vea al aplicar.
+notify pgrst, 'reload schema';

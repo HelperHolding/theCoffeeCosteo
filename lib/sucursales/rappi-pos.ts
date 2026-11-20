@@ -414,6 +414,7 @@ export function mismaHoraQueRappi(zona: string, fecha: string): boolean {
  * Escala los importes de líneas y personalizaciones de bruto a venta (factor venta ÷ bruto). Si las líneas sumaban el
  * bruto, la última con importe > 0 absorbe el redondeo y la suma queda exactamente en la venta; si no lo sumaban (el
  * pedido no cuadraba de origen), solo se escala cada importe. Sin descuento devuelve las mismas líneas.
+ * El redondeo se absorbe solo en importes base: un pedido solo de personalizaciones no ocurre con el menú actual.
  */
 function escalarLineas<L extends LineaNormal>(lineas: L[], brutoCent: number, ventaCent: number): L[] {
   if (ventaCent === brutoCent || brutoCent <= 0) return lineas;
@@ -453,6 +454,7 @@ export function pedidoRappiAPos(p: PedidoRappi, zona: string = ZONA_RAPPI): Pedi
   const ss = String(local.segundo % 60).padStart(2, '0');
   const m = [p.creado, local.fecha, hh, mm, ss] as const;
   const brutoCent = cent(p.bruto);
+  // El tope en el bruto es defensivo: la función SQL rappi_descuento_venta ya lo aplica.
   const descuentoCent = Math.min(brutoCent, Math.max(0, cent(p.descuento_venta ?? 0)));
   const ventaCent = brutoCent - descuentoCent;
   const lineas = escalarLineas(p.productos.flatMap(lineasDe), brutoCent, ventaCent);

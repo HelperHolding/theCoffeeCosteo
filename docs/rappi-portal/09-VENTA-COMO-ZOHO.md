@@ -9,10 +9,13 @@ que paga la tienda, sin restar los premios Pro Rewards**. Antes se contaba el br
 antes de descuentos) y quedaba ~13 % arriba de Zoho.
 
 `venta = bruto − descuento_venta`, con `descuento_venta` calculado en la base (migración 79,
-`rappi_descuento_venta(p rappi_pedidos)`):
+`rappi_descuento_venta(p rappi_pedidos)`). PostgREST la expone como columna calculada `rappi_descuento_venta`; el
+corte la pide con el alias `descuento_venta:rappi_descuento_venta`. La migración termina con
+`notify pgrst, 'reload schema';` para que se vea al aplicarla:
 
 - Sin detalle (`descuento_aliado` nulo): 0, y la venta queda en el bruto.
-- Los premios Pro Rewards (`type_description = 'order_discount'`) nunca se restan.
+- Los premios Pro Rewards (`type_description = 'order_discount'`) nunca se restan; un premio con `value` vacío o no
+  numérico se ignora.
 - Se usa `descuento_aliado` (la suma del portal), no la suma del detalle, para no duplicar ofertas repetidas.
 - Nunca es negativo ni mayor que el bruto.
 
@@ -31,7 +34,7 @@ antes de descuentos) y quedaba ~13 % arriba de Zoho.
    insert into supabase_migrations.schema_migrations (version, name) values ('20261120000079','rappi_descuento_venta');
    ```
 2. Merge del PR.
-3. Recálculo.
+3. Recálculo, **corrido desde el código ya fusionado** (con la 79 aplicada): el comando usa el `select` con el alias.
 
 Si se fusiona antes de la 79, `rappiServicio` pide una columna que no existe: la lectura de Rappi falla y el corte
 marca esos días como carga incompleta, sin escribir ceros.

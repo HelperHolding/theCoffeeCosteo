@@ -54,7 +54,7 @@ describe('rappiServicio: venta como Zoho', () => {
     const { db, selects } = clienteCon([f]);
     const fuente = rappiServicio(db, { rappiPortal: true, companyId: 1 } as never)!;
     const [p] = (await fuente('2026-11-03', '2026-11-03'))!;
-    expect(selects[0]).toContain('descuento_venta');
+    expect(selects[0]).toContain('descuento_venta:rappi_descuento_venta');
     expect(p.ventaCent).toBe(10000 - 1760);
   });
 });

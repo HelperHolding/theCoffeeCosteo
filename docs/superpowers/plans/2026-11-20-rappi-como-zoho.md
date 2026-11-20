@@ -4,7 +4,7 @@
 
 **Goal:** Que la venta de cada pedido de Rappi del portal sea `bruto − descuento_venta` (descuentos de la tienda sin premios Pro Rewards), igual que Zoho, en todo el portal.
 
-**Architecture:** Una función de SQL (`rappi_descuento_venta`, migración 79) calcula el descuento por pedido y se expone en las dos lecturas existentes. `sucursales_rappi_portal` lo agrega a cada pedido y el corte lo pide como columna calculada. `pedidoRappiAPos` resta ese descuento y lo reparte entre las líneas; la pestaña Rappi suma la venta nueva.
+**Architecture:** Una función de SQL (`rappi_descuento_venta`, migración 79) calcula el descuento por pedido y se expone en las dos lecturas existentes. `sucursales_rappi_portal` lo agrega a cada pedido y el corte lo pide como columna calculada `rappi_descuento_venta` con el alias `descuento_venta`. `pedidoRappiAPos` resta ese descuento y lo reparte entre las líneas; la pestaña Rappi suma la venta nueva.
 
 **Tech Stack:** Supabase Postgres (PGlite en pruebas), TypeScript, Vitest.
 
@@ -39,7 +39,7 @@
 
 **Interfaces:**
 - Produces:
-  - `public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric` (columna calculada `descuento_venta` para PostgREST);
+  - `public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric` (PostgREST la expone como columna calculada `rappi_descuento_venta`; el cliente la pide con el alias `descuento_venta:rappi_descuento_venta`); la migración termina con `notify pgrst, 'reload schema';`;
   - cada pedido de `sucursales_rappi_portal(...)->'pedidos'` trae `'descuento_venta'` (numeric).
 
 - [ ] **Step 1: Write the failing test**
@@ -396,7 +396,7 @@ git commit -m "Rappi como Zoho: venta del pedido = bruto menos descuento_venta, 
 - Test: `tests/portal/bi-corte.test.ts`
 
 **Interfaces:**
-- Consumes: columna calculada `descuento_venta` (Task 1); `PedidoRappi.descuento_venta` (Task 2).
+- Consumes: columna calculada `rappi_descuento_venta` (alias `descuento_venta`, Task 1); `PedidoRappi.descuento_venta` (Task 2).
 
 - [ ] **Step 1: Failing test**
 
@@ -409,7 +409,7 @@ describe('rappiServicio: venta como Zoho', () => {
     const { db, selects } = clienteCon([f]);
     const fuente = rappiServicio(db, { rappiPortal: true, companyId: 1 } as never)!;
     const [p] = (await fuente('2026-11-03', '2026-11-03'))!;
-    expect(selects[0]).toContain('descuento_venta');
+    expect(selects[0]).toContain('descuento_venta:rappi_descuento_venta');
     expect(p.ventaCent).toBe(10000 - 1760);
   });
 });
@@ -419,10 +419,10 @@ Run: `npx vitest run tests/portal/bi-corte.test.ts` → FAIL.
 
 - [ ] **Step 2: Implementation**
 
-En `rappiServicio`, agrega `descuento_venta` al `select` justo después de `descuento_aliado`:
+En `rappiServicio`, agrega `descuento_venta:rappi_descuento_venta` (alias de la columna calculada) al `select` justo después de `descuento_aliado`:
 
 ```ts
-        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, descuento_venta, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
+        'rappi_pedido_id, rappi_tienda_id, creado_local, fecha_local, estado, estado_nombre, en_disputa, estado_disputa, metodo_pago, bruto, descuento_aliado, descuento_venta:rappi_descuento_venta, estado_anterior, revisar, rappi_tiendas(canal), rappi_pedido_productos(linea, nombre, unidades, precio, opciones)',
 ```
 
 y en el objeto que se pasa a `pedidoRappiAPos`, debajo de `descuento_aliado: …`:

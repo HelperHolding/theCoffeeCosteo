@@ -458,6 +458,12 @@ function TotalesPedido({ p, pesos }: { p: PedidoVista; pesos: (valor: number) =>
             <dt className="font-semibold">Total</dt>
             <dd className="font-semibold tabular">{pesos(p.bruto - p.descuento_aliado)}</dd>
           </div>
+          {Math.abs((p.descuento_venta ?? 0) - p.descuento_aliado) > 0.005 ? (
+            <div className="flex justify-between gap-3 text-xs">
+              <dt className="text-ink-2">Venta (como Zoho)</dt>
+              <dd className="tabular">{pesos(p.bruto - (p.descuento_venta ?? 0))}</dd>
+            </div>
+          ) : null}
         </>
       ) : (
         <p className="text-right text-muted-foreground">Descuento aún sin leer</p>

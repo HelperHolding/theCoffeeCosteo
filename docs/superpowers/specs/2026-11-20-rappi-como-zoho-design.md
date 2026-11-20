@@ -61,7 +61,7 @@ language sql stable set search_path = public, pg_temp as $$
 $$;
 ```
 
-- Recibe la fila de `rappi_pedidos`: PostgREST la expone como columna calculada `descuento_venta`.
+- Recibe la fila de `rappi_pedidos`: PostgREST la expone como columna calculada con el nombre de la función, `rappi_descuento_venta`; el cliente la pide con el alias `descuento_venta:rappi_descuento_venta` y la fila trae `descuento_venta`. La migración termina con `notify pgrst, 'reload schema';`.
 - **Sin detalle** (`descuento_aliado` nulo): 0, y la venta queda en el bruto, como hoy.
 - **Premios Pro Rewards** (`order_discount`): nunca se restan. El resultado nunca es negativo ni mayor que el bruto.
 - **Ofertas repetidas** en `descuentos`: se usa `descuento_aliado` (la suma que da el portal), no la suma del detalle.
@@ -94,7 +94,7 @@ $$;
 - Unidades, códigos, nombres, hora y fecha no cambian.
 
 **`lib/sucursales/corte-servidor.ts` · `rappiServicio`**
-- El `select` de `rappi_pedidos` agrega `descuento_venta` y lo pasa a `pedidoRappiAPos`.
+- El `select` de `rappi_pedidos` agrega `descuento_venta:rappi_descuento_venta` (alias) y lo pasa a `pedidoRappiAPos`.
 
 **`lib/sucursales/rappi-pos-servidor.ts` · `fuenteRappi`** y **Franquiciatarios**
 - No cambian: leen `sucursales_rappi_portal`, que ya trae el campo, y pasan el pedido entero.
@@ -158,7 +158,7 @@ corte marcaría esos días como carga incompleta, sin escribir ceros. El orden e
   - `descuento_venta` ausente → 0, idéntico a hoy;
   - `descuentoCent = descuento_venta`.
 - **`tests/portal/rappi-portal.test.ts`:** totales de la pestaña con la venta nueva y cancelados con el bruto.
-- **`tests/portal` del corte:** el `select` de `rappiServicio` pide `descuento_venta`.
+- **`tests/portal` del corte:** el `select` de `rappiServicio` pide `descuento_venta:rappi_descuento_venta`.
 - Las demás pruebas de Sucursales, Costeo y BI siguen verdes, ajustando solo las que fijaban el bruto como venta de
   Rappi.
 

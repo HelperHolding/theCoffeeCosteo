@@ -12,6 +12,7 @@ const NORMAL = 'MX1930270777';
 
 const oferta = (v: number) => ({ type: '7', value: v, type_description: 'offer_by_product', percentage_value: 20 });
 const premio = (v: number) => ({ type: '6', value: v, type_description: 'order_discount', percentage_value: 0 });
+const premioRaro = (v: unknown) => ({ type: '6', value: v, type_description: 'order_discount', percentage_value: 0 });
 const envio = (v: number) => ({ type: '5', value: v, type_description: 'prime_discount_shipping', percentage_value: 0 });
 
 const pedido = (id: string, bruto: number, aliado: number | null, descuentos: unknown) => ({
@@ -42,6 +43,10 @@ const CASOS: [string, number, number | null, unknown, number][] = [
   ['7', 150, 50, [premio(80)], 0],                             // premio mayor que el descuento: 0, no negativo
   ['8', 90, 30, { raro: true }, 30],                           // descuentos no es arreglo: cuenta como []
   ['9', 40, 55, [oferta(55)], 40],                             // descuento mayor que el bruto: tope en el bruto
+  ['10', 200, 50, [oferta(50), premioRaro('')], 50],           // premio con value vacío: se ignora, no truena
+  ['11', 200, 50, [oferta(50), premioRaro('abc')], 50],        // premio con value no numérico: se ignora
+  ['13', 200, 50, [oferta(50), premioRaro('1x5')], 50],         // texto con un carácter raro entre dígitos: se ignora
+  ['12', 200, 70, [oferta(50), premioRaro('20')], 50],         // premio con value en texto numérico: se resta
 ];
 
 beforeAll(async () => {
