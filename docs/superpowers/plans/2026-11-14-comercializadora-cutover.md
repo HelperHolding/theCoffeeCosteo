@@ -2225,6 +2225,14 @@ Cada paso dice **quién** lo hace:
 
 Los comandos son de PowerShell, desde `C:\Users\sebcm\Projects\thecoffee-costeos`, salvo que se diga otra cosa. Los SQL y scripts de una vez viven en `$env:TEMP\plan4\` (Tarea 8, Step 1), nunca en el repo. Los SQL de bliocjvq se abren y se pegan completos en su SQL Editor.
 
+> **Actualización 2026-11-19 (manda sobre los horarios de abajo):**
+>
+> - Desde el 2026-11-18 `zoho-generar-oc` corre **solo lunes y jueves a las 14:00 UTC (08:00 CDMX)** en los dos sitios (migración 71 del portal; `20261119000001` del viejo). `com-minmax` sigue diario a las 12:30 UTC. Donde abajo dice "13:05 UTC" o "07:05 CDMX", léase "14:00 UTC / 08:00 CDMX, solo lunes y jueves".
+> - **Paridad (Tarea 9):** corre cada día después de las 14:00 UTC (tarea programada local "Paridad Comercializadora diaria", 08:30 CDMX). Los días sin OC solo comparan mín/máx y OVs; la regla "al menos un día con OC del viejo" se cumple con un lunes o jueves.
+> - **No copiar editables del viejo al portal (Tarea 9, Step 3) sin revisar antes qué difiere:** el 2026-11-19 el portal tenía el kit de la OV COM-OV-04758 y `aper.por_mes = 10`, y se igualó el viejo a esos valores (SQL manual del usuario). Copiar viejo → portal revertiría cambios hechos en el portal.
+> - **T-0 (Tarea 10):** conviene un **martes o miércoles**. Ese día el viejo no tiene OC, así que el pre-check 7 solo pide que `com-minmax` de hoy terminó y que nada siga corriendo; la primera OC real del portal sale el siguiente lunes o jueves a las 08:00 CDMX.
+> - El aviso del viejo enlaza a `https://portal.thecoffeemexico.com`.
+
 ### Task 8: migración 70 y sombra
 
 **Files:**
