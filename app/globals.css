@@ -294,6 +294,13 @@
     white-space: normal;
     min-width: 10rem;
   }
+  .tabla-bi-compacta th,
+  .tabla-bi-compacta td {
+    padding-block: 0.5rem;
+  }
+  .tabla-bi-compacta thead th {
+    background: var(--color-surface);
+  }
   /*
    * BI: cinco números clave sin renglones a medias. 2 columnas (la última a lo ancho) y, con espacio, los cinco en fila.
    */
