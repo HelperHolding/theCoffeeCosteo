@@ -4,8 +4,11 @@ import { cargarConfig, esColumnaFaltante, type SupabaseClient, todo } from "../_
 import { type Cierre, cargarCierres, cerradoEn, periodosDe } from "../_shared/cierres.ts";
 import { hoyCdmx } from "../_shared/fechas.ts";
 import type { FilaPago } from "../_shared/proyeccion.ts";
-import type { ZohoClient } from "../_shared/zoho.ts";
-import { cargarFilas, type Fila } from "../_shared/posicion.ts";
+import { type ZohoClient, ZohoError } from "../_shared/zoho.ts";
+import { cargarFilas, cargarOcsProveedor, esBorrador, type Fila, type OcProveedor } from "../_shared/posicion.ts";
+import { ocAbierta, SKU_MARCADOR } from "../zoho-sync/sync.ts";
+import { type PlanConsolidar, planConsolidar, vendoresConBorrador } from "./consolidar.ts";
+import { asuntoConsolidar, correoConsolidarHtml, type ResultadoConsolidada } from "./correoConsolidar.ts";
 import { recalcular } from "../com-minmax/minmax.ts";
 
 export type { Fila };
@@ -100,7 +103,7 @@ export function proponer(filas: Fila[], sumarYulius: boolean, ajuste?: AjusteCie
   return { porProveedor: [...grupos.values()].sort((a, b) => a.vendor_id.localeCompare(b.vendor_id)), aCorregir };
 }
 
-export function cuerpoOc(p: Propuesta["porProveedor"][number], fecha: string, locationId: string | null): Record<string, unknown> {
+export function cuerpoOc(p: Propuesta["porProveedor"][number], fecha: string, locationId: string | null, reemplaza?: string[]): Record<string, unknown> {
   const notas = p.lineas.map((l) =>
     `${l.sku}: disp ${l.disponible}, en camino ${l.enCamino}, mín ${l.minimo}, máx ${l.maximo}, venta/día ${l.venta_diaria}` +
     (l.kits ? `, kits ${l.kits}` : "")).join("\n");
@@ -109,7 +112,7 @@ export function cuerpoOc(p: Propuesta["porProveedor"][number], fecha: string, lo
     reference_number: "AUTO-" + fecha.replaceAll("-", ""),
     date: fecha,
     line_items: p.lineas.map((l) => ({ item_id: l.item_id, quantity: l.cantidad, rate: l.costo })),
-    notes: `OC generada automáticamente por thecoffeemexico.com (borrador).\n${notas}`.slice(0, 5000),
+    notes: `${reemplaza?.length ? `Reemplaza a ${reemplaza.join(", ")}\n` : ""}OC generada automáticamente por thecoffeemexico.com (borrador).\n${notas}`.slice(0, 5000),
   };
   if (locationId) b.location_id = locationId;
   return b;
@@ -168,7 +171,7 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
     const { count, error } = await db.from("com_oc_auto").select("id", { count: "exact", head: true })
       .eq("fecha", fecha).eq("modo", "real").eq("estado", "creada");
     if (error) throw error;
-    if ((count ?? 0) > 0) return { corrida, modo, ocs: 0, lineas: 0, aCorregir: 0, errores: [] as string[], omitida: "ya corrió hoy" };
+    if ((count ?? 0) > 0) return { corrida, modo, ocs: 0, lineas: 0, aCorregir: 0, errores: [] as string[], omitida: "ya corrió hoy", consolidadas: 0, alertas: 0 };
   }
 
   const rec = await (opts.recalcular ?? recalcular)(db, fecha, { borradores: false });
@@ -240,6 +243,24 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
   for (const g of prop.porProveedor) { const m = minimoDe.get(g.vendor_id); if (m) g.minimo = m; }
   const locationId = Deno.env.get("ZOHO_LOCATION_ID") ?? null;
 
+  // Consolidación de borradores y alertas por OCs emitidas (spec 2026-11-20). Con la bandera apagada no se lee nada más.
+  let zCons: ZohoClient | null = null;
+  let plan: PlanConsolidar | null = null;
+  if (cfg.auto.consolidar) {
+    let ocs = await cargarOcsProveedor(db);
+    const candidatos = vendoresConBorrador(prop, ocs);
+    if (modo === "real" && candidatos.size) {
+      if (!crearZoho) throw new Error("modo real sin cliente de Zoho");
+      const v = await verificarBorradores(zCons ??= crearZoho(), ocs, candidatos);
+      ocs = v.ocs;
+      errores.push(...v.avisos);
+    }
+    plan = planConsolidar({ filas, ocs, prop, proponerCon: (x) => proponer(x, cfg.inv.yulius, ajuste, ajusteMin) });
+    for (const g of plan.porProveedor) { const m = minimoDe.get(g.vendor_id); if (m) g.minimo = m; }
+  }
+  const grupos = plan?.porProveedor ?? prop.porProveedor;
+  const resultadoCons: ResultadoConsolidada[] = [];
+
   const creadas: Parameters<typeof correoHtml>[0]["creadas"] = [];
   const marcadasDe = (g: Propuesta["porProveedor"][number]) => {
     const m = g.lineas.filter((l) => l.adelanto_cierre || l.cierre_tarde || l.adelanto_minimo)
@@ -247,34 +268,122 @@ export async function generar(db: SupabaseClient, crearZoho: (() => ZohoClient) 
     return { ...(m.length ? { marcadas: m } : {}), ...(g.minimo ? { minimo: g.minimo } : {}), ...(g.bajo_minimo ? { bajo_minimo: true } : {}) };
   };
   if (modo === "real" && !crearZoho) throw new Error("modo real sin cliente de Zoho");
-  const z = modo === "real" ? crearZoho!() : null;
-  for (const g of prop.porProveedor) {
+  const z = modo === "real" ? (zCons ??= crearZoho!()) : null;
+  for (const g of grupos) {
+    const c = plan?.consolidadas.find((x) => x.vendor_id === g.vendor_id);
+    const alerta = plan?.alertas.find((x) => x.vendor_id === g.vendor_id);
+    const reemplaza: { zoho_po_id: string; po_number: string; cancelada: boolean; error?: string }[] =
+      (c?.borradores ?? []).map((b) => ({ ...b, cancelada: false }));
     const fila = { corrida_id: corrida, origen: opts.origen, modo, vendor_id: g.vendor_id, vendor_name: g.vendor_name,
-      lineas: g.lineas, monto: g.monto, fecha };
+      lineas: g.lineas, monto: g.monto, fecha,
+      ...(c ? { reemplaza } : {}), ...(alerta ? { alerta_emitidas: alerta.emitidas } : {}) };
+    const alCorreo = (nueva: string | null, error?: string) => {
+      if (!c) return;
+      resultadoCons.push({
+        vendor_name: g.vendor_name, nueva, borradores: reemplaza.map((b) => ({ po_number: b.po_number, cancelada: b.cancelada, ...(b.error ? { error: b.error } : {}) })),
+        lineas: g.lineas.map((l) => ({ sku: l.sku, nombre: l.nombre, antes: l.antes ?? null, ahora: l.cantidad, origen: l.origen ?? "nuevo" })),
+        quitados: c.quitados, monto_antes: c.monto_antes, monto: g.monto, ...(error ? { error } : {}),
+      });
+    };
     if (!z) {
       const { error } = await db.from("com_oc_auto").insert({ ...fila, estado: "simulada" });
       if (error) throw error;
       creadas.push({ vendor_name: g.vendor_name, po_number: null, monto: g.monto, lineas: g.lineas.length, ...marcadasDe(g) });
+      alCorreo(null);
+      continue;
+    }
+    // Una línea que pasa del borrador sin artículo de Zoho no se puede volver a crear: no se toca nada de ese proveedor.
+    if (c && g.lineas.some((l) => !l.item_id)) {
+      const msg = `${g.vendor_name}: línea sin artículo de Zoho; no se consolidó`;
+      errores.push(msg);
+      const { error } = await db.from("com_oc_auto").insert({ ...fila, estado: "error", error: msg });
+      if (error) throw error;
+      alCorreo(null, msg);
       continue;
     }
     let po: { purchaseorder_id: string; purchaseorder_number: string };
     try {
-      po = (await z.post<{ purchaseorder: { purchaseorder_id: string; purchaseorder_number: string } }>("/purchaseorders", cuerpoOc(g, fecha, locationId))).purchaseorder;
+      po = (await z.post<{ purchaseorder: { purchaseorder_id: string; purchaseorder_number: string } }>("/purchaseorders",
+        cuerpoOc(g, fecha, locationId, c?.borradores.map((b) => b.po_number)))).purchaseorder;
     } catch (e) {
       const msg = `${g.vendor_name}: ${(e as Error).message}`;
       errores.push(msg);
       const { error } = await db.from("com_oc_auto").insert({ ...fila, estado: "error", error: msg });
       if (error) throw error;
+      alCorreo(null, msg);
       continue;
+    }
+    // Solo con la OC nueva creada se cancelan los borradores viejos.
+    for (const b of reemplaza) {
+      try {
+        await cancelarBorrador(z, b.zoho_po_id);
+        b.cancelada = true;
+      } catch (e) {
+        b.error = (e as Error).message;
+        errores.push(`${g.vendor_name}: cancelar a mano ${b.po_number} (${b.error}); la OC nueva ${po.purchaseorder_number} ya está creada`);
+      }
     }
     // La OC ya existe en Zoho: si no se puede registrar, se reporta en el correo en vez de perderla.
     const { error } = await db.from("com_oc_auto").insert({ ...fila, estado: "creada", zoho_po_id: po.purchaseorder_id, po_number: po.purchaseorder_number });
     if (error) errores.push(`${g.vendor_name}: OC ${po.purchaseorder_number} creada en Zoho pero no se registró: ${(error as { message?: string }).message ?? String(error)}`);
     creadas.push({ vendor_name: g.vendor_name, po_number: po.purchaseorder_number, zoho_po_id: po.purchaseorder_id, monto: g.monto, lineas: g.lineas.length, ...marcadasDe(g) });
+    alCorreo(po.purchaseorder_number);
   }
 
   const enviado = await enviarCorreo(cfg.auto.correos, `OCs automáticas ${fecha}${modo === "simulacion" ? " (simulación)" : ""}: ${creadas.length} proveedor(es)`,
     correoHtml({ fecha, modo, creadas, aCorregir: prop.aCorregir, errores }));
   if (!enviado) errores.push("no se pudo enviar el correo");
-  return { corrida, modo, ocs: creadas.length, lineas: prop.porProveedor.reduce((s, g) => s + g.lineas.length, 0), aCorregir: prop.aCorregir.length, errores };
+  if (plan && (plan.consolidadas.length || plan.alertas.length)) {
+    const ok2 = await enviarCorreo(cfg.auto.correos, asuntoConsolidar(fecha, modo),
+      correoConsolidarHtml({ fecha, modo, consolidadas: resultadoCons, alertas: plan.alertas }));
+    if (!ok2) errores.push("no se pudo enviar el correo de consolidaciones");
+  }
+  return { corrida, modo, ocs: creadas.length, lineas: grupos.reduce((s, g) => s + g.lineas.length, 0), aCorregir: prop.aCorregir.length, errores,
+    consolidadas: plan?.consolidadas.length ?? 0, alertas: plan?.alertas.length ?? 0 };
+}
+
+/** GET en vivo de cada borrador de los proveedores a consolidar: toma estado, cantidades, precios e item_id de Zoho. */
+export async function verificarBorradores(z: ZohoClient, ocs: OcProveedor[], vendores: Set<string>): Promise<{ ocs: OcProveedor[]; avisos: string[] }> {
+  const ids = [...new Set(ocs.filter((o) => esBorrador(o.status) && vendores.has(o.vendor_id)).map((o) => o.zoho_po_id))];
+  const avisos: string[] = [];
+  let out = ocs;
+  for (const id of ids) {
+    const po0 = out.find((o) => o.zoho_po_id === id)!;
+    type PoVivo = { status: string; line_items: { item_id: string; sku?: string; quantity: number; quantity_received?: number; rate: number }[] };
+    let po: PoVivo;
+    try {
+      po = (await z.get<{ purchaseorder: PoVivo }>(`/purchaseorders/${id}`)).purchaseorder;
+    } catch (e) {
+      if (e instanceof ZohoError && e.status === 404) {
+        out = out.filter((o) => o.zoho_po_id !== id);
+        avisos.push(`${po0.po_number}: ya no existe en Zoho`);
+        continue;
+      }
+      throw e;
+    }
+    const status = String(po.status ?? "").toLowerCase();
+    if (!ocAbierta(status)) {
+      out = out.filter((o) => o.zoho_po_id !== id);
+      avisos.push(`${po0.po_number}: ya está ${status} en Zoho`);
+      continue;
+    }
+    const vivas: OcProveedor[] = (po.line_items ?? []).map((l) => ({
+      ...po0, status, sku: String(l.sku || SKU_MARCADOR), item_id: l.item_id || null, cantidad: Number(l.quantity),
+      pendiente: Number(l.quantity) - Number(l.quantity_received ?? 0), precio: Number(l.rate),
+    }));
+    if (status !== "draft") avisos.push(`${po0.po_number}: ya no es borrador (${status}); no se reemplaza`);
+    out = [...out.filter((o) => o.zoho_po_id !== id), ...vivas];
+  }
+  return { ocs: out, avisos };
+}
+
+/** Cancela un borrador; si Zoho no permite cancelar (4xx), lo borra: nunca se envió al proveedor. Un 5xx se relanza. */
+export async function cancelarBorrador(z: ZohoClient, id: string): Promise<void> {
+  try {
+    await z.post(`/purchaseorders/${id}/status/cancelled`, {});
+  } catch (e) {
+    const s = e instanceof ZohoError ? e.status : 0;
+    if (!(s >= 400 && s < 500)) throw e;
+    await z.del(`/purchaseorders/${id}`);
+  }
 }
