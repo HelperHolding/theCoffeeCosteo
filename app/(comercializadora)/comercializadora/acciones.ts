@@ -267,6 +267,20 @@ export async function eliminarOc(folio: string): Promise<Resultado> {
 }
 
 /** _minGuardar: la función guarda en la plataforma y envía a Zoho; lo guardado queda aunque Zoho falle. */
+/** Reintento de WhatsApp (spec OC por WhatsApp §7): borra el registro fallido para que el próximo webhook lo reserve. */
+export async function reintentarWhatsapp(zohoPoId: string): Promise<Resultado<{ borrada: boolean }>> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await com(s.db).rpc('com_oc_whatsapp_reintentar', { p_zoho_po_id: zohoPoId });
+    if (r.error) return fallo(r.error);
+    revalidatePath('/comercializadora/ordenes');
+    return { ok: true, borrada: r.data === true };
+  } catch (e) {
+    return fallo(e);
+  }
+}
+
 export async function guardarMinimo(
   vendor_id: string,
   monto: string,

@@ -7,7 +7,13 @@ import { claseCampo } from '@/lib/crm/formato';
 import { pesos } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
 import { textoDestino, validarOc, type FormOc, type OcGrupo } from '@/lib/comercializadora/ordenes';
-import { eliminarOc, guardarOc, recibirOc } from '@/app/(comercializadora)/comercializadora/acciones';
+import {
+  eliminarOc,
+  guardarOc,
+  recibirOc,
+  reintentarWhatsapp,
+} from '@/app/(comercializadora)/comercializadora/acciones';
+import { etiquetaWhatsapp, type EnvioWhatsapp } from '@/lib/comercializadora/whatsapp';
 import type { FormPrellenado } from '@/lib/comercializadora/crearOc';
 
 const TONO: Record<OcGrupo['estado'], Estado> = { emitida: 'neutro', parcial: 'bajo', recibida: 'ok' };
@@ -28,6 +34,7 @@ export function Ordenes(p: {
   editable: boolean;
   hoy: string;
   prellenado?: FormPrellenado | null;
+  whatsapp?: Record<string, EnvioWhatsapp>;
 }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState<string | null>(null);
@@ -297,6 +304,7 @@ export function Ordenes(p: {
                 <th>Destino</th>
                 <th>F. Arribo</th>
                 <th>Estado</th>
+                <th>WhatsApp</th>
               </tr>
             </thead>
             <tbody>
@@ -396,6 +404,31 @@ export function Ordenes(p: {
                   <td>{g.fecha_arribo ? fechaCorta(g.fecha_arribo) : '—'}</td>
                   <td>
                     <Pill estado={TONO[g.estado]}>{NOMBRE[g.estado]}</Pill>
+                  </td>
+                  <td>
+                    {(() => {
+                      const fila = p.whatsapp?.[g.folio];
+                      const w = etiquetaWhatsapp(fila);
+                      return (
+                        <div className="space-y-1">
+                          <Pill estado={w.tono}>{w.texto}</Pill>
+                          {p.editable && w.reintentable && fila ? (
+                            <button
+                              type="button"
+                              className="block text-xs underline"
+                              aria-label={`Reintentar WhatsApp ${g.folio}`}
+                              onClick={async () => {
+                                const r = await reintentarWhatsapp(fila.zoho_po_id);
+                                if ('error' in r) setError(r.error);
+                                else router.refresh();
+                              }}
+                            >
+                              Reintentar WhatsApp
+                            </button>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

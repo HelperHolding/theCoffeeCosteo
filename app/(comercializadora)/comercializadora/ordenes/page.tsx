@@ -8,6 +8,7 @@ import { agruparOcs, resumenOcs, type MovCompra } from '@/lib/comercializadora/o
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { pesos } from '@/lib/comercializadora/formato';
 import { prellenadoOc } from '@/lib/comercializadora/crearOc';
+import type { EnvioWhatsapp } from '@/lib/comercializadora/whatsapp';
 
 const ESTADOS = ['emitida', 'parcial', 'recibida'];
 
@@ -19,7 +20,7 @@ export default async function OrdenesPagina({
   const { db, accesos } = await sesionComercializadora();
   const sp = await searchParams;
   const hoy = hoyCdmx();
-  const [movs, proveedores, catalogo, sync] = await Promise.all([
+  const [movs, proveedores, catalogo, sync, envios] = await Promise.all([
     leerTodoCom<MovCompra>(
       db,
       'com_movimientos',
@@ -42,7 +43,14 @@ export default async function OrdenesPagina({
       .eq('proceso', 'zoho-sync')
       .order('inicio', { ascending: false })
       .limit(1),
+    leerTodoCom<EnvioWhatsapp>(
+      db,
+      'com_oc_whatsapp',
+      'zoho_po_id,po_number,estado,error,enviado_at,leido_at',
+      'zoho_po_id',
+    ),
   ]);
+  const whatsapp = Object.fromEntries(envios.map((w) => [w.po_number, w]));
   const k = resumenOcs(movs, hoy);
   const estado = ESTADOS.includes(sp.estado ?? '') ? sp.estado : undefined;
   const mes = /^\d{4}-\d{2}$/.test(sp.mes ?? '') ? sp.mes : undefined;
@@ -94,6 +102,7 @@ export default async function OrdenesPagina({
         editable={editable}
         hoy={hoy}
         prellenado={prellenado}
+        whatsapp={whatsapp}
       />
     </>
   );
