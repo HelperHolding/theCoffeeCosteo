@@ -9,12 +9,15 @@ import {
   type RolFranq,
 } from '@/lib/supabase/sesion';
 import { cookieBarista } from '@/lib/franquiciatarios/servidor';
-import type { SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
+import { configDe } from '@/lib/sucursales/config';
+import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
+import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
+import type { MomentoArqueo, MomentoConteo, SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
-const SECCIONES: SeccionClave[] = ['apertura', 'cambio', 'cierre'];
-const FIRMAS: TipoFirma[] = ['responsable', 'entrega', 'recibe'];
+const SECCIONES: SeccionClave[] = ['apertura', 'durante', 'cambio', 'medio', 'cierre'];
+const FIRMAS: TipoFirma[] = ['responsable', 'entrega', 'recibe', 'visto_bueno'];
 const SIN_ACCESO = 'No tienes acceso a esta sucursal.';
 
 /** Sesión del módulo y rol en la sucursal pedida; null si no la tiene (la base lo vuelve a exigir). */
@@ -38,7 +41,7 @@ async function barista(companyId: number, rol: RolFranq): Promise<number | null>
 const fallo = (e: unknown): { error: string } => {
   const x = (e && typeof e === 'object' ? e : {}) as { message?: unknown; code?: unknown };
   const m = typeof x.message === 'string' ? x.message : '';
-  // P0001: mensajes que escribimos en las funciones de la migración 75 (ya en español, para la persona).
+  // P0001: mensajes que escribimos en las funciones de las migraciones 75 y 79 (ya en español, para la persona).
   if (x.code === 'P0001' && m.length < 300) return { error: m };
   if (x.code === '42501') return { error: m.startsWith('Solo') ? m : SIN_ACCESO };
   // Dos dispositivos registraron lo mismo a la vez: lo otro ya quedó.
@@ -113,6 +116,7 @@ export async function responder(datos: {
   cumple: boolean;
   observacion?: string | null;
   motivo?: string | null;
+  dato?: string | null;
 }): Promise<Resultado> {
   if (!SECCIONES.includes(datos.seccion) || typeof datos.cumple !== 'boolean')
     return { error: 'Datos inválidos.' };
@@ -131,6 +135,7 @@ export async function responder(datos: {
       p_barista: b,
       p_dispositivo: disp,
       p_motivo: datos.motivo ?? null,
+      p_dato: datos.dato ?? null,
     }),
   );
 }
@@ -175,6 +180,7 @@ export async function corregir(datos: {
   cumple: boolean;
   observacion?: string | null;
   motivo: string;
+  dato?: string | null;
 }): Promise<Resultado> {
   const c = await contexto(datos.companyId);
   if (!c || !esGestorFranq(c.rol))
@@ -187,6 +193,7 @@ export async function corregir(datos: {
       p_observacion: datos.observacion ?? null,
       p_motivo: String(datos.motivo ?? ''),
       p_dispositivo: disp,
+      p_dato: datos.dato ?? null,
     }),
   );
 }
@@ -206,6 +213,228 @@ export async function guardarBarista(datos: {
       p_id: datos.id,
       p_nombre: String(datos.nombre ?? ''),
       p_activo: datos.activo,
+    }),
+  );
+}
+
+/**
+ * Recepción de un pedido a la Comercializadora. El servidor vuelve a leer el pedido de ESTA sucursal (candado de
+ * apertura) y arma las diferencias contra sus cantidades: del navegador solo llega lo recibido por renglón.
+ */
+export async function recibirPedido(datos: {
+  companyId: number;
+  pedido: string;
+  /** Cantidad recibida por renglón, en el orden en que se mostraron las líneas del pedido. */
+  recibidos: number[];
+  observacion?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  // Pedidos y recepciones son de gerencia (la base también lo exige: migración 82).
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario registran recepciones.' };
+  const cfg = configDe(datos.companyId);
+  if (!cfg) return { error: SIN_ACCESO };
+  const lectura = await leerPedidosSucursal(cfg);
+  if (!lectura.ok) return { error: lectura.error };
+  const recepciones = await c.db
+    .from('franq_recepciones')
+    .select('*')
+    .eq('company_id', datos.companyId)
+    .eq('pedido_id', String(datos.pedido));
+  if (recepciones.error) return { error: 'No se pudo revisar el pedido. Intenta de nuevo.' };
+  const pedido = armarPedidos(
+    lectura.filas.filter((f) => f.id === datos.pedido),
+    recepciones.data ?? [],
+    { conMontos: false },
+  )[0];
+  if (!pedido) return { error: 'Ese pedido no es de esta sucursal.' };
+  if (!pedido.recibible)
+    return {
+      error: pedido.recepcion
+        ? 'Este pedido ya tiene su recepción registrada.'
+        : 'Este pedido aún no se puede recibir.',
+    };
+  const rec = Array.isArray(datos.recibidos) ? datos.recibidos : [];
+  if (
+    rec.length !== pedido.lineas.length ||
+    rec.some((x) => typeof x !== 'number' || !Number.isFinite(x) || x < 0)
+  )
+    return { error: 'Revisa las cantidades recibidas.' };
+  const diferencias = pedido.lineas
+    .map((l, i) => ({ nombre: l.nombre, sku: l.sku, pedido: l.cantidad, recibido: rec[i] }))
+    .filter((d) => d.pedido !== d.recibido);
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_recibir', {
+      p_company: datos.companyId,
+      p_pedido: pedido.id,
+      p_folio: pedido.folio,
+      p_diferencias: diferencias,
+      p_observacion: datos.observacion ?? null,
+      p_barista: null,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+/** Conteo de insumos críticos de hoy (apertura o medio turno). Cualquier rol de la sucursal; la base exige completo. */
+export async function contar(datos: {
+  companyId: number;
+  momento: MomentoConteo;
+  conteos: { insumo: number; cantidad: number }[];
+}): Promise<Resultado> {
+  if (datos.momento !== 'apertura' && datos.momento !== 'medio') return { error: 'Datos inválidos.' };
+  const lista = Array.isArray(datos.conteos) ? datos.conteos : [];
+  if (
+    lista.some(
+      (c) =>
+        !Number.isSafeInteger(c?.insumo) || typeof c?.cantidad !== 'number' || !Number.isFinite(c.cantidad),
+    )
+  )
+    return { error: 'Revisa las cantidades.' };
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_contar', {
+      p_company: datos.companyId,
+      p_momento: datos.momento,
+      p_conteos: lista.map((x) => ({ insumo: x.insumo, cantidad: x.cantidad })),
+      p_barista: b,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+/** Arma la lista de insumos críticos sugerida por el consumo teórico (solo si la sucursal no tiene lista). */
+export async function sugerirInsumos(companyId: number): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario arman la lista.' };
+  return ejecutar(() => c.db.rpc('franq_sugerir_insumos', { p_company: companyId }));
+}
+
+export async function guardarInsumo(datos: {
+  companyId: number;
+  id: number | null;
+  nombre: string;
+  unidad: string;
+  orden: number | null;
+  activo: boolean;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario ajustan la lista.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_insumo_guardar', {
+      p_company: datos.companyId,
+      p_id: datos.id,
+      p_nombre: String(datos.nombre ?? ''),
+      p_unidad: String(datos.unidad ?? ''),
+      p_orden: datos.orden,
+      p_activo: datos.activo,
+    }),
+  );
+}
+
+/** Arqueo ciego de hoy (medio turno o cierre). Cualquier rol; no devuelve nada de lo esperado. */
+export async function arquear(datos: {
+  companyId: number;
+  momento: MomentoArqueo;
+  contado: number;
+  observacion?: string | null;
+}): Promise<Resultado> {
+  if ((datos.momento !== 'medio' && datos.momento !== 'cierre') || !Number.isFinite(datos.contado))
+    return { error: 'Datos inválidos.' };
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_arquear', {
+      p_company: datos.companyId,
+      p_momento: datos.momento,
+      p_contado: datos.contado,
+      p_observacion: datos.observacion ?? null,
+      p_barista: b,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+const SOLO_GERENCIA = 'Solo el gerente o el franquiciatario manejan la caja chica.';
+
+export async function registrarGasto(datos: {
+  companyId: number;
+  concepto: string;
+  categoria: string;
+  monto: number;
+  enEfectivo: boolean;
+  comprobante: boolean;
+  nota?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GERENCIA };
+  if (!Number.isFinite(datos.monto)) return { error: 'Escribe el monto del gasto.' };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto', {
+      p_company: datos.companyId,
+      p_concepto: String(datos.concepto ?? ''),
+      p_categoria: String(datos.categoria ?? ''),
+      p_monto: datos.monto,
+      p_en_efectivo: Boolean(datos.enEfectivo),
+      p_comprobante: Boolean(datos.comprobante),
+      p_nota: datos.nota ?? null,
+      p_dispositivo: disp,
+    }),
+  );
+}
+
+export async function anularGasto(companyId: number, gasto: number, motivo: string): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GERENCIA };
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto_anular', { p_gasto: gasto, p_motivo: String(motivo ?? ''), p_dispositivo: disp }),
+  );
+}
+
+export async function configurarCaja(
+  companyId: number,
+  fondo: number,
+  tolerancia: number,
+): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario configuran la caja.' };
+  if (!Number.isFinite(fondo) || !Number.isFinite(tolerancia))
+    return { error: 'Revisa el fondo y la tolerancia.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_caja_configurar', { p_company: companyId, p_fondo: fondo, p_tolerancia: tolerancia }),
+  );
+}
+
+/** Gasto fijo del mes (renta, nómina…): corrige o completa lo que vino de Zoho. Solo gerencia. */
+export async function guardarGastoFijo(datos: {
+  companyId: number;
+  mes: string;
+  concepto: string;
+  monto: number;
+  nota?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol))
+    return { error: 'Solo el gerente o el franquiciatario capturan los gastos fijos.' };
+  if (!/^\d{4}-\d{2}$/.test(datos.mes) || !Number.isFinite(datos.monto)) return { error: 'Datos inválidos.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_gasto_fijo', {
+      p_company: datos.companyId,
+      p_mes: `${datos.mes}-01`,
+      p_concepto: String(datos.concepto ?? ''),
+      p_monto: datos.monto,
+      p_nota: datos.nota ?? null,
     }),
   );
 }

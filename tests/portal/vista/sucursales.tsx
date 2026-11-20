@@ -20,6 +20,9 @@ import { pedidoRappiAPos } from '../../../lib/sucursales/rappi-pos';
 import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
+import { construirServicio } from '../../../lib/sucursales/servicio';
+import { recortarAlPublicado } from '../../../lib/sucursales/servicio-publicado';
+import { servicioSintetico } from './servicio-sintetico';
 
 /**
  * Ventas POS con DATOS SINTÉTICOS: el mismo pipeline del servidor corre en el navegador sobre un
@@ -381,7 +384,7 @@ const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
   const m =
-    /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo|rappi-portal)$/.exec(
+    /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo|rappi-portal|servicio)$/.exec(
       url.pathname,
     );
   if (!m) return fetchNavegador(entrada, init);
@@ -392,6 +395,20 @@ window.fetch = async (entrada, init) => {
   const hasta = q.get('hasta') ?? desde;
   if (m[2] === 'rappi-portal')
     return Response.json(construirRappiPortal(rappiPortalSintetico(desde, hasta), desde, hasta));
+  if (m[2] === 'servicio') {
+    if (!portal)
+      return Response.json({ error: 'Esta sucursal no está conectada al portal de Rappi.' }, { status: 404 });
+    // Como en producción: Rappi publica con retraso (aquí, hasta ayer) y ?ultimo=1 abre en ese día.
+    const publicadoHasta = sumarDias(hoy, -1);
+    const [d, h] = q.get('ultimo') === '1' ? [publicadoHasta, hoy] : [desde, hasta];
+    const corte = publicadoHasta < h ? publicadoHasta : h;
+    const rpc = recortarAlPublicado(servicioSintetico(d, h, hoy, parametros.get('servicio') === 'vacio'), corte);
+    return Response.json({
+      ...construirServicio(rpc, d, h, cfg.zona, false),
+      publicadoHasta,
+      indicadoresHasta: corte < d ? null : corte,
+    });
+  }
   if (m[2] === 'costeo' && !costeo)
     return Response.json({ error: 'No tienes acceso al Costeo de esta sucursal.' }, { status: 403 });
   // Namóra sintética: Rappi del portal traducido al POS, como en producción (fuenteRappi).

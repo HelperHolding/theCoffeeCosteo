@@ -23,6 +23,8 @@ export async function autorizar(params: Promise<{ companyId: string }>): Promise
       /** Sesión y perfil del usuario: para lecturas adicionales bajo su RLS (p. ej. costos de Costeo). */
       db: Extract<Awaited<ReturnType<typeof accesoSucursales>>, { ok: true }>['db'];
       perfil: { rol: string };
+      /** Todas las sucursales asignadas al usuario (p. ej. para saber hasta qué día publicó Rappi). */
+      companias: number[];
     }
   | { ok: false; respuesta: Response }
 > {
@@ -30,7 +32,7 @@ export async function autorizar(params: Promise<{ companyId: string }>): Promise
   if (!a.ok) return { ok: false, respuesta: error(a.status, a.mensaje) };
   const cfg = resolverSucursal((await params).companyId, a.companias);
   if (!cfg) return { ok: false, respuesta: error(404, 'Sucursal no disponible.') };
-  return { ok: true, cfg, db: a.db, perfil: a.perfil };
+  return { ok: true, cfg, db: a.db, perfil: a.perfil, companias: a.companias };
 }
 
 export const invalido = (mensaje: string) => error(400, mensaje);

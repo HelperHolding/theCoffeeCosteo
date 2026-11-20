@@ -1,13 +1,25 @@
 // Arnés visual: sustituye las server actions de Franquiciatarios por un estado en memoria con las MISMAS reglas que la
-// migración 75 (observación en «No», firma con todo respondido, recibe ≠ entrega, firmada = solo gestores con motivo).
+// migraciones 75 y 79 (observación en «No», dato en el «Sí» si el punto lo pide, rondas = renglón propio, firma con los
+// puntos únicos respondidos, recibe ≠ entrega, visto bueno solo gestores, firmada = solo gestores con motivo).
 import type {
   FranqBarista,
   FranqFirma,
+  FranqArqueo,
+  FranqCajaConfig,
+  FranqConteo,
+  FranqGasto,
   FranqIncidencia,
+  FranqInsumo,
+  FranqPunto,
+  FranqRecepcion,
+  MomentoArqueo,
+  MomentoConteo,
   FranqRespuesta,
   SeccionClave,
   TipoFirma,
 } from '../../../lib/franquiciatarios/tipos';
+
+import { armarPedidos, type FilaPedidoLegado } from '../../../lib/franquiciatarios/pedidos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -20,14 +32,27 @@ export const tienda = {
   respuestas: [] as FranqRespuesta[],
   firmas: [] as FranqFirma[],
   incidencias: [] as FranqIncidencia[],
-  /** checklist id por sección (1, 2, 3) y puntos por sección. */
+  /** checklist id por sección y puntos por sección; meta = el punto completo (tipo y dato). */
   puntos: {} as Record<SeccionClave, number[]>,
+  meta: {} as Record<number, FranqPunto>,
+  pedidos: [] as FilaPedidoLegado[],
+  recepciones: [] as FranqRecepcion[],
+  insumos: [] as FranqInsumo[],
+  conteos: [] as FranqConteo[],
+  arqueos: [] as FranqArqueo[],
+  gastos: [] as FranqGasto[],
+  cajaConfig: { fondo: 1500, tolerancia: 20 } as Pick<FranqCajaConfig, 'fondo' | 'tolerancia'> | null,
   dia: '',
 };
 let id = 1000;
 const ahora = () => new Date().toISOString();
 const avisar = () => window.dispatchEvent(new Event('franq-cambio'));
-const CHECK: Record<SeccionClave, number> = { apertura: 1, cambio: 2, cierre: 3 };
+const CHECK: Record<SeccionClave, number> = { apertura: 1, durante: 2, cambio: 3, medio: 3, cierre: 4 };
+const vigentes = (ch: number, punto: number) =>
+  tienda.respuestas.filter(
+    (r) =>
+      r.checklist_id === ch && r.punto_id === punto && !tienda.respuestas.some((x) => x.corrige_id === r.id),
+  );
 const quien = (): { barista_id: number | null; nombre: string } | string => {
   if (tienda.rol !== 'barista') return { barista_id: null, nombre: tienda.perfil };
   const b = tienda.baristas.find((x) => x.id === tienda.elegido && x.activo);
@@ -59,6 +84,7 @@ export async function responder(d: {
   cumple: boolean;
   observacion?: string | null;
   motivo?: string | null;
+  dato?: string | null;
 }): Promise<Resultado> {
   await espera();
   const q = quien();
@@ -66,7 +92,25 @@ export async function responder(d: {
   const ch = CHECK[d.seccion];
   if (!d.cumple && (d.observacion ?? '').trim().length < 3)
     return { error: 'Todo «No» se explica en Observaciones.' };
-  const previa = tienda.respuestas.filter((r) => r.checklist_id === ch && r.punto_id === d.punto).at(-1);
+  const punto = tienda.meta[d.punto];
+  const dato = (d.dato ?? '').trim() || null;
+  if (d.cumple && punto?.dato && !dato) return { error: `Anota ${punto.dato.toLowerCase()}.` };
+  if (punto?.tipo === 'recurrente') {
+    tienda.respuestas.push({
+      ...base(q),
+      id: ++id,
+      checklist_id: ch,
+      punto_id: d.punto,
+      cumple: d.cumple,
+      observacion: d.cumple ? null : (d.observacion ?? '').trim(),
+      corrige_id: null,
+      motivo: null,
+      dato,
+    });
+    avisar();
+    return { ok: true };
+  }
+  const previa = vigentes(ch, d.punto).at(-1);
   const firmada = tienda.firmas.some((f) => f.checklist_id === ch);
   if (firmada && tienda.rol === 'barista')
     return { error: 'La sección ya está firmada; pide al gerente que registre la corrección.' };
@@ -80,6 +124,7 @@ export async function responder(d: {
     observacion: d.cumple ? null : (d.observacion ?? '').trim(),
     corrige_id: previa?.id ?? null,
     motivo: firmada ? (d.motivo ?? '').trim() : null,
+    dato,
   });
   avisar();
   return { ok: true };
@@ -90,8 +135,16 @@ export async function firmar(_c: number, seccion: SeccionClave, tipo: TipoFirma)
   const q = quien();
   if (typeof q === 'string') return { error: q };
   const ch = CHECK[seccion];
+  if (tipo === 'visto_bueno') {
+    if (tienda.rol === 'barista') return { error: 'El visto bueno lo da el gerente o el franquiciatario.' };
+    if (!tienda.firmas.some((f) => f.checklist_id === ch && f.tipo === 'responsable'))
+      return { error: 'Primero firma el responsable del cierre.' };
+  }
   const faltan = tienda.puntos[seccion].filter(
-    (p) => !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p),
+    (p) =>
+      tipo !== 'visto_bueno' &&
+      tienda.meta[p]?.tipo !== 'recurrente' &&
+      !tienda.respuestas.some((r) => r.checklist_id === ch && r.punto_id === p),
   );
   if (faltan.length) return { error: `Faltan ${faltan.length} puntos por responder antes de firmar.` };
   if (tipo === 'recibe') {
@@ -120,6 +173,7 @@ export async function corregir(d: {
   cumple: boolean;
   observacion?: string | null;
   motivo: string;
+  dato?: string | null;
 }): Promise<Resultado> {
   await espera();
   const previa = tienda.respuestas.find((r) => r.id === d.respuesta);
@@ -133,6 +187,7 @@ export async function corregir(d: {
     observacion: d.cumple ? null : (d.observacion ?? '').trim(),
     corrige_id: previa.id,
     motivo: d.motivo.trim(),
+    dato: (d.dato ?? '').trim() || previa.dato,
   });
   avisar();
   return { ok: true };
@@ -173,6 +228,242 @@ export async function guardarBarista(d: {
 export async function verComo(rol: string): Promise<Resultado> {
   await espera();
   tienda.rol = rol === 'admin' ? 'gerente' : (rol as typeof tienda.rol);
+  avisar();
+  return { ok: true };
+}
+
+/** Recepción con las reglas de franq_recibir y de recibirPedido (diferencias contra lo pedido, observación). */
+export async function recibirPedido(d: {
+  pedido: string;
+  recibidos: number[];
+  observacion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario registran recepciones.' };
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const p = armarPedidos(
+    tienda.pedidos.filter((x) => x.id === d.pedido),
+    tienda.recepciones,
+    { conMontos: false },
+  )[0];
+  if (!p) return { error: 'Ese pedido no es de esta sucursal.' };
+  if (!p.recibible) return { error: 'Este pedido ya tiene su recepción registrada.' };
+  const diferencias = p.lineas
+    .map((l, i) => ({ nombre: l.nombre, sku: l.sku, pedido: l.cantidad, recibido: d.recibidos[i] }))
+    .filter((x) => x.pedido !== x.recibido);
+  if (diferencias.length && (d.observacion ?? '').trim().length < 3)
+    return { error: 'Explica qué pasó con lo que llegó distinto.' };
+  tienda.recepciones.push({
+    ...base(q),
+    id: ++id,
+    pedido_id: p.id,
+    folio: p.folio,
+    completo: diferencias.length === 0,
+    diferencias,
+    observacion: (d.observacion ?? '').trim() || null,
+  });
+  avisar();
+  return { ok: true };
+}
+
+/** Conteo con las reglas de franq_contar: todos los insumos activos, cantidades ≥ 0, un recuento corrige al vigente. */
+export async function contar(d: {
+  momento: MomentoConteo;
+  conteos: { insumo: number; cantidad: number }[];
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const activos = tienda.insumos.filter((i) => i.activo);
+  const faltan = activos.filter((i) => !d.conteos.some((c) => c.insumo === i.id)).length;
+  if (faltan) return { error: `Faltan ${faltan} insumos por contar.` };
+  if (d.conteos.some((c) => c.cantidad < 0)) return { error: 'Las cantidades van de 0 en adelante.' };
+  for (const c of d.conteos) {
+    const previo = tienda.conteos
+      .filter(
+        (x) =>
+          x.dia === tienda.dia &&
+          x.momento === d.momento &&
+          x.insumo_id === c.insumo &&
+          !tienda.conteos.some((y) => y.corrige_id === x.id),
+      )
+      .at(-1);
+    tienda.conteos.push({
+      ...base(q),
+      id: ++id,
+      dia: tienda.dia,
+      momento: d.momento,
+      insumo_id: c.insumo,
+      cantidad: c.cantidad,
+      corrige_id: previo?.id ?? null,
+    });
+  }
+  avisar();
+  return { ok: true };
+}
+
+export async function sugerirInsumos(): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista') return { error: 'Solo el gerente o el franquiciatario arman la lista.' };
+  if (tienda.insumos.some((i) => i.activo)) return { error: 'La sucursal ya tiene su lista de insumos.' };
+  [
+    'Café Tostado En Grano White 1.5 Kg',
+    'Leche Deslactosadas',
+    'Leche Entera',
+    'Croissant Tradicional',
+  ].forEach((nombre, i) =>
+    tienda.insumos.push({
+      id: ++id,
+      company_id: 514,
+      insumo_id: null,
+      nombre,
+      unidad: i === 3 ? 'pza' : 'paquete',
+      orden: i + 1,
+      activo: true,
+      origen: 'sugerido',
+      creado_por: 'g',
+      creado_en: ahora(),
+      actualizado_por: null,
+      actualizado_en: null,
+    }),
+  );
+  avisar();
+  return { ok: true };
+}
+
+export async function guardarInsumo(d: {
+  id: number | null;
+  nombre: string;
+  unidad: string;
+  orden: number | null;
+  activo: boolean;
+}): Promise<Resultado> {
+  await espera();
+  const nombre = d.nombre.trim().replace(/\s+/g, ' ');
+  if (nombre.length < 2 || !d.unidad.trim())
+    return { error: 'Escribe el nombre y la unidad en que se cuenta.' };
+  if (
+    tienda.insumos.some((i) => i.activo && i.id !== d.id && i.nombre.toLowerCase() === nombre.toLowerCase())
+  )
+    return { error: 'Ya hay un insumo activo con ese nombre.' };
+  if (d.id === null)
+    tienda.insumos.push({
+      id: ++id,
+      company_id: 514,
+      insumo_id: null,
+      nombre,
+      unidad: d.unidad.trim(),
+      orden: tienda.insumos.length + 1,
+      activo: true,
+      origen: 'manual',
+      creado_por: 'g',
+      creado_en: ahora(),
+      actualizado_por: null,
+      actualizado_en: null,
+    });
+  else
+    Object.assign(
+      tienda.insumos.find((i) => i.id === d.id)!,
+      { nombre, unidad: d.unidad.trim(), activo: d.activo },
+    );
+  avisar();
+  return { ok: true };
+}
+
+/** Arqueo ciego con las reglas de franq_arquear (recuento corrige al vigente del mismo momento). */
+export async function arquear(d: {
+  momento: MomentoArqueo;
+  contado: number;
+  observacion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  if (!(d.contado >= 0)) return { error: 'Escribe el efectivo contado (de 0 en adelante).' };
+  const previo = tienda.arqueos
+    .filter(
+      (a) =>
+        a.dia === tienda.dia && a.momento === d.momento && !tienda.arqueos.some((x) => x.corrige_id === a.id),
+    )
+    .at(-1);
+  tienda.arqueos.push({
+    ...base(q),
+    id: ++id,
+    dia: tienda.dia,
+    momento: d.momento,
+    contado: Math.round(d.contado * 100) / 100,
+    observacion: (d.observacion ?? '').trim() || null,
+    corrige_id: previo?.id ?? null,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function registrarGasto(d: {
+  concepto: string;
+  categoria: string;
+  monto: number;
+  enEfectivo: boolean;
+  comprobante: boolean;
+}): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario manejan la caja chica.' };
+  if (d.concepto.trim().length < 3) return { error: 'Describe el gasto.' };
+  if (!(d.monto > 0)) return { error: 'Escribe el monto del gasto.' };
+  tienda.gastos.push({
+    ...base({ barista_id: null, nombre: tienda.perfil }),
+    id: ++id,
+    dia: tienda.dia,
+    concepto: d.concepto.trim(),
+    categoria: d.categoria,
+    monto: Math.round(d.monto * 100) / 100,
+    en_efectivo: d.enEfectivo,
+    comprobante: d.comprobante,
+    nota: null,
+    anula_id: null,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function anularGasto(_c: number, gasto: number, motivo: string): Promise<Resultado> {
+  await espera();
+  if (motivo.trim().length < 3) return { error: 'Escribe por qué se anula.' };
+  if (tienda.gastos.some((g) => g.anula_id === gasto)) return { error: 'Ese gasto ya está anulado.' };
+  const g = tienda.gastos.find((x) => x.id === gasto)!;
+  tienda.gastos.push({
+    ...base({ barista_id: null, nombre: tienda.perfil }),
+    id: ++id,
+    dia: g.dia,
+    concepto: null,
+    categoria: null,
+    monto: null,
+    en_efectivo: g.en_efectivo,
+    comprobante: false,
+    nota: motivo.trim(),
+    anula_id: gasto,
+  });
+  avisar();
+  return { ok: true };
+}
+
+export async function configurarCaja(_c: number, fondo: number, tolerancia: number): Promise<Resultado> {
+  await espera();
+  if (!(fondo >= 0) || !(tolerancia >= 0)) return { error: 'Revisa el fondo y la tolerancia.' };
+  tienda.cajaConfig = { fondo, tolerancia };
+  avisar();
+  return { ok: true };
+}
+
+/** Gasto fijo (franq_gasto_fijo): en el arnés solo valida; el P&L sintético no cambia. */
+export async function guardarGastoFijo(d: { concepto: string; monto: number }): Promise<Resultado> {
+  await espera();
+  if (tienda.rol === 'barista')
+    return { error: 'Solo el gerente o el franquiciatario capturan los gastos fijos.' };
+  if (!(d.monto >= 0)) return { error: 'Escribe el monto (de 0 en adelante).' };
   avisar();
   return { ok: true };
 }

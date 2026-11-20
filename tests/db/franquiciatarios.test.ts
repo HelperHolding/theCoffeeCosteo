@@ -4,6 +4,8 @@ import { crearDbLocal } from '../../scripts/db/pglite';
 import { comoUsuario, crearUsuario, darModulo } from './utilidades';
 
 // Migración 75: módulo Franquiciatarios (roles por sucursal, baristas, checklists, firmas, incidencias y avisos).
+// Desde la migración 79 la plantilla vigente es la v2 (PDF de Operaciones): estas pruebas usan sus puntos de apertura
+// (8) y su «medio turno» (entrega/recibe). Las reglas nuevas de la v2 están en franquiciatarios-rutina.test.ts.
 let db: PGlite;
 let admin: string; // fila del módulo con nivel desarrollador
 let franquiciatario: string;
@@ -49,8 +51,9 @@ const responder = (
   barista: number | null,
   seccion = 'apertura',
   motivo: string | null = null,
+  dato: string | null = null,
 ) =>
-  uno(u, 'select public.franq_responder($1,$2,$3,$4,$5,$6,$7,$8) id', [
+  uno(u, 'select public.franq_responder($1,$2,$3,$4,$5,$6,$7,$8,$9) id', [
     E,
     seccion,
     punto,
@@ -59,6 +62,7 @@ const responder = (
     barista,
     'tablet prueba',
     motivo,
+    dato,
   ]);
 
 beforeAll(async () => {
@@ -87,7 +91,8 @@ beforeAll(async () => {
   puntosApertura = (
     await db.query<F>(
       `select pt.id from franq_plantilla_puntos pt join franq_plantilla_secciones s on s.id = pt.seccion_id
-       where s.clave = 'apertura' order by pt.orden`,
+       join franq_plantillas pl on pl.id = s.plantilla_id
+       where s.clave = 'apertura' and pl.version = 2 order by pt.orden`,
     )
   ).rows.map((r) => Number(r.id));
 });
@@ -271,8 +276,9 @@ describe('migración 75 · checklist', () => {
   it('no se firma con puntos pendientes; con todos respondidos sí, una sola vez', async () => {
     expect(
       await falla(tienda, `select public.franq_firmar(514,'apertura','responsable',$1,'x')`, [ana]),
-    ).toMatch(/Faltan 9 puntos/);
-    for (const p of puntosApertura.slice(3)) await responder(tienda, p, true, null, ana);
+    ).toMatch(/Faltan 5 puntos/);
+    for (const p of puntosApertura.slice(3))
+      await responder(tienda, p, true, null, ana, 'apertura', null, 'ok');
     expect(await falla(tienda, `select public.franq_firmar(514,'apertura','entrega',$1,'x')`, [ana])).toMatch(
       /no lleva la firma/,
     );
@@ -284,21 +290,24 @@ describe('migración 75 · checklist', () => {
 
   it('firmada: el barista ya no cambia respuestas; el gerente corrige con motivo y se conserva el original', async () => {
     expect(
-      await falla(tienda, `select public.franq_responder(514,'apertura',$1,false,'No había pan',$2,'x')`, [
-        puntosApertura[9],
-        ana,
-      ]),
+      await falla(
+        tienda,
+        `select public.franq_responder(514,'apertura',$1,false,'Bocina sin conexión',$2,'x')`,
+        [puntosApertura[7], ana],
+      ),
     ).toMatch(/ya está firmada/);
     expect(
-      await falla(gerente, `select public.franq_responder(514,'apertura',$1,false,'No había pan',null,'x')`, [
-        puntosApertura[9],
-      ]),
+      await falla(
+        gerente,
+        `select public.franq_responder(514,'apertura',$1,false,'Bocina sin conexión',null,'x')`,
+        [puntosApertura[7]],
+      ),
     ).toMatch(/motivo/);
     const c = await responder(
       gerente,
-      puntosApertura[9],
+      puntosApertura[7],
       false,
-      'No había pan',
+      'Bocina sin conexión',
       null,
       'apertura',
       'Lo vi en la revisión',
@@ -310,7 +319,7 @@ describe('migración 75 · checklist', () => {
     expect(f.motivo).toBe('Lo vi en la revisión');
     expect(f.corrige_id).not.toBeNull();
     expect(
-      (await filas(gerente, 'select id from franq_respuestas where punto_id = $1', [puntosApertura[9]]))
+      (await filas(gerente, 'select id from franq_respuestas where punto_id = $1', [puntosApertura[7]]))
         .length,
     ).toBe(2);
   });
@@ -363,17 +372,17 @@ describe('migración 75 · checklist', () => {
   it('cambio de turno: recibe va después de entrega y por otra persona', async () => {
     const puntos = (
       await db.query<F>(`select pt.id from franq_plantilla_puntos pt join franq_plantilla_secciones s
-      on s.id = pt.seccion_id where s.clave = 'cambio' order by pt.orden`)
+      on s.id = pt.seccion_id where s.clave = 'medio' order by pt.orden`)
     ).rows.map((r) => Number(r.id));
-    for (const p of puntos) await responder(tienda, p, true, null, beto, 'cambio');
-    expect(await falla(tienda, `select public.franq_firmar(514,'cambio','recibe',$1,'x')`, [ana])).toMatch(
+    for (const p of puntos) await responder(tienda, p, true, null, beto, 'medio', null, 'Leche y café');
+    expect(await falla(tienda, `select public.franq_firmar(514,'medio','recibe',$1,'x')`, [ana])).toMatch(
       /Primero firma/,
     );
-    await uno(tienda, `select public.franq_firmar(514,'cambio','entrega',$1,'x') id`, [beto]);
-    expect(await falla(tienda, `select public.franq_firmar(514,'cambio','recibe',$1,'x')`, [beto])).toMatch(
+    await uno(tienda, `select public.franq_firmar(514,'medio','entrega',$1,'x') id`, [beto]);
+    expect(await falla(tienda, `select public.franq_firmar(514,'medio','recibe',$1,'x')`, [beto])).toMatch(
       /persona distinta/,
     );
-    await uno(tienda, `select public.franq_firmar(514,'cambio','recibe',$1,'x') id`, [ana]);
+    await uno(tienda, `select public.franq_firmar(514,'medio','recibe',$1,'x') id`, [ana]);
   });
 
   it('un nombre desactivado ya no registra pero conserva su historial', async () => {
@@ -403,21 +412,25 @@ describe('migración 75 · incidencias y avisos', () => {
         expect.arrayContaining([
           expect.objectContaining({
             tipo: 'no',
-            punto: 'Recorrido de seguridad',
+            punto: 'Revisar etiquetas y caducidades',
             observacion: 'La alarma no armó',
             nombre: 'Ana López',
           }),
-          expect.objectContaining({ tipo: 'no', punto: 'Vitrina', observacion: 'No había pan' }),
           expect.objectContaining({
             tipo: 'no',
-            punto: 'Registro de entrada',
+            punto: 'Encender música',
+            observacion: 'Bocina sin conexión',
+          }),
+          expect.objectContaining({
+            tipo: 'no',
+            punto: 'Encender equipos',
             observacion: 'Llegó tarde Beto',
           }),
           expect.objectContaining({ tipo: 'incidencia', observacion: 'Se terminó la leche de avena' }),
         ]),
       );
-      // El «No» corregido a «Sí» (Sistemas y delivery) ya no es aviso.
-      expect(avisos.find((a) => a.punto === 'Sistemas y delivery')).toBeUndefined();
+      // El «No» corregido a «Sí» (Hacer PEPS) ya no es aviso.
+      expect(avisos.find((a) => a.punto === 'Hacer PEPS')).toBeUndefined();
     }
     expect(await falla(tienda, 'select * from franq_avisos(514, current_date, current_date)')).toMatch(
       /Solo el gerente/,

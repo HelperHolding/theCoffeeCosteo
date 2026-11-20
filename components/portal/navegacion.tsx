@@ -25,6 +25,7 @@ import {
   Settings2,
   BarChart3,
   ShoppingCart,
+  Banknote,
   Boxes,
   Bot,
   ClipboardList,
@@ -72,6 +73,8 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/checklist`, nombre: 'Checklists', icono: ClipboardCheck },
         { href: `${b}/ventas`, nombre: 'Ventas y pedidos', icono: Activity },
         { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
+        { href: `${b}/conteo`, nombre: 'Conteo de insumos', icono: ClipboardList },
+        { href: `${b}/caja`, nombre: 'Caja', icono: Banknote },
       ],
     },
   ];
@@ -79,6 +82,9 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
     g.push({
       titulo: 'Gerencia',
       enlaces: [
+        { href: `${b}/pedidos`, nombre: 'Pedidos', icono: Truck },
+        { href: `${b}/inventario`, nombre: 'Inventario', icono: Boxes },
+        { href: `${b}/pyl`, nombre: 'P&L y metas', icono: BarChart3 },
         { href: `${b}/avisos`, nombre: 'Avisos e historial', icono: BellRing },
         { href: `${b}/equipo`, nombre: 'Baristas', icono: UsersRound },
       ],

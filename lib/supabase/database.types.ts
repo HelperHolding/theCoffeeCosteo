@@ -196,6 +196,13 @@ export interface Database {
       franq_respuestas: Tabla<Franq.FranqRespuesta>;
       franq_firmas: Tabla<Franq.FranqFirma>;
       franq_incidencias: Tabla<Franq.FranqIncidencia>;
+      franq_recepciones: Tabla<Franq.FranqRecepcion>;
+      franq_insumos: Tabla<Franq.FranqInsumo>;
+      franq_conteos: Tabla<Franq.FranqConteo>;
+      franq_caja_config: Tabla<Franq.FranqCajaConfig>;
+      franq_arqueos: Tabla<Franq.FranqArqueo>;
+      franq_gastos: Tabla<Franq.FranqGasto>;
+      franq_gastos_fijos: Tabla<Franq.FranqGastoFijo>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -256,6 +263,17 @@ export interface Database {
       franq_incidencia: Franq.FuncionesFranq['franq_incidencia'];
       franq_barista_guardar: Franq.FuncionesFranq['franq_barista_guardar'];
       franq_avisos: Franq.FuncionesFranq['franq_avisos'];
+      franq_recibir: Franq.FuncionesFranq['franq_recibir'];
+      franq_sugerir_insumos: Franq.FuncionesFranq['franq_sugerir_insumos'];
+      franq_insumo_guardar: Franq.FuncionesFranq['franq_insumo_guardar'];
+      franq_contar: Franq.FuncionesFranq['franq_contar'];
+      franq_conteo_estado: Franq.FuncionesFranq['franq_conteo_estado'];
+      franq_arquear: Franq.FuncionesFranq['franq_arquear'];
+      franq_arqueo_estado: Franq.FuncionesFranq['franq_arqueo_estado'];
+      franq_gasto: Franq.FuncionesFranq['franq_gasto'];
+      franq_gasto_anular: Franq.FuncionesFranq['franq_gasto_anular'];
+      franq_caja_configurar: Franq.FuncionesFranq['franq_caja_configurar'];
+      franq_gasto_fijo: Franq.FuncionesFranq['franq_gasto_fijo'];
       guardar_receta: { Args: { p_datos: Json }; Returns: Json };
       mcp_lectura_habilitada: { Args: Record<string, never>; Returns: boolean };
       reservar_consulta_chat: { Args: Record<string, never>; Returns: boolean };
@@ -321,6 +339,16 @@ export interface Database {
       sucursales_recetas_consumo: { Args: { p_company: number }; Returns: Json };
       sucursales_catalogo_pos: { Args: { p_company: number }; Returns: Json };
       sucursales_rappi_portal: {
+        Args: { p_company: number; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
+      /** Migración 89: Nivel de servicio de Rappi de todas las sucursales del usuario (Tablero de México). */
+      sucursales_servicio_nacional: {
+        Args: { p_companias: number[]; p_desde: string; p_hasta: string };
+        Returns: Json;
+      };
+      /** Migración 87: Nivel de servicio y Conectividad de Rappi de una sucursal. */
+      sucursales_nivel_servicio: {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };

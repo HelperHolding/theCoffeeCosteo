@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import type { servidor } from '../supabase/servidor';
 import { configDe, type ConfigSucursal } from '../sucursales/config';
 import type { RolFranq } from '../supabase/sesion';
-import { armarDia, plantillaVigente, type Dia } from './dia';
+import { armarDia, diaOperacion, plantillaVigente, type Dia } from './dia';
 import type { FranqBarista } from './tipos';
 
 type Db = Awaited<ReturnType<typeof servidor>>;
@@ -78,6 +78,7 @@ export async function leerDia(db: Db, companyId: number, dia: string): Promise<D
     firmas: firmas.data ?? [],
     incidencias: incidencias.data ?? [],
     vigente,
+    ahora: dia === diaOperacion() ? new Date() : undefined,
   });
 }
 

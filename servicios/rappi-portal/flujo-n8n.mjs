@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 const NOMBRE = 'TheCoffee_Rappi_Portal';
 const LECTOR = 'http://rappi-thecoffee:3101/sincronizar';
 const SUPABASE = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_importar';
+const SUPABASE_SERVICIO = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_importar_servicio';
 const SMTP = { id: '77HAkO1eZAVBGkN4', name: 'SMTP Notifications' }; // la misma de los reportes
 const AVISAR_A = 'cvalencia@mx.thecoffee.jp';
 
@@ -35,6 +36,19 @@ else if (ok && r.body && typeof r.body === 'object') {
   if (b.nuevos !== undefined) mensaje += ' Guardados: ' + b.nuevos + ' nuevos, ' + b.cambiados + ' cambiados, ' + b.desaparecidos + ' para revisar.';
   if (b.cambios?.length) mensaje += ' Cambios: ' + b.cambios.map((c) => '#' + c.id + ' ' + c.de + ' → ' + c.a).join(', ') + '.';
 }
+// Nivel de servicio (docs/rappi-portal/08): si falla no cambia el estado de la corrida; va al correo diario.
+const r2 = $('Guardar servicio').isExecuted ? $('Guardar servicio').first().json : null;
+let servicioFalla = lote?.servicio_error ?? null;
+if (lote?.servicio) {
+  const ok2 = r2 && r2.statusCode >= 200 && r2.statusCode < 300;
+  if (!ok2) servicioFalla = [servicioFalla, 'No se guardó el Nivel de servicio: ' + (r2?.error ? String(r2.error.message ?? r2.error) : 'Supabase respondió ' + r2?.statusCode + ' ' + JSON.stringify(r2?.body)).slice(0, 300)].filter(Boolean).join(' ');
+  else {
+    const s = r2.body ?? {};
+    mensaje += ' Servicio guardado: ' + (s.dias ?? 0) + ' tienda-días, ' + (s.reclamos ?? 0) + ' reclamos, ' + (s.cambios_conectividad ?? 0) + ' cambios de conectividad.';
+    if (s.ignoradas?.length) servicioFalla = [servicioFalla, 'Tiendas sin alta en rappi_tiendas: ' + s.ignoradas.join(', ') + '.'].filter(Boolean).join(' ');
+  }
+}
+if (servicioFalla) mensaje += ' ' + servicioFalla;
 // Avisos:
 // - Corrida de cada 10 min que falla: NO avisa la primera vez, porque la siguiente relee ayer y hoy (fallas sueltas del
 //   2026-11-16 09:07 «Failed to fetch» y del 2026-11-17 11:47 «403», que la siguiente resolvió sola). Si la siguiente
@@ -67,18 +81,22 @@ if (estado === 'error' || estado === 'sesion_expirada') {
 const recuperada = estado === 'ok' || estado === 'sin_ordenes' ? /A media lectura: (.*?) Se volvió a entrar/.exec(mensaje) : null;
 if (recuperada) st.recuperadas = [...(st.recuperadas ?? []), hora + ' (' + tipo + '): ' + recuperada[1]].slice(-50);
 let asunto = estado === 'sesion_expirada' ? 'el lector no pudo entrar' : estado === 'error' ? 'revisar lectura' : 'revisar pedidos';
+if (servicioFalla) st.servicio = [...(st.servicio ?? []), hora + ' (' + tipo + '): ' + servicioFalla.slice(0, 220)].slice(-50);
 const rec = st.recuperadas ?? [];
 const sue = st.sueltas ?? [];
-if (tipo === 'cierre' && (rec.length || sue.length)) {
+const ser = st.servicio ?? [];
+if (tipo === 'cierre' && (rec.length || sue.length || ser.length)) {
   const veces = (n, una, varias) => n + ' ' + (n === 1 ? una : varias);
   const partes = [];
   if (rec.length) partes.push('El lector se recuperó solo ' + veces(rec.length, 'vez', 'veces') + ' desde el último aviso (la sesión de Rappi se cayó a media lectura, volvió a entrar y terminó la lectura; no se perdió nada):\\n- ' + rec.join('\\n- '));
   if (sue.length) partes.push('Fallaron ' + veces(sue.length, 'corrida suelta', 'corridas sueltas') + ' (la siguiente salió bien y releyó ayer y hoy; no se perdió nada):\\n- ' + sue.join('\\n- '));
-  if (!avisar) asunto = 'resumen del lector: ' + [rec.length ? 'se recuperó solo ' + veces(rec.length, 'vez', 'veces') : '', sue.length ? veces(sue.length, 'falla suelta', 'fallas sueltas') : ''].filter(Boolean).join(', ');
+  if (ser.length) partes.push('Nivel de servicio con fallas en ' + veces(ser.length, 'corrida', 'corridas') + ' (los pedidos sí se guardaron; el cierre vuelve a leer los últimos 7 días):\\n- ' + ser.join('\\n- '));
+  if (!avisar) asunto = 'resumen del lector: ' + [rec.length ? 'se recuperó solo ' + veces(rec.length, 'vez', 'veces') : '', sue.length ? veces(sue.length, 'falla suelta', 'fallas sueltas') : '', ser.length ? veces(ser.length, 'falla de Nivel de servicio', 'fallas de Nivel de servicio') : ''].filter(Boolean).join(', ');
   mensaje = partes.join('\\n\\n') + '\\n\\nCierre: ' + mensaje;
   avisar = true;
   st.recuperadas = [];
   st.sueltas = [];
+  st.servicio = [];
 }
 return [{ json: { avisar, asunto, tipo, desde: lote?.desde ?? pedido.desde, hasta: lote?.hasta ?? pedido.hasta, estado, mensaje } }];`;
 
@@ -184,7 +202,11 @@ const nodes = [
     2,
     [640, 270],
     {
-      jsCode: 'return [{ json: { cuerpo: JSON.stringify({ p_lote: $input.first().json.body }) } }];',
+      // El Nivel de servicio (docs/rappi-portal/08) viaja en el mismo lote y se guarda aparte («Guardar servicio»).
+      jsCode: [
+        'const { servicio, servicio_error, ...lote } = $input.first().json.body;',
+        'return [{ json: { cuerpo: JSON.stringify({ p_lote: lote }), servicio: JSON.stringify({ p: servicio ?? {} }) } }];',
+      ].join('\n'),
     },
     { onError: 'continueRegularOutput' },
   ),
@@ -210,7 +232,28 @@ const nodes = [
       onError: 'continueRegularOutput',
     },
   ),
-  nodo('Resumen', 'n8n-nodes-base.code', 2, [940, 270], { jsCode: resumen }),
+  nodo(
+    'Guardar servicio',
+    'n8n-nodes-base.httpRequest',
+    4.2,
+    [880, 270],
+    {
+      method: 'POST',
+      url: SUPABASE_SERVICIO,
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'raw',
+      rawContentType: 'application/json',
+      body: "={{ $('Armar lote').first().json.servicio }}",
+      options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 120000 },
+    },
+    {
+      notes: 'Credencial: la misma de «Guardar en Supabase». Solo llama rappi_importar_servicio.',
+      onError: 'continueRegularOutput',
+    },
+  ),
+  nodo('Resumen', 'n8n-nodes-base.code', 2, [1000, 270], { jsCode: resumen }),
   nodo('¿Avisar?', 'n8n-nodes-base.if', 2.2, [1160, 270], {
     conditions: {
       options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
@@ -262,7 +305,8 @@ const connections = {
   ...conecta('Leer portal', '¿Lector OK?'),
   ...conecta('¿Lector OK?', 'Armar lote', 'Resumen'),
   ...conecta('Armar lote', 'Guardar en Supabase'),
-  ...conecta('Guardar en Supabase', 'Resumen'),
+  ...conecta('Guardar en Supabase', 'Guardar servicio'),
+  ...conecta('Guardar servicio', 'Resumen'),
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
 };
@@ -270,6 +314,7 @@ const connections = {
 for (const [nodoCred, variable] of [
   ['Leer portal', 'CRED_LECTOR'],
   ['Guardar en Supabase', 'CRED_SUPABASE'],
+  ['Guardar servicio', 'CRED_SUPABASE'],
   ['Reponer (webhook)', 'CRED_WEBHOOK'],
 ]) {
   if (process.env[variable])
@@ -321,8 +366,12 @@ if (existente) {
   // (availableInMCP, binaryMode).
   const actual = await n8n('GET', `/workflows/${existente.id}`);
   flujo.settings = { ...actual.settings, ...flujo.settings };
+  // «Guardar servicio» usa la misma llave de Supabase que «Guardar en Supabase» (la primera vez aún no existe).
+  const MISMA_CREDENCIAL = { 'Guardar servicio': 'Guardar en Supabase' };
   for (const n of flujo.nodes) {
-    const previo = actual.nodes.find((x) => x.name === n.name);
+    const previo =
+      actual.nodes.find((x) => x.name === n.name && x.credentials) ??
+      actual.nodes.find((x) => x.name === MISMA_CREDENCIAL[n.name]);
     if (previo?.credentials) n.credentials = { ...n.credentials, ...previo.credentials };
     if (previo?.webhookId) n.webhookId = previo.webhookId;
   }

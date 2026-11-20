@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calcular } from '../../components/sucursales/tablero-mexico';
-import { configDe } from '../../lib/sucursales/config';
+import { ESTADO_DE_CIUDAD, calcular } from '../../components/sucursales/tablero-mexico';
+import { ESTADOS_MX } from '../../components/sucursales/mapa-mexico-trazos';
+import { configDe, sucursalesConfiguradas } from '../../lib/sucursales/config';
 import type { TableroMexico } from '../../lib/sucursales/contratos';
 import type { Origen } from '../../lib/sucursales/normalizar';
 import {
@@ -333,5 +334,101 @@ describe('Tablero de México: un día cerrado y un rango', () => {
     expect(v.rango!.porDia).toBeCloseTo(650_00 / 7);
     expect(v.ultimaHora).toBeNull();
     expect(v.avisos.some((a) => /no tienen venta de Rappi del portal/.test(a))).toBe(true);
+  });
+});
+
+describe('Tablero de México: estado de cada ciudad en el mapa', () => {
+  it('cada ciudad configurada tiene un estado que existe en el mapa (un lote nuevo no se queda fuera)', () => {
+    const claves = new Set(ESTADOS_MX.map((e) => e.clave));
+    const sinEstado = sucursalesConfiguradas
+      .filter((s) => !claves.has(ESTADO_DE_CIUDAD[s.ciudad] ?? ''))
+      .map((s) => `${s.companyId} ${s.nombre} (${s.ciudad})`);
+    expect(sinEstado).toEqual([]);
+  });
+
+  it('Los Cabos va en Baja California Sur', () => {
+    expect(ESTADO_DE_CIUDAD['Los Cabos']).toBe('BCS');
+  });
+
+  it('una ciudad sin estado se avisa arriba y bajo el mapa, y su venta cuenta en los totales', () => {
+    const cfg = { ...configDe(513)!, ciudad: 'Ciudad Nueva' };
+    const hoy = armarHoy(
+      { ultimo_corte: '2026-11-15T22:10:00Z', dias: [dia(513, '2026-11-15', true, 16 * 3600)] },
+      [cfg],
+    );
+    const v = calcular(
+      {
+        generadoEn: '2026-11-15T22:12:00Z',
+        semanas: 8,
+        hoy,
+        periodo: armarPeriodo(periodoVacio, '2026-09-14', '2026-11-08', [cfg]),
+      },
+      'todos',
+    );
+    expect(v.sinEstado).toEqual(['Ciudad Nueva']);
+    expect(v.avisos).toContain(
+      'Ciudad Nueva no tiene estado en el mapa: su venta cuenta en los totales, pero no se pinta.',
+    );
+    expect(v.hoy.venta).toBeGreaterThan(0);
+  });
+});
+
+describe('Tablero de México: filtro Rappi y sucursales sin tienda en Rappi', () => {
+  // Namóra (Guadalajara) con tienda en Rappi; Puerto Paraíso (Los Cabos) todavía sin tienda.
+  const conTienda = { ...configDe(513)!, rappiPortal: true };
+  const sinTienda = { ...configDe(690)!, rappiPortal: false };
+  const cfgs = [conTienda, sinTienda];
+  const fila = (companyId: number, rappi: number): DiaHoyRpc => {
+    const r = dia(companyId, '2026-11-15', true, 16 * 3600);
+    if (rappi) r.origenes.rappi = { pedidos: 1, venta_cent: rappi, descuento_cent: 0, lineas: 1 };
+    return r;
+  };
+  const tablero: TableroMexico = {
+    generadoEn: '2026-11-15T22:12:00Z',
+    semanas: 8,
+    hoy: armarHoy({ ultimo_corte: '2026-11-15T22:10:00Z', dias: [fila(513, 250_00), fila(690, 0)] }, cfgs),
+    periodo: armarPeriodo(periodoVacio, '2026-09-14', '2026-11-08', cfgs),
+  };
+
+  it('cada sucursal sabe si tiene tienda en Rappi', () => {
+    expect(tablero.hoy.sucursales.map((s) => [s.companyId, s.rappi])).toEqual([
+      [513, true],
+      [690, false],
+    ]);
+  });
+
+  it('con Rappi, la que no tiene tienda no cuenta como «sin venta» y su estado va aparte', () => {
+    const v = calcular(tablero, 'rappi');
+    expect(v.total).toBe(1);
+    expect(v.conVenta).toBe(1);
+    expect(v.sinVenta).toEqual([]);
+    expect(v.sinTienda.map((s) => s.companyId)).toEqual([690]);
+    expect(v.hoy.venta).toBe(250_00);
+    const bcs = v.estados.find((e) => e.clave === 'BCS')!;
+    expect(bcs).toMatchObject({ sucursales: 0, venta: 0, sinCanal: 1, nombresSinCanal: ['Puerto Paraíso'] });
+    expect(v.estados.find((e) => e.clave === 'JAL')).toMatchObject({ sucursales: 1, venta: 250_00 });
+    expect(v.ciudades.map((c) => c.ciudad)).toEqual(['Guadalajara']);
+    expect(v.avisos).toContain(
+      '1 sucursal no tiene tienda en el portal de Rappi y no cuenta en este filtro: Puerto Paraíso.',
+    );
+  });
+
+  it('con Todo cuentan todas y no hay aviso de Rappi', () => {
+    const v = calcular(tablero, 'todos');
+    expect(v.total).toBe(2);
+    expect(v.sinTienda).toEqual([]);
+    expect(v.estados.find((e) => e.clave === 'BCS')).toMatchObject({ sucursales: 1 });
+    expect(v.avisos.some((a) => /tienda en el portal de Rappi/.test(a))).toBe(false);
+  });
+
+  it('una respuesta sin el campo rappi (de antes) cuenta todas, como antes', () => {
+    const viejo: TableroMexico = {
+      ...tablero,
+      hoy: {
+        ...tablero.hoy,
+        sucursales: tablero.hoy.sucursales.map(({ rappi: _r, ...s }) => s),
+      },
+    };
+    expect(calcular(viejo, 'rappi').total).toBe(2);
   });
 });

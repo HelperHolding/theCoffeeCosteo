@@ -19,14 +19,20 @@ export function guardarPeriodoEnUrl(p: Periodo) {
   window.history.replaceState(null, '', `${window.location.pathname}?${params}`);
 }
 
+/**
+ * `ultimo` (opcional, Nivel de servicio): agrega «Último día con datos» al principio. Mientras esté activo, el periodo
+ * compartido no cambia; al elegir otro, `alCambiar` lo cambia como siempre.
+ */
 export function SelectorPeriodo({
   periodo,
   zona,
   alCambiar,
+  ultimo,
 }: {
   periodo: Periodo;
   zona: string;
   alCambiar: (p: Periodo) => void;
+  ultimo?: { activo: boolean; fecha: string | null; alElegir: () => void };
 }) {
   const { desde, hasta } = rango(periodo, zona);
   const hoy = enZona(new Date(), zona).fecha;
@@ -43,14 +49,17 @@ export function SelectorPeriodo({
       <label className="text-sm">
         <span className="mb-1 block font-medium text-ink-2">Periodo</span>
         <select
-          value={periodo.id}
+          value={ultimo?.activo ? 'ultimo' : periodo.id}
           onChange={(e) =>
-            e.target.value === 'rango'
-              ? alCambiar({ id: 'rango', desde, hasta })
-              : alCambiar({ id: e.target.value as IdPreset })
+            e.target.value === 'ultimo'
+              ? ultimo?.alElegir()
+              : e.target.value === 'rango'
+                ? alCambiar({ id: 'rango', desde, hasta })
+                : alCambiar({ id: e.target.value as IdPreset })
           }
           className={`${claseCampo} w-48`}
         >
+          {ultimo && <option value="ultimo">Último día con datos</option>}
           {PRESETS.map((x) => (
             <option key={x.id} value={x.id}>
               {x.nombre}
@@ -59,7 +68,7 @@ export function SelectorPeriodo({
           <option value="rango">Elegir fechas…</option>
         </select>
       </label>
-      {periodo.id === 'rango' ? (
+      {periodo.id === 'rango' && !ultimo?.activo ? (
         <>
           <label className="text-sm">
             <span className="mb-1 block font-medium text-ink-2">Desde</span>
@@ -85,8 +94,18 @@ export function SelectorPeriodo({
         </>
       ) : null}
       <p className="pb-2 text-xs text-muted-foreground tabular">
-        {desde === hasta ? fechaCorta(desde) : `${fechaCorta(desde)} – ${fechaCorta(hasta)}`}
-        {dias > 1 && ` (${numero(dias)} días)`}
+        {ultimo?.activo ? (
+          ultimo.fecha ? (
+            fechaCorta(ultimo.fecha)
+          ) : (
+            '—'
+          )
+        ) : (
+          <>
+            {desde === hasta ? fechaCorta(desde) : `${fechaCorta(desde)} – ${fechaCorta(hasta)}`}
+            {dias > 1 && ` (${numero(dias)} días)`}
+          </>
+        )}
       </p>
     </div>
   );

@@ -1,7 +1,10 @@
-// Contrato de las tablas y funciones del módulo Franquiciatarios (migración 75).
+// Contrato de las tablas y funciones del módulo Franquiciatarios (migraciones 75 y 79).
 
-export type SeccionClave = 'apertura' | 'cambio' | 'cierre';
-export type TipoFirma = 'responsable' | 'entrega' | 'recibe';
+/** Fases del checklist. v1 (Excel): apertura, cambio, cierre. v2 (PDF): apertura, durante, medio, cierre. */
+export type SeccionClave = 'apertura' | 'durante' | 'cambio' | 'medio' | 'cierre';
+export type TipoFirma = 'responsable' | 'entrega' | 'recibe' | 'visto_bueno';
+export type TipoPunto = 'unico' | 'recurrente';
+export type TipoCorte = 'parcial' | 'dia';
 
 export interface FranqMiembro {
   user_id: string;
@@ -42,6 +45,15 @@ export interface FranqPunto {
   orden: number;
   actividad: string;
   estandar: string;
+  /** unico = una vez por día; recurrente = rondas (varias veces al día). */
+  tipo: TipoPunto;
+  /** Frecuencia de la ronda en minutos y tolerancia antes de marcarla atrasada (null = según demanda). */
+  cada_min: number | null;
+  margen_min: number | null;
+  /** Etiqueta del dato que pide un «Sí» (null = no pide dato). */
+  dato: string | null;
+  /** Punto de «enviar corte»: enlaza a la tira parcial o del día. */
+  corte: TipoCorte | null;
 }
 export interface FranqChecklist {
   id: number;
@@ -66,6 +78,7 @@ export interface FranqRespuesta {
   dispositivo: string | null;
   corrige_id: number | null;
   motivo: string | null;
+  dato: string | null;
 }
 export interface FranqFirma {
   id: number;
@@ -102,8 +115,204 @@ export interface FranqAviso {
   registrado_en: string;
   respuesta_id: number | null;
 }
+/** Renglón con diferencia en una recepción (migración 80). */
+export interface DiferenciaRecepcion {
+  nombre: string;
+  sku: string | null;
+  pedido: number;
+  recibido: number;
+}
+export interface FranqRecepcion {
+  id: number;
+  company_id: number;
+  pedido_id: string;
+  folio: string | null;
+  completo: boolean;
+  diferencias: DiferenciaRecepcion[];
+  observacion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+}
+
+/** Insumo a contar en la sucursal (migración 83). Sin valores: el costo nunca sale de la base. */
+export interface FranqInsumo {
+  id: number;
+  company_id: number;
+  insumo_id: string | null;
+  nombre: string;
+  unidad: string;
+  orden: number;
+  activo: boolean;
+  origen: 'sugerido' | 'manual';
+  creado_por: string;
+  creado_en: string;
+  actualizado_por: string | null;
+  actualizado_en: string | null;
+}
+export type MomentoConteo = 'apertura' | 'medio';
+/** Solo la gerencia lee los conteos (RLS). */
+export interface FranqConteo {
+  id: number;
+  company_id: number;
+  dia: string;
+  momento: MomentoConteo;
+  insumo_id: number;
+  cantidad: number;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+  corrige_id: number | null;
+}
+/** Estado de un momento del día sin cantidades (lo ve también la cuenta de baristas). */
+export interface EstadoConteo {
+  momento: MomentoConteo;
+  nombre: string;
+  registrado_en: string;
+  insumos: number;
+}
+
+/** Caja (migración 84): todo esto solo lo lee la gerencia. */
+export interface FranqCajaConfig {
+  company_id: number;
+  fondo: number;
+  tolerancia: number;
+  actualizado_por: string;
+  actualizado_en: string;
+}
+export type MomentoArqueo = 'medio' | 'cierre';
+export interface FranqArqueo {
+  id: number;
+  company_id: number;
+  dia: string;
+  momento: MomentoArqueo;
+  contado: number;
+  observacion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+  corrige_id: number | null;
+}
+export interface FranqGasto {
+  id: number;
+  company_id: number;
+  dia: string;
+  concepto: string | null;
+  categoria: string | null;
+  monto: number | null;
+  en_efectivo: boolean;
+  comprobante: boolean;
+  nota: string | null;
+  anula_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+}
+/** Estado de un arqueo sin montos (lo ve también la cuenta de baristas). */
+export interface EstadoArqueo {
+  momento: MomentoArqueo;
+  nombre: string;
+  registrado_en: string;
+}
+
+/** Gasto fijo mensual (migración 88): de Zoho o capturado por la gerencia; el último por concepto y mes manda. */
+export interface FranqGastoFijo {
+  id: number;
+  company_id: number;
+  mes: string;
+  concepto: string;
+  monto: number;
+  nota: string | null;
+  origen: 'manual' | 'zoho';
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+}
 
 export interface FuncionesFranq {
+  franq_gasto_fijo: {
+    Args: { p_company: number; p_mes: string; p_concepto: string; p_monto: number; p_nota: string | null };
+    Returns: number;
+  };
+  franq_arquear: {
+    Args: {
+      p_company: number;
+      p_momento: MomentoArqueo;
+      p_contado: number;
+      p_observacion: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_arqueo_estado: { Args: { p_company: number; p_dia: string }; Returns: EstadoArqueo[] };
+  franq_gasto: {
+    Args: {
+      p_company: number;
+      p_concepto: string;
+      p_categoria: string;
+      p_monto: number;
+      p_en_efectivo: boolean;
+      p_comprobante: boolean;
+      p_nota: string | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_gasto_anular: {
+    Args: { p_gasto: number; p_motivo: string; p_dispositivo: string | null };
+    Returns: number;
+  };
+  franq_caja_configurar: {
+    Args: { p_company: number; p_fondo: number; p_tolerancia: number };
+    Returns: undefined;
+  };
+  franq_sugerir_insumos: { Args: { p_company: number }; Returns: number };
+  franq_insumo_guardar: {
+    Args: {
+      p_company: number;
+      p_id: number | null;
+      p_nombre: string;
+      p_unidad: string;
+      p_orden: number | null;
+      p_activo: boolean;
+    };
+    Returns: number;
+  };
+  franq_contar: {
+    Args: {
+      p_company: number;
+      p_momento: MomentoConteo;
+      p_conteos: { insumo: number; cantidad: number }[];
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
+  franq_conteo_estado: { Args: { p_company: number; p_dia: string }; Returns: EstadoConteo[] };
+  franq_recibir: {
+    Args: {
+      p_company: number;
+      p_pedido: string;
+      p_folio: string | null;
+      p_diferencias: DiferenciaRecepcion[];
+      p_observacion: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
   franq_rol: { Args: { p_company: number }; Returns: string | null };
   franq_dia_operacion: { Args: Record<string, never>; Returns: string };
   franq_responder: {
@@ -116,6 +325,7 @@ export interface FuncionesFranq {
       p_barista: number | null;
       p_dispositivo: string | null;
       p_motivo?: string | null;
+      p_dato?: string | null;
     };
     Returns: number;
   };
@@ -126,6 +336,7 @@ export interface FuncionesFranq {
       p_observacion: string | null;
       p_motivo: string;
       p_dispositivo: string | null;
+      p_dato?: string | null;
     };
     Returns: number;
   };

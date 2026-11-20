@@ -61,10 +61,11 @@ const UMBRAL = 0.03;
 const CIUDADES_VISIBLES = 8;
 
 /**
- * Estado de cada ciudad configurada, para el mapa. Una ciudad nueva (doc 15, lotes) se agrega aquí; si falta, el
- * tablero la lista como «sin estado» y no la pierde.
+ * Estado de cada ciudad configurada, para el mapa. Una ciudad nueva (doc 15, lotes) se agrega aquí. Si falta, el
+ * tablero la avisa arriba y bajo el mapa (cuenta en los totales, pero no se pinta). La prueba
+ * «cada ciudad configurada tiene estado» falla antes de llegar a producción.
  */
-const ESTADO_DE_CIUDAD: Record<string, string> = {
+export const ESTADO_DE_CIUDAD: Record<string, string> = {
   Guadalajara: 'JAL',
   'Puerto Vallarta': 'JAL',
   Tepatitlán: 'JAL',
@@ -95,6 +96,7 @@ const ESTADO_DE_CIUDAD: Record<string, string> = {
   Durango: 'DGO',
   Torreón: 'COAH',
   Tijuana: 'BC',
+  'Los Cabos': 'BCS',
   Hermosillo: 'SON',
   Monterrey: 'NL',
   Morelia: 'MICH',
@@ -508,7 +510,7 @@ function Cuerpo({
         <Tarjeta
           className="xl:col-span-8"
           titulo={`México ${m.cuando}, por estado`}
-          descripcion={`${v.estados.filter((e) => e.sucursales).length} estados con sucursales. Pasa el cursor o el foco por un estado para ver su detalle; el Valle de México va ampliado.`}
+          descripcion={`${v.estados.filter((e) => e.sucursales).length} estados con ${v.sinTienda.length ? 'tienda en Rappi' : 'sucursales'}. Pasa el cursor o el foco por un estado para ver su detalle; el Valle de México va ampliado.`}
           acciones={
             <Segmentos
               etiqueta="Color del mapa"
@@ -615,6 +617,12 @@ function Cuerpo({
               />
             )}
             <Ciudades grupos={v.ciudades} momento={m} />
+            {v.sinTienda.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Sin tienda en Rappi (no cuentan en este filtro):{' '}
+                {lista(v.sinTienda.map((s) => `${s.nombre} (${s.ciudad})`))}.
+              </p>
+            )}
           </div>
         </Tarjeta>
       </div>
@@ -1161,7 +1169,10 @@ function masVendidos(lista: TableroMexico['periodo']['productos'], f: FiltroOrig
 }
 
 export function calcular(d: TableroMexico, f: FiltroOrigen) {
-  const ss = d.hoy.sucursales;
+  // Con el filtro Rappi solo cuentan las sucursales con tienda en el portal. Las demás van aparte, como «sin tienda
+  // en Rappi», nunca como venta cero. Sin el campo `rappi` (respuestas viejas), cuentan todas.
+  const sinTienda = f === 'rappi' ? d.hoy.sucursales.filter((s) => s.rappi === false) : [];
+  const ss = f === 'rappi' ? d.hoy.sucursales.filter((s) => s.rappi !== false) : d.hoy.sucursales;
   const conCorte = ss.filter((s) => !s.sinCorte);
   const hoy = sumar(
     conCorte.map((s) => s.hoy),
@@ -1308,6 +1319,26 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
     }
     estados.set(clave, e);
   }
+  // Las sin tienda en Rappi se marcan en su estado (rayado si ninguna tiene), sin sumar venta ni sucursales.
+  for (const s of sinTienda) {
+    const clave = ESTADO_DE_CIUDAD[s.ciudad];
+    if (!clave) {
+      sinEstado.add(s.ciudad);
+      continue;
+    }
+    const e = estados.get(clave) ?? {
+      clave,
+      sucursales: 0,
+      venta: 0,
+      delta: null,
+      nombres: [],
+      hoyC: 0,
+      baseC: 0,
+    };
+    e.sinCanal = (e.sinCanal ?? 0) + 1;
+    (e.nombresSinCanal ??= []).push(s.nombre);
+    estados.set(clave, e);
+  }
   for (const e of estados.values()) e.delta = e.baseC ? variacion(e.hoyC, e.baseC) : null;
 
   const top = [...celdas]
@@ -1429,26 +1460,29 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
     : null;
 
   const claves = d.periodo.semanas.map((w) => w.semana);
-  const filasPeriodo = d.periodo.sucursales.map((s) => {
-    const tt = filtrar(s.cifras, f);
-    const serie = claves.map((c) => (s.porSemana[c] ? filtrar(s.porSemana[c], f).venta_cent : 0));
-    const us =
-      ultimaW && s.porSemana[ultimaW.semana] ? filtrar(s.porSemana[ultimaW.semana], f).venta_cent : null;
-    const as =
-      anteriorW && s.porSemana[anteriorW.semana]
-        ? filtrar(s.porSemana[anteriorW.semana], f).venta_cent
-        : null;
-    return {
-      companyId: s.companyId,
-      nombre: s.nombre,
-      ciudad: s.ciudad,
-      venta: tt.venta_cent,
-      pedidos: tt.pedidos,
-      por: porOrigen(s.cifras, f),
-      serie,
-      delta: us !== null && as ? variacion(us, as) : null,
-    };
-  });
+  const fueraDelCanal = new Set(sinTienda.map((s) => s.companyId));
+  const filasPeriodo = d.periodo.sucursales
+    .filter((s) => !fueraDelCanal.has(s.companyId))
+    .map((s) => {
+      const tt = filtrar(s.cifras, f);
+      const serie = claves.map((c) => (s.porSemana[c] ? filtrar(s.porSemana[c], f).venta_cent : 0));
+      const us =
+        ultimaW && s.porSemana[ultimaW.semana] ? filtrar(s.porSemana[ultimaW.semana], f).venta_cent : null;
+      const as =
+        anteriorW && s.porSemana[anteriorW.semana]
+          ? filtrar(s.porSemana[anteriorW.semana], f).venta_cent
+          : null;
+      return {
+        companyId: s.companyId,
+        nombre: s.nombre,
+        ciudad: s.ciudad,
+        venta: tt.venta_cent,
+        pedidos: tt.pedidos,
+        por: porOrigen(s.cifras, f),
+        serie,
+        delta: us !== null && as ? variacion(us, as) : null,
+      };
+    });
   const totalPeriodo = filasPeriodo.reduce((acc, s) => acc + s.venta, 0);
   const tabla = filasPeriodo
     .map((s) => ({ ...s, parte: totalPeriodo ? s.venta / totalPeriodo : null }))
@@ -1476,11 +1510,18 @@ export function calcular(d: TableroMexico, f: FiltroOrigen) {
     d.periodo.incompletos
       ? `${d.periodo.incompletos} ${d.periodo.incompletos === 1 ? 'día de sucursal' : 'días de sucursal'} del periodo con lectura incompleta.`
       : '',
-    f === 'rappi' ? 'Rappi solo está en las sucursales que ya leen el portal de Rappi.' : '',
+    sinTienda.length
+      ? `${sinTienda.length === 1 ? '1 sucursal no tiene tienda en el portal de Rappi y no cuenta' : `${sinTienda.length} sucursales no tienen tienda en el portal de Rappi y no cuentan`} en este filtro: ${lista(sinTienda.map((s) => s.nombre))}.`
+      : '',
+    // Una ciudad sin estado cuenta en los totales pero no se pinta en el mapa: que no pase sin aviso.
+    sinEstado.size
+      ? `${lista([...sinEstado])} no ${sinEstado.size === 1 ? 'tiene' : 'tienen'} estado en el mapa: su venta cuenta en los totales, pero no se pinta.`
+      : '',
   ].filter(Boolean);
 
   return {
     modo,
+    sinTienda: sinTienda.map((s) => ({ companyId: s.companyId, nombre: s.nombre, ciudad: s.ciudad })),
     momento,
     titulo,
     paso: d.hoy.curva.paso ?? 1,

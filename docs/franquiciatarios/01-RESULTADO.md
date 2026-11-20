@@ -7,15 +7,15 @@
 
 ## 1. Fases
 
-| Fase | Estado | Entregable |
-|---|---|---|
-| F0 Exploración y plan | ✅ Aprobado por Carlos | Plan con el modelo de roles, tablas y RLS, rutas, piezas reutilizadas y corte del día |
-| F1 Base del módulo | ✅ | Migración 75, `accesoFranquiciatarios`, marca The Coffee, navegación, rutas `/franquiciatarios/[companyId]` |
-| F2 Baristas y checklists | ✅ | Nombres, plantilla v1 (Excel), checklist con Sí/No, firmas, incidencias, avisos, correcciones |
-| F3 Ventas y tira | ✅ | `/api/franquiciatarios/[id]/{vivo,pedidos,tira,avisos}`, sin neto, costos ni márgenes; tira de 80 mm y A4 |
-| F4 Propuesta del gerente | ✅ | `02-PROPUESTA-GERENTE.md` y prototipo en el arnés (`?franquiciatarios&vista=propuesta&rol=gerente`) |
-| F5 Control y PR | ✅ | Revisión de código (nivel high), respaldo, ensayo con ROLLBACK y PR en borrador |
-| Producción | ⏸ Requiere OK | Aplicar la 75, crear usuarios de Essentia y verificar con cada rol |
+| Fase                     | Estado                 | Entregable                                                                                                  |
+| ------------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| F0 Exploración y plan    | ✅ Aprobado por Carlos | Plan con el modelo de roles, tablas y RLS, rutas, piezas reutilizadas y corte del día                       |
+| F1 Base del módulo       | ✅                     | Migración 75, `accesoFranquiciatarios`, marca The Coffee, navegación, rutas `/franquiciatarios/[companyId]` |
+| F2 Baristas y checklists | ✅                     | Nombres, plantilla v1 (Excel), checklist con Sí/No, firmas, incidencias, avisos, correcciones               |
+| F3 Ventas y tira         | ✅                     | `/api/franquiciatarios/[id]/{vivo,pedidos,tira,avisos}`, sin neto, costos ni márgenes; tira de 80 mm y A4   |
+| F4 Propuesta del gerente | ✅                     | `02-PROPUESTA-GERENTE.md` y prototipo en el arnés (`?franquiciatarios&vista=propuesta&rol=gerente`)         |
+| F5 Control y PR          | ✅                     | Revisión de código (nivel high), respaldo, ensayo con ROLLBACK y PR en borrador                             |
+| Producción               | ⏸ Requiere OK          | Aplicar la 75, crear usuarios de Essentia y verificar con cada rol                                          |
 
 ## 2. Decisiones
 
@@ -95,16 +95,16 @@
 
 ### Comandos
 
-| Comando | Resultado |
-|---|---|
-| `npm run typecheck` | ✅ sin errores |
-| `npx vitest run tests/db/franquiciatarios.test.ts` | ✅ 22/22 (acceso por rol y sucursal, OAuth, inmutabilidad también con service_role, nombres, firmas, avisos, día de operación) |
-| `npx vitest run tests/portal/franquiciatarios-rutas.test.ts` | ✅ 15/15 (401/403/404, 7 días, mismas cifras que Sucursales en vivo, pedidos y tira; sin claves sensibles) |
-| Guardias del repo (`guardia-lectura`, `permisos`) | ✅, después de ajustar las políticas a initPlan |
-| `npm test` (suite completa) | ✅ 1647 pasan; solo falla `paridad.test.ts` por un Excel local que no existe (entorno) |
-| `npm run build` | ✅ |
-| `npx tsx scripts/franquiciatarios/ensayo-75.ts` | ✅ Ensayo con ROLLBACK (§4.2) |
-| `npx tsx scripts/franquiciatarios/paridad-essentia.ts 7` | ✅ Paridad con producción (§4.3) |
+| Comando                                                      | Resultado                                                                                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run typecheck`                                          | ✅ sin errores                                                                                                                 |
+| `npx vitest run tests/db/franquiciatarios.test.ts`           | ✅ 22/22 (acceso por rol y sucursal, OAuth, inmutabilidad también con service_role, nombres, firmas, avisos, día de operación) |
+| `npx vitest run tests/portal/franquiciatarios-rutas.test.ts` | ✅ 15/15 (401/403/404, 7 días, mismas cifras que Sucursales en vivo, pedidos y tira; sin claves sensibles)                     |
+| Guardias del repo (`guardia-lectura`, `permisos`)            | ✅, después de ajustar las políticas a initPlan                                                                                |
+| `npm test` (suite completa)                                  | ✅ 1647 pasan; solo falla `paridad.test.ts` por un Excel local que no existe (entorno)                                         |
+| `npm run build`                                              | ✅                                                                                                                             |
+| `npx tsx scripts/franquiciatarios/ensayo-75.ts`              | ✅ Ensayo con ROLLBACK (§4.2)                                                                                                  |
+| `npx tsx scripts/franquiciatarios/paridad-essentia.ts 7`     | ✅ Paridad con producción (§4.3)                                                                                               |
 
 ### 4.2 Respaldo y ensayo de la migración 75
 
@@ -203,3 +203,270 @@ Preguntas originales:
 - Otras sucursales (el modelo ya las soporta).
 - Los apartados del gerente de `02-PROPUESTA-GERENTE.md`.
 - El arnés visual tiene su propia copia de la plantilla v1: si cambia la plantilla, hay que actualizarla.
+
+---
+
+## 8. Rutina de turno v2 (PDF de Operaciones) — F1 del plan `03-PLAN-RUTINA-Y-CONEXIONES.md`
+
+> Rama `feat/franq-rutina-v2` (2026-11-20). Migración **20261120000079** ensayada con rollback y **sin aplicar**:
+> se aplica al mergear, con el OK de Carlos.
+
+**Qué cambia**
+
+- **4 fases:** Apertura (8), Durante la operación (6 rondas), Medio turno (7) y Fin de turno (11), con las 32
+  actividades del PDF. «Medio turno» toma el lugar del «Cambio de turno» de la v1.
+- **Rondas.** Baños cada hora (tolerancia 15 min), sanitizante cada 2 h (15 min) y cold brew cada 2–4 h (120 + 120).
+  Reabastecer barra, previas y preparados van según demanda.
+  - Cada ronda es un registro propio, con hora del servidor.
+  - La pantalla muestra «última / siguiente / atrasada». La primera ronda cuenta desde la firma de apertura y los
+    atrasos se detienen al firmar el cierre.
+  - **Supuesto [S]:** las rondas solo avisan; no bloquean ninguna firma.
+- **Datos.** Caducidades, conteos de apertura y de medio turno, preparados y cold brew piden un dato corto en el «Sí».
+- **Cortes.** «Enviar corte de medio día» y «Enviar corte del día» enlazan a la tira; el «Sí» registra quién y a qué
+  hora.
+- **Firmas.**
+  - Apertura: barista del turno de mañana.
+  - Medio turno: entrega (turno de mañana) y recibe (turno de tarde, otra persona).
+  - Fin de turno: barista de tarde o cierre, y después el **visto bueno del gerente**.
+- **Vigencia uniforme.** Un registro vale mientras ningún otro lo corrija, y se corrige una sola vez (índice único:
+  dos dispositivos a la vez ya no dejan dos registros vigentes). Los avisos muestran cada «No» vigente,
+  también los de las rondas.
+- **Convivencia.** La v1 deja de ser vigente y conserva sus 33 puntos y registros. Un día empezado con la v1 sigue con
+  la v1; en producción había 1 checklist de hoy con la v1. Un día anterior se ve con su versión.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-rutina.test.ts`: 10 pruebas (plantilla, rondas, dato, corrección de ronda, avisos,
+    visto bueno, convivencia).
+  - `tests/db/franquiciatarios.test.ts`: 22 pruebas, adaptadas a la v2.
+  - `tests/portal/franquiciatarios-dia.test.ts`: 6 pruebas (próxima ronda y atrasos, vigencia, convivencia, día
+    anterior).
+- **Ensayo** `scripts/franquiciatarios/ensayo-79.ts` (sha `51c10a51…`, con el índice único de correcciones):
+  - Dentro de la transacción: v1 sin vigencia y v2 vigente, con 8 / 6 / 7 / 11 puntos y 6 recurrentes; los 33
+    puntos v1 quedan como únicos y la respuesta existente sigue ahí.
+  - En la consulta nueva: no está registrada, sigue 1 plantilla, no aparece la columna `tipo` y el check de firmas
+    es el original.
+  - Respaldo en `Respaldos/thecoffee-supabase/2026-11-20-migracion-79-antes.sql`.
+- **Arnés visual** (datos sintéticos):
+  - Hoy con las 4 fases en 2×2 (en pantallas grandes, 4 en una fila).
+  - «Durante» con rondas atrasadas en ámbar.
+  - Registrar una ronda y el cold brew con su dato.
+  - Fin de turno con el visto bueno a 375 px, sin scroll horizontal.
+  - Enlace a la tira parcial en Medio turno.
+
+**Pendiente de Carlos:** si las rondas avisan o bloquean, la hora del cambio de turno en Essentia y la lista de insumos
+críticos para la F2.
+
+## 9. Pedidos y recepciones — F3 del plan
+
+> Rama `feat/franq-pedidos` (2026-11-20). Migración **20261120000080** ensayada con rollback y **sin aplicar**;
+> se aplica al mergear, con el OK de Carlos. No escribe nada en el sitio viejo ni en las tablas `com_*`.
+
+**Qué hay**
+
+- **Pantalla nueva «Pedidos»** (menú y tarjeta en Hoy, color oliva). Muestra los pedidos de la sucursal a la
+  Comercializadora de los últimos 120 días: folio, fecha, estado del sitio viejo, productos y piezas.
+  - Arriba, tres cifras: por recibir, en camino y con diferencias.
+- **Vínculo con el sitio viejo.** La apertura es el número de tienda de la sucursal (`lookerStoreId`; Essentia = 397).
+  - **Candado:** solo se lee si el nombre de esa apertura en el sitio viejo coincide con el de la sucursal. Si no
+    coincide, la pantalla dice que la sucursal no está vinculada.
+  - Además se descartan las filas de cualquier otra apertura.
+  - La lectura usa la llave de servicio en el servidor, después de autorizar al usuario para esa sucursal.
+- **Recepción** (tabla `franq_recepciones`, solo inserción, una por pedido):
+  - Cualquier rol de la sucursal la registra; la cuenta de baristas, con su nombre declarado.
+  - Cada renglón trae lo pedido y solo se cambia lo que llegó distinto. Si hay diferencia, se explica qué pasó.
+  - El servidor vuelve a leer el pedido de esta sucursal y calcula las diferencias contra sus cantidades. Del
+    navegador solo llega lo recibido.
+  - Se puede recibir un pedido en camino o entregado, de los últimos 60 días, que aún no tenga recepción.
+- **Montos ([S], decisión pendiente):** solo el administrador ve precios y totales. Los demás roles ven productos,
+  cantidades y estado, y la prueba confirma que el JSON no lleva ningún precio.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-recepciones.test.ts`: 6 pruebas. Nombre declarado, una por pedido, diferencias
+    válidas con observación, pedido inválido u otra sucursal, solo inserción, lectura por sucursal y OAuth.
+  - `tests/portal/franquiciatarios-pedidos.test.ts`: 7 pruebas. Sin montos no sale ningún precio; los artículos
+    editados mandan; ventana de recepción; candado de apertura y nombre.
+- **Ensayo** `scripts/franquiciatarios/ensayo-80.ts` (sha `a6b35830…`):
+  - Dentro de la transacción quedaron la tabla con RLS, 1 política, 1 trigger y la función.
+  - En la consulta nueva no quedó nada.
+- **Producción, solo lectura:** la apertura 397 se llama «Essentia» y tiene 21 pedidos en 120 días (en camino,
+  recibidos y entregados).
+- **Arnés visual:**
+  - Lista como gerente, sin montos.
+  - Recepción con una diferencia: aparecen la columna «Recibido» y quién recibió.
+  - Vista con montos a 375 px, sin scroll horizontal (se corrigió el espacio entre cantidad y precio).
+
+**Pendiente de Carlos**
+
+- Si el gerente o el franquiciatario ven los montos.
+- Dar de alta a Essentia en la OV sugerida de Comercializadora: renglón `514 → 397` en `com_ovs_tiendas`, que es una
+  escritura en producción.
+
+## 10. Pedidos solo para gerencia (decisión de Carlos, 2026-11-20)
+
+> Rama `feat/franq-pedidos-gestores`. Migración **20261120000082** (la 81 ya era de Rappi) ensayada con respaldo y
+> rollback; **sin aplicar** hasta el merge con OK.
+
+- **Gerente y franquiciatario ven los pedidos con montos** (precio por producto y total) y registran las recepciones
+  con el nombre de su perfil.
+- **La cuenta de baristas no ve pedidos, inventario ni P&L.** «Pedidos» pasa al grupo Gerencia y la tarjeta de Hoy
+  solo la ven los gestores. La página le responde 404 a la cuenta de baristas, como Avisos y Baristas.
+- **En la base (migración 82):** la lectura de `franq_recepciones` queda solo para gestores
+  (`franq_companias_gestor()`), y `franq_recibir` rechaza a quien no sea gerente, franquiciatario o admin.
+- **Evidencia:**
+  - `tests/db/franquiciatarios-recepciones.test.ts`: 7 pruebas. El barista no registra ni lee; el gerente de otra
+    sucursal tampoco.
+  - Ensayo `scripts/franquiciatarios/ensayo-82.ts` (sha `46628ad2…`): la política queda limitada a gestores y
+    `franq_recibir` exige gestor; en la consulta nueva todo sigue igual. Había 0 recepciones en producción.
+  - Respaldo: `Respaldos/thecoffee-supabase/2026-11-20-migracion-82-antes.sql`.
+
+## 11. Conteos de insumos críticos — F2 del plan
+
+> Rama `feat/franq-conteos` (2026-11-20). Migración **20261120000083** ensayada con rollback y **sin aplicar**; se
+> aplica al mergear, con el OK de Carlos.
+
+**Decisión de Carlos:** «usa un sugerido tomando en cuenta las ventas para el inventario crítico; después
+corregimos y afinamos».
+
+- **Lista sugerida** (`franq_sugerir_insumos`, solo gestores; solo si la sucursal no tiene lista):
+  - Sale del consumo teórico (receta × ventas) del último mes de `sucursales_consumo_mes`.
+  - Toma los insumos que acumulan el **80 % del valor consumido**, con un mínimo de 10 y un máximo de 20, ordenados
+    por peso.
+  - Unidad de conteo: el paquete de compra (presentación del insumo); lo que se vende por pieza, en piezas.
+  - El valor solo se usa dentro de la base para ordenar; la lista no lleva costos.
+- **Para Essentia** (corrido dentro del ensayo sobre producción, sin guardar nada), salen 20 insumos: café White,
+  leches deslactosada, entera y de avena, creamer Pumpkin, brioche, croissant, panqués, brownie, pavo, mozzarella,
+  vasos y tapas, Isopure, matcha y bolsas para pan.
+- **Ajustes.** El gerente afina la lista en «Inventario» (gerencia): agrega a mano, renombra, cambia la unidad y da
+  de baja. Los insumos nunca se borran.
+- **Conteo** («Conteo de insumos», todos los roles), en la apertura y a medio turno:
+  - Se cuentan todos los insumos activos; si de algo no hay, se escribe 0.
+  - Un recuento del mismo momento corrige al anterior. Es de solo inserción y la hora la pone el servidor.
+  - Los puntos «Realizar conteos…» y «Conteos» del checklist enlazan a esta captura.
+- **Quién ve qué:**
+  - La **cuenta de baristas no ve inventario**. Captura en blanco y no puede leer `franq_conteos`; solo ve quién
+    contó y a qué hora, sin cantidades (`franq_conteo_estado`).
+  - El historial de 7 días (insumo × día y momento) lo ve solo la gerencia.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-conteos.test.ts`: 10 pruebas (Pareto con mínimo 10 y tope 20, unidad por paquete o
+    pieza, sin consumo → manual, sin valores, ajustes, conteo completo, el barista no ve cantidades, recuento,
+    validaciones, OAuth).
+  - `tests/portal/franquiciatarios-conteos.test.ts`: 2 pruebas del historial.
+- **Ensayo** `scripts/franquiciatarios/ensayo-83.ts` (sha `1b6e2a12…`):
+  - Dentro de la transacción: 2 tablas con RLS y 4 funciones, y el sugerido de Essentia corrido como administrador.
+  - En la consulta nueva no quedó nada.
+- **Arnés visual:**
+  - Conteo de 20 insumos en celular, guardado («contó 20 insumos a las …»).
+  - Inventario con su lista, el historial y el estado sin lista (botón «Usar la lista sugerida»).
+
+**Siguiente paso tras el merge (con OK):** cargar la lista sugerida de Essentia desde Inventario (botón) o
+ejecutando `franq_sugerir_insumos(514)` como administrador.
+
+## 12. Arqueo y caja chica — F4 del plan
+
+> Rama `feat/franq-caja` (2026-11-20). Migración **20261120000084** ensayada con rollback y **sin aplicar**; se aplica
+> al mergear, con el OK de Carlos.
+
+- **Arqueo ciego** («Caja», todos los roles), a medio turno y al cierre (los puntos de corte del checklist enlazan
+  aquí):
+  - Se cuenta todo el efectivo de la caja y se captura el total **sin ver lo esperado**.
+  - Un recuento reemplaza al anterior. Es de solo inserción y la hora la pone el servidor.
+  - La cuenta de baristas no lee `franq_arqueos`; solo ve quién arqueó y a qué hora (`franq_arqueo_estado`).
+- **Cuadre** (gerencia):
+  - Esperado = fondo de caja + efectivo del POS (pago `DINHEIRO`) **hasta la hora del arqueo** − gastos de caja
+    chica pagados en efectivo hasta esa hora.
+  - El efectivo cuenta dentro del día de operación (4:00 a 4:00), así que un cierre de madrugada incluye lo vendido
+    después de medianoche.
+  - La diferencia sale en rojo si pasa la tolerancia.
+  - Se pueden consultar días anteriores.
+- **Caja chica** (gerencia):
+  - Cada gasto lleva concepto, categoría (insumos, limpieza, mantenimiento, papelería, transporte u otro), monto, si
+    se pagó con efectivo de la caja y si hay comprobante.
+  - No se borra: se **anula** una sola vez con motivo, y quedan el original y la anulación.
+- **Fondo y tolerancia** por sucursal (gerencia). Si no se configuran, el fondo es $0 y la tolerancia $20.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-caja.test.ts`: 7 pruebas. Arqueo ciego con nombre declarado; el barista no ve montos,
+    solo el estado; recuento; validaciones; otra sucursal; gastos solo de gerencia; validaciones de gasto; anulación
+    única con motivo; configuración; OAuth.
+  - `tests/portal/franquiciatarios-caja.test.ts`: 4 pruebas. Efectivo por día de operación y hora, incluida la
+    madrugada; gastos vigentes en efectivo; esperado y tolerancia.
+- **Ensayo** `scripts/franquiciatarios/ensayo-84.ts` (sha `297d8051…`):
+  - Dentro de la transacción: 3 tablas con RLS, 3 políticas, 5 funciones y 2 triggers.
+  - En la consulta nueva no quedó nada.
+- **Arnés visual:**
+  - El gerente ve el cuadre: fondo $1,500 + POS $637.50 − $80 = $2,057.50 contra $2,050, con diferencia de −$7.50
+    en verde. También ve la caja chica con un gasto anulado y la configuración.
+  - El barista solo ve la captura, sin ningún monto.
+  - A 375 px no hay scroll horizontal.
+
+**Pendiente:** Carlos o el gerente fijan el fondo de caja real de Essentia en «Caja → Fondo y tolerancia».
+
+## 13. P&L y metas de venta — F5 del plan
+
+> Rama `feat/franq-pyl` (2026-11-20). Migración **20261120000088**: la 85 y la 86 quedaron saltadas en `main` y la 87
+> es de Sucursales. Está ensayada con rollback y **sin aplicar**; se aplica al mergear, con el OK de Carlos.
+
+**Decisiones de Carlos:**
+
+- El P&L lo ven el gerente, el franquiciatario y el admin; el barista no.
+- Los gastos fijos salen de **Zoho**.
+- Las metas de día, semana y mes se traen de una vez.
+
+**Fuentes**
+
+| Línea                     | Fuente                                                                                                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venta con IVA, descuentos | POS + Rappi del portal, con las mismas funciones que Sucursales                                                                                                                                                         |
+| Comisiones                | Rappi: 18 % de su venta (`canales`, confirmada) más la comisión de cobro que reporta el POS (venta − neto)                                                                                                              |
+| Compras                   | Pedidos del mes a la Comercializadora (sitio viejo, apertura con candado), ÷ 1.16                                                                                                                                       |
+| Caja chica                | `franq_gastos` vigentes del mes                                                                                                                                                                                         |
+| Gastos fijos              | **Zoho Analytics «Gastos Sucursales Por Meses»**: renta, labor cost, energía, agua y teléfono, POS fee y suscripciones. La gerencia corrige y gana la captura más reciente (`franq_gastos_fijos`, origen zoho o manual) |
+| Metas                     | BI (`bi_metas`, `bi_metas_diarias`), que se cargan de Zoho «Metas Mensuales 2026». La semana va de lunes a domingo                                                                                                      |
+
+- **Cálculo:** líneas sin IVA → margen bruto → contribución → utilidad de operación.
+- **Proyección al cierre:** escala lo variable con los días del mes y deja los fijos completos.
+- **Punto de equilibrio:** en venta con IVA = fijos ÷ (contribución ÷ venta).
+
+**Essentia, noviembre del 1 al 20 (datos reales, solo lectura, `scripts/franquiciatarios/pyl-essentia.ts --zoho`):**
+
+- Venta con IVA $188,294; venta neta $162,323.
+- Comisiones $14,746; compras $32,996.
+- Contribución $114,581.
+- Fijos de Zoho $101,231 al mes: renta $38,381, nómina $53,000, energía $5,300, agua y teléfono $2,000, POS $2,000 y
+  suscripciones $550.
+- **Utilidad de operación $13,350 a la fecha, $70,641 proyectada al cierre.**
+- **Punto de equilibrio $166,356 de venta al mes**, con un margen de contribución de 61 %.
+
+**Metas:** Zoho trae la meta de Essentia (noviembre: $314,691, 2,098 tickets y ticket promedio de $150), pero **la tabla
+de metas de BI está vacía en producción para todas las sucursales**.
+
+- La carga en prueba (`scripts/bi/metas.ts metas`) subiría 728 metas de 82 sucursales, de enero a noviembre, y las
+  repartiría por día.
+- Guardarlas es una escritura en producción que requiere el OK de Carlos.
+- Mientras tanto la pantalla dice «sin meta», nunca cero.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-gastos-fijos.test.ts`: 3 pruebas.
+  - `tests/portal/franquiciatarios-pyl.test.ts`: 6 pruebas (fijos vigentes, líneas sin IVA, proyección, punto de
+    equilibrio, metas de día, semana y mes, y «sin meta → null»).
+- **Ensayo** `scripts/franquiciatarios/ensayo-88.ts` (sha `044868a5…`): dentro de la transacción, tabla con RLS,
+  política, función y trigger; en la consulta nueva no quedó nada.
+- **Cargador** `scripts/franquiciatarios/zoho-gastos-fijos.ts` (en prueba): Essentia 72 montos; todas las sucursales
+  58 con 4,176 montos.
+- **Arnés visual:** P&L con metas y tabla; en celular sin scroll horizontal.
+
+**Después del merge (con OK):**
+
+1. Cargar los gastos fijos de Essentia: `zoho-gastos-fijos.ts --tienda 514 --aplicar`.
+2. Cargar las metas de BI: `scripts/bi/metas.ts metas --aplicar`.
