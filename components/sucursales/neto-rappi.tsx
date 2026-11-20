@@ -6,9 +6,9 @@ import { COLOR_ORIGEN } from './colores';
 import { dinero, numero, porcentaje } from './formato';
 
 /**
- * Cobrado y neto de Rappi TAL COMO LOS REPORTA LA API (grossAmount y netAmout), sin interpretación:
- * el proveedor no ha documentado qué incluye netAmout, así que no se rotula como comisión ni como ajuste
- * y no se calcula ninguna estimación. Ver docs/sucursales/11.
+ * Venta de Rappi con sus dos cifras: la completa (precio de lista, antes de descuentos; la que sigue el equipo de
+ * delivery) y la neta (completa − descuento que paga la tienda), que es la que suma a la venta de la sucursal. Las
+ * promociones que paga Rappi («Pro Rewards») se muestran aparte y no se restan.
  */
 export function NetoRappi({
   kpis,
@@ -19,14 +19,14 @@ export function NetoRappi({
   moneda: string;
   periodo?: string;
 }) {
-  const neto = kpis.netoCent;
-  const diferencia = neto === null ? null : kpis.ventaCent - neto;
-  const pct = diferencia === null || kpis.ventaCent === 0 ? null : diferencia / kpis.ventaCent;
+  const completa = kpis.brutoCent;
+  const neta = kpis.ventaCent;
+  const tienda = kpis.descuentoCent;
   return (
     <ConInfo info={infoNetoRappi(kpis, moneda, periodo)}>
       <Tarjeta
-        titulo={`Cobrado y neto de Rappi (${periodo})`}
-        descripcion="Montos tal como los reporta la API: cobrado (grossAmount) y neto (netAmout). El proveedor no ha documentado qué incluye el neto."
+        titulo={`Venta de Rappi: completa y neta (${periodo})`}
+        descripcion="Completa: precio Rappi antes de descuentos. Neta: después del descuento que paga la tienda; es la que suma a la venta de la sucursal."
       >
         {kpis.pedidos === 0 ? (
           <p className="text-sm text-muted-foreground">Sin pedidos de Rappi en el periodo.</p>
@@ -35,26 +35,33 @@ export function NetoRappi({
             <div
               className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-[4px]"
               role="img"
-              aria-label={`Neto ${porcentaje(neto === null ? null : neto / kpis.ventaCent, 0)} de lo cobrado`}
+              aria-label={`Venta neta ${porcentaje(completa > 0 ? neta / completa : null, 0)} de la venta completa`}
             >
-              {neto !== null && kpis.ventaCent > 0 && (
+              {completa > 0 && (
                 <>
                   <span
                     className="h-full"
-                    style={{
-                      width: `${(neto / kpis.ventaCent) * 100}%`,
-                      backgroundColor: COLOR_ORIGEN.rappi,
-                    }}
+                    style={{ width: `${(neta / completa) * 100}%`, backgroundColor: COLOR_ORIGEN.rappi }}
                   />
                   <span className="h-full flex-1 bg-line-strong" />
                 </>
               )}
             </div>
-            <dl className="grid gap-3 sm:grid-cols-4">
+            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl bg-crema-soft/60 p-4">
-                <dt className="text-xs font-medium text-ink-2">Cobrado (grossAmount)</dt>
+                <dt className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
+                  <span aria-hidden="true" className="size-2 rounded-full bg-line-strong" />
+                  Venta completa (sin descuentos)
+                </dt>
+                <dd className="mt-1 font-display text-2xl font-black tabular">{dinero(completa, moneda)}</dd>
+              </div>
+              <div className="rounded-xl bg-crema-soft/60 p-4">
+                <dt className="text-xs font-medium text-ink-2">Descuento que paga la tienda</dt>
                 <dd className="mt-1 font-display text-2xl font-black tabular">
-                  {dinero(kpis.ventaCent, moneda)}
+                  {dinero(tienda, moneda)}{' '}
+                  <span className="text-sm font-semibold text-ink-2">
+                    {numero(kpis.pedidosConDescuento)} pedidos
+                  </span>
                 </dd>
               </div>
               <div className="rounded-xl bg-crema-soft/60 p-4">
@@ -64,27 +71,14 @@ export function NetoRappi({
                     className="size-2 rounded-full"
                     style={{ backgroundColor: COLOR_ORIGEN.rappi }}
                   />
-                  Neto (netAmout)
+                  Venta neta (con descuentos)
                 </dt>
-                <dd className="mt-1 font-display text-2xl font-black tabular">{dinero(neto, moneda)}</dd>
+                <dd className="mt-1 font-display text-2xl font-black tabular">{dinero(neta, moneda)}</dd>
               </div>
               <div className="rounded-xl bg-crema-soft/60 p-4">
-                <dt className="flex items-center gap-1.5 text-xs font-medium text-ink-2">
-                  <span aria-hidden="true" className="size-2 rounded-full bg-line-strong" />
-                  Diferencia cobrado − neto
-                </dt>
+                <dt className="text-xs font-medium text-ink-2">Promociones que paga Rappi</dt>
                 <dd className="mt-1 font-display text-2xl font-black tabular">
-                  {dinero(diferencia, moneda)}{' '}
-                  <span className="text-sm font-semibold text-ink-2">{porcentaje(pct)}</span>
-                </dd>
-              </div>
-              <div className="rounded-xl bg-crema-soft/60 p-4">
-                <dt className="text-xs font-medium text-ink-2">Pedidos con descuento</dt>
-                <dd className="mt-1 font-display text-2xl font-black tabular">
-                  {numero(kpis.pedidosConDescuento)}{' '}
-                  <span className="text-sm font-semibold text-ink-2">
-                    · {dinero(kpis.descuentoCent, moneda)}
-                  </span>
+                  {dinero(kpis.descuentoRappiCent, moneda)}
                 </dd>
               </div>
             </dl>

@@ -72,6 +72,9 @@ describe('armarPyl', () => {
       armarPyl({ ...base, ventaCent: 0, ventaRappiCent: 0, comisionPosCent: 0 }).puntoEquilibrio,
     ).toBeNull();
   });
+  it('no hay línea de saldo de la app: ya no es venta (llega restado desde Sucursales)', () => {
+    expect(armarPyl(base).lineas.some((l) => l.clave === 'saldo-app')).toBe(false);
+  });
   it('sin descuentos no muestra la línea; mes cerrado: proyección = real', () => {
     const p = armarPyl({ ...base, descuentoCent: 0, diasTranscurridos: 30 });
     expect(p.lineas.some((l) => l.clave === 'descuentos')).toBe(false);

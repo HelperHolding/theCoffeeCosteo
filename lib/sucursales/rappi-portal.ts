@@ -1,7 +1,8 @@
 /**
  * Rappi leído del portal de Partners (docs/rappi-portal): lo que devuelve la RPC sucursales_rappi_portal y su resumen
- * para la pestaña Rappi. Solo datos del portal: venta = suma de productos antes de descuentos
- * (order_product_total_price); nada se estima ni se renombra (no hay comisión ni neto por pedido).
+ * para la pestaña Rappi. Solo datos del portal. Dos cifras de venta: la completa = suma de productos antes de descuentos
+ * (order_product_total_price) y la neta = completa − descuento que paga la tienda (descuento_venta), que es la que suma a
+ * la venta de la sucursal en los demás módulos. No hay comisión por pedido.
  */
 
 export type CanalRappi = 'normal' | 'turbo';
@@ -32,6 +33,11 @@ export interface PedidoRappi {
   metodo_pago: string | null;
   bruto: number;
   descuento_aliado: number | null;
+  /**
+   * Descuento que paga la tienda: descuento_aliado sin las recompensas «Pro Rewards» que paga Rappi
+   * (rappi_descuento_venta, migración 90). Venta neta = bruto − descuento_venta.
+   */
+  descuento_venta?: number | null;
   estado_anterior: string | null;
   revisar: boolean;
   cambios: number;
@@ -61,7 +67,13 @@ export const nombreRappi = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 export interface TotalesRappi {
   pedidos: number;
+  /** Venta completa: suma de productos con precio Rappi, antes de descuentos (bruto). */
   ventaCent: number;
+  /** Descuento que paga la tienda (descuento_venta) y venta neta = bruto − ese descuento. */
+  descuentoTiendaCent: number;
+  ventaNetaCent: number;
+  /** Promociones que paga Rappi («Pro Rewards»): no se restan de la venta de la tienda. */
+  descuentoRappiCent: number;
   cancelados: number;
   canceladosCent: number;
   otros: number;
@@ -101,6 +113,9 @@ export interface RappiPortalVista {
 const vacio = (): TotalesRappi => ({
   pedidos: 0,
   ventaCent: 0,
+  descuentoTiendaCent: 0,
+  ventaNetaCent: 0,
+  descuentoRappiCent: 0,
   cancelados: 0,
   canceladosCent: 0,
   otros: 0,
@@ -127,7 +142,12 @@ export function construirRappiPortal(r: RpcRappiPortal, desde: string, hasta: st
       } else if (p.clase === 'otro') t.otros++;
       else {
         t.pedidos++;
-        t.ventaCent += cent(p.bruto);
+        const bruto = cent(p.bruto);
+        const tienda = Math.min(bruto, Math.max(0, cent(p.descuento_venta ?? 0)));
+        t.ventaCent += bruto;
+        t.descuentoTiendaCent += tienda;
+        t.ventaNetaCent += bruto - tienda;
+        t.descuentoRappiCent += Math.max(0, cent(p.descuento_aliado ?? 0) - tienda);
         t.unidades += p.productos.reduce((s, x) => s + x.unidades, 0);
       }
     }

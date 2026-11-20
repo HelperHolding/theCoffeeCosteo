@@ -54,6 +54,33 @@ describe('normalización', () => {
     expect(JSON.stringify(pedidos)).not.toMatch(/refundId|netAmout|uuid-sintetico|percentageOfTransfer/);
   });
 
+  it('saldo de la app: la venta es el neto de la API (lo que no se pagó con saldo); líneas prorrateadas', () => {
+    const conSaldo = (gross: number, neto: number | null) =>
+      norm([
+        pedido('2026-10-21', '11:00:00', {
+          fromSmartphone: true,
+          paymentMethod: 'WALLET_BALANCE',
+          grossAmount: gross,
+          netAmout: neto ?? undefined,
+          discount: 0,
+          items: [
+            { defaultCode: 'CPU', productName: 'Pumpkin Latte', amount: 80, discount: 0, itemsCustom: [] },
+            { defaultCode: 'BRO', productName: 'Brownie', amount: 40, discount: 0, itemsCustom: [] },
+          ],
+        }),
+      ]).pedidos[0];
+    const p = conSaldo(120, 45);
+    expect(p).toMatchObject({ ventaCent: 4500, brutoCent: 12000, saldoAppCent: 7500, cuadra: true });
+    expect(p.lineas.map((l) => l.importeCent)).toEqual([3000, 1500]);
+    // Pagado completo con saldo: venta 0, sigue contando el pedido y sus productos.
+    expect(conSaldo(120, 0)).toMatchObject({ ventaCent: 0, saldoAppCent: 12000 });
+    // Sin neto: se queda lo cobrado.
+    expect(conSaldo(120, null)).toMatchObject({ ventaCent: 12000 });
+    expect(conSaldo(120, null).saldoAppCent).toBeUndefined();
+    const r = resumen([p]);
+    expect(r).toMatchObject({ ventaCent: 4500, brutoCent: 12000, saldoAppCent: 7500 });
+  });
+
   it('un dato inválido no se vuelve cero: se excluye y se cuenta', () => {
     const r = norm([
       pedido('2026-10-21', '09:00:00', { grossAmount: null as unknown as number }),

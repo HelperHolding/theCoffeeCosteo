@@ -72,6 +72,15 @@ export interface PedidoNormal {
   numeroPedidoRappi: string | null;
   /** ventaCent = Σ líneas + Σ customs. Si es false, la conciliación lo reporta (no se ajusta). */
   cuadra: boolean;
+  /**
+   * Venta completa, antes de lo que no cuenta como venta: en Rappi el bruto (precio de lista, sin descuentos); en pagos
+   * con saldo de la app, lo cobrado (grossAmount). En Rappi siempre viene; en el POS, solo con saldo de la app.
+   */
+  brutoCent?: number;
+  /** Rappi: promociones que paga Rappi («Pro Rewards»); no se restan de la venta de la tienda. */
+  descuentoRappiCent?: number;
+  /** Saldo de la app (WALLET_BALANCE): grossAmount − netAmout. No es venta (decisión de Carlos, 2026-11-20). */
+  saldoAppCent?: number;
 }
 
 export const centavos = (x: number) => Math.round(x * 100);
@@ -86,6 +95,42 @@ const custom = (c: z.infer<typeof Custom>): CustomNormal => ({
 
 export const importeLinea = (l: LineaNormal) =>
   l.importeCent + l.customs.reduce((s, c) => s + c.importeCent, 0);
+
+/**
+ * Reparte `objetivo` entre los importes de las líneas y sus personalizaciones en proporción a lo que ya traen, para que
+ * Σ líneas siga siendo la venta del pedido cuando la venta se ajusta (descuento de Rappi o saldo de la app). El último
+ * importe distinto de cero absorbe el redondeo. Las partes de los combos no se tocan (no suman a la venta).
+ */
+export function prorratear(lineas: LineaNormal[], objetivo: number): LineaNormal[] {
+  const total = lineas.reduce((s, l) => s + importeLinea(l), 0);
+  if (total <= 0 || total === objetivo) return lineas;
+  let acumulado = 0;
+  let ultimo: { l: number; c: number } | null = null;
+  const escala = (x: number) => {
+    const y = Math.round((x * objetivo) / total);
+    acumulado += y;
+    return y;
+  };
+  const nuevas = lineas.map((l, i) => {
+    const importeCent = escala(l.importeCent);
+    if (l.importeCent !== 0) ultimo = { l: i, c: -1 };
+    const customs = l.customs.map((c, k) => {
+      if (c.importeCent !== 0) ultimo = { l: i, c: k };
+      return { ...c, importeCent: escala(c.importeCent) };
+    });
+    return { ...l, importeCent, customs };
+  });
+  const u = ultimo as { l: number; c: number } | null;
+  if (u) {
+    const ajuste = objetivo - acumulado;
+    if (u.c < 0) nuevas[u.l].importeCent += ajuste;
+    else nuevas[u.l].customs[u.c].importeCent += ajuste;
+  }
+  return nuevas;
+}
+
+/** Forma de pago con saldo de la app: su venta es el neto de la API (lo que no se pagó con saldo). */
+export const SALDO_APP = 'WALLET_BALANCE';
 
 export interface Normalizados {
   pedidos: PedidoNormal[];
@@ -118,8 +163,14 @@ export function normalizar(
       fueraDeVentana++;
       continue;
     }
-    const lineas = d.items.map((i) => ({ ...custom(i), customs: (i.itemsCustom ?? []).map(custom) }));
-    const ventaCent = centavos(d.grossAmount);
+    const lineasCobradas = d.items.map((i) => ({ ...custom(i), customs: (i.itemsCustom ?? []).map(custom) }));
+    const cobradoCent = centavos(d.grossAmount);
+    const netoCent = d.netAmout === null || d.netAmout === undefined ? null : centavos(d.netAmout);
+    // Saldo de la app: solo es venta lo que no se pagó con saldo (el neto de la API; así lo cuenta Zoho).
+    const conSaldo =
+      d.paymentMethod === SALDO_APP && netoCent !== null && netoCent >= 0 && netoCent < cobradoCent;
+    const ventaCent = conSaldo ? netoCent : cobradoCent;
+    const lineas = conSaldo ? prorratear(lineasCobradas, ventaCent) : lineasCobradas;
     pedidos.push({
       id: d.id,
       fecha: m.fecha,
@@ -134,7 +185,7 @@ export function normalizar(
               ? 'mostrador'
               : 'desconocido',
       ventaCent,
-      netoCent: d.netAmout === null || d.netAmout === undefined ? null : centavos(d.netAmout),
+      netoCent,
       descuentoCent: centavos(d.discount),
       metodo: d.paymentMethod ?? '',
       tipo: d.paymentType ?? '',
@@ -143,7 +194,8 @@ export function normalizar(
           ? d.refundId
           : null,
       lineas,
-      cuadra: lineas.reduce((s, l) => s + importeLinea(l), 0) === ventaCent,
+      cuadra: lineasCobradas.reduce((s, l) => s + importeLinea(l), 0) === cobradoCent,
+      ...(conSaldo ? { brutoCent: cobradoCent, saldoAppCent: cobradoCent - ventaCent } : {}),
     });
   }
   pedidos.sort((a, b) => (a.fecha === b.fecha ? b.segundo - a.segundo : a.fecha < b.fecha ? 1 : -1));

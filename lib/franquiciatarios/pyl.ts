@@ -61,7 +61,7 @@ export interface EntradaPyl {
   ventaCent: number;
   descuentoCent: number;
   ventaRappiCent: number;
-  /** Comisión de cobro que reporta el POS (venta − neto) de los pedidos que la traen. */
+  /** Comisión de cobro que reporta el POS (venta − neto) de los pedidos con tarjeta o app. */
   comisionPosCent: number;
   iva: number;
   comisionRappi: number;
@@ -123,7 +123,14 @@ export function armarPyl(e: EntradaPyl): Pyl {
     ...(nota ? { nota } : {}),
   });
   const lineas: LineaPyl[] = [
-    L('venta', 'Venta con IVA', venta, 'ingreso', false, 'POS y Rappi, igual que Sucursales'),
+    L(
+      'venta',
+      'Venta con IVA',
+      venta,
+      'ingreso',
+      false,
+      'POS y Rappi neto de descuentos, sin saldo de la app; igual que Sucursales y Zoho',
+    ),
     L(
       'descuentos',
       'Descuentos otorgados',

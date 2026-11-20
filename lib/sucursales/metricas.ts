@@ -31,6 +31,12 @@ export interface Resumen {
   lineas: number;
   /** Σ netAmout (neto reportado por la API); null si algún pedido no lo trae. */
   netoCent: number | null;
+  /** Venta completa: Σ brutoCent (Rappi antes de descuentos, saldo de la app incluido) o la venta si no lo trae. */
+  brutoCent: number;
+  /** Promociones que paga Rappi («Pro Rewards»): no se restan de la venta. */
+  descuentoRappiCent: number;
+  /** Pagado con saldo de la app: no es venta. */
+  saldoAppCent: number;
 }
 
 export function resumen(ps: PedidoNormal[]): Resumen {
@@ -39,7 +45,13 @@ export function resumen(ps: PedidoNormal[]): Resumen {
   let lineas = 0;
   let pedidosConDescuento = 0;
   let netoCent: number | null = 0;
+  let brutoCent = 0;
+  let descuentoRappiCent = 0;
+  let saldoAppCent = 0;
   for (const p of ps) {
+    brutoCent += p.brutoCent ?? p.ventaCent;
+    descuentoRappiCent += p.descuentoRappiCent ?? 0;
+    saldoAppCent += p.saldoAppCent ?? 0;
     netoCent = netoCent === null || p.netoCent === null ? null : netoCent + p.netoCent;
     ventaCent += p.ventaCent;
     descuentoCent += p.descuentoCent;
@@ -56,6 +68,9 @@ export function resumen(ps: PedidoNormal[]): Resumen {
     pedidosConDescuento,
     lineas,
     netoCent,
+    brutoCent,
+    descuentoRappiCent,
+    saldoAppCent,
   };
 }
 
