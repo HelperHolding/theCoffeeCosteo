@@ -115,8 +115,42 @@ export interface FranqAviso {
   registrado_en: string;
   respuesta_id: number | null;
 }
+/** Renglón con diferencia en una recepción (migración 80). */
+export interface DiferenciaRecepcion {
+  nombre: string;
+  sku: string | null;
+  pedido: number;
+  recibido: number;
+}
+export interface FranqRecepcion {
+  id: number;
+  company_id: number;
+  pedido_id: string;
+  folio: string | null;
+  completo: boolean;
+  diferencias: DiferenciaRecepcion[];
+  observacion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+  sesion: string | null;
+  dispositivo: string | null;
+}
 
 export interface FuncionesFranq {
+  franq_recibir: {
+    Args: {
+      p_company: number;
+      p_pedido: string;
+      p_folio: string | null;
+      p_diferencias: DiferenciaRecepcion[];
+      p_observacion: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+    };
+    Returns: number;
+  };
   franq_rol: { Args: { p_company: number }; Returns: string | null };
   franq_dia_operacion: { Args: Record<string, never>; Returns: string };
   franq_responder: {

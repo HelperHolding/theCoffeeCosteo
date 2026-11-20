@@ -257,3 +257,50 @@ Preguntas originales:
 
 **Pendiente de Carlos:** si las rondas avisan o bloquean, la hora del cambio de turno en Essentia y la lista de insumos
 críticos para la F2.
+
+## 9. Pedidos y recepciones — F3 del plan
+
+> Rama `feat/franq-pedidos` (2026-11-20). Migración **20261120000080** ensayada con rollback y **sin aplicar**;
+> se aplica al mergear, con el OK de Carlos. No escribe nada en el sitio viejo ni en las tablas `com_*`.
+
+**Qué hay**
+
+- **Pantalla nueva «Pedidos»** (menú y tarjeta en Hoy, color oliva). Muestra los pedidos de la sucursal a la
+  Comercializadora de los últimos 120 días: folio, fecha, estado del sitio viejo, productos y piezas.
+  - Arriba, tres cifras: por recibir, en camino y con diferencias.
+- **Vínculo con el sitio viejo.** La apertura es el número de tienda de la sucursal (`lookerStoreId`; Essentia = 397).
+  - **Candado:** solo se lee si el nombre de esa apertura en el sitio viejo coincide con el de la sucursal. Si no
+    coincide, la pantalla dice que la sucursal no está vinculada.
+  - Además se descartan las filas de cualquier otra apertura.
+  - La lectura usa la llave de servicio en el servidor, después de autorizar al usuario para esa sucursal.
+- **Recepción** (tabla `franq_recepciones`, solo inserción, una por pedido):
+  - Cualquier rol de la sucursal la registra; la cuenta de baristas, con su nombre declarado.
+  - Cada renglón trae lo pedido y solo se cambia lo que llegó distinto. Si hay diferencia, se explica qué pasó.
+  - El servidor vuelve a leer el pedido de esta sucursal y calcula las diferencias contra sus cantidades. Del
+    navegador solo llega lo recibido.
+  - Se puede recibir un pedido en camino o entregado, de los últimos 60 días, que aún no tenga recepción.
+- **Montos ([S], decisión pendiente):** solo el administrador ve precios y totales. Los demás roles ven productos,
+  cantidades y estado, y la prueba confirma que el JSON no lleva ningún precio.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-recepciones.test.ts`: 6 pruebas. Nombre declarado, una por pedido, diferencias
+    válidas con observación, pedido inválido u otra sucursal, solo inserción, lectura por sucursal y OAuth.
+  - `tests/portal/franquiciatarios-pedidos.test.ts`: 7 pruebas. Sin montos no sale ningún precio; los artículos
+    editados mandan; ventana de recepción; candado de apertura y nombre.
+- **Ensayo** `scripts/franquiciatarios/ensayo-80.ts` (sha `a6b35830…`):
+  - Dentro de la transacción quedaron la tabla con RLS, 1 política, 1 trigger y la función.
+  - En la consulta nueva no quedó nada.
+- **Producción, solo lectura:** la apertura 397 se llama «Essentia» y tiene 21 pedidos en 120 días (en camino,
+  recibidos y entregados).
+- **Arnés visual:**
+  - Lista como gerente, sin montos.
+  - Recepción con una diferencia: aparecen la columna «Recibido» y quién recibió.
+  - Vista con montos a 375 px, sin scroll horizontal (se corrigió el espacio entre cantidad y precio).
+
+**Pendiente de Carlos**
+
+- Si el gerente o el franquiciatario ven los montos.
+- Dar de alta a Essentia en la OV sugerida de Comercializadora: renglón `514 → 397` en `com_ovs_tiendas`, que es una
+  escritura en producción.
