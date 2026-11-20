@@ -10,7 +10,7 @@ import { NombreDeclarado, QuienEres } from '@/components/franquiciatarios/quien-
 import { diaLargo } from '@/components/franquiciatarios/formato';
 import { ICONO_SECCION, TONO } from '@/components/franquiciatarios/colores';
 
-const CLAVES: SeccionClave[] = ['apertura', 'cambio', 'cierre'];
+const CLAVES: SeccionClave[] = ['apertura', 'durante', 'cambio', 'medio', 'cierre'];
 
 export default async function PaginaChecklist({
   params,
@@ -56,7 +56,7 @@ export default async function PaginaChecklist({
   const pedida = CLAVES.find((k) => k === q.seccion);
   const actual =
     estado.secciones.find((s) => s.clave === pedida) ??
-    estado.secciones.find((s) => s.estado !== 'completa') ??
+    estado.secciones.find((s) => s.firmasRequeridas.length > 0 && s.estado !== 'completa') ??
     estado.secciones[0];
   const consultaDia = esHoy ? '' : `&dia=${dia}`;
 
@@ -86,7 +86,7 @@ export default async function PaginaChecklist({
         <p className="aviso">No hay plantilla de checklist para esta sucursal. Avisa al administrador.</p>
       ) : (
         <>
-          <nav aria-label="Secciones del checklist" className="grid grid-cols-3 gap-2">
+          <nav aria-label="Secciones del checklist" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {estado.secciones.map((s) => {
               const t = TONO[s.clave];
               const Icono = ICONO_SECCION[s.clave];
@@ -112,7 +112,13 @@ export default async function PaginaChecklist({
                     {s.nombre}
                   </span>
                   <span className="text-xs tabular text-ink-2">
-                    {s.estado === 'completa' ? 'Completa' : `${s.respondidos}/${s.puntos.length}`}
+                    {s.firmasRequeridas.length === 0
+                      ? s.atrasos > 0
+                        ? `${s.atrasos} atrasada${s.atrasos === 1 ? '' : 's'}`
+                        : `${s.puntos.reduce((n, p) => n + p.rondas.length, 0)} registros`
+                      : s.estado === 'completa'
+                        ? 'Completa'
+                        : `${s.respondidos}/${s.puntos.length}`}
                     {s.noes > 0 && ` · ${s.noes} No`}
                   </span>
                 </Link>

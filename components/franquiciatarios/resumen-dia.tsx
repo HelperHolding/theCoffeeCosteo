@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CircleCheck, CircleDashed, CircleDot, TriangleAlert } from 'lucide-react';
+import { CircleCheck, CircleDashed, CircleDot, Clock, TriangleAlert } from 'lucide-react';
 import { cn } from 'cn';
 import type { Dia, EstadoSeccion } from '@/lib/franquiciatarios/dia';
 import { hora } from './formato';
@@ -11,12 +11,27 @@ const ESTADO: Record<EstadoSeccion, { texto: string; icono: typeof CircleCheck; 
   completa: { texto: 'Completa', icono: CircleCheck, color: 'text-ok' },
 };
 
-/** Avance de las tres secciones del día; cada tarjeta abre su checklist y lleva el color de su sección. */
+/**
+ * Avance de las fases del día; cada tarjeta abre su checklist y lleva el color de su fase. Una fase de rondas (sin
+ * firmas) muestra cuántos registros lleva, cuáles están atrasadas y la siguiente que toca.
+ */
 export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: string; consulta?: string }) {
   return (
-    <ul className="grid gap-3 md:grid-cols-3">
+    <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
       {dia.secciones.map((s) => {
-        const e = ESTADO[s.estado];
+        const rondas = s.firmasRequeridas.length === 0;
+        const e =
+          s.atrasos > 0
+            ? {
+                texto: s.atrasos === 1 ? '1 atrasada' : `${s.atrasos} atrasadas`,
+                icono: Clock,
+                color: 'text-warn',
+              }
+            : ESTADO[s.estado];
+        const registros = s.puntos.reduce((n, p) => n + p.rondas.length, 0);
+        const siguiente = s.puntos
+          .filter((p) => p.proxima && !p.atrasada)
+          .sort((a, b) => a.proxima!.localeCompare(b.proxima!))[0];
         const t = TONO[s.clave];
         const Icono = ICONO_SECCION[s.clave];
         const total = s.puntos.length;
@@ -48,10 +63,14 @@ export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: strin
                 </span>
               </div>
               <p className="mt-4 font-display text-3xl font-black tabular leading-none">
-                {s.respondidos}
-                <span className="text-base font-bold text-muted-foreground"> / {total}</span>
+                {rondas ? registros : s.respondidos}
+                {!rondas && <span className="text-base font-bold text-muted-foreground"> / {total}</span>}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">puntos respondidos</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {rondas
+                  ? `${registros === 1 ? 'registro' : 'registros'} hoy · ${s.respondidos} de ${total} actividades`
+                  : 'puntos respondidos'}
+              </p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface" aria-hidden="true">
                 <div
                   className={cn('h-full rounded-full', s.estado === 'completa' ? 'bg-ok' : t.marca)}
@@ -62,11 +81,23 @@ export function ResumenDia({ dia, base, consulta = '' }: { dia: Dia; base: strin
                 {s.noes > 0 && (
                   <p className="flex items-center gap-1.5 font-semibold text-bad">
                     <TriangleAlert size={14} aria-hidden="true" /> {s.noes}{' '}
-                    {s.noes === 1 ? 'punto en «No»' : 'puntos en «No»'}
+                    {rondas
+                      ? s.noes === 1
+                        ? 'ronda con problema'
+                        : 'rondas con problema'
+                      : s.noes === 1
+                        ? 'punto en «No»'
+                        : 'puntos en «No»'}
                   </p>
                 )}
                 <p className="text-xs text-ink-2">
-                  {ultima ? `Firmó ${ultima.nombre} a las ${hora(ultima.registrado_en)}` : 'Sin firma'}
+                  {rondas
+                    ? siguiente
+                      ? `Siguiente: ${siguiente.actividad.toLowerCase()} a las ${hora(siguiente.proxima!)}`
+                      : 'Se registran cada vez que se hacen'
+                    : ultima
+                      ? `Firmó ${ultima.nombre} a las ${hora(ultima.registrado_en)}`
+                      : 'Sin firma'}
                 </p>
               </div>
             </Link>

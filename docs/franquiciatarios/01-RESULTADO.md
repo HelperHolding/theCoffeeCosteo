@@ -7,15 +7,15 @@
 
 ## 1. Fases
 
-| Fase | Estado | Entregable |
-|---|---|---|
-| F0 Exploración y plan | ✅ Aprobado por Carlos | Plan con el modelo de roles, tablas y RLS, rutas, piezas reutilizadas y corte del día |
-| F1 Base del módulo | ✅ | Migración 75, `accesoFranquiciatarios`, marca The Coffee, navegación, rutas `/franquiciatarios/[companyId]` |
-| F2 Baristas y checklists | ✅ | Nombres, plantilla v1 (Excel), checklist con Sí/No, firmas, incidencias, avisos, correcciones |
-| F3 Ventas y tira | ✅ | `/api/franquiciatarios/[id]/{vivo,pedidos,tira,avisos}`, sin neto, costos ni márgenes; tira de 80 mm y A4 |
-| F4 Propuesta del gerente | ✅ | `02-PROPUESTA-GERENTE.md` y prototipo en el arnés (`?franquiciatarios&vista=propuesta&rol=gerente`) |
-| F5 Control y PR | ✅ | Revisión de código (nivel high), respaldo, ensayo con ROLLBACK y PR en borrador |
-| Producción | ⏸ Requiere OK | Aplicar la 75, crear usuarios de Essentia y verificar con cada rol |
+| Fase                     | Estado                 | Entregable                                                                                                  |
+| ------------------------ | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| F0 Exploración y plan    | ✅ Aprobado por Carlos | Plan con el modelo de roles, tablas y RLS, rutas, piezas reutilizadas y corte del día                       |
+| F1 Base del módulo       | ✅                     | Migración 75, `accesoFranquiciatarios`, marca The Coffee, navegación, rutas `/franquiciatarios/[companyId]` |
+| F2 Baristas y checklists | ✅                     | Nombres, plantilla v1 (Excel), checklist con Sí/No, firmas, incidencias, avisos, correcciones               |
+| F3 Ventas y tira         | ✅                     | `/api/franquiciatarios/[id]/{vivo,pedidos,tira,avisos}`, sin neto, costos ni márgenes; tira de 80 mm y A4   |
+| F4 Propuesta del gerente | ✅                     | `02-PROPUESTA-GERENTE.md` y prototipo en el arnés (`?franquiciatarios&vista=propuesta&rol=gerente`)         |
+| F5 Control y PR          | ✅                     | Revisión de código (nivel high), respaldo, ensayo con ROLLBACK y PR en borrador                             |
+| Producción               | ⏸ Requiere OK          | Aplicar la 75, crear usuarios de Essentia y verificar con cada rol                                          |
 
 ## 2. Decisiones
 
@@ -95,16 +95,16 @@
 
 ### Comandos
 
-| Comando | Resultado |
-|---|---|
-| `npm run typecheck` | ✅ sin errores |
-| `npx vitest run tests/db/franquiciatarios.test.ts` | ✅ 22/22 (acceso por rol y sucursal, OAuth, inmutabilidad también con service_role, nombres, firmas, avisos, día de operación) |
-| `npx vitest run tests/portal/franquiciatarios-rutas.test.ts` | ✅ 15/15 (401/403/404, 7 días, mismas cifras que Sucursales en vivo, pedidos y tira; sin claves sensibles) |
-| Guardias del repo (`guardia-lectura`, `permisos`) | ✅, después de ajustar las políticas a initPlan |
-| `npm test` (suite completa) | ✅ 1647 pasan; solo falla `paridad.test.ts` por un Excel local que no existe (entorno) |
-| `npm run build` | ✅ |
-| `npx tsx scripts/franquiciatarios/ensayo-75.ts` | ✅ Ensayo con ROLLBACK (§4.2) |
-| `npx tsx scripts/franquiciatarios/paridad-essentia.ts 7` | ✅ Paridad con producción (§4.3) |
+| Comando                                                      | Resultado                                                                                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run typecheck`                                          | ✅ sin errores                                                                                                                 |
+| `npx vitest run tests/db/franquiciatarios.test.ts`           | ✅ 22/22 (acceso por rol y sucursal, OAuth, inmutabilidad también con service_role, nombres, firmas, avisos, día de operación) |
+| `npx vitest run tests/portal/franquiciatarios-rutas.test.ts` | ✅ 15/15 (401/403/404, 7 días, mismas cifras que Sucursales en vivo, pedidos y tira; sin claves sensibles)                     |
+| Guardias del repo (`guardia-lectura`, `permisos`)            | ✅, después de ajustar las políticas a initPlan                                                                                |
+| `npm test` (suite completa)                                  | ✅ 1647 pasan; solo falla `paridad.test.ts` por un Excel local que no existe (entorno)                                         |
+| `npm run build`                                              | ✅                                                                                                                             |
+| `npx tsx scripts/franquiciatarios/ensayo-75.ts`              | ✅ Ensayo con ROLLBACK (§4.2)                                                                                                  |
+| `npx tsx scripts/franquiciatarios/paridad-essentia.ts 7`     | ✅ Paridad con producción (§4.3)                                                                                               |
 
 ### 4.2 Respaldo y ensayo de la migración 75
 
@@ -203,3 +203,57 @@ Preguntas originales:
 - Otras sucursales (el modelo ya las soporta).
 - Los apartados del gerente de `02-PROPUESTA-GERENTE.md`.
 - El arnés visual tiene su propia copia de la plantilla v1: si cambia la plantilla, hay que actualizarla.
+
+---
+
+## 8. Rutina de turno v2 (PDF de Operaciones) — F1 del plan `03-PLAN-RUTINA-Y-CONEXIONES.md`
+
+> Rama `feat/franq-rutina-v2` (2026-11-20). Migración **20261120000079** ensayada con rollback y **sin aplicar**:
+> se aplica al mergear, con el OK de Carlos.
+
+**Qué cambia**
+
+- **4 fases:** Apertura (8), Durante la operación (6 rondas), Medio turno (7) y Fin de turno (11), con las 32
+  actividades del PDF. «Medio turno» toma el lugar del «Cambio de turno» de la v1.
+- **Rondas.** Baños cada hora (tolerancia 15 min), sanitizante cada 2 h (15 min) y cold brew cada 2–4 h (120 + 120).
+  Reabastecer barra, previas y preparados van según demanda.
+  - Cada ronda es un registro propio, con hora del servidor.
+  - La pantalla muestra «última / siguiente / atrasada». La primera ronda cuenta desde la firma de apertura y los
+    atrasos se detienen al firmar el cierre.
+  - **Supuesto [S]:** las rondas solo avisan; no bloquean ninguna firma.
+- **Datos.** Caducidades, conteos de apertura y de medio turno, preparados y cold brew piden un dato corto en el «Sí».
+- **Cortes.** «Enviar corte de medio día» y «Enviar corte del día» enlazan a la tira; el «Sí» registra quién y a qué
+  hora.
+- **Firmas.**
+  - Apertura: barista del turno de mañana.
+  - Medio turno: entrega (turno de mañana) y recibe (turno de tarde, otra persona).
+  - Fin de turno: barista de tarde o cierre, y después el **visto bueno del gerente**.
+- **Vigencia uniforme.** Un registro vale mientras ningún otro lo corrija, y se corrige una sola vez (índice único:
+  dos dispositivos a la vez ya no dejan dos registros vigentes). Los avisos muestran cada «No» vigente,
+  también los de las rondas.
+- **Convivencia.** La v1 deja de ser vigente y conserva sus 33 puntos y registros. Un día empezado con la v1 sigue con
+  la v1; en producción había 1 checklist de hoy con la v1. Un día anterior se ve con su versión.
+
+**Evidencia**
+
+- **Pruebas:**
+  - `tests/db/franquiciatarios-rutina.test.ts`: 10 pruebas (plantilla, rondas, dato, corrección de ronda, avisos,
+    visto bueno, convivencia).
+  - `tests/db/franquiciatarios.test.ts`: 22 pruebas, adaptadas a la v2.
+  - `tests/portal/franquiciatarios-dia.test.ts`: 6 pruebas (próxima ronda y atrasos, vigencia, convivencia, día
+    anterior).
+- **Ensayo** `scripts/franquiciatarios/ensayo-79.ts` (sha `51c10a51…`, con el índice único de correcciones):
+  - Dentro de la transacción: v1 sin vigencia y v2 vigente, con 8 / 6 / 7 / 11 puntos y 6 recurrentes; los 33
+    puntos v1 quedan como únicos y la respuesta existente sigue ahí.
+  - En la consulta nueva: no está registrada, sigue 1 plantilla, no aparece la columna `tipo` y el check de firmas
+    es el original.
+  - Respaldo en `Respaldos/thecoffee-supabase/2026-11-20-migracion-79-antes.sql`.
+- **Arnés visual** (datos sintéticos):
+  - Hoy con las 4 fases en 2×2 (en pantallas grandes, 4 en una fila).
+  - «Durante» con rondas atrasadas en ámbar.
+  - Registrar una ronda y el cold brew con su dato.
+  - Fin de turno con el visto bueno a 375 px, sin scroll horizontal.
+  - Enlace a la tira parcial en Medio turno.
+
+**Pendiente de Carlos:** si las rondas avisan o bloquean, la hora del cambio de turno en Essentia y la lista de insumos
+críticos para la F2.
