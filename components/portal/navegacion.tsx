@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
+  BookOpen,
+  Timer,
   Table2,
   Calculator,
   Coffee,
@@ -75,6 +77,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
         { href: `${b}/conteo`, nombre: 'Conteo de insumos', icono: ClipboardList },
         { href: `${b}/caja`, nombre: 'Caja', icono: Banknote },
+        { href: `${b}/recetas`, nombre: 'Recetas', icono: BookOpen },
       ],
     },
   ];
@@ -85,6 +88,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/pedidos`, nombre: 'Pedidos', icono: Truck },
         { href: `${b}/inventario`, nombre: 'Inventario', icono: Boxes },
         { href: `${b}/pyl`, nombre: 'P&L y metas', icono: BarChart3 },
+        { href: `${b}/servicio`, nombre: 'Tiempo de preparación', icono: Timer },
         { href: `${b}/avisos`, nombre: 'Avisos e historial', icono: BellRing },
         { href: `${b}/equipo`, nombre: 'Baristas', icono: UsersRound },
       ],

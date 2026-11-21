@@ -32,6 +32,10 @@ import { ArqueoCaptura, CajaChica, ConfigCaja, ResumenCaja } from '../../../comp
 import { gastosEfectivoHasta, gastosVigentes, resumenArqueo } from '../../../lib/franquiciatarios/caja';
 import type { CajaDia } from '../../../lib/franquiciatarios/caja-servidor';
 import { PylFranq } from '../../../components/franquiciatarios/pyl';
+import { RecetasFranq } from '../../../components/franquiciatarios/recetas';
+import { armarFicha, type RpcFicha } from '../../../lib/franquiciatarios/recetas';
+import { ServicioFranq } from '../../../components/franquiciatarios/servicio';
+import { armarServicio } from '../../../lib/franquiciatarios/servicio';
 import { armarPyl, fijosVigentes, metasDe } from '../../../lib/franquiciatarios/pyl';
 import type { PylMes } from '../../../lib/franquiciatarios/pyl-servidor';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
@@ -42,6 +46,7 @@ import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
  * ?franquiciatarios&vista=hoy|checklist|ventas|tira|pedidos|conteo|inventario|equipo|avisos&rol=barista|gerente|franquiciatario
  * &momento=apertura|medio (conteo); vista=caja (arqueo ciego; gerencia ve cuadre, caja chica y fondo); &sinlista=1 (inventario sin lista: botón de sugerido)
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
+ * vista=recetas (ficha sin costo) · vista=servicio (tiempo de preparación de Rappi; &estado=vacio sin datos)
  */
 const p = new URLSearchParams(window.location.search);
 const vista = p.get('vista') ?? 'hoy';
@@ -815,6 +820,10 @@ export function VistaFranquiciatarios() {
             </>
           )}
         </>
+      ) : vista === 'recetas' ? (
+        <RecetasFranq ficha={armarFicha(FICHA_ARNES)} />
+      ) : vista === 'servicio' ? (
+        <ServicioFranq s={servicioArnes()} />
       ) : vista === 'pyl' ? (
         <PylFranq companyId={514} datos={pylArnes()} enCurso />
       ) : vista === 'inventario' ? (
@@ -832,4 +841,80 @@ export function VistaFranquiciatarios() {
       )}
     </Marco>
   );
+}
+
+// Ficha sintética (nombres del recetario; cantidades ilustrativas).
+const L = (receta_id: string, tamano: string | null, insumo: string, unidad: string, cantidad: number, sub?: string) => ({
+  receta_id,
+  tamano,
+  orden: 0,
+  insumo: sub ? null : insumo,
+  subreceta_id: sub ?? null,
+  subreceta: sub ? insumo : null,
+  unidad,
+  cantidad,
+});
+const FICHA_ARNES: RpcFicha = {
+  productos: [
+    { id: 'il', nombre: 'Iced Latte', categoria: 'Bebidas frías', tamanos: ['Chica', 'Grande'] },
+    { id: 'iv', nombre: 'Iced Vanilla', categoria: 'Bebidas frías', tamanos: ['Chica', 'Grande'] },
+    { id: 'tw', nombre: 'True White', categoria: 'Bebidas calientes', tamanos: ['Chica', 'Grande'] },
+    { id: 'cr', nombre: 'Croissant traditional', categoria: 'Alimentos', tamanos: ['Único'] },
+  ],
+  subrecetas: [{ id: 'jv', nombre: 'JARABE DE VAINILLA', rendimiento: 1000, unidad: 'ml' }],
+  lineas: [
+    L('il', 'Chica', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 18),
+    L('il', 'Chica', 'LECHE ENTERA', 'ml', 200),
+    L('il', 'Chica', 'HIELO', 'gr', 180),
+    L('il', 'Chica', 'VASO PET 16 OZ', 'pza', 1),
+    L('il', 'Grande', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 36),
+    L('il', 'Grande', 'LECHE ENTERA', 'ml', 300),
+    L('il', 'Grande', 'HIELO', 'gr', 240),
+    L('il', 'Grande', 'VASO PET 20 OZ', 'pza', 1),
+    L('iv', 'Chica', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 18),
+    L('iv', 'Chica', 'JARABE DE VAINILLA', 'ml', 15, 'jv'),
+    L('iv', 'Chica', 'LECHE ENTERA', 'ml', 190),
+    L('iv', 'Grande', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 36),
+    L('iv', 'Grande', 'JARABE DE VAINILLA', 'ml', 20, 'jv'),
+    L('iv', 'Grande', 'LECHE ENTERA', 'ml', 280),
+    L('tw', 'Chica', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 18),
+    L('tw', 'Chica', 'LECHE ENTERA', 'ml', 180),
+    L('tw', 'Grande', 'CAFÉ TOSTADO EN GRANO WHITE 1.5 KG', 'gr', 36),
+    L('tw', 'Grande', 'LECHE ENTERA', 'ml', 260),
+    L('cr', 'Único', 'CROISSANT TRADICIONAL', 'pza', 1),
+    L('jv', null, 'AZÚCAR', 'gr', 500),
+    L('jv', null, 'AGUA', 'ml', 500),
+    L('jv', null, 'EXTRACTO DE VAINILLA', 'ml', 12.5),
+  ],
+};
+
+function servicioArnes() {
+  const hasta = sumarDias(diaOperacion(), -2);
+  const dias =
+    estado === 'vacio'
+      ? []
+      : Array.from({ length: 30 }, (_, i) => {
+          const pedidos = 14 + ((i * 7) % 9);
+          return (['MX1', 'MX2'] as const).map((tienda, k) => ({
+            tienda,
+            fecha: sumarDias(hasta, -i),
+            pedidos: k ? Math.round(pedidos / 2) : pedidos,
+            rech_cbpi: 0,
+            rech_cbpr: 0,
+            rech_tienda_cerrada: 0,
+            rech_sin_stock: 0,
+            rech_demora: i % 9 === 3 && !k ? 1 : 0,
+            finalizados: k ? Math.round(pedidos / 2) : pedidos,
+            recl_mal_estado: 0,
+            recl_faltante: 0,
+            recl_incorrecto: 0,
+            disponibilidad: null,
+            indisponibilidad: null,
+            cocina_pedidos: k ? Math.round(pedidos / 2) : pedidos,
+            cocina_demorada: (i + k) % 4 === 0 ? 2 : (i % 3) % 2,
+            sin_disp_minutos: null,
+            espera_repartidor: 4 + ((i + k) % 5),
+          }));
+        }).flat();
+  return armarServicio({ tiendas: 2, actualizado_hasta: dias.length ? hasta : null, dias });
 }
