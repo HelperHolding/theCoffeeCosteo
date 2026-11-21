@@ -37,9 +37,10 @@ describe('etiqueta de pedido', () => {
     expect(e).toHaveLength(2);
     expect(e[0]).toEqual({
       producto: 'Chai Iced Latte',
-      tamano: 'Regular - 440ml',
+      tamano: { nombre: 'REGULAR', ml: '440 ml' },
       opciones: ['Double shot (36ml)', 'Lactose free', 'Without Honey'],
-      para: 'Rappi #2490326996',
+      paraGrande: 'RAPPI',
+      paraDetalle: 'Orden #2490326996',
       cuando: '17:15 · 20 nov',
       numero: 1,
       total: 2,
@@ -50,17 +51,20 @@ describe('etiqueta de pedido', () => {
 
   it('solo los productos pedidos; mostrador lleva el número del POS', () => {
     const e = datosEtiquetas({ ...pedido, origen: 'mostrador', numeroPedidoRappi: null }, 'Essentia', [1]);
-    expect(e.map((x) => [x.producto, x.numero, x.total, x.para])).toEqual([
-      ['Croissant <relleno> & "jamón"', 2, 2, 'Mostrador · #2490326996'],
+    expect(e.map((x) => [x.producto, x.numero, x.total, x.paraGrande, x.paraDetalle])).toEqual([
+      ['Croissant <relleno> & "jamón"', 2, 2, '#6996', 'Mostrador'],
     ]);
   });
 
   it('el HTML escapa el texto y define el tamaño de la etiqueta', () => {
     const html = htmlEtiquetas(datosEtiquetas(pedido, 'Essentia'));
-    expect(html).toContain('@page { size: 50mm 30mm');
+    expect(html).toContain('@page { size: 50mm 80mm');
     expect(html).toContain('Croissant &lt;relleno&gt; &amp; &quot;jamón&quot;');
     expect(html).not.toContain('<relleno>');
     expect(html.match(/class="et"/g)).toHaveLength(2);
     expect(html).toContain('the coffee.');
+    expect(html).toContain('Zen+Kaku+Gothic+New');
+    expect(html).toContain('Sin cambios · como viene');
+    expect(html).toContain('REGULAR <b>440 ml</b>');
   });
 });

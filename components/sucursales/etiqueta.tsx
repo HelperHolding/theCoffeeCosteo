@@ -6,7 +6,7 @@ import { datosEtiquetas, htmlEtiquetas } from '@/lib/sucursales/etiqueta';
 
 /**
  * Imprime las etiquetas desde un marco oculto (sin abrir otra ventana ni salir de la pantalla): el navegador abre su
- * diálogo de impresión con el tamaño de etiqueta (50 × 30 mm). El marco se quita al terminar.
+ * diálogo de impresión con el tamaño de etiqueta (50 × 80 mm). El marco se quita al terminar.
  */
 export function imprimirEtiquetas(pedido: PedidoVista, sucursal: string, indices?: number[]) {
   const etiquetas = datosEtiquetas(pedido, sucursal, indices);
@@ -31,13 +31,29 @@ export function imprimirEtiquetas(pedido: PedidoVista, sucursal: string, indices
   doc.write(htmlEtiquetas(etiquetas));
   doc.close();
   win.addEventListener('afterprint', quitar, { once: true });
-  // Espera un cuadro para que el marco tenga el contenido antes de imprimir.
-  setTimeout(() => {
+  // Espera a que carguen las fuentes de la marca (máximo 2.5 s; sin red imprime con las de respaldo).
+  let impreso = false;
+  const imprimir = () => {
+    if (impreso) return;
+    impreso = true;
     win.focus();
     win.print();
     // Respaldo: algunos navegadores no avisan afterprint desde un marco.
     setTimeout(quitar, 60_000);
-  }, 50);
+  };
+  setTimeout(imprimir, 2500);
+  const fuentes = doc.fonts;
+  if (fuentes?.ready) {
+    // load() fuerza la descarga aunque nada se haya pintado todavía.
+    Promise.all([
+      fuentes.load('900 20px "Zen Kaku Gothic New"'),
+      fuentes.load('700 20px "Zen Kaku Gothic New"'),
+      fuentes.load('400 12px Inter'),
+    ])
+      .catch(() => undefined)
+      .then(() => fuentes.ready)
+      .then(() => setTimeout(imprimir, 50));
+  } else setTimeout(imprimir, 300);
 }
 
 /** Botón «Etiqueta»: imprime una etiqueta por producto del pedido (o solo de `indices`). */
@@ -59,7 +75,7 @@ export function BotonEtiqueta({
     <button
       type="button"
       onClick={() => imprimirEtiquetas(pedido, sucursal, indices)}
-      title={`Imprimir ${n} ${n === 1 ? 'etiqueta' : 'etiquetas'} (50 × 30 mm)`}
+      title={`Imprimir ${n} ${n === 1 ? 'etiqueta' : 'etiquetas'} (50 × 80 mm)`}
       className={cn(
         'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-tira/50 bg-tira-soft px-3 text-xs font-semibold text-ink hover:border-tira focus-visible:outline-2 focus-visible:outline-ink',
         className,
