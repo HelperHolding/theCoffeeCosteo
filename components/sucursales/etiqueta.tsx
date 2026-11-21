@@ -6,7 +6,7 @@ import { datosEtiquetas, htmlEtiquetas } from '@/lib/sucursales/etiqueta';
 
 /**
  * Imprime las etiquetas desde un marco oculto (sin abrir otra ventana ni salir de la pantalla): el navegador abre su
- * diálogo de impresión con el tamaño de etiqueta (58 × 80 mm). El marco se quita al terminar.
+ * diálogo de impresión con el tamaño de etiqueta (50 × 30 mm). El marco se quita al terminar.
  */
 export function imprimirEtiquetas(pedido: PedidoVista, sucursal: string, indices?: number[]) {
   const etiquetas = datosEtiquetas(pedido, sucursal, indices);
@@ -59,7 +59,7 @@ export function BotonEtiqueta({
     <button
       type="button"
       onClick={() => imprimirEtiquetas(pedido, sucursal, indices)}
-      title={`Imprimir ${n} ${n === 1 ? 'etiqueta' : 'etiquetas'} (58 × 80 mm)`}
+      title={`Imprimir ${n} ${n === 1 ? 'etiqueta' : 'etiquetas'} (50 × 30 mm)`}
       className={cn(
         'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-tira/50 bg-tira-soft px-3 text-xs font-semibold text-ink hover:border-tira focus-visible:outline-2 focus-visible:outline-ink',
         className,

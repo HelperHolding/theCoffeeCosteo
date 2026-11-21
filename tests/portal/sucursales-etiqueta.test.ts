@@ -19,7 +19,7 @@ const pedido: PedidoVista = {
       nombre: 'Chai Iced Latte',
       importeCent: 9200,
       descuentoPct: 0,
-      customs: [c('Regular - 440ml'), c('Café: Con Café'), c('Lactose free'), c('Without Honey')],
+      customs: [c('Double shot (36ml)'), c('Regular - 440ml'), c('Lactose free'), c('Without Honey')],
     },
     {
       codigo: 'CR',
@@ -38,7 +38,7 @@ describe('etiqueta de pedido', () => {
     expect(e[0]).toEqual({
       producto: 'Chai Iced Latte',
       tamano: 'Regular - 440ml',
-      opciones: ['Café: Con Café', 'Lactose free', 'Without Honey'],
+      opciones: ['Double shot (36ml)', 'Lactose free', 'Without Honey'],
       para: 'Rappi #2490326996',
       cuando: '17:15 · 20 nov',
       numero: 1,
@@ -57,7 +57,7 @@ describe('etiqueta de pedido', () => {
 
   it('el HTML escapa el texto y define el tamaño de la etiqueta', () => {
     const html = htmlEtiquetas(datosEtiquetas(pedido, 'Essentia'));
-    expect(html).toContain('@page { size: 58mm 80mm');
+    expect(html).toContain('@page { size: 50mm 30mm');
     expect(html).toContain('Croissant &lt;relleno&gt; &amp; &quot;jamón&quot;');
     expect(html).not.toContain('<relleno>');
     expect(html.match(/class="et"/g)).toHaveLength(2);
