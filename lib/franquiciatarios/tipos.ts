@@ -240,7 +240,119 @@ export interface FranqGastoFijo {
   registrado_en: string;
 }
 
+/** F6 (migración 92): posición de la barra y turno de la sucursal. Se desactivan, nunca se borran. */
+export interface FranqPosicion {
+  id: number;
+  company_id: number;
+  nombre: string;
+  orden: number;
+  activo: boolean;
+}
+export interface FranqTurno {
+  id: number;
+  company_id: number;
+  nombre: string;
+  /** HH:MM:SS */
+  entrada: string;
+  salida: string;
+  orden: number;
+  activo: boolean;
+}
+/** Asignación de un barista a un día, turno y posición; quitarla = renglón anulado que la corrige. */
+export interface FranqAsignacion {
+  id: number;
+  company_id: number;
+  dia: string;
+  turno_id: number;
+  posicion_id: number;
+  barista_id: number;
+  anulada: boolean;
+  corrige_id: number | null;
+  registrado_por: string;
+  registrado_en: string;
+}
+export type MotivoMerma = 'caducidad' | 'preparacion' | 'caida' | 'devolucion' | 'otro';
+/** Merma registrada (cantidad en la unidad de conteo del insumo). Solo inserción. */
+export interface FranqMerma {
+  id: number;
+  company_id: number;
+  dia: string;
+  insumo_id: number;
+  cantidad: number;
+  motivo: MotivoMerma;
+  nota: string | null;
+  anulada: boolean;
+  corrige_id: number | null;
+  motivo_correccion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+}
+export interface FranqMermaTolerancia {
+  id: number;
+  company_id: number;
+  insumo_id: number;
+  pct: number;
+  registrado_por: string;
+  registrado_en: string;
+}
+export interface FranqMermasCierre {
+  company_id: number;
+  dia: string;
+  nombre: string;
+  cerrado_por: string;
+  cerrado_en: string;
+}
+
 export interface FuncionesFranq {
+  franq_ficha_recetas: { Args: { p_company: number }; Returns: unknown };
+  franq_nivel_servicio: { Args: { p_company: number; p_desde: string; p_hasta: string }; Returns: unknown };
+  franq_roles_base: { Args: { p_company: number }; Returns: number };
+  franq_posicion_guardar: {
+    Args: { p_company: number; p_id: number | null; p_nombre: string; p_orden: number | null; p_activo: boolean };
+    Returns: number;
+  };
+  franq_turno_guardar: {
+    Args: {
+      p_company: number;
+      p_id: number | null;
+      p_nombre: string;
+      p_entrada: string;
+      p_salida: string;
+      p_activo: boolean;
+    };
+    Returns: number;
+  };
+  franq_asignar: {
+    Args: {
+      p_company: number;
+      p_dia: string;
+      p_turno: number;
+      p_posicion: number;
+      p_barista: number;
+      p_quitar: boolean;
+    };
+    Returns: number | null;
+  };
+  franq_copiar_semana: { Args: { p_company: number; p_lunes: string }; Returns: number };
+  franq_registrar_merma: {
+    Args: {
+      p_company: number;
+      p_insumo: number | null;
+      p_cantidad: number | null;
+      p_motivo: string | null;
+      p_nota: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+      p_corrige: number | null;
+      p_anular: boolean;
+      p_motivo_correccion: string | null;
+    };
+    Returns: number;
+  };
+  franq_cerrar_mermas: { Args: { p_company: number; p_dia: string }; Returns: undefined };
+  franq_tolerancia_guardar: { Args: { p_company: number; p_insumo: number; p_pct: number }; Returns: number };
   franq_gasto_fijo: {
     Args: { p_company: number; p_mes: string; p_concepto: string; p_monto: number; p_nota: string | null };
     Returns: number;

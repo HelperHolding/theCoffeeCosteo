@@ -36,6 +36,17 @@ import { RecetasFranq } from '../../../components/franquiciatarios/recetas';
 import { armarFicha, type RpcFicha } from '../../../lib/franquiciatarios/recetas';
 import { ServicioFranq } from '../../../components/franquiciatarios/servicio';
 import { armarServicio } from '../../../lib/franquiciatarios/servicio';
+import { RolesGestor, RolesHoy } from '../../../components/franquiciatarios/roles';
+import { armarSemana, lunesDe } from '../../../lib/franquiciatarios/roles';
+import { MermasFranq } from '../../../components/franquiciatarios/mermas';
+import {
+  compararMermas,
+  toleranciasVigentes,
+  vigentesMerma,
+  type InsumoCosteo,
+} from '../../../lib/franquiciatarios/mermas';
+import type { MermasDia } from '../../../lib/franquiciatarios/mermas-servidor';
+import type { MotivoMerma } from '../../../lib/franquiciatarios/tipos';
 import { armarPyl, fijosVigentes, metasDe } from '../../../lib/franquiciatarios/pyl';
 import type { PylMes } from '../../../lib/franquiciatarios/pyl-servidor';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
@@ -47,6 +58,7 @@ import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
  * &momento=apertura|medio (conteo); vista=caja (arqueo ciego; gerencia ve cuadre, caja chica y fondo); &sinlista=1 (inventario sin lista: botón de sugerido)
  * &estado=vacio|curso|no|firmado&elegido=1&seccion=apertura|durante|medio|cierre&sinred=1
  * vista=recetas (ficha sin costo) · vista=servicio (tiempo de preparación de Rappi; &estado=vacio sin datos)
+ * vista=roles (gerencia: semana editable; barista: hoy) · vista=mermas (captura; gerencia: contra el teórico) · &estado=vacio
  */
 const p = new URLSearchParams(window.location.search);
 const vista = p.get('vista') ?? 'hoy';
@@ -820,6 +832,19 @@ export function VistaFranquiciatarios() {
             </>
           )}
         </>
+      ) : vista === 'roles' ? (
+        tienda.rol === 'barista' ? (
+          <RolesHoy semana={semanaArnes()} hoy={tienda.dia} />
+        ) : (
+          <RolesGestor companyId={514} semana={semanaArnes()} baristas={tienda.baristas} hoy={tienda.dia} />
+        )
+      ) : vista === 'mermas' ? (
+        <MermasFranq
+          companyId={514}
+          datos={mermasArnes(tienda.rol !== 'barista')}
+          gestor={tienda.rol !== 'barista'}
+          hoy={tienda.dia}
+        />
       ) : vista === 'recetas' ? (
         <RecetasFranq ficha={armarFicha(FICHA_ARNES)} />
       ) : vista === 'servicio' ? (
@@ -918,3 +943,97 @@ function servicioArnes() {
         }).flat();
   return armarServicio({ tiendas: 2, actualizado_hasta: dias.length ? hasta : null, dias });
 }
+
+// ── F6 · Roles y mermas sintéticos (estado=vacio: sin posiciones ni mermas) ────────────────────────────────────────
+function sembrarF6() {
+  if (estado === 'vacio') return;
+  ['Caja/Mostrador', 'Barra caliente', 'Barra fría', 'Alimentos', 'Rappi/Delivery'].forEach((nombre, i) =>
+    tienda.posiciones.push({ id: 900 + i, company_id: 514, nombre, orden: i + 1, activo: true }),
+  );
+  tienda.turnos.push(
+    { id: 950, company_id: 514, nombre: 'Matutino', entrada: '07:00:00', salida: '15:00:00', orden: 1, activo: true },
+    { id: 951, company_id: 514, nombre: 'Vespertino', entrada: '15:00:00', salida: '22:00:00', orden: 2, activo: true },
+  );
+  const lunes = lunesDe(tienda.dia);
+  let aid = 5000;
+  for (let d = 0; d < 7; d++)
+    [
+      [950, 900, 1],
+      [950, 901, 2],
+      [950, 902, 3],
+      [951, 900, 4],
+      [951, 901, 3],
+      [951, 904, 2],
+    ].forEach(([turno, posicion, barista], k) => {
+      if ((d + k) % 5 === 4) return;
+      tienda.asignaciones.push({
+        id: aid++,
+        company_id: 514,
+        dia: sumarDias(lunes, d),
+        turno_id: turno,
+        posicion_id: posicion,
+        barista_id: barista,
+        anulada: false,
+        corrige_id: null,
+        registrado_por: 'g',
+        registrado_en: '2026-11-15T15:00:00Z',
+      });
+    });
+  const m = (insumo: number, cantidad: number, motivo: MotivoMerma, nombre: string, h: number, nota?: string) =>
+    tienda.mermas.push({
+      id: aid++,
+      company_id: 514,
+      dia: tienda.dia,
+      insumo_id: insumo,
+      cantidad,
+      motivo,
+      nota: nota ?? null,
+      anulada: false,
+      corrige_id: null,
+      motivo_correccion: null,
+      barista_id: 1,
+      nombre,
+      registrado_por: 'cuenta',
+      registrado_en: new Date(`${tienda.dia}T${String(h + 6).padStart(2, '0')}:10:00Z`).toISOString(),
+    });
+  if (tienda.insumos.length >= 6) {
+    m(tienda.insumos[0].id, 0.4, 'caducidad', 'Ana López', 9);
+    m(tienda.insumos[2].id, 3, 'caida', 'Beto Ruiz', 12);
+    m(tienda.insumos[5].id, 1, 'otro', 'Carla Ortiz', 15, 'Se rompió el empaque');
+  }
+}
+sembrarF6();
+
+/** Mermas del día con un consumo teórico sintético (en la unidad base) y costos ilustrativos para los gestores. */
+function mermasArnes(gestor: boolean): MermasDia {
+  // En el arnés, los primeros 10 insumos de la lista se ligan a un «insumo de Costeo» ficticio.
+  const insumos = tienda.insumos.map((i, k) => (k < 10 ? { ...i, insumo_id: `costeo-${i.id}` } : i));
+  const vig = vigentesMerma(tienda.mermas.filter((x) => x.dia === tienda.dia));
+  const costeo = new Map<string, InsumoCosteo>();
+  const consumo = new Map<string, number>();
+  insumos.forEach((i, k) => {
+    if (!i.insumo_id) return;
+    const pres = Number(/paquete de (\d+)/.exec(i.unidad)?.[1] ?? 1);
+    costeo.set(i.insumo_id, { presentacion: pres, costoUnitario: pres > 1 ? 0.45 / pres * 100 : 12 + k });
+    consumo.set(i.insumo_id, (k % 4 === 1 ? 0 : 6 + k * 3) * (pres > 1 ? pres : 1));
+  });
+  return {
+    dia: tienda.dia,
+    insumos,
+    registros: vig,
+    cierre: tienda.cierres.find((c) => c.dia === tienda.dia) ?? null,
+    filas: gestor
+      ? compararMermas({
+          insumos,
+          mermas: tienda.mermas.filter((x) => x.dia === tienda.dia),
+          tolerancias: toleranciasVigentes(tienda.tolerancias),
+          consumo,
+          costeo,
+        })
+      : null,
+    aviso: gestor ? 'Arnés: consumo teórico y costos sintéticos.' : null,
+  };
+}
+
+const semanaArnes = () =>
+  armarSemana(lunesDe(tienda.dia), tienda.turnos, tienda.posiciones, tienda.asignaciones, tienda.baristas);
