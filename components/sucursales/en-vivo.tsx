@@ -21,6 +21,7 @@ import { ConInfo, type InfoTablero } from '@/components/portal/con-info';
 import { BarraApilada, CurvaAcumulada, PedidosPorHora, Ranking } from './graficas';
 import { COLOR_ORIGEN, Delta, Etiqueta, SERIE_HOY, colorPago } from './colores';
 import { DetallePedido } from './detalle-pedido';
+import { BotonEtiqueta } from './etiqueta';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import {
   diaMes,
@@ -317,11 +318,11 @@ export function EnVivo({
                   ) : (
                     <ul className="divide-y divide-line">
                       {d.ultimosPedidos.map((p) => (
-                        <li key={p.id}>
+                        <li key={p.id} className="flex items-center gap-2 pr-4 hover:bg-surface-2/70">
                           <button
                             type="button"
                             onClick={() => setPedido(p)}
-                            className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-sm hover:bg-surface-2/70 focus-visible:outline-2 focus-visible:outline-ink"
+                            className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-5 text-left text-sm focus-visible:outline-2 focus-visible:outline-ink"
                           >
                             <span className="tabular w-12 shrink-0 font-semibold">{p.hora.slice(0, 5)}</span>
                             <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
@@ -335,6 +336,7 @@ export function EnVivo({
                             </span>
                             <span className="tabular font-semibold">{dinero(p.ventaCent, m)}</span>
                           </button>
+                          <BotonEtiqueta pedido={p} sucursal={d.sucursal.nombre} />
                         </li>
                       ))}
                     </ul>
@@ -418,7 +420,12 @@ export function EnVivo({
           </>
         )}
       </div>
-      <DetallePedido pedido={pedido} moneda={m} alCerrar={() => setPedido(null)} />
+      <DetallePedido
+        pedido={pedido}
+        moneda={m}
+        alCerrar={() => setPedido(null)}
+        sucursal={datos?.sucursal.nombre ?? ''}
+      />
     </div>
   );
 }

@@ -1,7 +1,25 @@
 'use client';
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, CircleAlert, Copy, LoaderCircle, Plus, X } from 'lucide-react';
+import {
+  Bike,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  Coffee,
+  Copy,
+  Croissant,
+  CupSoda,
+  LoaderCircle,
+  MoonStar,
+  Plus,
+  Store,
+  Sun,
+  Sunrise,
+  UserRound,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,14 +32,33 @@ import {
 } from '@/app/(franquiciatarios)/franquiciatarios/acciones';
 import { horaCorta, type DiaRoles, type SemanaRoles } from '@/lib/franquiciatarios/roles';
 import { sumarDias } from '@/lib/franquiciatarios/dia';
-import type { FranqBarista } from '@/lib/franquiciatarios/tipos';
+import type { FranqBarista, FranqPosicion, FranqTurno } from '@/lib/franquiciatarios/tipos';
 import { Vacio } from '@/components/portal/piezas';
-import { diaCorto, diaLargo } from './formato';
+import { TONO, type Tono } from './colores';
+import { diaCorto } from './formato';
 
 const campo =
   'h-9 rounded-[10px] border border-line-strong bg-surface px-2.5 text-sm text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-crema/35';
+const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-/** Ejecuta una acción del servidor y deja el error a la vista (nada se da por guardado sin respuesta). */
+/** Color e ícono del turno por la hora de entrada: mañana ámbar, tarde azul, noche morado. */
+function estiloTurno(t: FranqTurno): { tono: Tono; icono: LucideIcon } {
+  const h = Number(t.entrada.slice(0, 2));
+  if (h < 12) return { tono: 'apertura', icono: Sunrise };
+  if (h < 18) return { tono: 'cierre', icono: Sun };
+  return { tono: 'cambio', icono: MoonStar };
+}
+/** Ícono de la posición por su nombre (lista base; cualquier otra lleva una persona). */
+function iconoPosicion(p: FranqPosicion): LucideIcon {
+  const n = p.nombre.toLocaleLowerCase('es-MX');
+  if (/caja|mostrador/.test(n)) return Store;
+  if (/fr[ií]a/.test(n)) return CupSoda;
+  if (/caliente|barra|espresso|m[eé]todo/.test(n)) return Coffee;
+  if (/aliment|cocina|pan/.test(n)) return Croissant;
+  if (/rappi|delivery|domicilio/.test(n)) return Bike;
+  return UserRound;
+}
+
 function useAccion() {
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
@@ -48,7 +85,7 @@ function Fallo({ texto }: { texto: string | null }) {
   );
 }
 
-/** Matriz de la semana para la gerencia: asignar y quitar por día, turno y posición. */
+/** Matriz de la semana para la gerencia: elige el día y asigna por turno y posición. */
 export function RolesGestor({
   companyId,
   semana,
@@ -61,6 +98,8 @@ export function RolesGestor({
   hoy: string;
 }) {
   const a = useAccion();
+  const enSemana = semana.dias.some((d) => d.dia === hoy);
+  const [dia, setDia] = useState(enSemana ? hoy : semana.lunes);
   const base = `/franquiciatarios/${companyId}/roles`;
   if (!semana.turnos.length || !semana.posiciones.length)
     return (
@@ -77,53 +116,93 @@ export function RolesGestor({
       </div>
     );
   const activos = baristas.filter((b) => b.activo);
+  const d = semana.dias.find((x) => x.dia === dia) ?? semana.dias[0];
+  const vacios = semana.dias.filter((x) => !x.asignados).length;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <Link
-          className="inline-flex h-9 items-center gap-1 rounded-[10px] border border-line-strong px-3 text-sm"
+          className="grid size-9 place-items-center rounded-full border border-line-strong hover:bg-surface-2"
           href={`${base}?semana=${sumarDias(semana.lunes, -7)}`}
+          aria-label="Semana anterior"
         >
-          <ChevronLeft size={16} aria-hidden="true" /> Semana anterior
+          <ChevronLeft size={17} aria-hidden="true" />
         </Link>
-        <p className="px-1 text-sm font-semibold">
+        <p className="font-display text-lg font-bold">
           {diaCorto(semana.lunes)} – {diaCorto(sumarDias(semana.lunes, 6))}
         </p>
         <Link
-          className="inline-flex h-9 items-center gap-1 rounded-[10px] border border-line-strong px-3 text-sm"
+          className="grid size-9 place-items-center rounded-full border border-line-strong hover:bg-surface-2"
           href={`${base}?semana=${sumarDias(semana.lunes, 7)}`}
+          aria-label="Semana siguiente"
         >
-          Semana siguiente <ChevronRight size={16} aria-hidden="true" />
+          <ChevronRight size={17} aria-hidden="true" />
         </Link>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-          disabled={a.pendiente}
-          onClick={() => a.correr(() => copiarSemana(companyId, semana.lunes))}
-        >
-          {a.pendiente ? (
-            <LoaderCircle className="animate-spin" aria-hidden="true" />
-          ) : (
-            <Copy aria-hidden="true" />
-          )}
-          Copiar la semana anterior a los días vacíos
-        </Button>
+        {vacios > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            disabled={a.pendiente}
+            onClick={() => a.correr(() => copiarSemana(companyId, semana.lunes))}
+          >
+            {a.pendiente ? (
+              <LoaderCircle className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Copy aria-hidden="true" />
+            )}
+            Copiar la semana anterior ({vacios} {vacios === 1 ? 'día vacío' : 'días vacíos'})
+          </Button>
+        )}
       </div>
       <Fallo texto={a.error} />
+
+      <div className="grid grid-cols-7 gap-1.5" role="tablist" aria-label="Día">
+        {semana.dias.map((x, i) => {
+          const activo = x.dia === d.dia;
+          return (
+            <button
+              key={x.dia}
+              type="button"
+              role="tab"
+              aria-selected={activo}
+              onClick={() => setDia(x.dia)}
+              className={cn(
+                'flex flex-col items-center gap-0.5 rounded-2xl border px-1 py-2 transition-colors',
+                activo ? 'border-ink bg-ink text-surface' : 'border-line bg-surface hover:border-line-strong',
+              )}
+            >
+              <span className={cn('text-[11px] font-semibold', !activo && 'text-ink-2')}>
+                {DIAS_CORTOS[i]}
+              </span>
+              <span className="font-display text-lg leading-none font-black">{Number(x.dia.slice(8))}</span>
+              <span
+                className={cn(
+                  'mt-0.5 rounded-full px-1.5 text-[10px] font-bold',
+                  activo ? 'bg-surface/20' : x.asignados ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn',
+                )}
+              >
+                {x.dia === hoy ? 'hoy' : x.asignados ? x.asignados : 'vacío'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {!activos.length && (
         <p className="aviso">Da de alta a los baristas en «Baristas» para poder asignarlos.</p>
       )}
-      <div className="space-y-4">
-        {semana.dias.map((d) => (
-          <DiaGestor
-            key={d.dia}
-            companyId={companyId}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {semana.turnos.map((t) => (
+          <TurnoCard
+            key={t.id}
+            turno={t}
             semana={semana}
             d={d}
-            baristas={activos}
             editable={d.dia >= sumarDias(hoy, -7)}
-            esHoy={d.dia === hoy}
+            companyId={companyId}
+            baristas={activos}
           />
         ))}
       </div>
@@ -132,134 +211,135 @@ export function RolesGestor({
   );
 }
 
-function DiaGestor({
-  companyId,
+function TurnoCard({
+  turno: t,
   semana,
   d,
-  baristas,
   editable,
-  esHoy,
+  companyId,
+  baristas,
 }: {
-  companyId: number;
+  turno: FranqTurno;
   semana: SemanaRoles;
   d: DiaRoles;
-  baristas: FranqBarista[];
-  editable: boolean;
-  esHoy: boolean;
+  editable?: boolean;
+  companyId?: number;
+  baristas?: FranqBarista[];
 }) {
   const a = useAccion();
+  const e = estiloTurno(t);
+  const tono = TONO[e.tono];
+  const Icono = e.icono;
+  const gente = new Set(
+    d.celdas.filter((c) => c.turnoId === t.id).flatMap((c) => c.baristas.map((b) => b.id)),
+  ).size;
   return (
     <section
-      aria-label={diaLargo(d.dia)}
-      className={cn(
-        'overflow-hidden rounded-2xl border bg-surface shadow-card',
-        esHoy ? 'border-ink' : 'border-line',
-      )}
+      aria-label={`${t.nombre} ${horaCorta(t.entrada)} a ${horaCorta(t.salida)}`}
+      className={cn('overflow-hidden rounded-3xl border shadow-card', tono.brillo, tono.borde)}
     >
-      <header className="flex items-baseline justify-between gap-2 border-b border-line px-4 py-2.5">
-        <h2 className="text-base font-semibold first-letter:uppercase">
-          {diaLargo(d.dia)}
-          {esHoy && <span className="ml-2 text-xs font-semibold text-ink-2">Hoy</span>}
-        </h2>
-        <p className="text-xs text-ink-2">
-          {d.asignados} {d.asignados === 1 ? 'barista' : 'baristas'}
-        </p>
+      <header className="flex items-center gap-3 px-5 pt-4 pb-3">
+        <span
+          className={cn('grid size-11 place-items-center rounded-2xl text-primary-foreground', tono.marca)}
+        >
+          <Icono size={20} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg leading-tight font-bold">{t.nombre}</span>
+          <span className="text-sm text-ink-2 tabular">
+            {horaCorta(t.entrada)} – {horaCorta(t.salida)}
+          </span>
+        </span>
+        <span className={cn('rounded-full px-2.5 py-1 text-xs font-bold', tono.suave)}>
+          {gente} {gente === 1 ? 'persona' : 'personas'}
+        </span>
       </header>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[36rem] text-sm">
-          <thead>
-            <tr className="text-left text-xs text-muted-foreground">
-              <th className="w-40 px-4 py-2 font-medium">Posición</th>
-              {semana.turnos.map((t) => (
-                <th key={t.id} className="px-3 py-2 font-medium">
-                  {t.nombre} · {horaCorta(t.entrada)}–{horaCorta(t.salida)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {semana.posiciones.map((p) => (
-              <tr key={p.id}>
-                <th scope="row" className="px-4 py-2 text-left font-medium">
-                  {p.nombre}
-                </th>
-                {semana.turnos.map((t) => {
-                  const celda = d.celdas.find((c) => c.turnoId === t.id && c.posicionId === p.id)!;
-                  const libres = baristas.filter((b) => !celda.baristas.some((x) => x.id === b.id));
-                  return (
-                    <td key={t.id} className="px-3 py-2 align-top">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {celda.baristas.map((b) => (
-                          <span
-                            key={b.id}
-                            className="inline-flex items-center gap-1 rounded-full bg-surface-2 py-0.5 pr-1 pl-2.5 text-xs font-medium"
-                          >
-                            {b.nombre}
-                            {editable && (
-                              <button
-                                type="button"
-                                aria-label={`Quitar a ${b.nombre} de ${p.nombre}, ${t.nombre}`}
-                                disabled={a.pendiente}
-                                onClick={() =>
-                                  a.correr(() =>
-                                    asignar({
-                                      companyId,
-                                      dia: d.dia,
-                                      turno: t.id,
-                                      posicion: p.id,
-                                      barista: b.id,
-                                      quitar: true,
-                                    }),
-                                  )
-                                }
-                                className="grid size-5 place-items-center rounded-full hover:bg-line"
-                              >
-                                <X size={12} aria-hidden="true" />
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                        {editable && libres.length > 0 && (
-                          <select
-                            aria-label={`Agregar barista a ${p.nombre}, ${t.nombre}`}
-                            className={cn(campo, 'h-8 w-auto max-w-36 py-0 text-xs leading-none')}
-                            value=""
-                            disabled={a.pendiente}
-                            onChange={(e) => {
-                              const id = Number(e.target.value);
-                              if (id)
-                                a.correr(() =>
-                                  asignar({
-                                    companyId,
-                                    dia: d.dia,
-                                    turno: t.id,
-                                    posicion: p.id,
-                                    barista: id,
-                                    quitar: false,
-                                  }),
-                                );
-                            }}
-                          >
-                            <option value="">+ Agregar</option>
-                            {libres.map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.nombre}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        {!editable && !celda.baristas.length && <span className="text-ink-2">—</span>}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ul className="space-y-1.5 px-3 pb-3">
+        {semana.posiciones.map((p) => {
+          const c = d.celdas.find((x) => x.turnoId === t.id && x.posicionId === p.id)!;
+          const libres = (baristas ?? []).filter((b) => !c.baristas.some((x) => x.id === b.id));
+          const IconoP = iconoPosicion(p);
+          return (
+            <li key={p.id} className="flex items-center gap-3 rounded-2xl bg-surface/85 px-3 py-2.5">
+              <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-surface-2">
+                <IconoP size={16} aria-hidden="true" className={tono.texto} />
+              </span>
+              <span className="w-24 shrink-0 text-sm leading-tight font-semibold sm:w-28">{p.nombre}</span>
+              <span className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1.5">
+                {c.baristas.map((b) => (
+                  <span
+                    key={b.id}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full py-1 pl-2.5 text-sm font-semibold',
+                      tono.suave,
+                      editable ? 'pr-1' : 'pr-2.5',
+                    )}
+                  >
+                    {b.nombre.split(' ')[0]}
+                    {editable && companyId && (
+                      <button
+                        type="button"
+                        aria-label={`Quitar a ${b.nombre} de ${p.nombre}, ${t.nombre}`}
+                        disabled={a.pendiente}
+                        onClick={() =>
+                          a.correr(() =>
+                            asignar({
+                              companyId,
+                              dia: d.dia,
+                              turno: t.id,
+                              posicion: p.id,
+                              barista: b.id,
+                              quitar: true,
+                            }),
+                          )
+                        }
+                        className="grid size-5 place-items-center rounded-full hover:bg-surface"
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+                {!c.baristas.length && !editable && <span className="text-sm text-ink-2">Sin asignar</span>}
+                {editable && companyId && libres.length > 0 && (
+                  <select
+                    aria-label={`Agregar barista a ${p.nombre}, ${t.nombre}`}
+                    className={cn(
+                      campo,
+                      'h-8 w-auto max-w-32 rounded-full border-dashed py-0 text-xs leading-none',
+                    )}
+                    value=""
+                    disabled={a.pendiente}
+                    onChange={(ev) => {
+                      const id = Number(ev.target.value);
+                      if (id)
+                        a.correr(() =>
+                          asignar({
+                            companyId,
+                            dia: d.dia,
+                            turno: t.id,
+                            posicion: p.id,
+                            barista: id,
+                            quitar: false,
+                          }),
+                        );
+                    }}
+                  >
+                    <option value="">+ Asignar</option>
+                    {libres.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.nombre}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
       {a.error && (
-        <div className="px-4 pb-3">
+        <div className="px-5 pb-3">
           <Fallo texto={a.error} />
         </div>
       )}
@@ -267,35 +347,42 @@ function DiaGestor({
   );
 }
 
-/** Posiciones y turnos: agregar, renombrar, cambiar horas y desactivar. */
+/** Posiciones y turnos: agregar, desactivar y volver a activar. */
 function Catalogo({ companyId, semana }: { companyId: number; semana: SemanaRoles }) {
   const a = useAccion();
   const [posicion, setPosicion] = useState('');
   const [turno, setTurno] = useState({ nombre: '', entrada: '', salida: '' });
   return (
-    <details className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-      <summary className="cursor-pointer font-semibold">Posiciones y turnos</summary>
-      <div className="mt-3 grid gap-5 md:grid-cols-2">
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Posiciones</h3>
-          <ul className="divide-y divide-line text-sm">
-            {semana.posiciones.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-2 py-1.5">
-                <span className={cn(!p.activo && 'text-ink-2 line-through')}>{p.nombre}</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={a.pendiente}
-                  onClick={() =>
-                    a.correr(() =>
-                      guardarPosicion({ companyId, id: p.id, nombre: p.nombre, activo: !p.activo }),
-                    )
-                  }
-                >
-                  {p.activo ? 'Desactivar' : 'Activar'}
-                </Button>
-              </li>
-            ))}
+    <details className="rounded-3xl border border-line bg-surface p-5 shadow-card">
+      <summary className="cursor-pointer font-display font-bold">Ajustar posiciones y turnos</summary>
+      <div className="mt-4 grid gap-6 md:grid-cols-2">
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-ink-2">Posiciones de la barra</h3>
+          <ul className="flex flex-wrap gap-2">
+            {semana.posiciones.map((p) => {
+              const Icono = iconoPosicion(p);
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    disabled={a.pendiente}
+                    title={p.activo ? 'Desactivar' : 'Activar'}
+                    onClick={() =>
+                      a.correr(() =>
+                        guardarPosicion({ companyId, id: p.id, nombre: p.nombre, activo: !p.activo }),
+                      )
+                    }
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm',
+                      p.activo ? 'border-line-strong' : 'border-dashed border-line text-ink-2 line-through',
+                    )}
+                  >
+                    <Icono size={14} aria-hidden="true" /> {p.nombre}
+                    {p.activo ? <X size={12} aria-hidden="true" /> : <Plus size={12} aria-hidden="true" />}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
           <form
             className="flex gap-2"
@@ -308,11 +395,8 @@ function Catalogo({ companyId, semana }: { companyId: number; semana: SemanaRole
               });
             }}
           >
-            <label className="sr-only" htmlFor="posicion-nueva">
-              Nueva posición
-            </label>
             <input
-              id="posicion-nueva"
+              aria-label="Nueva posición"
               className={cn(campo, 'min-w-0 flex-1')}
               value={posicion}
               onChange={(e) => setPosicion(e.target.value)}
@@ -323,35 +407,42 @@ function Catalogo({ companyId, semana }: { companyId: number; semana: SemanaRole
             </Button>
           </form>
         </div>
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Turnos</h3>
-          <ul className="divide-y divide-line text-sm">
-            {semana.turnos.map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-2 py-1.5">
-                <span className={cn(!t.activo && 'text-ink-2 line-through')}>
-                  {t.nombre} · {horaCorta(t.entrada)}–{horaCorta(t.salida)}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={a.pendiente}
-                  onClick={() =>
-                    a.correr(() =>
-                      guardarTurno({
-                        companyId,
-                        id: t.id,
-                        nombre: t.nombre,
-                        entrada: t.entrada.slice(0, 5),
-                        salida: t.salida.slice(0, 5),
-                        activo: !t.activo,
-                      }),
-                    )
-                  }
-                >
-                  {t.activo ? 'Desactivar' : 'Activar'}
-                </Button>
-              </li>
-            ))}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-ink-2">Turnos</h3>
+          <ul className="space-y-2">
+            {semana.turnos.map((t) => {
+              const e = estiloTurno(t);
+              const Icono = e.icono;
+              return (
+                <li key={t.id} className="flex items-center gap-2 text-sm">
+                  <span className={cn('grid size-7 place-items-center rounded-lg', TONO[e.tono].suave)}>
+                    <Icono size={14} aria-hidden="true" className={TONO[e.tono].texto} />
+                  </span>
+                  <span className={cn('flex-1', !t.activo && 'text-ink-2 line-through')}>
+                    {t.nombre} · {horaCorta(t.entrada)}–{horaCorta(t.salida)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={a.pendiente}
+                    onClick={() =>
+                      a.correr(() =>
+                        guardarTurno({
+                          companyId,
+                          id: t.id,
+                          nombre: t.nombre,
+                          entrada: t.entrada.slice(0, 5),
+                          salida: t.salida.slice(0, 5),
+                          activo: !t.activo,
+                        }),
+                      )
+                    }
+                  >
+                    {t.activo ? 'Desactivar' : 'Activar'}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
           <form
             className="flex flex-wrap gap-2"
@@ -391,39 +482,22 @@ function Catalogo({ companyId, semana }: { companyId: number; semana: SemanaRole
           </form>
         </div>
       </div>
-      <div className="mt-2">
+      <div className="mt-3">
         <Fallo texto={a.error} />
       </div>
     </details>
   );
 }
 
-/** Cuenta de baristas: quién está hoy en qué posición (solo lectura). */
+/** Cuenta de baristas: quién está hoy en cada posición (solo lectura). */
 export function RolesHoy({ semana, hoy }: { semana: SemanaRoles; hoy: string }) {
   const d = semana.dias.find((x) => x.dia === hoy);
   if (!d || !d.asignados)
     return <Vacio titulo="Sin roles para hoy">La gerencia todavía no asigna las posiciones de hoy.</Vacio>;
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2">
       {semana.turnos.map((t) => (
-        <section key={t.id} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
-          <h2 className="text-base font-semibold">
-            {t.nombre} · {horaCorta(t.entrada)}–{horaCorta(t.salida)}
-          </h2>
-          <ul className="mt-2 divide-y divide-line text-sm">
-            {semana.posiciones.map((p) => {
-              const c = d.celdas.find((x) => x.turnoId === t.id && x.posicionId === p.id)!;
-              return (
-                <li key={p.id} className="flex items-baseline justify-between gap-3 py-2">
-                  <span className="text-ink-2">{p.nombre}</span>
-                  <span className="text-right font-semibold">
-                    {c.baristas.length ? c.baristas.map((b) => b.nombre).join(', ') : '—'}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <TurnoCard key={t.id} turno={t} semana={semana} d={d} />
       ))}
     </div>
   );

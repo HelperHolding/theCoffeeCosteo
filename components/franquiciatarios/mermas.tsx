@@ -1,6 +1,19 @@
 'use client';
 import { useState, useTransition } from 'react';
-import { CircleAlert, LoaderCircle, Lock } from 'lucide-react';
+import {
+  CalendarX2,
+  ChefHat,
+  CircleAlert,
+  CircleCheck,
+  CircleHelp,
+  Droplets,
+  LoaderCircle,
+  Lock,
+  Trash2,
+  Undo2,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from 'cn';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +27,16 @@ import type { MermasDia } from '@/lib/franquiciatarios/mermas-servidor';
 import type { FranqMerma, MotivoMerma } from '@/lib/franquiciatarios/tipos';
 import { Vacio } from '@/components/portal/piezas';
 import { hora } from './formato';
+import { TONO, type Tono } from './colores';
+
+/** Color e ícono por motivo (tipo de información, no estado). */
+const ESTILO_MOTIVO: Record<MotivoMerma, { tono: Tono; icono: LucideIcon }> = {
+  caducidad: { tono: 'apertura', icono: CalendarX2 },
+  preparacion: { tono: 'cambio', icono: ChefHat },
+  caida: { tono: 'cierre', icono: Droplets },
+  devolucion: { tono: 'tira', icono: Undo2 },
+  otro: { tono: 'pedidos', icono: CircleHelp },
+};
 
 const campo =
   'h-10 w-full rounded-[10px] border border-line-strong bg-surface px-3 text-sm text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-crema/35';
@@ -70,8 +93,45 @@ export function MermasFranq({
         Las mermas se registran sobre la lista de insumos de conteo. La gerencia la arma en «Inventario».
       </Vacio>
     );
+  const fuera = datos.filas?.filter((f) => f.fuera).length ?? null;
+  const valor = datos.filas?.reduce((x, f) => x + (f.valor ?? 0), 0) ?? null;
   return (
     <div className="space-y-6">
+      <div className={cn('grid gap-2 sm:gap-3', gestor ? 'grid-cols-3' : 'grid-cols-2')}>
+        <Kpi
+          tono="tira"
+          icono={Trash2}
+          titulo={esHoy ? 'Registradas hoy' : 'Registradas'}
+          valor={String(datos.registros.length)}
+          detalle={`${new Set(datos.registros.map((m) => m.insumo_id)).size} insumos distintos`}
+        />
+        {gestor && (
+          <Kpi
+            tono={fuera ? 'alerta' : 'durante'}
+            icono={fuera ? CircleAlert : CircleCheck}
+            titulo="Fuera de tolerancia"
+            valor={fuera === null ? '—' : String(fuera)}
+            detalle={fuera ? 'Revisa los insumos marcados abajo' : 'Todo dentro de lo esperado'}
+          />
+        )}
+        {gestor ? (
+          <Kpi
+            tono="incidencia"
+            icono={Wallet}
+            titulo="Valor a costo"
+            valor={valor === null ? '—' : pesos(valor)}
+            detalle="Lo que costó lo que se perdió"
+          />
+        ) : (
+          <Kpi
+            tono={cerrado ? 'cierre' : 'ventas'}
+            icono={Lock}
+            titulo="Estado del día"
+            valor={cerrado ? 'Cerrado' : 'Abierto'}
+            detalle={cerrado ? 'Ya no se registran mermas' : 'Registra cada merma al momento'}
+          />
+        )}
+      </div>
       {cerrado && (
         <p className="flex items-center gap-2 rounded-xl border border-line bg-surface-2/60 px-4 py-2.5 text-sm">
           <Lock size={15} aria-hidden="true" /> Día cerrado por {datos.cierre!.nombre} a las{' '}
@@ -87,6 +147,36 @@ export function MermasFranq({
         editable={esHoy && (!cerrado || gestor)}
       />
       {gestor && datos.filas && <Comparacion companyId={companyId} datos={datos} />}
+    </div>
+  );
+}
+
+function Kpi({
+  tono,
+  icono: Icono,
+  titulo,
+  valor,
+  detalle,
+}: {
+  tono: Tono;
+  icono: LucideIcon;
+  titulo: string;
+  valor: string;
+  detalle: string;
+}) {
+  const t = TONO[tono];
+  return (
+    <div
+      className={cn('relative overflow-hidden rounded-3xl border p-3 shadow-card sm:p-4', t.brillo, t.borde)}
+    >
+      <span
+        className={cn('grid size-8 place-items-center rounded-xl text-primary-foreground sm:size-9', t.marca)}
+      >
+        <Icono size={16} aria-hidden="true" />
+      </span>
+      <p className="mt-2 text-[11px] leading-tight font-semibold text-ink-2 sm:mt-3 sm:text-xs">{titulo}</p>
+      <p className="font-display text-xl leading-tight font-black tabular sm:text-3xl">{valor}</p>
+      <p className="hidden text-xs text-ink-2 sm:block">{detalle}</p>
     </div>
   );
 }
@@ -117,10 +207,10 @@ function Captura({
   return (
     <section
       aria-labelledby="registrar"
-      className="rounded-2xl border border-line bg-surface p-4 shadow-card"
+      className={cn('rounded-3xl border p-5 shadow-card', TONO.tira.brillo, TONO.tira.borde)}
     >
-      <h2 id="registrar" className="text-lg">
-        Registrar merma
+      <h2 id="registrar" className="flex items-center gap-2 text-lg">
+        <Trash2 size={18} aria-hidden="true" className={TONO.tira.texto} /> Registrar merma
       </h2>
       <form
         className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
@@ -168,17 +258,33 @@ function Captura({
             placeholder="0"
           />
         </label>
-        <label className="text-sm">
-          <span className="mb-1 block font-medium">Motivo</span>
-          <select className={campo} value={motivo} onChange={(e) => setMotivo(e.target.value as MotivoMerma)}>
-            <option value="">Elige…</option>
-            {(Object.keys(MOTIVOS) as MotivoMerma[]).map((m) => (
-              <option key={m} value={m}>
-                {MOTIVOS[m]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <fieldset className="text-sm sm:col-span-2 lg:col-span-4">
+          <legend className="mb-1.5 font-medium">Motivo</legend>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(MOTIVOS) as MotivoMerma[]).map((m) => {
+              const e = ESTILO_MOTIVO[m];
+              const Icono = e.icono;
+              const activo = motivo === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => setMotivo(m)}
+                  className={cn(
+                    'inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors',
+                    activo
+                      ? cn(TONO[e.tono].marca, 'border-transparent text-primary-foreground')
+                      : cn('bg-surface hover:border-line-strong', TONO[e.tono].borde),
+                  )}
+                >
+                  <Icono size={15} aria-hidden="true" className={activo ? undefined : TONO[e.tono].texto} />
+                  {MOTIVOS[m]}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
         <label className="text-sm">
           <span className="mb-1 block font-medium">Nota{motivo === 'otro' ? '' : ' (opcional)'}</span>
           <input className={campo} value={nota} onChange={(e) => setNota(e.target.value)} maxLength={300} />
@@ -226,7 +332,7 @@ function Registros({
       {!datos.registros.length ? (
         <p className="text-sm text-muted-foreground">Sin mermas registradas este día.</p>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
+        <ul className="grid gap-2.5 md:grid-cols-2">
           {datos.registros.map((m) => (
             <Registro
               key={m.id}
@@ -259,25 +365,45 @@ function Registro({
   const a = useAccion();
   const [motivo, setMotivo] = useState('');
   const [anulando, setAnulando] = useState(false);
+  const e = ESTILO_MOTIVO[m.motivo];
+  const Icono = e.icono;
   return (
-    <li className="space-y-2 px-4 py-2.5 text-sm">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-semibold">{insumo?.nombre ?? 'Insumo'}</span>
-        <span className="tabular">
-          {num(Number(m.cantidad))} {insumo?.unidad}
+    <li
+      className={cn(
+        'relative space-y-2 overflow-hidden rounded-2xl border bg-surface py-3 pr-3 pl-4 text-sm shadow-card',
+        TONO[e.tono].borde,
+      )}
+    >
+      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1.5', TONO[e.tono].marca)} />
+      <div className="flex items-start gap-3">
+        <span className={cn('grid size-9 shrink-0 place-items-center rounded-xl', TONO[e.tono].suave)}>
+          <Icono size={16} aria-hidden="true" className={TONO[e.tono].texto} />
         </span>
-        <span className="text-ink-2">
-          {MOTIVOS[m.motivo]}
-          {m.nota ? ` · ${m.nota}` : ''}
-        </span>
-        <span className="ml-auto text-xs text-ink-2">
-          {m.nombre} · {hora(m.registrado_en)}
-        </span>
-        {editable && !anulando && (
-          <Button size="sm" variant="outline" onClick={() => setAnulando(true)}>
-            Anular
-          </Button>
-        )}
+        <div className="min-w-0 flex-1">
+          <p className="leading-tight font-semibold">{insumo?.nombre ?? 'Insumo'}</p>
+          <p className="text-xs text-ink-2">
+            {MOTIVOS[m.motivo]}
+            {m.nota ? ` · ${m.nota}` : ''}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {m.nombre} · {hora(m.registrado_en)}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className="font-display text-lg leading-none font-black tabular">
+            {num(Number(m.cantidad))}
+          </span>
+          <span className="max-w-28 text-right text-[11px] leading-tight text-ink-2">{insumo?.unidad}</span>
+          {editable && !anulando && (
+            <button
+              type="button"
+              onClick={() => setAnulando(true)}
+              className="text-xs font-semibold text-ink-2 underline hover:text-bad"
+            >
+              Anular
+            </button>
+          )}
+        </div>
       </div>
       {anulando && (
         <form
@@ -333,6 +459,8 @@ function Comparacion({ companyId, datos }: { companyId: number; datos: MermasDia
   const valor = filas.reduce((s, f) => s + (f.valor ?? 0), 0);
   const a = useAccion();
   const [confirmar, setConfirmar] = useState(false);
+  const [todos, setTodos] = useState(false);
+  const visibles = todos ? filas : filas.filter((f) => f.merma > 0 || f.fuera);
   return (
     <section aria-labelledby="tolerancia" className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -362,12 +490,24 @@ function Comparacion({ companyId, datos }: { companyId: number; datos: MermasDia
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {filas.map((f) => (
+            {visibles.map((f) => (
               <FilaComparacion key={f.insumoId} companyId={companyId} f={f} />
             ))}
+            {!visibles.length && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  Sin mermas registradas este día.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+      <button type="button" onClick={() => setTodos((x) => !x)} className="text-sm font-semibold underline">
+        {todos
+          ? 'Ver solo los insumos con merma'
+          : `Ver los ${filas.length} insumos de la lista (y su tolerancia)`}
+      </button>
       <p className="text-xs text-muted-foreground">
         Consumo teórico = recetas × lo vendido ese día (POS y Rappi), en la unidad de conteo. Un insumo dado
         de alta a mano no tiene teórico. {conMerma.length} insumos con merma.
@@ -419,6 +559,17 @@ function FilaComparacion({ companyId, f }: { companyId: number; f: FilaMerma }) 
       <td className="px-3 py-2 text-right tabular">{f.merma ? num(f.merma) : '—'}</td>
       <td className="px-3 py-2 text-right tabular">{f.teorico === null ? 'Sin teórico' : num(f.teorico)}</td>
       <td className={cn('px-3 py-2 text-right tabular', f.fuera && 'font-semibold text-bad')}>
+        {f.pct !== null && f.merma > 0 && (
+          <span
+            className="mb-1 ml-auto block h-1.5 w-20 overflow-hidden rounded-full bg-surface-2"
+            aria-hidden="true"
+          >
+            <span
+              className={cn('block h-full rounded-full', f.fuera ? 'bg-bad' : 'bg-ok')}
+              style={{ width: `${Math.min(100, (f.pct * 100 * 100) / Math.max(f.tolerancia * 2, 0.01))}%` }}
+            />
+          </span>
+        )}
         {!f.merma ? '—' : f.pct === null ? (f.teorico === 0 ? 'Sin venta' : '—') : `${num(f.pct * 100)} %`}
       </td>
       <td className="px-3 py-2 text-right">
