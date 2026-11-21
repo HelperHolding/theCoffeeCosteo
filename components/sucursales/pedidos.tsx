@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { infoPedidos } from './info-tableros';
 import { claseCampo } from '@/lib/crm/formato';
 import { DetallePedido } from './detalle-pedido';
+import { BotonEtiqueta } from './etiqueta';
 import { AvisosLectura, ErrorCarga, Esqueleto } from './estados';
 import { dinero, fechaCorta, numero } from './formato';
 import { useLectura } from './use-lectura';
@@ -174,13 +175,16 @@ export function Pedidos({
                               </td>
                               <td className="numero">{numero(p.lineas.length)}</td>
                               <td>
-                                <button
-                                  type="button"
-                                  onClick={() => setPedido(p)}
-                                  className="text-sm font-semibold underline"
-                                >
-                                  Ver<span className="sr-only"> pedido {p.id}</span>
-                                </button>
+                                <span className="flex items-center justify-end gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPedido(p)}
+                                    className="text-sm font-semibold underline"
+                                  >
+                                    Ver<span className="sr-only"> pedido {p.id}</span>
+                                  </button>
+                                  <BotonEtiqueta pedido={p} sucursal={datos.sucursal.nombre} />
+                                </span>
                               </td>
                             </tr>
                           ))}
@@ -221,7 +225,12 @@ export function Pedidos({
           )}
         </>
       )}
-      <DetallePedido pedido={pedido} moneda={m} alCerrar={() => setPedido(null)} />
+      <DetallePedido
+        pedido={pedido}
+        moneda={m}
+        alCerrar={() => setPedido(null)}
+        sucursal={datos?.sucursal.nombre ?? ''}
+      />
     </div>
   );
 }

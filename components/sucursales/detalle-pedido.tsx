@@ -4,16 +4,20 @@ import { etiquetaOrigen } from '@/lib/sucursales/metricas';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { dinero, fechaCorta } from './formato';
 import { COLOR_ORIGEN, Etiqueta, TIPOS, colorPago, tipoPersonalizacion } from './colores';
+import { BotonEtiqueta } from './etiqueta';
 
 /** Detalle de un pedido: líneas y personalizaciones con su importe, descuento en % (ya aplicado). */
 export function DetallePedido({
   pedido,
   moneda,
   alCerrar,
+  sucursal = '',
 }: {
   pedido: PedidoVista | null;
   moneda: string;
   alCerrar: () => void;
+  /** Nombre de la sucursal para la etiqueta del pedido. */
+  sucursal?: string;
 }) {
   return (
     <Dialog open={pedido !== null} onOpenChange={(o) => !o && alCerrar()}>
@@ -43,6 +47,19 @@ export function DetallePedido({
                 <Etiqueta color={COLOR_ORIGEN[pedido.origen]}>{etiquetaOrigen[pedido.origen]}</Etiqueta>
                 {pedido.descuentoCent > 0 && <span>Descuento {dinero(pedido.descuentoCent, moneda)}</span>}
               </DialogDescription>
+              {pedido.lineas.length > 0 && (
+                <div className="pt-1">
+                  <BotonEtiqueta
+                    pedido={pedido}
+                    sucursal={sucursal}
+                    texto={
+                      pedido.lineas.length === 1
+                        ? 'Imprimir etiqueta'
+                        : `Imprimir ${pedido.lineas.length} etiquetas (una por producto)`
+                    }
+                  />
+                </div>
+              )}
             </DialogHeader>
             <table className="tabla w-full text-sm">
               <caption className="sr-only">Productos del pedido</caption>
@@ -84,7 +101,12 @@ export function DetallePedido({
                         </ul>
                       )}
                     </td>
-                    <td className="numero">{dinero(l.importeCent, moneda)}</td>
+                    <td className="numero">
+                      <span className="block">{dinero(l.importeCent, moneda)}</span>
+                      {pedido.lineas.length > 1 && (
+                        <BotonEtiqueta pedido={pedido} sucursal={sucursal} indices={[i]} className="mt-1.5" />
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
