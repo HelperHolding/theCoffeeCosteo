@@ -12,7 +12,13 @@ import { cookieBarista } from '@/lib/franquiciatarios/servidor';
 import { configDe } from '@/lib/sucursales/config';
 import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
 import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
-import type { MomentoArqueo, MomentoConteo, SeccionClave, TipoFirma } from '@/lib/franquiciatarios/tipos';
+import type {
+  MomentoArqueo,
+  MomentoConteo,
+  MotivoMerma,
+  SeccionClave,
+  TipoFirma,
+} from '@/lib/franquiciatarios/tipos';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -436,5 +442,147 @@ export async function guardarGastoFijo(datos: {
       p_monto: datos.monto,
       p_nota: datos.nota ?? null,
     }),
+  );
+}
+
+// ── F6 · Matriz de roles por posición (migración 92) ─────────────────────────────────────────────────────────────
+const SOLO_GESTOR_ROLES = 'Solo el gerente o el franquiciatario arman la matriz de roles.';
+const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+const HORA = /^\d{2}:\d{2}$/;
+
+/** Siembra la lista base de posiciones y turnos (solo si la sucursal no tiene ninguno). */
+export async function rolesBase(companyId: number): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GESTOR_ROLES };
+  return ejecutar(() => c.db.rpc('franq_roles_base', { p_company: companyId }));
+}
+
+export async function guardarPosicion(datos: {
+  companyId: number;
+  id: number | null;
+  nombre: string;
+  activo: boolean;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GESTOR_ROLES };
+  return ejecutar(() =>
+    c.db.rpc('franq_posicion_guardar', {
+      p_company: datos.companyId,
+      p_id: datos.id,
+      p_nombre: String(datos.nombre ?? ''),
+      p_orden: null,
+      p_activo: datos.activo,
+    }),
+  );
+}
+
+export async function guardarTurno(datos: {
+  companyId: number;
+  id: number | null;
+  nombre: string;
+  entrada: string;
+  salida: string;
+  activo: boolean;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GESTOR_ROLES };
+  if (!HORA.test(datos.entrada) || !HORA.test(datos.salida)) return { error: 'Escribe las horas como 07:00.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_turno_guardar', {
+      p_company: datos.companyId,
+      p_id: datos.id,
+      p_nombre: String(datos.nombre ?? ''),
+      p_entrada: datos.entrada,
+      p_salida: datos.salida,
+      p_activo: datos.activo,
+    }),
+  );
+}
+
+/** Asigna (o quita) a un barista en un día, turno y posición. */
+export async function asignar(datos: {
+  companyId: number;
+  dia: string;
+  turno: number;
+  posicion: number;
+  barista: number;
+  quitar: boolean;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GESTOR_ROLES };
+  if (!FECHA.test(datos.dia)) return { error: 'Fecha inválida.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_asignar', {
+      p_company: datos.companyId,
+      p_dia: datos.dia,
+      p_turno: datos.turno,
+      p_posicion: datos.posicion,
+      p_barista: datos.barista,
+      p_quitar: datos.quitar,
+    }),
+  );
+}
+
+/** Copia la semana anterior a los días vacíos de la semana que empieza en `lunes`. */
+export async function copiarSemana(companyId: number, lunes: string): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: SOLO_GESTOR_ROLES };
+  if (!FECHA.test(lunes)) return { error: 'Fecha inválida.' };
+  return ejecutar(() => c.db.rpc('franq_copiar_semana', { p_company: companyId, p_lunes: lunes }));
+}
+
+// ── F6 · Mermas (migración 92) ───────────────────────────────────────────────────────────────────────────────────
+const MOTIVOS_MERMA: MotivoMerma[] = ['caducidad', 'preparacion', 'caida', 'devolucion', 'otro'];
+
+/** Registra una merma de hoy, o corrige / anula un registro vigente (`corrige`). Cualquier rol de la sucursal. */
+export async function registrarMerma(datos: {
+  companyId: number;
+  insumo: number | null;
+  cantidad: number | null;
+  motivo: MotivoMerma | null;
+  nota?: string | null;
+  corrige?: number | null;
+  anular?: boolean;
+  motivoCorreccion?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  if (!datos.anular) {
+    if (!datos.insumo) return { error: 'Elige el insumo.' };
+    if (!Number.isFinite(datos.cantidad) || (datos.cantidad ?? 0) <= 0) return { error: 'Escribe la cantidad.' };
+    if (!datos.motivo || !MOTIVOS_MERMA.includes(datos.motivo)) return { error: 'Elige el motivo.' };
+  }
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_registrar_merma', {
+      p_company: datos.companyId,
+      p_insumo: datos.insumo,
+      p_cantidad: datos.cantidad,
+      p_motivo: datos.motivo,
+      p_nota: datos.nota ?? null,
+      p_barista: b,
+      p_dispositivo: disp,
+      p_corrige: datos.corrige ?? null,
+      p_anular: !!datos.anular,
+      p_motivo_correccion: datos.motivoCorreccion ?? null,
+    }),
+  );
+}
+
+export async function cerrarMermas(companyId: number, dia: string): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario cierran las mermas.' };
+  if (!FECHA.test(dia)) return { error: 'Fecha inválida.' };
+  return ejecutar(() => c.db.rpc('franq_cerrar_mermas', { p_company: companyId, p_dia: dia }));
+}
+
+export async function guardarTolerancia(companyId: number, insumo: number, pct: number): Promise<Resultado> {
+  const c = await contexto(companyId);
+  if (!c || !esGestorFranq(c.rol)) return { error: 'Solo el gerente o el franquiciatario ajustan la tolerancia.' };
+  if (!Number.isFinite(pct) || pct < 0 || pct > 100) return { error: 'La tolerancia va de 0 a 100 %.' };
+  return ejecutar(() =>
+    c.db.rpc('franq_tolerancia_guardar', { p_company: companyId, p_insumo: insumo, p_pct: pct }),
   );
 }

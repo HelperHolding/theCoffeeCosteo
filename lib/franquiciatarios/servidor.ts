@@ -6,7 +6,7 @@ import type { RolFranq } from '../supabase/sesion';
 import { armarDia, diaOperacion, plantillaVigente, type Dia } from './dia';
 import type { FranqBarista } from './tipos';
 
-type Db = Awaited<ReturnType<typeof servidor>>;
+export type Db = Awaited<ReturnType<typeof servidor>>;
 
 /**
  * Sucursal de la URL: entero positivo, con rol del usuario en ella y configurada. Cualquier otro caso = null y la

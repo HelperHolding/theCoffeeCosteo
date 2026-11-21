@@ -15,6 +15,13 @@ import type {
   MomentoArqueo,
   MomentoConteo,
   FranqRespuesta,
+  FranqAsignacion,
+  FranqMerma,
+  FranqMermaTolerancia,
+  FranqMermasCierre,
+  FranqPosicion,
+  FranqTurno,
+  MotivoMerma,
   SeccionClave,
   TipoFirma,
 } from '../../../lib/franquiciatarios/tipos';
@@ -42,6 +49,12 @@ export const tienda = {
   arqueos: [] as FranqArqueo[],
   gastos: [] as FranqGasto[],
   cajaConfig: { fondo: 1500, tolerancia: 20 } as Pick<FranqCajaConfig, 'fondo' | 'tolerancia'> | null,
+  posiciones: [] as FranqPosicion[],
+  turnos: [] as FranqTurno[],
+  asignaciones: [] as FranqAsignacion[],
+  mermas: [] as FranqMerma[],
+  tolerancias: [] as FranqMermaTolerancia[],
+  cierres: [] as FranqMermasCierre[],
   dia: '',
 };
 let id = 1000;
@@ -464,6 +477,224 @@ export async function guardarGastoFijo(d: { concepto: string; monto: number }): 
   if (tienda.rol === 'barista')
     return { error: 'Solo el gerente o el franquiciatario capturan los gastos fijos.' };
   if (!(d.monto >= 0)) return { error: 'Escribe el monto (de 0 en adelante).' };
+  avisar();
+  return { ok: true };
+}
+
+// ── F6 · Roles por posición y mermas (reglas de la migración 92) ─────────────────────────────────────────────────
+const soloGestor = (texto: string) => (tienda.rol === 'barista' ? { error: texto } : null);
+const SOLO_ROLES = 'Solo el gerente o el franquiciatario arman la matriz de roles.';
+
+export async function rolesBase(): Promise<Resultado> {
+  await espera();
+  const no = soloGestor(SOLO_ROLES);
+  if (no) return no;
+  if (!tienda.posiciones.length)
+    ['Caja/Mostrador', 'Barra caliente', 'Barra fría', 'Alimentos', 'Rappi/Delivery'].forEach((nombre, i) =>
+      tienda.posiciones.push({ id: ++id, company_id: 514, nombre, orden: i + 1, activo: true }),
+    );
+  if (!tienda.turnos.length)
+    tienda.turnos.push(
+      {
+        id: ++id,
+        company_id: 514,
+        nombre: 'Matutino',
+        entrada: '07:00:00',
+        salida: '15:00:00',
+        orden: 1,
+        activo: true,
+      },
+      {
+        id: ++id,
+        company_id: 514,
+        nombre: 'Vespertino',
+        entrada: '15:00:00',
+        salida: '22:00:00',
+        orden: 2,
+        activo: true,
+      },
+    );
+  avisar();
+  return { ok: true };
+}
+
+export async function guardarPosicion(d: {
+  id: number | null;
+  nombre: string;
+  activo: boolean;
+}): Promise<Resultado> {
+  await espera();
+  const no = soloGestor(SOLO_ROLES);
+  if (no) return no;
+  const nombre = d.nombre.trim().replace(/\s+/g, ' ');
+  if (nombre.length < 2) return { error: 'Escribe el nombre de la posición.' };
+  if (
+    tienda.posiciones.some((p) => p.activo && p.id !== d.id && p.nombre.toLowerCase() === nombre.toLowerCase())
+  )
+    return { error: 'Ya hay una posición activa con ese nombre.' };
+  if (d.id === null)
+    tienda.posiciones.push({
+      id: ++id,
+      company_id: 514,
+      nombre,
+      orden: tienda.posiciones.length + 1,
+      activo: true,
+    });
+  else Object.assign(tienda.posiciones.find((p) => p.id === d.id)!, { nombre, activo: d.activo });
+  avisar();
+  return { ok: true };
+}
+
+export async function guardarTurno(d: {
+  id: number | null;
+  nombre: string;
+  entrada: string;
+  salida: string;
+  activo: boolean;
+}): Promise<Resultado> {
+  await espera();
+  const no = soloGestor(SOLO_ROLES);
+  if (no) return no;
+  if (d.nombre.trim().length < 2 || !d.entrada || !d.salida || d.entrada === d.salida)
+    return { error: 'Escribe el nombre del turno y sus horas de entrada y salida.' };
+  const t = {
+    nombre: d.nombre.trim(),
+    entrada: `${d.entrada}:00`,
+    salida: `${d.salida}:00`,
+    activo: d.activo,
+  };
+  if (d.id === null) tienda.turnos.push({ id: ++id, company_id: 514, orden: tienda.turnos.length + 1, ...t });
+  else Object.assign(tienda.turnos.find((x) => x.id === d.id)!, t);
+  avisar();
+  return { ok: true };
+}
+
+const asignacionVigente = (dia: string, turno: number, posicion: number, barista: number) =>
+  tienda.asignaciones.find(
+    (a) =>
+      a.dia === dia &&
+      a.turno_id === turno &&
+      a.posicion_id === posicion &&
+      a.barista_id === barista &&
+      !a.anulada &&
+      !tienda.asignaciones.some((x) => x.corrige_id === a.id),
+  );
+
+export async function asignar(d: {
+  dia: string;
+  turno: number;
+  posicion: number;
+  barista: number;
+  quitar: boolean;
+}): Promise<Resultado> {
+  await espera();
+  const no = soloGestor(SOLO_ROLES);
+  if (no) return no;
+  const previa = asignacionVigente(d.dia, d.turno, d.posicion, d.barista);
+  const fila = {
+    company_id: 514,
+    dia: d.dia,
+    turno_id: d.turno,
+    posicion_id: d.posicion,
+    barista_id: d.barista,
+    registrado_por: 'g',
+    registrado_en: ahora(),
+  };
+  if (d.quitar) {
+    if (previa) tienda.asignaciones.push({ id: ++id, ...fila, anulada: true, corrige_id: previa.id });
+  } else if (!previa) tienda.asignaciones.push({ id: ++id, ...fila, anulada: false, corrige_id: null });
+  avisar();
+  return { ok: true };
+}
+
+export async function copiarSemana(_c: number, lunes: string): Promise<Resultado> {
+  await espera();
+  const no = soloGestor(SOLO_ROLES);
+  if (no) return no;
+  const mas = (d: string, n: number) =>
+    new Date(Date.parse(`${d}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+  const vig = tienda.asignaciones.filter(
+    (a) => !a.anulada && !tienda.asignaciones.some((x) => x.corrige_id === a.id),
+  );
+  const ocupados = new Set(vig.map((a) => a.dia));
+  for (const a of vig.filter((x) => x.dia >= mas(lunes, -7) && x.dia < lunes))
+    if (!ocupados.has(mas(a.dia, 7)))
+      tienda.asignaciones.push({ ...a, id: ++id, dia: mas(a.dia, 7), registrado_en: ahora() });
+  avisar();
+  return { ok: true };
+}
+
+export async function registrarMerma(d: {
+  insumo: number | null;
+  cantidad: number | null;
+  motivo: MotivoMerma | null;
+  nota?: string | null;
+  corrige?: number | null;
+  anular?: boolean;
+  motivoCorreccion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const cerrado = tienda.cierres.some((c) => c.dia === tienda.dia);
+  if (cerrado && tienda.rol === 'barista')
+    return { error: 'Las mermas de hoy ya se cerraron; pide a la gerencia que lo registre.' };
+  if (cerrado && (d.motivoCorreccion ?? '').trim().length < 3)
+    return { error: 'El día ya se cerró: escribe el motivo del cambio.' };
+  const comun = {
+    id: ++id,
+    company_id: 514,
+    dia: tienda.dia,
+    barista_id: q.barista_id,
+    nombre: q.nombre,
+    registrado_por: 'cuenta',
+    registrado_en: ahora(),
+    motivo_correccion: d.motivoCorreccion ?? null,
+  };
+  if (d.anular) {
+    const o = tienda.mermas.find((m) => m.id === d.corrige);
+    if (!o || tienda.mermas.some((x) => x.corrige_id === o.id)) return { error: 'Ese registro ya no está vigente.' };
+    tienda.mermas.push({ ...o, ...comun, anulada: true, corrige_id: o.id });
+  } else {
+    if (!d.insumo || !(Number(d.cantidad) > 0) || !d.motivo) return { error: 'Completa insumo, cantidad y motivo.' };
+    if (d.motivo === 'otro' && (d.nota ?? '').trim().length < 3) return { error: 'Con «Otro», escribe qué pasó.' };
+    tienda.mermas.push({
+      ...comun,
+      insumo_id: d.insumo,
+      cantidad: Number(d.cantidad),
+      motivo: d.motivo,
+      nota: d.nota?.trim() || null,
+      anulada: false,
+      corrige_id: d.corrige ?? null,
+    });
+  }
+  avisar();
+  return { ok: true };
+}
+
+export async function cerrarMermas(_c: number, dia: string): Promise<Resultado> {
+  await espera();
+  const no = soloGestor('Solo el gerente o el franquiciatario cierran las mermas.');
+  if (no) return no;
+  if (!tienda.cierres.some((c) => c.dia === dia))
+    tienda.cierres.push({ company_id: 514, dia, nombre: tienda.perfil, cerrado_por: 'g', cerrado_en: ahora() });
+  avisar();
+  return { ok: true };
+}
+
+export async function guardarTolerancia(_c: number, insumo: number, pct: number): Promise<Resultado> {
+  await espera();
+  const no = soloGestor('Solo el gerente o el franquiciatario ajustan la tolerancia.');
+  if (no) return no;
+  if (!(pct >= 0 && pct <= 100)) return { error: 'La tolerancia va de 0 a 100 %.' };
+  tienda.tolerancias.push({
+    id: ++id,
+    company_id: 514,
+    insumo_id: insumo,
+    pct,
+    registrado_por: 'g',
+    registrado_en: ahora(),
+  });
   avisar();
   return { ok: true };
 }
