@@ -253,10 +253,10 @@ export interface ResumenFranquicia {
     secciones: { clave: SeccionClave; nombre: string; avance: number; estado: string; noes: number }[];
     incidencias: number;
   }[];
-  /** Sucursales con acceso que no se muestran (se leen hasta 6). */
+  /** Sucursales con acceso que no se muestran (se leen hasta 5). */
   mas: number;
 }
-const MAX_FRANQ = 6;
+const MAX_FRANQ = 5;
 
 export async function resumenFranquiciatarios(): Promise<Lectura<ResumenFranquicia>> {
   try {

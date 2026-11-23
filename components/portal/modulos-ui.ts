@@ -23,8 +23,8 @@ export interface EstiloModulo {
   suave: string;
   /** Borde con transparencia. */
   borde: string;
-  /** Brillo que sube desde abajo (tarjetas del dashboard). */
-  brillo: string;
+  /** Color del módulo como valor CSS (la luz de las tarjetas de Inicio, inicio.css). */
+  tono: string;
 }
 
 export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
@@ -34,7 +34,7 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-apertura',
     suave: 'bg-apertura-soft',
     borde: 'border-apertura/35',
-    brillo: 'bg-linear-to-t from-apertura/18 via-apertura/6 via-45% to-surface',
+    tono: 'var(--color-apertura)',
   },
   crm: {
     icono: Store,
@@ -42,7 +42,7 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-cambio',
     suave: 'bg-cambio-soft',
     borde: 'border-cambio/35',
-    brillo: 'bg-linear-to-t from-cambio/18 via-cambio/6 via-45% to-surface',
+    tono: 'var(--color-cambio)',
   },
   sucursales: {
     icono: Activity,
@@ -50,7 +50,7 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-ventas',
     suave: 'bg-ventas-soft',
     borde: 'border-ventas/35',
-    brillo: 'bg-linear-to-t from-ventas/18 via-ventas/6 via-45% to-surface',
+    tono: 'var(--color-ventas)',
   },
   bi: {
     icono: BarChart3,
@@ -58,7 +58,7 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-cierre',
     suave: 'bg-cierre-soft',
     borde: 'border-cierre/35',
-    brillo: 'bg-linear-to-t from-cierre/18 via-cierre/6 via-45% to-surface',
+    tono: 'var(--color-cierre)',
   },
   comercializadora: {
     icono: ShoppingCart,
@@ -66,7 +66,7 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-pedidos',
     suave: 'bg-pedidos-soft',
     borde: 'border-pedidos/35',
-    brillo: 'bg-linear-to-t from-pedidos/18 via-pedidos/6 via-45% to-surface',
+    tono: 'var(--color-pedidos)',
   },
   franquiciatarios: {
     icono: ClipboardCheck,
@@ -74,6 +74,6 @@ export const ESTILO_MODULO: Record<IdModulo, EstiloModulo> = {
     marca: 'bg-tira',
     suave: 'bg-tira-soft',
     borde: 'border-tira/35',
-    brillo: 'bg-linear-to-t from-tira/18 via-tira/6 via-45% to-surface',
+    tono: 'var(--color-tira)',
   },
 };

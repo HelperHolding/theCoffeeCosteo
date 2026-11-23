@@ -3,10 +3,11 @@ import { ArrowUpRight, CircleAlert } from 'lucide-react';
 import { cn } from 'cn';
 import { modulos, type IdModulo } from '@/lib/portal/modulos';
 import { ESTILO_MODULO } from '@/components/portal/modulos-ui';
+import './inicio.css';
 
 /**
- * Marco de un bloque del dashboard de Inicio: color e ícono del módulo, su nombre y un acceso al módulo. El brillo
- * sube desde abajo en el color del módulo (mismo recurso que Franquiciatarios); el texto siempre queda en tinta.
+ * Marco de un bloque del dashboard de Inicio: color e ícono del módulo, su nombre y un acceso al módulo. La luz sube
+ * desde abajo en el color del módulo (inicio.css, sin borde de color); el texto siempre queda en tinta.
  */
 export function Bloque({
   modulo,
@@ -30,10 +31,10 @@ export function Bloque({
     <section
       aria-label={titulo ?? m.nombre}
       className={cn(
-        'relative flex flex-col overflow-hidden rounded-3xl p-5 shadow-card',
-        e.brillo,
+        'luz-modulo relative flex flex-col overflow-hidden rounded-3xl p-5 shadow-card',
         className,
       )}
+      style={{ '--tono': e.tono } as React.CSSProperties}
     >
       <header className="mb-4 flex items-center gap-3">
         <span
@@ -69,7 +70,8 @@ export function EsqueletoBloque({ modulo, className }: { modulo: IdModulo; class
     <div
       role="status"
       aria-label="Cargando"
-      className={cn('rounded-3xl p-5 shadow-card', e.brillo, className)}
+      className={cn('luz-modulo rounded-3xl p-5 shadow-card', className)}
+      style={{ '--tono': e.tono } as React.CSSProperties}
     >
       <div className="flex items-center gap-3">
         <span className={cn('size-10 rounded-2xl opacity-60', e.marca)} />
@@ -130,10 +132,10 @@ export function Mini({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-line bg-surface/80 px-3 py-2',
-        tono === 'bad' && 'border-bad/30 bg-bad-soft',
-        tono === 'warn' && 'border-warn/30 bg-warn-soft',
-        tono === 'ok' && 'border-ok/30 bg-ok-soft',
+        'rounded-2xl border border-line/60 bg-surface/35 px-3 py-2',
+        tono === 'bad' && 'border-bad/25 bg-bad-soft/60',
+        tono === 'warn' && 'border-warn/25 bg-warn-soft/60',
+        tono === 'ok' && 'border-ok/25 bg-ok-soft/60',
       )}
     >
       <p className="font-display text-lg leading-tight font-black tabular">{valor}</p>

@@ -48,14 +48,15 @@ export function Dashboard({ nombre, visibles }: { nombre: string; visibles: IdMo
             </div>
           )}
           {bloques.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+            // Mosaico: columnas que se llenan de arriba abajo; cada tarjeta mide lo que su contenido (sin estirar).
+            <div className="columns-1 gap-5 md:columns-2 2xl:columns-3">
               {bloques.map(({ id, Bloque }, i) => (
                 <div
                   key={id}
-                  className="tarjeta-entrada flex [&>*]:flex-1"
+                  className="tarjeta-entrada mb-5 break-inside-avoid"
                   style={{ '--i': i + 1 } as React.CSSProperties}
                 >
-                  <Suspense fallback={<EsqueletoBloque modulo={id} className="flex-1" />}>
+                  <Suspense fallback={<EsqueletoBloque modulo={id} />}>
                     <Bloque />
                   </Suspense>
                 </div>

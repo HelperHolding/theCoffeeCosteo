@@ -32,7 +32,7 @@ export function VistaModulos({ seccion }: { seccion: 'inicio' | 'crm' }) {
           />
           <div className="space-y-5">
             {visibles.includes('sucursales') && <MexicoResumen />}
-            <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="columns-1 gap-5 md:columns-2 2xl:columns-3 [&>*]:mb-5 [&>*]:break-inside-avoid">
               {visibles.includes('bi') && <VistaBi d={BI} />}
               {visibles.includes('costeo') && <VistaCosteo d={COSTEO} />}
               {visibles.includes('crm') && <VistaCrm d={CRM} />}
@@ -112,20 +112,20 @@ const COM = {
   ],
   ov: { semana: '2026-11-23', tiendas: 12, errores: 0, piezas: 4_382, montoCent: 386_540_00 },
 };
+const seccionesDe = (a: number, d: number, m: number, c: number, noes = 0) => [
+  { clave: 'apertura' as const, nombre: 'Apertura', avance: a, estado: 'en-curso', noes },
+  { clave: 'durante' as const, nombre: 'Durante la operación', avance: d, estado: 'en-curso', noes: 0 },
+  { clave: 'medio' as const, nombre: 'Medio turno', avance: m, estado: 'pendiente', noes: 0 },
+  { clave: 'cierre' as const, nombre: 'Fin de turno', avance: c, estado: 'pendiente', noes: 0 },
+];
 const FRANQ = {
   dia: '2026-11-23',
-  mas: 0,
+  mas: 78,
   sucursales: [
-    {
-      companyId: 514,
-      nombre: 'Essentia',
-      incidencias: 1,
-      secciones: [
-        { clave: 'apertura' as const, nombre: 'Apertura', avance: 1, estado: 'completa', noes: 1 },
-        { clave: 'durante' as const, nombre: 'Durante', avance: 0.6, estado: 'en-curso', noes: 0 },
-        { clave: 'medio' as const, nombre: 'Medio turno', avance: 0.3, estado: 'en-curso', noes: 0 },
-        { clave: 'cierre' as const, nombre: 'Cierre', avance: 0, estado: 'pendiente', noes: 0 },
-      ],
-    },
+    { companyId: 514, nombre: 'Essentia', incidencias: 1, secciones: seccionesDe(1, 0.6, 0.3, 0, 1) },
+    { companyId: 612, nombre: 'Cd. Juárez', incidencias: 0, secciones: seccionesDe(1, 0.8, 0.5, 0) },
+    { companyId: 384, nombre: 'Bonampak', incidencias: 0, secciones: seccionesDe(0.4, 0, 0, 0) },
+    { companyId: 513, nombre: 'Rubén Darío', incidencias: 0, secciones: seccionesDe(0, 0, 0, 0) },
+    { companyId: 532, nombre: 'Ventura', incidencias: 0, secciones: seccionesDe(1, 1, 1, 0.2) },
   ],
 };

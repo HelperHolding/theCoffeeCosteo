@@ -1,0 +1,17 @@
+/*
+ * Luz del módulo en las tarjetas de Inicio: un resplandor radial que sube desde abajo, del color del módulo (--tono),
+ * con varias paradas suaves para que se lea como iluminación y no como franjas. Sin borde de color (pedido de Carlos).
+ */
+.luz-modulo {
+  background-color: var(--color-surface);
+  background-image: radial-gradient(
+    135% 85% at 50% 118%,
+    color-mix(in oklab, var(--tono) 30%, transparent) 0%,
+    color-mix(in oklab, var(--tono) 24%, transparent) 14%,
+    color-mix(in oklab, var(--tono) 17%, transparent) 28%,
+    color-mix(in oklab, var(--tono) 11%, transparent) 42%,
+    color-mix(in oklab, var(--tono) 6%, transparent) 56%,
+    color-mix(in oklab, var(--tono) 2.5%, transparent) 70%,
+    transparent 84%
+  );
+}
