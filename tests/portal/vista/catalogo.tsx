@@ -1,6 +1,7 @@
 import { CatalogoRecetas } from '../../../components/recetas/catalogo';
 import { Navegacion } from '../../../components/portal/navegacion';
 import { Marca } from '../../../components/portal/marca';
+import { fotoDeCodigos } from '../../../lib/portal/fotos-pos';
 const nombres = [
   'Açaí Bowl',
   'Acai Cup',
@@ -13,6 +14,13 @@ const nombres = [
   'Apple and Cinnamon Muffin',
   'Banana Cake',
 ];
+// Códigos reales del menú del POS para los nombres de muestra (los demás quedan sin código ni foto).
+const codigos: Record<string, string[]> = {
+  'Açaí Bowl': ['ACABOWAPP'],
+  'Almond Croissant': ['ALMCROAPP'],
+  Americano: ['2AM', '2AMEAPP'],
+  'Banana Cake': ['CAKBANAPP'],
+};
 // Margen Rappi de muestra, variado: en objetivo (≥ 50 %), bajo objetivo y con pérdida.
 const margen = (i: number, ajuste = 0) => {
   const pct = i === 5 ? -0.04 : ((i * 17 + ajuste) % 45) / 100 + 0.22;
@@ -43,6 +51,8 @@ export function VistaCatalogo() {
             id: String(i),
             nombre: `${nombres[i % nombres.length]}${i >= 10 ? ` · prueba ${i}` : ''}`,
             activo: i !== 8,
+            codigos: codigos[nombres[i % nombres.length]],
+            foto: fotoDeCodigos(codigos[nombres[i % nombres.length]] ?? [])?.src,
             categoria: i % 2 ? 'Bebidas calientes' : 'Bakery',
             precios:
               i % 3 === 0

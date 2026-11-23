@@ -4,15 +4,20 @@ import { puede } from '@/lib/portal/permisos';
 import { APP_PROPIA, FUSIONADO, MOSTRADOR, fusionarCanales } from '@/lib/portal/canales';
 import { veMargenRappiEnTabla } from '@/lib/portal/vistas';
 import { estadoMargen } from '@/components/portal/piezas';
+import { fotoDeCodigos } from '@/lib/portal/fotos-pos';
 import { CatalogoRecetas, type PreciosTamano } from './catalogo';
 export async function ListaRecetas({ tipo, q = '' }: { tipo: 'producto' | 'subreceta'; q?: string }) {
   const { db, perfil } = await sesion();
-  const [recetas, categorias, resumen, canales] = await Promise.all([
+  const [recetas, categorias, resumen, canales, enlaces] = await Promise.all([
     todas(db, 'recetas', 'nombre,id'),
     todas(db, 'categorias_producto', 'id'),
     tipo === 'producto' ? todas(db, 'v_resumen', 'producto_id,tamano_id,canal_id') : [],
     tipo === 'producto' ? todas(db, 'canales', 'orden,id') : [],
+    tipo === 'producto' ? todas(db, 'producto_codigo_pos', 'codigo') : [],
   ]);
+  // Códigos del POS de cada receta (producto_codigo_pos): se muestran, se buscan y eligen la foto.
+  const codigos = new Map<string, string[]>();
+  for (const e of enlaces) codigos.set(e.receta_id, [...(codigos.get(e.receta_id) ?? []), e.codigo]);
   const nombres = new Map(categorias.map((c) => [c.id, c.nombre]));
   // Costo y precio final por canal de cada tamaño, tal como los calcula v_resumen. Mostrador y App propia
   // comparten la columna "App propia/Mostrador"; si su precio difiere, la celda muestra ambos.
@@ -61,6 +66,8 @@ export async function ListaRecetas({ tipo, q = '' }: { tipo: 'producto' | 'subre
       categoria: categoria_id ? nombres.get(categoria_id) : undefined,
       detalle: rendimiento ? `${rendimiento} ${unidad_rendimiento}` : undefined,
       precios: tipo === 'producto' ? [...(precios.get(id)?.values() ?? [])] : undefined,
+      codigos: tipo === 'producto' ? (codigos.get(id) ?? []) : undefined,
+      foto: tipo === 'producto' ? (fotoDeCodigos(codigos.get(id) ?? [])?.src ?? undefined) : undefined,
     }));
   return (
     <CatalogoRecetas

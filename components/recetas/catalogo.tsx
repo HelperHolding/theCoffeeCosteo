@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowUpRight, Search, Plus, Coffee, Calculator } from 'lucide-react';
+import { ArrowUpRight, Search, Plus, Coffee, Calculator, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Encabezado, Pill, textoEstado } from '@/components/portal/piezas';
 import {
@@ -30,6 +30,10 @@ export type RecetaCatalogo = {
   categoria?: string;
   detalle?: string;
   precios?: PreciosTamano[];
+  /** Códigos del POS ligados a la receta (producto_codigo_pos). */
+  codigos?: string[];
+  /** Foto del menú del POS, por código (lib/portal/fotos-pos.ts). */
+  foto?: string;
 };
 const texto = (tipo: 'producto' | 'subreceta', s: string) => (tipo === 'producto' ? mayusculas(s) : s);
 function PorTamano({
@@ -83,6 +87,52 @@ function MargenPorTamano({ precios }: { precios: PreciosTamano[] }) {
     </ul>
   );
 }
+const textoPrecio = (valor: PrecioCanal) =>
+  Array.isArray(valor)
+    ? valor.map((v) => `${v.nombre} ${v.precio ?? ''}`.trim()).join(' / ')
+    : valor === null
+      ? ''
+      : String(valor);
+const celdaCsv = (v: string | number) => {
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+/**
+ * Cruce para Finanzas e IT: un renglón por producto y tamaño con su código del POS, costo y precio por canal, para
+ * compararlo por código contra el menú del POS. Se arma en el navegador con lo que ya muestra la tabla.
+ */
+function descargarCruce(filas: RecetaCatalogo[], canales: { id: string; nombre: string }[]) {
+  const encabezado = [
+    'Código POS',
+    'Producto',
+    'Categoría',
+    'Estado',
+    'Tamaño',
+    'Costo',
+    ...canales.map((c) => c.nombre),
+  ];
+  const renglones = filas.flatMap((r) => {
+    const base = [(r.codigos ?? []).join(' '), r.nombre, r.categoria ?? '', r.activo ? 'Activo' : 'Inactivo'];
+    const precios = r.precios ?? [];
+    if (!precios.length) return [[...base, '', '', ...canales.map(() => '')]];
+    return precios.map((p) => [
+      ...base,
+      p.tamano,
+      p.costo === null ? '' : String(p.costo),
+      ...canales.map((c) => textoPrecio(p.canales[c.id] ?? null)),
+    ]);
+  });
+  const csv = [encabezado, ...renglones].map((fila) => fila.map(celdaCsv).join(',')).join('\r\n');
+  // BOM para que Excel abra los acentos bien.
+  const url = URL.createObjectURL(
+    new Blob([String.fromCharCode(0xfeff) + csv], { type: 'text/csv;charset=utf-8' }),
+  );
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cruce-productos-pos-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 function Precio({ valor }: { valor: PrecioCanal }) {
   if (!Array.isArray(valor)) return <span className="tabular">{valor === null ? '—' : dinero(valor)}</span>;
   return (
@@ -120,10 +170,12 @@ export function CatalogoRecetas({
   const [filtroMargen, setFiltroMargen] = useState<FiltroMargen>('todos');
   const [ordenMargen, setOrdenMargen] = useState<OrdenMargen>('nombre');
   const ruta = tipo === 'producto' ? '/productos' : '/subrecetas';
+  const consultaNormal = buscar.trim().toLocaleLowerCase('es');
   const filtradas = ordenarPorMargen(
     filas.filter(
       (r) =>
-        r.nombre.toLocaleLowerCase('es').includes(buscar.trim().toLocaleLowerCase('es')) &&
+        (r.nombre.toLocaleLowerCase('es').includes(consultaNormal) ||
+          (r.codigos ?? []).some((c) => c.toLocaleLowerCase('es').includes(consultaNormal))) &&
         (estado === 'todos' || r.activo === (estado === 'activos')) &&
         (!margenRappi || cumpleFiltro(r, filtroMargen)),
     ),
@@ -143,6 +195,12 @@ export function CatalogoRecetas({
             : 'Organiza las preparaciones que comparten tus productos.'
         }
       >
+        {conPrecios && (
+          <Button variant="outline" size="lg" onClick={() => descargarCruce(filas, canales)}>
+            <Download aria-hidden="true" />
+            Descargar cruce
+          </Button>
+        )}
         {tipo === 'producto' && (
           <Button asChild variant="outline" size="lg">
             <Link href="/productos/calculadora">
@@ -173,7 +231,7 @@ export function CatalogoRecetas({
         >
           <div className={margenRappi ? 'sm:col-span-3 xl:col-span-1' : 'flex-1'}>
             <label htmlFor="buscar-recetas" className="sr-only">
-              Buscar por nombre
+              {tipo === 'producto' ? 'Buscar por nombre o código del POS' : 'Buscar por nombre'}
             </label>
             <div className="relative">
               <Search
@@ -185,7 +243,7 @@ export function CatalogoRecetas({
                 id="buscar-recetas"
                 type="search"
                 value={buscar}
-                placeholder="Buscar por nombre…"
+                placeholder={tipo === 'producto' ? 'Buscar por nombre o código…' : 'Buscar por nombre…'}
                 className="!pl-10"
                 onChange={(e) => {
                   setBuscar(e.target.value);
@@ -266,6 +324,11 @@ export function CatalogoRecetas({
             <thead>
               <tr>
                 <th scope="col">Nombre</th>
+                {tipo === 'producto' && (
+                  <th scope="col" className="hidden sm:table-cell">
+                    Código POS
+                  </th>
+                )}
                 <th scope="col" className="hidden md:table-cell">
                   {tipo === 'producto' ? 'Categoría' : 'Rendimiento'}
                 </th>
@@ -302,12 +365,40 @@ export function CatalogoRecetas({
                       href={`${ruta}/${r.id}`}
                       className="inline-flex items-center gap-3 font-medium hover:underline"
                     >
-                      <span className="hidden sm:grid size-8 shrink-0 place-items-center bg-crema-soft rounded-lg text-crema-strong">
-                        <Coffee size={16} aria-hidden="true" />
-                      </span>
+                      {r.foto ? (
+                        // Foto del menú del POS por código; decorativa: el nombre va al lado.
+                        <img
+                          src={r.foto}
+                          alt=""
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          decoding="async"
+                          className="hidden sm:block size-10 shrink-0 rounded-lg border border-line bg-crema-soft object-cover"
+                        />
+                      ) : (
+                        <span className="hidden sm:grid size-10 shrink-0 place-items-center bg-crema-soft rounded-lg text-crema-strong">
+                          <Coffee size={16} aria-hidden="true" />
+                        </span>
+                      )}
                       {texto(tipo, r.nombre)}
                     </Link>
                   </td>
+                  {tipo === 'producto' && (
+                    <td className="hidden sm:table-cell text-xs tabular text-ink-2">
+                      {r.codigos?.length ? (
+                        <span className="flex flex-col gap-0.5">
+                          {r.codigos.map((c) => (
+                            <span key={c} className="font-mono">
+                              {c}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="hidden md:table-cell text-ink-2">
                     {r.categoria ? texto(tipo, r.categoria) : (r.detalle ?? '—')}
                   </td>
@@ -357,7 +448,9 @@ export function CatalogoRecetas({
           <div className="text-center py-14 px-5">
             <p className="font-semibold">No hay resultados</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Prueba otro nombre o cambia el filtro de estado.
+              {tipo === 'producto'
+                ? 'Prueba otro nombre o código, o cambia el filtro de estado.'
+                : 'Prueba otro nombre o cambia el filtro de estado.'}
             </p>
           </div>
         )}

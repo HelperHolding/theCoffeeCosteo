@@ -5,6 +5,7 @@ import { todas, dinero, porcentaje } from '@/lib/portal/consultas';
 import { fusionarCanales } from '@/lib/portal/canales';
 import { cargarEditor } from '@/lib/portal/recetas';
 import { dependientes } from '@/lib/portal/dependencias';
+import { fotoDeCodigos } from '@/lib/portal/fotos-pos';
 import { puede } from '@/lib/portal/permisos';
 import { EditorReceta } from './editor-receta';
 import { AvisoComision } from '@/components/portal/aviso-comision';
@@ -25,7 +26,7 @@ export async function Ficha({
   const { db, perfil } = await sesion();
   const editor = await cargarEditor(db, tipo, id);
   if (!editor) notFound();
-  const [resumen, historial, canales, manuales, usuarios] = await Promise.all([
+  const [resumen, historial, canales, manuales, usuarios, enlaces] = await Promise.all([
     id && tipo === 'producto'
       ? todas(db, 'v_resumen', 'producto_id,tamano_id,canal_id', { producto_id: id })
       : [],
@@ -37,7 +38,11 @@ export async function Ficha({
       ? todas(db, 'precio_canal_manual', 'producto_id,tamano_id,canal_id', { producto_id: id })
       : [],
     todas(db, 'perfiles', 'user_id'),
+    id && tipo === 'producto' ? todas(db, 'producto_codigo_pos', 'codigo', { receta_id: id }) : [],
   ]);
+  // Códigos del POS de este producto y su foto del menú del POS (por código, nunca por nombre).
+  const codigosPos = enlaces.map((e) => e.codigo);
+  const foto = fotoDeCodigos(codigosPos);
   if (historial.error) throw new Error('No se pudo consultar el historial');
   const filas = resumen
     .filter((r) => r.producto_id === id)
@@ -221,6 +226,43 @@ export async function Ficha({
         </Pill>
       </Encabezado>
       <AvisoComision pendiente={canales.some((c) => !c.comision_confirmada)} />
+      {tipo === 'producto' && (
+        <section
+          aria-label="Foto y código del POS"
+          className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 shadow-card"
+        >
+          {foto ? (
+            <img
+              src={foto.src}
+              alt={`Foto de ${editor.borrador.nombre} en el menú del POS`}
+              width={112}
+              height={112}
+              className="size-28 shrink-0 rounded-xl border border-line bg-crema-soft object-cover"
+            />
+          ) : (
+            <span className="grid size-28 shrink-0 place-items-center rounded-xl bg-crema-soft text-crema-strong">
+              <Coffee size={28} aria-hidden="true" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm text-ink-2">Código del POS</p>
+            {codigosPos.length ? (
+              <p className="mt-1 flex flex-wrap gap-2">
+                {codigosPos.map((c) => (
+                  <Insignia key={c} className="font-mono">
+                    {c}
+                  </Insignia>
+                ))}
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Sin código del POS ligado.</p>
+            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {foto ? 'Foto del menú del POS (MEX - A).' : 'Sin foto: el menú del POS no trae este código.'}
+            </p>
+          </div>
+        </section>
+      )}
       {mostrador && (
         <div className="grid gap-4 sm:grid-cols-3">
           {(
