@@ -88,11 +88,11 @@ const responder = async (i: number, cuerpo: unknown, status = 200) => {
   await act(async () => pendientes[i].resolver(Response.json(cuerpo, { status })));
 };
 
-it('la navegación de Sucursales muestra su directorio y el regreso a los otros módulos', () => {
+it('la navegación de Sucursales muestra su directorio y los módulos, con Sucursales activo', () => {
   render(<Navegacion seccion="sucursales" visibles={['costeo', 'crm', 'sucursales']} />);
   expect(screen.getByRole('link', { name: 'Directorio' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'CRM Franquicias' })).toHaveAttribute('href', '/crm');
-  expect(screen.queryByRole('link', { name: 'Sucursales' })).toBeNull();
+  expect(screen.getByRole('link', { name: 'Sucursales' })).toHaveAttribute('aria-current', 'page');
   expect(screen.queryByRole('link', { name: 'Insumos' })).toBeNull();
 });
 

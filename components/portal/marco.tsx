@@ -36,7 +36,7 @@ const textos: Record<Seccion, { marca: [string, string]; buscar: string; registr
     buscar: 'Buscar pantalla…',
     registros: 'Registros',
   },
-  inicio: { marca: ['Inicio', 'módulos'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
+  inicio: { marca: ['Inicio', 'resumen'], buscar: 'Buscar módulo o pantalla…', registros: 'Registros' },
   costeo: {
     marca: ['Costeo', 'recetas'],
     buscar: 'Buscar producto, insumo o pantalla…',
