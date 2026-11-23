@@ -71,6 +71,30 @@ describe('inventario (port de renderComInventario)', () => {
       filasInventario({ ...d, catalogo: [cat({ zoho_sync_at: null, saldo_cedis: 7 }) as never] })[0],
     ).toMatchObject({ fisico: 7, contable: null });
   });
+  it('en camino: pendiente de OCs abiertas (borradores sí), sin cerradas, recibidas ni marcador, con sus folios', () => {
+    const lineas = [
+      { sku: 'EQ-DEL-001', status: 'open', cantidad: 8, cantidad_recibida: 8, po_number: 'COM-OC-01325' },
+      { sku: 'EQ-DEL-001', status: 'open', cantidad: 25, cantidad_recibida: 0, po_number: 'COM-OC-01342' },
+      { sku: 'EQ-DEL-001', status: 'Closed', cantidad: 10, cantidad_recibida: 0, po_number: 'COM-OC-01200' },
+      { sku: 'EQ-DEL-001', status: 'void', cantidad: 4, cantidad_recibida: 0, po_number: 'COM-OC-01201' },
+      { sku: 'B', status: 'draft', cantidad: 6, cantidad_recibida: 1, po_number: 'COM-OC-01350' },
+      { sku: 'B', status: 'billed', cantidad: 3, cantidad_recibida: 0, po_number: 'COM-OC-01343' },
+      { sku: 'B', status: 'open', cantidad: 2, cantidad_recibida: 0, po_number: 'COM-OC-01343' },
+      { sku: '(sin-sku)', status: 'open', cantidad: 5, cantidad_recibida: 0, po_number: 'COM-OC-01342' },
+    ];
+    const filas = filasInventario({
+      catalogo: [cat({ sku: 'EQ-DEL-001' }), cat({ sku: 'B' }), cat({ sku: 'C' })] as never,
+      minmax: [],
+      ventas: [],
+      lineas,
+      yulius: true,
+    });
+    expect(filas.map((f) => [f.sku, f.camino, f.ocsCamino])).toEqual([
+      ['EQ-DEL-001', 25, 'COM-OC-01342'],
+      ['B', 10, 'COM-OC-01343, COM-OC-01350'],
+      ['C', 0, ''],
+    ]);
+  });
   it('valor del inventario: CEDIS + 3PL siempre, solo activos con costo; cuenta los que tienen stock sin costo', () => {
     expect(
       valorInventario([

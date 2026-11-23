@@ -45,7 +45,7 @@ export default async function InventarioPagina() {
     leerTodoCom<LineaOcZoho & { zoho_po_id: string }>(
       db,
       'com_zoho_oc_lineas',
-      'zoho_po_id,sku,status,cantidad,cantidad_recibida',
+      'zoho_po_id,po_number,sku,status,cantidad,cantidad_recibida',
       'zoho_po_id',
       (q) => q.order('sku'),
     ),

@@ -1,6 +1,6 @@
 import { difDias } from './fechas';
 import { serieDiaria, type PedidoPlan } from '../../supabase/functions/_shared/planEngine.ts';
-import { enCamino, saldoCedis } from './quepedir';
+import { enCamino, ocsEnCamino, saldoCedis } from './quepedir';
 import type { ArticuloCatalogo, LineaOcZoho } from './tipos';
 
 const n = (x: unknown) => Number(x) || 0;
@@ -36,6 +36,8 @@ export interface FilaInventario {
   comprometido: number;
   disponible: number;
   camino: number;
+  /** Folios de las OCs abiertas de Zoho que traen lo en camino, separados por coma ('' si no hay). */
+  ocsCamino: string;
   minimo: number | null;
   maximo: number | null;
   minManual: boolean;
@@ -72,6 +74,7 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
   const mm = new Map(d.minmax.map((m) => [m.sku, m]));
   const comp = comprometido(d.ventas);
   const cam = enCamino(d.lineas);
+  const ocs = ocsEnCamino(d.lineas);
   return d.catalogo.map((c) => {
     const m = mm.get(c.sku) ?? null;
     const fisico = saldoCedis(c);
@@ -89,6 +92,7 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
       comprometido: n(comp[c.sku]),
       disponible,
       camino,
+      ocsCamino: (ocs[c.sku] ?? []).join(', '),
       minimo: m?.minimo ?? null,
       maximo: m?.maximo ?? null,
       minManual: m?.minimo_manual != null,
