@@ -286,78 +286,75 @@ export function VistaComercializadora({ d }: { d: ResumenComercializadora }) {
 
 // ── Franquiciatarios ─────────────────────────────────────────────────────────────────────────────────────────
 const COLOR_SECCION: Record<string, string> = {
-  apertura: 'text-apertura',
-  durante: 'text-durante',
-  cambio: 'text-cambio',
-  medio: 'text-cambio',
-  cierre: 'text-cierre',
+  apertura: 'bg-apertura',
+  durante: 'bg-durante',
+  cambio: 'bg-cambio',
+  medio: 'bg-cambio',
+  cierre: 'bg-cierre',
+};
+const CORTO: Record<string, string> = {
+  apertura: 'Apertura',
+  durante: 'Durante',
+  cambio: 'Medio',
+  medio: 'Medio',
+  cierre: 'Cierre',
 };
 
-function Anillo({ avance, clase, etiqueta }: { avance: number; clase: string; etiqueta: string }) {
-  const r = 15;
-  const c = 2 * Math.PI * r;
-  return (
-    <span className="flex flex-col items-center gap-1">
-      <svg
-        viewBox="0 0 36 36"
-        className={cn('size-11 -rotate-90', clase)}
-        role="img"
-        aria-label={`${etiqueta}: ${pct(avance)}`}
-      >
-        <circle
-          cx="18"
-          cy="18"
-          r={r}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity={0.18}
-          strokeWidth="4"
-        />
-        <circle
-          cx="18"
-          cy="18"
-          r={r}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray={`${avance * c} ${c}`}
-        />
-      </svg>
-      <span className="text-[10px] font-semibold text-ink-2">{etiqueta}</span>
-    </span>
-  );
-}
-
+/** Una fila por sucursal: avance de cada sección del checklist de hoy en barras finas de su color. */
 export function VistaFranquiciatarios({ d }: { d: ResumenFranquicia }) {
   const noes = d.sucursales.reduce((a, s) => a + s.secciones.reduce((x, y) => x + y.noes, 0), 0);
   const incid = d.sucursales.reduce((a, s) => a + s.incidencias, 0);
+  const conAvance = d.sucursales.filter((s) => s.secciones.some((x) => x.avance > 0)).length;
+  const secciones = d.sucursales[0]?.secciones ?? [];
   return (
     <Bloque modulo="franquiciatarios" subtitulo={`Checklists de hoy · ${fecha(d.dia)}`}>
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Mini valor={num(noes)} etiqueta="respuestas «No» hoy" tono={noes ? 'bad' : 'ok'} />
+      <div className="mb-4 grid grid-cols-3 gap-2">
+        <Mini valor={`${conAvance}/${d.sucursales.length}`} etiqueta="sucursales con avance" />
+        <Mini valor={num(noes)} etiqueta="respuestas «No»" tono={noes ? 'bad' : 'ok'} />
         <Mini valor={num(incid)} etiqueta="incidencias" tono={incid ? 'warn' : 'ok'} />
       </div>
-      <ul className="space-y-3">
+      {secciones.length > 0 && (
+        <div className="mb-1.5 grid grid-cols-[minmax(0,7rem)_repeat(4,minmax(0,1fr))] gap-2 text-[10px] font-semibold text-ink-2">
+          <span />
+          {secciones.slice(0, 4).map((x) => (
+            <span key={x.clave} className="flex items-center gap-1">
+              <span aria-hidden="true" className={cn('size-1.5 rounded-full', COLOR_SECCION[x.clave])} />
+              {CORTO[x.clave] ?? x.nombre}
+            </span>
+          ))}
+        </div>
+      )}
+      <ul className="divide-y divide-line/60">
         {d.sucursales.map((s) => (
-          <li key={s.companyId} className="rounded-2xl border border-line bg-surface/80 p-3">
-            <Link href={`/franquiciatarios/${s.companyId}`} className="text-sm font-semibold hover:underline">
+          <li
+            key={s.companyId}
+            className="grid grid-cols-[minmax(0,7rem)_repeat(4,minmax(0,1fr))] items-center gap-2 py-2"
+          >
+            <Link
+              href={`/franquiciatarios/${s.companyId}`}
+              className="truncate text-sm font-semibold hover:underline"
+            >
               {s.nombre}
             </Link>
-            <div className="mt-2 flex flex-wrap gap-3">
-              {s.secciones.map((x) => (
-                <Anillo
-                  key={x.clave}
-                  avance={x.avance}
-                  clase={COLOR_SECCION[x.clave] ?? 'text-ink'}
-                  etiqueta={x.nombre}
+            {s.secciones.slice(0, 4).map((x) => (
+              <span
+                key={x.clave}
+                className="h-2 rounded-full bg-ink/10"
+                role="img"
+                aria-label={`${s.nombre}, ${x.nombre}: ${pct(x.avance)}`}
+              >
+                <span
+                  className={cn('block h-full rounded-full', COLOR_SECCION[x.clave])}
+                  style={{ width: `${Math.max(x.avance > 0 ? 6 : 0, x.avance * 100)}%` }}
                 />
-              ))}
-            </div>
+              </span>
+            ))}
           </li>
         ))}
       </ul>
-      {d.mas > 0 && <p className="mt-2 text-xs text-ink-2">Y {d.mas} sucursales más en el módulo.</p>}
+      {d.mas > 0 && (
+        <p className="mt-2 text-xs text-ink-2">Y {d.mas} sucursales más: ábrelas en el módulo.</p>
+      )}
     </Bloque>
   );
 }

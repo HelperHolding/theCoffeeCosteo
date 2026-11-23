@@ -99,7 +99,7 @@ describe('bloques de Inicio', () => {
     );
     expect(screen.getByText('hoy')).toBeInTheDocument();
     expect(screen.getByText('Sin proyección calculada')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Apertura: 50 %' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Essentia, Apertura: 50 %' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Essentia' })).toHaveAttribute('href', '/franquiciatarios/514');
     const hrefs = screen.getAllByRole('link', { name: /Abrir/ }).map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual(['/crm', '/comercializadora', '/franquiciatarios']);

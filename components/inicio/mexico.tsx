@@ -12,6 +12,7 @@ import { useLectura } from '@/components/sucursales/use-lectura';
 import { dinero, numero } from '@/components/sucursales/formato';
 import { ESTILO_MODULO } from '@/components/portal/modulos-ui';
 import { FalloBloque } from './bloque';
+import './inicio.css';
 
 const MXN = 'MXN';
 
@@ -33,7 +34,8 @@ export function MexicoResumen({ datosIniciales }: { datosIniciales?: TableroMexi
   return (
     <section
       aria-label="Tablero México"
-      className={cn('relative overflow-hidden rounded-3xl p-5 shadow-card sm:p-6', e.brillo)}
+      className="luz-modulo relative overflow-hidden rounded-3xl p-5 shadow-card sm:p-6"
+      style={{ '--tono': e.tono } as React.CSSProperties}
     >
       <header className="mb-5 flex flex-wrap items-center gap-3">
         <span className={cn('grid size-10 place-items-center rounded-2xl text-primary-foreground', e.marca)}>
@@ -135,7 +137,7 @@ export function MexicoResumen({ datosIniciales }: { datosIniciales?: TableroMexi
           </div>
 
           {/* 2. La curva del día contra la semana pasada */}
-          <div className="min-w-0 rounded-2xl border border-line bg-surface/80 p-3">
+          <div className="min-w-0 rounded-2xl border border-line/60 bg-surface/35 p-3">
             <p className="mb-1 text-xs font-semibold text-ink-2">Venta acumulada · hoy vs {v.dia}</p>
             <CurvaHoy
               hoy={v.ventaTramo}
@@ -201,7 +203,7 @@ export function MexicoResumen({ datosIniciales }: { datosIniciales?: TableroMexi
 
 function Dato({ valor, etiqueta }: { valor: string; etiqueta: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface/80 px-3 py-2">
+    <div className="rounded-2xl border border-line/60 bg-surface/35 px-3 py-2">
       <p className="font-display text-base leading-tight font-black tabular">{valor}</p>
       <p className="text-[11px] text-ink-2">{etiqueta}</p>
     </div>
