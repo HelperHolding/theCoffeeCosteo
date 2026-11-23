@@ -7,7 +7,7 @@
 -- 1. Descuento que se resta de la venta. Sin detalle (descuento_aliado nulo) es 0: la venta queda en el bruto.
 --    Un premio con value vacío o no numérico se ignora (no truena la lectura).
 --    Ofertas repetidas en `descuentos`: manda descuento_aliado (la suma del portal). Nunca negativo ni mayor que el bruto.
-create function public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric
+create or replace function public.rappi_descuento_venta(p public.rappi_pedidos) returns numeric
 language sql stable set search_path = public, pg_temp as $$
   select least(p.bruto, greatest(coalesce(p.descuento_aliado, 0) - coalesce((
     select sum(case
