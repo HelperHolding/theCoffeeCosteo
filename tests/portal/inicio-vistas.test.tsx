@@ -18,7 +18,7 @@ describe('bloques de Inicio', () => {
           desde: '2026-11-01',
           hasta: '2026-11-23',
           tiendas: 79,
-          mes: { ventaCent: 110_000_00, tickets: 1000, ticketCent: 11_000, upt: 1.4 },
+          actual: { ventaCent: 110_000_00, tickets: 1000, ticketCent: 11_000, upt: 1.4 },
           anterior: { ventaCent: 100_000_00, tickets: 950, ticketCent: 10_526, upt: 1.38 },
         }}
       />,
@@ -26,7 +26,7 @@ describe('bloques de Inicio', () => {
     const b = screen.getByRole('region', { name: 'BI' });
     expect(within(b).getAllByText('$110,000').length).toBeGreaterThan(0);
     expect(within(b).getByText(/10\.0 %/)).toBeInTheDocument();
-    expect(within(b).getByRole('img', { name: /mes anterior/ })).toBeInTheDocument();
+    expect(within(b).getByRole('img', { name: /semana anterior/ })).toBeInTheDocument();
     expect(within(b).getByRole('link', { name: /Abrir/ })).toHaveAttribute('href', '/bi');
   });
 
@@ -37,13 +37,13 @@ describe('bloques de Inicio', () => {
           desde: '2026-11-01',
           hasta: '2026-11-23',
           tiendas: 3,
-          mes: { ventaCent: 5_000_00, tickets: 10, ticketCent: 50_000, upt: null },
+          actual: { ventaCent: 5_000_00, tickets: 10, ticketCent: 50_000, upt: null },
           anterior: null,
         }}
       />,
     );
     expect(screen.getByText(/sin base completa/)).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: /mes anterior/ })).toBeNull();
+    expect(screen.queryByRole('img', { name: /semana anterior/ })).toBeNull();
   });
 
   it('Costeo: food cost, salud del menú y los productos con menor margen', () => {

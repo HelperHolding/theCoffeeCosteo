@@ -127,8 +127,9 @@ export interface ResumenBi {
   desde: string;
   hasta: string;
   tiendas: number;
-  mes: Kpis;
-  /** Mismos días del mes anterior (recortado a la hora del corte si el mes llega a hoy). null sin carga completa. */
+  /** Esta semana (lunes a hoy), como abre el tablero de BI. */
+  actual: Kpis;
+  /** Mismo tramo de la semana anterior (recortado a la hora del corte, como el BI). null sin carga completa o si falló. */
   anterior: Kpis | null;
 }
 const kpisDe = (k: RpcKpis['kpis']): Kpis => ({
@@ -143,7 +144,9 @@ export async function resumenBi(): Promise<Lectura<ResumenBi>> {
     const a = await accesoBi();
     if (!a.ok) return { ok: false, error: a.mensaje };
     const hoy = hoyMexico(new Date());
-    const f = { ...leerUrl(new URLSearchParams()), fr: 'este-mes' };
+    // Esta semana, como abre el tablero de BI: el mes completo de toda la red pasa del tiempo límite de la base para
+    // un usuario (bi_kpis > 8 s, medido el 2026-11-23) y el bloque fallaba a veces.
+    const f = { ...leerUrl(new URLSearchParams()), fr: 'esta-semana' };
     const p = resolverPeriodo(f, hoy);
     if (!p.ok) return { ok: false, error: p.error };
     const actual = { desde: p.desde, hasta: p.hasta };
@@ -157,28 +160,30 @@ export async function resumenBi(): Promise<Lectura<ResumenBi>> {
         datos: {
           ...actual,
           tiendas: 0,
-          mes: { ventaCent: 0, tickets: 0, ticketCent: null, upt: null },
+          actual: { ventaCent: 0, tickets: 0, ticketCent: null, upt: null },
           anterior: null,
         },
       };
-    const previo = periodoAnterior('este-mes', actual);
-    const [k, kp] = await Promise.all([
-      a.db.rpc('bi_kpis', { p: aJsonRpc(aFiltrosBi(f, actual, companias, hoy)) as Json, p_hora_corte: null }),
-      a.db.rpc('bi_kpis', {
-        p: aJsonRpc(aFiltrosBi(f, previo, companias, hoy)) as Json,
-        p_hora_corte: horaCorte(opciones.ultimo_corte, actual.hasta, hoy),
-      }),
-    ]);
+    // Una después de la otra (juntas compiten por la base) y la comparación es opcional: si falla, se muestra la semana.
+    const k = await a.db.rpc('bi_kpis', {
+      p: aJsonRpc(aFiltrosBi(f, actual, companias, hoy)) as Json,
+      p_hora_corte: null,
+    });
     if (k.error || !k.data) throw k.error ?? new Error('sin kpis');
     const r = k.data as unknown as RpcKpis;
-    const rp = kp.data as unknown as RpcKpis | null;
+    const previo = periodoAnterior('esta-semana', actual);
+    const kp = await a.db.rpc('bi_kpis', {
+      p: aJsonRpc(aFiltrosBi(f, previo, companias, hoy)) as Json,
+      p_hora_corte: horaCorte(opciones.ultimo_corte, actual.hasta, hoy),
+    });
+    const rp = kp.error ? null : (kp.data as unknown as RpcKpis | null);
     const completa = rp?.cargas && rp.cargas.con_carga >= rp.cargas.esperados && rp.cargas.incompletos === 0;
     return {
       ok: true,
       datos: {
         ...actual,
         tiendas: companias.length,
-        mes: kpisDe(r.kpis),
+        actual: kpisDe(r.kpis),
         anterior: completa && rp?.kpis ? kpisDe(rp.kpis) : null,
       },
     };

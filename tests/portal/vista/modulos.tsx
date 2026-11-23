@@ -63,7 +63,7 @@ const BI = {
   desde: '2026-11-01',
   hasta: '2026-11-23',
   tiendas: 79,
-  mes: { ventaCent: 1_184_532_40_0, tickets: 98_214, ticketCent: 12_061, upt: 1.42 },
+  actual: { ventaCent: 1_184_532_40_0, tickets: 98_214, ticketCent: 12_061, upt: 1.42 },
   anterior: { ventaCent: 1_102_118_00_0, tickets: 95_870, ticketCent: 11_496, upt: 1.4 },
 };
 const COSTEO = {
