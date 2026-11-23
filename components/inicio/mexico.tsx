@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, MapPinned } from 'lucide-react';
 import { cn } from 'cn';
@@ -29,6 +29,14 @@ export function MexicoResumen({ datosIniciales }: { datosIniciales?: TableroMexi
     },
   );
   const d = datosIniciales ?? datos;
+  // La primera lectura del día puede pasar del tiempo límite (la base calcula en frío): se reintenta una vez sola.
+  const reintentado = useRef(false);
+  useEffect(() => {
+    if (!error || d || reintentado.current || [401, 403, 404].includes(error.status)) return;
+    reintentado.current = true;
+    const t = setTimeout(recargar, 3000);
+    return () => clearTimeout(t);
+  }, [error, d, recargar]);
   const v = useMemo(() => (d ? calcular(d, 'todos') : null), [d]);
   const e = ESTILO_MODULO.sucursales;
   return (

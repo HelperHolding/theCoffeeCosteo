@@ -181,33 +181,36 @@ export function VistaBi({ d }: { d: ResumenBi }) {
   const a = d.anterior;
   return (
     <Bloque modulo="bi" subtitulo={`${fecha(d.desde)} – ${fecha(d.hasta)} · ${num(d.tiendas)} tiendas`}>
-      <Principal valor={pesos(d.mes.ventaCent)} etiqueta="Venta del mes (neta, con IVA)">
+      <Principal valor={pesos(d.actual.ventaCent)} etiqueta="Venta de esta semana (neta, con IVA)">
         <Cambio
-          valor={a ? variacion(d.mes.ventaCent, a.ventaCent) : null}
-          texto="vs mismos días del mes anterior"
+          valor={a ? variacion(d.actual.ventaCent, a.ventaCent) : null}
+          texto="vs el mismo tramo de la semana anterior"
         />
       </Principal>
       <div className="grid grid-cols-3 gap-2">
-        <Mini valor={num(d.mes.tickets)} etiqueta="tickets" />
-        <Mini valor={d.mes.ticketCent === null ? '—' : pesos(d.mes.ticketCent)} etiqueta="ticket promedio" />
-        <Mini valor={d.mes.upt === null ? '—' : d.mes.upt.toFixed(2)} etiqueta="productos por ticket" />
+        <Mini valor={num(d.actual.tickets)} etiqueta="tickets" />
+        <Mini
+          valor={d.actual.ticketCent === null ? '—' : pesos(d.actual.ticketCent)}
+          etiqueta="ticket promedio"
+        />
+        <Mini valor={d.actual.upt === null ? '—' : d.actual.upt.toFixed(2)} etiqueta="productos por ticket" />
       </div>
       {a && (
         <div
           className="mt-5 space-y-2.5"
           role="img"
-          aria-label="Venta de este mes contra los mismos días del mes anterior"
+          aria-label="Venta de esta semana contra el mismo tramo de la semana anterior"
         >
           {[
-            { etiqueta: 'Este mes', valor: d.mes.ventaCent, clase: 'bg-cierre' },
-            { etiqueta: 'Mes anterior', valor: a.ventaCent, clase: 'bg-cierre/35' },
+            { etiqueta: 'Esta semana', valor: d.actual.ventaCent, clase: 'bg-cierre' },
+            { etiqueta: 'Sem. anterior', valor: a.ventaCent, clase: 'bg-cierre/35' },
           ].map((x) => (
             <div key={x.etiqueta} className="grid grid-cols-[5.5rem_1fr_6.5rem] items-center gap-2 text-xs">
               <span className="text-ink-2">{x.etiqueta}</span>
               <span className="h-3 rounded-full bg-surface-2">
                 <span
                   className={cn('block h-full rounded-full', x.clase)}
-                  style={{ width: `${(x.valor / Math.max(1, d.mes.ventaCent, a.ventaCent)) * 100}%` }}
+                  style={{ width: `${(x.valor / Math.max(1, d.actual.ventaCent, a.ventaCent)) * 100}%` }}
                 />
               </span>
               <span className="text-right font-semibold tabular">{pesos(x.valor)}</span>
@@ -218,11 +221,13 @@ export function VistaBi({ d }: { d: ResumenBi }) {
       {a && (
         <ul className="mt-auto space-y-1 pt-4 text-xs text-ink-2">
           <li>
-            <Cambio valor={variacion(d.mes.tickets, a.tickets)} texto="en tickets" />
+            <Cambio valor={variacion(d.actual.tickets, a.tickets)} texto="en tickets" />
           </li>
           <li>
             <Cambio
-              valor={d.mes.ticketCent && a.ticketCent ? variacion(d.mes.ticketCent, a.ticketCent) : null}
+              valor={
+                d.actual.ticketCent && a.ticketCent ? variacion(d.actual.ticketCent, a.ticketCent) : null
+              }
               texto="en ticket promedio"
             />
           </li>
