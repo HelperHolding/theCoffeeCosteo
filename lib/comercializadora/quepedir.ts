@@ -11,15 +11,33 @@ export function saldoCedis(c: ArticuloCatalogo | undefined): number {
 }
 
 const CERRADAS = ['closed', 'cancelled', 'void'];
+/** Pendiente de recibir de una línea de OC abierta de Zoho (borradores incluidos); 0 si está cerrada o es el marcador. */
+function pendienteOc(l: LineaOcZoho): number {
+  if (l.sku === '(sin-sku)' || CERRADAS.includes(String(l.status ?? '').toLowerCase())) return 0;
+  const p = n(l.cantidad) - n(l.cantidad_recibida);
+  return p > 0 ? p : 0;
+}
+
 /** Piezas en camino por SKU: lo pendiente de recibir de OCs de Zoho abiertas (renderComQuePedir). */
 export function enCamino(lineas: LineaOcZoho[]): Record<string, number> {
   const r: Record<string, number> = {};
   for (const l of lineas) {
-    if (l.sku === '(sin-sku)' || CERRADAS.includes(String(l.status ?? '').toLowerCase())) continue;
-    const p = n(l.cantidad) - n(l.cantidad_recibida);
+    const p = pendienteOc(l);
     if (p > 0) r[l.sku] = (r[l.sku] ?? 0) + p;
   }
   return r;
+}
+
+/** Folios de las OCs que aportan a lo en camino de cada SKU, sin repetir y en orden. */
+export function ocsEnCamino(lineas: LineaOcZoho[]): Record<string, string[]> {
+  const r: Record<string, Set<string>> = {};
+  for (const l of lineas) {
+    if (!(pendienteOc(l) > 0) || !l.po_number) continue;
+    (r[l.sku] ??= new Set()).add(l.po_number);
+  }
+  return Object.fromEntries(
+    Object.entries(r).map(([sku, s]) => [sku, [...s].sort((a, b) => a.localeCompare(b, 'es'))]),
+  );
 }
 
 export interface DatosQuePedir {

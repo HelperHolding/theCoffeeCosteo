@@ -133,6 +133,8 @@ export function Inventario(p: {
             ['nombre', 'Nombre'],
             ['categoria', 'Categoria'],
             ['inventario', 'Inventario (contable)'],
+            ['camino', 'En camino (OC abiertas)'],
+            ['ocsCamino', 'OC en camino'],
             ['venta', 'Venta diaria (30 dias)'],
             ['cobertura', 'Cobertura (dias)'],
             ['kitApertura', 'Kit por apertura'],
@@ -159,6 +161,12 @@ export function Inventario(p: {
               <tr>
                 <th>Nombre</th>
                 <th className="text-right">Inventario</th>
+                <th
+                  className="text-right"
+                  title="Pendiente de recibir de OCs abiertas de Zoho (borradores incluidos)"
+                >
+                  En camino
+                </th>
                 <th className="text-right">Venta diaria</th>
                 <th className="text-right">Cobertura (días)</th>
                 <th className="text-right">Cobertura c/aperturas (días)</th>
@@ -173,6 +181,18 @@ export function Inventario(p: {
                   </td>
                   <td className="text-right font-semibold tabular-nums">
                     {f.inventario == null ? '—' : numero(f.inventario)}
+                  </td>
+                  <td className="text-right tabular-nums" title={f.ocsCamino || undefined}>
+                    {f.camino > 0 ? (
+                      <>
+                        <div>{numero(f.camino)}</div>
+                        {f.ocsCamino ? (
+                          <div className="text-xs text-muted-foreground">{f.ocsCamino}</div>
+                        ) : null}
+                      </>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                   <td className="text-right tabular-nums">{f.venta == null ? '—' : numero(f.venta)}</td>
                   <td className="text-right tabular-nums">{f.cobertura == null ? '—' : f.cobertura}</td>

@@ -27,6 +27,8 @@ export interface LineaOcZoho {
   status: string | null;
   cantidad: number | null;
   cantidad_recibida: number | null;
+  /** Folio de la OC en Zoho (COM-OC-…); opcional porque no todas las consultas lo leen. */
+  po_number?: string | null;
 }
 export interface MinMax {
   sku: string;

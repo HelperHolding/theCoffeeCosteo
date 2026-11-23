@@ -130,13 +130,14 @@ describe('pantalla Inventario', () => {
     ventaAviso: null,
     aperturasMes: 10,
   };
-  it('solo Nombre (con el SKU debajo), Inventario, Venta/día y Cobertura', () => {
+  it('solo Nombre (con el SKU debajo), Inventario, En camino, Venta/día y Cobertura', () => {
     const filas = conCoberturaAperturas(conVentaContable([fila({})] as never, { A: 0.8 }), {}, 10);
     render(<Inventario filas={filas} {...props} />);
     const encabezados = screen.getAllByRole('columnheader').map((h) => h.textContent);
     expect(encabezados).toEqual([
       'Nombre',
       'Inventario',
+      'En camino',
       'Venta diaria',
       'Cobertura (días)',
       'Cobertura c/aperturas (días)',
