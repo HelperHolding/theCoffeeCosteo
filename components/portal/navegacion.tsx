@@ -49,21 +49,25 @@ import {
   ReceiptText,
   BellRing,
 } from 'lucide-react';
-import type { IdModulo } from '@/lib/portal/modulos';
+import { modulos, type IdModulo } from '@/lib/portal/modulos';
+import { ESTILO_MODULO } from './modulos-ui';
 
-type Enlace = { href: string; nombre: string; icono: LucideIcon; exacto?: boolean };
+type Enlace = {
+  href: string;
+  nombre: string;
+  icono: LucideIcon;
+  exacto?: boolean;
+  /** Entrada de un módulo: se marca activa por la sección (Costeo vive en /resumen, /productos…), no por la ruta. */
+  modulo?: IdModulo;
+};
 type Grupo = { titulo: string; enlaces: Enlace[] };
 export type Seccion = 'inicio' | IdModulo;
 /** Sucursal abierta en Franquiciatarios. gestor = gerente, franquiciatario o admin del módulo. */
 export type Franquicia = { companyId: number; nombre: string; gestor: boolean; varias: boolean };
 
-const entradaModulo: Record<IdModulo, Enlace> = {
-  costeo: { href: '/costeo', nombre: 'Costeo', icono: Calculator },
-  crm: { href: '/crm', nombre: 'CRM Franquicias', icono: Store },
-  sucursales: { href: '/sucursales', nombre: 'Sucursales', icono: Activity },
-  bi: { href: '/bi', nombre: 'BI', icono: BarChart3 },
-  comercializadora: { href: '/comercializadora', nombre: 'Comercializadora', icono: ShoppingCart },
-  franquiciatarios: { href: '/franquiciatarios', nombre: 'Franquiciatarios', icono: ClipboardCheck },
+const entradaModulo = (m: IdModulo): Enlace => {
+  const def = modulos.find((x) => x.id === m)!;
+  return { href: def.href, nombre: def.nombre, icono: ESTILO_MODULO[m].icono, modulo: m };
 };
 
 /** Navegación de una sucursal en Franquiciatarios: la operación del día y, para gestores, avisos y equipo. */
@@ -228,23 +232,17 @@ const gruposPorSeccion: Record<Seccion, Grupo[]> = {
 };
 
 /**
- * Grupos de la sección: primero "Portal", luego los del módulo. En Inicio los módulos solo se
- * muestran como tarjetas; dentro de un módulo, "Portal" lleva a Inicio y a los otros módulos visibles.
+ * Grupos de la sección: primero «Módulos» (Inicio y todos los módulos que el usuario puede ver, incluido el abierto),
+ * luego los del módulo abierto. Franquiciatarios sin otros módulos no lleva «Módulos»: Inicio lo regresa a su sucursal.
  */
 export function gruposDe(seccion: Seccion, visibles: IdModulo[], franquicia?: Franquicia): Grupo[] {
-  const otros = seccion === 'inicio' ? [] : visibles.filter((m) => m !== seccion);
-  // Franquiciatarios sin otros módulos: el grupo «Portal» no lleva a nada útil (Inicio regresa aquí).
-  if (seccion === 'franquiciatarios' && otros.length === 0)
-    return franquicia ? gruposFranquicia(franquicia) : [];
-  const portal: Grupo = {
-    titulo: 'Portal',
-    enlaces: [
-      { href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true },
-      ...otros.map((m) => entradaModulo[m]),
-    ],
+  const propios = seccion === 'franquiciatarios' ? (franquicia ? gruposFranquicia(franquicia) : []) : gruposPorSeccion[seccion];
+  if (visibles.every((m) => m === 'franquiciatarios') && seccion === 'franquiciatarios') return propios;
+  const modulosGrupo: Grupo = {
+    titulo: 'Módulos',
+    enlaces: [{ href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true }, ...visibles.map(entradaModulo)],
   };
-  if (seccion === 'franquiciatarios') return [portal, ...(franquicia ? gruposFranquicia(franquicia) : [])];
-  return [portal, ...gruposPorSeccion[seccion]];
+  return [modulosGrupo, ...propios];
 }
 
 function esActivo(href: string, exacto: boolean | undefined, pathname: string, tab: string | null) {
@@ -280,10 +278,11 @@ export function Navegacion({
             {g.titulo}
           </p>
           <ul className="flex flex-col gap-0.5">
-            {g.enlaces.map(({ href, nombre, icono: Icono, exacto }) => {
-              const activo = esActivo(href, exacto, pathname, tab);
+            {g.enlaces.map(({ href, nombre, icono: Icono, exacto, modulo }) => {
+              const activo = modulo ? modulo === seccion : esActivo(href, exacto, pathname, tab);
+              const color = modulo ? ESTILO_MODULO[modulo].texto : null;
               return (
-                <li key={href}>
+                <li key={`${g.titulo}-${href}`}>
                   <Link
                     href={href}
                     onClick={alNavegar}
@@ -298,7 +297,9 @@ export function Navegacion({
                     <Icono
                       size={17}
                       aria-hidden="true"
-                      className={activo ? 'text-crema-strong' : 'text-muted-foreground group-hover:text-ink'}
+                      className={
+                        color ?? (activo ? 'text-crema-strong' : 'text-muted-foreground group-hover:text-ink')
+                      }
                     />
                     {nombre}
                   </Link>

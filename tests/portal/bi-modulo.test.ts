@@ -10,9 +10,10 @@ describe('módulo BI', () => {
     expect(modulos.find((m) => m.id === 'bi')?.href).toBe('/bi');
   });
 
-  it('navegación del BI: Portal + tableros', () => {
+  it('navegación del BI: Módulos (con el BI) + tableros', () => {
     const g = gruposDe('bi', ['bi', 'sucursales']);
-    expect(g[0].enlaces.map((e) => e.href)).toEqual(['/', '/sucursales']);
+    expect(g[0].titulo).toBe('Módulos');
+    expect(g[0].enlaces.map((e) => e.href)).toEqual(['/', '/bi', '/sucursales']);
     expect(g[1].enlaces.map((e) => e.href)).toEqual(['/bi', '/bi/the-coffee-mexico']);
   });
 });

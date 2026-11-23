@@ -281,15 +281,6 @@ export function CurvaHoy({
               </linearGradient>
             ))}
           </defs>
-          {/* Resto del día: aún no pasa. */}
-          <rect
-            x={x(corte)}
-            y={M.arr}
-            width={Math.max(0, x(t1) - x(corte))}
-            height={H - M.arr - M.aba}
-            fill="#f4f1ea"
-            opacity={0.7}
-          />
           {marcas.map((v) => (
             <g key={v}>
               <line
