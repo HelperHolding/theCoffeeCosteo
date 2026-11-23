@@ -18,7 +18,7 @@ it('pagina, filtra desde la segunda página y permite consultar a usuarios sin e
   expect(screen.getByRole('status')).toHaveTextContent('1–25 de 30');
   await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
   expect(screen.getByRole('link', { name: 'RECETA 29' })).toHaveAttribute('href', '/productos/29');
-  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), 'Receta 0');
+  await userEvent.type(screen.getByRole('searchbox', { name: /^Buscar por nombre/ }), 'Receta 0');
   expect(screen.getByRole('status')).toHaveTextContent('1–1 de 1');
   await userEvent.selectOptions(screen.getByLabelText('Estado'), 'inactivos');
   expect(screen.getByText('No hay resultados')).toBeVisible();
