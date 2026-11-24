@@ -48,6 +48,7 @@ import {
   Sun,
   ReceiptText,
   BellRing,
+  ArrowDownToLine,
 } from 'lucide-react';
 import { modulos, type IdModulo } from '@/lib/portal/modulos';
 import { ESTILO_MODULO } from './modulos-ui';
@@ -82,6 +83,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
         { href: `${b}/ventas`, nombre: 'Ventas y pedidos', icono: Activity },
         { href: `${b}/tira`, nombre: 'Tira de venta', icono: ReceiptText },
         { href: `${b}/conteo`, nombre: 'Conteo de insumos', icono: ClipboardList },
+        { href: `${b}/entradas`, nombre: 'Entradas', icono: ArrowDownToLine },
         { href: `${b}/caja`, nombre: 'Caja', icono: Banknote },
         { href: `${b}/mermas`, nombre: 'Mermas', icono: Trash2 },
         { href: `${b}/roles`, nombre: 'Roles', icono: Users },
@@ -95,6 +97,7 @@ export function gruposFranquicia(f: Franquicia): Grupo[] {
       enlaces: [
         { href: `${b}/pedidos`, nombre: 'Pedidos', icono: Truck },
         { href: `${b}/inventario`, nombre: 'Inventario', icono: Boxes },
+        { href: `${b}/existencias`, nombre: 'Existencias', icono: Scale },
         { href: `${b}/pyl`, nombre: 'P&L y metas', icono: BarChart3 },
         { href: `${b}/servicio`, nombre: 'Tiempo de preparación', icono: Timer },
         { href: `${b}/avisos`, nombre: 'Avisos e historial', icono: BellRing },

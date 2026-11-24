@@ -7,6 +7,7 @@ import type {
   FranqArqueo,
   FranqCajaConfig,
   FranqConteo,
+  FranqEntrada,
   FranqGasto,
   FranqIncidencia,
   FranqInsumo,
@@ -27,6 +28,7 @@ import type {
 } from '../../../lib/franquiciatarios/tipos';
 
 import { armarPedidos, type FilaPedidoLegado } from '../../../lib/franquiciatarios/pedidos';
+import { entradasDePedido, type EquivalenciaSku } from '../../../lib/franquiciatarios/existencias';
 
 export type Resultado = { ok: true } | { error: string };
 
@@ -55,6 +57,10 @@ export const tienda = {
   mermas: [] as FranqMerma[],
   tolerancias: [] as FranqMermaTolerancia[],
   cierres: [] as FranqMermasCierre[],
+  entradas: [] as FranqEntrada[],
+  /** Equivalencia SKU → insumo (OV sugerida) y presentaciones; las arma el arnés. */
+  equivalencias: [] as EquivalenciaSku[],
+  presentaciones: new Map<string, number>(),
   dia: '',
 };
 let id = 1000;
@@ -277,6 +283,29 @@ export async function recibirPedido(d: {
     diferencias,
     observacion: (d.observacion ?? '').trim() || null,
   });
+  const recepcion = id;
+  const { entradas } = entradasDePedido({
+    lineas: p.lineas.map((l, i) => ({ nombre: l.nombre, sku: l.sku, recibido: d.recibidos[i] })),
+    equivalencias: tienda.equivalencias,
+    insumos: tienda.insumos,
+    presentaciones: tienda.presentaciones,
+  });
+  for (const e of entradas)
+    tienda.entradas.push({
+      ...base(q),
+      id: ++id,
+      dia: tienda.dia,
+      insumo_id: e.insumo,
+      cantidad: e.cantidad,
+      origen: 'pedido',
+      recepcion_id: recepcion,
+      sku: e.sku,
+      proveedor: null,
+      nota: null,
+      anulada: false,
+      corrige_id: null,
+      motivo_correccion: null,
+    });
   avisar();
   return { ok: true };
 }
@@ -695,6 +724,50 @@ export async function guardarTolerancia(_c: number, insumo: number, pct: number)
     registrado_por: 'g',
     registrado_en: ahora(),
   });
+  avisar();
+  return { ok: true };
+}
+
+/** Entrada con las reglas de franq_registrar_entrada (migración 96). */
+export async function registrarEntrada(d: {
+  insumo: number | null;
+  cantidad: number | null;
+  proveedor: string | null;
+  nota?: string | null;
+  corrige?: number | null;
+  anular?: boolean;
+  motivoCorreccion?: string | null;
+}): Promise<Resultado> {
+  await espera();
+  const q = quien();
+  if (typeof q === 'string') return { error: q };
+  const comun = { ...base(q), id: ++id, dia: tienda.dia, motivo_correccion: d.motivoCorreccion ?? null };
+  if (d.anular) {
+    const o = tienda.entradas.find((e) => e.id === d.corrige && !e.anulada);
+    if (!o || tienda.entradas.some((x) => x.corrige_id === o.id)) return { error: 'Ese registro ya no está vigente.' };
+    const especial = o.dia !== tienda.dia || o.origen === 'pedido';
+    if (especial && tienda.rol === 'barista')
+      return { error: 'Solo la gerencia corrige entradas de otro día o de un pedido.' };
+    if (especial && (d.motivoCorreccion ?? '').trim().length < 3) return { error: 'Escribe el motivo de la corrección.' };
+    tienda.entradas.push({ ...o, ...comun, dia: o.dia, anulada: true, corrige_id: o.id });
+  } else {
+    if (!tienda.insumos.some((i) => i.id === d.insumo && i.activo))
+      return { error: 'Ese insumo no está en la lista de esta sucursal.' };
+    if (!(Number(d.cantidad) > 0)) return { error: 'La cantidad va de más de 0 en adelante.' };
+    if ((d.proveedor ?? '').trim().length < 2) return { error: 'Escribe de qué proveedor llegó.' };
+    tienda.entradas.push({
+      ...comun,
+      insumo_id: d.insumo!,
+      cantidad: Number(d.cantidad),
+      origen: 'proveedor',
+      recepcion_id: null,
+      sku: null,
+      proveedor: d.proveedor!.trim(),
+      nota: d.nota?.trim() || null,
+      anulada: false,
+      corrige_id: d.corrige ?? null,
+    });
+  }
   avisar();
   return { ok: true };
 }

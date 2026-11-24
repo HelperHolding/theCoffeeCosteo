@@ -304,6 +304,33 @@ export interface FranqMermasCierre {
   cerrado_por: string;
   cerrado_en: string;
 }
+/** Existencias (migración 96): lo que entra a la sucursal, en la unidad de conteo del insumo. Solo inserción. */
+export type OrigenEntrada = 'pedido' | 'proveedor';
+export interface FranqEntrada {
+  id: number;
+  company_id: number;
+  dia: string;
+  insumo_id: number;
+  cantidad: number;
+  origen: OrigenEntrada;
+  recepcion_id: number | null;
+  sku: string | null;
+  proveedor: string | null;
+  nota: string | null;
+  anulada: boolean;
+  corrige_id: number | null;
+  motivo_correccion: string | null;
+  barista_id: number | null;
+  nombre: string;
+  registrado_por: string;
+  registrado_en: string;
+}
+/** Entrada de un pedido, ya convertida a la unidad de la lista (la arma el servidor al recibir). */
+export interface EntradaPedido {
+  insumo: number;
+  cantidad: number;
+  sku: string | null;
+}
 
 export interface FuncionesFranq {
   franq_ficha_recetas: { Args: { p_company: number }; Returns: unknown };
@@ -422,6 +449,22 @@ export interface FuncionesFranq {
       p_observacion: string | null;
       p_barista: number | null;
       p_dispositivo: string | null;
+      p_entradas?: EntradaPedido[];
+    };
+    Returns: number;
+  };
+  franq_registrar_entrada: {
+    Args: {
+      p_company: number;
+      p_insumo: number | null;
+      p_cantidad: number | null;
+      p_proveedor: string | null;
+      p_nota: string | null;
+      p_barista: number | null;
+      p_dispositivo: string | null;
+      p_corrige: number | null;
+      p_anular: boolean;
+      p_motivo_correccion: string | null;
     };
     Returns: number;
   };
