@@ -6,8 +6,10 @@ import {
   enParalelo,
   esFallaSinRespuesta,
   fechaMX,
+  intentosEn,
   pedidoDeListado,
   reintentable,
+  reintentableEn,
 } from '../../servicios/rappi-portal/lote.mjs';
 
 // El lector (servicios/rappi-portal) convierte el JSON del portal al lote de rappi_importar. Forma del JSON observada
@@ -189,5 +191,15 @@ describe('lote del lector de Rappi', () => {
     expect(esFallaSinRespuesta(new Error('Target page, context or browser has been closed'))).toBe(false);
     expect([0, 429, 500, 503].every(reintentable)).toBe(true);
     expect([200, 400, 401, 403, 404].some(reintentable)).toBe(false);
+    // Reclamos: Rappi da 400 al azar con el mismo cuerpo (2026-11-24); ahí sí se repite, y con más vueltas.
+    expect(reintentableEn('/partners-indicators/indicators/defects', 400)).toBe(true);
+    expect(reintentableEn('/partners-indicators/indicators/v2/summary/metrics', 400)).toBe(false);
+    expect(reintentableEn('/partners-indicators/indicators/defects', 403)).toBe(false);
+    expect(reintentableEn('/api/rest-aliados-state-ms/store-status-detail/retrieve?country=MX', 503)).toBe(
+      true,
+    );
+    expect([intentosEn('/partners-indicators/indicators/defects'), intentosEn('/x/y?country=MX')]).toEqual([
+      8, 3,
+    ]);
   });
 });

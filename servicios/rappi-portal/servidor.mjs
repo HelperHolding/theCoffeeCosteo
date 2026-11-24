@@ -28,8 +28,10 @@ import {
   esFallaSinRespuesta,
   fechaMX,
   huellaListado,
+  intentosEn,
   pedidoDeListado,
   reintentable,
+  reintentableEn,
 } from './lote.mjs';
 import {
   conectividadDe,
@@ -367,7 +369,7 @@ async function leerServicio(pagina, plan, { tiendas, inicio, tiendaDePedido, tie
     let r;
     for (let intento = 0; ; intento++) {
       r = await pedirApi(pagina, metodo, ruta, cuerpo);
-      if (!reintentable(r.status) || intento === 2) break;
+      if (!reintentableEn(ruta, r.status) || intento === intentosEn(ruta) - 1) break;
       await esperar(2000 * (intento + 1));
     }
     if (r.status === 200 && r.json !== null) return r.json;

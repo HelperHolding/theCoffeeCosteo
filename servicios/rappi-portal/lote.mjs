@@ -62,6 +62,17 @@ export const esFallaSinRespuesta = (e) =>
 /** ¿Vale la pena repetir la consulta? 0 = sin respuesta (esFallaSinRespuesta), 429 o 5xx. */
 export const reintentable = (status) => status === 0 || status === 429 || status >= 500;
 
+/**
+ * Consultas donde Rappi responde 400 al azar: la búsqueda de reclamos (indicators/defects) dio 400 o 200 con el mismo
+ * cuerpo, incluso con una sola tienda (2026-11-24, unas 2 de cada 3 veces). Ahí el 400 se reintenta y con más vueltas.
+ */
+const CON_400_INTERMITENTE = /\/indicators\/defects$/;
+const ruta400 = (ruta) => CON_400_INTERMITENTE.test(String(ruta).split('?')[0]);
+/** ¿Se repite esta consulta con esta respuesta? Como `reintentable`, más el 400 de las rutas intermitentes. */
+export const reintentableEn = (ruta, status) => reintentable(status) || (status === 400 && ruta400(ruta));
+/** Vueltas máximas por consulta: 3, u 8 en las rutas con 400 intermitente (todas fallan ~3 % de las veces). */
+export const intentosEn = (ruta) => (ruta400(ruta) ? 8 : 3);
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 100) / 100 : null);
 
 /**
