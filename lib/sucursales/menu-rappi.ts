@@ -56,7 +56,19 @@ export interface CorridaMenuRpc {
   leidas: number;
   fallidas: number;
   completa: boolean;
-  detalle: { tienda: string; motivo?: string | null }[] | null;
+  /**
+   * Lo que guarda el importador (migración 93): `{fallidas: [{tienda, motivo}], ignoradas: [...], viejas: [...]}`.
+   * `ignoradas` son tiendas sin alta (no son nuestras); `viejas`, fotos atrasadas que no se tomaron. Se acepta también
+   * una lista simple de `{tienda}`.
+   */
+  detalle:
+    | { tienda: string; motivo?: string | null }[]
+    | {
+        fallidas?: { tienda: string; motivo?: string | null }[];
+        ignoradas?: unknown[];
+        viejas?: (string | { tienda: string })[];
+      }
+    | null;
 }
 export interface CambioMenuRpc {
   tienda: string;
@@ -159,7 +171,15 @@ export function lecturaDe(
 ): LecturaMenu {
   const fin = corrida?.fin ?? null;
   const minutos = fin ? Math.max(0, Math.round((ahora.getTime() - Date.parse(fin)) / 60_000)) : null;
-  const fallidas = (corrida?.detalle ?? []).map((x) => nombreDe(x.tienda)).filter((x): x is string => !!x);
+  // Tiendas sin foto nueva en la última corrida: las que fallaron y las de foto vieja (las ignoradas no son nuestras).
+  const d = corrida?.detalle ?? null;
+  const ids = Array.isArray(d)
+    ? d.map((x) => x.tienda)
+    : [
+        ...(d?.fallidas ?? []).map((x) => x.tienda),
+        ...(d?.viejas ?? []).map((x) => (typeof x === 'string' ? x : x.tienda)),
+      ];
+  const fallidas = [...new Set(ids.map(nombreDe).filter((x): x is string => !!x))];
   return {
     fin,
     minutos,

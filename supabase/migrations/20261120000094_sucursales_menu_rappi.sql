@@ -1,6 +1,5 @@
--- BORRADOR de la migración 94 (docs/rappi-portal/09): lectura del Menú/Carta de Rappi para Sucursales.
--- Pasa a supabase/migrations/ cuando las tablas de la migración 93 («n8n thecoffee») estén en main, y se prueba con
--- PGlite (tests/db). Mismo candado que el resto de Sucursales: sin sucursales_acceso devuelve null; la nacional filtra.
+-- Migración 94 (docs/rappi-portal/09): lectura del Menú/Carta de Rappi para Sucursales, sobre las tablas de la 93
+-- (lector de n8n). Mismo candado que el resto de Sucursales: sin sucursales_acceso devuelve null; la nacional filtra.
 -- Las tablas siguen cerradas (RLS sin políticas); estas funciones son la única puerta para el portal.
 
 -- Desde cuándo está cada artículo en su estado actual: el tramo abierto (hasta is null).
@@ -23,7 +22,7 @@ begin
       from public.rappi_menu_productos p
       join public.rappi_tiendas t using (rappi_tienda_id)
       left join public.rappi_menu_tramos m on m.rappi_tienda_id = p.rappi_tienda_id and m.tipo = 'producto'
-        and m.item_id = p.producto_id::text and m.hasta is null
+        and m.item_id = p.producto_id and m.hasta is null
       where t.company_id = p_company and t.activa and p.eliminado_en is null), '[]'),
     'toppings', coalesce((select jsonb_agg(jsonb_build_object(
         'tienda', x.rappi_tienda_id, 'id', x.topping_id::text, 'nombre', x.nombre, 'nombre_norm', x.nombre_norm,
@@ -33,7 +32,7 @@ begin
       from public.rappi_menu_toppings x
       join public.rappi_tiendas t using (rappi_tienda_id)
       left join public.rappi_menu_tramos m on m.rappi_tienda_id = x.rappi_tienda_id and m.tipo = 'topping'
-        and m.item_id = x.topping_id::text and m.hasta is null
+        and m.item_id = x.topping_id and m.hasta is null
       where t.company_id = p_company and t.activa and x.eliminado_en is null), '[]'),
     'primera_lectura', (select min(m.desde) from public.rappi_menu_tramos m
       join public.rappi_tiendas t using (rappi_tienda_id) where t.company_id = p_company),
@@ -41,7 +40,7 @@ begin
         'fallidas', c.fallidas, 'completa', c.completa, 'detalle', c.detalle)
       from public.rappi_menu_corridas c where c.fin is not null order by c.fin desc limit 1),
     'cambios', coalesce((select jsonb_agg(jsonb_build_object('tienda', m.rappi_tienda_id, 'tipo', m.tipo,
-        'item_id', m.item_id, 'disponible', m.disponible, 'desde', m.desde, 'hasta', m.hasta) order by m.desde desc)
+        'item_id', m.item_id::text, 'disponible', m.disponible, 'desde', m.desde, 'hasta', m.hasta) order by m.desde desc)
       from public.rappi_menu_tramos m join public.rappi_tiendas t using (rappi_tienda_id)
       where t.company_id = p_company and m.desde >= now() - interval '7 days'), '[]'));
 end $$;
@@ -83,13 +82,13 @@ begin
         p.categoria, m.desde
       from public.rappi_menu_productos p join public.rappi_tiendas t using (rappi_tienda_id)
       left join public.rappi_menu_tramos m on m.rappi_tienda_id = p.rappi_tienda_id and m.tipo = 'producto'
-        and m.item_id = p.producto_id::text and m.hasta is null
+        and m.item_id = p.producto_id and m.hasta is null
       where t.company_id = any (v_permitidas) and t.activa and p.activo and p.eliminado_en is null and not p.disponible
       union all
       select x.rappi_tienda_id, 'topping', x.topping_id::text, x.nombre, x.nombre_norm, x.grupo, m.desde
       from public.rappi_menu_toppings x join public.rappi_tiendas t using (rappi_tienda_id)
       left join public.rappi_menu_tramos m on m.rappi_tienda_id = x.rappi_tienda_id and m.tipo = 'topping'
-        and m.item_id = x.topping_id::text and m.hasta is null
+        and m.item_id = x.topping_id and m.hasta is null
       where t.company_id = any (v_permitidas) and t.activa and x.activo and x.eliminado_en is null
         and not x.disponible) a), '[]'),
     'sin_opcion', coalesce((select jsonb_agg(jsonb_build_object('tienda', p.rappi_tienda_id, 'nombre', p.nombre,

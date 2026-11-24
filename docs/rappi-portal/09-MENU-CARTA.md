@@ -94,8 +94,12 @@ Las tablas quedan cerradas por RLS, sin políticas. La pantalla las lee solo por
   - `sin_opcion`: los encendidos que no se pueden pedir (tienda, nombre, categoría, grupos);
   - `presencia`: en cuántas tiendas existe cada producto (por nombre normalizado), para la alerta de abasto;
   - `primera_lectura` y `corrida`.
-- **Borrador del SQL:** `docs/rappi-portal/09-menu-rpc-borrador.sql`. Pasa a `supabase/migrations/` cuando la 93 esté en
-  main, y se prueba con PGlite.
+- **SQL:** `supabase/migrations/20261120000094_sucursales_menu_rappi.sql`, sobre las tablas de la 93 (#210).
+  - Probado con PGlite en `tests/db/menu-rappi-lectura.test.ts`: acceso por sucursal, «desde» de los tramos, sin opción,
+    presencia y el armado de la pantalla.
+  - En los tramos, `item_id` es bigint.
+  - El `detalle` de las corridas es `{fallidas, ignoradas, viejas}`; la pantalla cuenta como no leídas las fallidas y
+    las viejas.
 - **Armado y pantalla, ya hechos en F2 sobre las muestras de Essentia:**
   - `lib/sucursales/menu-rappi.ts`, con `construirMenu` y `construirMenuNacional`;
   - las rutas `/api/sucursales/[id]/menu` y `/api/sucursales/menu-nacional`;
