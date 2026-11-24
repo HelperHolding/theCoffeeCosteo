@@ -98,6 +98,12 @@ describe('/api/bi/tendencias', () => {
     expect(p).toMatchObject({ cafe: ['Sí'], hoy: '2026-11-05', companias: [384, 612] });
     expect(p.semanas).toBeUndefined();
   });
+
+  it('lee las tiendas con acceso con bi_opciones de hoy, no del año (con el año pasaba de 8 s)', async () => {
+    await pedir(tendencias);
+    const o = s.llamadas.find((l) => l.fn === 'bi_opciones')!.p;
+    expect(o).toEqual({ desde: '2026-11-05', hasta: '2026-11-05' });
+  });
 });
 
 describe('/api/bi/kpis', () => {
