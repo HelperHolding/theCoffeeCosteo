@@ -41,6 +41,7 @@ import {
   tiendaNum,
   topDe,
 } from './servicio.mjs';
+import { menuCompacto, tocaMenu } from './menu.mjs';
 
 const PORTAL = 'https://partners.rappi.com';
 const API = 'https://services.rappi.com/rests-partners-gateway/cauth';
@@ -111,6 +112,9 @@ const LECTURAS = [
     ruta: /^\/partners-indicators\/indicators\/store\/availability-monitoring\/\d+\?country=MX$/,
   },
   { metodo: 'GET', ruta: /^\/api\/rests-score\/performance-system\/find\/brandId\/\d+\?country=MX$/ },
+  // Menú/Carta (docs/rappi-portal/09): solo el GET. Los botones del menú (menu-update, menu-publish, item/{id}/active,
+  // topping/massive/deactivate, delete, cms) no están en ninguna lista.
+  { metodo: 'GET', ruta: /^\/partners-selfservice\/selfservice\/menu\/MX\d+$/ },
 ];
 
 const escribir = (ruta, datos) => {
@@ -469,7 +473,38 @@ async function leerServicio(pagina, plan, { tiendas, inicio, tiendaDePedido, tie
   return { servicio, partes, fallas };
 }
 
-async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS, plan = null }) {
+/**
+ * Menú/Carta de cada tienda (docs/rappi-portal/09). Nunca tumba la corrida: una tienda que falla va en `fallidas` con su
+ * motivo y las demás se guardan. Se corta al llegar a LIMITE_CORRIDA_MS (las que faltan van como fallidas).
+ */
+async function leerMenu(pagina, tiendas, inicio) {
+  const fallidas = [];
+  const leidas = await enParalelo(tiendas, CONCURRENCIA, async (t) => {
+    if (Date.now() - inicio > LIMITE_CORRIDA_MS) {
+      fallidas.push({ tienda: t, motivo: 'se cortó para no pasar de 8 min' });
+      return null;
+    }
+    let r;
+    for (let intento = 0; ; intento++) {
+      r = await pedirApi(pagina, 'GET', `/partners-selfservice/selfservice/menu/${t}`);
+      if (!reintentable(r.status) || intento === 2) break;
+      await esperar(2000 * (intento + 1));
+    }
+    if (r.status !== 200 || !r.json) {
+      fallidas.push({ tienda: t, motivo: `HTTP ${r.status}` });
+      return null;
+    }
+    try {
+      return menuCompacto(t, r.json);
+    } catch (e) {
+      fallidas.push({ tienda: t, motivo: String(e.message).slice(0, 120) });
+      return null;
+    }
+  });
+  return { momento: new Date().toISOString(), tiendas: leidas.filter(Boolean), fallidas };
+}
+
+async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS, plan = null, menu = false }) {
   const base = { tipo, desde, hasta, estado: 'ok', mensaje: '', tiendas: [], pedidos: [] };
   const inicio = Date.now();
   const navegador = await chromium.launch({
@@ -606,6 +641,29 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS, plan = null 
       }
     }
 
+    // Menú/Carta (docs/rappi-portal/09): cada 30 min; aparte del lote de pedidos y si falla no lo tumba.
+    let resumenMenu = '';
+    if (menu) {
+      try {
+        base.menu = await leerMenu(pagina, tiendas, inicio);
+        const apagados = base.menu.tiendas.reduce(
+          (a, t) => a + t.productos.filter((p) => !p.disponible).length,
+          0,
+        );
+        resumenMenu = `Menú: ${base.menu.tiendas.length} de ${tiendas.length} tiendas, ${apagados} productos apagados.`;
+        if (base.menu.fallidas.length) {
+          base.menu_error = `Menú con fallas: ${base.menu.fallidas
+            .slice(0, 5)
+            .map((f) => `${f.tienda} ${f.motivo}`)
+            .join('; ')}${base.menu.fallidas.length > 5 ? ` y ${base.menu.fallidas.length - 5} más` : ''}.`;
+          resumenMenu += ` ${base.menu_error}`;
+        }
+      } catch (e) {
+        base.menu_error = `El menú no se pudo leer: ${String(e?.message ?? e).slice(0, 200)}`;
+        resumenMenu = base.menu_error;
+      }
+    }
+
     // Caché de detalles: solo lo de los últimos 30 días.
     const limite = Date.now() - 30 * 86_400_000;
     for (const [k, v] of Object.entries(cache)) if (v.t < limite) delete cache[k];
@@ -640,6 +698,7 @@ async function sincronizar({ tipo, desde, hasta, tiendas = TIENDAS, plan = null 
           ? `El listado devolvió menos de lo que contó (Rappi tampoco los muestra en su historial ni en su descarga): ${faltan.join(', ')}.`
           : '',
         resumenServicio,
+        resumenMenu,
       ]
         .filter(Boolean)
         .join(' ');
@@ -733,7 +792,8 @@ createServer(async (req, res) => {
   const vacio = { tipo, ...v, tiendas: [], pedidos: [] };
   if (enCurso)
     return responder(res, 200, { ...vacio, estado: 'ocupado', mensaje: 'Ya había una corrida en curso.' });
-  enCurso = sincronizar({ tipo, ...v, tiendas, plan });
+  const menu = tocaMenu({ tipo, minuto, menu: datos.menu === true });
+  enCurso = sincronizar({ tipo, ...v, tiendas, plan, menu });
   try {
     responder(res, 200, await enCurso);
   } catch (e) {
