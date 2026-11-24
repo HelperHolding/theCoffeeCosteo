@@ -17,7 +17,7 @@ indicadores con las skills, top de sucursales con items más apagados, por revis
 
 | Quién | Hace | Autorizado ahora |
 |---|---|---|
-| «n8n thecoffee» | Lector del portal (SOLO LECTURA, sin botones de escritura), tablas, importador, flujo n8n cada 30 min (:07 y :37) | Auditoría hecha; migración y prod solo con OK de Carlos |
+| «n8n thecoffee» | Lector del portal (SOLO LECTURA, sin botones de escritura), tablas, importador, flujo n8n cada 30 min (:17 y :47) | Auditoría hecha; migración y prod solo con OK de Carlos |
 | «Módulo Sucursales» (este chat) | RPC de lectura, armado puro, rutas, pantalla en sucursal y Tablero, pruebas y arnés | Sí, en local y en PR; migración, prod y merge con OK de Carlos |
 
 - **Fuera de alcance:** cambiar algo en el portal de Rappi; avisos automáticos a las sucursales (WhatsApp o correo; se
