@@ -108,17 +108,43 @@ guardar('consumo.json', {
   dias: c.consumo ? Object.fromEntries([...c.consumo].map(([d, m]) => [d, Object.fromEntries(m)])) : null,
 });
 
-// 7. Sucursales de la ciudad (para «Mis sucursales» del franquiciatario).
+// 7. Sucursales de la ciudad (para «Mis sucursales» del franquiciatario), con su venta de hoy del resumen del corte.
+const ciudad = sucursalesConfiguradas.filter((s) => s.ciudad === cfg.ciudad);
+const resumenes =
+  (
+    await db
+      .from('sucursales_resumen_dia')
+      .select('company_id,origenes,corte_segundo')
+      .eq('fecha', hoy)
+      .in(
+        'company_id',
+        ciudad.map((s) => s.companyId),
+      )
+  ).data ?? [];
+type Resumen = {
+  company_id: number;
+  origenes: Record<string, { venta_cent?: number }>;
+  corte_segundo: number;
+};
+const ventaDe = new Map(
+  (resumenes as Resumen[]).map((r) => [
+    r.company_id,
+    {
+      ventaCent: Object.values(r.origenes ?? {}).reduce((s, o) => s + Number(o?.venta_cent ?? 0), 0),
+      corteSegundo: r.corte_segundo,
+    },
+  ]),
+);
 guardar(
   'sucursales.json',
-  sucursalesConfiguradas
-    .filter((s) => s.ciudad === cfg.ciudad)
-    .map((s) => ({
-      companyId: s.companyId,
-      nombre: s.nombre,
-      ciudad: s.ciudad,
-      ubicacion: s.ubicacion ?? null,
-    })),
+  ciudad.map((s) => ({
+    companyId: s.companyId,
+    nombre: s.nombre,
+    ciudad: s.ciudad,
+    ubicacion: s.ubicacion ?? null,
+    ventaCent: ventaDe.get(s.companyId)?.ventaCent ?? null,
+    corteSegundo: ventaDe.get(s.companyId)?.corteSegundo ?? null,
+  })),
 );
 guardar('meta.json', {
   company: COMPANY,

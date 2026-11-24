@@ -38,11 +38,17 @@ export interface PedidoFranq {
   > | null;
   /** Se puede registrar su recepción (en camino o entregado, reciente y aún sin recepción). */
   recibible: boolean;
+  /** Entregado o en camino, sin recepción y fuera de la ventana de DIAS_RECEPCION: ya no se recibe. */
+  cerradoSinRecepcion: boolean;
 }
 
 /** Ventana de pedidos que ve la sucursal y hasta cuándo se puede registrar la recepción. */
 export const DIAS_PEDIDOS = 120;
-export const DIAS_RECEPCION = 60;
+/**
+ * Solo los pedidos de los últimos 14 días se reciben en el portal (decisión de Carlos, 2026-11-24): los anteriores que
+ * la Comercializadora ya entregó salen como «cerrado sin recepción» y no se acumulan como pendientes.
+ */
+export const DIAS_RECEPCION = 14;
 
 const ESTADOS: Record<string, string> = {
   pendiente: 'Pendiente',
@@ -129,6 +135,7 @@ export function armarPedidos(
             }
           : null,
         recibible: !r && RECIBIBLES.has(estado) && reciente,
+        cerradoSinRecepcion: !r && RECIBIBLES.has(estado) && !reciente,
       };
     })
     .sort((a, b) => (b.fecha ?? '').localeCompare(a.fecha ?? ''));
