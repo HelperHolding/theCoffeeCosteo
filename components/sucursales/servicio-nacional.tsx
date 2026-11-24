@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, Download } from 'lucide-react';
 import { cn } from 'cn';
@@ -24,6 +24,7 @@ import {
 } from './nivel-servicio';
 import { rango, SelectorPeriodo, type Periodo } from './periodo';
 import { useLectura } from './use-lectura';
+import { ApartadosServicio, MenuRappiNacional, apartadoDeUrl, type Apartado } from './menu-rappi';
 import './nivel-servicio.css';
 
 /**
@@ -39,11 +40,16 @@ export function ServicioNacionalVista() {
   // Rappi publica cada día con 1 a 2 días de retraso: abre en el último día que ya publicó y avanza solo (se relee
   // cada 5 min). Al elegir otro periodo se usa ese.
   const [ultimo, setUltimo] = useState(true);
+  // Apartado Servicio o Menú en Rappi (docs/rappi-portal/09), de la URL al montar: así no se lee lo que no se ve.
+  const [apartado, setApartado] = useState<Apartado | null>(null);
+  useEffect(() => setApartado(apartadoDeUrl()), []);
   const { desde, hasta } = rango(periodo, ZONA);
   const { datos, error, cargando, recargar } = useLectura<RespuestaServicioNacional>(
-    ultimo
-      ? '/api/sucursales/servicio-nacional?ultimo=1'
-      : `/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`,
+    apartado !== 'servicio'
+      ? null
+      : ultimo
+        ? '/api/sucursales/servicio-nacional?ultimo=1'
+        : `/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`,
     { intervaloMs: 5 * 60_000 },
   );
   const descargar = async () => {
@@ -59,73 +65,86 @@ export function ServicioNacionalVista() {
     XLSX.writeFile(libro, h.nombreArchivo);
   };
   return (
-    <div className="servicio space-y-6" aria-busy={cargando}>
-      <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
-        <SelectorPeriodo
-          periodo={periodo}
-          zona={ZONA}
-          alCambiar={(p) => {
-            setUltimo(false);
-            setPeriodo(p);
-          }}
-          ultimo={{ activo: ultimo, fecha: datos?.publicadoHasta ?? null, alElegir: () => setUltimo(true) }}
-        />
-        <button
-          type="button"
-          onClick={descargar}
-          disabled={!datos}
-          className="inline-flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50"
-        >
-          <Download size={15} aria-hidden="true" />
-          Descargar Excel
-        </button>
-        {datos && (
-          <AlDiaRappi
-            publicadoHasta={datos.publicadoHasta}
-            hasta={datos.hasta}
-            indicadoresHasta={datos.indicadoresHasta}
-            ultimo={ultimo}
-          />
-        )}
-      </div>
-      {!datos ? (
-        error ? (
-          <ErrorCarga error={error} alReintentar={recargar} />
-        ) : (
-          <Esqueleto filas={3} />
-        )
+    <div className="servicio space-y-6" aria-busy={apartado === 'servicio' && cargando}>
+      <ApartadosServicio activo={apartado ?? 'servicio'} alCambiar={setApartado} />
+      {apartado === 'menu' ? (
+        <MenuRappiNacional />
+      ) : apartado === null ? (
+        <Esqueleto filas={3} />
       ) : (
         <>
-          {error && <ErrorCarga error={error} alReintentar={recargar} />}
-          <AhoraEnMexico d={datos} />
-          {datos.dias.length === 0 ? (
-            <SinPublicar
-              desde={datos.desde}
-              hasta={datos.hasta}
-              publicadoHasta={datos.publicadoHasta}
-              alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+          <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
+            <SelectorPeriodo
+              periodo={periodo}
+              zona={ZONA}
+              alCambiar={(p) => {
+                setUltimo(false);
+                setPeriodo(p);
+              }}
+              ultimo={{
+                activo: ultimo,
+                fecha: datos?.publicadoHasta ?? null,
+                alElegir: () => setUltimo(true),
+              }}
             />
+            <button
+              type="button"
+              onClick={descargar}
+              disabled={!datos}
+              className="inline-flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50"
+            >
+              <Download size={15} aria-hidden="true" />
+              Descargar Excel
+            </button>
+            {datos && (
+              <AlDiaRappi
+                publicadoHasta={datos.publicadoHasta}
+                hasta={datos.hasta}
+                indicadoresHasta={datos.indicadoresHasta}
+                ultimo={ultimo}
+              />
+            )}
+          </div>
+          {!datos ? (
+            error ? (
+              <ErrorCarga error={error} alReintentar={recargar} />
+            ) : (
+              <Esqueleto filas={3} />
+            )
           ) : (
             <>
-              <Indicadores
-                titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi, ${datos.sucursales.length} sucursales`}
-                t={datos.totales}
-              />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <ReclamosPorDia d={datos} />
-                <SinDisponibilidadPorDia d={datos} />
-              </div>
+              {error && <ErrorCarga error={error} alReintentar={recargar} />}
+              <AhoraEnMexico d={datos} />
+              {datos.dias.length === 0 ? (
+                <SinPublicar
+                  desde={datos.desde}
+                  hasta={datos.hasta}
+                  publicadoHasta={datos.publicadoHasta}
+                  alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+                />
+              ) : (
+                <>
+                  <Indicadores
+                    titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi, ${datos.sucursales.length} sucursales`}
+                    t={datos.totales}
+                  />
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <ReclamosPorDia d={datos} />
+                    <SinDisponibilidadPorDia d={datos} />
+                  </div>
+                </>
+              )}
+              <Ranking d={datos} />
+              <ReclamosMexico d={datos} />
+              <p className="placa px-3 py-2 text-xs text-muted-foreground">
+                Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners (Rappi y Rappi Turbo),
+                leídos cada 10 min (conectividad) y cada hora (indicadores). Rappi publica los indicadores de
+                cada día con 1 a 2 días de retraso. Los días son los de Rappi, en hora del centro.
+                {datos.leidoEn &&
+                  ` Última lectura de indicadores ${hace(Math.round((Date.now() - new Date(datos.leidoEn).getTime()) / 1000))}.`}
+              </p>
             </>
           )}
-          <Ranking d={datos} />
-          <ReclamosMexico d={datos} />
-          <p className="placa px-3 py-2 text-xs text-muted-foreground">
-            Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners (Rappi y Rappi Turbo),
-            leídos cada 10 min (conectividad) y cada hora (indicadores). Rappi publica los indicadores de cada
-            día con 1 a 2 días de retraso. Los días son los de Rappi, en hora del centro.
-            {datos.leidoEn &&
-              ` Última lectura de indicadores ${hace(Math.round((Date.now() - new Date(datos.leidoEn).getTime()) / 1000))}.`}
-          </p>
         </>
       )}
     </div>

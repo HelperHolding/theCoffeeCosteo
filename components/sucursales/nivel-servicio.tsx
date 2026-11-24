@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
 import { cn } from 'cn';
 import type { SucursalInfo } from '@/lib/sucursales/contratos';
@@ -22,6 +22,7 @@ import { diaMes, fechaCorta, hace, horaDe, numero, porcentaje } from './formato'
 import { sumarDias } from '@/lib/sucursales/tiempo';
 import { rango, SelectorPeriodo, type Periodo } from './periodo';
 import { useLectura } from './use-lectura';
+import { ApartadosServicio, MenuRappi, apartadoDeUrl, type Apartado } from './menu-rappi';
 import './nivel-servicio.css';
 
 /**
@@ -68,12 +69,17 @@ export function SeccionServicio({
   // Rappi publica cada día con 1 a 2 días de retraso: la sección abre en el último día que ya publicó (el periodo
   // compartido no cambia). Al elegir otro periodo se usa ese.
   const [ultimo, setUltimo] = useState(true);
+  // Apartado Servicio o Menú en Rappi (docs/rappi-portal/09), de la URL al montar: así no se lee lo que no se ve.
+  const [apartado, setApartado] = useState<Apartado | null>(null);
+  useEffect(() => setApartado(apartadoDeUrl()), []);
   // La conectividad se fotografía cada 10 min y los indicadores cada hora: se refresca cada 5 min, así que el último
   // día con datos avanza solo cuando Rappi publica el siguiente.
   const { datos, error, cargando, recargar } = useLectura<RespuestaServicio>(
-    ultimo
-      ? `/api/sucursales/${sucursal.companyId}/servicio?ultimo=1`
-      : `/api/sucursales/${sucursal.companyId}/servicio?desde=${desde}&hasta=${hasta}`,
+    apartado !== 'servicio'
+      ? null
+      : ultimo
+        ? `/api/sucursales/${sucursal.companyId}/servicio?ultimo=1`
+        : `/api/sucursales/${sucursal.companyId}/servicio?desde=${desde}&hasta=${hasta}`,
     { intervaloMs: 5 * 60_000 },
   );
   const descargar = async () => {
@@ -89,76 +95,90 @@ export function SeccionServicio({
     XLSX.writeFile(libro, h.nombreArchivo);
   };
   return (
-    <div className="servicio space-y-6" aria-busy={cargando}>
-      <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
-        <SelectorPeriodo
-          periodo={periodo}
-          zona={sucursal.zona}
-          alCambiar={(p) => {
-            setUltimo(false);
-            alCambiarPeriodo(p);
-          }}
-          ultimo={{ activo: ultimo, fecha: datos?.publicadoHasta ?? null, alElegir: () => setUltimo(true) }}
-        />
-        <button
-          type="button"
-          onClick={descargar}
-          disabled={!datos}
-          className="inline-flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50"
-        >
-          <Download size={15} aria-hidden="true" />
-          Descargar Excel
-        </button>
-        {datos && (
-          <AlDiaRappi
-            publicadoHasta={datos.publicadoHasta}
-            hasta={datos.hasta}
-            indicadoresHasta={datos.indicadoresHasta}
-            ultimo={ultimo}
-          />
-        )}
-      </div>
-      {!datos ? (
-        error ? (
-          <ErrorCarga error={error} alReintentar={recargar} />
-        ) : (
-          <Esqueleto filas={3} />
-        )
+    <div className="servicio space-y-6" aria-busy={apartado === 'servicio' && cargando}>
+      <ApartadosServicio activo={apartado ?? 'servicio'} alCambiar={setApartado} />
+      {apartado === 'menu' ? (
+        <MenuRappi companyId={sucursal.companyId} />
+      ) : apartado === null ? (
+        <Esqueleto filas={3} />
       ) : (
         <>
-          {error && <ErrorCarga error={error} alReintentar={recargar} />}
-          <AhoraEnRappi d={datos} zona={sucursal.zona} />
-          {/* Sin días de Rappi no hay indicadores: no se muestran ceros que parezcan datos. */}
-          {datos.dias.length > 0 && (
-            <Indicadores
-              titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi`}
-              t={datos.totales}
-            >
-              <PorCanal d={datos} />
-            </Indicadores>
-          )}
-          {datos.dias.length === 0 ? (
-            <SinPublicar
-              desde={datos.desde}
-              hasta={datos.hasta}
-              publicadoHasta={datos.publicadoHasta}
-              alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+          <div className="placa flex flex-wrap items-end justify-between gap-3 p-3">
+            <SelectorPeriodo
+              periodo={periodo}
+              zona={sucursal.zona}
+              alCambiar={(p) => {
+                setUltimo(false);
+                alCambiarPeriodo(p);
+              }}
+              ultimo={{
+                activo: ultimo,
+                fecha: datos?.publicadoHasta ?? null,
+                alElegir: () => setUltimo(true),
+              }}
             />
+            <button
+              type="button"
+              onClick={descargar}
+              disabled={!datos}
+              className="inline-flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50"
+            >
+              <Download size={15} aria-hidden="true" />
+              Descargar Excel
+            </button>
+            {datos && (
+              <AlDiaRappi
+                publicadoHasta={datos.publicadoHasta}
+                hasta={datos.hasta}
+                indicadoresHasta={datos.indicadoresHasta}
+                ultimo={ultimo}
+              />
+            )}
+          </div>
+          {!datos ? (
+            error ? (
+              <ErrorCarga error={error} alReintentar={recargar} />
+            ) : (
+              <Esqueleto filas={3} />
+            )
           ) : (
-            <div className="grid gap-6 lg:grid-cols-2">
-              <ReclamosPorDia d={datos} />
-              <SinDisponibilidadPorDia d={datos} />
-            </div>
+            <>
+              {error && <ErrorCarga error={error} alReintentar={recargar} />}
+              <AhoraEnRappi d={datos} zona={sucursal.zona} />
+              {/* Sin días de Rappi no hay indicadores: no se muestran ceros que parezcan datos. */}
+              {datos.dias.length > 0 && (
+                <Indicadores
+                  titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi`}
+                  t={datos.totales}
+                >
+                  <PorCanal d={datos} />
+                </Indicadores>
+              )}
+              {datos.dias.length === 0 ? (
+                <SinPublicar
+                  desde={datos.desde}
+                  hasta={datos.hasta}
+                  publicadoHasta={datos.publicadoHasta}
+                  alVerUltimo={ultimo ? undefined : () => setUltimo(true)}
+                />
+              ) : (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <ReclamosPorDia d={datos} />
+                  <SinDisponibilidadPorDia d={datos} />
+                </div>
+              )}
+              <Conectividad d={datos} zona={sucursal.zona} />
+              <Reclamos d={datos} />
+              <p className="placa px-3 py-2 text-xs text-muted-foreground">
+                Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners, leídos cada 10 min
+                (conectividad) y cada hora (indicadores). Rappi publica los indicadores de cada día con 1 a 2
+                días de retraso; el cierre de las 5:07 vuelve a leer los últimos 7 días porque Rappi corrige
+                tarde.
+                {datos.diasEnHoraCentro &&
+                  ' Rappi cuenta los días en hora del centro: el corte del día no coincide con la hora local; las horas de conectividad sí van en hora local.'}
+              </p>
+            </>
           )}
-          <Conectividad d={datos} zona={sucursal.zona} />
-          <Reclamos d={datos} />
-          <p className="placa px-3 py-2 text-xs text-muted-foreground">
-            Fuente: Nivel de servicio y Conectividad del portal de Rappi Partners, leídos cada 10 min
-            (conectividad) y cada hora (indicadores). Rappi publica los indicadores de cada día con 1 a 2 días
-            de retraso; el cierre de las 5:07 vuelve a leer los últimos 7 días porque Rappi corrige tarde.
-            {datos.diasEnHoraCentro &&
-              ' Rappi cuenta los días en hora del centro: el corte del día no coincide con la hora local; las horas de conectividad sí van en hora local.'}
-          </p>
         </>
       )}
     </div>

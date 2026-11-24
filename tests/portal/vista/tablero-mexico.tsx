@@ -4,6 +4,8 @@ import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
 import { VistasMexico } from '../../../components/sucursales/vistas-mexico';
 import { construirServicioNacional } from '../../../lib/sucursales/servicio-nacional';
+import { construirMenuNacional } from '../../../lib/sucursales/menu-rappi';
+import { menuNacionalSintetico } from './menu-sintetico';
 import { servicioNacionalSintetico } from './servicio-sintetico';
 import { sucursalesConfiguradas as configuradas, type ConfigSucursal } from '../../../lib/sucursales/config';
 import { armarConsumoNacional, type RpcConsumoNacional } from '../../../lib/sucursales/consumo-nacional';
@@ -299,6 +301,15 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
+  if (url.pathname === '/api/sucursales/menu-nacional') {
+    await new Promise((r) => setTimeout(r, 200));
+    return Response.json(
+      construirMenuNacional(
+        menuNacionalSintetico(sucursalesConfiguradas),
+        sucursalesConfiguradas.map((s) => ({ ...s, rappiPortal: !!s.rappiPortal })),
+      ),
+    );
+  }
   if (url.pathname === '/api/sucursales/servicio-nacional') {
     await new Promise((r) => setTimeout(r, 200));
     const hoyMx = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date());

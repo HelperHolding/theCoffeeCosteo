@@ -368,6 +368,16 @@ export interface Database {
         Args: { p_company: number; p_desde: string; p_hasta: string };
         Returns: Json;
       };
+      /** Migración 94 (docs/rappi-portal/09): Menú/Carta de Rappi de una sucursal. */
+      sucursales_menu_rappi: {
+        Args: { p_company: number };
+        Returns: Json;
+      };
+      /** Migración 94: Menú/Carta de Rappi de todas las sucursales del usuario (Tablero de México). */
+      sucursales_menu_nacional: {
+        Args: { p_companias: number[] };
+        Returns: Json;
+      };
       sucursales_consumo_desglose: {
         Args: { p_mes: string; p_companias: number[]; p_insumo: string | null };
         Returns: Json;
