@@ -133,6 +133,7 @@ export function Inventario(p: {
             ['nombre', 'Nombre'],
             ['categoria', 'Categoria'],
             ['inventario', 'Inventario (contable)'],
+            ['fisicoZoho', 'Fisico (informativo)'],
             ['camino', 'En camino (OC abiertas)'],
             ['ocsCamino', 'OC en camino'],
             ['venta', 'Venta diaria (30 dias)'],
@@ -161,6 +162,9 @@ export function Inventario(p: {
               <tr>
                 <th>Nombre</th>
                 <th className="text-right">Inventario</th>
+                <th className="text-right" title="Físico de Zoho. No se usa en ningún cálculo.">
+                  Físico (Informativo)
+                </th>
                 <th
                   className="text-right"
                   title="Pendiente de recibir de OCs abiertas de Zoho (borradores incluidos)"
@@ -181,6 +185,9 @@ export function Inventario(p: {
                   </td>
                   <td className="text-right font-semibold tabular-nums">
                     {f.inventario == null ? '—' : numero(f.inventario)}
+                  </td>
+                  <td className="text-right tabular-nums text-muted-foreground">
+                    {f.fisicoZoho == null ? '—' : numero(f.fisicoZoho)}
                   </td>
                   <td className="text-right tabular-nums" title={f.ocsCamino || undefined}>
                     {f.camino > 0 ? (

@@ -137,6 +137,7 @@ describe('pantalla Inventario', () => {
     expect(encabezados).toEqual([
       'Nombre',
       'Inventario',
+      'Físico (Informativo)',
       'En camino',
       'Venta diaria',
       'Cobertura (días)',

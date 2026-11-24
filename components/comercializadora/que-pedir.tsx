@@ -141,6 +141,7 @@ export function QuePedir({
             ['nombre', 'Artículo'],
             ['vendorNombre', 'Proveedor'],
             ['inventario', 'Inventario (contable)'],
+            ['fisico', 'Fisico (informativo)'],
             ['camino', 'En camino'],
             ['dias', 'Días de inventario'],
             ['cant', 'Cantidad'],
@@ -161,6 +162,9 @@ export function QuePedir({
                 <th>SKU</th>
                 <th>Proveedor</th>
                 <th className="text-right">Inventario</th>
+                <th className="text-right" title="Físico de Zoho. No se usa en ningún cálculo.">
+                  Físico (Informativo)
+                </th>
                 <th className="text-right">En camino</th>
                 <th className="text-right">Días de inventario</th>
                 <th>¿Pedir?</th>
@@ -177,6 +181,9 @@ export function QuePedir({
                   </td>
                   <td>{f.vendorNombre}</td>
                   <td className="text-right tabular-nums">{numero(f.inventario)}</td>
+                  <td className="text-right tabular-nums text-muted-foreground">
+                    {f.fisico == null ? '—' : numero(f.fisico)}
+                  </td>
                   <td className="text-right tabular-nums">{numero(f.camino)}</td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="space-x-1">
@@ -269,6 +276,9 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
               <tr>
                 <th>Artículo</th>
                 <th className="text-right">Inventario</th>
+                <th className="text-right" title="Físico de Zoho. No se usa en ningún cálculo.">
+                  Físico (Informativo)
+                </th>
                 <th className="text-right">En camino</th>
                 <th className="text-right">Días de inventario</th>
                 <th className="text-right">Cantidad</th>
@@ -283,6 +293,9 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
                     <div className="text-xs text-muted-foreground">{f.sku}</div>
                   </td>
                   <td className="text-right tabular-nums">{numero(f.inventario)}</td>
+                  <td className="text-right tabular-nums text-muted-foreground">
+                    {f.fisico == null ? '—' : numero(f.fisico)}
+                  </td>
                   <td className="text-right tabular-nums">{numero(f.camino)}</td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="text-right tabular-nums">{numero(f.cant)}</td>

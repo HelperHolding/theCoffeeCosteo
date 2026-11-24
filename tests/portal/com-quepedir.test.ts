@@ -116,6 +116,8 @@ describe('filasQuePedir (_qpFilas)', () => {
     const [f] = filasQuePedir({ ...d, yulius: false }, 7, '2026-11-13');
     expect(f.inventario).toBe(6);
     expect(f.dias).toBe(3);
+    expect(f.fisico).toBe(40); // solo informativo
+    expect(filasQuePedir(datos(), 7, '2026-11-13')[0].fisico).toBeNull();
   });
   it('suma saldo de 3PL solo con inv.yulius', () => {
     const d = datos({

@@ -15,6 +15,11 @@ export function contable(c: ArticuloCatalogo | undefined): number {
   return n(c?.zoho_stock);
 }
 
+/** Físico de Zoho (actual_available_stock), solo informativo: no entra en ningún cálculo. null si Zoho no lo manda. */
+export function fisicoZoho(c: ArticuloCatalogo | undefined): number | null {
+  return c?.zoho_stock_fisico == null ? null : Number(c.zoho_stock_fisico);
+}
+
 const CERRADAS = ['closed', 'cancelled', 'void'];
 /** Pendiente de recibir de una línea de OC abierta de Zoho (borradores incluidos); 0 si está cerrada o es el marcador. */
 function pendienteOc(l: LineaOcZoho): number {
@@ -65,6 +70,8 @@ export interface FilaQuePedir {
   vendorNombre: string;
   /** Inventario contable de Zoho (más 3PL si está activado). */
   inventario: number;
+  /** Físico de Zoho, solo informativo. */
+  fisico: number | null;
   camino: number;
   venta: number;
   dias: number | null;
@@ -131,6 +138,7 @@ export function filasQuePedir(d: DatosQuePedir, dias: number, hoy: string): Fila
       vendor: String(c?.zoho_vendor_id || c?.zoho_vendor_name || '(sin proveedor)'),
       vendorNombre: c?.zoho_vendor_name || '(sin proveedor)',
       inventario,
+      fisico: fisicoZoho(c),
       camino: n(d.camino[m.sku]),
       venta: v,
       dias: v > 0 ? inventario / v : null,
