@@ -123,11 +123,19 @@ function Pedido({
               {r.completo ? 'Recibido completo' : `${r.diferencias.length} con diferencia`}
             </span>
           ) : (
-            pedido.recibible && (
+            (pedido.recibible && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-warn-soft px-2.5 py-1 text-xs font-semibold text-warn">
                 <PackageCheck size={13} aria-hidden="true" /> Por recibir
               </span>
-            )
+            )) ||
+            (pedido.cerradoSinRecepcion && (
+              <span
+                title="Pasaron más de 14 días: ya no se registra su recepción en el portal."
+                className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-ink-2"
+              >
+                Cerrado sin recepción
+              </span>
+            ))
           )}
         </div>
       </div>

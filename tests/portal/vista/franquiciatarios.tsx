@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from 'react';
-import { Store } from 'lucide-react';
+import { TarjetaSucursal } from '../../../components/franquiciatarios/mis-sucursales';
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
 import { Checklist } from '../../../components/franquiciatarios/checklist';
@@ -1252,7 +1252,7 @@ if (GRABAR && !restaurarEstado()) {
 
 /** Descripciones de las páginas reales (app/(franquiciatarios)/…/page.tsx), para que el video se vea como el portal. */
 const DESCRIPCIONES: Record<string, string> = {
-  sucursales: 'Elige la sucursal para ver su día.',
+  sucursales: 'El día de cada sucursal: avance de los checklists, avisos y venta de hoy. Ábrela para ver el detalle.',
   avisos: 'Los «No» vigentes con su observación y las incidencias del periodo. Una corrección queda junto al registro original.',
   equipo: 'Nombres de la cuenta de baristas de la sucursal. Cada registro guarda el nombre que eligió quien lo hizo.',
   existencias: 'Lo que debería haber de cada insumo crítico: conteo, entradas, consumo por recetas y mermas.',
@@ -1267,31 +1267,50 @@ const DESCRIPCIONES: Record<string, string> = {
     'Las mismas cifras que el reporte de la sucursal: venta del día, por origen y forma de pago, y el desglose de cada pedido.',
 };
 
-/** «Mis sucursales» del franquiciatario (la misma tarjeta que app/(franquiciatarios)/franquiciatarios/page.tsx). */
+/**
+ * «Mis sucursales» del franquiciatario con la tarjeta real: el día de Essentia (estado del arnés) y la venta de hoy de
+ * cada sucursal (copia del resumen del corte); las demás todavía no llenan checklists.
+ */
 function MisSucursales() {
   const lista = (REAL?.sucursales ?? [{ companyId: 514, nombre: 'Essentia', ciudad: 'Guadalajara', ubicacion: null }])
     .slice()
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const dia = armarDia({
+    dia: tienda.dia,
+    secciones,
+    puntos,
+    checklists: (['apertura', 'durante', 'medio', 'cierre'] as const).map((s, i) => ({
+      id: i + 1,
+      seccion: s,
+      seccion_id: i + 1,
+    })),
+    respuestas: tienda.respuestas,
+    firmas: tienda.firmas,
+    incidencias: tienda.incidencias,
+    vigente: 2,
+    ahora: new Date(),
+  });
   return (
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-      {lista.map((s) => (
-        <li key={s.companyId}>
-          <a
-            href={`/franquiciatarios/${s.companyId}`}
-            onClick={(e) => {
-              e.preventDefault();
-              if (s.companyId === 514) window.location.assign(`/?franquiciatarios&grabar&rol=${tienda.rol}&vista=hoy`);
+      {lista.map((x) => (
+        <li key={x.companyId}>
+          <TarjetaSucursal
+            companyId={x.companyId}
+            nombre={x.nombre}
+            detalle={`${x.ciudad} · Franquiciatario`}
+            r={{
+              companyId: x.companyId,
+              secciones: dia.secciones.map((s) => ({
+                clave: s.clave,
+                nombre: s.nombre,
+                avance: x.companyId === 514 && s.puntos.length ? Math.min(1, s.respondidos / s.puntos.length) : 0,
+                estado: s.estado,
+              })),
+              avisos: x.companyId === 514 ? dia.secciones.reduce((a, s) => a + s.noes, 0) + dia.incidencias.length : 0,
+              ventaCent: x.ventaCent ?? null,
+              corteSegundo: x.corteSegundo ?? null,
             }}
-            className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
-          >
-            <span className="grid size-11 place-items-center rounded-xl bg-surface-2 text-ink">
-              <Store size={20} aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="block font-display text-lg font-bold">{s.nombre}</span>
-              <span className="text-sm text-muted-foreground">{s.ciudad} · Franquiciatario</span>
-            </span>
-          </a>
+          />
         </li>
       ))}
     </ul>

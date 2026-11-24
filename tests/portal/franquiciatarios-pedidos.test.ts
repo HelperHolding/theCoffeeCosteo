@@ -112,7 +112,10 @@ describe('armarPedidos', () => {
     expect(por[ID2].recibible).toBe(false);
     expect(por[ID2].recepcion?.diferencias).toHaveLength(1);
     expect(por['00000000-0000-0000-0000-000000000003'].recibible).toBe(false); // aún no sale
-    expect(por['00000000-0000-0000-0000-000000000004'].recibible).toBe(false); // fuera de los 60 días
+    expect(por['00000000-0000-0000-0000-000000000004'].recibible).toBe(false); // fuera de los 14 días
+    expect(por['00000000-0000-0000-0000-000000000004'].cerradoSinRecepcion).toBe(true);
+    expect(por[ID1].cerradoSinRecepcion).toBe(false);
+    expect(por[ID2].cerradoSinRecepcion).toBe(false); // ya tiene recepción
     expect(por[ID1].estadoTexto).toBe('En camino');
   });
 

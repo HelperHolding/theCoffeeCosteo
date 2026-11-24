@@ -28,7 +28,14 @@ export interface DatosReales {
   pedidos: FilaPedidoLegado[];
   pyl: PylMes;
   consumo: { aviso: string | null; dias: Record<string, Record<string, number>> | null };
-  sucursales: { companyId: number; nombre: string; ciudad: string; ubicacion: string | null }[];
+  sucursales: {
+    companyId: number;
+    nombre: string;
+    ciudad: string;
+    ubicacion: string | null;
+    ventaCent?: number | null;
+    corteSegundo?: number | null;
+  }[];
 }
 
 const meta = leer<DatosReales['meta']>('meta');
