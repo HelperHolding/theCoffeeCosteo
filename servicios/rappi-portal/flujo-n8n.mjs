@@ -12,6 +12,7 @@ const NOMBRE = 'TheCoffee_Rappi_Portal';
 const LECTOR = 'http://rappi-thecoffee:3101/sincronizar';
 const SUPABASE = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_importar';
 const SUPABASE_SERVICIO = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_importar_servicio';
+const SUPABASE_MENU = 'https://jpqkmnfjwzniptszjuli.supabase.co/rest/v1/rpc/rappi_importar_menu';
 const SMTP = { id: '77HAkO1eZAVBGkN4', name: 'SMTP Notifications' }; // la misma de los reportes
 const AVISAR_A = 'cvalencia@mx.thecoffee.jp';
 
@@ -46,6 +47,18 @@ if (lote?.servicio) {
     const s = r2.body ?? {};
     mensaje += ' Servicio guardado: ' + (s.dias ?? 0) + ' tienda-días, ' + (s.reclamos ?? 0) + ' reclamos, ' + (s.cambios_conectividad ?? 0) + ' cambios de conectividad.';
     if (s.ignoradas?.length) servicioFalla = [servicioFalla, 'Tiendas sin alta en rappi_tiendas: ' + s.ignoradas.join(', ') + '.'].filter(Boolean).join(' ');
+  }
+}
+// Menú/Carta (docs/rappi-portal/09): igual que el servicio, sus fallas van al correo diario.
+const r3 = $('Guardar menú').isExecuted ? $('Guardar menú').first().json : null;
+if (lote?.menu_error) servicioFalla = [servicioFalla, lote.menu_error].filter(Boolean).join(' ');
+if (lote?.menu) {
+  const ok3 = r3 && r3.statusCode >= 200 && r3.statusCode < 300;
+  if (!ok3) servicioFalla = [servicioFalla, 'No se guardó el menú: ' + (r3?.error ? String(r3.error.message ?? r3.error) : 'Supabase respondió ' + r3?.statusCode + ' ' + JSON.stringify(r3?.body)).slice(0, 300)].filter(Boolean).join(' ');
+  else {
+    const m = r3.body ?? {};
+    mensaje += ' Menú guardado: ' + (m.tiendas ?? 0) + ' tiendas, ' + (m.tramos_cerrados ?? 0) + ' cambios de encendido.';
+    if (m.ignoradas?.length) servicioFalla = [servicioFalla, 'Menú de tiendas sin alta: ' + m.ignoradas.join(', ') + '.'].filter(Boolean).join(' ');
   }
 }
 if (servicioFalla) mensaje += ' ' + servicioFalla;
@@ -90,8 +103,8 @@ if (tipo === 'cierre' && (rec.length || sue.length || ser.length)) {
   const partes = [];
   if (rec.length) partes.push('El lector se recuperó solo ' + veces(rec.length, 'vez', 'veces') + ' desde el último aviso (la sesión de Rappi se cayó a media lectura, volvió a entrar y terminó la lectura; no se perdió nada):\\n- ' + rec.join('\\n- '));
   if (sue.length) partes.push('Fallaron ' + veces(sue.length, 'corrida suelta', 'corridas sueltas') + ' (la siguiente salió bien y releyó ayer y hoy; no se perdió nada):\\n- ' + sue.join('\\n- '));
-  if (ser.length) partes.push('Nivel de servicio con fallas en ' + veces(ser.length, 'corrida', 'corridas') + ' (los pedidos sí se guardaron; el cierre vuelve a leer los últimos 7 días):\\n- ' + ser.join('\\n- '));
-  if (!avisar) asunto = 'resumen del lector: ' + [rec.length ? 'se recuperó solo ' + veces(rec.length, 'vez', 'veces') : '', sue.length ? veces(sue.length, 'falla suelta', 'fallas sueltas') : '', ser.length ? veces(ser.length, 'falla de Nivel de servicio', 'fallas de Nivel de servicio') : ''].filter(Boolean).join(', ');
+  if (ser.length) partes.push('Nivel de servicio o menú con fallas en ' + veces(ser.length, 'corrida', 'corridas') + ' (los pedidos sí se guardaron; el cierre vuelve a leer los últimos 7 días):\\n- ' + ser.join('\\n- '));
+  if (!avisar) asunto = 'resumen del lector: ' + [rec.length ? 'se recuperó solo ' + veces(rec.length, 'vez', 'veces') : '', sue.length ? veces(sue.length, 'falla suelta', 'fallas sueltas') : '', ser.length ? veces(ser.length, 'falla de Nivel de servicio o menú', 'fallas de Nivel de servicio o menú') : ''].filter(Boolean).join(', ');
   mensaje = partes.join('\\n\\n') + '\\n\\nCierre: ' + mensaje;
   avisar = true;
   st.recuperadas = [];
@@ -204,8 +217,8 @@ const nodes = [
     {
       // El Nivel de servicio (docs/rappi-portal/08) viaja en el mismo lote y se guarda aparte («Guardar servicio»).
       jsCode: [
-        'const { servicio, servicio_error, ...lote } = $input.first().json.body;',
-        'return [{ json: { cuerpo: JSON.stringify({ p_lote: lote }), servicio: JSON.stringify({ p: servicio ?? {} }) } }];',
+        'const { servicio, servicio_error, menu, menu_error, ...lote } = $input.first().json.body;',
+        'return [{ json: { cuerpo: JSON.stringify({ p_lote: lote }), servicio: JSON.stringify({ p: servicio ?? {} }), menu: JSON.stringify({ p: menu ?? null }) } }];',
       ].join('\n'),
     },
     { onError: 'continueRegularOutput' },
@@ -253,7 +266,29 @@ const nodes = [
       onError: 'continueRegularOutput',
     },
   ),
-  nodo('Resumen', 'n8n-nodes-base.code', 2, [1000, 270], { jsCode: resumen }),
+  // Menú/Carta (docs/rappi-portal/09): solo 2 de cada 6 corridas lo traen; sin menú, rappi_importar_menu no hace nada.
+  nodo(
+    'Guardar menú',
+    'n8n-nodes-base.httpRequest',
+    4.2,
+    [940, 270],
+    {
+      method: 'POST',
+      url: SUPABASE_MENU,
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'raw',
+      rawContentType: 'application/json',
+      body: "={{ $('Armar lote').first().json.menu }}",
+      options: { response: { response: { fullResponse: true, neverError: true } }, timeout: 120000 },
+    },
+    {
+      notes: 'Credencial: la misma de «Guardar en Supabase». Solo llama rappi_importar_menu.',
+      onError: 'continueRegularOutput',
+    },
+  ),
+  nodo('Resumen', 'n8n-nodes-base.code', 2, [1060, 270], { jsCode: resumen }),
   nodo('¿Avisar?', 'n8n-nodes-base.if', 2.2, [1160, 270], {
     conditions: {
       options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
@@ -306,7 +341,8 @@ const connections = {
   ...conecta('¿Lector OK?', 'Armar lote', 'Resumen'),
   ...conecta('Armar lote', 'Guardar en Supabase'),
   ...conecta('Guardar en Supabase', 'Guardar servicio'),
-  ...conecta('Guardar servicio', 'Resumen'),
+  ...conecta('Guardar servicio', 'Guardar menú'),
+  ...conecta('Guardar menú', 'Resumen'),
   ...conecta('Resumen', '¿Avisar?'),
   ...conecta('¿Avisar?', 'Avisar por correo', 'Listo'),
 };
@@ -315,6 +351,7 @@ for (const [nodoCred, variable] of [
   ['Leer portal', 'CRED_LECTOR'],
   ['Guardar en Supabase', 'CRED_SUPABASE'],
   ['Guardar servicio', 'CRED_SUPABASE'],
+  ['Guardar menú', 'CRED_SUPABASE'],
   ['Reponer (webhook)', 'CRED_WEBHOOK'],
 ]) {
   if (process.env[variable])
@@ -367,7 +404,10 @@ if (existente) {
   const actual = await n8n('GET', `/workflows/${existente.id}`);
   flujo.settings = { ...actual.settings, ...flujo.settings };
   // «Guardar servicio» usa la misma llave de Supabase que «Guardar en Supabase» (la primera vez aún no existe).
-  const MISMA_CREDENCIAL = { 'Guardar servicio': 'Guardar en Supabase' };
+  const MISMA_CREDENCIAL = {
+    'Guardar servicio': 'Guardar en Supabase',
+    'Guardar menú': 'Guardar en Supabase',
+  };
   for (const n of flujo.nodes) {
     const previo =
       actual.nodes.find((x) => x.name === n.name && x.credentials) ??
