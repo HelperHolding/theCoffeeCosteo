@@ -1,6 +1,6 @@
 import { difDias } from './fechas';
 import { serieDiaria, type PedidoPlan } from '../../supabase/functions/_shared/planEngine.ts';
-import { enCamino, ocsEnCamino, saldoCedis } from './quepedir';
+import { enCamino, fisicoZoho, ocsEnCamino, saldoCedis } from './quepedir';
 import type { ArticuloCatalogo, LineaOcZoho } from './tipos';
 
 const n = (x: unknown) => Number(x) || 0;
@@ -33,6 +33,8 @@ export interface FilaInventario {
   proveedor: string;
   fisico: number;
   contable: number | null;
+  /** Físico de Zoho (actual_available_stock), solo informativo. */
+  fisicoZoho: number | null;
   comprometido: number;
   disponible: number;
   camino: number;
@@ -89,6 +91,7 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
       proveedor: c.zoho_vendor_name ?? '',
       fisico,
       contable: c.zoho_sync_at == null ? null : n(c.zoho_stock),
+      fisicoZoho: fisicoZoho(c),
       comprometido: n(comp[c.sku]),
       disponible,
       camino,

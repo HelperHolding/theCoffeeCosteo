@@ -66,7 +66,7 @@ export default async function QuePedirPagina() {
           catalogo,
           minmax,
           compras,
-          camino: enCamino(lineas),
+          camino: enCamino(lineas, { sinFacturadas: true }),
           yulius: config.data?.config?.inv?.yulius !== false,
           resumen: proy.resumen,
         }}

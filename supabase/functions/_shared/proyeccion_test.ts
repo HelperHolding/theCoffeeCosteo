@@ -4,7 +4,7 @@ import type { Fila } from "./posicion.ts";
 
 const fila = (o: Partial<Fila> = {}): Fila => ({
   sku: "A", nombre: "Art A", zoho_item_id: "I1", zoho_vendor_id: "V1", zoho_vendor_name: "Prov 1", costo: 10,
-  fisico: 0, fisicoRespaldo: false, saldo_yulius: 0, enCamino: 0, enOcAbierta: false, minimo: 10, maximo: 20, venta_diaria: 1, kits_max: 0,
+  inventario: 0, saldo_yulius: 0, enCamino: 0, enOcAbierta: false, minimo: 10, maximo: 20, venta_diaria: 1, kits_max: 0,
   multiplo: null, minimoPzas: null, lead_time: 5, ...o,
 });
 // Curva acumulada con venta constante de `v` por día: D(j) = v·j.
@@ -15,14 +15,14 @@ const base = (o: Partial<EntradaProyeccion> = {}): EntradaProyeccion => ({
 });
 
 Deno.test("día 0 compra lo mismo que la OC automática y redondea al múltiplo", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 4, enCamino: 2, multiplo: 6 })] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 4, enCamino: 2, multiplo: 6 })] }));
   const d0 = r.filas.filter((f) => f.fecha_oc === "2026-11-06");
   assertEquals(d0.map((f) => f.cantidad), [18]); // máx 20 − pos 6 = 14 → múltiplo 6 → 18
   assertEquals(d0[0].monto, 180);
 });
 
 Deno.test("vuelve a comprar cuando la posición toca el mínimo, después de que llega la compra anterior", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 20 })] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 20 })] }));
   // pos 20 − 1/día: toca 10 el día 10 → compra 10; vuelve a tocar 10 los días 20 y 30 (el horizonte incluye el día 30).
   assertEquals(r.filas.map((f) => [f.fecha_oc, f.cantidad]), [["2026-11-16", 10], ["2026-11-26", 10], ["2026-12-06", 10]]);
 });
@@ -35,7 +35,7 @@ Deno.test("fecha de pago: llegada + crédito, o fecha de OC + crédito con base 
 });
 
 Deno.test("los kits se consumen en su fecha de kit (los de hoy, el día 1)", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 15 })], curvas: { A: lineal(0, 30) }, kit: { A: 3 },
+  const r = proyectar(base({ filas: [fila({ inventario: 15 })], curvas: { A: lineal(0, 30) }, kit: { A: 3 },
     fechasKit: ["2026-11-06", "2026-11-10", "2026-11-10"] }));
   // día 1: 15 − 3 = 12; día 4 (11-10): 12 − 6 = 6 ≤ 10 → compra 14.
   assertEquals(r.filas.map((f) => [f.fecha_oc, f.cantidad]), [["2026-11-10", 14]]);
@@ -57,7 +57,7 @@ Deno.test("comprometido: pendiente × precio, pago vencido cae hoy, sin precio v
     { zoho_po_id: "P2", sku: "A", vendor_id: "V1", vendor_name: "Prov 1", pendiente: 2, precio: 10, fecha_oc: "2026-09-01", fecha_entrega: "2026-09-10", facturada: false },
     { zoho_po_id: "P3", sku: "Z", vendor_id: "V9", vendor_name: "Otro", pendiente: 3, precio: null, fecha_oc: "2026-11-01", fecha_entrega: null, facturada: false },
   ];
-  const r = proyectar(base({ filas: [fila({ fisico: 100 })], abiertas }));
+  const r = proyectar(base({ filas: [fila({ inventario: 100 })], abiertas }));
   const c = r.filas.filter((f) => f.tipo === "comprometido");
   assertEquals(c.map((f) => [f.zoho_po_id, f.monto, f.fecha_llegada, f.fecha_pago]),
     [["P1", 50, "2026-11-06", "2026-11-06"], ["P2", 20, "2026-09-10", "2026-11-06"]]);
@@ -75,8 +75,8 @@ Deno.test("OC facturada (billed): bloquea la recompra hasta su llegada pero no e
 
 Deno.test("sin proveedor o sin costo no generan monto; sin venta no compra; curva corta no da NaN", () => {
   const r = proyectar(base({
-    filas: [fila({ sku: "S", zoho_vendor_id: null }), fila({ sku: "C", costo: null }), fila({ sku: "Q", fisico: 50 }),
-      fila({ sku: "N", fisico: 50 })],
+    filas: [fila({ sku: "S", zoho_vendor_id: null }), fila({ sku: "C", costo: null }), fila({ sku: "Q", inventario: 50 }),
+      fila({ sku: "N", inventario: 50 })],
     curvas: { S: lineal(1, 30), C: lineal(1, 30), Q: [0, 0], N: lineal(1, 3) },
   }));
   assertEquals(r.sinProveedor, ["S"]);
@@ -86,7 +86,7 @@ Deno.test("sin proveedor o sin costo no generan monto; sin venta no compra; curv
 });
 
 Deno.test("OC automática más nueva que el sync (enOcAbierta sin líneas abiertas) bloquea hasta hoy + lead time", () => {
-  const r = proyectar(base({ filas: [fila({ enOcAbierta: true, fisico: 0, lead_time: 5 })], abiertas: [], curvas: { A: lineal(1, 30) } }));
+  const r = proyectar(base({ filas: [fila({ enOcAbierta: true, inventario: 0, lead_time: 5 })], abiertas: [], curvas: { A: lineal(1, 30) } }));
   assertEquals(r.filas.filter((f) => f.tipo === "proyectado")[0].fecha_oc, "2026-11-12");
 });
 
@@ -96,7 +96,7 @@ const cierre = (o: Partial<import("./cierres.ts").Cierre> = {}) =>
 Deno.test("cierre: no compra en días cerrados y cubre en U hasta la primera entrega posterior", () => {
   // pos 30, 1/día. U = 11-20 − 5 − 1 = 11-14 (j=8, pos 22). R = 11-30 + 5 = 12-05 (j=29).
   // Necesidad = mín 10 + D(29)−D(8) = 21 → 10 + 21 − 22 = 9 → q = max(qNormal 0, 9) = 9 (adelanto).
-  const r = proyectar(base({ filas: [fila({ fisico: 30 })], cierres: [cierre()] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 30 })], cierres: [cierre()] }));
   const p = r.filas.filter((f) => f.tipo === "proyectado");
   assertEquals(p[0].fecha_oc, "2026-11-14");
   assertEquals([p[0].cantidad, p[0].adelanto_cierre, p[0].cierre_id, p[0].cierre_tarde], [9, true, 7, false]);
@@ -105,14 +105,14 @@ Deno.test("cierre: no compra en días cerrados y cubre en U hasta la primera ent
 });
 
 Deno.test("cierre: hoy cerrado → día 0 sin compra; compra normal desde que reabre", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 0 })], cierres: [cierre({ ini: "2026-11-01", fin: "2026-11-10" })] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 0 })], cierres: [cierre({ ini: "2026-11-01", fin: "2026-11-10" })] }));
   const p = r.filas.filter((f) => f.tipo === "proyectado");
   assertEquals(p[0].fecha_oc, "2026-11-11");
   assertEquals(p[0].cierre_id, null);
 });
 
 Deno.test("cierre: U ya pasó → cobertura hoy marcada tarde, llega al reabrir", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 5 })], cierres: [cierre({ ini: "2026-11-08", fin: "2026-11-15" })] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 5 })], cierres: [cierre({ ini: "2026-11-08", fin: "2026-11-15" })] }));
   const d0 = r.filas.find((f) => f.tipo === "proyectado" && f.fecha_oc === "2026-11-06");
   assertEquals([d0?.cantidad, d0?.adelanto_cierre, d0?.cierre_tarde], [20, true, true]);
   assertEquals(d0?.fecha_llegada, "2026-11-16");
@@ -121,24 +121,24 @@ Deno.test("cierre: U ya pasó → cobertura hoy marcada tarde, llega al reabrir"
 Deno.test("cierre: una OC abierta que llegaría en el cierre se recorre al reabrir (fila comprometido y bloqueo)", () => {
   const abiertas = [{ zoho_po_id: "P", sku: "A", vendor_id: "V1", vendor_name: "Prov 1", pendiente: 5, precio: 10,
     fecha_oc: "2026-11-01", fecha_entrega: "2026-11-22", facturada: false }];
-  const r = proyectar(base({ filas: [fila({ fisico: 30, enOcAbierta: true })], abiertas, cierres: [cierre()] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 30, enOcAbierta: true })], abiertas, cierres: [cierre()] }));
   const com = r.filas.find((f) => f.tipo === "comprometido")!;
   assertEquals([com.fecha_llegada, com.cierre_id], ["2026-11-30", 7]);
 });
 
 Deno.test("cierre limitado a otro SKU no cambia nada", () => {
-  const sin = proyectar(base({ filas: [fila({ fisico: 30 })] }));
-  const con = proyectar(base({ filas: [fila({ fisico: 30 })], cierres: [cierre({ skus: ["Z"] })] }));
+  const sin = proyectar(base({ filas: [fila({ inventario: 30 })] }));
+  const con = proyectar(base({ filas: [fila({ inventario: 30 })], cierres: [cierre({ skus: ["Z"] })] }));
   assertEquals(con.filas.map((f) => [f.fecha_oc, f.cantidad]), sin.filas.map((f) => [f.fecha_oc, f.cantidad]));
 });
 Deno.test("cierre: artículo con mínimo y máximo en 0 no recibe compra de cobertura", () => {
-  const r = proyectar(base({ filas: [fila({ fisico: 5, minimo: 0, maximo: 0 })], cierres: [cierre()] }));
+  const r = proyectar(base({ filas: [fila({ inventario: 5, minimo: 0, maximo: 0 })], cierres: [cierre()] }));
   assertEquals(r.filas.filter((f) => f.tipo === "proyectado").length, 0);
 });
 Deno.test("cierre: un segundo cierre a menos de un LT del primero se cubre desde antes del primero (posición ≥ mín hasta R_B)", () => {
   // LT 5, 1/día, mín 10, máx 20. A = 11-20..25, B = 11-29..12-05 (U_B = 11-23 cae en A). R_B = 12-06 + 5 = 12-11.
   const cierres = [cierre({ id: 1, ini: "2026-11-20", fin: "2026-11-25" }), cierre({ id: 2, ini: "2026-11-29", fin: "2026-12-05" })];
-  const r = proyectar(base({ filas: [fila({ fisico: 20 })], curvas: { A: lineal(1, 60) }, horizonte: 45, cierres }));
+  const r = proyectar(base({ filas: [fila({ inventario: 20 })], curvas: { A: lineal(1, 60) }, horizonte: 45, cierres }));
   const p = r.filas.filter((f) => f.tipo === "proyectado");
   const cob = p.filter((f) => f.cierre_id != null);
   // Una sola compra de cobertura el 11-14: pos 12; necesidad = 10 + D(35) − D(8) − 12 = 25.

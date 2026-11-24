@@ -29,7 +29,7 @@ function dbTablas(t: Record<string, Record<string, unknown>[]>) {
   } as never;
 }
 
-Deno.test("cargarFilas: posición con físico; contable solo como respaldo; facturado sin recibir no se cuenta doble", async () => {
+Deno.test("cargarFilas: posición con el contable, sin importar el físico; facturado sin recibir no se cuenta doble", async () => {
   const mm = (sku: string) => ({ sku, minimo: 10, maximo: 20, venta_diaria: 1, kits_max: 0, lead_time: 5 });
   const filas = await cargarFilas(dbTablas({
     com_minmax: [mm("CAB"), mm("SIN")],
@@ -37,16 +37,20 @@ Deno.test("cargarFilas: posición con físico; contable solo como respaldo; fact
       { sku: "CAB", nombre: "Caballete", zoho_stock: 12, zoho_stock_fisico: 5, saldo_yulius: 0 },
       { sku: "SIN", nombre: "Sin físico", zoho_stock: 12, zoho_stock_fisico: null, saldo_yulius: 0 },
     ],
-    com_zoho_oc_lineas: [{ sku: "CAB", status: "billed", cantidad: 10, cantidad_recibida: 0 }],
+    com_zoho_oc_lineas: [
+      { sku: "CAB", status: "billed", cantidad: 10, cantidad_recibida: 0 },
+      { sku: "SIN", status: "open", cantidad: 7, cantidad_recibida: 2 },
+    ],
     com_oc_auto: [],
   }), "2026-11-07T00:00:00Z");
   const cab = filas.find((f) => f.sku === "CAB")!, sin = filas.find((f) => f.sku === "SIN")!;
-  assertEquals([cab.fisico, cab.enCamino, cab.fisico + cab.enCamino, cab.fisicoRespaldo], [5, 10, 15, false]);
-  assertEquals([sin.fisico, sin.fisicoRespaldo], [12, true]);
+  // La OC "billed" ya subió el contable: bloquea recompras, pero no suma en camino.
+  assertEquals([cab.inventario, cab.enCamino, cab.enOcAbierta], [12, 0, true]);
+  assertEquals([sin.inventario, sin.enCamino, sin.enOcAbierta], [12, 5, true]);
 });
 
 const fila = (o: Partial<Fila>): Fila => ({
-  sku: "A", nombre: "A", zoho_item_id: "i", zoho_vendor_id: "v1", zoho_vendor_name: "P", costo: 10, fisico: 0, fisicoRespaldo: false,
+  sku: "A", nombre: "A", zoho_item_id: "i", zoho_vendor_id: "v1", zoho_vendor_name: "P", costo: 10, inventario: 0,
   saldo_yulius: 0, enCamino: 0, enOcAbierta: false, minimo: 340, maximo: 640, venta_diaria: 20, kits_max: 0, multiplo: null,
   minimoPzas: null, lead_time: 7, ...o,
 });

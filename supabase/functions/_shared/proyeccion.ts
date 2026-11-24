@@ -76,7 +76,7 @@ export function proyectar(e: EntradaProyeccion): { filas: FilaPago[]; sinCosto: 
     const curva = e.curvas[f.sku] ?? [0];
     const D = (j: number) => { const v = curva[Math.min(j, curva.length - 1)]; return Number.isFinite(v) ? v : 0; };
     const kit = e.kit[f.sku] ?? 0;
-    let pos = f.fisico + (e.sumarYulius ? f.saldo_yulius : 0) + f.enCamino;
+    let pos = f.inventario + (e.sumarYulius ? f.saldo_yulius : 0) + f.enCamino;
     let bloqueo: string | null = bloqueoAbiertas.get(f.sku) ?? null;
     const valido = !!f.zoho_item_id && !!f.zoho_vendor_id;
     for (let j = 0; j <= H; j++) {

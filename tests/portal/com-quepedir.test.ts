@@ -45,6 +45,14 @@ describe('enCamino', () => {
       ]),
     ).toEqual({ A: 11 });
   });
+  it('con sinFacturadas deja fuera las OCs "billed": sus piezas ya están en el contable', () => {
+    const lineas = [
+      { sku: 'A', status: 'open', cantidad: 10, cantidad_recibida: 4 },
+      { sku: 'A', status: 'Billed', cantidad: 8, cantidad_recibida: 0 },
+    ];
+    expect(enCamino(lineas)).toEqual({ A: 14 });
+    expect(enCamino(lineas, { sinFacturadas: true })).toEqual({ A: 6 });
+  });
 });
 
 const datos = (o: Partial<DatosQuePedir> = {}): DatosQuePedir => ({
@@ -80,7 +88,7 @@ describe('filasQuePedir (_qpFilas)', () => {
     const [a, b] = filasQuePedir(datos(), 15, '2026-11-13');
     expect(a).toMatchObject({
       sku: 'A',
-      disp: 10,
+      inventario: 10,
       camino: 3,
       venta: 2,
       dias: 5,
@@ -100,13 +108,24 @@ describe('filasQuePedir (_qpFilas)', () => {
       nota: 'sin costo',
     });
   });
+  it('el inventario es el contable de Zoho, aunque haya físico', () => {
+    const d = datos({
+      catalogo: [cat({ zoho_stock: 6, zoho_stock_fisico: 40 }) as never],
+      minmax: [{ sku: 'A', venta_diaria: 2 }],
+    });
+    const [f] = filasQuePedir({ ...d, yulius: false }, 7, '2026-11-13');
+    expect(f.inventario).toBe(6);
+    expect(f.dias).toBe(3);
+    expect(f.fisico).toBe(40); // solo informativo
+    expect(filasQuePedir(datos(), 7, '2026-11-13')[0].fisico).toBeNull();
+  });
   it('suma saldo de 3PL solo con inv.yulius', () => {
     const d = datos({
       catalogo: [cat({ saldo_yulius: 4 }) as never],
       minmax: [{ sku: 'A', venta_diaria: 1 }],
     });
-    expect(filasQuePedir(d, 7, '2026-11-13')[0].disp).toBe(14);
-    expect(filasQuePedir({ ...d, yulius: false }, 7, '2026-11-13')[0].disp).toBe(10);
+    expect(filasQuePedir(d, 7, '2026-11-13')[0].inventario).toBe(14);
+    expect(filasQuePedir({ ...d, yulius: false }, 7, '2026-11-13')[0].inventario).toBe(10);
   });
 });
 

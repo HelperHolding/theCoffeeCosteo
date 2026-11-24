@@ -72,12 +72,12 @@ describe('Inventario', () => {
       />,
     );
     const encabezados = screen.getAllByRole('columnheader').map((th) => th.textContent?.trim());
-    expect(encabezados.slice(0, 3)).toEqual(['Nombre', 'Inventario', 'En camino']);
-    expect(encabezados[3]).toBe('Venta diaria');
+    expect(encabezados.slice(0, 4)).toEqual(['Nombre', 'Inventario', 'Físico (Informativo)', 'En camino']);
+    expect(encabezados[4]).toBe('Venta diaria');
     const celdas = screen.getAllByRole('row')[1].querySelectorAll('td');
-    expect(celdas[2].textContent).toContain('25');
-    expect(celdas[2].textContent).toContain('COM-OC-01342');
-    expect(screen.getAllByRole('row')[2].querySelectorAll('td')[2].textContent).toBe('—');
+    expect(celdas[3].textContent).toContain('25');
+    expect(celdas[3].textContent).toContain('COM-OC-01342');
+    expect(screen.getAllByRole('row')[2].querySelectorAll('td')[3].textContent).toBe('—');
   });
   it('el CSV trae En camino y los folios de OC', async () => {
     let blob: Blob | null = null;
@@ -101,8 +101,10 @@ describe('Inventario', () => {
     await userEvent.click(screen.getByRole('button', { name: /Descargar CSV/ }));
     const texto = await (blob as unknown as Blob).text();
     const [encabezado, linea] = texto.replace(/^﻿/, '').split(/\r?\n/);
-    expect(encabezado).toContain('Inventario (contable),En camino (OC abiertas),OC en camino,Venta diaria');
-    expect(linea).toContain('-6,25,COM-OC-01342');
+    expect(encabezado).toContain(
+      'Inventario (contable),Fisico (informativo),En camino (OC abiertas),OC en camino,Venta diaria',
+    );
+    expect(linea).toContain('-6,,25,COM-OC-01342');
     click.mockRestore();
   });
   it('sin permiso de edición no muestra "Ajustar 3PL"', () => {
