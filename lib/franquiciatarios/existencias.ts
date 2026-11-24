@@ -187,7 +187,8 @@ export function armarExistencias(a: {
             dia: base.dia,
             esperado: redondear(esperado),
             contado: Number(base.cantidad),
-            diferencia: redondear(Number(base.cantidad) - esperado),
+            // A centésimas: el conteo se captura así; una diferencia menor es redondeo, no faltante.
+            diferencia: Math.round((Number(base.cantidad) - esperado) * 100) / 100 || 0,
           };
         }
       }

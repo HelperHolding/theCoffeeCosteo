@@ -1,8 +1,29 @@
 import type { ComponentProps } from 'react';
 import * as flujo from './flujo';
+import { GRABAR as GRABAR_FRANQ } from './franq-real';
+
+// Videos de Franquiciatarios (?franquiciatarios&grabar): /franquiciatarios/514/<pantalla> → vista del arnés.
+const PF = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+function rutaFranq(href: string): string | null {
+  if (!GRABAR_FRANQ) return null;
+  const u = new URL(href, 'http://x');
+  const m = /^\/franquiciatarios(?:\/(\d+)(?:\/([a-z-]+))?)?\/?$/.exec(u.pathname);
+  if (!m) return null;
+  const q = new URLSearchParams();
+  q.set('franquiciatarios', '');
+  q.set('grabar', '');
+  q.set('rol', PF.get('rol') ?? 'barista');
+  q.set('vista', m[1] ? (m[2] ?? 'hoy') : 'sucursales');
+  u.searchParams.forEach((v, k) => q.set(k, v));
+  return `/?${q.toString().replace(/=(&|$)/g, '$1')}`;
+}
 // ?ruta=/crm/pendientes simula la página (p. ej. para las sugerencias del agente); con ?grabar, Mis pendientes.
 export function usePathname() {
   const p = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+  if (GRABAR_FRANQ) {
+    const v = p.get('vista') ?? 'hoy';
+    return v === 'sucursales' ? '/franquiciatarios' : `/franquiciatarios/514${v === 'hoy' ? '' : `/${v}`}`;
+  }
   return p.get('ruta') ?? (p.has('grabar') ? '/crm/pendientes' : '/productos');
 }
 export function useSearchParams() {
@@ -16,6 +37,11 @@ export function notFound(): never {
 }
 // Con ?grabar, refresh recarga (el estado del video vive en sessionStorage) y push navega dentro del arnés.
 export function useRouter() {
+  if (GRABAR_FRANQ)
+    return {
+      push: (href: string) => window.location.assign(rutaFranq(href) ?? href),
+      refresh: () => window.dispatchEvent(new Event('franq-cambio')),
+    };
   if (!flujo.GRABANDO) return { push: () => {}, refresh: () => {} };
   return {
     push: (href: string) => window.location.assign(flujo.mapear(href)),
@@ -23,6 +49,20 @@ export function useRouter() {
   };
 }
 export default function Link(props: ComponentProps<'a'>) {
+  const franq = typeof props.href === 'string' ? rutaFranq(props.href) : null;
+  if (franq)
+    return (
+      <a
+        {...props}
+        href={franq}
+        onClick={(e) => {
+          props.onClick?.(e);
+          if (e.defaultPrevented) return;
+          e.preventDefault();
+          window.location.assign(franq);
+        }}
+      />
+    );
   if (!flujo.GRABANDO || typeof props.href !== 'string' || !props.href.startsWith('/crm'))
     return <a {...props} />;
   const destino = flujo.mapear(props.href);

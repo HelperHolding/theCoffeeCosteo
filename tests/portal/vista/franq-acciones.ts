@@ -65,7 +65,10 @@ export const tienda = {
 };
 let id = 1000;
 const ahora = () => new Date().toISOString();
-const avisar = () => window.dispatchEvent(new Event('franq-cambio'));
+const avisar = () => {
+  guardarEstado();
+  window.dispatchEvent(new Event('franq-cambio'));
+};
 const CHECK: Record<SeccionClave, number> = { apertura: 1, durante: 2, cambio: 3, medio: 3, cierre: 4 };
 const vigentes = (ch: number, punto: number) =>
   tienda.respuestas.filter(
@@ -771,3 +774,30 @@ export async function registrarEntrada(d: {
   avisar();
   return { ok: true };
 }
+
+// Grabación de videos (?franquiciatarios&grabar): el estado vive en sessionStorage de la pestaña grabada, así un
+// recorrido de varias pantallas (y de varios roles) conserva lo registrado. &nuevo empieza de cero.
+const PARAMS = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+const GRABANDO = PARAMS.has('franquiciatarios') && PARAMS.has('grabar');
+const CLAVE = 'franq-video';
+if (GRABANDO && PARAMS.has('nuevo')) sessionStorage.removeItem(CLAVE);
+
+function guardarEstado() {
+  if (!GRABANDO) return;
+  const { rol: _rol, sinRed: _red, presentaciones, ...resto } = tienda;
+  sessionStorage.setItem(CLAVE, JSON.stringify({ ...resto, presentaciones: [...presentaciones], id }));
+}
+
+/** Restaura lo grabado hasta ahora; false si la pestaña empieza de cero (entonces el arnés siembra). */
+export function restaurarEstado(): boolean {
+  if (!GRABANDO) return false;
+  const crudo = sessionStorage.getItem(CLAVE);
+  if (!crudo) return false;
+  const { presentaciones, id: ultimo, ...resto } = JSON.parse(crudo);
+  Object.assign(tienda, resto, { presentaciones: new Map(presentaciones) });
+  id = ultimo;
+  return true;
+}
+
+/** Guarda la siembra inicial para que la siguiente pantalla la encuentre. */
+export const sembrado = () => guardarEstado();

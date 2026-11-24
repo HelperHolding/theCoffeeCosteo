@@ -73,15 +73,21 @@ export const catalogo = [
  * fetch falso: sirve el catálogo y pedidos por fecha (orden desc, paginados como la API real).
  * Registra cada URL y cada header Authorization para verificar que el token no viaja en la URL.
  */
-export function apiFalsa(porFecha: Record<string, PedidoApi[]>) {
+/** `sucursal`: otra identidad de la API (p. ej. la copia real de una sucursal para los videos); por omisión, Cd. Juárez. */
+export function apiFalsa(
+  porFecha: Record<string, PedidoApi[]>,
+  sucursal?: { id: number; name: string; lookerStoreId: number },
+) {
   const llamadas: { url: string; auth: string | null }[] = [];
+  const empresa = sucursal?.id ?? 612;
+  const lista = sucursal ? [...catalogo.filter((c) => c.id !== sucursal.id), sucursal] : catalogo;
   const fetchFalso = async (entrada: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(entrada));
     llamadas.push({ url: url.toString(), auth: new Headers(init?.headers).get('authorization') });
-    if (url.pathname === '/company/list/all') return Response.json(catalogo);
+    if (url.pathname === '/company/list/all') return Response.json(lista);
     const m = /^\/order\/company\/(\d+)$/.exec(url.pathname);
     if (!m) return new Response('no', { status: 404 });
-    if (Number(m[1]) !== 612)
+    if (Number(m[1]) !== empresa)
       return Response.json({ statusCode: 404, message: 'company not found' }, { status: 404 });
     const desde = url.searchParams.get('dateStart')!;
     const hasta = url.searchParams.get('dateEnd')!;

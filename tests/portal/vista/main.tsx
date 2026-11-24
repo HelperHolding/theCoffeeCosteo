@@ -1,3 +1,4 @@
+import './reloj';
 import { createRoot } from 'react-dom/client';
 import { EditorReceta } from '../../../components/recetas/editor-receta';
 import { TablaResumen } from '../../../components/portal/tabla-resumen';

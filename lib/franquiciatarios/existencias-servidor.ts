@@ -31,7 +31,7 @@ export interface ExistenciasSucursal {
  * Consumo teórico por día de operación con el MISMO motor que Sucursales, mermas y la OV sugerida (ventas del POS +
  * Rappi del portal × recetas): una sola lectura de la ventana y un cálculo por día. null si no se pudo.
  */
-async function consumoPorDia(
+export async function consumoPorDia(
   cfg: ConfigSucursal,
   desde: string,
   hasta: string,
