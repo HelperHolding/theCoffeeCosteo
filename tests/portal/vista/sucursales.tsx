@@ -25,6 +25,7 @@ import { construirMenu } from '../../../lib/sucursales/menu-rappi';
 import { menuSintetico } from './menu-sintetico';
 import { recortarAlPublicado } from '../../../lib/sucursales/servicio-publicado';
 import { servicioSintetico } from './servicio-sintetico';
+import { GRABAR, REAL, rappiEntre } from './franq-real';
 
 /**
  * Ventas POS con DATOS SINTÉTICOS: el mismo pipeline del servidor corre en el navegador sobre un
@@ -34,8 +35,11 @@ import { servicioSintetico } from './servicio-sintetico';
  */
 const parametros = new URLSearchParams(window.location.search);
 const gdl = parametros.get('gdl') === '1';
-const portal = gdl && parametros.get('portal') === '1';
-const cfg = gdl
+const portal = GRABAR || (gdl && parametros.get('portal') === '1');
+// Grabando un video de Franquiciatarios: la sucursal real con su copia del POS y de Rappi (franq-real.ts).
+const cfg = GRABAR
+  ? configDe(REAL!.meta.company)!
+  : gdl
   ? {
       ...configDe(384)!,
       companyId: 612,
@@ -44,6 +48,8 @@ const cfg = gdl
       rappiPortal: portal,
     }
   : configDe(612)!;
+
+const rappiDe = (d: string, h: string) => (GRABAR ? rappiEntre(d, h) : rappiPortalSintetico(d, h));
 
 // Pedidos de Rappi SINTÉTICOS del portal (nombres del menú de Rappi; precios y cantidades inventados).
 const MENU_RAPPI: [string, number, [string, string, number?][][]][] = [
@@ -363,8 +369,9 @@ function dia(fecha: string, hastaSegundo: number, semilla: number): PedidoApi[] 
 
 const ahora = enZona(new Date(), cfg.zona);
 const hoy = ahora.fecha;
-const datos: Record<string, PedidoApi[]> =
-  estado === 'vacio'
+const datos: Record<string, PedidoApi[]> = GRABAR
+  ? REAL!.pos
+  : estado === 'vacio'
     ? { [sumarDias(hoy, -7)]: dia(sumarDias(hoy, -7), 86_399, 7) }
     : Object.fromEntries(
         Array.from({ length: 90 }, (_, i) => {
@@ -372,7 +379,10 @@ const datos: Record<string, PedidoApi[]> =
           return [f, dia(f, i === 0 ? ahora.segundo : 86_399, 11 + i)];
         }),
       );
-const api = apiFalsa(datos);
+const api = apiFalsa(
+  datos,
+  GRABAR ? { id: cfg.companyId, name: `The Coffee ${cfg.nombre}`, lookerStoreId: cfg.lookerStoreId } : undefined,
+);
 const fetchProveedor: typeof fetch = async (u, init) => {
   if (estado === 'error') return new Response('', { status: 503 });
   if (estado === 'parcial' && String(u).includes(`dateStart=${sumarDias(hoy, -7)}`))
@@ -401,7 +411,7 @@ window.fetch = async (entrada, init) => {
   const desde = q.get('desde') ?? hoy;
   const hasta = q.get('hasta') ?? desde;
   if (m[2] === 'rappi-portal')
-    return Response.json(construirRappiPortal(rappiPortalSintetico(desde, hasta), desde, hasta));
+    return Response.json(construirRappiPortal(rappiDe(desde, hasta), desde, hasta));
   if (m[2] === 'menu') {
     if (!portal)
       return Response.json({ error: 'Esta sucursal no está conectada al portal de Rappi.' }, { status: 404 });
@@ -427,7 +437,7 @@ window.fetch = async (entrada, init) => {
   // Namóra sintética: Rappi del portal traducido al POS, como en producción (fuenteRappi).
   const rappi = portal
     ? async (d: string, h: string) =>
-        rappiPortalSintetico(d, h)
+        rappiDe(d, h)
           .pedidos.map((p) => pedidoRappiAPos(p))
           .filter((p) => p !== null)
     : undefined;
@@ -437,14 +447,22 @@ window.fetch = async (entrada, init) => {
     return Response.json(await construirConsumo(cfg, desde, hasta, origen, consumo, null, rappi));
   const cuerpo =
     m[2] === 'vivo'
-      ? await construirVivo(cfg, origen, { forzar: q.get('fresco') === '1' })
+      ? await construirVivo(cfg, origen, { forzar: q.get('fresco') === '1', rappi })
       : m[2] === 'tendencias'
-        ? await construirTendencias(cfg, Number(q.get('semanas') ?? 4) as 4 | 8 | 12, origen)
+        ? await construirTendencias(cfg, Number(q.get('semanas') ?? 4) as 4 | 8 | 12, origen, rappi)
         : m[2] === 'productos'
-          ? await construirProductos(cfg, desde, hasta, origen)
-          : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1));
+          ? await construirProductos(cfg, desde, hasta, origen, null, rappi)
+          : await construirPedidos(cfg, desde, hasta, origen, q.get('pago'), Number(q.get('pagina') ?? 1), rappi);
   return Response.json(cuerpo);
 };
+
+/** Rappi del portal traducido al POS para la tira de Franquiciatarios (mismo arnés). */
+export const rappiArnes = portal
+  ? async (d: string, h: string) =>
+      rappiDe(d, h)
+        .pedidos.map((p) => pedidoRappiAPos(p))
+        .filter((p) => p !== null)
+  : undefined;
 
 export function VistaSucursales() {
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from 'react';
+import { Store } from 'lucide-react';
 import { Marco } from '../../../components/portal/marco';
 import { Encabezado } from '../../../components/portal/piezas';
 import { Checklist } from '../../../components/franquiciatarios/checklist';
@@ -21,7 +22,9 @@ import type {
 import { configDe } from '../../../lib/sucursales/config';
 import { construirTira, sinDatosSensibles } from '../../../lib/franquiciatarios/ventas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
-import { tienda } from './franq-acciones';
+import { restaurarEstado, sembrado, tienda } from './franq-acciones';
+import { GRABAR, REAL } from './franq-real';
+import { rappiArnes } from './sucursales';
 import { PropuestaGerente } from './propuesta-gerente';
 import { VerComo } from '../../../components/franquiciatarios/ver-como';
 import { PedidosFranq } from '../../../components/franquiciatarios/pedidos';
@@ -446,7 +449,15 @@ function sembrarCaja() {
     corrige_id: null,
   });
 }
-const efectivoArnes = (iso: string) => {
+const efectivoArnes = (iso: string) => (GRABAR ? efectivoReal(iso) : efectivoSintetico(iso));
+/** Efectivo cobrado hoy en el POS hasta `iso` (la hora del POS es local etiquetada con Z; CDMX es UTC−6). */
+const efectivoReal = (iso: string) => {
+  const local = new Date(Date.parse(iso) - 6 * 3_600_000).toISOString().slice(0, 19);
+  return (REAL!.pos[tienda.dia] ?? [])
+    .filter((x) => x.paymentMethod === 'DINHEIRO' && x.createdAt.slice(0, 19) <= local)
+    .reduce((s, x) => s + Math.round(Number(x.grossAmount) * 100), 0);
+};
+const efectivoSintetico = (iso: string) => {
   const h = (Date.parse(iso) - Date.parse(hora(7, 0))) / 3_600_000;
   return Math.max(0, Math.round(h * 9000));
 };
@@ -472,6 +483,7 @@ const cajaDia = (): CajaDia => {
 };
 // P&L con las cifras reales de Essentia del 1 al 20 de noviembre (script pyl-essentia.ts) y fijos de Zoho.
 const pylArnes = (): PylMes => {
+  if (GRABAR) return REAL!.pyl;
   const fijos = fijosVigentes(
     Object.entries({
       renta: 38381,
@@ -662,7 +674,7 @@ if (estado !== 'vacio') {
 }
 
 // API del módulo sobre el fetch falso de Sucursales (mismo pipeline), sin neto ni costos.
-const cfgVentas = configDe(612)!;
+const cfgVentas = GRABAR ? configDe(REAL!.meta.company)! : configDe(612)!;
 const fetchPrevio = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
@@ -675,13 +687,13 @@ window.fetch = async (entrada, init) => {
       cfgVentas,
       q.get('dia') ?? enZona(new Date(), cfgVentas.zona).fecha,
       (q.get('origen') ?? 'todos') as 'todos',
-      {},
+      GRABAR ? { rappi: rappiArnes } : {},
     );
     return Response.json(
-      sinDatosSensibles({ ...t, sucursal: { ...t.sucursal, nombre: 'Essentia', ciudad: 'Guadalajara' } }),
+      sinDatosSensibles(GRABAR ? t : { ...t, sucursal: { ...t.sucursal, nombre: 'Essentia', ciudad: 'Guadalajara' } }),
     );
   }
-  const r = await fetchPrevio(`/api/sucursales/612/${m[2]}${url.search}`, init);
+  const r = await fetchPrevio(`/api/sucursales/${cfgVentas.companyId}/${m[2]}${url.search}`, init);
   return Response.json(sinDatosSensibles(await r.json()));
 };
 
@@ -716,7 +728,7 @@ function avisosDe(dia: ReturnType<typeof armarDia>): FranqAviso[] {
   return out;
 }
 
-sembrarCaja();
+if (!GRABAR) sembrarCaja();
 
 export function VistaFranquiciatarios() {
   const [, forzar] = useReducer((n: number) => n + 1, 0);
@@ -740,7 +752,10 @@ export function VistaFranquiciatarios() {
     ahora: new Date(),
   });
   const gestor = tienda.rol !== 'barista';
-  const elegido = tienda.baristas.find((b) => b.id === tienda.elegido && b.activo) ?? null;
+  // Solo la cuenta de baristas declara un nombre en el dispositivo (como en las páginas reales).
+  const elegido =
+    tienda.rol === 'barista' ? (tienda.baristas.find((b) => b.id === tienda.elegido && b.activo) ?? null) : null;
+  if (GRABAR) tienda.perfil = tienda.rol === 'franquiciatario' ? 'Halim' : 'Gerente Essentia';
   const necesitaNombre = tienda.rol === 'barista' && !elegido;
   const base = '/franquiciatarios/514';
   const titulo =
@@ -757,7 +772,15 @@ export function VistaFranquiciatarios() {
       caja: 'Caja',
       pyl: 'P&L y metas',
       inventario: 'Inventario',
+      entradas: 'Entradas',
+      existencias: 'Existencias',
+      mermas: 'Mermas',
+      roles: gestor ? 'Roles por posición' : 'Roles de hoy',
+      recetas: 'Recetas',
+      servicio: 'Tiempo de preparación',
+      sucursales: 'Mis sucursales',
     }[vista] ?? 'Hoy';
+  const descripcionFija = GRABAR ? DESCRIPCIONES[vista] : undefined;
   const actual = dia.secciones.find((s) => s.clave === seccionPedida) ?? dia.secciones[0];
   const hoyVentas = enZona(new Date(), cfgVentas.zona).fecha;
   return (
@@ -768,17 +791,19 @@ export function VistaFranquiciatarios() {
       }}
       seccion="franquiciatarios"
       visibles={['franquiciatarios']}
-      franquicia={{ companyId: 514, nombre: 'Essentia', gestor, varias: tienda.rol === 'franquiciatario' }}
+      franquicia={vista === 'sucursales' ? undefined : { companyId: 514, nombre: 'Essentia', gestor, varias: tienda.rol === 'franquiciatario' }}
     >
-      <p className="aviso">PRUEBA VISUAL · DATOS SINTÉTICOS · Sin Auth ni conexión a bases de datos</p>
+      {!GRABAR && <p className="aviso">PRUEBA VISUAL · DATOS SINTÉTICOS · Sin Auth ni conexión a bases de datos</p>}
       {p.get('admin') === '1' && <VerComo rol={tienda.rol} />}
       <Encabezado
-        area="Essentia"
+        area={vista === 'sucursales' ? 'Operación' : 'Essentia'}
         titulo={titulo}
         descripcion={
-          <span className="first-letter:uppercase">
-            {diaLargo(tienda.dia)} · día de operación (cambia a las 4:00)
-          </span>
+          descripcionFija ?? (
+            <span className="first-letter:uppercase">
+              {diaLargo(tienda.dia)} · día de operación (cambia a las 4:00)
+            </span>
+          )
         }
       />
       {(vista === 'hoy' || vista === 'checklist') && necesitaNombre ? (
@@ -855,6 +880,8 @@ export function VistaFranquiciatarios() {
           gestor={tienda.rol !== 'barista'}
           hoy={tienda.dia}
         />
+      ) : vista === 'sucursales' ? (
+        <MisSucursales />
       ) : vista === 'entradas' ? (
         <EntradasFranq
           companyId={514}
@@ -866,7 +893,7 @@ export function VistaFranquiciatarios() {
       ) : vista === 'existencias' ? (
         <ExistenciasFranq companyId={514} hoy={tienda.dia} {...existenciasArnes()} />
       ) : vista === 'recetas' ? (
-        <RecetasFranq ficha={armarFicha(FICHA_ARNES)} />
+        <RecetasFranq ficha={armarFicha(GRABAR ? REAL!.ficha : FICHA_ARNES)} />
       ) : vista === 'servicio' ? (
         <ServicioFranq s={servicioArnes()} />
       ) : vista === 'pyl' ? (
@@ -934,6 +961,7 @@ const FICHA_ARNES: RpcFicha = {
 };
 
 function servicioArnes() {
+  if (GRABAR) return armarServicio(REAL!.servicio);
   const hasta = sumarDias(diaOperacion(), -2);
   const dias =
     estado === 'vacio'
@@ -1026,6 +1054,7 @@ sembrarF6();
 
 /** Mermas del día con un consumo teórico sintético (en la unidad base) y costos ilustrativos para los gestores. */
 function mermasArnes(gestor: boolean): MermasDia {
+  if (GRABAR) return mermasReales(gestor);
   // En el arnés, los primeros 10 insumos de la lista se ligan a un «insumo de Costeo» ficticio.
   const insumos = tienda.insumos.map((i, k) => (k < 10 ? { ...i, insumo_id: `costeo-${i.id}` } : i));
   const vig = vigentesMerma(tienda.mermas.filter((x) => x.dia === tienda.dia));
@@ -1055,8 +1084,53 @@ function mermasArnes(gestor: boolean): MermasDia {
   };
 }
 
+/** Mermas con el consumo teórico REAL del día y el costo de Costeo (solo gestores), como leerMermasDia. */
+function mermasReales(gestor: boolean): MermasDia {
+  const r = REAL!;
+  const costeo = new Map<string, InsumoCosteo>();
+  for (const [id, pres] of tienda.presentaciones)
+    costeo.set(id, { presentacion: pres, costoUnitario: r.insumos.costos?.[id] ?? null });
+  const consumo = r.consumo.dias ? new Map(Object.entries(r.consumo.dias[tienda.dia] ?? {})) : null;
+  return {
+    dia: tienda.dia,
+    insumos: tienda.insumos,
+    registros: vigentesMerma(tienda.mermas.filter((x) => x.dia === tienda.dia)),
+    cierre: tienda.cierres.find((c) => c.dia === tienda.dia) ?? null,
+    filas: gestor
+      ? compararMermas({
+          insumos: tienda.insumos,
+          mermas: tienda.mermas.filter((x) => x.dia === tienda.dia),
+          tolerancias: toleranciasVigentes(tienda.tolerancias),
+          consumo,
+          costeo,
+        })
+      : null,
+    aviso: gestor ? r.consumo.aviso : null,
+  };
+}
+
 /** Existencias del arnés: los primeros 10 insumos ligados a Costeo (como en mermas) y consumo sintético por día. */
 function existenciasArnes() {
+  if (GRABAR) {
+    const r = REAL!;
+    const consumo: ConsumoPorDia = new Map(
+      Object.entries(r.consumo.dias ?? {}).map(([d, m]) => [d, new Map(Object.entries(m))]),
+    );
+    return {
+      insumos: tienda.insumos,
+      filas: armarExistencias({
+        insumos: tienda.insumos,
+        conteos: tienda.conteos,
+        entradas: tienda.entradas,
+        mermas: tienda.mermas,
+        consumo: r.consumo.dias ? consumo : null,
+        presentaciones: tienda.presentaciones,
+        hoy: tienda.dia,
+      }),
+      entradas: vigentesEntrada(tienda.entradas).reverse(),
+      aviso: r.consumo.aviso,
+    };
+  }
   const insumos = tienda.insumos.map((i, k) => (k < 10 ? { ...i, insumo_id: `costeo-${i.id}` } : i));
   const consumo: ConsumoPorDia = new Map();
   for (let d = 0; d <= 4; d++) {
@@ -1088,3 +1162,192 @@ function existenciasArnes() {
 
 const semanaArnes = () =>
   armarSemana(lunesDe(tienda.dia), tienda.turnos, tienda.posiciones, tienda.asignaciones, tienda.baristas);
+
+// ── Grabación con datos REALES (?franquiciatarios&grabar, franq-real.ts) ─────────────────────────────────────────
+// Lo que la sucursal ya tiene en producción viene de la copia (insumos, pedidos, recetas, P&L, ventas); lo que todavía
+// no existe (baristas, conteo de ayer, roles de la semana) se siembra aquí. Todo lo demás se registra en el video.
+function sembrarReal() {
+  const r = REAL!;
+  const ayer = sumarDias(tienda.dia, -1);
+  Object.assign(tienda, {
+    perfil: tienda.rol === 'franquiciatario' ? 'Halim' : 'Gerente Essentia',
+    elegido: null,
+    respuestas: [],
+    firmas: [],
+    incidencias: [],
+    recepciones: [],
+    conteos: [],
+    arqueos: [],
+    gastos: [],
+    mermas: [],
+    tolerancias: [],
+    cierres: [],
+    entradas: [],
+    posiciones: [],
+    turnos: [],
+    asignaciones: [],
+    cajaConfig: { fondo: 1500, tolerancia: 20 },
+    pedidos: r.pedidos,
+    insumos: r.insumos.insumos,
+    equivalencias: r.insumos.equivalencias,
+    presentaciones: new Map(Object.entries(r.insumos.presentaciones)),
+  });
+  tienda.baristas = [alta(1, 'Ana Torres'), alta(2, 'Luis Peña')];
+  // Conteo de apertura de ayer (lo hizo Luis): parte de las existencias de hoy.
+  const consumoAyer = r.consumo.dias?.[ayer] ?? {};
+  tienda.insumos.forEach((ins, i) => {
+    const pres = ins.insumo_id ? (r.insumos.presentaciones[ins.insumo_id] ?? 1) : 1;
+    const factor = pres > 1 && /^paquete/i.test(ins.unidad) ? pres : 1;
+    const gasto = ins.insumo_id ? (consumoAyer[ins.insumo_id] ?? 0) / factor : 0;
+    tienda.conteos.push({
+      id: 7000 + i,
+      company_id: 514,
+      dia: ayer,
+      momento: 'apertura',
+      insumo_id: ins.id,
+      cantidad: Math.round((gasto * 2.4 + 2 + (i % 3)) * 2) / 2,
+      barista_id: 2,
+      nombre: 'Luis Peña',
+      registrado_por: 'cuenta',
+      registrado_en: `${ayer}T13:10:00Z`,
+      sesion: 's',
+      dispositivo: 'tablet',
+      corrige_id: null,
+    });
+  });
+  // Posiciones, turnos y la semana en curso (la gerencia la ajusta en el video).
+  ['Caja/Mostrador', 'Barra caliente', 'Barra fría', 'Alimentos', 'Rappi/Delivery'].forEach((nombre, i) =>
+    tienda.posiciones.push({ id: 900 + i, company_id: 514, nombre, orden: i + 1, activo: true }),
+  );
+  tienda.turnos.push(
+    { id: 950, company_id: 514, nombre: 'Matutino', entrada: '07:00:00', salida: '15:00:00', orden: 1, activo: true },
+    { id: 951, company_id: 514, nombre: 'Vespertino', entrada: '15:00:00', salida: '22:00:00', orden: 2, activo: true },
+  );
+  const lunes = lunesDe(tienda.dia);
+  let aid = 5000;
+  for (let d = 0; d < 7; d++)
+    [
+      [950, 901, d % 2 ? 2 : 1],
+      [950, 900, d % 2 ? 1 : 2],
+      [951, 900, d % 2 ? 2 : 1],
+    ].forEach(([turno, posicion, barista]) =>
+      tienda.asignaciones.push({
+        id: aid++,
+        company_id: 514,
+        dia: sumarDias(lunes, d),
+        turno_id: turno,
+        posicion_id: posicion,
+        barista_id: barista,
+        anulada: false,
+        corrige_id: null,
+        registrado_por: 'g',
+        registrado_en: `${sumarDias(lunes, -2)}T15:00:00Z`,
+      }),
+    );
+}
+if (GRABAR && !restaurarEstado()) {
+  sembrarReal();
+  sembrado();
+}
+
+/** Descripciones de las páginas reales (app/(franquiciatarios)/…/page.tsx), para que el video se vea como el portal. */
+const DESCRIPCIONES: Record<string, string> = {
+  sucursales: 'Elige la sucursal para ver su día.',
+  avisos: 'Los «No» vigentes con su observación y las incidencias del periodo. Una corrección queda junto al registro original.',
+  equipo: 'Nombres de la cuenta de baristas de la sucursal. Cada registro guarda el nombre que eligió quien lo hizo.',
+  existencias: 'Lo que debería haber de cada insumo crítico: conteo, entradas, consumo por recetas y mermas.',
+  inventario: 'Insumos críticos que se cuentan en cada turno y lo que se contó en la última semana.',
+  pedidos:
+    'Lo que la sucursal pidió en los últimos 120 días, lo que costó y su recepción: quién recibió y qué llegó distinto.',
+  pyl: 'Estado de resultados del mes y avance contra la meta de venta del día, la semana y el mes.',
+  recetas: 'Insumos y cantidades de cada producto por tamaño, como están en el recetario.',
+  servicio: 'Cocina demorada, rechazos por demora y espera del repartidor según Rappi.',
+  tira: 'Resumen del día tipo ticket para imprimir o guardar en PDF. Mientras el día no cierre, sale marcada como parcial.',
+  ventas:
+    'Las mismas cifras que el reporte de la sucursal: venta del día, por origen y forma de pago, y el desglose de cada pedido.',
+};
+
+/** «Mis sucursales» del franquiciatario (la misma tarjeta que app/(franquiciatarios)/franquiciatarios/page.tsx). */
+function MisSucursales() {
+  const lista = (REAL?.sucursales ?? [{ companyId: 514, nombre: 'Essentia', ciudad: 'Guadalajara', ubicacion: null }])
+    .slice()
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {lista.map((s) => (
+        <li key={s.companyId}>
+          <a
+            href={`/franquiciatarios/${s.companyId}`}
+            onClick={(e) => {
+              e.preventDefault();
+              if (s.companyId === 514) window.location.assign(`/?franquiciatarios&grabar&rol=${tienda.rol}&vista=hoy`);
+            }}
+            className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-crema/45"
+          >
+            <span className="grid size-11 place-items-center rounded-xl bg-surface-2 text-ink">
+              <Store size={20} aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-display text-lg font-bold">{s.nombre}</span>
+              <span className="text-sm text-muted-foreground">{s.ciudad} · Franquiciatario</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Grabando: la etiqueta se imprime desde un marco oculto; en el video se muestra como vista previa de impresión
+// (50 × 80 mm a escala) en lugar del diálogo del navegador. Toca fuera de la etiqueta para cerrarla.
+if (GRABAR)
+  new MutationObserver((ms) =>
+    ms.forEach((m) =>
+      m.addedNodes.forEach((n) => {
+        if (!(n instanceof HTMLIFrameElement) || n.getAttribute('aria-hidden') !== 'true') return;
+        const velo = document.createElement('div');
+        velo.dataset.vistaPrevia = 'velo';
+        Object.assign(velo.style, {
+          position: 'fixed',
+          inset: '0',
+          background: 'rgba(20,16,12,.55)',
+          zIndex: '90',
+          display: 'grid',
+          placeItems: 'end center',
+          paddingBottom: '48px',
+          color: '#fff',
+          font: '600 18px Inter, sans-serif',
+        });
+        velo.textContent = 'Vista previa de impresión · etiqueta 50 × 80 mm';
+        velo.addEventListener('click', () => {
+          velo.remove();
+          n.remove();
+        });
+        document.body.appendChild(velo);
+        Object.assign(n.style, {
+          right: '50%',
+          bottom: '50%',
+          width: '189px',
+          height: '302px',
+          transform: 'translate(50%, 50%) scale(2.2)',
+          background: '#fff',
+          boxShadow: '0 20px 50px -10px rgba(0,0,0,.6)',
+          zIndex: '91',
+        });
+        n.dataset.vistaPrevia = 'etiqueta';
+        n.setAttribute('scrolling', 'no');
+        const sinDialogo = () => {
+          if (n.contentWindow) n.contentWindow.print = () => {};
+        };
+        sinDialogo();
+        n.addEventListener('load', sinDialogo);
+        const t = setInterval(sinDialogo, 50);
+        setTimeout(() => clearInterval(t), 4000);
+        // Nunca se quita sola mientras se graba (la quita el toque fuera).
+        const quitar = n.remove.bind(n);
+        n.remove = () => {
+          if (!velo.isConnected) quitar();
+        };
+      }),
+    ),
+  ).observe(document.body, { childList: true });
