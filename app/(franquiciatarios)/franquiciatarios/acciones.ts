@@ -12,6 +12,8 @@ import { cookieBarista } from '@/lib/franquiciatarios/servidor';
 import { configDe } from '@/lib/sucursales/config';
 import { armarPedidos } from '@/lib/franquiciatarios/pedidos';
 import { leerPedidosSucursal } from '@/lib/franquiciatarios/pedidos-servidor';
+import { equivalenciasLista } from '@/lib/franquiciatarios/existencias-servidor';
+import { entradasDePedido } from '@/lib/franquiciatarios/existencias';
 import type {
   MomentoArqueo,
   MomentoConteo,
@@ -269,6 +271,17 @@ export async function recibirPedido(datos: {
   const diferencias = pedido.lineas
     .map((l, i) => ({ nombre: l.nombre, sku: l.sku, pedido: l.cantidad, recibido: rec[i] }))
     .filter((d) => d.pedido !== d.recibido);
+  // Lo recibido entra a existencias: cada renglón se convierte a los insumos de la lista (equivalencia de la OV
+  // sugerida). Si no se puede preparar, no se registra la recepción a medias.
+  const insumos = await c.db.from('franq_insumos').select('*').eq('company_id', datos.companyId);
+  const eq = insumos.error ? null : await equivalenciasLista(insumos.data ?? []);
+  if (!eq) return { error: 'No se pudo preparar la entrada al inventario. Intenta de nuevo.' };
+  const { entradas } = entradasDePedido({
+    lineas: pedido.lineas.map((l, i) => ({ nombre: l.nombre, sku: l.sku, recibido: rec[i] })),
+    equivalencias: eq.equivalencias,
+    insumos: insumos.data ?? [],
+    presentaciones: eq.presentaciones,
+  });
   const disp = await dispositivo();
   return ejecutar(() =>
     c.db.rpc('franq_recibir', {
@@ -279,6 +292,7 @@ export async function recibirPedido(datos: {
       p_observacion: datos.observacion ?? null,
       p_barista: null,
       p_dispositivo: disp,
+      p_entradas: entradas,
     }),
   );
 }
@@ -561,6 +575,45 @@ export async function registrarMerma(datos: {
       p_insumo: datos.insumo,
       p_cantidad: datos.cantidad,
       p_motivo: datos.motivo,
+      p_nota: datos.nota ?? null,
+      p_barista: b,
+      p_dispositivo: disp,
+      p_corrige: datos.corrige ?? null,
+      p_anular: !!datos.anular,
+      p_motivo_correccion: datos.motivoCorreccion ?? null,
+    }),
+  );
+}
+
+/**
+ * Entrada de otro proveedor (leche, pan…) a existencias, o corrección / anulación de una vigente (`corrige`).
+ * Cualquier rol de la sucursal; la base decide quién corrige qué.
+ */
+export async function registrarEntrada(datos: {
+  companyId: number;
+  insumo: number | null;
+  cantidad: number | null;
+  proveedor: string | null;
+  nota?: string | null;
+  corrige?: number | null;
+  anular?: boolean;
+  motivoCorreccion?: string | null;
+}): Promise<Resultado> {
+  const c = await contexto(datos.companyId);
+  if (!c) return { error: SIN_ACCESO };
+  const b = await barista(datos.companyId, c.rol);
+  if (c.rol === 'barista' && !b) return { error: 'Elige tu nombre antes de registrar.' };
+  if (!datos.anular) {
+    if (!datos.insumo) return { error: 'Elige el insumo.' };
+    if (!Number.isFinite(datos.cantidad) || (datos.cantidad ?? 0) <= 0) return { error: 'Escribe la cantidad.' };
+  }
+  const disp = await dispositivo();
+  return ejecutar(() =>
+    c.db.rpc('franq_registrar_entrada', {
+      p_company: datos.companyId,
+      p_insumo: datos.insumo,
+      p_cantidad: datos.cantidad,
+      p_proveedor: datos.proveedor,
       p_nota: datos.nota ?? null,
       p_barista: b,
       p_dispositivo: disp,

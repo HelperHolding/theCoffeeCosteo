@@ -209,6 +209,7 @@ export interface Database {
       franq_mermas: Tabla<Franq.FranqMerma>;
       franq_merma_tolerancias: Tabla<Franq.FranqMermaTolerancia>;
       franq_mermas_cierre: Tabla<Franq.FranqMermasCierre>;
+      franq_entradas: Tabla<Franq.FranqEntrada>;
       recetas: Tabla<Receta>;
       insumos: Tabla<Insumo>;
       proveedores: Tabla<Catalogo>;
@@ -270,6 +271,7 @@ export interface Database {
       franq_barista_guardar: Franq.FuncionesFranq['franq_barista_guardar'];
       franq_avisos: Franq.FuncionesFranq['franq_avisos'];
       franq_recibir: Franq.FuncionesFranq['franq_recibir'];
+      franq_registrar_entrada: Franq.FuncionesFranq['franq_registrar_entrada'];
       franq_sugerir_insumos: Franq.FuncionesFranq['franq_sugerir_insumos'];
       franq_insumo_guardar: Franq.FuncionesFranq['franq_insumo_guardar'];
       franq_contar: Franq.FuncionesFranq['franq_contar'];

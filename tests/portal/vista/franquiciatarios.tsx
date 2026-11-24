@@ -50,6 +50,8 @@ import type { MotivoMerma } from '../../../lib/franquiciatarios/tipos';
 import { armarPyl, fijosVigentes, metasDe } from '../../../lib/franquiciatarios/pyl';
 import type { PylMes } from '../../../lib/franquiciatarios/pyl-servidor';
 import { armarPedidos } from '../../../lib/franquiciatarios/pedidos';
+import { EntradasFranq, ExistenciasFranq } from '../../../components/franquiciatarios/existencias';
+import { armarExistencias, vigentesEntrada, type ConsumoPorDia } from '../../../lib/franquiciatarios/existencias';
 
 /**
  * Franquiciatarios con DATOS SINTÉTICOS (sin Auth ni base): las acciones corren contra un estado en memoria con las
@@ -324,13 +326,21 @@ const LISTA_SUGERIDA: [string, string][] = [
   ['Matcha Gourmet Orgánico 1 Kg', 'paquete de 1000 gr'],
   ['Bolsas Para Pan Paquete (1000 Piezas)', 'paquete de 1000 pza'],
 ];
+// Equivalencias SKU → insumo del arnés (como com_insumo_sku): café White y tapas frías van a la lista.
+tienda.equivalencias = [
+  { sku: 'INS-CAF-003', insumoId: 'costeo-700', factor: 1500 },
+  { sku: 'INS-DES-008', insumoId: 'costeo-711', factor: 1000 },
+];
+LISTA_SUGERIDA.forEach(([, unidad], i) =>
+  tienda.presentaciones.set(`costeo-${700 + i}`, Number(/paquete de (\d+)/.exec(unidad)?.[1] ?? 1)),
+);
 const momentoConteo = p.get('momento') === 'medio' ? ('medio' as const) : ('apertura' as const);
 if (p.get('sinlista') !== '1') {
   LISTA_SUGERIDA.forEach(([nombre, unidad], i) =>
     tienda.insumos.push({
       id: 700 + i,
       company_id: 514,
-      insumo_id: null,
+      insumo_id: i < 12 ? `costeo-${700 + i}` : null,
       nombre,
       unidad,
       orden: i + 1,
@@ -845,6 +855,16 @@ export function VistaFranquiciatarios() {
           gestor={tienda.rol !== 'barista'}
           hoy={tienda.dia}
         />
+      ) : vista === 'entradas' ? (
+        <EntradasFranq
+          companyId={514}
+          insumos={tienda.insumos}
+          entradas={vigentesEntrada(tienda.entradas.filter((e) => e.dia === tienda.dia)).reverse()}
+          gestor={gestor}
+          hoy={tienda.dia}
+        />
+      ) : vista === 'existencias' ? (
+        <ExistenciasFranq companyId={514} hoy={tienda.dia} {...existenciasArnes()} />
       ) : vista === 'recetas' ? (
         <RecetasFranq ficha={armarFicha(FICHA_ARNES)} />
       ) : vista === 'servicio' ? (
@@ -1032,6 +1052,37 @@ function mermasArnes(gestor: boolean): MermasDia {
         })
       : null,
     aviso: gestor ? 'Arnés: consumo teórico y costos sintéticos.' : null,
+  };
+}
+
+/** Existencias del arnés: los primeros 10 insumos ligados a Costeo (como en mermas) y consumo sintético por día. */
+function existenciasArnes() {
+  const insumos = tienda.insumos.map((i, k) => (k < 10 ? { ...i, insumo_id: `costeo-${i.id}` } : i));
+  const consumo: ConsumoPorDia = new Map();
+  for (let d = 0; d <= 4; d++) {
+    const dia = sumarDias(tienda.dia, -d);
+    consumo.set(
+      dia,
+      new Map(
+        insumos
+          .filter((i) => i.insumo_id)
+          .map((i, k) => [i.insumo_id!, (k % 3) + 1.5 * (tienda.presentaciones.get(i.insumo_id!) ?? 1)]),
+      ),
+    );
+  }
+  return {
+    insumos,
+    filas: armarExistencias({
+      insumos,
+      conteos: tienda.conteos,
+      entradas: tienda.entradas,
+      mermas: tienda.mermas,
+      consumo,
+      presentaciones: tienda.presentaciones,
+      hoy: tienda.dia,
+    }),
+    entradas: vigentesEntrada(tienda.entradas).reverse(),
+    aviso: 'Arnés: consumo teórico sintético.',
   };
 }
 
