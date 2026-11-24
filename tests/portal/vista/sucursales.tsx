@@ -21,6 +21,8 @@ import type { FiltroOrigen } from '../../../lib/sucursales/metricas';
 import { enZona, sumarDias } from '../../../lib/sucursales/tiempo';
 import { apiFalsa, pedido, type PedidoApi } from '../sucursales-fixtures';
 import { construirServicio } from '../../../lib/sucursales/servicio';
+import { construirMenu } from '../../../lib/sucursales/menu-rappi';
+import { menuSintetico } from './menu-sintetico';
 import { recortarAlPublicado } from '../../../lib/sucursales/servicio-publicado';
 import { servicioSintetico } from './servicio-sintetico';
 
@@ -389,7 +391,7 @@ const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
   const m =
-    /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo|rappi-portal|servicio)$/.exec(
+    /^\/api\/sucursales\/(\d+)\/(vivo|tendencias|productos|pedidos|costeo|consumo|rappi-portal|servicio|menu)$/.exec(
       url.pathname,
     );
   if (!m) return fetchNavegador(entrada, init);
@@ -400,6 +402,12 @@ window.fetch = async (entrada, init) => {
   const hasta = q.get('hasta') ?? desde;
   if (m[2] === 'rappi-portal')
     return Response.json(construirRappiPortal(rappiPortalSintetico(desde, hasta), desde, hasta));
+  if (m[2] === 'menu') {
+    if (!portal)
+      return Response.json({ error: 'Esta sucursal no está conectada al portal de Rappi.' }, { status: 404 });
+    // Menú/Carta sintético con el menú real de Essentia (&menu=vacio: sin lectura todavía).
+    return Response.json(construirMenu(menuSintetico(Date.now(), parametros.get('menu') === 'vacio')));
+  }
   if (m[2] === 'servicio') {
     if (!portal)
       return Response.json({ error: 'Esta sucursal no está conectada al portal de Rappi.' }, { status: 404 });
