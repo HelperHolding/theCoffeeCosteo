@@ -79,9 +79,9 @@ export function proponer(filas: Fila[], sumarYulius: boolean, ajuste?: AjusteCie
   const aCorregir: Propuesta["aCorregir"] = [];
   for (const f of filas) {
     if (ajuste?.cerrados.has(f.sku)) continue;
-    // El disponible es el inventario físico en mano de Zoho (actual_available_stock). Por decisión, NO se resta
-    // lo comprometido en pedidos aún no enviados.
-    const disponible = f.fisico + (sumarYulius ? f.saldo_yulius : 0);
+    // El disponible es el inventario contable de Zoho (stock_on_hand), el mismo de la pantalla Inventario. Por decisión,
+    // NO se resta lo comprometido en pedidos aún no enviados.
+    const disponible = f.inventario + (sumarYulius ? f.saldo_yulius : 0);
     const cob = ajuste?.cobertura.get(f.sku);
     const qBase = cob ? cob.cantidad : cantidadAPedir({ disponible, enCamino: f.enCamino, minimo: f.minimo, maximo: f.maximo,
       multiplo: f.multiplo, minimoPzas: f.minimoPzas, enOcAbierta: f.enOcAbierta });

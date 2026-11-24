@@ -4,7 +4,7 @@ import { proponer } from "./generar.ts";
 import { planConsolidar, vendoresConBorrador } from "./consolidar.ts";
 
 const f = (o: Partial<Fila>): Fila => ({
-  sku: "S", nombre: "N", zoho_item_id: "i", zoho_vendor_id: "v1", zoho_vendor_name: "P1", costo: 10, fisico: 0, fisicoRespaldo: false,
+  sku: "S", nombre: "N", zoho_item_id: "i", zoho_vendor_id: "v1", zoho_vendor_name: "P1", costo: 10, inventario: 0,
   saldo_yulius: 0, enCamino: 0, enOcAbierta: false, minimo: 340, maximo: 640, venta_diaria: 20, kits_max: 0, multiplo: null,
   minimoPzas: null, lead_time: 7, ...o,
 });
@@ -44,7 +44,7 @@ Deno.test("varios borradores del mismo proveedor → una sola OC y los dos en re
 
 Deno.test("SKU manejado que recalcula a 0 sale y va a quitados", () => {
   // A tiene 1000 físico: sin el borrador ya no hace falta.
-  const p = correr([f({ sku: "A", fisico: 1000, enCamino: 100, enOcAbierta: true }), f({ sku: "B" })], [oc({ sku: "A" })]);
+  const p = correr([f({ sku: "A", inventario: 1000, enCamino: 100, enOcAbierta: true }), f({ sku: "B" })], [oc({ sku: "A" })]);
   assertEquals(lineas(p.porProveedor[0]), [["B", 640, "nuevo", null]]);
   assertEquals(p.consolidadas[0].quitados, [{ sku: "A", nombre: "N", antes: 100 }]);
 });

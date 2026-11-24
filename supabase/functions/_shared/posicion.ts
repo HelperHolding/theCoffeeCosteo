@@ -3,7 +3,7 @@ import { ocAbierta, SKU_MARCADOR } from "../zoho-sync/sync.ts";
 
 export type Fila = {
   sku: string; nombre: string; zoho_item_id: string | null; zoho_vendor_id: string | null; zoho_vendor_name: string | null;
-  costo: number | null; fisico: number; fisicoRespaldo: boolean; saldo_yulius: number; enCamino: number; enOcAbierta: boolean;
+  costo: number | null; inventario: number; saldo_yulius: number; enCamino: number; enOcAbierta: boolean;
   minimo: number; maximo: number; venta_diaria: number; kits_max: number; multiplo: number | null; minimoPzas: number | null; lead_time: number;
 };
 
@@ -14,7 +14,7 @@ export async function cargarFilas(db: SupabaseClient, desdeSync: string): Promis
     todo<{ sku: string; minimo: number; maximo: number; venta_diaria: number; kits_max: number; lead_time: number | null }>((a, b) =>
       db.from("com_minmax").select("sku,minimo,maximo,venta_diaria,kits_max,lead_time").order("sku").range(a, b)),
     todo<Record<string, unknown> & { sku: string }>((a, b) =>
-      db.from("com_catalogo").select("sku,nombre,zoho_item_id,zoho_vendor_id,zoho_vendor_name,costo_unitario,zoho_stock,zoho_stock_fisico,saldo_yulius,multiplo_compra,minimo_compra_pzas")
+      db.from("com_catalogo").select("sku,nombre,zoho_item_id,zoho_vendor_id,zoho_vendor_name,costo_unitario,zoho_stock,saldo_yulius,multiplo_compra,minimo_compra_pzas")
         .order("sku").range(a, b)),
     todo<{ sku: string; status: string; cantidad: number; cantidad_recibida: number }>((a, b) =>
       db.from("com_zoho_oc_lineas").select("sku,status,cantidad,cantidad_recibida").order("zoho_po_id").order("sku").range(a, b)),
@@ -24,13 +24,16 @@ export async function cargarFilas(db: SupabaseClient, desdeSync: string): Promis
   const catPor = new Map(cat.map((c) => [c.sku, c]));
   const camino = new Map<string, number>();
   const abierta = new Set<string>();
-  const sumar = (sku: string, pendiente: number) => {
+  const sumar = (sku: string, pendiente: number, enContable = false) => {
     if (!sku || !(pendiente > 0)) return;
     abierta.add(sku);
-    camino.set(sku, (camino.get(sku) ?? 0) + pendiente);
+    if (!enContable) camino.set(sku, (camino.get(sku) ?? 0) + pendiente);
   };
-  // Solo bloquea la línea que aún tiene unidades por recibir; una OC "billed" con pendientes sí cuenta.
-  for (const l of oc) if (ocAbierta(l.status)) sumar(l.sku, Number(l.cantidad) - Number(l.cantidad_recibida));
+  // Solo bloquea la línea que aún tiene unidades por recibir; una OC "billed" con pendientes sí bloquea, pero sus
+  // unidades ya están en el contable (Zoho lo sube con la factura del proveedor): no se cuentan otra vez en camino.
+  for (const l of oc) {
+    if (ocAbierta(l.status)) sumar(l.sku, Number(l.cantidad) - Number(l.cantidad_recibida), facturadaOc(l.status));
+  }
   for (const r of recientes) {
     for (const l of (Array.isArray(r.lineas) ? r.lineas : []) as { sku?: string; cantidad?: unknown }[]) sumar(String(l.sku ?? ""), Number(l.cantidad));
   }
@@ -41,9 +44,8 @@ export async function cargarFilas(db: SupabaseClient, desdeSync: string): Promis
       sku: m.sku, nombre: String(c.nombre ?? ""), zoho_item_id: (c.zoho_item_id as string) ?? null,
       zoho_vendor_id: (c.zoho_vendor_id as string) ?? null, zoho_vendor_name: (c.zoho_vendor_name as string) ?? null,
       costo: num(c.costo_unitario),
-      // Físico en mano de Zoho; si aún no llega (null) se usa el contable y se marca como respaldo.
-      fisico: c.zoho_stock_fisico == null ? Number(c.zoho_stock ?? 0) : Number(c.zoho_stock_fisico),
-      fisicoRespaldo: c.zoho_stock_fisico == null,
+      // Inventario contable de Zoho (stock_on_hand): lo comprado menos lo facturado a venta. El mismo de la pantalla Inventario.
+      inventario: Number(c.zoho_stock ?? 0),
       saldo_yulius: Number(c.saldo_yulius ?? 0),
       enCamino: camino.get(m.sku) ?? 0, enOcAbierta: abierta.has(m.sku),
       minimo: Number(m.minimo), maximo: Number(m.maximo), venta_diaria: Number(m.venta_diaria), kits_max: Number(m.kits_max),
@@ -51,6 +53,9 @@ export async function cargarFilas(db: SupabaseClient, desdeSync: string): Promis
     };
   });
 }
+
+/** OC "billed": la factura del proveedor ya está en Zoho, así que sus unidades ya cuentan en el contable. */
+export const facturadaOc = (status: string) => String(status ?? "").toLowerCase() === "billed";
 
 export type LineaAbierta = {
   zoho_po_id: string; sku: string; vendor_id: string | null; vendor_name: string | null; pendiente: number;
@@ -74,7 +79,7 @@ export async function cargarAbiertas(db: SupabaseClient): Promise<LineaAbierta[]
     out.push({
       zoho_po_id: String(l.zoho_po_id), sku, vendor_id: (l.vendor_id as string) ?? null, vendor_name: (l.vendor_name as string) ?? null,
       pendiente, precio: l.precio == null ? null : Number(l.precio), fecha_oc: (l.fecha_oc as string) ?? null,
-      fecha_entrega: (l.fecha_entrega as string) ?? null, facturada: String(l.status ?? "").toLowerCase() === "billed",
+      fecha_entrega: (l.fecha_entrega as string) ?? null, facturada: facturadaOc(String(l.status ?? "")),
     });
   }
   return out;

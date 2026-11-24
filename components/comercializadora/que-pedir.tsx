@@ -140,7 +140,7 @@ export function QuePedir({
             ['sku', 'SKU'],
             ['nombre', 'Artículo'],
             ['vendorNombre', 'Proveedor'],
-            ['disp', 'Físico'],
+            ['inventario', 'Inventario (contable)'],
             ['camino', 'En camino'],
             ['dias', 'Días de inventario'],
             ['cant', 'Cantidad'],
@@ -160,7 +160,7 @@ export function QuePedir({
               <tr>
                 <th>SKU</th>
                 <th>Proveedor</th>
-                <th className="text-right">Físico (Zoho)</th>
+                <th className="text-right">Inventario</th>
                 <th className="text-right">En camino</th>
                 <th className="text-right">Días de inventario</th>
                 <th>¿Pedir?</th>
@@ -176,7 +176,7 @@ export function QuePedir({
                     <div className="text-xs text-muted-foreground">{f.sku}</div>
                   </td>
                   <td>{f.vendorNombre}</td>
-                  <td className="text-right tabular-nums">{numero(f.disp)}</td>
+                  <td className="text-right tabular-nums">{numero(f.inventario)}</td>
                   <td className="text-right tabular-nums">{numero(f.camino)}</td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="space-x-1">
@@ -268,7 +268,7 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
             <thead>
               <tr>
                 <th>Artículo</th>
-                <th className="text-right">Físico (Zoho)</th>
+                <th className="text-right">Inventario</th>
                 <th className="text-right">En camino</th>
                 <th className="text-right">Días de inventario</th>
                 <th className="text-right">Cantidad</th>
@@ -282,7 +282,7 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
                     <div className="font-medium">{f.nombre}</div>
                     <div className="text-xs text-muted-foreground">{f.sku}</div>
                   </td>
-                  <td className="text-right tabular-nums">{numero(f.disp)}</td>
+                  <td className="text-right tabular-nums">{numero(f.inventario)}</td>
                   <td className="text-right tabular-nums">{numero(f.camino)}</td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="text-right tabular-nums">{numero(f.cant)}</td>

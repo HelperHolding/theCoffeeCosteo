@@ -67,7 +67,7 @@ describe('Qué pedir por proveedor: líneas desplegables', () => {
       within(lineas)
         .getAllByRole('columnheader')
         .map((h) => h.textContent),
-    ).toEqual(['Artículo', 'Físico (Zoho)', 'En camino', 'Días de inventario', 'Cantidad', 'Monto']);
+    ).toEqual(['Artículo', 'Inventario', 'En camino', 'Días de inventario', 'Cantidad', 'Monto']);
     // Prov Dos sigue cerrado.
     expect(screen.queryByText('Vasos')).not.toBeInTheDocument();
   });

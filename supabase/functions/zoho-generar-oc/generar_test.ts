@@ -10,14 +10,14 @@ import {
 
 const f = (o: Partial<Fila>): Fila => ({
   sku: "S", nombre: "N", zoho_item_id: "i", zoho_vendor_id: "v1", zoho_vendor_name: "SIMBS", costo: 10,
-  fisico: 0, fisicoRespaldo: false, saldo_yulius: 0, enCamino: 0, enOcAbierta: false,
+  inventario: 0, saldo_yulius: 0, enCamino: 0, enOcAbierta: false,
   minimo: 340, maximo: 640, venta_diaria: 20, kits_max: 0, multiplo: null, minimoPzas: null, lead_time: 7, ...o,
 });
 
 Deno.test("proponer agrupa por proveedor y calcula disponible como Zoho más Yulius", () => {
   const p = proponer([
-    f({ sku: "A", fisico: 300, saldo_yulius: 40 }),                       // disp 340 → pide 300
-    f({ sku: "B", fisico: 1000 }),                                        // arriba del mínimo
+    f({ sku: "A", inventario: 300, saldo_yulius: 40 }),                       // disp 340 → pide 300
+    f({ sku: "B", inventario: 1000 }),                                        // arriba del mínimo
     f({ sku: "C", zoho_vendor_id: "v2", zoho_vendor_name: "ECOPLATE" }),      // pide 640
   ], true);
   assertEquals(p.porProveedor.map((x) => [x.vendor_id, x.lineas.map((l) => [l.sku, l.cantidad])]),
@@ -27,7 +27,7 @@ Deno.test("proponer agrupa por proveedor y calcula disponible como Zoho más Yul
 });
 
 Deno.test("proponer sin Yulius no lo suma", () => {
-  const p = proponer([f({ sku: "A", fisico: 300, saldo_yulius: 40 })], false);
+  const p = proponer([f({ sku: "A", inventario: 300, saldo_yulius: 40 })], false);
   assertEquals(p.porProveedor[0].lineas[0].cantidad, 340);
 });
 
@@ -318,7 +318,7 @@ Deno.test("generar reporta 'no se pudo enviar el correo' si el envío falla", as
 
 Deno.test("proponer: el disponible es el físico; el contable no entra", () => {
   // Físico 5 + en camino 10 = 15 ≤ mínimo 340 → pide. Con el contable (12) + 10 = 22 también pediría; lo que fija la prueba es la cantidad.
-  const p = proponer([f({ sku: "A", fisico: 5, enCamino: 10 })], false);
+  const p = proponer([f({ sku: "A", inventario: 5, enCamino: 10 })], false);
   assertEquals(p.porProveedor[0].lineas[0].disponible, 5);
 });
 
@@ -333,7 +333,7 @@ Deno.test("proponer: un SKU cerrado no se pide aunque esté bajo el mínimo", ()
 });
 
 Deno.test("proponer: con cobertura usa su cantidad aunque cantidadAPedir diera 0, y marca la línea", () => {
-  const filas = [f({ sku: "A", fisico: 1000 })];
+  const filas = [f({ sku: "A", inventario: 1000 })];
   assertEquals(proponer(filas, true).porProveedor, []);
   const p = proponer(filas, true, { cerrados: new Set(), cobertura: new Map([["A", { cantidad: 90, cierre_id: 7, adelanto: true, tarde: true }]]) });
   assertEquals(p.porProveedor[0].lineas.map((l) => [l.sku, l.cantidad, l.adelanto_cierre, l.cierre_tarde]), [["A", 90, true, true]]);
@@ -349,9 +349,9 @@ Deno.test("proponer: la cobertura sin costo va a 'a corregir'", () => {
 Deno.test("cuadre: el día 0 de proyectar es igual a la línea de proponer con cierre activo", () => {
   const hoy = "2026-10-30";
   const filas = [
-    f({ sku: "A", fisico: 400 }),                                               // cierre próximo, U ya pasó → cobertura tarde hoy
-    f({ sku: "B", fisico: 100, zoho_vendor_id: "v2", zoho_vendor_name: "P2" }),  // sin cierre → compra normal
-    f({ sku: "C", fisico: 0, zoho_vendor_id: "v3", zoho_vendor_name: "P3" }),    // cerrado hoy
+    f({ sku: "A", inventario: 400 }),                                               // cierre próximo, U ya pasó → cobertura tarde hoy
+    f({ sku: "B", inventario: 100, zoho_vendor_id: "v2", zoho_vendor_name: "P2" }),  // sin cierre → compra normal
+    f({ sku: "C", inventario: 0, zoho_vendor_id: "v3", zoho_vendor_name: "P3" }),    // cerrado hoy
   ];
   const cierres = [cierreV(), cierreV({ id: 8, vendor_id: "v3", ini: "2026-10-25", fin: "2026-11-02" })];
   const lineal = (v: number) => Array.from({ length: 41 }, (_, j) => v * j);
@@ -425,7 +425,7 @@ Deno.test("ajusteMinimoDesdeProyeccion: suma por SKU lo adelantado a hoy y junta
 });
 
 Deno.test("proponer: suma el extra por mínimo, incluye líneas de base 0 y marca grupo bajo mínimo", () => {
-  const filas = [f({ sku: "A", fisico: 300 }), f({ sku: "B", fisico: 1000 }), f({ sku: "C", fisico: 0, zoho_vendor_id: "v2", zoho_vendor_name: "P2" })];
+  const filas = [f({ sku: "A", inventario: 300 }), f({ sku: "B", inventario: 1000 }), f({ sku: "C", inventario: 0, zoho_vendor_id: "v2", zoho_vendor_name: "P2" })];
   const p = proponer(filas, true, undefined, { extra: new Map([["A", 50], ["B", 20]]), bajo: new Set(["v2"]) });
   assertEquals(p.porProveedor.map((g) => [g.vendor_id, g.bajo_minimo, g.lineas.map((l) => [l.sku, l.cantidad, l.adelanto_minimo])]),
     [["v1", undefined, [["A", 390, true], ["B", 20, true]]], ["v2", true, [["C", 640, undefined]]]]);
@@ -434,7 +434,7 @@ Deno.test("proponer: suma el extra por mínimo, incluye líneas de base 0 y marc
 
 Deno.test("proponer: un SKU cerrado sigue saltado aunque tenga extra; el extra sin costo va a 'a corregir'", () => {
   const m = { extra: new Map([["A", 50], ["B", 8]]), bajo: new Set<string>() };
-  const p = proponer([f({ sku: "A" }), f({ sku: "B", fisico: 1000, costo: null })], true,
+  const p = proponer([f({ sku: "A" }), f({ sku: "B", inventario: 1000, costo: null })], true,
     { cerrados: new Set(["A"]), cobertura: new Map() }, m);
   assertEquals(p.porProveedor, []);
   assertEquals(p.aCorregir.map((x) => [x.sku, x.cantidad]), [["B", 8]]);
@@ -443,10 +443,10 @@ Deno.test("proponer: un SKU cerrado sigue saltado aunque tenga extra; el extra s
 Deno.test("cuadre: con mínimos activos, proponer = día 0 de la proyección ajustada, por SKU y por proveedor", () => {
   const hoy = "2026-10-30";
   const filas = [
-    f({ sku: "A", fisico: 300 }),                                                   // v1 pide hoy
-    f({ sku: "B", fisico: 450 }),                                                   // v1 pide en unos días → se adelanta
-    f({ sku: "C", fisico: 450, zoho_vendor_id: "v2", zoho_vendor_name: "P2" }),
-    f({ sku: "D", fisico: 100, zoho_vendor_id: "v3", zoho_vendor_name: "P3" }),     // v3: no alcanza el mínimo
+    f({ sku: "A", inventario: 300 }),                                                   // v1 pide hoy
+    f({ sku: "B", inventario: 450 }),                                                   // v1 pide en unos días → se adelanta
+    f({ sku: "C", inventario: 450, zoho_vendor_id: "v2", zoho_vendor_name: "P2" }),
+    f({ sku: "D", inventario: 100, zoho_vendor_id: "v3", zoho_vendor_name: "P3" }),     // v3: no alcanza el mínimo
   ];
   const lineal = (v: number) => Array.from({ length: 41 }, (_, j) => v * j);
   const proy = proyectar({ hoy, horizonte: 40, base: "llegada", sumarYulius: true, filas, curvas: { A: lineal(20), B: lineal(20), C: lineal(20), D: lineal(20) },
@@ -511,7 +511,7 @@ Deno.test("ajusteDesdeProyeccion ignora las filas adelantadas por mínimo (no so
 
 Deno.test("cuadre: cierre y mínimo en el mismo SKU, cobertura movida a hoy, no se cuenta dos veces", () => {
   const hoy = "2026-10-30";
-  const filas = [f({ sku: "A", fisico: 100 }), f({ sku: "B", fisico: 450 })];
+  const filas = [f({ sku: "A", inventario: 100 }), f({ sku: "B", inventario: 450 })];
   const cierres = [cierreV({ ini: "2026-11-12", fin: "2026-11-25" })];
   const lineal = (v: number) => Array.from({ length: 41 }, (_, j) => v * j);
   const proy = proyectar({ hoy, horizonte: 40, base: "llegada", sumarYulius: true, filas, curvas: { A: lineal(20), B: lineal(20) },

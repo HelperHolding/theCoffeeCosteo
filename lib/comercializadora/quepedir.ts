@@ -10,6 +10,11 @@ export function saldoCedis(c: ArticuloCatalogo | undefined): number {
   return c.zoho_stock_fisico != null ? Number(c.zoho_stock_fisico) : n(c.zoho_stock);
 }
 
+/** Inventario contable de Zoho (stock_on_hand: lo comprado menos lo facturado a venta), el que usa la simulación. */
+export function contable(c: ArticuloCatalogo | undefined): number {
+  return n(c?.zoho_stock);
+}
+
 const CERRADAS = ['closed', 'cancelled', 'void'];
 /** Pendiente de recibir de una línea de OC abierta de Zoho (borradores incluidos); 0 si está cerrada o es el marcador. */
 function pendienteOc(l: LineaOcZoho): number {
@@ -18,10 +23,14 @@ function pendienteOc(l: LineaOcZoho): number {
   return p > 0 ? p : 0;
 }
 
-/** Piezas en camino por SKU: lo pendiente de recibir de OCs de Zoho abiertas (renderComQuePedir). */
-export function enCamino(lineas: LineaOcZoho[]): Record<string, number> {
+/**
+ * Piezas en camino por SKU: lo pendiente de recibir de OCs de Zoho abiertas (renderComQuePedir).
+ * sinFacturadas: deja fuera las OCs "billed", cuyas piezas ya cuentan en el contable (como en la simulación).
+ */
+export function enCamino(lineas: LineaOcZoho[], { sinFacturadas = false } = {}): Record<string, number> {
   const r: Record<string, number> = {};
   for (const l of lineas) {
+    if (sinFacturadas && String(l.status ?? '').toLowerCase() === 'billed') continue;
     const p = pendienteOc(l);
     if (p > 0) r[l.sku] = (r[l.sku] ?? 0) + p;
   }
@@ -54,7 +63,8 @@ export interface FilaQuePedir {
   nombre: string;
   vendor: string;
   vendorNombre: string;
-  disp: number;
+  /** Inventario contable de Zoho (más 3PL si está activado). */
+  inventario: number;
   camino: number;
   venta: number;
   dias: number | null;
@@ -111,7 +121,7 @@ export function filasQuePedir(d: DatosQuePedir, dias: number, hoy: string): Fila
   const sinProv = new Set(Array.isArray(d.resumen.sinProveedor) ? d.resumen.sinProveedor : []);
   return d.minmax.map((m) => {
     const c = cat.get(m.sku);
-    const disp = saldoCedis(c) + (d.yulius ? n(c?.saldo_yulius) : 0);
+    const inventario = contable(c) + (d.yulius ? n(c?.saldo_yulius) : 0);
     const v = n(m.venta_diaria);
     const a = compra.get(m.sku);
     const costo = n(c?.costo_unitario) > 0 ? Number(c!.costo_unitario) : null;
@@ -120,10 +130,10 @@ export function filasQuePedir(d: DatosQuePedir, dias: number, hoy: string): Fila
       nombre: c?.nombre ?? '',
       vendor: String(c?.zoho_vendor_id || c?.zoho_vendor_name || '(sin proveedor)'),
       vendorNombre: c?.zoho_vendor_name || '(sin proveedor)',
-      disp,
+      inventario,
       camino: n(d.camino[m.sku]),
       venta: v,
-      dias: v > 0 ? disp / v : null,
+      dias: v > 0 ? inventario / v : null,
       costo,
       pedir: !!a,
       cant: a?.cant ?? 0,
@@ -154,7 +164,7 @@ export interface ProveedorQuePedir {
   pedir: boolean;
 }
 
-/** _qpProveedores: disponible y días en pesos (disp × costo, venta × costo), solo artículos con costo. */
+/** _qpProveedores: disponible y días en pesos (inventario × costo, venta × costo), solo artículos con costo. */
 export function proveedoresQuePedir(filas: FilaQuePedir[]): ProveedorQuePedir[] {
   const g = new Map<string, ProveedorQuePedir>();
   for (const f of filas) {
@@ -175,7 +185,7 @@ export function proveedoresQuePedir(filas: FilaQuePedir[]): ProveedorQuePedir[] 
     };
     p.skus.push(f);
     if (f.costo != null) {
-      p.valor += Math.max(0, f.disp) * f.costo;
+      p.valor += Math.max(0, f.inventario) * f.costo;
       p.ventaValor += f.venta * f.costo;
       p.caminoValor += f.camino * f.costo;
     }
