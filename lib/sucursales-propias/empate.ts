@@ -37,14 +37,20 @@ export interface Empate {
   asignaciones: Asignacion[];
 }
 
+/**
+ * Razón social al final del nombre: SA, SAPI o S DE RL, con o sin "DE CV", y con letras sueltas ("S A DE C V").
+ * Una "S" sola al final no cuenta: puede ser la inicial de un apellido ("JUAN PEREZ S").
+ */
+const RAZON_SOCIAL = / (?:S ?A ?P ?I|S ?A|S DE R ?L)(?: DE C ?V)?$/;
+
 export function normalizarNombre(s: string): string {
   return s
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, ' ')
     .trim()
-    .replace(/\s+(SAPI|SA|S)(\s+DE)?(\s+RL)?(\s+DE)?(\s+CV)?$/, '')
+    .replace(RAZON_SOCIAL, '')
     .trim();
 }
 

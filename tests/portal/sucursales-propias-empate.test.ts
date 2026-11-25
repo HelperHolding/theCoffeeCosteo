@@ -54,6 +54,38 @@ describe('normalizarNombre y sugerirProveedor', () => {
     expect(normalizarNombre('Francisco Román González')).toBe('FRANCISCO ROMAN GONZALEZ');
   });
 
+  it('normaliza las variantes de la razón social igual', () => {
+    const base = normalizarNombre('EMPAQUES DEMO SA DE CV');
+    expect(base).toBe('EMPAQUES DEMO');
+    for (const v of [
+      'EMPAQUES DEMO S A DE C V',
+      'Empaques Demo, S.A. de C.V.',
+      'EMPAQUES DEMO SA',
+      'EMPAQUES DEMO SAPI DE CV',
+      'EMPAQUES DEMO S DE RL',
+      'EMPAQUES DEMO S. de R.L. de C.V.',
+    ])
+      expect(normalizarNombre(v)).toBe(base);
+  });
+
+  it('una S sola al final es parte del nombre, no razón social', () => {
+    expect(normalizarNombre('JUAN PEREZ S')).toBe('JUAN PEREZ S');
+    const otros: Proveedor[] = [{ id: 'v-jp', nombre: 'JUAN PEREZ' }];
+    // No es empate exacto; sí es contenido (2+ palabras), así que se sugiere y queda marcado para revisar.
+    expect(normalizarNombre('JUAN PEREZ S')).not.toBe(normalizarNombre('JUAN PEREZ'));
+    expect(sugerirProveedor('JUAN PEREZ S', otros)?.id).toBe('v-jp');
+  });
+
+  it('un nombre de persona de 2 palabras contenido en otro más largo se sugiere (comportamiento actual)', () => {
+    const lista: Proveedor[] = [
+      { id: 'v-jpg', nombre: 'JUAN PEREZ GARCIA' },
+      { id: 'v-otro', nombre: 'MARIA LOPEZ' },
+    ];
+    expect(sugerirProveedor('JUAN PEREZ', lista)?.id).toBe('v-jpg');
+    // Con dos candidatos que lo contienen, no se sugiere ninguno.
+    expect(sugerirProveedor('JUAN PEREZ', [...lista, { id: 'v-jpl', nombre: 'JUAN PEREZ LUNA' }])).toBeNull();
+  });
+
   it('empata por nombre exacto o contenido, nunca con dos candidatos', () => {
     expect(sugerirProveedor('FOOD SERVICE DE MEXICO SA DE CV', PROVEEDORES)?.id).toBe('v-fs');
     expect(sugerirProveedor('OH LALA', PROVEEDORES)?.id).toBe('v-oh');
