@@ -196,6 +196,36 @@ describe('unir', () => {
     expect(avisos.some((a) => a.includes('copia.pdf') && a.includes('repetido'))).toBe(true);
   });
 
+  it('una solicitud SPEI y un traspaso Banregio con misma fecha, últimos 4 y monto no chocan', () => {
+    const banregio = { ...leerRecibo(BANREGIO), ultimos4: '3333', monto: 6612 };
+    const solicitud = leerRecibo(SOLICITUD);
+    const { transferencias, avisos } = unir(null, [
+      { archivo: 'brg.pdf', recibo: banregio },
+      { archivo: 'sol.pdf', recibo: solicitud },
+    ]);
+    expect(transferencias.map((t) => t.llave).sort()).toEqual([
+      'BRG-2026-11-20-3333-6612.00',
+      'SOL-2026-11-20-3333-6612.00',
+    ]);
+    expect(avisos.some((a) => a.includes('repetido'))).toBe(false);
+  });
+
+  it('avisa que una solicitud SPEI sin clave de rastreo debe confirmarse, y completa su CLABE desde el resumen', () => {
+    const resumen = leerResumen(
+      RESUMEN.replace('3 Banregio 058320000000005957', '3 SPEI 012320000000003333').replaceAll(
+        '$2700.00',
+        '$6612.00',
+      ),
+    );
+    const { transferencias, avisos } = unir(resumen, [{ archivo: 'sol.pdf', recibo: leerRecibo(SOLICITUD) }]);
+    const aviso =
+      'sol.pdf: es un recibo de solicitud sin clave de rastreo; confirma con Banregio que se ejecutó antes de aplicarlo.';
+    expect(avisos).toContain(aviso);
+    expect(aviso).not.toMatch(/\d{18}/);
+    expect(transferencias[0].clabe).toBe('012320000000003333');
+    expect(transferencias[0].secuencia).toBe(3);
+  });
+
   it('centavos no arrastra errores de coma flotante', () => {
     expect(centavos(0.1 + 0.2)).toBe(30);
     expect(centavos(1088.5)).toBe(108850);

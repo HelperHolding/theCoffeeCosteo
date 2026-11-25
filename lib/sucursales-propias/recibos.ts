@@ -23,7 +23,7 @@ export interface Resumen {
 export interface Recibo {
   tipo: TipoTransferencia;
   alias: string;
-  /** null en traspasos Banregio→Banregio: el recibo solo trae los últimos 4 dígitos. */
+  /** null en traspasos Banregio→Banregio y en recibos de solicitud SPEI (solo traen los últimos 4 dígitos). */
   clabe: string | null;
   ultimos4: string;
   monto: number;
@@ -178,12 +178,18 @@ export function unir(
     );
     const fila = i >= 0 ? libres.splice(i, 1)[0] : null;
     if (resumen && !fila) avisos.push(`${archivo}: no aparece en el resumen de la masiva.`);
-    const llave = r.claveRastreo ?? `BRG-${r.fecha}-${r.ultimos4}-${r.monto.toFixed(2)}`;
+    // Sin clave de rastreo la llave es determinista; el prefijo evita choques entre traspasos Banregio y solicitudes SPEI.
+    const prefijo = r.tipo === 'SPEI' ? 'SOL' : 'BRG';
+    const llave = r.claveRastreo ?? `${prefijo}-${r.fecha}-${r.ultimos4}-${r.monto.toFixed(2)}`;
     if (vistas.has(llave)) {
       avisos.push(`${archivo}: recibo repetido en el ZIP; se tomó una sola vez.`);
       continue;
     }
     vistas.add(llave);
+    if (r.tipo === 'SPEI' && !r.claveRastreo)
+      avisos.push(
+        `${archivo}: es un recibo de solicitud sin clave de rastreo; confirma con Banregio que se ejecutó antes de aplicarlo.`,
+      );
     transferencias.push({
       llave,
       tipo: r.tipo,
