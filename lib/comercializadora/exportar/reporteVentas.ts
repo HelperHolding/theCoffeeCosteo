@@ -9,7 +9,7 @@ import type { Indicador, Origen, Surtido } from '../../../supabase/functions/_sh
 import type { Apertura, Atencion, GrupoAtencion, Notas } from '../../../supabase/functions/_shared/reporte/atencion.ts';
 import type { SaldoCliente, SaldosExternos, SaldosSucursales } from '../../../supabase/functions/_shared/reporte/saldos.ts';
 import { finSemana } from '../../../supabase/functions/_shared/reporte/fechas.ts';
-import { barrasApiladas, crudo, documento, esc, nombreArchivo, seccion, tabla } from './html';
+import { barrasApiladas, crudo, documento, esc, leyenda, nombreArchivo, seccion, tabla } from './html';
 
 export const archivoVentas = (semana: string, ext: 'html' | 'pdf') => nombreArchivo(['reporte-ventas', semana], ext);
 
@@ -35,7 +35,8 @@ function ventas(v: Ventas): string {
   return `<div class="tarjetas">${tarjeta('Ventas con IVA', pesos(v.total), `~${pesos(v.sinIva)} sin IVA`)}${tarjeta('Pedidos facturados', String(v.pedidos))}`
     + `${tarjeta('Vs semana anterior', vari(v.vsAnterior), pesos(v.difAnterior))}${tarjeta('Vs promedio 5 semanas', vari(v.vsPromedio), pesos(v.promedio))}</div>`
     + tabla(['#', 'Cliente', 'Sucursales', 'Total'], v.top.map((t, i) => [String(i + 1).padStart(2, '0'), t.nombre, t.sucursales.join(', '), pesos(t.total)]), { derecha: [3] })
-    + `<p class="peq">Últimas 5 semanas, con IVA, por tipo de envío (${esc(Object.keys(COLOR).join(' · '))}).</p>${grafica}`
+    + `<p class="peq">Últimas 5 semanas, con IVA, por tipo de envío.</p>${grafica}`
+    + leyenda(Object.entries(COLOR).map(([nombre, color]) => ({ nombre, color })))
     + `<p class="peq">Solo ordinario vs semana anterior: ${esc(pesos(v.difAnteriorOrdinario))} ${esc(vari(v.vsAnteriorOrdinario))}</p>`;
 }
 

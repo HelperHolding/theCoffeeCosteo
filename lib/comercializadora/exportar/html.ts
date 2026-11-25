@@ -80,6 +80,10 @@ export function barrasApiladas(cols: { etiqueta: string; total: string; partes: 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ancho} ${alto}" width="${ancho}" height="${alto}" role="img">${grupos}</svg>`;
 }
 
+/** Leyenda de una gráfica: un cuadro del color de cada serie con su nombre. */
+export const leyenda = (series: { nombre: string; color: string }[]) =>
+  `<p class="peq">${series.map((s) => `<span style="display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px;vertical-align:middle;background:${esc(s.color)}"></span>${esc(s.nombre)}`).join('')}</p>`;
+
 export function nombreArchivo(partes: string[], ext: 'html' | 'pdf'): string {
   const slug = partes.join('-').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return `${slug}.${ext}`;

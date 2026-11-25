@@ -1,6 +1,6 @@
 // tests/comercializadora/exportar-html.test.ts
 import { describe, expect, it } from 'vitest';
-import { barrasApiladas, celda, crudo, documento, esc, nombreArchivo, seccion, tabla } from '@/lib/comercializadora/exportar/html';
+import { barrasApiladas, celda, crudo, documento, esc, leyenda, nombreArchivo, seccion, tabla } from '@/lib/comercializadora/exportar/html';
 
 describe('piezas de HTML para exportar', () => {
   it('esc escapa los caracteres de HTML', () => {
@@ -36,6 +36,12 @@ describe('piezas de HTML para exportar', () => {
     expect(s.startsWith('<svg')).toBe(true);
     expect((s.match(/<rect /g) ?? []).length).toBe(2);
     expect(s).toContain('16 nov');
+  });
+  it('leyenda con un cuadro de color por serie', () => {
+    const l = leyenda([{ nombre: 'Ordinario', color: '#1b1b1b' }, { nombre: 'Apertura & más', color: '#2f7a4f' }]);
+    expect(l).toContain('background:#1b1b1b');
+    expect(l).toContain('background:#2f7a4f');
+    expect(l).toContain('Apertura &amp; más');
   });
   it('nombreArchivo sin acentos ni espacios', () => {
     expect(nombreArchivo(['Reporte ventas', '2026-11-16'], 'pdf')).toBe('reporte-ventas-2026-11-16.pdf');
