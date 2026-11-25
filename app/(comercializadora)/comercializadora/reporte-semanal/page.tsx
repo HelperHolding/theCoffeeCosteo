@@ -11,6 +11,7 @@ import { puedeEditarCom } from '@/lib/portal/modulos';
 import { aFormulario } from '@/lib/comercializadora/configReporte';
 import { ConfigReporteVista } from '@/components/comercializadora/reporte-semanal/config';
 import { ActualizarReporte } from '@/components/comercializadora/reporte-semanal/actualizar';
+import { DescargarReporte } from '@/components/comercializadora/reporte-semanal/descargar';
 import { ErrorSeccion, SeccionTitulo } from '@/components/comercializadora/reporte-semanal/piezas';
 import { VentasVista } from '@/components/comercializadora/reporte-semanal/ventas';
 import { SurtidoVista } from '@/components/comercializadora/reporte-semanal/surtido';
@@ -42,6 +43,7 @@ export default async function ReporteSemanalPagina({ searchParams }: { searchPar
         {siguiente <= hoy && <Link href={`?semana=${siguiente}`} className="underline">Siguiente ›</Link>}
       </nav>
       <ActualizarReporte semana={semana} />
+      <DescargarReporte semana={semana} />
     </Encabezado>
   );
   if (!r.ok)
