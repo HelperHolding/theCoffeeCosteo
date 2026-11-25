@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { pesos } from '@/lib/comercializadora/formato';
-import { ESTADOS } from '@/lib/sucursales-propias/estados';
+import { ESTADOS, PREVIOS } from '@/lib/sucursales-propias/estados';
 import { ElegirProveedor } from './elegir-proveedor';
 import { EditarAsignacion } from './editar-asignacion';
 import type { AccionesPagos, FilaVista } from './tipos';
@@ -14,6 +14,16 @@ const TONO = {
   bad: 'bg-bad-soft text-bad',
   muted: 'bg-surface-2 text-muted-foreground',
 } as const;
+
+const INSIGNIA = 'mt-1 mr-1 inline-block rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn';
+
+/** Estados en los que se puede volver a llamar aplicar ("aplicando" la Edge Function la retoma al vencer la reserva). */
+const REINTENTABLES: readonly string[] = ['error', 'aplicada_sin_adjunto', 'aplicando'];
+
+/** Recibo de solicitud SPEI sin clave de rastreo: no prueba que Banregio ejecutó la transferencia. */
+const esSolicitud = (f: Pick<FilaVista, 'llave'>) => f.llave.startsWith('SOL-');
+
+const esPrevia = (estado: string) => (PREVIOS as readonly string[]).includes(estado);
 
 type Resultado = { estado: string; mensaje?: string };
 
@@ -31,12 +41,27 @@ export function Corrida({
   const router = useRouter();
   const [resultados, setResultados] = useState<Record<number, Resultado>>({});
   const [ocupadas, setOcupadas] = useState<Record<number, boolean>>({});
+  const [fallos, setFallos] = useState<Record<number, string>>({});
   const [confirmar, setConfirmar] = useState(false);
+  const [confirmarSolicitud, setConfirmarSolicitud] = useState<number | null>(null);
   const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
-  const listas = filas.filter((f) => f.estado === 'cuadra');
+  // El lote solo lleva filas que cuadran, con proveedor confirmado y con recibo definitivo (spec §7).
+  const listas = filas.filter((f) => f.estado === 'cuadra' && !f.sugerido && !esSolicitud(f));
   const total = listas.reduce((s, f) => s + Math.round(f.monto * 100), 0) / 100;
-  // Filas a aplicar cuyo proveedor se emparejó por nombre: el usuario debe revisarlas antes.
-  const porNombre = listas.filter((f) => f.sugerido).length;
+  const porConfirmar = filas.filter((f) => f.estado === 'cuadra' && f.sugerido).length;
+  const solicitudes = filas.filter((f) => f.estado === 'cuadra' && !f.sugerido && esSolicitud(f)).length;
+  const notas = [
+    porConfirmar === 1
+      ? '1 fila con proveedor por nombre espera tu confirmación y no se incluye.'
+      : porConfirmar > 1
+        ? `${porConfirmar} filas con proveedor por nombre esperan tu confirmación y no se incluyen.`
+        : null,
+    solicitudes === 1
+      ? '1 solicitud sin clave de rastreo se aplica aparte, en su fila.'
+      : solicitudes > 1
+        ? `${solicitudes} solicitudes sin clave de rastreo se aplican aparte, cada una en su fila.`
+        : null,
+  ].filter((n): n is string => n !== null);
 
   async function aplicarUna(id: number) {
     setOcupadas((o) => ({ ...o, [id]: true }));
@@ -69,8 +94,10 @@ export function Corrida({
     }
   }
 
-  async function reintentar(id: number) {
+  /** Reintento o aplicación individual (solicitudes ya confirmadas con Banregio). */
+  async function aplicarSola(id: number) {
     if (ocupadas[id]) return;
+    setConfirmarSolicitud(null);
     try {
       await aplicarUna(id);
     } finally {
@@ -78,33 +105,61 @@ export function Corrida({
     }
   }
 
+  /** Confirma el proveedor sugerido por nombre: el servidor lo revalida en Zoho y rehace el reparto. */
+  async function confirmarProveedor(f: FilaVista) {
+    if (ocupadas[f.id] || !f.proveedorId || !f.proveedorNombre) return;
+    setOcupadas((o) => ({ ...o, [f.id]: true }));
+    setFallos((x) => {
+      const y = { ...x };
+      delete y[f.id];
+      return y;
+    });
+    try {
+      const r = await acciones.asignarProveedor(f.id, { id: f.proveedorId, nombre: f.proveedorNombre });
+      if ('error' in r) setFallos((x) => ({ ...x, [f.id]: r.error }));
+      else router.refresh();
+    } catch {
+      setFallos((x) => ({ ...x, [f.id]: 'No se pudo confirmar. Intenta de nuevo.' }));
+    } finally {
+      setOcupadas((o) => ({ ...o, [f.id]: false }));
+    }
+  }
+
   return (
     <div className="space-y-4">
-      {puedeAplicar && listas.length > 0 ? (
-        <div className="placa flex flex-wrap items-center gap-3 px-4 py-3">
-          {progreso ? (
-            <p role="status" className="text-sm">
-              Aplicando {progreso.hechas} de {progreso.total}…
-            </p>
-          ) : confirmar ? (
-            <>
-              <p className="text-sm">
-                Se registrarán en Zoho {listas.length} pagos por {pesos(total)} desde BANREGIO - CONSOLIDADO
-                SUCURSALES PROPIAS
-                {porNombre > 0 ? `, ${porNombre} con proveedor por nombre` : ''}.
+      {puedeAplicar && (listas.length > 0 || notas.length > 0) ? (
+        <div className="placa space-y-2 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {progreso ? (
+              <p role="status" className="text-sm">
+                Aplicando {progreso.hechas} de {progreso.total}…
               </p>
-              <Button type="button" onClick={aplicarTodas}>
-                Confirmar y aplicar en Zoho
+            ) : confirmar ? (
+              <>
+                <p className="text-sm">
+                  Se registrarán en Zoho {listas.length} pagos por {pesos(total)} desde BANREGIO - CONSOLIDADO
+                  SUCURSALES PROPIAS.
+                </p>
+                <Button type="button" onClick={aplicarTodas}>
+                  Confirmar y aplicar en Zoho
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setConfirmar(false)}>
+                  Cancelar
+                </Button>
+              </>
+            ) : listas.length > 0 ? (
+              <Button type="button" onClick={() => setConfirmar(true)}>
+                Aplicar {listas.length} pagos
               </Button>
-              <Button type="button" variant="outline" onClick={() => setConfirmar(false)}>
-                Cancelar
-              </Button>
-            </>
-          ) : (
-            <Button type="button" onClick={() => setConfirmar(true)}>
-              Aplicar {listas.length} pagos
-            </Button>
-          )}
+            ) : null}
+          </div>
+          {!progreso
+            ? notas.map((n) => (
+                <p key={n} className="text-sm text-warn">
+                  {n}
+                </p>
+              ))
+            : null}
         </div>
       ) : null}
 
@@ -114,6 +169,9 @@ export function Corrida({
           const estado = (r?.estado ?? f.estado) as FilaVista['estado'];
           const e = ESTADOS[estado] ?? ESTADOS.error;
           const mensaje = r?.mensaje ?? f.error;
+          const editable = puedeAplicar && !r && esPrevia(f.estado);
+          const solicitud = esSolicitud(f);
+          const porNombre = Boolean(f.proveedorNombre && f.sugerido);
           return (
             <li key={f.id} className="placa px-4 py-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -125,10 +183,9 @@ export function Corrida({
                       : 'Sin proveedor en Zoho'}{' '}
                     · {f.fecha} · {f.concepto}
                   </p>
-                  {f.proveedorNombre && f.sugerido ? (
-                    <span className="mt-1 inline-block rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">
-                      Proveedor por nombre — revisa
-                    </span>
+                  {porNombre ? <span className={INSIGNIA}>Proveedor por nombre — revisa</span> : null}
+                  {solicitud ? (
+                    <span className={INSIGNIA}>Solicitud sin clave de rastreo — confirma con Banregio</span>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-3">
@@ -139,6 +196,7 @@ export function Corrida({
                 </div>
               </div>
               {mensaje ? <p className="mt-1 text-sm text-bad">{mensaje}</p> : null}
+              {fallos[f.id] ? <p className="mt-1 text-sm text-bad">{fallos[f.id]}</p> : null}
               {f.asignaciones.length ? (
                 <details className="mt-2 text-sm">
                   <summary className="cursor-pointer text-muted-foreground">
@@ -181,22 +239,67 @@ export function Corrida({
                     Ver en Zoho
                   </a>
                 ) : null}
-                {puedeAplicar && (estado === 'error' || estado === 'aplicada_sin_adjunto') ? (
+                {puedeAplicar && REINTENTABLES.includes(estado) ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     disabled={ocupadas[f.id]}
-                    onClick={() => reintentar(f.id)}
+                    onClick={() => aplicarSola(f.id)}
                   >
                     Reintentar
                   </Button>
                 ) : null}
+                {editable && porNombre ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={ocupadas[f.id]}
+                    onClick={() => confirmarProveedor(f)}
+                  >
+                    Confirmar proveedor
+                  </Button>
+                ) : null}
+                {editable &&
+                solicitud &&
+                f.estado === 'cuadra' &&
+                !f.sugerido &&
+                confirmarSolicitud !== f.id ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={ocupadas[f.id] || progreso !== null}
+                    onClick={() => setConfirmarSolicitud(f.id)}
+                  >
+                    Aplicar
+                  </Button>
+                ) : null}
               </div>
-              {puedeAplicar && !r && f.estado === 'desconocido' ? (
-                <ElegirProveedor id={f.id} acciones={acciones} />
+              {editable && solicitud && confirmarSolicitud === f.id ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                  <p>¿Ya confirmaste con Banregio que se ejecutó?</p>
+                  <Button type="button" size="sm" disabled={ocupadas[f.id]} onClick={() => aplicarSola(f.id)}>
+                    Confirmar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfirmarSolicitud(null)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               ) : null}
-              {puedeAplicar && !r && f.estado === 'no_cuadra' ? (
+              {editable ? (
+                <ElegirProveedor
+                  id={f.id}
+                  acciones={acciones}
+                  texto={f.proveedorNombre ? 'Cambiar proveedor' : 'Elegir proveedor de Zoho'}
+                />
+              ) : null}
+              {editable && f.estado === 'no_cuadra' ? (
                 <EditarAsignacion fila={f} acciones={acciones} />
               ) : null}
             </li>

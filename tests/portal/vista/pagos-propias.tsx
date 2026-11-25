@@ -105,6 +105,24 @@ const filas: FilaVista[] = [
     aplicadoEn: '2026-11-21T16:05:00Z',
     asignaciones: [asig('1006', 2100)],
   },
+  {
+    ...base,
+    id: 9,
+    llave: 'SOL-2026-11-20-0000-660.00',
+    alias: 'BANCO DEMO SOLICITUD',
+    monto: 660,
+    proveedorNombre: 'Distribuidora Ficticia',
+    asignaciones: [asig('1008', 660)],
+  },
+  {
+    ...base,
+    id: 10,
+    alias: 'LIMPIEZA EJEMPLO',
+    monto: 340,
+    estado: 'aplicando',
+    proveedorNombre: 'Limpieza Ejemplo',
+    asignaciones: [asig('1009', 340)],
+  },
 ];
 
 const proveedores = [
@@ -151,7 +169,7 @@ export function VistaPagosPropias() {
       <Encabezado
         area="Sucursales propias · Helper Holding"
         titulo="Corrida #1"
-        descripcion="demo.zip · 8 recibos por $7,920.50 · 1/8 aplicadas"
+        descripcion="demo.zip · 10 recibos por $8,920.50 · 1/10 aplicadas"
       />
       {lectura ? null : <SubirZip />}
       <Corrida filas={filas} puedeAplicar={!lectura} acciones={acciones} zohoOrg="1" />

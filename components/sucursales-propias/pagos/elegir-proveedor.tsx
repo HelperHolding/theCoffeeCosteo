@@ -5,8 +5,19 @@ import { Button } from '@/components/ui/button';
 import { normalizarNombre, type Proveedor } from '@/lib/sucursales-propias/empate';
 import type { AccionesPagos } from './tipos';
 
-/** Proveedor desconocido: el usuario elige el de Zoho; la equivalencia CLABE → proveedor se guarda (spec §4). */
-export function ElegirProveedor({ id, acciones }: { id: number; acciones: AccionesPagos }) {
+/**
+ * El usuario elige (o cambia) el proveedor de Zoho de una fila aún no aplicada; el servidor lo revalida, rehace el
+ * reparto y guarda la equivalencia CLABE → proveedor (spec §4).
+ */
+export function ElegirProveedor({
+  id,
+  acciones,
+  texto = 'Elegir proveedor de Zoho',
+}: {
+  id: number;
+  acciones: AccionesPagos;
+  texto?: string;
+}) {
   const router = useRouter();
   const [lista, setLista] = useState<Proveedor[] | null>(null);
   const [filtro, setFiltro] = useState('');
@@ -46,7 +57,7 @@ export function ElegirProveedor({ id, acciones }: { id: number; acciones: Accion
     return (
       <div className="mt-2">
         <Button type="button" variant="outline" size="sm" onClick={abrir}>
-          Elegir proveedor de Zoho
+          {texto}
         </Button>
         {error ? <p className="text-sm text-bad">{error}</p> : null}
       </div>
