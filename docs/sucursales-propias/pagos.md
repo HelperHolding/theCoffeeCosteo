@@ -25,13 +25,15 @@ Aplicar `supabase/migrations/20261125000098_sucursales_propias_pagos.sql` con el
 
 ## 3. Credenciales de Zoho (lo hace el usuario)
 
-1. En `https://api-console.zoho.com` → *Self Client* (o el cliente que ya usan) → *Generate Code* con los scopes `ZohoBooks.bills.READ,ZohoBooks.contacts.READ,ZohoBooks.vendorpayments.CREATE,ZohoBooks.vendorpayments.READ,ZohoBooks.vendorpayments.UPDATE,ZohoBooks.accountants.READ`, con un usuario que tenga acceso a la org *Sucursales The Coffee – GDL*.
+1. En `https://api-console.zoho.com` → *Self Client* (o el cliente que ya usan) → *Generate Code* con los scopes `ZohoBooks.bills.READ,ZohoBooks.bills.CREATE,ZohoBooks.contacts.READ,ZohoBooks.vendorpayments.CREATE,ZohoBooks.vendorpayments.READ,ZohoBooks.vendorpayments.UPDATE,ZohoBooks.accountants.READ`, con un usuario que tenga acceso a la org *Sucursales The Coffee – GDL*.
 2. Cambiar el código por el refresh token: `POST https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id=<id>&client_secret=<secreto>&code=<código>`.
 3. El id de la org está en Zoho Books → Configuración → Perfil de la organización.
 
 ## 4. Secretos de Supabase
 
 Project Settings → Edge Functions → Secrets (o `npx supabase secrets set`): `ZOHO_SUC_CLIENT_ID`, `ZOHO_SUC_CLIENT_SECRET`, `ZOHO_SUC_REFRESH_TOKEN`, `ZOHO_SUC_ORG_ID`.
+
+`COM_SECRETO` ya debe existir entre los secretos de las Edge Functions (la función autoriza al portal con el encabezado `x-com-secreto`): es el mismo valor que ya usa Comercializadora, no es un secreto nuevo.
 
 `SUC_PAGOS_EFECTOS` **no** se define todavía: sin ella todo es solo lectura.
 
@@ -59,32 +61,32 @@ Con `SUC_PAGOS_EFECTOS` apagado, subir el ZIP real. Se registran la corrida y lo
 
 Vista previa sin base de datos: `npm run prueba:visual` y abrir `http://127.0.0.1:4173/?pagos-propias` (agregar `&solo-lectura=1` para ver el modo de solo lectura).
 
-### Primera corrida en modo prueba: qué revisar
+### 8.1 Primera corrida en modo prueba — qué revisar
 
 Los parámetros de Zoho se supusieron sin credenciales reales. En la primera corrida, con un usuario `edicion`, confirmar:
 
 - [ ] **Filtro de estado de facturas.** La acción `facturas` regresa facturas `open`, `overdue` y `partially_paid`. Si Zoho rechaza el parámetro `status`, cambiarlo por `filter_by` con `Status.Unpaid`, `Status.Overdue` y `Status.PartiallyPaid` en `facturasAbiertas` (`supabase/functions/_shared/sucPagos.ts`) y ajustar su prueba en `sucPagos_test.ts`.
 - [ ] **Sucursal de la factura.** `location_name` trae la sucursal. Si viene vacío, ajustar el campo leído en `facturasAbiertas` (mismo archivo).
 - [ ] **Búsqueda de pago previo.** Al pulsar Aplicar en una fila, el error «modo sin efectos externos» debe aparecer **después** de pasar la búsqueda `GET /vendorpayments?search_text=<llave>` y la relectura de saldos. Si `search_text` no filtra (regresa pagos ajenos o ninguno existiendo), cambiar a `reference_number_contains` en `pagoConReferencia` (mismo archivo) y su prueba.
-- [ ] **Adjunto del recibo** (ya con efectos, en la primera fila real). El PDF debe quedar adjunto al pago. Si queda adjunto a cada factura liquidada, es el respaldo documentado: la API de Zoho no admitió adjuntos en pagos (`adjuntarYCerrar`) y no requiere cambio.
+- [ ] **Adjunto del recibo** (ya con efectos, en la primera fila real). El PDF debe quedar adjunto al pago. Si queda adjunto a cada factura liquidada, es el respaldo documentado: la API de Zoho no admitió adjuntos en pagos (`adjuntarYCerrar`) y no requiere cambio. Ese respaldo escribe en `/bills/{id}/attachment` y por eso el scope incluye `ZohoBooks.bills.CREATE`; si Zoho rechaza el adjunto con un error de scope, ajustar la lista de scopes de la sección 3 y regenerar el refresh token.
 
 Anotar aquí lo que se cambie tras la primera corrida:
 
 - _(sin cambios todavía)_
-
-## Pendiente de confirmar con Banregio
-
-Los recibos SPEI «de la solicitud» (`SOL-…`) no traen clave de rastreo, por lo que no prueban que la transferencia se ejecutó. Confirmar con Banregio qué documento acredita la ejecución (o cómo obtener el recibo con clave) y, mientras tanto, validar cada uno antes de aplicarlo.
 
 ## 9. Si algo sale mal
 
 | Mensaje | Causa y qué hacer |
 | --- | --- |
 | «Zoho de Sucursales GDL no está configurado.» | Faltan secretos `ZOHO_SUC_*` en Supabase; cargarlos y volver a desplegar si hace falta. |
-| «no encontré una sola cuenta bancaria …» | El nombre no coincide con exactamente una cuenta en Zoho; revisar `suc_pago_config.cuenta_nombre`. |
+| «no encontré una sola cuenta bancaria …» | Se busca en el plan de cuentas de Zoho, entre las cuentas de tipo banco, una cuyo nombre empiece con `suc_pago_config.cuenta_nombre`; debe haber exactamente una. Revisar ese nombre. |
 | «Aplicada · falta el recibo» | El pago existe en Zoho pero el adjunto falló; botón Reintentar (no duplica el pago). |
 | «Ya estaba en Zoho» | Ya existía un pago con esa referencia (llave); no se crea otro. |
 | «Otra persona la está aplicando.» | La fila está en «Aplicando…»; esperar. Pasados 10 minutos se puede reintentar. |
 | «Lo asignado no es igual a la transferencia» | El reparto no suma el monto; corregirlo en la fila. |
 | «El saldo de la factura … cambió en Zoho» | La factura ya se pagó o cambió; revisar la fila y repartir de nuevo. |
 | «modo sin efectos externos» | `SUC_PAGOS_EFECTOS` no es `si`; es lo esperado en la corrida de prueba. |
+
+## 10. Pendiente de confirmar con Banregio
+
+Los recibos SPEI «de la solicitud» (`SOL-…`) no traen clave de rastreo, por lo que no prueban que la transferencia se ejecutó. Confirmar con Banregio qué documento acredita la ejecución (o cómo obtener el recibo con clave) y, mientras tanto, validar cada uno antes de aplicarlo.
