@@ -145,3 +145,24 @@ describe('revisión final · números del conteo y del ajuste', () => {
     expect(cantidadAjuste('1,200,5')).toBeNull();
   });
 });
+
+describe('llegada de lo en camino (pedido del usuario 2026-11-25)', () => {
+  it('la fila lleva fecha, si es estimada, si está atrasada y cuántas OCs más vienen', () => {
+    const d = {
+      catalogo: [cat({}) as never, cat({ sku: 'B' }) as never],
+      minmax: [],
+      ventas: [],
+      lineas: [],
+      yulius: false,
+      llegadas: { A: { fecha: '2026-12-01', estimada: true, atrasada: false, mas: 2 } },
+    };
+    const [a, b] = filasInventario(d);
+    expect(a).toMatchObject({
+      llegada: '2026-12-01',
+      llegadaEstimada: true,
+      llegadaAtrasada: false,
+      llegadaMas: 2,
+    });
+    expect(b).toMatchObject({ llegada: null, llegadaEstimada: false, llegadaAtrasada: false, llegadaMas: 0 });
+  });
+});

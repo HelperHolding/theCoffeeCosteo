@@ -59,6 +59,8 @@ export interface DatosQuePedir {
   minmax: MinMax[];
   compras: CompraProyectada[];
   camino: Record<string, number>;
+  /** Llegada más próxima de lo en camino por SKU (llegadaEnCamino); opcional. */
+  llegadas?: Record<string, LlegadaCamino>;
   yulius: boolean;
   resumen: ResumenProyeccion;
 }
@@ -73,6 +75,7 @@ export interface FilaQuePedir {
   /** Físico de Zoho, solo informativo. */
   fisico: number | null;
   camino: number;
+  llegada: LlegadaCamino | null;
   venta: number;
   dias: number | null;
   costo: number | null;
@@ -140,6 +143,7 @@ export function filasQuePedir(d: DatosQuePedir, dias: number, hoy: string): Fila
       inventario,
       fisico: fisicoZoho(c),
       camino: n(d.camino[m.sku]),
+      llegada: d.llegadas?.[m.sku] ?? null,
       venta: v,
       dias: v > 0 ? inventario / v : null,
       costo,
@@ -235,4 +239,60 @@ export function kpisQuePedir(filas: FilaQuePedir[], diasAlerta: number) {
     proveedores: new Set(pedir.map((f) => f.vendor)).size,
     cortos: filas.filter((f) => f.dias != null && f.dias < diasAlerta).length,
   };
+}
+
+/** Lead time de un SKU: el de Zoho (`zoho_lead_time`), si no el de `com_lead_times`, si no el de Configuración. */
+export function leadTimePorSku(
+  catalogo: { sku: string; zoho_lead_time?: number | null }[],
+  leadTimes: { sku: string; dias: number | null }[],
+  ltDefault: number,
+): (sku: string) => number {
+  const zoho = new Map(catalogo.map((c) => [c.sku, n(c.zoho_lead_time)]));
+  const tabla = new Map(leadTimes.map((l) => [l.sku, n(l.dias)]));
+  return (sku) =>
+    n(zoho.get(sku)) > 0 ? n(zoho.get(sku)) : n(tabla.get(sku)) > 0 ? n(tabla.get(sku)) : ltDefault;
+}
+
+export interface LlegadaCamino {
+  /** Llegada más próxima de lo en camino ('YYYY-MM-DD'). */
+  fecha: string;
+  /** true si salió de fecha de OC + lead time (la OC no trae fecha de entrega en Zoho). */
+  estimada: boolean;
+  /** La fecha ya pasó y sigue pendiente de recibir. */
+  atrasada: boolean;
+  /** Cuántas OCs más traen ese SKU, además de la más próxima. */
+  mas: number;
+}
+
+/**
+ * Llegada de lo en camino por SKU (pedido del usuario 2026-11-25): por cada OC con pendiente, la fecha de entrega de
+ * Zoho o, si no tiene, fecha de la OC + lead time del SKU; se muestra la más próxima. Las OCs sin ninguna fecha no
+ * cuentan. sinFacturadas: igual que enCamino (Qué pedir deja fuera las "billed").
+ */
+export function llegadaEnCamino(
+  lineas: LineaOcZoho[],
+  leadTime: (sku: string) => number,
+  hoy: string,
+  { sinFacturadas = false } = {},
+): Record<string, LlegadaCamino> {
+  const porSku = new Map<string, Map<string, { fecha: string; estimada: boolean }>>();
+  for (const l of lineas) {
+    if (sinFacturadas && String(l.status ?? '').toLowerCase() === 'billed') continue;
+    if (!(pendienteOc(l) > 0)) continue;
+    const fecha =
+      l.fecha_entrega || (l.fecha_oc ? masDias(String(l.fecha_oc).slice(0, 10), leadTime(l.sku)) : null);
+    if (!fecha) continue;
+    const oc = String(l.zoho_po_id ?? l.po_number ?? `${l.sku}:${fecha}`);
+    const ocs = porSku.get(l.sku) ?? new Map();
+    const previa = ocs.get(oc);
+    if (!previa || fecha < previa.fecha)
+      ocs.set(oc, { fecha: String(fecha).slice(0, 10), estimada: !l.fecha_entrega });
+    porSku.set(l.sku, ocs);
+  }
+  const r: Record<string, LlegadaCamino> = {};
+  for (const [sku, ocs] of porSku) {
+    const [primera] = [...ocs.values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
+    r[sku] = { ...primera, atrasada: primera.fecha < hoy, mas: ocs.size - 1 };
+  }
+  return r;
 }

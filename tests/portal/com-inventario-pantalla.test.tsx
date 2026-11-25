@@ -73,7 +73,8 @@ describe('Inventario', () => {
     );
     const encabezados = screen.getAllByRole('columnheader').map((th) => th.textContent?.trim());
     expect(encabezados.slice(0, 4)).toEqual(['Nombre', 'Inventario', 'Físico (Informativo)', 'En camino']);
-    expect(encabezados[4]).toBe('Venta diaria');
+    expect(encabezados[4]).toBe('Llegada');
+    expect(encabezados[5]).toBe('Venta diaria');
     const celdas = screen.getAllByRole('row')[1].querySelectorAll('td');
     expect(celdas[3].textContent).toContain('25');
     expect(celdas[3].textContent).toContain('COM-OC-01342');
@@ -86,7 +87,17 @@ describe('Inventario', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     render(
       <Inventario
-        filas={[fila({ inventario: -6, camino: 25, ocsCamino: 'COM-OC-01342' })] as never}
+        filas={
+          [
+            fila({
+              inventario: -6,
+              camino: 25,
+              ocsCamino: 'COM-OC-01342',
+              llegada: '2026-12-03',
+              llegadaEstimada: true,
+            }),
+          ] as never
+        }
         valor={{ valor: 0, sinCosto: 0 }}
         viejos={[]}
         ultimoSync={null}
@@ -102,9 +113,9 @@ describe('Inventario', () => {
     const texto = await (blob as unknown as Blob).text();
     const [encabezado, linea] = texto.replace(/^﻿/, '').split(/\r?\n/);
     expect(encabezado).toContain(
-      'Inventario (contable),Fisico (informativo),En camino (OC abiertas),OC en camino,Venta diaria',
+      'Inventario (contable),Fisico (informativo),En camino (OC abiertas),OC en camino,Llegada,Llegada estimada,Venta diaria',
     );
-    expect(linea).toContain('-6,,25,COM-OC-01342');
+    expect(linea).toContain('-6,,25,COM-OC-01342,2026-12-03,si');
     click.mockRestore();
   });
   it('sin permiso de edición no muestra "Ajustar 3PL"', () => {
@@ -123,5 +134,41 @@ describe('Inventario', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: /Ajustar 3PL/ })).not.toBeInTheDocument();
+  });
+  it('columna Llegada: fecha, estimada, atrasada y OCs de más', () => {
+    render(
+      <Inventario
+        filas={
+          [
+            fila({
+              camino: 25,
+              ocsCamino: 'COM-OC-1',
+              llegada: '2026-12-03',
+              llegadaEstimada: true,
+              llegadaMas: 1,
+            }),
+            fila({ sku: 'B', nombre: 'Vasos', camino: 4, llegada: '2026-11-20', llegadaAtrasada: true }),
+            fila({ sku: 'C', nombre: 'Tapas', camino: 0, llegada: null }),
+          ] as never
+        }
+        valor={{ valor: 0, sinCosto: 0 }}
+        viejos={[]}
+        ultimoSync={null}
+        hoy="2026-11-25"
+        editable={false}
+        autorizadores={[]}
+        saldos3pl={{}}
+        ventaAviso={null}
+        aperturasMes={10}
+      />,
+    );
+    const celda = (r: number) => screen.getAllByRole('row')[r].querySelectorAll('td')[4].textContent;
+    expect(celda(1)).toContain('3 dic');
+    expect(celda(1)).toContain('estimada');
+    expect(celda(1)).toContain('+1 OC');
+    expect(celda(2)).toContain('20 nov');
+    expect(celda(2)).toContain('atrasada');
+    expect(celda(2)).not.toContain('estimada');
+    expect(celda(3)).toBe('—');
   });
 });

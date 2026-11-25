@@ -4,6 +4,7 @@ import { Boxes, PackageX } from 'lucide-react';
 import { Kpi, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { numero, pesos } from '@/lib/comercializadora/formato';
+import { fechaCorta } from '@/lib/comercializadora/fechas';
 import type { FilaInventarioAperturas } from '@/lib/comercializadora/inventario';
 import { DescargarCsv } from './descargar-csv';
 import { Ajuste3pl } from './ajuste-3pl';
@@ -127,7 +128,10 @@ export function Inventario(p: {
         ) : null}
         <DescargarCsv
           nombre={`inventario-${p.hoy}.csv`}
-          filas={visibles as unknown as Record<string, unknown>[]}
+          filas={visibles.map((f) => ({
+            ...f,
+            llegadaEstimada: f.llegada ? (f.llegadaEstimada ? 'si' : 'no') : '',
+          }))}
           columnas={[
             ['sku', 'SKU'],
             ['nombre', 'Nombre'],
@@ -136,6 +140,8 @@ export function Inventario(p: {
             ['fisicoZoho', 'Fisico (informativo)'],
             ['camino', 'En camino (OC abiertas)'],
             ['ocsCamino', 'OC en camino'],
+            ['llegada', 'Llegada'],
+            ['llegadaEstimada', 'Llegada estimada'],
             ['venta', 'Venta diaria (30 dias)'],
             ['cobertura', 'Cobertura (dias)'],
             ['kitApertura', 'Kit por apertura'],
@@ -171,6 +177,12 @@ export function Inventario(p: {
                 >
                   En camino
                 </th>
+                <th
+                  className="text-right"
+                  title="Llegada más próxima de lo en camino: la fecha de entrega de la OC en Zoho o, si no la tiene, fecha de la OC + lead time del artículo (estimada)"
+                >
+                  Llegada
+                </th>
                 <th className="text-right">Venta diaria</th>
                 <th className="text-right">Cobertura (días)</th>
                 <th className="text-right">Cobertura c/aperturas (días)</th>
@@ -196,6 +208,26 @@ export function Inventario(p: {
                         {f.ocsCamino ? (
                           <div className="text-xs text-muted-foreground">{f.ocsCamino}</div>
                         ) : null}
+                      </>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap text-right tabular-nums">
+                    {f.llegada ? (
+                      <>
+                        <div className={f.llegadaAtrasada ? 'font-medium text-destructive' : undefined}>
+                          {fechaCorta(f.llegada)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {[
+                            f.llegadaAtrasada ? 'atrasada' : null,
+                            f.llegadaEstimada ? 'estimada' : null,
+                            f.llegadaMas > 0 ? `+${f.llegadaMas} OC` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </div>
                       </>
                     ) : (
                       '—'

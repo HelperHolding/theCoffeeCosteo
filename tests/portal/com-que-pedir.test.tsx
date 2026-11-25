@@ -104,3 +104,37 @@ describe('Qué pedir: correcciones I5 e I6', () => {
     expect(screen.getByText(/Con menos de 30 días/).parentElement!.parentElement).toHaveTextContent('2');
   });
 });
+
+describe('Qué pedir: llegada de lo en camino (pedido del usuario 2026-11-25)', () => {
+  it('debajo de En camino dice cuándo llega, si es estimada o si está atrasada', () => {
+    render(
+      <QuePedir
+        datos={{
+          ...datos,
+          camino: { A: 30 },
+          llegadas: { A: { fecha: '2026-12-03', estimada: true, atrasada: false, mas: 0 } },
+        }}
+        hoy="2026-11-25"
+        edadHoras={2}
+        avisos={[]}
+      />,
+    );
+    const fila = screen.getByRole('row', { name: /Café molido/ });
+    expect(fila).toHaveTextContent('llega 3 dic (estimada)');
+  });
+  it('atrasada', () => {
+    render(
+      <QuePedir
+        datos={{
+          ...datos,
+          camino: { A: 30 },
+          llegadas: { A: { fecha: '2026-11-20', estimada: false, atrasada: true, mas: 0 } },
+        }}
+        hoy="2026-11-25"
+        edadHoras={2}
+        avisos={[]}
+      />,
+    );
+    expect(screen.getByRole('row', { name: /Café molido/ })).toHaveTextContent('atrasada desde 20 nov');
+  });
+});

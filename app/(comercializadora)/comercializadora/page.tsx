@@ -8,7 +8,7 @@ import {
   leerTodoCom,
   ultimaProyeccion,
 } from '@/lib/comercializadora/consultas';
-import { enCamino } from '@/lib/comercializadora/quepedir';
+import { enCamino, leadTimePorSku, llegadaEnCamino } from '@/lib/comercializadora/quepedir';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import type { ArticuloCatalogo, CompraProyectada, LineaOcZoho, MinMax } from '@/lib/comercializadora/tipos';
 
@@ -33,7 +33,7 @@ export default async function QuePedirPagina() {
       </>
     );
   const calc = proy.resumen.calculado_at!;
-  const [compras, minmax, catalogo, config, lineas, avisos] = await Promise.all([
+  const [compras, minmax, catalogo, config, lineas, avisos, leadTimes] = await Promise.all([
     leerTodoCom<CompraProyectada>(
       db,
       'com_pago_proyectado',
@@ -45,18 +45,19 @@ export default async function QuePedirPagina() {
     leerTodoCom<ArticuloCatalogo>(
       db,
       'com_catalogo',
-      'sku,nombre,zoho_stock,zoho_stock_fisico,zoho_sync_at,saldo_cedis,saldo_yulius,costo_unitario,zoho_vendor_id,zoho_vendor_name',
+      'sku,nombre,zoho_stock,zoho_stock_fisico,zoho_sync_at,saldo_cedis,saldo_yulius,costo_unitario,zoho_vendor_id,zoho_vendor_name,zoho_lead_time',
       'sku',
     ),
     com(db).from('com_plan_config').select('config').eq('id', 1).maybeSingle(),
     leerTodoCom<LineaOcZoho & { zoho_po_id: string }>(
       db,
       'com_zoho_oc_lineas',
-      'zoho_po_id,sku,status,cantidad,cantidad_recibida',
+      'zoho_po_id,sku,status,cantidad,cantidad_recibida,fecha_oc,fecha_entrega',
       'zoho_po_id',
       (q) => q.order('sku'),
     ),
     cierresVigentes(db, hoy, proy.resumen),
+    leerTodoCom<{ sku: string; dias: number | null }>(db, 'com_lead_times', 'sku,dias', 'sku'),
   ]);
   return (
     <>
@@ -67,6 +68,12 @@ export default async function QuePedirPagina() {
           minmax,
           compras,
           camino: enCamino(lineas, { sinFacturadas: true }),
+          llegadas: llegadaEnCamino(
+            lineas,
+            leadTimePorSku(catalogo, leadTimes, Number(config.data?.config?.compra?.lt_default) || 7),
+            hoy,
+            { sinFacturadas: true },
+          ),
           yulius: config.data?.config?.inv?.yulius !== false,
           resumen: proy.resumen,
         }}

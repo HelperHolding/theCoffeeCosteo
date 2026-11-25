@@ -15,6 +15,7 @@ import {
 } from '@/lib/comercializadora/inventario';
 import { memoMotor, motorPlan } from '@/lib/comercializadora/motor';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
+import { leadTimePorSku, llegadaEnCamino } from '@/lib/comercializadora/quepedir';
 import type { LineaOcZoho } from '@/lib/comercializadora/tipos';
 
 export default async function InventarioPagina() {
@@ -22,11 +23,11 @@ export default async function InventarioPagina() {
   const hoy = hoyCdmx();
   // Venta/día = lo vendido en 30 días ÷ 30, sin aperturas, con los pedidos que el motor ya tiene en caché (plan 3d).
   const motor = motorPlan(db);
-  const [catalogo, minmax, ventas, lineas, sync, config, aut, kits] = await Promise.all([
+  const [catalogo, minmax, ventas, lineas, sync, config, aut, kits, leadTimes] = await Promise.all([
     leerTodoCom<ArticuloInventario>(
       db,
       'com_catalogo',
-      'sku,nombre,categoria,estatus,zoho_stock,zoho_stock_fisico,zoho_sync_at,saldo_cedis,saldo_yulius,yulius_actualizado_at,costo_unitario,zoho_vendor_id,zoho_vendor_name',
+      'sku,nombre,categoria,estatus,zoho_stock,zoho_stock_fisico,zoho_sync_at,saldo_cedis,saldo_yulius,yulius_actualizado_at,costo_unitario,zoho_vendor_id,zoho_vendor_name,zoho_lead_time',
       'sku',
     ),
     leerTodoCom<MinMaxInventario>(
@@ -45,7 +46,7 @@ export default async function InventarioPagina() {
     leerTodoCom<LineaOcZoho & { zoho_po_id: string }>(
       db,
       'com_zoho_oc_lineas',
-      'zoho_po_id,po_number,sku,status,cantidad,cantidad_recibida',
+      'zoho_po_id,po_number,sku,status,cantidad,cantidad_recibida,fecha_oc,fecha_entrega',
       'zoho_po_id',
       (q) => q.order('sku'),
     ),
@@ -60,7 +61,14 @@ export default async function InventarioPagina() {
     com(db).rpc('com_autorizadores'),
     // Kit por apertura (manual o promedio) para la cobertura con aperturas.
     leerTodoCom<{ sku: string; kit: number | null }>(db, 'com_kit_apertura', 'sku,kit', 'sku'),
+    // Lead times para estimar la llegada de lo en camino cuando la OC no trae fecha de entrega.
+    leerTodoCom<{ sku: string; dias: number | null }>(db, 'com_lead_times', 'sku,dias', 'sku'),
   ]);
+  const llegadas = llegadaEnCamino(
+    lineas,
+    leadTimePorSku(catalogo, leadTimes, Number(config.data?.config?.compra?.lt_default) || 7),
+    hoy,
+  );
   const editable = puedeEditarCom(accesos);
   const aperturasMes = Number(config.data?.config?.aper?.por_mes) || 0;
   const kit = Object.fromEntries(kits.map((k) => [k.sku, Number(k.kit) || 0]));
@@ -93,6 +101,7 @@ export default async function InventarioPagina() {
               minmax,
               ventas,
               lineas,
+              llegadas,
               yulius: config.data?.config?.inv?.yulius !== false,
             }),
             venta30,
