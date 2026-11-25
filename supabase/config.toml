@@ -426,3 +426,7 @@ verify_jwt = false
 # n8n entra con su propio secreto x-oc-whatsapp-secreto (spec OC por WhatsApp §4), no con JWT.
 [functions.com-oc-whatsapp]
 verify_jwt = false
+
+# Pagos de Sucursales propias: el portal entra con x-com-secreto + x-usuario-jwt (spec §5), no con verify_jwt.
+[functions.zoho-suc-pagos]
+verify_jwt = false
