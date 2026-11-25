@@ -3,11 +3,10 @@ import {
   parseItems,
   planDatTipo,
   planEngCeil,
-  planEngMediana,
   type PedidoPlan,
 } from '../../supabase/functions/_shared/planEngine.ts';
 import { validarCorreos } from './config';
-import { difDias, masDias } from './fechas';
+import { masDias } from './fechas';
 
 /**
  * Orden de venta sugerida, piloto (spec 2026-11-18-ov-sugerida-piloto-design.md, §4): "receta calibrada" por tienda.
@@ -15,9 +14,8 @@ import { difDias, masDias } from './fechas';
  */
 export const DIAS_HISTORIA = 90;
 export const DIAS_CONSUMO = 28;
-export const CADENCIA_MIN = 7;
-export const CADENCIA_MAX = 30;
-export const CADENCIA_POR_DEFECTO = 14;
+/** Días que cubre cada sugerencia y cada cuánto se calcula por tienda (pedido del usuario 2026-11-20). */
+export const CADENCIA_DIAS = 14;
 export const K_MIN = 0.8;
 export const K_MAX = 1.5;
 export const TOLERANCIA = 0.2;
@@ -161,23 +159,18 @@ export function pedidosResurtido(a: {
   return { pedidos: salida, sinSku, fueraDeCatalogo: [...fuera].sort() };
 }
 
-/** §4.2: mediana de días entre días con pedido de hoy-90 a hoy, acotada a [7, 30]; con menos de 2 días, 14. */
+/**
+ * Cadencia fija de CADENCIA_DIAS (pedido del usuario 2026-11-20; antes era la mediana entre pedidos en [7, 30]).
+ * La sugerencia cubre ese periodo y la corrida sale cada CADENCIA_DIAS (ovSugeridaServidor). `diasConPedido` cuenta
+ * los días con pedido de los últimos 90 días, para el encabezado del correo.
+ */
 export function cadencia(
   pedidos: PedidoTienda[],
   hoy: string,
 ): { dias: number; porDefecto: boolean; diasConPedido: number } {
   const desde = masDias(hoy, -DIAS_HISTORIA);
-  const fechas = [
-    ...new Set(pedidos.filter((p) => p.fecha >= desde && p.fecha <= hoy).map((p) => p.fecha)),
-  ].sort();
-  if (fechas.length < 2)
-    return { dias: CADENCIA_POR_DEFECTO, porDefecto: true, diasConPedido: fechas.length };
-  const saltos = fechas.slice(1).map((f, i) => difDias(fechas[i], f));
-  return {
-    dias: acotar(Math.round(planEngMediana(saltos)), CADENCIA_MIN, CADENCIA_MAX),
-    porDefecto: false,
-    diasConPedido: fechas.length,
-  };
+  const fechas = new Set(pedidos.filter((p) => p.fecha >= desde && p.fecha <= hoy).map((p) => p.fecha));
+  return { dias: CADENCIA_DIAS, porDefecto: false, diasConPedido: fechas.size };
 }
 
 export function ultimoPedido(pedidos: PedidoTienda[], hoy: string): string | null {
@@ -286,7 +279,7 @@ export function calcularLineas(a: {
   return { lineas, inactivos };
 }
 
-/** §7: lo sugerido la semana pasada (sugerido > 0) contra lo que la tienda pidió desde su lunes hasta hoy. */
+/** §7: lo sugerido en la corrida anterior (sugerido > 0) contra lo que la tienda pidió desde su lunes hasta hoy. */
 export function medicion(a: {
   anteriores: { sku: string; sugerido: number }[];
   desde: string;
