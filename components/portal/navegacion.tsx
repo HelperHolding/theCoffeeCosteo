@@ -49,6 +49,7 @@ import {
   ReceiptText,
   BellRing,
   ArrowDownToLine,
+  FileBarChart,
 } from 'lucide-react';
 import { modulos, type IdModulo } from '@/lib/portal/modulos';
 import { ESTILO_MODULO } from './modulos-ui';
@@ -191,6 +192,7 @@ const gruposComercializadora: Grupo[] = [
     titulo: 'Operación',
     enlaces: [
       { href: '/comercializadora/inicio', nombre: 'Inicio', icono: LayoutDashboard },
+      { href: '/comercializadora/reporte-semanal', nombre: 'Reporte semanal', icono: FileBarChart },
       { href: '/comercializadora/envios', nombre: 'Envíos', icono: Send },
       { href: '/comercializadora/traspasos', nombre: 'Traspasos', icono: ArrowLeftRight },
       { href: '/comercializadora/mapeo', nombre: 'Mapeo SKU', icono: Link2 },
