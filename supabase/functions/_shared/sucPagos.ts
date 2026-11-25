@@ -18,6 +18,8 @@ export interface FilaTransferencia {
   archivo_pdf: string;
   proveedor_zoho_id: string | null;
   proveedor_nombre: string | null;
+  /** true si el proveedor salió por nombre parecido y nadie lo ha confirmado. */
+  sugerido: boolean;
   estado: string;
   zoho_vendorpayment_id: string | null;
   adjunto_ok: boolean;
@@ -151,7 +153,12 @@ export async function aplicar(repo: RepoPagos, zoho: ZohoPagos, id: number, usua
       return { estado: "ya_aplicada", pagoId: previo };
     }
     for (const a of asig) {
-      const { bill } = await zoho.get<{ bill: { balance: number } }>(`/bills/${a.bill_id}`);
+      const { bill } = await zoho.get<{ bill: { balance: number; vendor_id: string } }>(`/bills/${a.bill_id}`);
+      if (bill.vendor_id !== vendorId) {
+        const mensaje = `La factura ${a.bill_numero} es de otro proveedor en Zoho. Revisa la fila.`;
+        await repo.marcar(id, ["aplicando"], { estado: "no_cuadra", error: mensaje });
+        return { estado: "no_cuadra", mensaje };
+      }
       if (cent(bill.balance) < cent(a.monto)) {
         const mensaje = `El saldo de la factura ${a.bill_numero} cambió en Zoho ($${bill.balance.toFixed(2)}). Revisa la fila.`;
         await repo.marcar(id, ["aplicando"], { estado: "no_cuadra", error: mensaje });
@@ -172,8 +179,9 @@ export async function aplicar(repo: RepoPagos, zoho: ZohoPagos, id: number, usua
     await repo.marcar(id, ["aplicando"], {
       estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId, aplicado_por: usuario, aplicado_en: ahora(),
     });
-    if (tf.clabe && tf.proveedor_nombre) {
-      // La equivalencia es una ayuda: si no se guarda, el pago ya quedó bien.
+    if (tf.clabe && tf.proveedor_nombre && !tf.sugerido) {
+      // La equivalencia es una ayuda: si no se guarda, el pago ya quedó bien. Un proveedor sugerido por nombre
+      // y no confirmado no se memoriza: un empate equivocado se repetiría en cada corrida.
       await repo.guardarEquivalencia(tf.clabe, vendorId, tf.proveedor_nombre).catch(() => {});
     }
     return adjuntarYCerrar(repo, zoho, { ...tf, estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId }, asig);

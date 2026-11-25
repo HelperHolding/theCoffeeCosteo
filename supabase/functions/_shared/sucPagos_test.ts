@@ -7,6 +7,7 @@ type Llamada = { m: string; path: string; body?: unknown; params?: Record<string
 function zohoFalso(o: {
   pagosPrevios?: { payment_id: string; reference_number: string }[];
   saldos?: Record<string, number>;
+  vendores?: Record<string, string>;
   fallarPost?: boolean;
   adjuntoPago?: "ok" | 404 | 500;
   adjuntoFactura?: "ok" | 500;
@@ -17,7 +18,7 @@ function zohoFalso(o: {
       llamadas.push({ m: "GET", path, params });
       if (path === "/vendorpayments") return { vendorpayments: o.pagosPrevios ?? [] } as T;
       const b = /^\/bills\/(.+)$/.exec(path);
-      if (b) return { bill: { balance: o.saldos?.[b[1]] ?? 0 } } as T;
+      if (b) return { bill: { balance: o.saldos?.[b[1]] ?? 0, vendor_id: o.vendores?.[b[1]] ?? "v-oh" } } as T;
       throw new Error(`GET inesperado ${path}`);
     },
     async post<T>(path: string, body: unknown) {
@@ -47,7 +48,7 @@ function zohoFalso(o: {
 function repoFalso(t: Partial<FilaTransferencia> = {}) {
   const fila: FilaTransferencia = {
     id: 1, llave: "058-20/11/2026/20-X1", clabe: "012535000000001111", concepto: "PAGO FACTURAS", monto: 400,
-    fecha_operacion: "2026-11-20", archivo_pdf: "5/abc.pdf", proveedor_zoho_id: "v-oh", proveedor_nombre: "OH LALA",
+    fecha_operacion: "2026-11-20", archivo_pdf: "5/abc.pdf", proveedor_zoho_id: "v-oh", proveedor_nombre: "OH LALA", sugerido: false,
     estado: "cuadra", zoho_vendorpayment_id: null, adjunto_ok: false, ...t,
   };
   const estado = { fila, cuentaId: null as string | null, equivalencias: [] as string[], actualizado: new Date().toISOString(), fallarMarcar: [] as string[] };
@@ -235,7 +236,7 @@ Deno.test("si el pago se creó y falla guardar el resultado, queda aplicada_sin_
 });
 
 Deno.test("usa la fila fresca tras reservar (proveedor editado entre lecturas)", async () => {
-  const { z, llamadas } = zohoFalso({ saldos: SALDOS });
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS, vendores: { b1: "v-nuevo", b2: "v-nuevo" } });
   const { repo, estado } = repoFalso();
   const original = repo.marcar;
   repo.marcar = async (...a) => {
@@ -245,4 +246,20 @@ Deno.test("usa la fila fresca tras reservar (proveedor editado entre lecturas)",
   };
   await aplicar(repo, z, 1, "u1");
   assertEquals((llamadas.find((l) => l.m === "POST")!.body as { vendor_id: string }).vendor_id, "v-nuevo");
+});
+
+Deno.test("un proveedor sugerido por nombre se paga pero no se guarda como equivalencia", async () => {
+  const { z } = zohoFalso({ saldos: SALDOS });
+  const { repo, estado } = repoFalso({ sugerido: true });
+  assertEquals((await aplicar(repo, z, 1, "u1")).estado, "aplicada");
+  assertEquals(estado.equivalencias, []);
+});
+
+Deno.test("si una factura es de otro proveedor en Zoho, no paga y queda no_cuadra", async () => {
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS, vendores: { b2: "v-otro" } });
+  const { repo, estado } = repoFalso();
+  const r = await aplicar(repo, z, 1, "u1");
+  assertEquals(r, { estado: "no_cuadra", mensaje: "La factura A2 es de otro proveedor en Zoho. Revisa la fila." });
+  assertEquals(llamadas.some((l) => l.m === "POST"), false);
+  assertEquals(estado.fila.estado, "no_cuadra");
 });

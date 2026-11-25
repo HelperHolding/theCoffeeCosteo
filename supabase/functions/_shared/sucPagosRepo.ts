@@ -6,7 +6,7 @@ export function repoSupabase(db: SupabaseClient): RepoPagos {
   return {
     async transferencia(id) {
       const { data, error } = await db.from("suc_pago_transferencia")
-        .select("id,llave,clabe,concepto,monto,fecha_operacion,archivo_pdf,proveedor_zoho_id,proveedor_nombre,estado,zoho_vendorpayment_id,adjunto_ok")
+        .select("id,llave,clabe,concepto,monto,fecha_operacion,archivo_pdf,proveedor_zoho_id,proveedor_nombre,sugerido,estado,zoho_vendorpayment_id,adjunto_ok")
         .eq("id", id).maybeSingle();
       if (error) throw error;
       return data ? { ...data, monto: Number(data.monto) } : null;
