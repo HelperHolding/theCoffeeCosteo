@@ -16,6 +16,7 @@ const estado = vi.hoisted(() => ({
   rpc: [] as { fn: string; args: Record<string, unknown> }[],
   rpcError: null as unknown,
   upserts: [] as unknown[],
+  orden: [] as string[],
   invocar: vi.fn(),
 }));
 
@@ -31,11 +32,13 @@ const db = {
     }),
     upsert: async (v: unknown) => {
       estado.upserts.push(v);
+      estado.orden.push('upsert');
       return { error: null };
     },
   }),
   rpc: async (fn: string, args: Record<string, unknown>) => {
     estado.rpc.push({ fn, args });
+    estado.orden.push('rpc');
     return { error: estado.rpcError };
   },
 };
@@ -74,11 +77,20 @@ const FACTURAS = [
   },
 ];
 
+// Zoho simulado: lista de proveedores y facturas según la acción pedida.
+const zoho = () =>
+  estado.invocar.mockImplementation(async (_db: unknown, accion: string) =>
+    accion === 'proveedores'
+      ? { ok: true, datos: { proveedores: [{ id: 'v-mp', nombre: 'MATERIAS PRIMAS EL REFUGIO' }] } }
+      : { ok: true, datos: { facturas: FACTURAS } },
+  );
+
 beforeEach(() => {
   estado.acceso = { ok: true, puedeAplicar: true };
   estado.rpc = [];
   estado.rpcError = null;
   estado.upserts = [];
+  estado.orden = [];
   estado.invocar.mockReset();
   estado.fila = { ...estado.fila, estado: 'desconocido', proveedor_zoho_id: null };
 });
@@ -100,7 +112,7 @@ describe('acciones de Pagos', () => {
   });
 
   it('asignar proveedor guarda la equivalencia y recalcula con sus facturas', async () => {
-    estado.invocar.mockResolvedValue({ ok: true, datos: { facturas: FACTURAS } });
+    zoho();
     expect(await asignarProveedor(5, { id: 'v-mp', nombre: 'MATERIAS PRIMAS EL REFUGIO' })).toEqual({
       ok: true,
     });
@@ -119,6 +131,51 @@ describe('acciones de Pagos', () => {
       ['b1', 300],
       ['b2', 100],
     ]);
+  });
+
+  it('un proveedor que no está en Zoho se rechaza sin tocar nada', async () => {
+    zoho();
+    expect(await asignarProveedor(5, { id: 'v-falso', nombre: 'X' })).toEqual({
+      error: 'Ese proveedor no está en Zoho.',
+    });
+    expect(estado.upserts).toEqual([]);
+    expect(estado.rpc).toEqual([]);
+  });
+
+  it('usa el nombre de Zoho aunque el navegador mande otro', async () => {
+    zoho();
+    expect(await asignarProveedor(5, { id: 'v-mp', nombre: 'NOMBRE FALSO' })).toEqual({ ok: true });
+    expect(estado.upserts).toEqual([
+      {
+        clabe: '030320900000001111',
+        proveedor_zoho_id: 'v-mp',
+        proveedor_nombre: 'MATERIAS PRIMAS EL REFUGIO',
+      },
+    ]);
+    expect(estado.rpc[0].args).toMatchObject({ p_proveedor_nombre: 'MATERIAS PRIMAS EL REFUGIO' });
+  });
+
+  it('la equivalencia se guarda después de la RPC y no si la RPC falla', async () => {
+    zoho();
+    await asignarProveedor(5, { id: 'v-mp', nombre: 'MP' });
+    expect(estado.orden).toEqual(['rpc', 'upsert']);
+    estado.orden = [];
+    estado.upserts = [];
+    estado.rpcError = { message: 'boom' };
+    expect(await asignarProveedor(5, { id: 'v-mp', nombre: 'MP' })).toEqual({
+      error: 'No se pudo guardar. Intenta de nuevo.',
+    });
+    expect(estado.upserts).toEqual([]);
+  });
+
+  it('un id inválido se rechaza sin llamar a la función', async () => {
+    expect(await aplicarTransferencia(0)).toEqual({ error: 'Datos inválidos.' });
+    expect(await aplicarTransferencia(1.5)).toEqual({ error: 'Datos inválidos.' });
+    expect(await asignarProveedor(-1, { id: 'v-mp', nombre: 'MP' })).toEqual({ error: 'Datos inválidos.' });
+    expect(await asignarProveedor(5, { id: '', nombre: 'MP' })).toEqual({ error: 'Datos inválidos.' });
+    expect(await guardarAsignaciones(NaN, [])).toEqual({ error: 'Datos inválidos.' });
+    expect(await guardarAsignaciones(5, null as never)).toEqual({ error: 'Datos inválidos.' });
+    expect(estado.invocar).not.toHaveBeenCalled();
   });
 
   it('una transferencia ya aplicada no se puede cambiar', async () => {

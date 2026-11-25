@@ -17,6 +17,8 @@ export type Resultado<T = object> = { error: string } | ({ ok: true } & T);
 
 const SOLO_LECTURA = 'Tu acceso a Pagos es de solo lectura.';
 const RUTA = '/sucursales/propias/pagos';
+const DATOS_INVALIDOS = 'Datos inválidos.';
+const idValido = (id: unknown): id is number => Number.isInteger(id) && (id as number) > 0;
 
 async function editor() {
   const a = await accesoPagos();
@@ -62,13 +64,18 @@ async function facturasDe(db: Db, vendorId: string): Promise<{ facturas: Factura
 export async function aplicarTransferencia(
   id: number,
 ): Promise<Resultado<{ estado: string; mensaje?: string }>> {
-  const a = await editor();
-  if (!a) return { error: SOLO_LECTURA };
-  const r = await invocarPagos(a.db, 'aplicar', { id });
-  if (!r.ok) return { error: r.error };
-  const d = r.datos as { estado: string; mensaje?: string };
-  revalidatePath(RUTA, 'layout');
-  return { ok: true, estado: d.estado, mensaje: d.mensaje };
+  try {
+    const a = await editor();
+    if (!a) return { error: SOLO_LECTURA };
+    if (!idValido(id)) return { error: DATOS_INVALIDOS };
+    const r = await invocarPagos(a.db, 'aplicar', { id });
+    if (!r.ok) return { error: r.error };
+    const d = r.datos as { estado: string; mensaje?: string };
+    revalidatePath(RUTA, 'layout');
+    return { ok: true, estado: d.estado, mensaje: d.mensaje };
+  } catch (e) {
+    return fallo(e);
+  }
 }
 
 export async function leerProveedores(): Promise<Resultado<{ proveedores: Proveedor[] }>> {
@@ -93,30 +100,37 @@ export async function asignarProveedor(id: number, proveedor: Proveedor): Promis
   try {
     const a = await editor();
     if (!a) return { error: SOLO_LECTURA };
+    if (!idValido(id) || typeof proveedor?.id !== 'string' || !proveedor.id)
+      return { error: DATOS_INVALIDOS };
     const t = await transferencia(a.db, id);
     if (!t) return { error: 'No encontré la transferencia.' };
     if (!(PREVIOS as readonly string[]).includes(t.estado))
       return { error: 'Esta transferencia ya se aplicó.' };
-    const f = await facturasDe(a.db, proveedor.id);
+    // El proveedor se toma de Zoho, no del navegador: id y nombre del cliente no son de fiar
+    // (la equivalencia CLABE -> proveedor es compartida y afecta empates futuros).
+    const lista = await invocarPagos(a.db, 'proveedores');
+    if (!lista.ok) return { error: lista.error };
+    const zoho = (lista.datos as { proveedores: Proveedor[] }).proveedores.find((p) => p.id === proveedor.id);
+    if (!zoho) return { error: 'Ese proveedor no está en Zoho.' };
+    const f = await facturasDe(a.db, zoho.id);
     if ('error' in f) return f;
-    const e = conProveedor(t.monto, proveedor, false, f.facturas);
-    if (t.clabe) {
-      const { error } = await a.db.from('suc_proveedor_clabe').upsert({
-        clabe: t.clabe,
-        proveedor_zoho_id: proveedor.id,
-        proveedor_nombre: proveedor.nombre,
-      });
-      if (error) return fallo(error);
-    }
+    const e = conProveedor(t.monto, zoho, false, f.facturas);
     const { error } = await a.db.rpc('suc_pagos_reemplazar_asignaciones', {
       p_id: id,
       p_estado: e.estado,
-      p_proveedor_id: proveedor.id,
-      p_proveedor_nombre: proveedor.nombre,
+      p_proveedor_id: zoho.id,
+      p_proveedor_nombre: zoho.nombre,
       p_sugerido: false,
       p_asig: e.asignaciones.map(aFila),
     });
     if (error) return fallo(error);
+    if (t.clabe) {
+      // Si esto falla la asignación ya quedó guardada: se devuelve ok y solo se pierde la
+      // memoria para la próxima corrida (el usuario volverá a elegir el proveedor).
+      await a.db
+        .from('suc_proveedor_clabe')
+        .upsert({ clabe: t.clabe, proveedor_zoho_id: zoho.id, proveedor_nombre: zoho.nombre });
+    }
     revalidatePath(RUTA, 'layout');
     return { ok: true };
   } catch (e) {
@@ -131,6 +145,7 @@ export async function guardarAsignaciones(
   try {
     const a = await editor();
     if (!a) return { error: SOLO_LECTURA };
+    if (!idValido(id) || !Array.isArray(asignaciones)) return { error: DATOS_INVALIDOS };
     const t = await transferencia(a.db, id);
     if (!t?.proveedor_zoho_id || !t.proveedor_nombre) return { error: 'Primero elige el proveedor.' };
     if (!(PREVIOS as readonly string[]).includes(t.estado))
