@@ -108,7 +108,10 @@ grant all on public.suc_pago_corrida, public.suc_pago_transferencia, public.suc_
 
 grant select, insert on public.suc_pago_corrida to authenticated;
 grant update (avisos) on public.suc_pago_corrida to authenticated;
-grant select, insert on public.suc_pago_transferencia to authenticated;
+grant select on public.suc_pago_transferencia to authenticated;
+-- Insert solo de las columnas que fija la RPC: aplicado_*, error, ids de Zoho quedan fuera.
+grant insert (corrida_id, llave, tipo, clabe, alias, concepto, monto, fecha_operacion, archivo_pdf,
+  proveedor_zoho_id, proveedor_nombre, sugerido, estado) on public.suc_pago_transferencia to authenticated;
 grant update (proveedor_zoho_id, proveedor_nombre, sugerido, estado, error, actualizado_en)
   on public.suc_pago_transferencia to authenticated;
 grant select, insert, delete on public.suc_pago_asignacion to authenticated;
@@ -127,7 +130,9 @@ create policy leer on public.suc_pago_transferencia for select to authenticated
 create policy registrar on public.suc_pago_transferencia for insert to authenticated
   with check ((select public.suc_pagos_puede_editar())
     and estado in ('cuadra', 'no_cuadra', 'desconocido', 'sin_facturas')
-    and zoho_vendorpayment_id is null and aplicado_por is null and not adjunto_ok);
+    and zoho_vendorpayment_id is null and aplicado_por is null and not adjunto_ok
+    -- La ruta del recibo la fija la base: el bucket confía en archivo_pdf.
+    and archivo_pdf = corrida_id || '/' || md5(llave) || '.pdf');
 create policy revisar on public.suc_pago_transferencia for update to authenticated
   using ((select public.suc_pagos_puede_editar()) and estado in ('cuadra', 'no_cuadra', 'desconocido', 'sin_facturas'))
   with check ((select public.suc_pagos_puede_editar()) and estado in ('cuadra', 'no_cuadra', 'desconocido', 'sin_facturas'));
@@ -210,6 +215,12 @@ begin
   select p_id, a->>'bill_id', a->>'bill_numero', coalesce(a->>'ubicacion', ''), nullif(a->>'fecha', '')::date,
          (a->>'saldo')::numeric, (a->>'monto')::numeric
   from jsonb_array_elements(coalesce(p_asig, '[]'::jsonb)) a;
+  -- Una transferencia 'cuadra' solo si lo asignado es exactamente su monto.
+  if p_estado = 'cuadra' and (
+    select coalesce(sum(a.monto), 0) from public.suc_pago_asignacion a where a.transferencia_id = p_id
+  ) <> (select t.monto from public.suc_pago_transferencia t where t.id = p_id) then
+    raise exception 'Lo asignado no es igual a la transferencia.';
+  end if;
 end $$;
 
 revoke all on function public.suc_pagos_registrar_corrida(jsonb),
@@ -223,9 +234,9 @@ values ('suc-pagos-recibos', 'suc-pagos-recibos', false, 5242880, array['applica
 on conflict (id) do nothing;
 
 create policy suc_pagos_recibos_leer on storage.objects for select to authenticated
-  using (bucket_id = 'suc-pagos-recibos' and public.suc_pagos_puede_leer()
+  using (bucket_id = 'suc-pagos-recibos' and (select public.suc_pagos_puede_leer())
     and exists (select 1 from public.suc_pago_transferencia t where t.archivo_pdf = name));
 create policy suc_pagos_recibos_subir on storage.objects for insert to authenticated
-  with check (bucket_id = 'suc-pagos-recibos' and public.suc_pagos_puede_editar()
+  with check (bucket_id = 'suc-pagos-recibos' and (select public.suc_pagos_puede_editar())
     and exists (select 1 from public.suc_pago_transferencia t
                 where t.archivo_pdf = name and t.estado in ('cuadra', 'no_cuadra', 'desconocido', 'sin_facturas')));

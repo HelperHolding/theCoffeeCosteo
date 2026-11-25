@@ -216,4 +216,48 @@ describe('migración 98: pagos de Sucursales propias', () => {
       comoUsuario(db, editor, () => db.query(`update suc_pago_config set cuenta_zoho_id = 'x'`)),
     ).rejects.toThrow(/permission denied/);
   });
+
+  it('el insert directo no puede fijar la ruta del recibo ni los campos de Zoho', async () => {
+    const ins = (cols: string, vals: string) =>
+      comoUsuario(db, editor, () =>
+        db.query(
+          `insert into suc_pago_transferencia (corrida_id, llave, tipo, alias, monto, fecha_operacion, estado, ${cols})
+           select id, 'DIR-' || md5(random()::text), 'SPEI', 'X', 10, '2026-11-20', 'cuadra', ${vals} from suc_pago_corrida limit 1`,
+        ),
+      );
+    await expect(ins('archivo_pdf', `'1/otro.pdf'`)).rejects.toThrow(/row-level security/);
+    await expect(ins('archivo_pdf, error', `'1/otro.pdf', 'x'`)).rejects.toThrow(/permission denied/);
+    await expect(ins('archivo_pdf, aplicado_en', `'1/otro.pdf', now()`)).rejects.toThrow(/permission denied/);
+  });
+
+  it('una transferencia solo cuadra si lo asignado suma su monto', async () => {
+    await comoUsuario(db, editor, () => registrar(db, corrida('058-20/11/2026/20-CCC3', 'no_cuadra')));
+    const { id } = (
+      await comoUsuario(db, editor, () =>
+        db.query<{ id: number }>(
+          `select id from suc_pago_transferencia where llave = '058-20/11/2026/20-CCC3'`,
+        ),
+      )
+    ).rows[0];
+    const mal = JSON.stringify([
+      { bill_id: 'b1', bill_numero: 'A1', ubicacion: 'D', fecha: null, saldo: 60, monto: 60 },
+    ]);
+    const bien = JSON.stringify([
+      { bill_id: 'b1', bill_numero: 'A1', ubicacion: 'D', fecha: null, saldo: 60, monto: 60 },
+      { bill_id: 'b2', bill_numero: 'A2', ubicacion: 'N', fecha: null, saldo: 40.5, monto: 40.5 },
+    ]);
+    const reemplazar = (estado: string, asig: string) =>
+      comoUsuario(db, editor, () =>
+        db.query(
+          `select suc_pagos_reemplazar_asignaciones($1, $2, 'v1', 'Proveedor Uno', false, $3::jsonb)`,
+          [id, estado, asig],
+        ),
+      );
+    await expect(reemplazar('cuadra', mal)).rejects.toThrow(/no es igual a la transferencia/);
+    await reemplazar('cuadra', bien);
+    const e = await db.query<{ estado: string }>('select estado from suc_pago_transferencia where id = $1', [
+      id,
+    ]);
+    expect(e.rows[0].estado).toBe('cuadra');
+  });
 });
