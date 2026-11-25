@@ -223,7 +223,8 @@ describe('Corrida', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Aplicar 1 pagos' }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar y aplicar en Zoho' }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
-    expect(aplicar.mock.calls.map((c) => c[0])).toEqual([1]);
+    expect(aplicar).toHaveBeenCalledTimes(1);
+    expect(aplicar).toHaveBeenCalledWith(1);
   });
 
   it('aplicar una solicitud pide confirmación; cancelar no aplica', async () => {
