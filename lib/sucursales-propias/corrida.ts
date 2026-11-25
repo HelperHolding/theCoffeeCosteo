@@ -67,20 +67,31 @@ export async function prepararCorrida(
   if (error) throw error;
   const { corrida_id, rutas } = data as { corrida_id: number; rutas: { llave: string; ruta: string }[] };
 
-  const pdfs = new Map(zip.recibos.map((r) => [r.archivo, r.pdf]));
+  // La corrida ya está registrada: cualquier falla al subir un recibo es un aviso, no un error de la corrida.
   const fallidos: string[] = [];
   for (const { llave, ruta } of rutas) {
-    const t = nuevas.find((x) => x.llave === llave)!;
-    const { error: eu } = await db.storage
-      .from('suc-pagos-recibos')
-      .upload(ruta, pdfs.get(t.archivo)!, { contentType: 'application/pdf', upsert: false });
-    if (eu) fallidos.push(`No se pudo guardar el recibo de ${t.alias}; al aplicar quedará sin adjunto.`);
+    const alias = nuevas.find((x) => x.llave === llave)?.alias ?? llave;
+    try {
+      const t = nuevas.find((x) => x.llave === llave)!;
+      const pdf = zip.recibos.find((r) => r.archivo === t.archivo)!.pdf;
+      const { error: eu } = await db.storage
+        .from('suc-pagos-recibos')
+        .upload(ruta, pdf, { contentType: 'application/pdf', upsert: false });
+      if (eu) throw eu;
+    } catch {
+      fallidos.push(`No se pudo guardar el recibo de ${alias}; al aplicar quedará sin adjunto.`);
+    }
   }
   if (fallidos.length) {
+    // Si esto falla, los avisos igual se devuelven en la respuesta; no vale la pena perder la corrida registrada.
     await db
       .from('suc_pago_corrida')
       .update({ avisos: [...avisos, ...fallidos] })
-      .eq('id', corrida_id);
+      .eq('id', corrida_id)
+      .then(
+        () => undefined,
+        () => undefined,
+      );
   }
   return { corridaId: corrida_id, avisos: [...avisos, ...fallidos] };
 }

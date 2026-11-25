@@ -132,8 +132,10 @@ export async function accesoSucursales(): Promise<
   const propias = puedeVerPagos(c.accesos, c.perfil.data.rol);
   if (!c.accesos.sucursales && !propias)
     return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Sucursales.' };
-  const companias = await companiasAsignadas(c.db, c.usuario.id);
-  return { ok: true, db: c.db, perfil: c.perfil.data, companias, red: !!c.accesos.sucursales, propias };
+  // Sin el módulo de ventas no hay sucursales: pagos-only no debe ver datos de POS/Rappi por perfil_sucursales (p. ej. las de BI).
+  const red = !!c.accesos.sucursales;
+  const companias = red ? await companiasAsignadas(c.db, c.usuario.id) : [];
+  return { ok: true, db: c.db, perfil: c.perfil.data, companias, red, propias };
 }
 
 /** Sesión de páginas de Sucursales: redirige como el resto del portal. */

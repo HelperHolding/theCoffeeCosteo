@@ -45,3 +45,22 @@ describe('POST /api/sucursales/propias/pagos', () => {
     expect(await (await pedir(new File(['x'], 'a.zip'))).json()).toEqual({ corridaId: 7, avisos: [] });
   });
 });
+
+describe('registro de errores de la ruta', () => {
+  it('un error de supabase-js (objeto plano) no deja la CLABE en los logs', async () => {
+    acceso.valor = { ok: true, db: {}, perfil: {}, nivel: 'edicion', puedeAplicar: true };
+    const espia = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    preparar.mockRejectedValueOnce({
+      message: 'dup',
+      code: '23505',
+      details: 'Key (clabe)=(012320000000001234)',
+      hint: 'clabe 012320000000001234',
+    });
+    const r = await pedir(new File(['x'], 'a.zip'));
+    expect(r.status).toBe(500);
+    expect(await r.json()).toEqual({ error: 'No se pudo registrar la corrida. Intenta de nuevo.' });
+    expect(espia).toHaveBeenCalled();
+    expect(JSON.stringify(espia.mock.calls)).not.toContain('012320000000001234');
+    espia.mockRestore();
+  });
+});

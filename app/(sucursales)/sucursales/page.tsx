@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { sesionSucursales } from '@/lib/supabase/sesion';
 import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
 import { Encabezado, Vacio } from '@/components/portal/piezas';
@@ -10,7 +11,9 @@ import { AvisoCalidadRappi } from '@/components/sucursales/estados';
  */
 export default async function Directorio() {
   // El layout no se vuelve a ejecutar al navegar: cada página valida su propia sesión.
-  const { companias } = await sesionSucursales();
+  const { companias, red } = await sesionSucursales();
+  // Solo pagos: el directorio de ventas no es para ellos.
+  if (!red) redirect('/sucursales/propias/pagos');
   const lista = sucursalesAccesibles(companias).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es-MX'));
   const sinConfigurar = companias.length - lista.length;
   const ciudades = [...new Set(lista.map((s) => s.ciudad))].sort((a, b) => a.localeCompare(b, 'es-MX'));

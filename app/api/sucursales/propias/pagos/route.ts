@@ -19,8 +19,13 @@ export async function POST(req: Request) {
     return Response.json(await prepararCorrida(a.db, zip.name, new Uint8Array(await zip.arrayBuffer())));
   } catch (e) {
     if (e instanceof ErrorCorrida) return Response.json({ error: e.message }, { status: 422 });
-    // Solo el mensaje: los errores de Postgres pueden traer datos sensibles (p. ej. una CLABE).
-    console.error('[sucursales-propias] subir corrida', e instanceof Error ? e.message : e);
+    // Solo message y code: supabase-js lanza objetos planos cuyo details/hint puede traer una CLABE.
+    const { message, code } = (e ?? {}) as { message?: unknown; code?: unknown };
+    console.error(
+      '[sucursales-propias] subir corrida',
+      typeof message === 'string' ? message : 'error',
+      typeof code === 'string' ? code : '',
+    );
     return Response.json({ error: 'No se pudo registrar la corrida. Intenta de nuevo.' }, { status: 500 });
   }
 }
