@@ -91,6 +91,30 @@ export class ZohoClient {
     return this.pedir<T>("DELETE", path, {});
   }
 
+  /** Sube un archivo como multipart/form-data. Igual que post: no reintenta 5xx (pudo haberse guardado ya). */
+  async subir<T>(path: string, campo: string, datos: Uint8Array, nombre: string, tipo = "application/pdf"): Promise<T> {
+    if (this.cfg.soloLectura) {
+      throw new ZohoError(`Zoho en modo sin efectos externos: POST ${path} no se envió`, 0);
+    }
+    const url = `${this.api}${path}?${new URLSearchParams({ organization_id: this.cfg.orgId })}`;
+    let refrescado = false;
+    for (let intento = 0; ; intento++) {
+      const tk = await this.obtenerToken();
+      const form = new FormData();
+      form.append(campo, new Blob([datos as BlobPart], { type: tipo }), nombre);
+      this.llamadas++;
+      // Sin Content-Type: fetch pone multipart/form-data con su boundary.
+      const r = await this.f(url, { method: "POST", headers: { Authorization: `Zoho-oauthtoken ${tk}` }, body: form });
+      if (r.status === 401 && !refrescado) { refrescado = true; this.llamadas--; await this.obtenerToken(true); continue; }
+      if (r.status === 429 && intento < REINTENTOS - 1) { await this.sleep(1000 * 2 ** intento); continue; }
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || (j.code !== undefined && j.code !== 0)) {
+        throw new ZohoError(j.message ?? `Zoho HTTP ${r.status}`, r.status, j.code);
+      }
+      return j as T;
+    }
+  }
+
   async listAll<T>(path: string, key: string, params: Record<string, string> = {}): Promise<T[]> {
     const out: T[] = [];
     for (let page = 1; ; page++) {
