@@ -58,8 +58,10 @@ Deno.test("paridad: calidad de surtido con los datos del 23 nov (spec §7, punto
 Deno.test("paridad: calidad de surtido con la captura del 25 nov (spec §7, puntos 1 y 2)", () => {
   if (!r.surtido.ok) throw new Error(r.surtido.error);
   const s = r.surtido.datos;
-  assertEquals([s.enviados, s.conFaltante, s.incidenciasTotal], [68, 32, 33]);
-  assertEquals(s.casos, { stock: 26, pickeo: 6, paqueteria: 1, otro: 0 });
+  // Los paquetes posteriores al domingo ya no cuentan (el punto 2 lo resuelve la regla). Universo y stock igualan
+  // al reporte a mano (71, 29); pickeo +2 y faltante +2 son las incidencias capturadas después (punto 1).
+  assertEquals([s.enviados, s.conFaltante, s.incidenciasTotal], [71, 35, 36]);
+  assertEquals(s.casos, { stock: 29, pickeo: 6, paqueteria: 1, otro: 0 });
   assertEquals([s.envio.universo, s.envio.enMeta, s.envio.buckets], [54, 54, [8, 24, 22, 0]]);
 });
 

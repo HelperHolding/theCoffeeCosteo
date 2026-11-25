@@ -46,15 +46,20 @@ async function enLotes<T, R>(xs: T[], tam: number, fn: (x: T) => Promise<R>, pau
   return out;
 }
 
-export async function leerZoho(z: ZohoClient, cfg: ConfigReporte, lunes: string, pausa: (ms: number) => Promise<void> = dormir): Promise<Lectura> {
+/**
+ * hasta: día de corte (hoy). OVs y paquetes se leen hasta ahí para mostrar aperturas próximas y su envío;
+ * surtido y atención se acotan a la semana en su propio cálculo.
+ */
+export async function leerZoho(z: ZohoClient, cfg: ConfigReporte, lunes: string, pausa: (ms: number) => Promise<void> = dormir, hasta?: string): Promise<Lectura> {
   const fin = finSemana(lunes);
+  const finOvs = hasta && hasta > fin ? hasta : fin;
   const desdeOvs = sumar(lunes, -cfg.dias_incidencias);
   const facturas = await intentar(async () =>
     (await z.listAll<J>("/invoices", "invoices", { date_start: sumar(lunes, -28), date_end: fin })).map(aFactura));
   const paquetes = await intentar(async () =>
-    (await z.listAll<J>("/packages", "packages", { date_start: desdeOvs, date_end: fin })).map(aPaquete));
+    (await z.listAll<J>("/packages", "packages", { date_start: desdeOvs, date_end: finOvs })).map(aPaquete));
   const ovs = await intentar(async () =>
-    (await z.listAll<J>("/salesorders", "salesorders", { date_start: desdeOvs, date_end: fin })).map(aOv));
+    (await z.listAll<J>("/salesorders", "salesorders", { date_start: desdeOvs, date_end: finOvs })).map(aOv));
   const descripciones: Seccion<Record<string, string>> = ovs.ok
     ? await intentar(async () => {
       const casos = casosAtencion(ovs.datos, cfg, lunes);

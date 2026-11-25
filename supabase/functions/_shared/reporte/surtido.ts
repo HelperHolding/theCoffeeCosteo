@@ -44,7 +44,8 @@ const ind = (valor: number | null, meta: number, mayor: boolean): Indicador =>
 
 export function calcularSurtido(ovs: Ov[], paquetes: Paquete[], cfg: ConfigReporte, lunes: string): Surtido {
   const fin = finSemana(lunes);
-  const pe = primerEnvio(paquetes);
+  // Paquetes posteriores al domingo no cuentan: la semana se ve como estaba al cerrar.
+  const pe = primerEnvio(paquetes.filter((p) => !p.envio || p.envio <= fin));
   const universo = ovs.filter((o) => {
     if (!ovValida(o, cfg)) return false;
     const e = pe.get(o.numero);

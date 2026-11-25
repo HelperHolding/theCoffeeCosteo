@@ -17,6 +17,16 @@ Deno.test("casosAtencion: abiertas de cualquier semana + resueltas de esta seman
   assertEquals(c.map((o) => o.numero), ["A", "B", "C"]);
 });
 
+Deno.test("casosAtencion: las OVs posteriores al domingo no entran a la semana", () => {
+  assertEquals(casosAtencion([ov({ numero: "A" }), ov({ numero: "G", fecha: "2026-11-24" })], cfg, L).map((o) => o.numero), ["A"]);
+});
+
+Deno.test("calcularAperturas: un pedido de apertura posterior a la semana sale con su envío", () => {
+  const r = calcularAperturas([ov({ numero: "S", tipoEnvio: "Apertura", fecha: "2026-11-25", incidencia: "" })],
+    [{ ov: "S", fecha: "2026-11-25", envio: "2026-11-25" }], cfg, L);
+  assertEquals(r.map((a) => [a.ov, a.envio]), [["S", "2026-11-25"]]);
+});
+
 Deno.test("calcularAtencion: separa propias/externos y agrupa por semana, más reciente primero", () => {
   const a = calcularAtencion([
     ov({ numero: "A" }), ov({ numero: "B", fecha: "2026-11-10" }),

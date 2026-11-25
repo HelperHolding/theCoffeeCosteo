@@ -23,6 +23,16 @@ Deno.test("primerEnvio: el menor shipment_date por OV, ignora los no enviados", 
   assertEquals(m.has("B"), false);
 });
 
+Deno.test("surtido: un paquete posterior al domingo no saca de la semana a la OV con incidencia sin enviar", () => {
+  const s = calcularSurtido(
+    [ov({ numero: "A", fecha: "2026-11-20", incidencia: "Sin stock - Pedido incompleto" }), ov({ numero: "B", fecha: "2026-11-24" })],
+    [pk("A", "2026-11-24"), pk("B", "2026-11-24")],
+    cfg, "2026-11-16");
+  assertEquals(s.enviados, 1);
+  assertEquals(s.casos.stock, 1);
+  assertEquals(s.envio.universo, 0);
+});
+
 Deno.test("surtido: universo por primer envío; reposición de OV vieja no cuenta", () => {
   const s = calcularSurtido(
     [ov({ numero: "A" }), ov({ numero: "B", incidencia: "Sin stock - Pedido incompleto" }), ov({ numero: "C", fecha: "2026-11-02" }),

@@ -40,6 +40,21 @@ Deno.test("leerZoho: rangos de fechas, detalles solo de OVs de atención y falla
   assertEquals(llamadas.filter((c) => c.startsWith("/salesorders/")), ["/salesorders/1?"]);
 });
 
+Deno.test("leerZoho: OVs y paquetes se leen hasta hoy; facturas y notas solo hasta el domingo", async () => {
+  const fin: Record<string, string> = {};
+  const fetchFn = (url: string | URL | Request) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith("/token")) return Promise.resolve(new Response(JSON.stringify({ access_token: "t", expires_in: 3600 })));
+    if (u.searchParams.get("date_end")) fin[u.pathname.replace("/books/v3", "") + (u.searchParams.get("filter_by") ?? "")] = u.searchParams.get("date_end")!;
+    return Promise.resolve(new Response(JSON.stringify({ code: 0, invoices: [], packages: [], salesorders: [], creditnotes: [], page_context: { has_more_page: false } })));
+  };
+  const z = new ZohoClient({ clientId: "c", clientSecret: "s", refreshToken: "r", orgId: "o", fetchFn: fetchFn as typeof fetch, sleep: () => Promise.resolve(), soloLectura: true });
+  await leerZoho(z, configReporteDef(), "2026-11-16", () => Promise.resolve(), "2026-11-25");
+  assertEquals(fin, { "/invoices": "2026-11-22", "/packages": "2026-11-25", "/salesorders": "2026-11-25", "/creditnotes": "2026-11-22" });
+  await leerZoho(z, configReporteDef(), "2026-11-16", () => Promise.resolve(), "2026-11-20");
+  assertEquals(fin["/salesorders"], "2026-11-22");
+});
+
 Deno.test("leerZoho: un detalle de OV que falla deja descripción vacía y la sección sigue ok; pausa entre lotes de 4", async () => {
   const ovs = Array.from({ length: 6 }, (_, i) => ({ salesorder_id: String(i + 1), salesorder_number: `A${i + 1}`, date: "2026-11-17", customer_name: "X", cf_tipo_de_incidencia: "Pedido Incompleto", cf_resoluci_n: "En Proceso", status: "open" }));
   const fetchFn = (url: string | URL | Request) => {

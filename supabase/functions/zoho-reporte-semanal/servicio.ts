@@ -62,7 +62,7 @@ export async function generar(db: SupabaseClient, zoho: () => ZohoClient, ahora:
   if (usarCache(cache, cfgR.data?.actualizado_at ?? null, ahora, body.forzar === true)) return { reporte: cache!.datos, cache: true, aviso: null };
 
   const corte = hoyCdmx(ahora);
-  const lectura = await leerZoho(zoho(), cfg, lunes);
+  const lectura = await leerZoho(zoho(), cfg, lunes, undefined, corte);
   const decision = decidirLectura(lectura, cache, ahora);
   if (decision.usar === "error") throw new Error(decision.error);
   if (decision.usar === "cache") return { reporte: cache!.datos, cache: true, aviso: decision.aviso };

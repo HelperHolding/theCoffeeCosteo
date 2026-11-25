@@ -15,7 +15,7 @@ const resuelto = (o: Ov) => norm(o.resolucion) === "RESUELTO";
 /** OVs que aparecen en Atención: también decide qué detalles de OV se leen de Zoho (descripción). */
 export function casosAtencion(ovs: Ov[], cfg: ConfigReporte, lunes: string): Ov[] {
   const fin = finSemana(lunes);
-  return ovs.filter((o) => ovValida(o, cfg) && origenIncidencia(o.incidencia) && (!resuelto(o) || enRango(o.fecha, lunes, fin)));
+  return ovs.filter((o) => ovValida(o, cfg) && o.fecha <= fin && origenIncidencia(o.incidencia) && (!resuelto(o) || enRango(o.fecha, lunes, fin)));
 }
 
 function grupo(ovs: Ov[], desc: Record<string, string>): GrupoAtencion {
