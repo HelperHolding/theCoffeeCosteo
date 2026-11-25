@@ -23,17 +23,15 @@ const calcular = (ovsCrudos: any[], paquetesCrudos: any[]) => calcularReporte({
 // Captura tal cual (25 nov).
 const r = calcular(d.ovs, d.paquetes);
 
-// Estado de los datos al 23 nov: se deshacen los cambios posteriores documentados en la spec §7, puntos 1 a 3.
+// Se deshacen solo los cambios de datos probados por folio (spec §7, puntos 1 y 2); el punto 3 es diferencia de criterio y no se toca.
 const incidenciaTardia = new Set(["COM-OV-04806", "COM-OV-04808", "COM-OV-04945", "COM-OV-04949"]); // punto 1
 const paqueteTardio = new Set(["COM-OV-04934", "COM-OV-04940", "COM-OV-04941"]); // punto 2
-const paquete14 = new Set(["COM-OV-04803", "COM-OV-04814"]); // punto 3
 const r23 = calcular(
   // deno-lint-ignore no-explicit-any
   d.ovs.map((o: any) => incidenciaTardia.has(o.salesorder_number) ? { ...o, cf_tipo_de_incidencia: "" } : o),
   // deno-lint-ignore no-explicit-any
   d.paquetes.filter((p: any) =>
-    !(paqueteTardio.has(p.salesorder_number) && p.shipment_date >= "2026-11-23") &&
-    !(paquete14.has(p.salesorder_number) && p.shipment_date === "2026-11-14")),
+    !(paqueteTardio.has(p.salesorder_number) && p.shipment_date >= "2026-11-23")),
 );
 
 Deno.test("paridad: ventas 16–22 nov", () => {
@@ -45,17 +43,19 @@ Deno.test("paridad: ventas 16–22 nov", () => {
   assertAlmostEquals(r.ventas.datos.top[0].total, 398_424, 1);
 });
 
-Deno.test("paridad: calidad de surtido con los datos del 23 nov (spec §7, puntos 1 a 3)", () => {
+Deno.test("paridad: calidad de surtido con los datos del 23 nov (spec §7, puntos 1 y 2)", () => {
   if (!r23.surtido.ok) throw new Error(r23.surtido.error);
   const s = r23.surtido.datos;
-  assertEquals([s.enviados, s.conFaltante, s.incidenciasTotal], [71, 33, 34]);
-  assertEquals(s.casos, { stock: 29, pickeo: 4, paqueteria: 1, otro: 0 });
-  assertEquals([s.envio.universo, s.envio.enMeta], [55, 54]);
-  // Spec §7 punto 4: un pedido cuenta 2 días hoy y 1 en el reporte a mano ([8, 25, 21, 1]); folio no identificable.
-  assertEquals(s.envio.buckets, [8, 24, 22, 1]);
+  // Difieren de 71/33/34 (29/4/1) y de 55/54 del reporte a mano solo por OV-04803 y OV-04814 (spec §7 punto 3:
+  // el reporte a mano contó el reenvío como envío; la regla del portal toma el primer paquete, del 14 nov).
+  assertEquals([s.enviados, s.conFaltante, s.incidenciasTotal], [69, 31, 32]);
+  assertEquals(s.casos, { stock: 27, pickeo: 4, paqueteria: 1, otro: 0 });
+  assertEquals([s.envio.universo, s.envio.enMeta], [54, 54]);
+  // Foto del comportamiento actual; diferencia con [8, 25, 21, 1] sin folio identificado (spec §7 punto 4).
+  assertEquals(s.envio.buckets, [8, 24, 22, 0]);
 });
 
-Deno.test("paridad: calidad de surtido con la captura del 25 nov (spec §7, puntos 1 a 3)", () => {
+Deno.test("paridad: calidad de surtido con la captura del 25 nov (spec §7, puntos 1 y 2)", () => {
   if (!r.surtido.ok) throw new Error(r.surtido.error);
   const s = r.surtido.datos;
   assertEquals([s.enviados, s.conFaltante, s.incidenciasTotal], [68, 32, 33]);
