@@ -5,7 +5,7 @@ import { leerReporteSemanal } from '@/lib/comercializadora/reporteSemanal';
 import { com } from '@/lib/comercializadora/consultas';
 import { normalizarConfigReporte } from '../../../../../supabase/functions/_shared/reporte/config.ts';
 import { archivoVentas, htmlReporteVentas } from '@/lib/comercializadora/exportar/reporteVentas';
-import { htmlAPdf } from '@/lib/comercializadora/exportar/pdf';
+import { htmlAPdf, MENSAJE_FALLA_PDF } from '@/lib/comercializadora/exportar/pdf';
 import { parametrosDescarga, respuestaArchivo, respuestaError } from '@/lib/comercializadora/exportar/descarga';
 
 export const runtime = 'nodejs';
@@ -33,8 +33,8 @@ export async function GET(req: Request) {
   if (formato === 'html') return respuestaArchivo(html, archivoVentas(semana, 'html'), 'html');
   try {
     return respuestaArchivo(await htmlAPdf(html), archivoVentas(semana, 'pdf'), 'pdf');
-  } catch (e) {
-    console.error('[comercializadora] descarga pdf', e instanceof Error ? e.message : e);
-    return respuestaError(502, e instanceof Error ? e.message : 'No se pudo generar el PDF.');
+  } catch {
+    // htmlAPdf ya registró el detalle; al usuario solo el mensaje fijo.
+    return respuestaError(502, MENSAJE_FALLA_PDF);
   }
 }

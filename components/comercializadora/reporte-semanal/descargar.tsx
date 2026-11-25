@@ -18,8 +18,11 @@ export function DescargarReporte({ semana }: { semana: string }) {
       const a = document.createElement('a');
       a.href = url;
       a.download = `reporte-ventas-${semana}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      a.remove();
+      // Safari y Firefox cancelan la descarga si el enlace se revoca en el mismo instante.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo generar el PDF.');
     } finally {

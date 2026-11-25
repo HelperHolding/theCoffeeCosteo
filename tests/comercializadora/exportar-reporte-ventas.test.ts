@@ -69,6 +69,19 @@ describe('HTML del Reporte semanal', () => {
     expect(h).not.toContain('<script');
     expect(h).toContain('<svg');
   });
+  it('solo usa símbolos que tiene Open Sans (la fuente de Chromium en Vercel): sin ▲ ▼ ≥ ≤ →', () => {
+    const r = base();
+    if (!r.surtido.ok) throw new Error('base sin surtido');
+    r.surtido = { ok: true, datos: { ...r.surtido.datos,
+      envio: { valor: 0.5, meta: 100, cumple: false, universo: 2, enMeta: 1, buckets: [0, 1, 0, 1],
+        fuera: [{ ov: 'COM-OV-1', sucursal: 'Durango', fecha: '2026-11-12', envio: '2026-11-18', dias: 4 }] } } };
+    const h2 = htmlReporteVentas(r, { excluidasSucursales: [], aviso: null });
+    expect(h2).not.toMatch(/[▲▼≥≤→]/);
+    expect(h2).toContain('-5.8%');
+    expect(h2).toContain('Meta: 98% o más');
+    expect(h2).toContain('Meta: 1% o menos');
+    expect(h2).toContain('12 nov a 18 nov');
+  });
   it('nombre de archivo', () => {
     expect(archivoVentas('2026-11-16', 'pdf')).toBe('reporte-ventas-2026-11-16.pdf');
   });

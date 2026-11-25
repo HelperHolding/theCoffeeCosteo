@@ -18,4 +18,20 @@ describe('botón Descargar', () => {
     expect(screen.getByRole('alert').querySelector('a')?.getAttribute('href')).toBe(HTML);
     vi.unstubAllGlobals();
   });
+  it('el enlace temporal del PDF se revoca después del clic, no en el mismo instante', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const revocar = vi.fn();
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob(['%PDF']), { status: 200 })));
+    vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:x', revokeObjectURL: revocar }));
+    const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    render(<DescargarReporte semana="2026-11-16" />);
+    fireEvent.click(screen.getByRole('button', { name: /PDF/ }));
+    await waitFor(() => expect(clic).toHaveBeenCalled());
+    expect(revocar).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(revocar).toHaveBeenCalledWith('blob:x');
+    clic.mockRestore();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
 });

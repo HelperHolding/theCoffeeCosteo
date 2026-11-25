@@ -1,7 +1,7 @@
 // tests/comercializadora/exportar-pdf.test.ts
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-import { htmlAPdf, OPCIONES_PDF } from '@/lib/comercializadora/exportar/pdf';
+import { htmlAPdf, opcionesServidor, OPCIONES_PDF } from '@/lib/comercializadora/exportar/pdf';
 
 describe('htmlAPdf', () => {
   it('carga el HTML, imprime carta con márgenes y número de página, y cierra el navegador', async () => {
@@ -19,13 +19,24 @@ describe('htmlAPdf', () => {
     expect(OPCIONES_PDF.footerTemplate).toContain('pageNumber');
     expect(OPCIONES_PDF.margin).toEqual({ top: '12mm', bottom: '14mm', left: '12mm', right: '12mm' });
   });
-  it('si Chromium falla, cierra y lanza un error claro', async () => {
+  it('si Chromium falla, cierra, registra el detalle y lanza un mensaje fijo sin datos internos', async () => {
     let cerrado = false;
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const lanzar = async () => ({
-      newPage: async () => ({ setContent: async () => { throw new Error('crash'); }, pdf: async () => new Uint8Array() }),
+      newPage: async () => ({ setContent: async () => { throw new Error('crash en /var/task/bin libnss3.so'); }, pdf: async () => new Uint8Array() }),
       close: async () => { cerrado = true; },
     });
-    await expect(htmlAPdf('<p>x</p>', { lanzar })).rejects.toThrow('No se pudo generar el PDF: crash');
+    const e = await htmlAPdf('<p>x</p>', { lanzar }).catch((x: Error) => x);
+    expect((e as Error).message).toBe('No se pudo generar el PDF. Baja el HTML.');
     expect(cerrado).toBe(true);
+    expect(String(log.mock.calls[0]?.join(' '))).toContain('libnss3.so');
+    log.mockRestore();
+  });
+  it('en servidor lanza Chromium como pide @sparticuz/chromium: headless "shell" con defaultArgs', async () => {
+    const llamadas: unknown[] = [];
+    const op = await opcionesServidor({ args: ['--a'], executablePath: async () => '/tmp/chromium' },
+      async (o) => { llamadas.push(o); return ['--a', '--b']; });
+    expect(llamadas).toEqual([{ args: ['--a'], headless: 'shell' }]);
+    expect(op).toEqual({ args: ['--a', '--b'], executablePath: '/tmp/chromium', headless: 'shell' });
   });
 });

@@ -14,7 +14,8 @@ import { barrasApiladas, crudo, documento, esc, leyenda, nombreArchivo, seccion,
 export const archivoVentas = (semana: string, ext: 'html' | 'pdf') => nombreArchivo(['reporte-ventas', semana], ext);
 
 const pct = (x: number | null, d = 1) => (x == null ? '—' : `${(x * 100).toFixed(d)}%`);
-const vari = (x: number | null) => (x == null ? '—' : `${x >= 0 ? '▲' : '▼'} ${Math.abs(x * 100).toFixed(1)}%`);
+// Solo símbolos que tiene Open Sans, la única fuente de Chromium en Vercel: nada de ▲ ▼ ≥ ≤ →.
+const vari = (x: number | null) => (x == null ? '—' : `${x >= 0 ? '+' : '-'}${Math.abs(x * 100).toFixed(1)}%`);
 const rango = (l: string) => `${fechaCorta(l)} – ${fechaCorta(finSemana(l))}`;
 const COLOR: Record<string, string> = { Ordinario: '#1b1b1b', 'Llenado de canal': '#8c5f36', Apertura: '#2f7a4f', 'Sin clasificar': '#9a958c' };
 const ORIGEN: Record<Origen, string> = { stock: 'Error de surtido (falta de stock)', pickeo: 'Error de pickeo', paqueteria: 'Paquetería', otro: 'Sin clasificar' };
@@ -24,7 +25,7 @@ function o<T>(s: Seccion<T>, f: (d: T) => string): string {
 }
 const tarjeta = (et: string, va: string, no = '', clase = '') =>
   `<div class="tarjeta"><div class="et">${esc(et)}</div><div class="va ${clase}">${esc(va)}</div><div class="no">${esc(no)}</div></div>`;
-const meta = (i: Indicador, signo: string) => `Meta: ${signo}${i.meta}%`;
+const meta = (i: Indicador, sentido: 'mas' | 'menos') => `Meta: ${i.meta}% o ${sentido === 'mas' ? 'más' : 'menos'}`;
 const clase = (i: Indicador) => (i.cumple == null ? '' : i.cumple ? 'ok' : 'mal');
 
 function ventas(v: Ventas): string {
@@ -41,12 +42,12 @@ function ventas(v: Ventas): string {
 }
 
 function surtido(s: Surtido): string {
-  const fuera = s.envio.fuera.map((f) => `${f.sucursal} ${f.ov} (${fechaCorta(f.fecha)} → ${fechaCorta(f.envio)}, ${f.dias} días)`);
+  const fuera = s.envio.fuera.map((f) => `${f.sucursal} ${f.ov} (${fechaCorta(f.fecha)} a ${fechaCorta(f.envio)}, ${f.dias} días)`);
   return `<p>${s.enviados} pedidos enviados en la semana.</p><div class="tarjetas">`
-    + tarjeta('Fill rate', pct(s.fill.valor), `${meta(s.fill, '≥')} · ${s.conFaltante} con faltante`, clase(s.fill))
-    + tarjeta('Faltante por stock', pct(s.stock.valor), `${meta(s.stock, '≤')} · ${s.casos.stock} casos`, clase(s.stock))
-    + tarjeta('Precisión de pickeo', pct(s.pickeo.valor), `${meta(s.pickeo, '≥')} · ${s.casos.pickeo} casos`, clase(s.pickeo))
-    + tarjeta('Calidad física', pct(s.fisica.valor), `${meta(s.fisica, '≤')} · ${s.casos.paqueteria} casos`, clase(s.fisica))
+    + tarjeta('Fill rate', pct(s.fill.valor), `${meta(s.fill, 'mas')} · ${s.conFaltante} con faltante`, clase(s.fill))
+    + tarjeta('Faltante por stock', pct(s.stock.valor), `${meta(s.stock, 'menos')} · ${s.casos.stock} casos`, clase(s.stock))
+    + tarjeta('Precisión de pickeo', pct(s.pickeo.valor), `${meta(s.pickeo, 'mas')} · ${s.casos.pickeo} casos`, clase(s.pickeo))
+    + tarjeta('Calidad física', pct(s.fisica.valor), `${meta(s.fisica, 'menos')} · ${s.casos.paqueteria} casos`, clase(s.fisica))
     + `</div><div class="tarjetas">${tarjeta('Envío en tiempo', pct(s.envio.valor), `${s.envio.enMeta} de ${s.envio.universo} · mismo día ${s.envio.buckets[0]} · 1 día ${s.envio.buckets[1]} · 2 días ${s.envio.buckets[2]} · más ${s.envio.buckets[3]}`, clase(s.envio))}</div>`
     + (fuera.length ? `<p class="peq mal">Fuera de meta: ${esc(fuera.join('; '))}</p>` : '')
     + `<p class="peq">Incidencias por origen: ${s.incidenciasTotal} (${pct(s.enviados ? s.incidenciasTotal / s.enviados : null)} de los pedidos).</p>`
