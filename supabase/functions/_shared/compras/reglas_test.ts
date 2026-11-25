@@ -41,6 +41,11 @@ Deno.test("ocDesdeDetalle: varias recepciones usan su detalle con el rate de la 
   assertEquals(recepciones.map((r) => [r.zoho_receive_id, r.monto]), [["R1", 464], ["R2", 332]]);
 });
 
+Deno.test("ocDesdeDetalle: sin detalle de recepciones (null), lo recibido va completo a la recepción más reciente", () => {
+  const { recepciones } = ocDesdeDetalle(po({ purchasereceives: [{ receive_id: "R2", date: "2026-11-21" }, { receive_id: "R1", date: "2026-11-19" }] }), null);
+  assertEquals(recepciones.map((r) => [r.zoho_receive_id, r.monto]), [["R2", 796], ["R1", 0]]);
+});
+
 Deno.test("ocDesdeDetalle: varias recepciones se relacionan por item_id aunque el SKU se repita con otro precio", () => {
   const { recepciones } = ocDesdeDetalle(po({
     line_items: [

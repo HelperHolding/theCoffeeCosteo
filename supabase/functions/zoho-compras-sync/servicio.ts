@@ -2,7 +2,7 @@
 import type { SupabaseClient } from "../_shared/db.ts";
 import { cargarConfig } from "../_shared/db.ts";
 import { enviarCorreo } from "../_shared/correo.ts";
-import type { ZohoClient } from "../_shared/zoho.ts";
+import { type ZohoClient, ZohoError } from "../_shared/zoho.ts";
 import { normalizarConfigReporte } from "../_shared/reporte/config.ts";
 import { lunesDe, sumar as sumarDias } from "../_shared/reporte/fechas.ts";
 import { hoyCdmx } from "../_shared/fechas.ts";
@@ -31,6 +31,22 @@ export const debeAvisar = (oks: boolean[]) => oks.length >= 3 && oks[0] === fals
 
 export const faseSinAvance = (f: { filas: unknown[]; omitidos: string[]; error: string | null }) =>
   !!f.error && f.filas.length === 0 && f.omitidos.length === 0;
+
+/**
+ * Detalle de recepciones solo cuando la OC tiene más de una. Zoho Books puede negar /purchasereceives al token
+ * (401 o código 57): entonces null y la OC se guarda con el respaldo de ocDesdeDetalle. Otros errores se propagan.
+ */
+export async function leerRecepciones(z: ZohoClient, po: J): Promise<Record<string, J> | null> {
+  const recs: Record<string, J> = {};
+  if ((po.purchasereceives ?? []).length <= 1) return recs;
+  try {
+    for (const r of po.purchasereceives) recs[r.receive_id] = (await z.get<J>(`/purchasereceives/${r.receive_id}`)).purchasereceive;
+  } catch (e) {
+    if (e instanceof ZohoError && (e.status === 401 || e.status === 403 || e.code === 57)) return null;
+    throw e;
+  }
+  return recs;
+}
 
 export type Resumen = { omitida?: string; ocs: number; recepciones: number; facturas: number; omitidos: number; semanas: string[]; pendientes: boolean; avisos: string[] };
 
@@ -71,12 +87,12 @@ export async function sincronizar(db: SupabaseClient, z: ZohoClient, ahora: Date
 
   // OCs: detalle de cada OC modificada; detalle de recepciones solo si tiene más de una.
   const marcaOc: Marca = { t: estado.oc_modificado_hasta, ids: estado.oc_ids_en_marca ?? [] };
+  const sinDetalle: string[] = [];
   const ocsLista = await leerModificados(z, "/purchaseorders", "purchaseorders", marcaOc, INICIO_OCS, "purchaseorder_id");
   const ocs = await detallar(ocsLista, CUPO_OCS, "purchaseorder_id", async (x: J) => {
     const po = (await z.get<J>(`/purchaseorders/${x.purchaseorder_id}`)).purchaseorder;
-    const recs: Record<string, J> = {};
-    if ((po.purchasereceives ?? []).length > 1)
-      for (const r of po.purchasereceives) recs[r.receive_id] = (await z.get<J>(`/purchasereceives/${r.receive_id}`)).purchasereceive;
+    const recs = await leerRecepciones(z, po);
+    if (recs == null) sinDetalle.push(String(po.purchaseorder_number ?? x.purchaseorder_id));
     return ocDesdeDetalle(po, recs);
   }, { pausa, limite: LIMITE_MS / 2 });
   let nRec = 0;
@@ -89,6 +105,7 @@ export async function sincronizar(db: SupabaseClient, z: ZohoClient, ahora: Date
   // La marca de OCs se guarda en cuanto sus filas quedaron guardadas: si la corrida se corta después, no se repiten.
   if (ocs.marca) await ok(db.from("com_compras_sync_estado").update({ oc_modificado_hasta: ocs.marca.t, oc_ids_en_marca: ocs.marca.ids }).eq("id", 1));
   if (ocs.error) avisos.push(`OCs: ${ocs.error}`);
+  if (sinDetalle.length) avisos.push(`Recepciones sin detalle (todo a la más reciente): ${sinDetalle.join(", ")}`);
 
   // Facturas: detalle con líneas; luego se recalculan las semanas tocadas dentro del periodo guardado.
   const inicioFact = sumarDias(lunesDe(hoyCdmx(ahora)), -7 * 16);

@@ -36,7 +36,8 @@ export type FilaOc = {
 };
 export type FilaRecepcion = { zoho_receive_id: string; zoho_po_id: string; folio_oc: string; fecha: string; monto: number; por_categoria: PorCategoria };
 
-export function ocDesdeDetalle(po: J, recepciones: Record<string, J>): { oc: FilaOc; recepciones: FilaRecepcion[] } {
+/** `recepciones` null: Zoho no dio el detalle de cada recepción; lo recibido (quantity_received) va completo a la más reciente. */
+export function ocDesdeDetalle(po: J, recepciones: Record<string, J> | null): { oc: FilaOc; recepciones: FilaRecepcion[] } {
   const mxn = s(po.currency_code || "MXN") === "MXN";
   const lineas: J[] = po.line_items ?? [];
   // Las líneas de una recepción traen item_id (no el id de la línea de la OC): se relacionan por item_id y, si falta, por SKU.
@@ -61,9 +62,11 @@ export function ocDesdeDetalle(po: J, recepciones: Record<string, J>): { oc: Fil
   const recibido = (ls: { sku: string; q: number; linea: J | undefined }[]): PorCategoria => (mxn
     ? sumar(ls.map((l) => ({ sku: l.sku, monto: l.linea ? iva(n(l.linea.rate) * l.q, l.linea.tax_percentage) : 0 })))
     : {});
+  // Sin detalle: la recepción más reciente (la primera en empate) se queda con todo lo recibido.
+  const ultima = prs.reduce((m: J, r: J) => (m == null || s(r.date) > s(m.date) ? r : m), null);
   const filas = prs.map((r) => {
-    const ls = prs.length === 1
-      ? lineas.map((l) => ({ sku: s(l.sku), q: n(l.quantity_received), linea: l }))
+    const ls = prs.length === 1 || recepciones == null
+      ? (r === ultima ? lineas.map((l) => ({ sku: s(l.sku), q: n(l.quantity_received), linea: l })) : [])
       : (recepciones[s(r.receive_id)]?.line_items ?? []).map((l: J) => ({
         sku: s(l.sku), q: n(l.quantity), linea: porItem.get(s(l.item_id)) ?? porSku.get(s(l.sku)),
       }));
