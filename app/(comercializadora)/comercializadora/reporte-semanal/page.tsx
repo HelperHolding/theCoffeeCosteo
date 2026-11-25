@@ -14,6 +14,9 @@ import { SurtidoVista } from '@/components/comercializadora/reporte-semanal/surt
 import { AperturasVista, AtencionVista, NotasVista } from '@/components/comercializadora/reporte-semanal/atencion';
 import { ExternosVista, SucursalesVista } from '@/components/comercializadora/reporte-semanal/saldos';
 
+// Lectura en vivo de Zoho (hasta 150 s) y su acción «Actualizar»: la guía de Next aplica maxDuration de la página a sus Server Actions.
+export const maxDuration = 300;
+
 export default async function ReporteSemanalPagina({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
   const { db } = await sesionComercializadora();
   const hoy = hoyCdmx();

@@ -17,8 +17,12 @@ export function ActualizarReporte({ semana }: { semana: string }) {
         disabled={pendiente}
         onClick={() =>
           iniciar(async () => {
-            const r = await actualizarReporte(semana);
-            setError('error' in r ? r.error : null);
+            try {
+              const r = await actualizarReporte(semana);
+              setError('error' in r ? r.error : null);
+            } catch {
+              setError('No se pudo actualizar. Intenta de nuevo en unos minutos.');
+            }
             router.refresh();
           })
         }
