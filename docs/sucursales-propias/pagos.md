@@ -10,13 +10,15 @@ Recibos que entiende:
 
 - SPEI con clave de rastreo (la llave es la clave).
 - Banregio a Banregio (llave `BRG-…`).
-- SPEI «Recibo de la solicitud» sin clave de rastreo (llave `SOL-…`): la corrida muestra un aviso para confirmar con Banregio que ya se ejecutó antes de aplicar.
+- SPEI «Recibo de la solicitud» sin clave de rastreo (llave `SOL-…`): la fila lleva la insignia «Solicitud sin clave de rastreo — confirma con Banregio», no entra en «Aplicar N pagos» y se aplica sola con su botón «Aplicar», que antes pregunta «¿Ya confirmaste con Banregio que se ejecutó?».
 
 Detalles de operación:
 
-- Una fila atorada en «Aplicando…» solo se puede reintentar pasados 10 minutos.
+- Una fila atorada en «Aplicando…» muestra Reintentar; la función responde «Otra persona la está aplicando.» hasta que pasan 10 minutos desde la reserva, y entonces la retoma.
 - Si el pago se creó en Zoho pero no se guardó el resultado, la fila queda «Aplicada · falta el recibo» con el id de Zoho; el botón Reintentar solo adjunta el recibo.
-- Las filas empatadas por nombre muestran «Proveedor por nombre — revisa»; la confirmación en bloque indica cuántas son.
+- Las filas empatadas por nombre muestran «Proveedor por nombre — revisa» y **no** entran en «Aplicar N pagos» (el bloque avisa cuántas esperan). Cada una tiene «Confirmar proveedor», que revalida el proveedor en Zoho, rehace el reparto y guarda la equivalencia CLABE → proveedor; después ya entra al bloque. Si al final se aplica una sin confirmar, la equivalencia no se guarda.
+- Toda fila aún no aplicada (cuadra, no cuadra, desconocido, sin facturas) ofrece «Cambiar proveedor» (o «Elegir proveedor de Zoho» si no tiene).
+- Antes de pagar, cada factura se relee en Zoho: si su saldo bajó o ya es de otro proveedor, la fila vuelve a «No cuadra» sin crear el pago.
 - Quien solo tiene `sucursales_pagos` (sin `sucursales`) entra directo a Pagos y no ve ventas de tiendas.
 
 ## 2. Migración
@@ -85,6 +87,8 @@ Anotar aquí lo que se cambie tras la primera corrida:
 | «Otra persona la está aplicando.» | La fila está en «Aplicando…»; esperar. Pasados 10 minutos se puede reintentar. |
 | «Lo asignado no es igual a la transferencia» | El reparto no suma el monto; corregirlo en la fila. |
 | «El saldo de la factura … cambió en Zoho» | La factura ya se pagó o cambió; revisar la fila y repartir de nuevo. |
+| «La factura … es de otro proveedor en Zoho» | La factura se reasignó en Zoho; revisar el proveedor de la fila y repartir de nuevo. |
+| «El ZIP es demasiado grande al descomprimirlo.» | Los PDF del ZIP pasan de 50 MB descomprimidos; dividir el ZIP. |
 | «modo sin efectos externos» | `SUC_PAGOS_EFECTOS` no es `si`; es lo esperado en la corrida de prueba. |
 
 ## 10. Pendiente de confirmar con Banregio

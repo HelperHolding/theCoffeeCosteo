@@ -3635,7 +3635,7 @@ git commit -m "feat(sucursales-propias): pantallas de corridas y revisión de pa
 2. **Migración** — aplicar `20261125000098_sucursales_propias_pagos.sql` según `docs/portal/MIGRACIONES-Y-DESPLIEGUE.md`.
 3. **Credenciales de Zoho (lo hace el usuario)**:
    - En `https://api-console.zoho.com` → *Self Client* (o el cliente que ya usan) → *Generate Code* con los scopes
-     `ZohoBooks.bills.READ,ZohoBooks.contacts.READ,ZohoBooks.vendorpayments.CREATE,ZohoBooks.vendorpayments.READ,ZohoBooks.vendorpayments.UPDATE,ZohoBooks.accountants.READ`,
+     `ZohoBooks.bills.READ,ZohoBooks.bills.CREATE,ZohoBooks.contacts.READ,ZohoBooks.vendorpayments.CREATE,ZohoBooks.vendorpayments.READ,ZohoBooks.vendorpayments.UPDATE,ZohoBooks.accountants.READ`,
      con un usuario que tenga acceso a la org *Sucursales The Coffee – GDL*.
    - Cambiar el código por el refresh token (`POST https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id=…&client_secret=…&code=…`).
    - El id de la org está en Zoho Books → Configuración → Perfil de la organización.

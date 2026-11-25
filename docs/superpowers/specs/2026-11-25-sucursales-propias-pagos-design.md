@@ -80,7 +80,8 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
 
 - **Org:** *Sucursales The Coffee – GDL*. Credenciales propias (`ZOHO_SUC_CLIENT_ID`, `ZOHO_SUC_CLIENT_SECRET`,
   `ZOHO_SUC_REFRESH_TOKEN`, `ZOHO_SUC_ORG_ID`), separadas de las de Comercializadora. Scopes:
-  `ZohoBooks.bills.READ`, `ZohoBooks.contacts.READ`, `ZohoBooks.vendorpayments.CREATE`,
+  `ZohoBooks.bills.READ`, `ZohoBooks.bills.CREATE` (respaldo: adjunto del recibo en cada factura),
+  `ZohoBooks.contacts.READ`, `ZohoBooks.vendorpayments.CREATE`,
   `ZohoBooks.vendorpayments.READ`, `ZohoBooks.vendorpayments.UPDATE` (adjuntos), `ZohoBooks.accountants.READ` (cuenta).
   `ZohoClient` de `_shared/zoho.ts` se reutiliza con otra configuración.
 - **Edge Function nueva `zoho-suc-pagos`** (`verify_jwt = false`, como las demás). Exige el secreto `x-com-secreto` del
