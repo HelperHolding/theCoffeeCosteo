@@ -3,10 +3,17 @@ import { Tarjeta } from '@/components/portal/piezas';
 import { pesos } from '@/lib/comercializadora/formato';
 import { fechaCorta } from '@/lib/comercializadora/fechas';
 import type { Ventas } from '../../../supabase/functions/_shared/reporte/ventas.ts';
+import { SIN_CLASIFICAR } from '../../../supabase/functions/_shared/reporte/config.ts';
 import { finSemana } from '../../../supabase/functions/_shared/reporte/fechas.ts';
 import { variacion, VerTodas } from './piezas';
 
-const TIPOS = ['Ordinario', 'Llenado de canal', 'Apertura'];
+// Tipo de envío → color de barra y leyenda (una sola definición).
+const TIPOS: { tipo: string; color: string }[] = [
+  { tipo: 'Ordinario', color: 'bg-ink' },
+  { tipo: 'Llenado de canal', color: 'bg-crema-strong' },
+  { tipo: 'Apertura', color: 'bg-ok' },
+  { tipo: SIN_CLASIFICAR, color: 'bg-muted-foreground' },
+];
 
 export function VentasVista({ v }: { v: Ventas }) {
   const max = Math.max(1, ...v.semanas.map((s) => s.total));
@@ -24,8 +31,9 @@ export function VentasVista({ v }: { v: Ventas }) {
             <p className="text-xs uppercase tracking-wider text-muted-foreground">pedidos facturados</p>
           </div>
         </div>
-        <ol className="mt-4 divide-y divide-line">
+        <div className="mt-4">
           <VerTodas
+            className="divide-y divide-line"
             filas={v.top}
             visibles={5}
             etiqueta="Ver top clientes"
@@ -42,19 +50,19 @@ export function VentasVista({ v }: { v: Ventas }) {
               </li>
             )}
           />
-        </ol>
+        </div>
       </Tarjeta>
       <Tarjeta titulo="Ventas · últimas 5 semanas" descripcion="Con IVA, por tipo de envío. Sin las exclusiones configuradas.">
         <div className="grid grid-cols-5 items-end gap-2">
           {v.semanas.map((s, i) => (
             <div key={s.lunes} className="text-center">
               <div className="mx-auto flex h-32 w-full max-w-14 flex-col-reverse overflow-hidden rounded-md bg-surface-2">
-                {TIPOS.map((t, k) => (
+                {TIPOS.map(({ tipo, color }) => (
                   <div
-                    key={t}
-                    title={`${t}: ${pesos(s.porTipo[t] ?? 0)}`}
-                    className={['bg-ink', 'bg-crema-strong', 'bg-ok'][k]}
-                    style={{ height: `${((s.porTipo[t] ?? 0) / max) * 100}%` }}
+                    key={tipo}
+                    title={`${tipo}: ${pesos(s.porTipo[tipo] ?? 0)}`}
+                    className={color}
+                    style={{ height: `${((s.porTipo[tipo] ?? 0) / max) * 100}%` }}
                   />
                 ))}
               </div>
@@ -65,9 +73,9 @@ export function VentasVista({ v }: { v: Ventas }) {
           ))}
         </div>
         <ul className="mt-3 flex gap-4 text-[11px] text-muted-foreground">
-          {TIPOS.map((t, k) => (
-            <li key={t} className="flex items-center gap-1">
-              <span className={['bg-ink', 'bg-crema-strong', 'bg-ok'][k] + ' size-2 rounded-sm'} aria-hidden="true" /> {t}
+          {TIPOS.filter(({ tipo }) => tipo !== SIN_CLASIFICAR || v.semanas.some((s) => (s.porTipo[tipo] ?? 0) > 0)).map(({ tipo, color }) => (
+            <li key={tipo} className="flex items-center gap-1">
+              <span className={color + ' size-2 rounded-sm'} aria-hidden="true" /> {tipo}
             </li>
           ))}
         </ul>

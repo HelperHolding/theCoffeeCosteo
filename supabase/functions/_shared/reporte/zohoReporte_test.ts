@@ -39,3 +39,22 @@ Deno.test("leerZoho: rangos de fechas, detalles solo de OVs de atención y falla
   assertEquals(llamadas.includes("/salesorders?2026-09-17"), true);
   assertEquals(llamadas.filter((c) => c.startsWith("/salesorders/")), ["/salesorders/1?"]);
 });
+
+Deno.test("leerZoho: un detalle de OV que falla deja descripción vacía y la sección sigue ok; pausa entre lotes de 4", async () => {
+  const ovs = Array.from({ length: 6 }, (_, i) => ({ salesorder_id: String(i + 1), salesorder_number: `A${i + 1}`, date: "2026-11-17", customer_name: "X", cf_tipo_de_incidencia: "Pedido Incompleto", cf_resoluci_n: "En Proceso", status: "open" }));
+  const fetchFn = (url: string | URL | Request) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith("/token")) return Promise.resolve(new Response(JSON.stringify({ access_token: "t", expires_in: 3600 })));
+    const j = (b: unknown) => Promise.resolve(new Response(JSON.stringify({ code: 0, ...b as object, page_context: { has_more_page: false } })));
+    if (u.pathname.endsWith("/salesorders")) return j({ salesorders: ovs });
+    if (u.pathname.endsWith("/salesorders/2")) return Promise.resolve(new Response(JSON.stringify({ code: 57, message: "falla" }), { status: 400 }));
+    if (/\/salesorders\/\d+$/.test(u.pathname)) return j({ salesorder: { custom_fields: [{ api_name: "cf_descripci_n_incidencia", value: "d" + u.pathname.slice(-1) }] } });
+    return j({ invoices: [], packages: [], creditnotes: [] });
+  };
+  const z = new ZohoClient({ clientId: "c", clientSecret: "s", refreshToken: "r", orgId: "o", fetchFn: fetchFn as typeof fetch, sleep: () => Promise.resolve(), soloLectura: true });
+  const pausas: number[] = [];
+  const l = await leerZoho(z, configReporteDef(), "2026-11-16", (ms) => { pausas.push(ms); return Promise.resolve(); });
+  assertEquals(l.descripciones.ok, true);
+  assertEquals(l.descripciones.ok && l.descripciones.datos, { "1": "d1", "2": "", "3": "d3", "4": "d4", "5": "d5", "6": "d6" });
+  assertEquals(pausas, [500]); // 6 detalles = 2 lotes de 4: una pausa entre ellos
+});

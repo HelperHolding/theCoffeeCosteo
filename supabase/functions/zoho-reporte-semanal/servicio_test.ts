@@ -46,3 +46,17 @@ Deno.test("decidirLectura: todas fallan sin caché es error; con caché usa la c
   assertEquals(decidirLectura(l, null, ahora2), { usar: "error", error: "a" });
   assertEquals(decidirLectura(l, cacheFila, ahora2), { usar: "cache", aviso: "Datos de hace 15 min; a" });
 });
+
+Deno.test("usarCache: forzar se ignora con copia de menos de 2 minutos", () => {
+  const ahora = new Date("2026-11-24T12:00:00Z");
+  assertEquals(usarCache({ leido_en: "2026-11-24T11:59:00Z" }, null, ahora, true), true);
+  assertEquals(usarCache({ leido_en: "2026-11-24T11:57:00Z" }, null, ahora, true), false);
+});
+
+Deno.test("decidirLectura: el aviso dice minutos, horas o días según la edad de la copia", () => {
+  const l = lect({ paquetes: mal("x") });
+  const aviso = (leido_en: string) => (decidirLectura(l, { datos: cacheFila.datos, leido_en }, ahora2) as { aviso: string }).aviso;
+  assertEquals(aviso("2026-11-24T11:00:00Z"), "Datos de hace 60 min; x");
+  assertEquals(aviso("2026-11-24T09:00:00Z"), "Datos de hace 3 h; x");
+  assertEquals(aviso("2026-11-21T12:00:00Z"), "Datos de hace 3 días; x");
+});

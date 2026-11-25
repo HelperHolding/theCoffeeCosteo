@@ -35,13 +35,18 @@ async function intentar<T>(fn: () => Promise<T>): Promise<Seccion<T>> {
 }
 
 /** De a pocos para no gastar la cuota de Zoho (100/min, compartida con zoho-sync). */
-async function enLotes<T, R>(xs: T[], tam: number, fn: (x: T) => Promise<R>): Promise<R[]> {
+const PAUSA_LOTE_MS = 500;
+const dormir = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+async function enLotes<T, R>(xs: T[], tam: number, fn: (x: T) => Promise<R>, pausa: (ms: number) => Promise<void>): Promise<R[]> {
   const out: R[] = [];
-  for (let i = 0; i < xs.length; i += tam) out.push(...await Promise.all(xs.slice(i, i + tam).map(fn)));
+  for (let i = 0; i < xs.length; i += tam) {
+    out.push(...await Promise.all(xs.slice(i, i + tam).map(fn)));
+    if (i + tam < xs.length) await pausa(PAUSA_LOTE_MS);
+  }
   return out;
 }
 
-export async function leerZoho(z: ZohoClient, cfg: ConfigReporte, lunes: string): Promise<Lectura> {
+export async function leerZoho(z: ZohoClient, cfg: ConfigReporte, lunes: string, pausa: (ms: number) => Promise<void> = dormir): Promise<Lectura> {
   const fin = finSemana(lunes);
   const desdeOvs = sumar(lunes, -cfg.dias_incidencias);
   const facturas = await intentar(async () =>
@@ -53,14 +58,17 @@ export async function leerZoho(z: ZohoClient, cfg: ConfigReporte, lunes: string)
   const descripciones: Seccion<Record<string, string>> = ovs.ok
     ? await intentar(async () => {
       const casos = casosAtencion(ovs.datos, cfg, lunes);
-      const pares = await enLotes(casos, 4, async (o) =>
-        [o.id, descripcionDe((await z.get<J>(`/salesorders/${o.id}`)).salesorder)] as const);
+      // Mejor esfuerzo: un detalle que falla deja la descripción vacía, no tumba la sección.
+      const pares = await enLotes(casos, 4, async (o) => {
+        try { return [o.id, descripcionDe((await z.get<J>(`/salesorders/${o.id}`)).salesorder)] as const; }
+        catch { return [o.id, ""] as const; }
+      }, pausa);
       return Object.fromEntries(pares);
     })
     : { ok: false, error: ovs.error };
   const notas = await intentar(async () => {
     const lista = await z.listAll<J>("/creditnotes", "creditnotes", { date_start: lunes, date_end: fin });
-    return enLotes(lista, 4, async (x) => aNota({ ...x, ...(await z.get<J>(`/creditnotes/${x.creditnote_id}`)).creditnote }));
+    return enLotes(lista, 4, async (x) => aNota({ ...x, ...(await z.get<J>(`/creditnotes/${x.creditnote_id}`)).creditnote }), pausa);
   });
   const pendientes = await intentar(async () =>
     (await z.listAll<J>("/invoices", "invoices", { filter_by: "Status.Unpaid" })).map(aFactura));

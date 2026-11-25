@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { configReporteDef, en, esPropia, norm, normalizarConfigReporte, pct, sucursalPropia, tipoEnvio, titulo } from "./config.ts";
-import { diasHabiles, enRango, esLunes, finSemana, lunesDe } from "./fechas.ts";
+import { dif, diasHabiles, enRango, esLunes, finSemana, lunesDe } from "./fechas.ts";
 
 Deno.test("norm: sin acentos, mayúsculas y espacios colapsados", () => {
   assertEquals(norm("  Ávila   Camacho "), "AVILA CAMACHO");
@@ -59,4 +59,12 @@ Deno.test("diasHabiles: cuenta lunes a viernes después de la fecha de la OV", (
   assertEquals(diasHabiles("2026-11-12", "2026-11-18"), 4); // jue → mié (Durango Centro)
   assertEquals(diasHabiles("2026-11-17", "2026-11-17"), 0);
   assertEquals(diasHabiles("2026-11-20", "2026-11-23"), 1); // vie → lun
+});
+
+Deno.test("fechas vacías: diasHabiles y dif devuelven 0", () => {
+  assertEquals(diasHabiles("", "2026-11-18"), 0);
+  assertEquals(diasHabiles("2026-11-12", ""), 0);
+  assertEquals(dif("", "2026-11-18"), 0);
+  assertEquals(dif("2026-11-12", ""), 0);
+  assertEquals(dif("2026-11-12", "2026-11-18"), 6);
 });

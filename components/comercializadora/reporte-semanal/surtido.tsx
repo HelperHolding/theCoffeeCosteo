@@ -42,7 +42,7 @@ export function SurtidoVista({ s }: { s: Surtido }) {
       </Tarjeta>
       <Tarjeta titulo={`Incidencias por origen · ${s.incidenciasTotal} en total (${porcentaje(s.enviados ? s.incidenciasTotal / s.enviados : null)} de los pedidos)`}>
         <div className="grid gap-3 sm:grid-cols-3">
-          {(['stock', 'pickeo', 'paqueteria'] as Origen[]).map((o) => (
+          {(['stock', 'pickeo', 'paqueteria', ...(s.casos.otro > 0 ? ['otro'] : [])] as Origen[]).map((o) => (
             <div key={o}>
               <p className="font-display text-2xl font-black tabular">{s.casos[o]}</p>
               <p className="text-sm">{ORIGEN[o]}</p>

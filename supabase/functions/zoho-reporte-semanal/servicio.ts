@@ -9,6 +9,7 @@ import { type Foto, fotoDe } from "../_shared/reporte/saldos.ts";
 import { leerZoho } from "../_shared/reporte/zohoReporte.ts";
 
 const VIGENCIA_MS = 15 * 60_000;
+const ENFRIAMIENTO_MS = 2 * 60_000; // «Actualizar» no relee Zoho si la copia tiene menos de esto
 export type Respuesta = { reporte: Reporte; cache: boolean; aviso: string | null };
 
 export function validarSemana(x: unknown): string {
@@ -17,13 +18,20 @@ export function validarSemana(x: unknown): string {
 }
 
 export function usarCache(c: { leido_en: string } | null, cfgActualizado: string | null, ahora: Date, forzar: boolean): boolean {
-  if (!c || forzar) return false;
+  if (!c) return false;
   const t = Date.parse(c.leido_en);
+  if (forzar && ahora.getTime() - t >= ENFRIAMIENTO_MS) return false;
   if (ahora.getTime() - t >= VIGENCIA_MS) return false;
   return !cfgActualizado || t > Date.parse(cfgActualizado);
 }
 
 const minutos = (desde: string, ahora: Date) => Math.max(0, Math.round((ahora.getTime() - Date.parse(desde)) / 60_000));
+export function hace(desde: string, ahora: Date): string {
+  const m = minutos(desde, ahora);
+  if (m >= 48 * 60) return `hace ${Math.floor(m / 1440)} días`;
+  if (m >= 120) return `hace ${Math.floor(m / 60)} h`;
+  return `hace ${m} min`;
+}
 
 type CacheFila = { datos: Reporte; leido_en: string };
 export type Decision =
@@ -36,7 +44,7 @@ export function decidirLectura(l: Lectura, cache: CacheFila | null, ahora: Date)
   const fuentes = Object.values(l);
   const falla = fuentes.find((f) => !f.ok);
   if (!falla || falla.ok) return { usar: "nuevo", guardar: true, aviso: null };
-  if (cache) return { usar: "cache", aviso: `Datos de hace ${minutos(cache.leido_en, ahora)} min; ${falla.error}` };
+  if (cache) return { usar: "cache", aviso: `Datos de ${hace(cache.leido_en, ahora)}; ${falla.error}` };
   if (fuentes.every((f) => !f.ok)) return { usar: "error", error: falla.error };
   return { usar: "nuevo", guardar: false, aviso: "Algunas secciones no se pudieron leer de Zoho." };
 }

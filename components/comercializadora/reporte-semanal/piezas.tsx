@@ -30,17 +30,17 @@ export function Meta({ cumple }: { cumple: boolean | null }) {
   );
 }
 
-/** Lista larga plegable sin JavaScript: los primeros `visibles` y el resto en <details>. */
-export function VerTodas<T>({ filas, visibles, render, etiqueta = 'Ver todas' }: {
-  filas: T[]; visibles: number; render: (f: T, i: number) => React.ReactNode; etiqueta?: string;
+/** Lista numerada larga plegable sin JavaScript: los primeros `visibles` en un <ol> y el resto en <details> con su propio <ol>. */
+export function VerTodas<T>({ filas, visibles, render, etiqueta = 'Ver todas', className }: {
+  filas: T[]; visibles: number; render: (f: T, i: number) => React.ReactNode; etiqueta?: string; className?: string;
 }) {
   return (
     <>
-      {filas.slice(0, visibles).map(render)}
+      <ol className={className}>{filas.slice(0, visibles).map(render)}</ol>
       {filas.length > visibles && (
         <details className="mt-2">
           <summary className="cursor-pointer text-xs font-semibold text-crema-strong">{etiqueta} ({filas.length})</summary>
-          {filas.slice(visibles).map((f, i) => render(f, i + visibles))}
+          <ol className={className}>{filas.slice(visibles).map((f, i) => render(f, i + visibles))}</ol>
         </details>
       )}
     </>

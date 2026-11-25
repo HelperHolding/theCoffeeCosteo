@@ -37,12 +37,13 @@ Deno.test("calcularNotas: las de la semana sin anuladas", () => {
   assertEquals(r.total, 196.04);
 });
 
-Deno.test("calcularAperturas: sin enviar o de la semana", () => {
+Deno.test("calcularAperturas: sin enviar (aunque sea de semanas anteriores) o con fecha o primer envío en la semana", () => {
   const r = calcularAperturas([
     ov({ numero: "A", tipoEnvio: "Apertura", fecha: "2026-11-24", incidencia: "" }),
     ov({ numero: "B", tipoEnvio: "Apertura", fecha: "2026-10-01", incidencia: "" }),
     ov({ numero: "C", tipoEnvio: "Apertura", fecha: "2026-11-10", incidencia: "" }),
     ov({ numero: "D", incidencia: "" }),
+    ov({ numero: "E", tipoEnvio: "Apertura", fecha: "2026-11-05", incidencia: "" }),
   ], [{ ov: "B", fecha: "2026-10-03", envio: "2026-10-03" }, { ov: "C", fecha: "2026-11-17", envio: "2026-11-17" }], cfg, L);
-  assertEquals(r.map((a) => [a.ov, a.envio]), [["A", null], ["C", "2026-11-17"]]);
+  assertEquals(r.map((a) => [a.ov, a.envio]), [["A", null], ["C", "2026-11-17"], ["E", null]]);
 });

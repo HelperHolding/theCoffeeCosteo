@@ -4,8 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { invocarFuncion } from '@/lib/comercializadora/funciones';
-import { leerReporteSemanal } from '@/lib/comercializadora/reporteSemanal';
-import { esLunes } from '../../../supabase/functions/_shared/reporte/fechas.ts';
 import {
   alcanceCambio,
   fechasCambiaron,
@@ -869,15 +867,6 @@ export async function guardarParamsImpCafe(
   } catch (e) {
     return fallo(e);
   }
-}
-
-/** "Actualizar" del reporte semanal: vuelve a leer Zoho (solo lectura; cualquiera con acceso a Comercializadora). */
-export async function actualizarReporte(semana: string): Promise<Resultado> {
-  await sesionComercializadora(false);
-  if (!esLunes(semana)) return { error: 'Semana no válida.' };
-  const r = await leerReporteSemanal(semana, true);
-  revalidatePath('/comercializadora/reporte-semanal');
-  return r.ok ? { ok: true } : { error: r.error };
 }
 
 export async function guardarConfigReporte(f: FormConfigReporte): Promise<Resultado> {

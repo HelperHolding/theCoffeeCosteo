@@ -17,15 +17,16 @@ import { SurtidoVista } from '@/components/comercializadora/reporte-semanal/surt
 import { AperturasVista, AtencionVista, NotasVista } from '@/components/comercializadora/reporte-semanal/atencion';
 import { ExternosVista, SucursalesVista } from '@/components/comercializadora/reporte-semanal/saldos';
 
-// Lectura en vivo de Zoho (hasta 150 s) y su acción «Actualizar»: la guía de Next aplica maxDuration de la página a sus Server Actions.
+// Lectura en vivo de Zoho (hasta 150 s) (también con «Actualizar», que recarga con forzar=1).
 export const maxDuration = 300;
 
-export default async function ReporteSemanalPagina({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
+export default async function ReporteSemanalPagina({ searchParams }: { searchParams: Promise<{ semana?: string; forzar?: string }> }) {
   const { db, accesos } = await sesionComercializadora();
   const hoy = hoyCdmx();
-  const semana = semanaDeUrl((await searchParams).semana, hoy);
+  const sp = await searchParams;
+  const semana = semanaDeUrl(sp.semana, hoy);
   const [r, cfgR] = await Promise.all([
-    leerReporteSemanal(semana),
+    leerReporteSemanal(semana, sp.forzar === '1'),
     com(db).from('com_reporte_config').select('config').eq('id', 1).maybeSingle(),
   ]);
   const cfg = normalizarConfigReporte(cfgR.data?.config);
@@ -79,7 +80,7 @@ export default async function ReporteSemanalPagina({ searchParams }: { searchPar
       {puedeEditarCom(accesos) && <ConfigReporteVista inicial={aFormulario(cfg)} />}
       <p className="mt-8 border-t border-line pt-4 text-center text-xs text-muted-foreground">
         Leído de Zoho el {new Date(x.leidoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}
-        {r.cache ? ' (copia de menos de 15 min)' : ''}. Las incidencias se capturan días después de la entrega; estas cifras pueden moverse.
+        {r.cache && !r.aviso ? ' (copia de menos de 15 min)' : ''}. Las incidencias se capturan días después de la entrega; estas cifras pueden moverse.
       </p>
     </>
   );

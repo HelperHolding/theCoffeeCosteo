@@ -51,7 +51,6 @@ export function calcularAperturas(ovs: Ov[], paquetes: Paquete[], cfg: ConfigRep
   const pe = primerEnvio(paquetes);
   return ovs.filter((o) => ovValida(o, cfg) && tipoEnvio(o.tipoEnvio) === "Apertura")
     .filter((o) => { const e = pe.get(o.numero); return !e || enRango(e, lunes, fin) || enRango(o.fecha, lunes, fin) || o.fecha > fin; })
-    .filter((o) => pe.has(o.numero) || o.fecha >= lunes)
     .map((o) => ({ ov: o.numero, fecha: o.fecha, sucursal: o.sucursal.trim(), cliente: titulo(o.cliente), envio: pe.get(o.numero) ?? null, estadoEnvio: o.estadoEnvio }))
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
