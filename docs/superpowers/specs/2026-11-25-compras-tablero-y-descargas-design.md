@@ -18,7 +18,7 @@
 
 **Edge Function nueva `zoho-compras-sync`** (solo lectura: `zohoDesdeEnv({ soloLectura: true, tokenVar: "ZOHO_REPORTE_REFRESH_TOKEN" })`, autenticación `x-com-secreto`, `verify_jwt = false`). Corre a diario (cron `com_invocar`, 06:30 CDMX) y bajo demanda desde el tablero (editores), con enfriamiento de 10 minutos entre corridas. Registra cada corrida en `com_sync_log` (`proceso = 'zoho-compras-sync'`) con `registrar()`, y avisa por correo tras dos fallas seguidas como `zoho-sync`.
 
-**Permisos del token:** `ZOHO_REPORTE_REFRESH_TOKEN` se regenera con `ZohoBooks.invoices.READ,ZohoBooks.salesorders.READ,ZohoBooks.creditnotes.READ,ZohoBooks.packages.READ,ZohoBooks.purchaseorders.READ,ZohoBooks.reports.READ`.
+**Permisos del token:** `ZOHO_REPORTE_REFRESH_TOKEN` se regenera con `ZohoBooks.invoices.READ,ZohoBooks.salesorders.READ,ZohoBooks.creditnotes.READ,ZohoBooks.packages.READ,ZohoBooks.purchaseorders.READ`. (El reporte de ventas por artículo no se usa: viene sin IVA y no permite excluir clientes; ver «Venta semanal por categoría».)
 
 **Tablas nuevas** (RLS: lectura con `com_puede_leer`; escritura solo service role):
 
@@ -26,17 +26,18 @@
 |---|---|---|
 | `com_compras_oc` | `zoho_po_id` | `folio`, `proveedor`, `vendor_id`, `comprador` (`created_by_name`; vacío → «Sin comprador»), `emision` (`date`), `arribo` (`delivery_date`, puede ser null), `estado`, `received_status`, `moneda`, `total`, `monto_ins` (insumos con IVA, MXN), `por_categoria` jsonb {CAF, BEB, …, otros}, `es_registro` bool, `factura_previa` date null, `zoho_modificado` timestamptz, `actualizado_at` |
 | `com_compras_recepcion` | `zoho_receive_id` | `zoho_po_id`, `folio_oc`, `fecha` (`receive_date`), `monto` (recibido con IVA, MXN), `por_categoria` jsonb |
+| `com_compras_factura` | `zoho_invoice_id` | `fecha`, `cliente`, `estado`, `total`, `por_categoria_ci` jsonb (líneas por familia de SKU, con IVA), `zoho_modificado` |
 | `com_compras_venta_semana` | `semana` (lunes) | `venta_total_ci` (igual al Reporte semanal: facturas no anuladas sin `excluir_ventas`), `facturas`, `por_categoria_ci` jsonb, `calculado_at` |
-| `com_compras_sync_estado` | `id = 1` | `oc_modificado_hasta` timestamptz (marca incremental), `venta_hasta` date |
+| `com_compras_sync_estado` | `id = 1` | `oc_modificado_hasta` y `factura_modificado_hasta` timestamptz (marcas incrementales) |
 
 **Lectura incremental de OCs:** `GET /purchaseorders` ordenado por `last_modified_time` desde `oc_modificado_hasta` (primera corrida: desde 2026-07-01). Por cada OC nueva o modificada, `GET /purchaseorders/{id}` (líneas con `sku`, `rate`, `quantity`, `quantity_received`, `tax_percentage`; `purchasereceives[]` con fecha; `bills[]` con fecha). La marca avanza solo hasta la última OC procesada con éxito. Detalles en lotes de 4 con pausa de 500 ms.
 
 **Reglas de cálculo al guardar:**
-- **Categoría por familia de SKU:** `INS-CAF` Café, `INS-BEB` Bebidas, `INS-DES` Desechables, `INS-DEL` Delivery, `INS-BA` Barra (incluye bases frappé), `INS-LIM` Limpieza, `INS-FOD` Foods, `INS-RTD` RTD; cualquier otro SKU → `otros` (no es insumo; cuenta en totales, no en categorías).
+- **Categoría por familia de SKU:** `INS-CAF` Café, `INS-BEB` Bebidas, `INS-DES` Desechables, `INS-DEL` Delivery, `INS-BA` Barra (incluye bases frappé), `INS-LIM` Limpieza, `INS-FOD` Foods, `RTD-` RTD (Zoé Water, Perrier; verificado 25 nov); cualquier otro SKU → `otros` (no es insumo; cuenta en totales, no en categorías).
 - **Montos con IVA:** `rate × cantidad × (1 + tax_percentage/100)`. OCs en moneda distinta de MXN: `monto_ins = 0` y no suman (como el tablero actual); se cuentan como OC.
-- **Monto recibido por recepción:** líneas de la recepción × `rate` de la línea de la OC × IVA. Si Zoho no da líneas por recepción, se prorratea por `quantity_received` y se documenta.
+- **Monto recibido por recepción:** líneas de la recepción × `rate` de la línea de la OC × IVA. Zoho sí da líneas por recepción (`GET /purchasereceives/{id}`, con `sku` y `quantity`); se lee el detalle solo cuando la OC tiene más de una recepción; con una sola, lo recibido es `quantity_received` de cada línea.
 - **OC de registro** (`es_registro`): arribo esperado más de 7 días antes de la fecha de la OC, o factura previa a la OC. No cuenta como OC elaborada ni en entregas; su mercancía tampoco cuenta como compra recibida.
-- **Venta semanal por categoría:** `GET /reports/salesbyitem?from_date&to_date` por semana (montos sin IVA) → con IVA usando la tasa de impuesto del artículo en Zoho (catálogo); categoría por familia del SKU. El total de la semana sale de las facturas (misma regla que `ventas.ts`). Se recalculan las 2 semanas más recientes en cada corrida; la primera carga trae 16 semanas.
+- **Venta semanal por categoría:** de las **líneas de cada factura** (`GET /invoices/{id}`: `sku`, `item_total`, `tax_percentage`), con IVA por línea (`item_total × (1 + tax_percentage/100)`), sin facturas anuladas ni borrador ni clientes de `excluir_ventas` (Dodo Pizza, Compras The Coffee). Las facturas se leen de forma incremental por `last_modified_time` y se guardan en `com_compras_factura`; `com_compras_venta_semana` se recalcula desde ahí. Verificado el 25 nov contra el tablero para 16–22 nov: café 399,850, bebidas 213,405, desechables 279,340, delivery 43,885, barra 86,757, limpieza 22,101, foods 17,622, RTD 16,633 (exactos). La primera carga trae 16 semanas (unas 1,600 facturas): la función procesa como máximo 300 detalles por corrida y sigue en la siguiente.
 
 ## 3. Tablero de compras
 
