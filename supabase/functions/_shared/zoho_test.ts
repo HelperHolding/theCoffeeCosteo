@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { ZohoClient, ZohoError, zohoDesdeEnv } from "./zoho.ts";
 
 type Resp = { status: number; body: unknown };
@@ -127,6 +127,33 @@ Deno.test("zohoDesdeEnv({ soloLectura: true }) bloquea escrituras aunque COM_EFE
     await assertRejects(() => z.post("/purchaseorders", {}), ZohoError, "sin efectos externos");
     await assertRejects(() => z.put("/contacts/1", {}), ZohoError, "sin efectos externos");
     assertEquals(llamadas, 0);
+  } finally {
+    globalThis.fetch = fetchOriginal;
+    claves.forEach((k, i) => previos[i] === undefined ? Deno.env.delete(k) : Deno.env.set(k, previos[i]!));
+  }
+});
+
+Deno.test("zohoDesdeEnv({ tokenVar }) usa ese secreto como refresh token y falla claro si no existe", async () => {
+  const claves = ["ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN", "ZOHO_ORG_ID", "ZOHO_REPORTE_REFRESH_TOKEN"];
+  const previos = claves.map((k) => Deno.env.get(k));
+  const fetchOriginal = globalThis.fetch;
+  const tokens: string[] = [];
+  globalThis.fetch = ((url: string | URL | Request) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith("/token")) {
+      tokens.push(u.searchParams.get("refresh_token") ?? "");
+      return Promise.resolve(new Response(JSON.stringify({ access_token: "t", expires_in: 3600 })));
+    }
+    return Promise.resolve(new Response(JSON.stringify({ code: 0, items: [] })));
+  }) as typeof fetch;
+  try {
+    for (const k of claves.slice(0, 4)) Deno.env.set(k, "compartido");
+    Deno.env.delete("ZOHO_REPORTE_REFRESH_TOKEN");
+    assertThrows(() => zohoDesdeEnv({ tokenVar: "ZOHO_REPORTE_REFRESH_TOKEN" }), Error, "Falta el secreto ZOHO_REPORTE_REFRESH_TOKEN");
+    Deno.env.set("ZOHO_REPORTE_REFRESH_TOKEN", "propio");
+    await zohoDesdeEnv({ tokenVar: "ZOHO_REPORTE_REFRESH_TOKEN" }).get("/items");
+    await zohoDesdeEnv().get("/items");
+    assertEquals(tokens, ["propio", "compartido"]);
   } finally {
     globalThis.fetch = fetchOriginal;
     claves.forEach((k, i) => previos[i] === undefined ? Deno.env.delete(k) : Deno.env.set(k, previos[i]!));

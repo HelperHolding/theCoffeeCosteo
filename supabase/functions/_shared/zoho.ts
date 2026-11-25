@@ -102,7 +102,11 @@ export class ZohoClient {
   }
 }
 
-export function zohoDesdeEnv(opts: { soloLectura?: boolean } = {}): ZohoClient {
+/**
+ * tokenVar: secreto con el refresh token a usar (por omisión ZOHO_REFRESH_TOKEN). El reporte semanal usa su propio
+ * token solo de lectura con permisos de ventas, sin tocar el de zoho-sync ni el de creación de OCs.
+ */
+export function zohoDesdeEnv(opts: { soloLectura?: boolean; tokenVar?: string } = {}): ZohoClient {
   const v = (k: string) => {
     const x = Deno.env.get(k);
     if (!x) throw new Error(`Falta el secreto ${k}`);
@@ -110,7 +114,7 @@ export function zohoDesdeEnv(opts: { soloLectura?: boolean } = {}): ZohoClient {
   };
   return new ZohoClient({
     clientId: v("ZOHO_CLIENT_ID"), clientSecret: v("ZOHO_CLIENT_SECRET"),
-    refreshToken: v("ZOHO_REFRESH_TOKEN"), orgId: v("ZOHO_ORG_ID"),
+    refreshToken: v(opts.tokenVar ?? "ZOHO_REFRESH_TOKEN"), orgId: v("ZOHO_ORG_ID"),
     soloLectura: opts.soloLectura ?? !efectosExternos(),
   });
 }
