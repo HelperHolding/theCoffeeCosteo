@@ -25,8 +25,12 @@ recibo Banregio.
 **ZIP de la corrida** (ej. `SUCURSALES 20NOV26.zip`):
 - Un **recibo individual** Banregio por transferencia (`<ALIAS> - $<monto>.pdf`). Campos: Cuenta origen
   (`COMERCIALIZADORA MASTER SITRU … *0151`), Cuenta destino (`<alias> - <CLABE 18 dígitos>`), Cantidad, Banco, Tipo
-  (SPEI / Banregio), Concepto, RFC, Fecha de operación SPEI, **Clave de rastreo**. Los traspasos Banregio→Banregio pueden
-  no traer clave de rastreo SPEI: en ese caso la llave es el folio de «Datos de tu operación».
+  (SPEI / Banregio), Concepto, RFC, Fecha de operación SPEI, **Clave de rastreo**. Los traspasos Banregio→Banregio
+  (comprobado con YESICA CAMPOS OTERO) **no traen CLABE completa (solo `*5957`) ni clave de rastreo ni folio**, y su fecha
+  viene como `20-11-2026 13:08`. Para ellos la CLABE sale del resumen (fila tipo Banregio con mismos 4 dígitos finales y
+  mismo monto) y la llave es `BRG-<fecha>-<últimos 4>-<monto>`.
+- El texto extraído de los PDF sale **desordenado** (etiquetas antes o después del valor), así que la lectura usa patrones
+  sobre todo el texto (CLABE de 18 dígitos, `$X pesos`, clave `058-20/11/2026/…`), no pares etiqueta-valor.
 - Un **resumen** `RESUMEN TRANSFERENCIA MASIVA …pdf`: archivo, número de transferencias, total y detalle (secuencia, tipo,
   CLABE, alias, descripción, monto), más la tabla «Transferencias con error».
 
@@ -44,7 +48,8 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
 
 - Acceso nuevo **`sucursales_pagos`** en `perfil_modulos` (se agrega al `check` de `modulo`, como `sucursales_costeo`).
   Nivel `lectura` = ver corridas y bitácora; `edicion` (o `desarrollador`) = subir, ajustar y **aplicar en Zoho**.
-- Además debe ser usuario **Holding** (`marcaDe(rol) === 'holding'`; nunca `franquiciado` ni `tienda`).
+- Además debe ser empleado **Holding**: rol `compras`, `operaciones`, `finanzas`, `admin`, `sucursales` o `interno`
+  (nunca `franquiciado`, `tienda` ni `proveedor`).
 - El grupo del menú solo aparece si se cumplen ambas. La RLS de las tablas `suc_pago_*` aplica la misma regla
   (función `suc_pagos_nivel()`), y la Edge Function la vuelve a verificar con el JWT del usuario antes de escribir en Zoho.
 - `Accesos` en `lib/portal/modulos.ts` suma `sucursales_pagos`; el módulo Sucursales también se muestra a quien solo tenga
@@ -55,7 +60,10 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
 1. **Subir.** Se arrastra el ZIP. El servidor lee cada PDF (texto, formato fijo de Banregio) y crea una **corrida**.
    Control con el resumen: número de transferencias y total de los recibos contra el resumen; si no cuadra, o el resumen
    trae transferencias con error, aviso en la corrida (no bloquea, las transferencias con error no se aplican).
-   Un PDF que no se pueda leer queda como fila ❌ «No se pudo leer» con su nombre de archivo.
+   Un PDF que no se pueda leer queda como aviso de la corrida («No se pudo leer <archivo>»), igual que una fila del
+   resumen sin recibo en el ZIP. Una transferencia cuya llave ya existe (ZIP subido otra vez) no se vuelve a registrar:
+   queda como aviso «ya registrada en la corrida #N (<estado>)». La subida va por un route handler (`POST
+   /api/sucursales/propias/pagos`, máx. 4 MB), no por server action (límite de 1 MB).
 2. **Revisar.** Una fila por transferencia, con estado:
    - ✅ **Cuadra**: proveedor identificado y monto = suma de saldos abiertos. Se despliega la lista de facturas a liquidar.
    - ⚠️ **No cuadra**: monto ≠ suma de saldos. El usuario marca qué facturas cubre y cuánto abona a cada una
@@ -63,7 +71,6 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
    - ❓ **Proveedor desconocido**: la CLABE no tiene equivalencia. Se sugiere el proveedor de Zoho por nombre parecido;
      el usuario confirma o elige otro y se **guarda la equivalencia CLABE → proveedor**.
    - ⛔ **Sin facturas abiertas**: no se aplica; queda señalado (puede ser un anticipo o un proveedor que no está en Zoho).
-   - ✔️ **Ya aplicada**: la llave (clave de rastreo) ya está en la bitácora; no se vuelve a aplicar.
 3. **Aplicar.** Botón «Aplicar N pagos» (solo filas ✅, solo nivel `edicion`) con confirmación que muestra número de pagos y
    total. Se procesa proveedor por proveedor (§5). Al terminar, cada fila muestra su resultado.
 4. **Bitácora.** Lista de corridas (fecha, archivo, quién subió, aplicadas/pendientes/total) y, por transferencia: proveedor,
@@ -76,8 +83,11 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
   `ZohoBooks.bills.READ`, `ZohoBooks.contacts.READ`, `ZohoBooks.vendorpayments.CREATE`,
   `ZohoBooks.vendorpayments.READ`, `ZohoBooks.vendorpayments.UPDATE` (adjuntos), `ZohoBooks.accountants.READ` (cuenta).
   `ZohoClient` de `_shared/zoho.ts` se reutiliza con otra configuración.
-- **Edge Function nueva `zoho-suc-pagos`** (`verify_jwt = true`: la invoca el usuario). Acciones: `facturas` (leer saldos
-  abiertos de un conjunto de proveedores), `proveedores` (buscar proveedor para equivalencias), `aplicar` (una transferencia).
+- **Edge Function nueva `zoho-suc-pagos`** (`verify_jwt = false`, como las demás). Exige el secreto `x-com-secreto` del
+  portal **y** el JWT del usuario en `x-usuario-jwt`; con ese JWT llama `suc_pagos_nivel()` y solo deja `aplicar` con nivel
+  `edicion`/`desarrollador`. Acciones: `facturas` (saldos abiertos de un conjunto de proveedores), `proveedores` (lista de
+  proveedores de Zoho), `aplicar` (una transferencia, leída de la base: no confía en montos que mande el portal).
+  Las escrituras a Zoho solo ocurren con `SUC_PAGOS_EFECTOS=si` (bandera propia, independiente de `COM_EFECTOS_EXTERNOS`).
 - **Por cada transferencia ✅, un `vendorpayment`:**
   - `vendor_id`, `date` = fecha de operación SPEI, `amount` = monto del recibo;
   - `paid_through_account_id` = cuenta **«BANREGIO - CONSOLIDADO SUCURSALES PROPIAS - \*0151»** (se resuelve por nombre la
@@ -96,8 +106,9 @@ Casos reales que el diseño debe cubrir (corrida del 20 nov):
 - `suc_pago_transferencia` (id, corrida_id, **llave unique** = clave de rastreo o folio, tipo, clabe, alias, concepto,
   monto, fecha_operacion, archivo_pdf (ruta en Storage), proveedor_zoho_id, proveedor_nombre, estado, error,
   zoho_vendorpayment_id, adjunto_ok, aplicado_por, aplicado_en).
-  Estados: `cuadra`, `no_cuadra`, `desconocido`, `sin_facturas`, `ilegible`, `aplicando`, `aplicada`,
-  `aplicada_sin_adjunto`, `error`, `ya_aplicada`.
+  Estados: `cuadra`, `no_cuadra`, `desconocido`, `sin_facturas`, `aplicando`, `aplicada`,
+  `aplicada_sin_adjunto`, `error`, `ya_aplicada` (el pago ya existía en Zoho con esa referencia).
+  La corrida, sus transferencias y asignaciones se registran en una sola transacción (RPC `suc_pagos_registrar_corrida`).
 - `suc_pago_asignacion` (transferencia_id, bill_id, bill_numero, ubicacion, monto).
 - `suc_proveedor_clabe` (clabe pk, proveedor_zoho_id, proveedor_nombre, creado_por, creado_en).
 - `suc_pago_config` (fila única: `paid_through_account_id`, nombre de la cuenta).
