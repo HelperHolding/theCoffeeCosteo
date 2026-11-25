@@ -55,7 +55,9 @@ create table public.com_compras_venta_semana (
 create table public.com_compras_sync_estado (
   id int primary key default 1 check (id = 1),
   oc_modificado_hasta timestamptz,
-  factura_modificado_hasta timestamptz
+  oc_ids_en_marca text[] not null default '{}',
+  factura_modificado_hasta timestamptz,
+  factura_ids_en_marca text[] not null default '{}'
 );
 insert into public.com_compras_sync_estado (id) values (1);
 
@@ -76,11 +78,17 @@ create policy lectura on public.com_compras_factura for select to authenticated 
 create policy lectura on public.com_compras_venta_semana for select to authenticated using ((select public.com_puede_leer()));
 create policy lectura on public.com_compras_sync_estado for select to authenticated using ((select public.com_puede_leer()));
 
--- Cada 15 minutos: solo lee Zoho y escribe estas tablas, así que se crea activo (a diferencia de zoho-sync).
+-- Cada 15 minutos. Se crea INACTIVO (como los demás jobs de Comercializadora): se activa después del despliegue,
+-- de ampliar el token con ZohoBooks.purchaseorders.READ y de una corrida forzada que salga bien.
 do $$
+declare
+  j record;
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron')
      and exists (select 1 from pg_roles where rolname = 'supabase_admin') then
     perform cron.schedule('zoho-compras-sync', '7,22,37,52 * * * *', $c$ select public.com_invocar('zoho-compras-sync') $c$);
+    for j in select jobid from cron.job where jobname = 'zoho-compras-sync' loop
+      perform cron.alter_job(j.jobid, active := false);
+    end loop;
   end if;
 end $$;

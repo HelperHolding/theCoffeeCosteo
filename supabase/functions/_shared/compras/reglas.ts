@@ -39,6 +39,8 @@ export type FilaRecepcion = { zoho_receive_id: string; zoho_po_id: string; folio
 export function ocDesdeDetalle(po: J, recepciones: Record<string, J>): { oc: FilaOc; recepciones: FilaRecepcion[] } {
   const mxn = s(po.currency_code || "MXN") === "MXN";
   const lineas: J[] = po.line_items ?? [];
+  // Las líneas de una recepción traen item_id (no el id de la línea de la OC): se relacionan por item_id y, si falta, por SKU.
+  const porItem = new Map<string, J>(lineas.filter((l) => s(l.item_id)).map((l) => [s(l.item_id), l]));
   const porSku = new Map<string, J>(lineas.map((l) => [s(l.sku), l]));
   const por_categoria = mxn ? sumar(lineas.map((l) => ({ sku: s(l.sku), monto: iva(n(l.rate) * n(l.quantity), l.tax_percentage) }))) : {};
   const emision = s(po.date);
@@ -56,13 +58,15 @@ export function ocDesdeDetalle(po: J, recepciones: Record<string, J>): { oc: Fil
     zoho_modificado: s(po.last_modified_time),
   };
   const prs: J[] = po.purchasereceives ?? [];
-  const recibido = (ls: { sku: string; q: number }[]): PorCategoria => (mxn
-    ? sumar(ls.map((l) => { const pl = porSku.get(l.sku); return { sku: l.sku, monto: pl ? iva(n(pl.rate) * l.q, pl.tax_percentage) : 0 }; }))
+  const recibido = (ls: { sku: string; q: number; linea: J | undefined }[]): PorCategoria => (mxn
+    ? sumar(ls.map((l) => ({ sku: l.sku, monto: l.linea ? iva(n(l.linea.rate) * l.q, l.linea.tax_percentage) : 0 })))
     : {});
   const filas = prs.map((r) => {
     const ls = prs.length === 1
-      ? lineas.map((l) => ({ sku: s(l.sku), q: n(l.quantity_received) }))
-      : (recepciones[s(r.receive_id)]?.line_items ?? []).map((l: J) => ({ sku: s(l.sku), q: n(l.quantity) }));
+      ? lineas.map((l) => ({ sku: s(l.sku), q: n(l.quantity_received), linea: l }))
+      : (recepciones[s(r.receive_id)]?.line_items ?? []).map((l: J) => ({
+        sku: s(l.sku), q: n(l.quantity), linea: porItem.get(s(l.item_id)) ?? porSku.get(s(l.sku)),
+      }));
     const pc = recibido(ls);
     const monto = cent(Object.values(pc).reduce((a, x) => a + (x ?? 0), 0));
     return { zoho_receive_id: s(r.receive_id), zoho_po_id: oc.zoho_po_id, folio_oc: oc.folio, fecha: s(r.date), monto, por_categoria: pc };

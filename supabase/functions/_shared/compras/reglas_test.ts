@@ -41,6 +41,20 @@ Deno.test("ocDesdeDetalle: varias recepciones usan su detalle con el rate de la 
   assertEquals(recepciones.map((r) => [r.zoho_receive_id, r.monto]), [["R1", 464], ["R2", 332]]);
 });
 
+Deno.test("ocDesdeDetalle: varias recepciones se relacionan por item_id aunque el SKU se repita con otro precio", () => {
+  const { recepciones } = ocDesdeDetalle(po({
+    line_items: [
+      { item_id: "I1", sku: "INS-DES-001", rate: 100, quantity: 10, quantity_received: 0, tax_percentage: 16 },
+      { item_id: "I2", sku: "INS-DES-001", rate: 10, quantity: 10, quantity_received: 0, tax_percentage: 16 },
+    ],
+    purchasereceives: [{ receive_id: "R1", date: "2026-11-19" }, { receive_id: "R2", date: "2026-11-21" }],
+  }), {
+    R1: { line_items: [{ item_id: "I1", sku: "INS-DES-001", quantity: 1 }] },
+    R2: { line_items: [{ item_id: "I2", sku: "INS-DES-001", quantity: 1 }] },
+  });
+  assertEquals(recepciones.map((r) => r.monto), [116, 11.6]);
+});
+
 Deno.test("ocDesdeDetalle: OC de registro por arribo muy anterior o factura previa; sin arribo no rompe", () => {
   assertEquals(ocDesdeDetalle(po({ delivery_date: "2026-11-05" }), {}).oc.es_registro, true);
   assertEquals(ocDesdeDetalle(po({ delivery_date: "2026-11-12" }), {}).oc.es_registro, false);
