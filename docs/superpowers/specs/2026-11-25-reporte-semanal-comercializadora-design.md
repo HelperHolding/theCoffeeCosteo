@@ -68,21 +68,22 @@ Semana = lunes a domingo. Exclusiones y agrupaciones salen de la configuración 
 
 **4.6 Saldos clientes externos.** Facturas con `balance > 0` de clientes no propios, sin `excluir_saldos` (Seinomarin, Dodo Pizza) ni deuda interna. Por cliente: fecha de la factura más antigua, días desde ella, saldo, y cuánto del saldo es Llenado de canal («100% llenado canal» si todo). Créditos activos (`creditos_activos`: cliente + texto) van en su bloque. Deuda interna (`deuda_interna`) en su bloque. Totales y «era $X la semana pasada» desde la foto.
 
-**4.7 Aperturas.** OVs con `cf_tipo_de_envio = Apertura` no enviadas, o enviadas en la semana: sucursal, cliente, fecha OV, estatus de envío. Si existe en `com_legado_aperturas`, se agrega la apertura estimada.
+**4.7 Aperturas.** OVs con `cf_tipo_de_envio = Apertura` sin enviar, o con fecha o primer envío en la semana: sucursal, cliente, fecha OV, estatus de envío. La apertura estimada no existe en Zoho y queda fuera.
 
 ## 5. Configuración
 
-Sección nueva «Reporte semanal» en Configuración de Comercializadora, guardada en la misma configuración con historial:
+Tabla propia `com_reporte_config (id = 1, config jsonb, actualizado_por, actualizado_at)`, **no** `com_plan_config`: `mergeCfg` del plan descarta claves desconocidas y cualquier cambio fuera de imp/cafe/kpi dispara el recálculo del motor. Se edita en un panel «Configuración del reporte» dentro de la misma pantalla, solo con `com_puede_editar`. Valores iniciales:
 
-- `reporte.excluir_ventas`: [«DODO PIZZA», «Compras The Coffee»]
-- `reporte.corporativo_ap`: [«OPERADORA DE FRANQUICIAS MJA», «OPERADORA DE CAFETERIAS SEJ»]
-- `reporte.excluir_saldos`: [Seinomarin Projects, «DODO PIZZA»]
-- `reporte.excluir_saldos_sucursales`: [Polanco]
-- `reporte.deuda_interna`: [«MARKETING», «OFICINA PRINCIPAL», «Compras The Coffee»]
-- `reporte.creditos_activos`: [{cliente, nota}] (p. ej. Tandem — Patio Santa Fe · apertura · crédito 6×6)
-- Metas: fill rate 98, stock 1, pickeo 98, física 1, envío 100 (%), días hábiles 2.
+- `excluir_ventas`: [«DODO PIZZA», «Compras The Coffee»]
+- `corporativo_ap`: [«OPERADORA DE FRANQUICIAS MJA», «OPERADORA DE CAFETERIAS SEJ»]
+- `excluir_saldos`: [«SEINOMARIN PROJECTS», «DODO PIZZA»]
+- `excluir_saldos_sucursales`: [«Polanco»] (se compara contra la Sucursal y contra el cliente)
+- `deuda_interna`: [«MARKETING», «OFICINA PRINCIPAL», «Compras The Coffee»]
+- `creditos_activos`: [{cliente, sucursal, nota}] — se identifican por factura (cliente + Sucursal; Sucursal vacía = todas las del cliente), porque un mismo cliente puede tener saldo normal y crédito activo (Tandem).
+- `metas`: fill 98, stock 1, pickeo 98, fisica 1, envio 100 (%), `dias_envio` 2.
+- `dias_incidencias`: 60 (antigüedad máxima de las OVs con incidencia abierta que se leen).
 
-Requiere un tipo de campo nuevo `lista` en `CampoConfig` (lista de nombres de cliente de Zoho) y, para créditos activos, `lista` de pares cliente/nota. Los nombres se comparan sin mayúsculas, acentos ni espacios sobrantes.
+Los nombres se comparan sin mayúsculas, acentos ni espacios sobrantes. Cambiar la configuración invalida la caché (la función ignora copias leídas antes de `actualizado_at`). Días hábiles = lunes a viernes, sin feriados.
 
 ## 6. Errores
 
