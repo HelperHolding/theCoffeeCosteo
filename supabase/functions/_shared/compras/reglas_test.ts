@@ -50,6 +50,13 @@ Deno.test("ocDesdeDetalle: OC de registro por arribo muy anterior o factura prev
   assertEquals([sinArribo.arribo, sinArribo.es_registro], [null, false]);
 });
 
+Deno.test("ocDesdeDetalle: el arribo esperado sale del campo «Fecha de Arribo Esperada» de Zoho", () => {
+  const conCampo = po({ delivery_date: "", custom_fields: [{ api_name: "cf_fecha_de_arribo_esperada", value: "2026-09-28" }], date: "2026-10-15" });
+  const oc = ocDesdeDetalle(conCampo, {}).oc;
+  assertEquals([oc.arribo, oc.es_registro], ["2026-09-28", true]);
+  assertEquals(ocDesdeDetalle(po({ delivery_date: "", cf_fecha_de_arribo_esperada: "2026-11-20" }), {}).oc.arribo, "2026-11-20");
+});
+
 Deno.test("ocDesdeDetalle: moneda distinta de MXN no suma montos", () => {
   const { oc, recepciones } = ocDesdeDetalle(po({ currency_code: "USD", purchasereceives: [{ receive_id: "R1", date: "2026-11-19" }] }), {});
   assertEquals([oc.monto_ins, oc.por_categoria, recepciones[0].monto], [0, {}, 0]);

@@ -42,7 +42,10 @@ export function ocDesdeDetalle(po: J, recepciones: Record<string, J>): { oc: Fil
   const porSku = new Map<string, J>(lineas.map((l) => [s(l.sku), l]));
   const por_categoria = mxn ? sumar(lineas.map((l) => ({ sku: s(l.sku), monto: iva(n(l.rate) * n(l.quantity), l.tax_percentage) }))) : {};
   const emision = s(po.date);
-  const arribo = s(po.delivery_date) || null;
+  // El arribo esperado vive en el campo personalizado «Fecha de Arribo Esperada»; delivery_date casi siempre viene vacío.
+  const cfArribo = s(po.cf_fecha_de_arribo_esperada) ||
+    s((po.custom_fields ?? []).find((c: J) => c?.api_name === "cf_fecha_de_arribo_esperada")?.value);
+  const arribo = cfArribo || s(po.delivery_date) || null;
   const facturas = (po.bills ?? []).map((b: J) => s(b.date)).filter(Boolean).sort();
   const factura_previa = facturas.find((f: string) => f < emision) ?? null;
   const es_registro = (arribo != null && dif(arribo, emision) > 7) || factura_previa != null;

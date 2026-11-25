@@ -24,7 +24,7 @@
 
 | Tabla | Llave | Campos |
 |---|---|---|
-| `com_compras_oc` | `zoho_po_id` | `folio`, `proveedor`, `vendor_id`, `comprador` (`created_by_name`; vacío → «Sin comprador»), `emision` (`date`), `arribo` (`delivery_date`, puede ser null), `estado`, `received_status`, `moneda`, `total`, `monto_ins` (insumos con IVA, MXN), `por_categoria` jsonb {CAF, BEB, …, otros}, `es_registro` bool, `factura_previa` date null, `zoho_modificado` timestamptz, `actualizado_at` |
+| `com_compras_oc` | `zoho_po_id` | `folio`, `proveedor`, `vendor_id`, `comprador` (`created_by_name`; vacío → «Sin comprador»), `emision` (`date`), `arribo` (campo personalizado `cf_fecha_de_arribo_esperada` «Fecha de Arribo Esperada»; `delivery_date` casi siempre viene vacío; puede ser null), `estado`, `received_status`, `moneda`, `total`, `monto_ins` (insumos con IVA, MXN), `por_categoria` jsonb {CAF, BEB, …, otros}, `es_registro` bool, `factura_previa` date null, `zoho_modificado` timestamptz, `actualizado_at` |
 | `com_compras_recepcion` | `zoho_receive_id` | `zoho_po_id`, `folio_oc`, `fecha` (`receive_date`), `monto` (recibido con IVA, MXN), `por_categoria` jsonb |
 | `com_compras_factura` | `zoho_invoice_id` | `fecha`, `cliente`, `estado`, `total`, `por_categoria_ci` jsonb (líneas por familia de SKU, con IVA), `zoho_modificado` |
 | `com_compras_venta_semana` | `semana` (lunes) | `venta_total_ci` (igual al Reporte semanal: facturas no anuladas sin `excluir_ventas`), `facturas`, `por_categoria_ci` jsonb, `calculado_at` |
@@ -100,4 +100,9 @@
 
 ## 7. Diferencias de paridad
 
-Se completa durante la implementación.
+Fixture `supabase/functions/_shared/pruebas/compras-2026-11.json` (capturado el 25 nov: facturas del 9 al 22 nov; OCs con fecha o recepción en esas semanas). Contra el tablero, semana 16–22 nov:
+
+- Venta: total 1,193,333.39 y las 8 categorías exactas.
+- Compras recibidas sin OCs de registro: 477,634 exacto; por categoría con diferencia máxima de un peso por redondeo (limpieza 10,604.6 vs 10,604).
+- OCs elaboradas 20 y de registro 2, exactas **excluyendo borradores** (`status = draft`): el tablero no cuenta las OCs en borrador. El tablero (fase 3) aplica la misma regla.
+- Hallazgo: el arribo esperado está en `cf_fecha_de_arribo_esperada`; con `delivery_date` ninguna OC salía de registro y las compras recibidas sumaban 44,799 de más (COM-OC-01263 y otras con arribo anterior a la OC).
