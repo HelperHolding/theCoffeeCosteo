@@ -50,12 +50,17 @@ function repoFalso(t: Partial<FilaTransferencia> = {}) {
     fecha_operacion: "2026-11-20", archivo_pdf: "5/abc.pdf", proveedor_zoho_id: "v-oh", proveedor_nombre: "OH LALA",
     estado: "cuadra", zoho_vendorpayment_id: null, adjunto_ok: false, ...t,
   };
-  const estado = { fila, cuentaId: null as string | null, equivalencias: [] as string[] };
+  const estado = { fila, cuentaId: null as string | null, equivalencias: [] as string[], actualizado: new Date().toISOString(), fallarMarcar: [] as string[] };
   const repo: RepoPagos = {
     async transferencia() { return { ...estado.fila }; },
     async asignaciones() { return [{ bill_id: "b1", bill_numero: "A1", monto: 300 }, { bill_id: "b2", bill_numero: "A2", monto: 100 }]; },
-    async marcar(_id, desde, cambios) {
+    async marcar(_id, desde, cambios, vencidaAntesDe) {
       if (!desde.includes(estado.fila.estado)) return false;
+      if (vencidaAntesDe && !(estado.actualizado < vencidaAntesDe)) return false;
+      // Falla simulada de la base al guardar una transición concreta (una sola vez).
+      const k = estado.fallarMarcar.indexOf(String(cambios.estado));
+      if (k >= 0) { estado.fallarMarcar.splice(k, 1); throw new Error("base caída"); }
+      estado.actualizado = new Date().toISOString();
       estado.fila = { ...estado.fila, ...cambios } as FilaTransferencia;
       return true;
     },
@@ -197,4 +202,47 @@ Deno.test("sin asignaciones tampoco llama a Zoho", async () => {
   assertEquals((await aplicar(repo, z, 1, "u1")).estado, "no_cuadra");
   assertEquals(llamadas.length, 0);
   assertEquals(estado.fila.estado, "no_cuadra");
+});
+
+Deno.test("una segunda llamada con la fila en aplicando vigente no llama a Zoho", async () => {
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS });
+  const { repo } = repoFalso({ estado: "aplicando" });
+  const r = await aplicar(repo, z, 1, "u1");
+  assertEquals(r.estado, "aplicando");
+  assertMatch(r.mensaje!, /Otra persona/);
+  assertEquals(llamadas.length, 0);
+});
+
+Deno.test("una reserva aplicando de hace 11 minutos se retoma", async () => {
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS });
+  const { repo, estado } = repoFalso({ estado: "aplicando" });
+  estado.actualizado = new Date(Date.now() - 11 * 60_000).toISOString();
+  assertEquals((await aplicar(repo, z, 1, "u1")).estado, "aplicada");
+  assertEquals(llamadas.some((l) => l.m === "GET" && l.path === "/vendorpayments"), true);
+});
+
+Deno.test("si el pago se creó y falla guardar el resultado, queda aplicada_sin_adjunto y no error", async () => {
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS });
+  const { repo, estado } = repoFalso();
+  estado.fallarMarcar.push("aplicada_sin_adjunto");
+  const r = await aplicar(repo, z, 1, "u1");
+  assertEquals(r.estado, "aplicada_sin_adjunto");
+  assertEquals(r.pagoId, "pago-1");
+  assertMatch(r.mensaje!, /pago-1/);
+  assertEquals(estado.fila.estado, "aplicada_sin_adjunto");
+  assertEquals(estado.fila.zoho_vendorpayment_id, "pago-1");
+  assertEquals(llamadas.filter((l) => l.m === "POST").length, 1);
+});
+
+Deno.test("usa la fila fresca tras reservar (proveedor editado entre lecturas)", async () => {
+  const { z, llamadas } = zohoFalso({ saldos: SALDOS });
+  const { repo, estado } = repoFalso();
+  const original = repo.marcar;
+  repo.marcar = async (...a) => {
+    const ok = await original(...a);
+    if (ok && a[2].estado === "aplicando") estado.fila = { ...estado.fila, proveedor_zoho_id: "v-nuevo" };
+    return ok;
+  };
+  await aplicar(repo, z, 1, "u1");
+  assertEquals((llamadas.find((l) => l.m === "POST")!.body as { vendor_id: string }).vendor_id, "v-nuevo");
 });

@@ -32,8 +32,8 @@ export interface FilaAsignacion {
 export interface RepoPagos {
   transferencia(id: number): Promise<FilaTransferencia | null>;
   asignaciones(id: number): Promise<FilaAsignacion[]>;
-  /** Update condicional: solo cambia la fila si su estado actual está en `desde`. true si la cambió. */
-  marcar(id: number, desde: string[], cambios: Record<string, unknown>): Promise<boolean>;
+  /** Update condicional: solo cambia la fila si su estado actual está en `desde` (y, si se da `vencidaAntesDe`, su actualizado_en es anterior). true si la cambió. */
+  marcar(id: number, desde: string[], cambios: Record<string, unknown>, vencidaAntesDe?: string): Promise<boolean>;
   recibo(ruta: string): Promise<Uint8Array>;
   cuenta(): Promise<{ id: string | null; nombre: string }>;
   guardarCuenta(id: string): Promise<void>;
@@ -55,6 +55,9 @@ export interface Factura {
 export type ResultadoAplicar = { estado: string; mensaje?: string; pagoId?: string };
 
 const APLICABLES = ["cuadra", "error", "aplicando"];
+const RESERVABLES = ["cuadra", "error"];
+/** Una reserva "aplicando" más vieja que esto se considera caída y otra persona puede retomarla. */
+const VIGENCIA_RESERVA_MS = 10 * 60_000;
 const cent = (n: number) => Math.round(n * 100);
 const normal = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
 const ahora = () => new Date().toISOString();
@@ -115,19 +118,32 @@ export async function aplicar(repo: RepoPagos, zoho: ZohoPagos, id: number, usua
     return { estado: t.estado, mensaje: "La transferencia no está lista para aplicarse." };
   }
   // Reserva antes de llamar a Zoho: dos clics o dos personas no crean dos pagos.
-  if (!(await repo.marcar(id, APLICABLES, { estado: "aplicando", error: null }))) {
-    return { estado: t.estado, mensaje: "Otra persona la está aplicando." };
+  // "aplicando" solo se retoma si su reserva venció (la comparación va dentro del mismo update condicional).
+  const reservada = (await repo.marcar(id, RESERVABLES, { estado: "aplicando", error: null })) ||
+    (t.estado === "aplicando" &&
+      (await repo.marcar(id, ["aplicando"], { estado: "aplicando", error: null },
+        new Date(Date.now() - VIGENCIA_RESERVA_MS).toISOString())));
+  if (!reservada) return { estado: t.estado, mensaje: "Otra persona la está aplicando." };
+  // Lectura fresca tras reservar: una edición del portal entre la primera lectura y la reserva no manda un proveedor viejo.
+  const fresca = await repo.transferencia(id);
+  if (!fresca?.proveedor_zoho_id) {
+    const mensaje = "La transferencia cambió y ya no tiene proveedor; revísala.";
+    await repo.marcar(id, ["aplicando"], { estado: "error", error: mensaje });
+    return { estado: "error", mensaje };
   }
+  const tf = fresca;
+  const vendorId = fresca.proveedor_zoho_id;
   const asig = await repo.asignaciones(id);
   // Compuerta final: la base no obliga en toda escritura que lo asignado sume el monto; se revisa antes de tocar Zoho.
-  if (asig.length === 0 || cent(asig.reduce((s, x) => s + x.monto, 0)) !== cent(t.monto)) {
+  if (asig.length === 0 || cent(asig.reduce((s, x) => s + x.monto, 0)) !== cent(tf.monto)) {
     const mensaje = "Lo asignado no es igual a la transferencia; revisa el reparto.";
     await repo.marcar(id, ["aplicando"], { estado: "no_cuadra", error: mensaje });
     return { estado: "no_cuadra", mensaje };
   }
+  let pagoId: string | null = null;
   try {
     // Cubre el pago creado cuya respuesta se perdió (fila atorada en "aplicando" o en "error").
-    const previo = await pagoConReferencia(zoho, t.proveedor_zoho_id, t.llave);
+    const previo = await pagoConReferencia(zoho, vendorId, tf.llave);
     if (previo) {
       await repo.marcar(id, ["aplicando"], {
         estado: "ya_aplicada", zoho_vendorpayment_id: previo, aplicado_por: usuario, aplicado_en: ahora(),
@@ -144,24 +160,32 @@ export async function aplicar(repo: RepoPagos, zoho: ZohoPagos, id: number, usua
     }
     const cuenta = await cuentaPago(repo, zoho);
     const r = await zoho.post<{ vendorpayment: { payment_id: string } }>("/vendorpayments", {
-      vendor_id: t.proveedor_zoho_id,
-      date: t.fecha_operacion,
-      amount: t.monto,
+      vendor_id: vendorId,
+      date: tf.fecha_operacion,
+      amount: tf.monto,
       paid_through_account_id: cuenta,
-      reference_number: t.llave,
-      description: t.concepto,
+      reference_number: tf.llave,
+      description: tf.concepto,
       bills: asig.map((a) => ({ bill_id: a.bill_id, amount_applied: a.monto })),
     });
-    const pagoId = r.vendorpayment.payment_id;
+    pagoId = r.vendorpayment.payment_id;
     await repo.marcar(id, ["aplicando"], {
       estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId, aplicado_por: usuario, aplicado_en: ahora(),
     });
-    if (t.clabe && t.proveedor_nombre) {
+    if (tf.clabe && tf.proveedor_nombre) {
       // La equivalencia es una ayuda: si no se guarda, el pago ya quedó bien.
-      await repo.guardarEquivalencia(t.clabe, t.proveedor_zoho_id, t.proveedor_nombre).catch(() => {});
+      await repo.guardarEquivalencia(tf.clabe, vendorId, tf.proveedor_nombre).catch(() => {});
     }
-    return adjuntarYCerrar(repo, zoho, { ...t, estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId }, asig);
+    return adjuntarYCerrar(repo, zoho, { ...tf, estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId }, asig);
   } catch (e) {
+    if (pagoId) {
+      // El pago ya existe en Zoho: nunca debe quedar como "error" (un reintento lo duplicaría a ojos del usuario).
+      const mensaje = `El pago se registró en Zoho (id ${pagoId}) pero no se pudo guardar el resultado; reintenta para adjuntar el recibo.`;
+      try {
+        await repo.marcar(id, ["aplicando"], { estado: "aplicada_sin_adjunto", zoho_vendorpayment_id: pagoId, error: mensaje });
+      } catch { /* sin más recurso: la referencia en Zoho cubre el reintento */ }
+      return { estado: "aplicada_sin_adjunto", pagoId, mensaje };
+    }
     const mensaje = e instanceof ZohoError ? `Zoho: ${e.message}` : "No se pudo completar el pago.";
     await repo.marcar(id, ["aplicando"], { estado: "error", error: mensaje });
     return { estado: "error", mensaje };

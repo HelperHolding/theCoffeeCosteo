@@ -17,10 +17,13 @@ export function repoSupabase(db: SupabaseClient): RepoPagos {
       if (error) throw error;
       return (data ?? []).map((a) => ({ ...a, monto: Number(a.monto) }));
     },
-    async marcar(id, desde, cambios) {
-      const { data, error } = await db.from("suc_pago_transferencia")
+    async marcar(id, desde, cambios, vencidaAntesDe) {
+      let q = db.from("suc_pago_transferencia")
         .update({ ...cambios, actualizado_en: new Date().toISOString() })
-        .eq("id", id).in("estado", desde).select("id");
+        .eq("id", id).in("estado", desde);
+      // Retomar una reserva caída: la antigüedad se evalúa en el mismo update, sin carrera.
+      if (vencidaAntesDe) q = q.lt("actualizado_en", vencidaAntesDe);
+      const { data, error } = await q.select("id");
       if (error) throw error;
       return (data ?? []).length > 0;
     },
