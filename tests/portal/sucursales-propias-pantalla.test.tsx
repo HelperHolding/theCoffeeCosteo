@@ -69,7 +69,7 @@ describe('Corrida', () => {
       />,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Aplicar 2 pagos' }));
-    expect(screen.getByText(/2 pagos por \$652\.21/)).toBeInTheDocument();
+    expect(screen.getByText(/Se registrarán en Zoho 2 pagos por \$652\.21/)).toBeInTheDocument();
     expect(aplicar).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar y aplicar en Zoho' }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
@@ -125,8 +125,8 @@ describe('Corrida', () => {
     expect(
       screen.getByText('2 filas con proveedor por nombre esperan tu confirmación y no se incluyen.'),
     ).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Aplicar 1 pagos' }));
-    expect(screen.getByText(/1 pagos por \$100\.00/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Aplicar 1 pago' }));
+    expect(screen.getByText(/Se registrará en Zoho 1 pago por \$100\.00/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar y aplicar en Zoho' }));
     await waitFor(() => expect(aplicar).toHaveBeenCalledTimes(1));
     expect(aplicar).toHaveBeenCalledWith(3);
@@ -220,7 +220,7 @@ describe('Corrida', () => {
       screen.getByText('1 solicitud sin clave de rastreo se aplica aparte, en su fila.'),
     ).toBeInTheDocument();
     // El lote no la incluye.
-    await userEvent.click(screen.getByRole('button', { name: 'Aplicar 1 pagos' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Aplicar 1 pago' }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar y aplicar en Zoho' }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(aplicar).toHaveBeenCalledTimes(1);

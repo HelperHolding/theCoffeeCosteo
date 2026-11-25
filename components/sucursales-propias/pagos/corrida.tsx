@@ -48,6 +48,7 @@ export function Corrida({
   // El lote solo lleva filas que cuadran, con proveedor confirmado y con recibo definitivo (spec §7).
   const listas = filas.filter((f) => f.estado === 'cuadra' && !f.sugerido && !esSolicitud(f));
   const total = listas.reduce((s, f) => s + Math.round(f.monto * 100), 0) / 100;
+  const nPagos = listas.length === 1 ? '1 pago' : `${listas.length} pagos`;
   const porConfirmar = filas.filter((f) => f.estado === 'cuadra' && f.sugerido).length;
   const solicitudes = filas.filter((f) => f.estado === 'cuadra' && !f.sugerido && esSolicitud(f)).length;
   const notas = [
@@ -137,8 +138,8 @@ export function Corrida({
             ) : confirmar ? (
               <>
                 <p className="text-sm">
-                  Se registrarán en Zoho {listas.length} pagos por {pesos(total)} desde BANREGIO - CONSOLIDADO
-                  SUCURSALES PROPIAS.
+                  Se {listas.length === 1 ? 'registrará' : 'registrarán'} en Zoho {nPagos} por {pesos(total)}{' '}
+                  desde BANREGIO - CONSOLIDADO SUCURSALES PROPIAS.
                 </p>
                 <Button type="button" onClick={aplicarTodas}>
                   Confirmar y aplicar en Zoho
@@ -149,7 +150,7 @@ export function Corrida({
               </>
             ) : listas.length > 0 ? (
               <Button type="button" onClick={() => setConfirmar(true)}>
-                Aplicar {listas.length} pagos
+                Aplicar {nPagos}
               </Button>
             ) : null}
           </div>
@@ -200,7 +201,7 @@ export function Corrida({
               {f.asignaciones.length ? (
                 <details className="mt-2 text-sm">
                   <summary className="cursor-pointer text-muted-foreground">
-                    {f.asignaciones.length} factura(s)
+                    {f.asignaciones.length === 1 ? '1 factura' : `${f.asignaciones.length} facturas`}
                   </summary>
                   <div className="overflow-x-auto">
                     <table className="mt-1 w-full text-left">
