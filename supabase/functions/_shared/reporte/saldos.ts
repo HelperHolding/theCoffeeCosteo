@@ -56,7 +56,9 @@ export function calcularSaldosExternos(pendientes: Factura[], cfg: ConfigReporte
     if (!pendiente(f) || esPropia(f.cliente)) continue;
     if (en(cfg.excluir_saldos, f.cliente)) { excl.set(titulo(f.cliente), (excl.get(titulo(f.cliente)) ?? 0) + f.saldo); continue; }
     if (en(cfg.deuda_interna, f.cliente)) { interna.push({ f, clave: norm(f.cliente), nota: "" }); continue; }
-    const c = cfg.creditos_activos.find((c) => norm(c.cliente) === norm(f.cliente) && (!c.sucursal || norm(c.sucursal) === norm(f.sucursal)));
+    // El crédito cubre la apertura y lo ordinario de esa sucursal; su llenado de canal se cobra normal (como el reporte manual).
+    const c = tipoEnvio(f.tipoEnvio) === "Llenado de canal" ? undefined
+      : cfg.creditos_activos.find((c) => norm(c.cliente) === norm(f.cliente) && (!c.sucursal || norm(c.sucursal) === norm(f.sucursal)));
     if (c) creditos.push({ f, clave: `${norm(c.cliente)}|${norm(c.sucursal)}`, nota: [c.sucursal, c.nota].filter(Boolean).join(" · ") });
     else normales.push({ f, clave: norm(f.cliente), nota: "" });
   }

@@ -38,3 +38,13 @@ Deno.test("externos: por cliente, más antigua, llenado, créditos, interna y ex
   assertEquals(s.excluidos, [{ cliente: "Dodo Pizza", saldo: 22 }]);
   assertEquals(fotoDe(s), { externos: 535, creditos: 500, interna: 70 });
 });
+
+Deno.test("externos: el llenado de canal de la sucursal con crédito se queda en el saldo normal", () => {
+  const cfg = { ...configReporteDef(), creditos_activos: [{ cliente: "TANDEM CORPORATIVO EMPRESARIAL", sucursal: "Patio Santa Fe", nota: "crédito 6×6" }] };
+  const s = calcularSaldosExternos([
+    f({ cliente: "TANDEM CORPORATIVO EMPRESARIAL", sucursal: "Patio Santa Fe", fecha: "2026-06-29", saldo: 500, tipoEnvio: "Apertura" }),
+    f({ cliente: "TANDEM CORPORATIVO EMPRESARIAL", sucursal: "Patio Santa Fe", fecha: "2026-10-20", saldo: 80, tipoEnvio: "Llenado de canal" }),
+  ], cfg, C);
+  assertEquals(s.creditos.map((c) => c.saldo), [500]);
+  assertEquals(s.filas.map((r) => [r.saldo, r.llenado]), [[80, 80]]);
+});

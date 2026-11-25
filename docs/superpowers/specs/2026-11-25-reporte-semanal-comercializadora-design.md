@@ -79,7 +79,7 @@ Tabla propia `com_reporte_config (id = 1, config jsonb, actualizado_por, actuali
 - `excluir_saldos`: [«SEINOMARIN PROJECTS», «DODO PIZZA»]
 - `excluir_saldos_sucursales`: [«Polanco»] (se compara contra la Sucursal y contra el cliente)
 - `deuda_interna`: [«MARKETING», «OFICINA PRINCIPAL», «Compras The Coffee»]
-- `creditos_activos`: [{cliente, sucursal, nota}] — se identifican por factura (cliente + Sucursal; Sucursal vacía = todas las del cliente), porque un mismo cliente puede tener saldo normal y crédito activo (Tandem).
+- `creditos_activos`: [{cliente, sucursal, nota}] — se identifican por factura (cliente + Sucursal; Sucursal vacía = todas las del cliente), porque un mismo cliente puede tener saldo normal y crédito activo (Tandem). Las facturas de Llenado de canal de esa sucursal no entran al crédito: se quedan en el saldo normal del cliente, como en el reporte manual (Tandem Patio Santa Fe $54,455.77 y Emmanuel Ortiz Paseo MS $10.00 al 25 nov).
 - `metas`: fill 98, stock 1, pickeo 98, fisica 1, envio 100 (%), `dias_envio` 2.
 - `dias_incidencias`: 60 (antigüedad máxima de las OVs con incidencia abierta que se leen).
 
