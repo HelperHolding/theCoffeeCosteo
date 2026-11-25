@@ -42,7 +42,10 @@ export interface Transferencia {
   monto: number;
   fecha: string;
   claveRastreo: string | null;
+  /** Nombre del PDF, solo para mostrar. */
   archivo: string;
+  /** Ruta completa del PDF dentro del ZIP: identifica el recibo (dos carpetas pueden traer el mismo nombre). */
+  ruta: string;
   secuencia: number | null;
 }
 
@@ -163,13 +166,13 @@ export function leerRecibo(texto: string): Recibo {
 /** Une cada recibo con su fila del resumen (CLABE + monto; Banregio: últimos 4 + monto) y arma la llave (spec §2). */
 export function unir(
   resumen: Resumen | null,
-  recibos: { archivo: string; recibo: Recibo }[],
+  recibos: { ruta?: string; archivo: string; recibo: Recibo }[],
 ): { transferencias: Transferencia[]; avisos: string[] } {
   const avisos: string[] = [];
   const libres = [...(resumen?.filas ?? [])];
   const vistas = new Set<string>();
   const transferencias: Transferencia[] = [];
-  for (const { archivo, recibo: r } of recibos) {
+  for (const { ruta, archivo, recibo: r } of recibos) {
     const i = libres.findIndex(
       (f) =>
         f.tipo === r.tipo &&
@@ -200,6 +203,7 @@ export function unir(
       fecha: r.fecha,
       claveRastreo: r.claveRastreo,
       archivo,
+      ruta: ruta ?? archivo,
       secuencia: fila?.secuencia ?? null,
     });
   }

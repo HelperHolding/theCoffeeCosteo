@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { zipSync, strToU8 } from 'fflate';
 import { centavos, esResumen, leerRecibo, leerResumen, unir } from '../../lib/sucursales-propias/recibos';
 import { ErrorCorrida, leerZip } from '../../lib/sucursales-propias/zip';
@@ -248,6 +248,34 @@ describe('leerZip', () => {
     expect(r.resumen?.numero).toBe(3);
     expect(r.recibos.map((x) => x.archivo)).toEqual(['OH LALA.pdf']);
     expect(r.avisos).toEqual(['No se pudo leer roto.pdf.']);
+  });
+
+  it('identifica cada recibo por su ruta completa: el mismo nombre en dos carpetas no se confunde', async () => {
+    const otro = SPEI.replace('20-145AOXPA31', '20-OTRARASTRO1').replace('$27,367.54', '$10.00');
+    const zip = zipSync({
+      'LOTE A/OH LALA.pdf': strToU8(SPEI),
+      'LOTE B/OH LALA.pdf': strToU8(otro),
+    });
+    const r = await leerZip(zip, extraer);
+    expect(r.recibos.map((x) => [x.ruta, x.archivo])).toEqual([
+      ['LOTE A/OH LALA.pdf', 'OH LALA.pdf'],
+      ['LOTE B/OH LALA.pdf', 'OH LALA.pdf'],
+    ]);
+    const { transferencias } = unir(null, r.recibos);
+    const porLlave = Object.fromEntries(transferencias.map((t) => [t.llave, t.ruta]));
+    expect(porLlave).toEqual({
+      '058-20/11/2026/20-145AOXPA31': 'LOTE A/OH LALA.pdf',
+      '058-20/11/2026/20-OTRARASTRO1': 'LOTE B/OH LALA.pdf',
+    });
+  });
+
+  it('rechaza un ZIP que descomprimido pasa de 50 MB, sin extraer nada', async () => {
+    // 51 MB de ceros se comprimen a unos cuantos KB.
+    const zip = zipSync({ 'bomba.pdf': new Uint8Array(51 * 1024 * 1024) }, { level: 9 });
+    expect(zip.length).toBeLessThan(1024 * 1024);
+    const espia = vi.fn(extraer);
+    await expect(leerZip(zip, espia)).rejects.toThrow('El ZIP es demasiado grande al descomprimirlo.');
+    expect(espia).not.toHaveBeenCalled();
   });
 
   it('rechaza un archivo que no es ZIP o un ZIP sin recibos', async () => {

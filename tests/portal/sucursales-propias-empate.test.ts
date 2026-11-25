@@ -43,6 +43,7 @@ const t = (o: Partial<Transferencia>): Transferencia => ({
   fecha: '2026-11-20',
   claveRastreo: 'L1',
   archivo: 'a.pdf',
+  ruta: 'a.pdf',
   secuencia: 1,
   ...o,
 });

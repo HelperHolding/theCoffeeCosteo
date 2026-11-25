@@ -14,8 +14,10 @@ export async function prepararCorrida(
   db: SupabaseClient,
   archivo: string,
   bytes: Uint8Array,
+  /** Solo para pruebas: lector de texto de PDF (por omisión, el de leerZip). */
+  extraer?: (b: Uint8Array) => Promise<string>,
 ): Promise<{ corridaId: number; avisos: string[] }> {
-  const zip = await leerZip(bytes);
+  const zip = await leerZip(bytes, extraer);
   const unidas = unir(zip.resumen, zip.recibos);
   const { data: previas, error: e1 } = await db
     .from('suc_pago_transferencia')
@@ -73,7 +75,7 @@ export async function prepararCorrida(
     const alias = nuevas.find((x) => x.llave === llave)?.alias ?? llave;
     try {
       const t = nuevas.find((x) => x.llave === llave)!;
-      const pdf = zip.recibos.find((r) => r.archivo === t.archivo)!.pdf;
+      const pdf = zip.recibos.find((r) => r.ruta === t.ruta)!.pdf;
       const { error: eu } = await db.storage
         .from('suc-pagos-recibos')
         .upload(ruta, pdf, { contentType: 'application/pdf', upsert: false });
