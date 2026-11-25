@@ -157,6 +157,6 @@ describe('Corrida', () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     expect(aplicar.mock.calls.map((c) => c[0])).toEqual([1, 2]);
     expect(screen.getByText('No se pudo aplicar; reintenta.')).toBeInTheDocument();
-    expect(screen.queryByText(/Aplicando d+ de/)).toBeNull();
+    expect(screen.queryByText(/Aplicando \d+ de/)).toBeNull();
   });
 });
