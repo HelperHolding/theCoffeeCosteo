@@ -423,6 +423,8 @@ verify_jwt = false
 verify_jwt = false
 [functions.zoho-proveedor-minimo]
 verify_jwt = false
+[functions.zoho-reporte-semanal]
+verify_jwt = false
 # n8n entra con su propio secreto x-oc-whatsapp-secreto (spec OC por WhatsApp §4), no con JWT.
 [functions.com-oc-whatsapp]
 verify_jwt = false

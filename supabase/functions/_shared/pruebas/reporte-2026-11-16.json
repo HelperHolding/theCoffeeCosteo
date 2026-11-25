@@ -1,0 +1,5377 @@
+{
+ "capturado": "2026-11-25T16:03:43.165Z",
+ "facturas": [
+  {
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 760,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 880,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 880,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Parque las Antenas",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "JUAN PABLO GARCIA ROMERO",
+   "cf_sucursal": "Andenes Hermosillo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 440.8,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 440.8,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 671.64,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-21",
+   "customer_name": "GRUPO FARBEYOND, COMERCIALIZADORA Y DE SERVICIOS",
+   "cf_sucursal": "Aeropuerto Chiapas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Parque las Antenas",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 123733.56,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22529.52,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22820.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "JUAN PABLO GARCIA ROMERO",
+   "cf_sucursal": "Andenes Hermosillo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11527.43,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 27699.38,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 917.49,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "MARIA JOSE DELGADO LAPHOND",
+   "cf_sucursal": "San Felipe CUU",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15163.57,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18142.18,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16175.05,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5950.2,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 440.8,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "GRUPO MEDICO FLALA",
+   "cf_sucursal": "Tijuana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 32572.47,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24313.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11891,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5793,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12587,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9868,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-19",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14276.29,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13903.28,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6452,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10823.1,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12063,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12807,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14267.72,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-14",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 20322.75,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-13",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14338.04,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4955.98,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19498.96,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1392.5,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 457.99,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 457.99,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8725.31,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19510.58,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15361.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13433.72,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22911.85,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7755.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12275.39,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5319.1,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8499.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8129.1,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15535,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12632.48,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7195.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18239.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6270.86,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6450.55,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24694.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13712.95,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13832.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15157.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17439.14,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14533.21,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18453.09,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10383.52,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23426.7,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12937.09,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 31656.42,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4864.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "NANCY BETSABETH DAVID ZECUA",
+   "cf_sucursal": "Vía San Ángel Puebla",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 1767.49,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17182.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "EMMANUEL AMADOR RIVEROS",
+   "cf_sucursal": "Colosio Pachuca",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 1379.65,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 25122.77,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-18",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23866.88,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 919.81,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 919.81,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 220.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7664.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6931.53,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "DANIEL MARTIN ALVAREZ",
+   "cf_sucursal": "Tepatitlán",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11819.93,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1434.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "MARIA DEL SOL JORDAN FLORES",
+   "cf_sucursal": "Andamar",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "IRVING FUENTES CALVO",
+   "cf_sucursal": "Costera Acapulco",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 8266.37,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 25275.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16276.07,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 63276.69,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 32295.52,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 25030.8,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5933.13,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-17",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 40907.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-16",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8195.6,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-14",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12435.51,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-14",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16110.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-14",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10820.23,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-13",
+   "customer_name": "EMMANUEL AMADOR RIVEROS",
+   "cf_sucursal": "Colosio Pachuca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 33588.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-13",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4900.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OFICINA PRINCIPAL",
+   "cf_sucursal": "Oficina Principal",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 2400,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 2465.5,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 26684.05,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13999.43,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 20291.4,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Patio Santa Fe",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Insurgentes",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SOMBRA AROMA Y CAFE",
+   "cf_sucursal": "Tulum",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SOMBRA AROMA Y CAFE",
+   "cf_sucursal": "Puerto Cancún",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 3360,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6152.12,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Zacatecas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10256.3,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10720.09,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-12",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12471.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "MARIA JOSE DELGADO LAPHOND",
+   "cf_sucursal": "San Felipe CUU",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 11880.17,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8480.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "RBN SPACE",
+   "cf_sucursal": "Plaza Cumbres",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1309.35,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "MARIA DEL SOL JORDAN FLORES",
+   "cf_sucursal": "Andamar",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22223.2,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "San Luis Potosí",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 37234.79,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16991.39,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9397.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7612.8,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12264.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3778.03,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14563.96,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 39174,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15989.46,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14861.51,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4760.41,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 20308.77,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18923.89,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7647.87,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24038.15,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12608.73,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11867.27,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10716.23,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 26714.22,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8023.98,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4324.25,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6360.34,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17323.71,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 20589.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "DEBORAH XIMENA GOMEZ ROSADO",
+   "cf_sucursal": "Calle 47 Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 28151.07,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "GRUPO FARBEYOND, COMERCIALIZADORA Y DE SERVICIOS",
+   "cf_sucursal": "Aeropuerto Chiapas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 28813.72,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19194.75,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6605.72,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18229.33,
+   "status": "sent"
+  },
+  {
+   "date": "2026-11-11",
+   "customer_name": "MIGUEL GALLARDO ESCOTO",
+   "cf_sucursal": "San Juan de los Lagos",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 5444.29,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "NANCY BETSABETH DAVID ZECUA",
+   "cf_sucursal": "Vía San Ángel Puebla",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 8037.16,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11568.38,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9626.31,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "RBN SPACE",
+   "cf_sucursal": "Plaza Cumbres",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8503.97,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6112.54,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17121.54,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12414.89,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "SEBASTIAN ANDRES JIMENEZ FLORES",
+   "cf_sucursal": "Garza Sada",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 4075.23,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-10",
+   "customer_name": "SEBASTIAN ANDRES JIMENEZ FLORES",
+   "cf_sucursal": "Colosio Aguascalientes",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 88507.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16326.35,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7949.65,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta Centro",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7601.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 51113.79,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "Compras The Coffee",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4040.16,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "SOMBRA AROMA Y CAFE",
+   "cf_sucursal": "Tulum",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 34512.99,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15745.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 40154.81,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13339.9,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-09",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22874.56,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "IRVING FUENTES CALVO",
+   "cf_sucursal": "Costera Acapulco",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 156388.64,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Insurgentes",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11633.33,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22440.22,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-07",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6986.46,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6774.9,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5508.53,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5353.28,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13440.94,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "DEBORAH XIMENA GOMEZ ROSADO",
+   "cf_sucursal": "Calle 47 Mérida",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Insurgentes",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 606.68,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 27171,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-06",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9761.39,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "MARKETING",
+   "cf_sucursal": "Marketing",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4472,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 43905.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16448.74,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SOMBRA AROMA Y CAFE",
+   "cf_sucursal": "Puerto Cancún",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 461.68,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "ANA LAURA SIMON VILLEGAS",
+   "cf_sucursal": "Mayab",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "DANIEL MARTIN ALVAREZ",
+   "cf_sucursal": "Tepatitlán",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 375.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22838.56,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13789.87,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-05",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4648.72,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3073.36,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1358.81,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 4711.71,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "RBN SPACE",
+   "cf_sucursal": "Plaza Cumbres",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6239.52,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "DEBORAH XIMENA GOMEZ ROSADO",
+   "cf_sucursal": "Calle 47 Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24031.13,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8081.9,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16880.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18826.38,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5893.65,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9543.4,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14297.35,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22633.66,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10516.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12255.44,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6333.75,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 26498.14,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Insurgentes",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7478.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17485.48,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11835.04,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22277.57,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6621.8,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 21308.69,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10234.58,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19019.48,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24532.97,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 32578.94,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3548.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23316.96,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18505.15,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15369.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11340.02,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15347.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23308.55,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10449.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10027.67,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4669.68,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19585.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-04",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11019.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Plaza Cantabria",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 145,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "MARIA JOSE DELGADO LAPHOND",
+   "cf_sucursal": "San Felipe CUU",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 165314.56,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "SOMBRA AROMA Y CAFE",
+   "cf_sucursal": "Puerto Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 46106.48,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11001.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8674.63,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3349.9,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "ANA LAURA SIMON VILLEGAS",
+   "cf_sucursal": "Mayab",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 33349.82,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11148.28,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "DANIEL MARTIN ALVAREZ",
+   "cf_sucursal": "Tepatitlán",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13164.54,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6914.76,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 26787.21,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 18082.87,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 4660.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-03",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5306,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17479.41,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 27254.75,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "SEBASTIAN ANDRES JIMENEZ FLORES",
+   "cf_sucursal": "Colosio Aguascalientes",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 461.68,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "SEBASTIAN ANDRES JIMENEZ FLORES",
+   "cf_sucursal": "Colosio Aguascalientes",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15004.5,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 29081.2,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 27238.36,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 461.68,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12657.39,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 33762.92,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "MIGUEL GALLARDO ESCOTO",
+   "cf_sucursal": "San Juan de los Lagos",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 159952.23,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango Centro",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7694.38,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4888.96,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8798.25,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 145,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 145,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 461.68,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "San Luis Potosí",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Constitución Colima",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 461.68,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Zacatecas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Constitución Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13580.36,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Zacatecas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11009.52,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6046.58,
+   "status": "paid"
+  },
+  {
+   "date": "2026-11-02",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 143693.19,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 2902.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-30",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7247.3,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5784.04,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22981.87,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-29",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6117.61,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-30",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10552.54,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 375.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11286.97,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 230.84,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8167.6,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "NANCY BETSABETH DAVID ZECUA",
+   "cf_sucursal": "Vía San Ángel Puebla",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 140969.08,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3521.29,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "San Luis Potosí",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3549.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9771.95,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14239.61,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4032.08,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6271.44,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3867.39,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8423.59,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11708.49,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7594.58,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13977.41,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6854.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10702.13,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12379.38,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6269.34,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13802.67,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8011.27,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4974.29,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7554.08,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12954.58,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-28",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11069.13,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17513.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "GRUPO FARBEYOND, COMERCIALIZADORA Y DE SERVICIOS",
+   "cf_sucursal": "Aeropuerto Chiapas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19354.94,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5570.45,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9696.41,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8416.37,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7692.8,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "MARIA DEL SOL JORDAN FLORES",
+   "cf_sucursal": "Andamar",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 34728,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 145,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "RBN SPACE",
+   "cf_sucursal": "Plaza Cumbres",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 145,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "RBN SPACE",
+   "cf_sucursal": "Plaza Cumbres",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 28034.34,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 22937.15,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6271.44,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Montes Urales CDMX",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 5414.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4184.28,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 127949.43,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 26326.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13880.26,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13177.14,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23286.4,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8398.93,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8113.2,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9027.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5120.94,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 19940.35,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10268.8,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12667.13,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-27",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8966.28,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13172.04,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-26",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7614.61,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7531.23,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Insurgentes",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7196.17,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14565.78,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "OFICINA PRINCIPAL",
+   "cf_sucursal": "Oficina Principal",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 894.03,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4967.83,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "EMMANUEL AMADOR RIVEROS",
+   "cf_sucursal": "Colosio Pachuca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14582.53,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "JUAN PABLO GARCIA ROMERO",
+   "cf_sucursal": "Andenes Hermosillo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23646.1,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4003.03,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7238.04,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "JUAN PABLO GARCIA ROMERO",
+   "cf_sucursal": "Andenes Hermosillo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 2868.47,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "San Luis Potosí",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4599.06,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "GRUPO MEDICO FLALA",
+   "cf_sucursal": "Tijuana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 31637.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9333.74,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6971.08,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-23",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16448.85,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-22",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13408.97,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 4182.5,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1446.29,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 1300,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "MARKETING",
+   "cf_sucursal": "Marketing",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 960,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13247.47,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-21",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24915.26,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 5628.01,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7021.01,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6404.57,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7486.64,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16846,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8293.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 7917.36,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "San Luis Potosí",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 39015.53,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13968.2,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16039.04,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "DEBORAH XIMENA GOMEZ ROSADO",
+   "cf_sucursal": "Calle 47 Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 21449.62,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6423.9,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 21220.95,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3548.45,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 8466.13,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 11290.64,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 15437.43,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3486.43,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6344.1,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17061.31,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 17810.65,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13550.88,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10996.64,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 14693.01,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10548.74,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3453.99,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6197.19,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 12116.12,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 3615.72,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12762.17,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "DANIEL MARTIN ALVAREZ",
+   "cf_sucursal": "Tepatitlán",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13911.1,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "DINAMIC RETAIL",
+   "cf_sucursal": "Río Nazas",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 4454.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 4454.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Llenado de canal",
+   "total": 4454.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 9003.1,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10908,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-20",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 6994.05,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 12457.25,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 10236.26,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 13539.95,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24508.38,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 39751.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Montes Urales CDMX",
+   "cf_tipo_de_envio": "Apertura",
+   "total": 96593.24,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23647.2,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 16334.66,
+   "status": "overdue"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "ANA LAURA SIMON VILLEGAS",
+   "cf_sucursal": "Mayab",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 25319.08,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 29503.32,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 23978.29,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-19",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 24324.93,
+   "status": "paid"
+  },
+  {
+   "date": "2026-10-31",
+   "customer_name": "MARIA DEL SOL JORDAN FLORES",
+   "cf_sucursal": "Andamar",
+   "cf_tipo_de_envio": "Ordinario",
+   "total": 20636.41,
+   "status": "paid"
+  }
+ ],
+ "paquetes": [
+  {
+   "salesorder_number": "COM-OV-04769",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04765",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04935",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04941",
+   "shipment_date": "2026-11-23"
+  },
+  {
+   "salesorder_number": "COM-OV-04880",
+   "shipment_date": "2026-11-23"
+  },
+  {
+   "salesorder_number": "COM-OV-04934",
+   "shipment_date": "2026-11-23"
+  },
+  {
+   "salesorder_number": "COM-OV-04940",
+   "shipment_date": "2026-11-23"
+  },
+  {
+   "salesorder_number": "COM-OV-04815",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04931",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04930",
+   "shipment_date": "2026-11-21"
+  },
+  {
+   "salesorder_number": "COM-OV-04929",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04927",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04925",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04885",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04877",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04873",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04884",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04924",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04926",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04867",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04814",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04813",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "DODO-OV-00011",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04805",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04803",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04802",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04801",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04771",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04772",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04793",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04790",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04795",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04779",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04776",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04774",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04806",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04808",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04869",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04889",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04890",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04891",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04892",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04893",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04896",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04897",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04904",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04907",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04910",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04911",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04912",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04913",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04914",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04915",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04917",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04918",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04920",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04921",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04922",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04923",
+   "shipment_date": "2026-11-20"
+  },
+  {
+   "salesorder_number": "COM-OV-04694",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04894",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04876",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04875",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04871",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04868",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04865",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04814",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04801",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04795",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04793",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04790",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04779",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04772",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04771",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04765",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04909",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04908",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04906",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04905",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04903",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04902",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04901",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04900",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04899",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04898",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04895",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04894",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04886",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04881",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04879",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04878",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04809",
+   "shipment_date": "2026-11-19"
+  },
+  {
+   "salesorder_number": "COM-OV-04807",
+   "shipment_date": "2026-11-18"
+  },
+  {
+   "salesorder_number": "COM-OV-04870",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04888",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04887",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04883",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04882",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04874",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04872",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04867",
+   "shipment_date": "2026-11-17"
+  },
+  {
+   "salesorder_number": "COM-OV-04694",
+   "shipment_date": "2026-11-06"
+  },
+  {
+   "salesorder_number": "COM-OV-04803",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04694",
+   "shipment_date": ""
+  },
+  {
+   "salesorder_number": "COM-OV-04813",
+   "shipment_date": "2026-11-13"
+  },
+  {
+   "salesorder_number": "COM-OV-04815",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04805",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04802",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04801",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04795",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04790",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04779",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04776",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04774",
+   "shipment_date": "2026-11-14"
+  },
+  {
+   "salesorder_number": "COM-OV-04769",
+   "shipment_date": "2026-11-12"
+  },
+  {
+   "salesorder_number": "COM-OV-04772",
+   "shipment_date": "2026-11-11"
+  },
+  {
+   "salesorder_number": "COM-OV-04793",
+   "shipment_date": "2026-11-11"
+  },
+  {
+   "salesorder_number": "COM-OV-04771",
+   "shipment_date": "2026-11-10"
+  },
+  {
+   "salesorder_number": "COM-OV-04765",
+   "shipment_date": "2026-11-10"
+  },
+  {
+   "salesorder_number": "COM-OV-04694",
+   "shipment_date": "2026-11-10"
+  }
+ ],
+ "ovs": [
+  {
+   "salesorder_number": "COM-OV-04950",
+   "date": "2026-11-20",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04949",
+   "date": "2026-11-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Parque las Antenas",
+   "cf_tipo_de_envio": "Apertura",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04948",
+   "date": "2026-11-20",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04947",
+   "date": "2026-11-20",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04946",
+   "date": "2026-11-20",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04945",
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "partially_invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04943",
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04941",
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04940",
+   "date": "2026-11-20",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04939",
+   "date": "2026-11-20",
+   "customer_name": "STARVISA",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04937",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04936",
+   "date": "2026-11-20",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04935",
+   "date": "2026-11-19",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04934",
+   "date": "2026-11-20",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04933",
+   "date": "2026-11-19",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "void"
+  },
+  {
+   "salesorder_number": "COM-OV-04932",
+   "date": "2026-11-19",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04931",
+   "date": "2026-11-19",
+   "customer_name": "MARIA JOSE DELGADO LAPHOND",
+   "cf_sucursal": "San Felipe CUU",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04930",
+   "date": "2026-11-19",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04929",
+   "date": "2026-11-19",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04928",
+   "date": "2026-11-18",
+   "customer_name": "GRUPO MEDICO FLALA",
+   "cf_sucursal": "Tijuana",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "open"
+  },
+  {
+   "salesorder_number": "COM-OV-04927",
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE - GRAN PLAZA",
+   "cf_sucursal": "Gran Plaza",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04926",
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04925",
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE-CD GRANJA",
+   "cf_sucursal": "Ciudad Granja",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "DODO-OV-00011",
+   "date": "2026-11-18",
+   "customer_name": "DODO PIZZA",
+   "cf_sucursal": "Dodo Pizza",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04924",
+   "date": "2026-11-18",
+   "customer_name": "SUCURSALES THE COFFEE-ALEDEN",
+   "cf_sucursal": "Aleden",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04923",
+   "date": "2026-11-18",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04922",
+   "date": "2026-11-18",
+   "customer_name": "Compras The Coffee",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04921",
+   "date": "2026-11-18",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Portales Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04920",
+   "date": "2026-11-18",
+   "customer_name": "TANDEM CORPORATIVO EMPRESARIAL",
+   "cf_sucursal": "Tecnológico",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04919",
+   "date": "2026-11-17",
+   "customer_name": "SEINOMARIN PROJECTS",
+   "cf_sucursal": "Roma Sur",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "void"
+  },
+  {
+   "salesorder_number": "COM-OV-04918",
+   "date": "2026-11-18",
+   "customer_name": "FERNANDO GAEL DAVILA ORTIZ",
+   "cf_sucursal": "Guadalupe",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04917",
+   "date": "2026-11-18",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04916",
+   "date": "2026-11-17",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Los Arcos",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "void"
+  },
+  {
+   "salesorder_number": "COM-OV-04915",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Townsquare Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04914",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04913",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Tampico 33",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04912",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Uruguay 20 CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04911",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puerta Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04910",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Satelite",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04909",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Samara",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04908",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04907",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Reforma",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04906",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Polanco",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04905",
+   "date": "2026-11-17",
+   "customer_name": "LUIS FERNANDO LOPEZ COULON",
+   "cf_sucursal": "Covalia",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04904",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Universidad",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04903",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Patio Toluca",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04902",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Nuevo León",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04901",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04900",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04899",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Interlomas",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04898",
+   "date": "2026-11-17",
+   "customer_name": "CARLOS FELIPE SANCHEZ OROZCO",
+   "cf_sucursal": "Distrito Independencia-Torreon",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04897",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La del Valle",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04896",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Puente Churubusco CDMX",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04895",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Plaza Carso",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04894",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Pasaje Parián",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04893",
+   "date": "2026-11-18",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04892",
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Bonampak",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04891",
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04890",
+   "date": "2026-11-18",
+   "customer_name": "GERARDO ALBERTO OJEDA PEREZ",
+   "cf_sucursal": "Arthouse Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04889",
+   "date": "2026-11-18",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Scala Huayacan",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04888",
+   "date": "2026-11-17",
+   "customer_name": "NOE GARCIA CALDERON",
+   "cf_sucursal": "Uptown Juriquilla",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04887",
+   "date": "2026-11-17",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04886",
+   "date": "2026-11-17",
+   "customer_name": "BERNARDITA PEREZ PEREZ",
+   "cf_sucursal": "Oaxaca",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04885",
+   "date": "2026-11-19",
+   "customer_name": "MAGNOLIA GC",
+   "cf_sucursal": "Puerta Paraíso",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04884",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04883",
+   "date": "2026-11-17",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04882",
+   "date": "2026-11-17",
+   "customer_name": "SERGIO ALFONSO DIAZ SOLORZANO",
+   "cf_sucursal": "Colima",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04881",
+   "date": "2026-11-17",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04880",
+   "date": "2026-11-20",
+   "customer_name": "JUAN PABLO GARCIA ROMERO",
+   "cf_sucursal": "Andenes Hermosillo",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04879",
+   "date": "2026-11-17",
+   "customer_name": "GRUPO LAGRED",
+   "cf_sucursal": "Puebla",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04878",
+   "date": "2026-11-17",
+   "customer_name": "DANIEL MARTIN ALVAREZ",
+   "cf_sucursal": "Tepatitlán",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04877",
+   "date": "2026-11-19",
+   "customer_name": "Fabian Hernandez Romero",
+   "cf_sucursal": "Torre Visu",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04876",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-CHAPULTEPEC",
+   "cf_sucursal": "Chapultepec 67",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04875",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-FORUM TLAQUEPAQUE",
+   "cf_sucursal": "Forum Tlaquepaque",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04874",
+   "date": "2026-11-13",
+   "customer_name": "OPERADORA DE FRANQUICIAS GRUPO PIZZART",
+   "cf_sucursal": "Plaza Norte",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04873",
+   "date": "2026-11-19",
+   "customer_name": "GRUPO MEDICO FLALA",
+   "cf_sucursal": "Tijuana",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04872",
+   "date": "2026-11-13",
+   "customer_name": "EMMANUEL ORTIZ LOPEZ",
+   "cf_sucursal": "Paseo MS",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04871",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-RUBEN DARIO",
+   "cf_sucursal": "Ruben Dario",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04870",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-OTTAWA",
+   "cf_sucursal": "Ottawa",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04869",
+   "date": "2026-11-18",
+   "customer_name": "ALMEN DROZ",
+   "cf_sucursal": "San Miguel de Allende",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04868",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-ESSENTIA",
+   "cf_sucursal": "Essentia",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04867",
+   "date": "2026-11-13",
+   "customer_name": "EMMANUEL AMADOR RIVEROS",
+   "cf_sucursal": "Colosio Pachuca",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04865",
+   "date": "2026-11-16",
+   "customer_name": "SUCURSALES THE COFFEE-NAMORA",
+   "cf_sucursal": "Namora",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04815",
+   "date": "2026-11-11",
+   "customer_name": "RFM CUATRO GRANOS HOLDING",
+   "cf_sucursal": "Plaza Toscana",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04814",
+   "date": "2026-11-11",
+   "customer_name": "SUCURSALES THE COFFEE-VENTURA",
+   "cf_sucursal": "Ventura",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04813",
+   "date": "2026-11-11",
+   "customer_name": "SUCURSALES THE COFFEE-LEGACY",
+   "cf_sucursal": "Legacy",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04809",
+   "date": "2026-11-17",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Marina Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Derrame de Produto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04808",
+   "date": "2026-11-18",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Fluvial",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04807",
+   "date": "2026-11-17",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Puerto Vallarta",
+   "cf_tipo_de_envio": "Ordinario",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04806",
+   "date": "2026-11-18",
+   "customer_name": "MOP VENTURES",
+   "cf_sucursal": "Versalles",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Pedido Incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04805",
+   "date": "2026-11-11",
+   "customer_name": "GRUPO FARBEYOND, COMERCIALIZADORA Y DE SERVICIOS",
+   "cf_sucursal": "Aeropuerto Chiapas",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "overdue"
+  },
+  {
+   "salesorder_number": "COM-OV-04803",
+   "date": "2026-11-12",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "cf_sucursal": "Durango Centro",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04802",
+   "date": "2026-11-11",
+   "customer_name": "DEBORAH XIMENA GOMEZ ROSADO",
+   "cf_sucursal": "Calle 47 Mérida",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04801",
+   "date": "2026-11-11",
+   "customer_name": "ASAPP-PAY",
+   "cf_sucursal": "Trendy San Luis",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04795",
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Santa Fe",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04793",
+   "date": "2026-11-10",
+   "customer_name": "SEBASTIAN ANDRES JIMENEZ FLORES",
+   "cf_sucursal": "Colosio Aguascalientes",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04790",
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Galerías Metepec",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04779",
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "La Mexicana",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04776",
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "cf_sucursal": "Hamburgo",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04774",
+   "date": "2026-11-11",
+   "customer_name": "OPERADORA DE CAFETERIAS SEJ",
+   "cf_sucursal": "Avándaro",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04772",
+   "date": "2026-11-10",
+   "customer_name": "RICH COFFEE",
+   "cf_sucursal": "Campanario",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "En Proceso",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04771",
+   "date": "2026-11-09",
+   "customer_name": "VIRTUO MARKETING INTEGRAL",
+   "cf_sucursal": "Ávila Camacho ",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04769",
+   "date": "2026-11-11",
+   "customer_name": "INMOBILIARIA GEONERAS",
+   "cf_sucursal": "Malecón Cancún",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04765",
+   "date": "2026-11-09",
+   "customer_name": "ISAAC GARCIA CALDERON",
+   "cf_sucursal": "Ciudad Juárez",
+   "cf_tipo_de_envio": "Ordinario",
+   "cf_tipo_de_incidencia": "Sin stock - Pedido incompleto",
+   "cf_resoluci_n": "Resuelto",
+   "status": "invoiced"
+  },
+  {
+   "salesorder_number": "COM-OV-04694",
+   "date": "2026-10-30",
+   "customer_name": "MIGUEL GALLARDO ESCOTO",
+   "cf_sucursal": "San Juan de los Lagos",
+   "cf_tipo_de_envio": "Apertura",
+   "status": "overdue"
+  }
+ ],
+ "notas": [
+  {
+   "creditnote_number": "CN-00204",
+   "date": "2026-11-20",
+   "customer_name": "MOP VENTURES",
+   "total": 196.04,
+   "status": "open",
+   "custom_fields": [],
+   "line_items": [
+    {
+     "description": "Compensación de una base neutra (1 kg) rota en translado"
+    }
+   ]
+  },
+  {
+   "creditnote_number": "CN-00203",
+   "date": "2026-11-20",
+   "customer_name": "OPERADORA DE FRANQUICIAS MJA",
+   "total": 48.26,
+   "status": "open",
+   "custom_fields": [],
+   "line_items": [
+    {
+     "description": "Compensación por 16 vasos caliente chico 8 oz, mangas con faltantes"
+    }
+   ]
+  },
+  {
+   "creditnote_number": "CN-00202",
+   "date": "2026-11-19",
+   "customer_name": "ALIMENTOS, REPOSTERIA Y CAFFE GOURMET",
+   "total": 1200,
+   "status": "closed",
+   "custom_fields": [],
+   "line_items": [
+    {
+     "description": "Compesanción de 2 bolsas de café white (1.5 kg) que no se mandaron"
+    }
+   ]
+  },
+  {
+   "creditnote_number": "CN-00201",
+   "date": "2026-11-18",
+   "customer_name": "NANCY BETSABETH DAVID ZECUA",
+   "total": 1409.99,
+   "status": "closed",
+   "custom_fields": [],
+   "line_items": [
+    {
+     "description": "Compensación de caja para bagazo de café, medidas erroneas. "
+    }
+   ]
+  },
+  {
+   "creditnote_number": "CN-00200",
+   "date": "2026-11-17",
+   "customer_name": "IRVING FUENTES CALVO",
+   "total": 503.44,
+   "status": "closed",
+   "custom_fields": [],
+   "line_items": [
+    {
+     "description": "Se eliminó del catálogo, ya no se surtió"
+    }
+   ]
+  }
+ ]
+}
