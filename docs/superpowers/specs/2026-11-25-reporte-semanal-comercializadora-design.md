@@ -21,9 +21,9 @@ Una pantalla nueva **Comercializadora → Reporte semanal** (`/comercializadora/
 ## 2. Arquitectura
 
 - **Edge Function nueva `zoho-reporte-semanal`** (solo lectura, `soloLectura: true` en `ZohoClient`). Usa `_shared/zoho.ts` y los secretos `ZOHO_*` que ya usa `zoho-sync`; se autentica con `x-com-secreto` como las demás (`verify_jwt = false` en `config.toml`). Recibe `{ semana: 'YYYY-MM-DD' (lunes), forzar?: boolean }` y devuelve el reporte calculado (JSON).
-- **Cálculo puro** en `supabase/functions/_shared/reporteSemanal.ts`: recibe lo leído de Zoho + configuración + fecha de corte y devuelve el reporte. Sin E/S, probado en Deno.
-- **Portal:** `invocarFuncion('zoho-reporte-semanal', …)` (se agrega a `FuncionCom`) desde la página servidor; componentes en `components/comercializadora/reporte-semanal.tsx`; entrada de menú en `components/portal/navegacion.tsx` junto a «Esta semana». Permisos: los de lectura de Comercializadora.
-- **Caché:** tabla `com_reporte_semanal_cache (semana date pk, datos jsonb, leido_en timestamptz)`. La función devuelve la copia guardada si tiene < 15 min, salvo `forzar`. Botón «Actualizar» → `forzar: true`.
+- **Cálculo puro** en `supabase/functions/_shared/reporte/*.ts` (`ventas.ts`, `surtido.ts`, `atencion.ts`, `saldos.ts`, `reporte.ts`, `config.ts`, `fechas.ts`, `tipos.ts`; la lectura de Zoho, solo Edge, en `zohoReporte.ts`): recibe lo leído de Zoho + configuración + fecha de corte y devuelve el reporte. Sin E/S, probado en Deno (`*_test.ts` junto a cada módulo, y `paridad_test.ts`).
+- **Portal:** `invocarFuncion('zoho-reporte-semanal', …)` (se agrega a `FuncionCom`) desde la página servidor; componentes en `components/comercializadora/reporte-semanal/*.tsx` (página en `app/(comercializadora)/comercializadora/reporte-semanal/page.tsx`); entrada de menú en `components/portal/navegacion.tsx` junto a «Esta semana». Permisos: los de lectura de Comercializadora.
+- **Caché:** tabla `com_reporte_semanal_cache (semana date pk, datos jsonb, leido_en timestamptz)`. La función devuelve la copia guardada si tiene < 15 min, salvo `forzar`. Botón «Actualizar» → recarga la página con `?forzar=1` → `forzar: true`. `forzar` se ignora (enfriamiento de 2 min) si la copia guardada tiene menos de 2 min, para no repetir la ráfaga de lecturas a Zoho. Las descripciones de incidencia se leen por OV a mejor esfuerzo: un detalle que falla deja la descripción vacía sin tumbar la sección; los detalles se piden de 4 en 4 con una pausa corta entre lotes.
 - **Foto de saldos:** tabla `com_reporte_saldos (semana date pk, externos numeric, creditos_activos numeric, interna numeric, guardado_en timestamptz)`. La primera lectura de cada semana guarda la foto de saldos «al día de hoy» para la semana en curso; el reporte de la semana N muestra «era $X» con la foto de la semana N−1. Si no existe, la línea no se muestra.
 - RLS: lectura para quien tenga `com_puede_leer`; escritura solo desde la función (service role).
 
@@ -50,9 +50,9 @@ Presupuesto: ~60–80 llamadas por lectura completa (la mayor parte son detalles
 
 Semana = lunes a domingo. Exclusiones y agrupaciones salen de la configuración (§5).
 
-**4.1 Ventas.** Facturas no anuladas (`status ≠ void`) con fecha en la semana, con IVA, sin `excluir_ventas`. Sin IVA ≈ total / 1.16. Pedidos = número de facturas. Top 9 clientes: agrupando `corporativo_ap` como «Corporativo AP (MJA + SEJ)» y todas las sucursales propias como «The Coffee Sucursales»; debajo, los valores distintos de `cf_sucursal`. Tendencia: 5 semanas terminando en la elegida, total y desglose por `cf_tipo_de_envio`; variación vs semana anterior (total y solo Ordinario) y vs promedio de las 5.
+**4.1 Ventas.** Facturas no anuladas ni en borrador (`status` distinto de `void` y `draft`) con fecha en la semana, con IVA, sin `excluir_ventas`. Sin IVA ≈ total / 1.16. Pedidos = número de facturas. Top 9 clientes: agrupando `corporativo_ap` como «Corporativo AP (MJA + SEJ)» y todas las sucursales propias como «The Coffee Sucursales»; debajo, los valores distintos de `cf_sucursal`. Tendencia: 5 semanas terminando en la elegida, total y desglose por `cf_tipo_de_envio`; variación vs semana anterior (total y solo Ordinario) y vs promedio de las 5.
 
-**4.2 Calidad de surtido.** Universo = OVs cuyo **primer** paquete tiene `shipment_date` en la semana, más OVs de la semana con incidencia aunque no hayan salido; sin `excluir_ventas` y sin OVs de reposición de incidencias de semanas anteriores (OV con referencia a otra OV — se detecta en implementación; si no se puede distinguir, se documenta).
+**4.2 Calidad de surtido.** Universo = OVs cuyo **primer** paquete tiene `shipment_date` en la semana, más OVs de la semana con incidencia aunque no hayan salido; sin `excluir_ventas` y sin OVs de reposición de incidencias de semanas anteriores (OV con referencia a otra OV — se detecta en implementación; si no se puede distinguir, se documenta). Implementación: las reposiciones se resuelven con la regla del «primer envío» a nivel de paquete (una OV vieja cuyo primer envío no cae en la semana no entra al universo); las OVs de reposición separadas no se detectan (Zoho no tiene un campo confiable) y cuentan como OVs normales.
 - Fill rate = OVs sin incidencia de faltante (stock o pickeo) / OVs del universo. Meta ≥98%.
 - Faltante por stock = OVs con «Sin stock - Pedido incompleto» / universo. Meta ≤1%.
 - Precisión de pickeo = 1 − OVs con «Pedido Incompleto» / universo. Meta ≥98%.
@@ -95,7 +95,7 @@ Los nombres se comparan sin mayúsculas, acentos ni espacios sobrantes. Cambiar 
 ## 7. Pruebas
 
 - `reporteSemanal_test.ts` (Deno) con datos de ejemplo por regla.
-- Prueba de paridad con una copia anonimizada de lo que Zoho devuelve para la semana 16–22 nov 2026 (`_shared/pruebas/`): debe dar $1,193,333 / 97 pedidos, fill rate 53.5%, 34 incidencias (29/4/1), NC $3,357.73, saldos externos $213,637.69. Cada diferencia se explica en este documento antes de aceptarla (ej. CN-00205/206 son del 23 nov y quedan fuera).
+- Prueba de paridad con una copia anonimizada de lo que Zoho devuelve para la semana 16–22 nov 2026 (`supabase/functions/_shared/pruebas/reporte-2026-11-16.json`): debe dar $1,193,333 / 97 pedidos, fill rate 53.5%, 34 incidencias (29/4/1), NC $3,357.73. Cada diferencia se explica en este documento antes de aceptarla (ej. CN-00205/206 son del 23 nov y quedan fuera).
 - Revisión de la pantalla en el navegador contra el HTML original: claro, oscuro y ancho de celular.
 
 ### Diferencias explicadas de la paridad (captura del 25 nov contra el reporte del 23 nov)
