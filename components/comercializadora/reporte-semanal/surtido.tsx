@@ -22,9 +22,9 @@ function Ind({ titulo, i, meta, nota }: { titulo: string; i: Indicador; meta: st
 export function SurtidoVista({ s }: { s: Surtido }) {
   const m = (i: Indicador, signo: string) => `${signo}${i.meta}%`;
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 *:min-w-0">
       <p className="text-sm text-muted-foreground">{s.enviados} pedidos enviados en la semana</p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 *:min-w-0 sm:grid-cols-2">
         <Ind titulo="Fill rate" i={s.fill} meta={m(s.fill, '≥')} nota={`${s.conFaltante} de ${s.enviados} pedidos con faltante`} />
         <Ind titulo="Faltante / tardío por stock" i={s.stock} meta={m(s.stock, '≤')} nota={`${s.casos.stock} pedido(s) con incidencia de stock`} />
         <Ind titulo="Precisión de pickeo" i={s.pickeo} meta={m(s.pickeo, '≥')} nota={`${s.casos.pickeo} casos de error de pickeo`} />
@@ -41,7 +41,7 @@ export function SurtidoVista({ s }: { s: Surtido }) {
         ))}
       </Tarjeta>
       <Tarjeta titulo={`Incidencias por origen · ${s.incidenciasTotal} en total (${porcentaje(s.enviados ? s.incidenciasTotal / s.enviados : null)} de los pedidos)`}>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 *:min-w-0 sm:grid-cols-3">
           {(['stock', 'pickeo', 'paqueteria', ...(s.casos.otro > 0 ? ['otro'] : [])] as Origen[]).map((o) => (
             <div key={o}>
               <p className="font-display text-2xl font-black tabular">{s.casos[o]}</p>

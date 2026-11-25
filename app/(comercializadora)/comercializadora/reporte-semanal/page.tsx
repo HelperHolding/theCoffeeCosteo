@@ -69,7 +69,7 @@ export default async function ReporteSemanalPagina({ searchParams }: { searchPar
       <SeccionTitulo num="03">Atención al cliente · incidencias abiertas</SeccionTitulo>
       {x.atencion.ok ? <AtencionVista a={x.atencion.datos} /> : <ErrorSeccion error={x.atencion.error} />}
       <SeccionTitulo num="04">Notas de crédito · saldos sucursales propias</SeccionTitulo>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 *:min-w-0 lg:grid-cols-2">
         {x.notas.ok ? <NotasVista n={x.notas.datos} /> : <ErrorSeccion error={x.notas.error} />}
         {x.sucursales.ok ? <SucursalesVista s={x.sucursales.datos} excluidas={cfg.excluir_saldos_sucursales} /> : <ErrorSeccion error={x.sucursales.error} />}
       </div>

@@ -5,7 +5,7 @@ import { pesos } from '@/lib/comercializadora/formato';
 import type { Apertura, Atencion, GrupoAtencion, Notas } from '../../../supabase/functions/_shared/reporte/atencion.ts';
 import { finSemana } from '../../../supabase/functions/_shared/reporte/fechas.ts';
 
-function Grupo({ titulo, g }: { titulo: string; g: GrupoAtencion }) {
+function Grupo({ titulo, g, conCliente = true }: { titulo: string; g: GrupoAtencion; conCliente?: boolean }) {
   return (
     <Tarjeta titulo={titulo} descripcion={`${g.abiertas} abiertas · ${g.resueltasSemana} resueltas esta semana`}>
       {g.semanas.length === 0 && <p className="text-sm text-ok">Sin incidencias abiertas.</p>}
@@ -18,7 +18,7 @@ function Grupo({ titulo, g }: { titulo: string; g: GrupoAtencion }) {
             {s.casos.map((c) => (
               <li key={c.ov} className="py-2 text-sm">
                 <p className="font-medium">
-                  {c.sucursal || c.cliente}{c.sucursal ? <span className="text-muted-foreground"> ({c.cliente})</span> : null}
+                  {c.sucursal || c.cliente}{c.sucursal && conCliente ? <span className="text-muted-foreground"> ({c.cliente})</span> : null}
                   <span className="ml-2 font-mono text-[10px] text-muted-foreground">{c.ov}</span>
                 </p>
                 <p className="text-xs">
@@ -36,8 +36,8 @@ function Grupo({ titulo, g }: { titulo: string; g: GrupoAtencion }) {
 
 export function AtencionVista({ a }: { a: Atencion }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      <Grupo titulo="Sucursales propias" g={a.propias} />
+    <div className="grid gap-3 *:min-w-0 lg:grid-cols-2">
+      <Grupo titulo="Sucursales propias" g={a.propias} conCliente={false} />
       <Grupo titulo="Clientes externos" g={a.externos} />
     </div>
   );

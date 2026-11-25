@@ -18,7 +18,7 @@ const TIPOS: { tipo: string; color: string }[] = [
 export function VentasVista({ v }: { v: Ventas }) {
   const max = Math.max(1, ...v.semanas.map((s) => s.total));
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 *:min-w-0">
       <Tarjeta>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -53,7 +53,7 @@ export function VentasVista({ v }: { v: Ventas }) {
         </div>
       </Tarjeta>
       <Tarjeta titulo="Ventas · últimas 5 semanas" descripcion="Con IVA, por tipo de envío. Sin las exclusiones configuradas.">
-        <div className="grid grid-cols-5 items-end gap-2">
+        <div className="grid grid-cols-5 items-end gap-2 *:min-w-0">
           {v.semanas.map((s, i) => (
             <div key={s.lunes} className="text-center">
               <div className="mx-auto flex h-32 w-full max-w-14 flex-col-reverse overflow-hidden rounded-md bg-surface-2">
