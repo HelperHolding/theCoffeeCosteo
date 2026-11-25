@@ -10,6 +10,8 @@ export interface ArticuloCatalogo {
   zoho_vendor_id: string | null;
   zoho_vendor_name: string | null;
   estatus?: string | null;
+  /** Lead time de Zoho en días (para estimar la llegada de lo en camino); opcional. */
+  zoho_lead_time?: number | null;
 }
 export interface CompraProyectada {
   sku: string;
@@ -29,6 +31,10 @@ export interface LineaOcZoho {
   cantidad_recibida: number | null;
   /** Folio de la OC en Zoho (COM-OC-…); opcional porque no todas las consultas lo leen. */
   po_number?: string | null;
+  /** Para la llegada de lo en camino; opcionales porque no todas las consultas los leen. */
+  zoho_po_id?: string | null;
+  fecha_oc?: string | null;
+  fecha_entrega?: string | null;
 }
 export interface MinMax {
   sku: string;

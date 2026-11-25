@@ -3,6 +3,8 @@ import {
   enCamino,
   filasQuePedir,
   kpisQuePedir,
+  leadTimePorSku,
+  llegadaEnCamino,
   ordenQuePedir,
   proveedoresQuePedir,
   saldoCedis,
@@ -171,5 +173,131 @@ describe('aCsv', () => {
       ],
     );
     expect(t).toBe('﻿A,B\r\n"x,""y""",2\r\n');
+  });
+});
+
+describe('llegada de lo en camino (pedido del usuario 2026-11-25)', () => {
+  const lt = leadTimePorSku(
+    [
+      { sku: 'A', zoho_lead_time: 10 },
+      { sku: 'B', zoho_lead_time: null },
+      { sku: 'C', zoho_lead_time: 0 },
+    ] as never,
+    [{ sku: 'B', dias: 20 }],
+    7,
+  );
+  it('lead time: el de Zoho, si no el de la tabla, si no el de Configuración', () => {
+    expect([lt('A'), lt('B'), lt('C'), lt('Z')]).toEqual([10, 20, 7, 7]);
+  });
+  it('usa la fecha de entrega de Zoho; si no hay, fecha de la OC + lead time (estimada)', () => {
+    const r = llegadaEnCamino(
+      [
+        {
+          zoho_po_id: 'p1',
+          po_number: 'OC-1',
+          sku: 'A',
+          status: 'open',
+          cantidad: 5,
+          cantidad_recibida: 0,
+          fecha_oc: '2026-11-20',
+          fecha_entrega: '2026-12-01',
+        },
+        {
+          zoho_po_id: 'p2',
+          po_number: 'OC-2',
+          sku: 'B',
+          status: 'draft',
+          cantidad: 5,
+          cantidad_recibida: 0,
+          fecha_oc: '2026-11-20',
+          fecha_entrega: null,
+        },
+      ],
+      lt,
+      '2026-11-25',
+    );
+    expect(r.A).toEqual({ fecha: '2026-12-01', estimada: false, atrasada: false, mas: 0 });
+    expect(r.B).toEqual({ fecha: '2026-12-10', estimada: true, atrasada: false, mas: 0 });
+  });
+  it('con varias OCs toma la más próxima y cuenta las demás; marca atrasada si ya pasó', () => {
+    const r = llegadaEnCamino(
+      [
+        {
+          zoho_po_id: 'p1',
+          sku: 'A',
+          status: 'open',
+          cantidad: 5,
+          cantidad_recibida: 0,
+          fecha_oc: '2026-11-01',
+        },
+        {
+          zoho_po_id: 'p2',
+          sku: 'A',
+          status: 'open',
+          cantidad: 5,
+          cantidad_recibida: 0,
+          fecha_oc: '2026-11-20',
+        },
+        {
+          zoho_po_id: 'p3',
+          sku: 'A',
+          status: 'open',
+          cantidad: 5,
+          cantidad_recibida: 5,
+          fecha_oc: '2026-10-01',
+        },
+      ],
+      lt,
+      '2026-11-25',
+    );
+    expect(r.A).toEqual({ fecha: '2026-11-11', estimada: true, atrasada: true, mas: 1 });
+  });
+  it('ignora cerradas, el marcador, sin fecha y (si se pide) las facturadas', () => {
+    const lineas = [
+      {
+        zoho_po_id: 'p1',
+        sku: 'A',
+        status: 'closed',
+        cantidad: 5,
+        cantidad_recibida: 0,
+        fecha_oc: '2026-11-20',
+      },
+      {
+        zoho_po_id: 'p2',
+        sku: '(sin-sku)',
+        status: 'open',
+        cantidad: 5,
+        cantidad_recibida: 0,
+        fecha_oc: '2026-11-20',
+      },
+      { zoho_po_id: 'p3', sku: 'B', status: 'open', cantidad: 5, cantidad_recibida: 0, fecha_oc: null },
+      {
+        zoho_po_id: 'p4',
+        sku: 'C',
+        status: 'billed',
+        cantidad: 5,
+        cantidad_recibida: 0,
+        fecha_oc: '2026-11-20',
+      },
+    ];
+    expect(Object.keys(llegadaEnCamino(lineas, lt, '2026-11-25'))).toEqual(['C']);
+    expect(llegadaEnCamino(lineas, lt, '2026-11-25', { sinFacturadas: true })).toEqual({});
+  });
+  it('Qué pedir: la fila lleva la llegada de su SKU', () => {
+    const d = {
+      catalogo: [{ sku: 'A', nombre: 'A' }],
+      minmax: [{ sku: 'A', venta_diaria: 1 }],
+      compras: [],
+      camino: { A: 5 },
+      llegadas: { A: { fecha: '2026-12-01', estimada: true, atrasada: false, mas: 0 } },
+      yulius: false,
+      resumen: {},
+    } as unknown as DatosQuePedir;
+    expect(filasQuePedir(d, 30, '2026-11-25')[0].llegada).toEqual({
+      fecha: '2026-12-01',
+      estimada: true,
+      atrasada: false,
+      mas: 0,
+    });
   });
 });

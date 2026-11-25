@@ -1,6 +1,6 @@
 import { difDias } from './fechas';
 import { serieDiaria, type PedidoPlan } from '../../supabase/functions/_shared/planEngine.ts';
-import { enCamino, fisicoZoho, ocsEnCamino, saldoCedis } from './quepedir';
+import { enCamino, fisicoZoho, ocsEnCamino, saldoCedis, type LlegadaCamino } from './quepedir';
 import type { ArticuloCatalogo, LineaOcZoho } from './tipos';
 
 const n = (x: unknown) => Number(x) || 0;
@@ -24,6 +24,8 @@ export interface DatosInventario {
   ventas: { sku: string; cantidad: number }[];
   lineas: LineaOcZoho[];
   yulius: boolean;
+  /** Llegada más próxima de lo en camino por SKU (llegadaEnCamino); opcional. */
+  llegadas?: Record<string, LlegadaCamino>;
 }
 export interface FilaInventario {
   sku: string;
@@ -40,6 +42,11 @@ export interface FilaInventario {
   camino: number;
   /** Folios de las OCs abiertas de Zoho que traen lo en camino, separados por coma ('' si no hay). */
   ocsCamino: string;
+  /** Llegada más próxima de lo en camino ('YYYY-MM-DD') o null; ver llegadaEnCamino. */
+  llegada: string | null;
+  llegadaEstimada: boolean;
+  llegadaAtrasada: boolean;
+  llegadaMas: number;
   minimo: number | null;
   maximo: number | null;
   minManual: boolean;
@@ -96,6 +103,10 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
       disponible,
       camino,
       ocsCamino: (ocs[c.sku] ?? []).join(', '),
+      llegada: d.llegadas?.[c.sku]?.fecha ?? null,
+      llegadaEstimada: !!d.llegadas?.[c.sku]?.estimada,
+      llegadaAtrasada: !!d.llegadas?.[c.sku]?.atrasada,
+      llegadaMas: d.llegadas?.[c.sku]?.mas ?? 0,
       minimo: m?.minimo ?? null,
       maximo: m?.maximo ?? null,
       minManual: m?.minimo_manual != null,

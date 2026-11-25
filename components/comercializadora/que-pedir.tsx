@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarDays, Package, Truck, Wallet } from 'lucide-reac
 import { Kpi, Pill, Vacio } from '@/components/portal/piezas';
 import { claseCampo } from '@/lib/crm/formato';
 import { numero, pesos } from '@/lib/comercializadora/formato';
+import { fechaCorta } from '@/lib/comercializadora/fechas';
 import {
   filasQuePedir,
   kpisQuePedir,
@@ -184,7 +185,10 @@ export function QuePedir({
                   <td className="text-right tabular-nums text-muted-foreground">
                     {f.fisico == null ? '—' : numero(f.fisico)}
                   </td>
-                  <td className="text-right tabular-nums">{numero(f.camino)}</td>
+                  <td className="text-right tabular-nums">
+                    {numero(f.camino)}
+                    <LlegadaCorta f={f} />
+                  </td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="space-x-1">
                     {f.pedir ? <Pill estado="bajo">Pedir</Pill> : <Pill estado="ok">No</Pill>}
@@ -296,7 +300,10 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
                   <td className="text-right tabular-nums text-muted-foreground">
                     {f.fisico == null ? '—' : numero(f.fisico)}
                   </td>
-                  <td className="text-right tabular-nums">{numero(f.camino)}</td>
+                  <td className="text-right tabular-nums">
+                    {numero(f.camino)}
+                    <LlegadaCorta f={f} />
+                  </td>
                   <td className="text-right tabular-nums">{f.dias == null ? 'Sin venta' : numero(f.dias)}</td>
                   <td className="text-right tabular-nums">{numero(f.cant)}</td>
                   <td className="text-right tabular-nums">{pesos(f.monto)}</td>
@@ -307,5 +314,17 @@ function LineasProveedor({ nombre, filas }: { nombre: string; filas: FilaQuePedi
         )}
       </td>
     </tr>
+  );
+}
+
+/** Debajo de "En camino": cuándo llega lo más próximo (pedido del usuario 2026-11-25). */
+function LlegadaCorta({ f }: { f: FilaQuePedir }) {
+  if (!f.llegada || !(f.camino > 0)) return null;
+  const { fecha, estimada, atrasada } = f.llegada;
+  return (
+    <div className={`text-xs ${atrasada ? 'font-medium text-destructive' : 'text-muted-foreground'}`}>
+      {atrasada ? `atrasada desde ${fechaCorta(fecha)}` : `llega ${fechaCorta(fecha)}`}
+      {estimada ? ' (estimada)' : ''}
+    </div>
   );
 }
