@@ -9,5 +9,5 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return responder(null);
   if (!autorizado(req)) return responder({ ok: false, error: "No autorizado" }, 401);
   const body = await req.json().catch(() => ({}));
-  return lanzar(() => generar(admin(), zohoDesdeEnv, new Date(), body));
+  return lanzar(() => generar(admin(), () => zohoDesdeEnv({ soloLectura: true }), new Date(), body));
 });

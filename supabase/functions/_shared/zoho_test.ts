@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { ZohoClient, ZohoError } from "./zoho.ts";
+import { ZohoClient, ZohoError, zohoDesdeEnv } from "./zoho.ts";
 
 type Resp = { status: number; body: unknown };
 function fakeFetch(seq: Resp[], log: string[]) {
@@ -112,4 +112,23 @@ Deno.test("del en solo lectura no llama a Zoho", async () => {
   const z = new ZohoClient({ ...cfg([], log), soloLectura: true });
   await assertRejects(() => z.del("/purchaseorders/1"), ZohoError, "sin efectos externos");
   assertEquals(log.length, 0);
+});
+
+Deno.test("zohoDesdeEnv({ soloLectura: true }) bloquea escrituras aunque COM_EFECTOS_EXTERNOS=si", async () => {
+  const claves = ["COM_EFECTOS_EXTERNOS", "ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN", "ZOHO_ORG_ID"];
+  const previos = claves.map((k) => Deno.env.get(k));
+  const fetchOriginal = globalThis.fetch;
+  let llamadas = 0;
+  globalThis.fetch = (() => { llamadas++; return Promise.reject(new Error("no debe llamarse")); }) as typeof fetch;
+  try {
+    Deno.env.set("COM_EFECTOS_EXTERNOS", "si");
+    for (const k of claves.slice(1)) Deno.env.set(k, "x");
+    const z = zohoDesdeEnv({ soloLectura: true });
+    await assertRejects(() => z.post("/purchaseorders", {}), ZohoError, "sin efectos externos");
+    await assertRejects(() => z.put("/contacts/1", {}), ZohoError, "sin efectos externos");
+    assertEquals(llamadas, 0);
+  } finally {
+    globalThis.fetch = fetchOriginal;
+    claves.forEach((k, i) => previos[i] === undefined ? Deno.env.delete(k) : Deno.env.set(k, previos[i]!));
+  }
 });

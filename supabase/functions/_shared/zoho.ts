@@ -102,7 +102,7 @@ export class ZohoClient {
   }
 }
 
-export function zohoDesdeEnv(): ZohoClient {
+export function zohoDesdeEnv(opts: { soloLectura?: boolean } = {}): ZohoClient {
   const v = (k: string) => {
     const x = Deno.env.get(k);
     if (!x) throw new Error(`Falta el secreto ${k}`);
@@ -111,6 +111,6 @@ export function zohoDesdeEnv(): ZohoClient {
   return new ZohoClient({
     clientId: v("ZOHO_CLIENT_ID"), clientSecret: v("ZOHO_CLIENT_SECRET"),
     refreshToken: v("ZOHO_REFRESH_TOKEN"), orgId: v("ZOHO_ORG_ID"),
-    soloLectura: !efectosExternos(),
+    soloLectura: opts.soloLectura ?? !efectosExternos(),
   });
 }
