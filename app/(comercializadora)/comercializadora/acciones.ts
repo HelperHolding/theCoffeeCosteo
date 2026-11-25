@@ -13,6 +13,7 @@ import {
   type FormCierre,
 } from '@/lib/comercializadora/cierres';
 import { com } from '@/lib/comercializadora/consultas';
+import { desdeFormulario, type FormConfigReporte } from '@/lib/comercializadora/configReporte';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { validarOc, type FormOc } from '@/lib/comercializadora/ordenes';
 import { cantidadConteo } from '@/lib/comercializadora/inventario';
@@ -877,4 +878,18 @@ export async function actualizarReporte(semana: string): Promise<Resultado> {
   const r = await leerReporteSemanal(semana, true);
   revalidatePath('/comercializadora/reporte-semanal');
   return r.ok ? { ok: true } : { error: r.error };
+}
+
+export async function guardarConfigReporte(f: FormConfigReporte): Promise<Resultado> {
+  try {
+    const s = await editorCom();
+    if (!s) return { error: SOLO_LECTURA };
+    const r = await com(s.db).from('com_reporte_config').update({ config: desdeFormulario(f) }).eq('id', 1).select('id');
+    if (r.error) return fallo(r.error);
+    if (!r.data?.length) return { error: 'Sin permiso para modificar la configuración del reporte' };
+    revalidatePath('/comercializadora/reporte-semanal');
+    return { ok: true };
+  } catch (e) {
+    return fallo(e);
+  }
 }

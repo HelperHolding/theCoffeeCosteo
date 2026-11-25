@@ -7,6 +7,9 @@ import { leerReporteSemanal, semanaDeUrl } from '@/lib/comercializadora/reporteS
 import { com } from '@/lib/comercializadora/consultas';
 import { finSemana, sumar } from '../../../../supabase/functions/_shared/reporte/fechas.ts';
 import { normalizarConfigReporte } from '../../../../supabase/functions/_shared/reporte/config.ts';
+import { puedeEditarCom } from '@/lib/portal/modulos';
+import { aFormulario } from '@/lib/comercializadora/configReporte';
+import { ConfigReporteVista } from '@/components/comercializadora/reporte-semanal/config';
 import { ActualizarReporte } from '@/components/comercializadora/reporte-semanal/actualizar';
 import { ErrorSeccion, SeccionTitulo } from '@/components/comercializadora/reporte-semanal/piezas';
 import { VentasVista } from '@/components/comercializadora/reporte-semanal/ventas';
@@ -18,7 +21,7 @@ import { ExternosVista, SucursalesVista } from '@/components/comercializadora/re
 export const maxDuration = 300;
 
 export default async function ReporteSemanalPagina({ searchParams }: { searchParams: Promise<{ semana?: string }> }) {
-  const { db } = await sesionComercializadora();
+  const { db, accesos } = await sesionComercializadora();
   const hoy = hoyCdmx();
   const semana = semanaDeUrl((await searchParams).semana, hoy);
   const [r, cfgR] = await Promise.all([
@@ -45,6 +48,7 @@ export default async function ReporteSemanalPagina({ searchParams }: { searchPar
       <>
         {encabezado}
         <p role="alert" className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">{r.error}</p>
+        {puedeEditarCom(accesos) && <ConfigReporteVista inicial={aFormulario(cfg)} />}
       </>
     );
   const x = r.reporte;
@@ -72,6 +76,7 @@ export default async function ReporteSemanalPagina({ searchParams }: { searchPar
       {x.externos.ok ? <ExternosVista e={x.externos.datos} corte={x.corte} /> : <ErrorSeccion error={x.externos.error} />}
       <SeccionTitulo num="06">Aperturas · seguimiento</SeccionTitulo>
       {x.aperturas.ok ? <AperturasVista a={x.aperturas.datos} /> : <ErrorSeccion error={x.aperturas.error} />}
+      {puedeEditarCom(accesos) && <ConfigReporteVista inicial={aFormulario(cfg)} />}
       <p className="mt-8 border-t border-line pt-4 text-center text-xs text-muted-foreground">
         Leído de Zoho el {new Date(x.leidoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}
         {r.cache ? ' (copia de menos de 15 min)' : ''}. Las incidencias se capturan días después de la entrega; estas cifras pueden moverse.
