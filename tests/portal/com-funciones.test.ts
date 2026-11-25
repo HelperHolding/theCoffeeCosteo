@@ -6,6 +6,24 @@ const resp = (status: number, body: unknown) =>
   Promise.resolve(new Response(JSON.stringify(body), { status }));
 
 describe('invocarFuncion', () => {
+  it('agrega los encabezados extra (JWT del usuario) sin quitar el secreto', async () => {
+    const f = vi.fn((_u: string, _i?: RequestInit) => resp(200, { ok: true }));
+    await invocarFuncion(
+      'zoho-suc-pagos',
+      { accion: 'proveedores' },
+      {
+        fetch: f as unknown as typeof fetch,
+        url: 'https://x/functions/v1',
+        secreto: 's',
+        encabezados: { 'x-usuario-jwt': 'jwt-1' },
+      },
+    );
+    const h = f.mock.calls[0][1]!.headers as Record<string, string>;
+    expect(h['x-com-secreto']).toBe('s');
+    expect(h['x-usuario-jwt']).toBe('jwt-1');
+    expect(f.mock.calls[0][0]).toBe('https://x/functions/v1/zoho-suc-pagos');
+  });
+
   it('manda x-com-secreto, sin Authorization, al URL de funciones', async () => {
     const f = vi.fn((_u: string, _i?: RequestInit) => resp(200, { ok: true, skus: 3 }));
     const r = await invocarFuncion(

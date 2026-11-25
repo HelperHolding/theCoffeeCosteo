@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 import { servidor } from './servidor';
 import { puede, type Area } from '../portal/permisos';
 import { tieneCosteo } from '../portal/roles';
-import type { Accesos } from '../portal/modulos';
+import { puedeAplicarPagos, puedeVerPagos, type Accesos } from '../portal/modulos';
+import type { NivelModulo } from './database.types';
 import { sucursalesConfiguradas } from '../sucursales/config';
 
 type Db = Awaited<ReturnType<typeof servidor>>;
@@ -107,7 +108,16 @@ type DenegacionSucursales = { ok: false; status: 401 | 403; destino: string; men
  * Falla cerrado: cualquier error al leer las asignaciones = ninguna sucursal.
  */
 export async function accesoSucursales(): Promise<
-  | { ok: true; db: Db; perfil: { user_id: string; nombre: string; rol: string }; companias: number[] }
+  | {
+      ok: true;
+      db: Db;
+      perfil: { user_id: string; nombre: string; rol: string };
+      companias: number[];
+      /** Ve la Red (ventas): tiene el módulo 'sucursales'. */
+      red: boolean;
+      /** Ve Sucursales propias (pagos): empleado Holding con 'sucursales_pagos'. */
+      propias: boolean;
+    }
   | DenegacionSucursales
 > {
   const c = await contexto();
@@ -119,15 +129,61 @@ export async function accesoSucursales(): Promise<
       destino: '/login?aviso=perfil',
       mensaje: 'Tu cuenta necesita un perfil activo.',
     };
-  if (!c.accesos.sucursales)
+  const propias = puedeVerPagos(c.accesos, c.perfil.data.rol);
+  if (!c.accesos.sucursales && !propias)
     return { ok: false, status: 403, destino: '/', mensaje: 'No tienes acceso a Sucursales.' };
   const companias = await companiasAsignadas(c.db, c.usuario.id);
-  return { ok: true, db: c.db, perfil: c.perfil.data, companias };
+  return { ok: true, db: c.db, perfil: c.perfil.data, companias, red: !!c.accesos.sucursales, propias };
 }
 
 /** Sesión de páginas de Sucursales: redirige como el resto del portal. */
 export async function sesionSucursales(redirigir = true) {
   const a = await accesoSucursales();
+  if (!a.ok) {
+    if (redirigir) redirect(a.destino);
+    throw new Error(a.mensaje);
+  }
+  return a;
+}
+
+/** Pagos de Sucursales propias (spec §3): empleado Holding con 'sucursales_pagos'. Sin redirigir, para route handlers. */
+export async function accesoPagos(): Promise<
+  | {
+      ok: true;
+      db: Db;
+      perfil: { user_id: string; nombre: string; rol: string };
+      nivel: NivelModulo;
+      puedeAplicar: boolean;
+    }
+  | DenegacionSucursales
+> {
+  const c = await contexto();
+  if (!c.usuario) return { ok: false, status: 401, destino: '/login', mensaje: 'La sesión venció.' };
+  if (c.perfil.error || !c.perfil.data?.activo)
+    return {
+      ok: false,
+      status: 403,
+      destino: '/login?aviso=perfil',
+      mensaje: 'Tu cuenta necesita un perfil activo.',
+    };
+  if (!puedeVerPagos(c.accesos, c.perfil.data.rol))
+    return {
+      ok: false,
+      status: 403,
+      destino: '/sucursales',
+      mensaje: 'No tienes acceso a Pagos de Sucursales propias.',
+    };
+  return {
+    ok: true,
+    db: c.db,
+    perfil: c.perfil.data,
+    nivel: c.accesos.sucursales_pagos!,
+    puedeAplicar: puedeAplicarPagos(c.accesos, c.perfil.data.rol),
+  };
+}
+
+export async function sesionPagos(redirigir = true) {
+  const a = await accesoPagos();
   if (!a.ok) {
     if (redirigir) redirect(a.destino);
     throw new Error(a.mensaje);

@@ -66,6 +66,7 @@ export function Marco({
   visibles,
   busqueda = [],
   franquicia,
+  sucursales,
   marca,
   children,
 }: {
@@ -75,6 +76,8 @@ export function Marco({
   busqueda?: ItemBusqueda[];
   /** Sucursal abierta en Franquiciatarios: arma su navegación (Hoy, Checklists, Ventas…). */
   franquicia?: Franquicia;
+  /** Grupos de Sucursales que ve el usuario: Red (ventas) y Sucursales propias (pagos). */
+  sucursales?: { red: boolean; propias: boolean };
   /** Fuerza la marca (vista previa del admin como usuario de tienda). */
   marca?: 'holding' | 'thecoffee';
   children: React.ReactNode;
@@ -126,6 +129,7 @@ export function Marco({
           seccion={seccion}
           visibles={visibles}
           franquicia={franquicia}
+          sucursales={sucursales}
         />
       </Suspense>
       <div className="flex-1" />
@@ -235,7 +239,7 @@ export function Marco({
         <CommandList>
           <CommandEmpty>Sin resultados.</CommandEmpty>
           <CommandGroup heading="Pantallas">
-            {gruposDe(seccion, visibles, franquicia).flatMap((g) =>
+            {gruposDe(seccion, visibles, franquicia, sucursales).flatMap((g) =>
               g.enlaces.map(({ href, nombre, icono: Icono }) => (
                 <CommandItem key={href} value={`pantalla ${nombre}`} onSelect={() => ir(href)}>
                   <Icono aria-hidden="true" /> {nombre}

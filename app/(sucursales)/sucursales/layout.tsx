@@ -5,7 +5,7 @@ import { Marco, type ItemBusqueda } from '@/components/portal/marco';
 import '@/components/portal/vitrina.css';
 export const dynamic = 'force-dynamic';
 export default async function SucursalesLayout({ children }: { children: React.ReactNode }) {
-  const { db, perfil, companias } = await sesionSucursales();
+  const { db, perfil, companias, red, propias } = await sesionSucursales();
   const busqueda: ItemBusqueda[] = sucursalesAccesibles(companias).map((s) => ({
     id: String(s.companyId),
     nombre: s.nombre,
@@ -20,6 +20,7 @@ export default async function SucursalesLayout({ children }: { children: React.R
       seccion="sucursales"
       visibles={modulosVisibles(await accesos(db, perfil.user_id), perfil.rol)}
       busqueda={busqueda}
+      sucursales={{ red, propias }}
     >
       {/* Propuesta local: tableros de cristal sobre el muro (ver vitrina.css). */}
       <div className="vitrina space-y-7">{children}</div>
