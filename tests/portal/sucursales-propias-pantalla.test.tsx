@@ -137,4 +137,26 @@ describe('Corrida', () => {
     expect(screen.queryByRole('button', { name: /Elegir proveedor|Ajustar facturas/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
+
+  it('si aplicar se cae en una fila, sigue con la siguiente, avisa y refresca', async () => {
+    refresh.mockClear();
+    const aplicar = vi.fn(async (id: number) => {
+      if (id === 1) throw new Error('504');
+      return { ok: true as const, estado: 'aplicada' };
+    });
+    render(
+      <Corrida
+        filas={[fila({ id: 1 }), fila({ id: 2, alias: 'OTRO' })]}
+        puedeAplicar
+        acciones={acciones(aplicar)}
+        zohoOrg="1"
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Aplicar 2 pagos' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar y aplicar en Zoho' }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(aplicar.mock.calls.map((c) => c[0])).toEqual([1, 2]);
+    expect(screen.getByText('No se pudo aplicar; reintenta.')).toBeInTheDocument();
+    expect(screen.queryByText(/Aplicando d+ de/)).toBeNull();
+  });
 });

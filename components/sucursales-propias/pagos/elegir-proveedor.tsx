@@ -18,17 +18,28 @@ export function ElegirProveedor({ id, acciones }: { id: number; acciones: Accion
   }, [lista, filtro]);
 
   async function abrir() {
-    const r = await acciones.leerProveedores();
-    if ('error' in r) setError(r.error);
-    else setLista(r.proveedores);
+    try {
+      const r = await acciones.leerProveedores();
+      if ('error' in r) setError(r.error);
+      else setLista(r.proveedores);
+    } catch {
+      setError('No se pudo cargar. Intenta de nuevo.');
+    }
   }
 
   async function elegir(p: Proveedor) {
+    if (guardando) return;
     setGuardando(true);
-    const r = await acciones.asignarProveedor(id, p);
-    setGuardando(false);
-    if ('error' in r) setError(r.error);
-    else router.refresh();
+    setError(null);
+    try {
+      const r = await acciones.asignarProveedor(id, p);
+      if ('error' in r) setError(r.error);
+      else router.refresh();
+    } catch {
+      setError('No se pudo guardar. Intenta de nuevo.');
+    } finally {
+      setGuardando(false);
+    }
   }
 
   if (!lista)

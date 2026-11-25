@@ -30,6 +30,7 @@ export function Corrida({
 }) {
   const router = useRouter();
   const [resultados, setResultados] = useState<Record<number, Resultado>>({});
+  const [ocupadas, setOcupadas] = useState<Record<number, boolean>>({});
   const [confirmar, setConfirmar] = useState(false);
   const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
   const listas = filas.filter((f) => f.estado === 'cuadra');
@@ -38,28 +39,43 @@ export function Corrida({
   const porNombre = listas.filter((f) => f.sugerido).length;
 
   async function aplicarUna(id: number) {
-    const r = await acciones.aplicar(id);
-    setResultados((x) => ({
-      ...x,
-      [id]: 'error' in r ? { estado: 'error', mensaje: r.error } : { estado: r.estado, mensaje: r.mensaje },
-    }));
+    setOcupadas((o) => ({ ...o, [id]: true }));
+    try {
+      const r = await acciones.aplicar(id);
+      setResultados((x) => ({
+        ...x,
+        [id]: 'error' in r ? { estado: 'error', mensaje: r.error } : { estado: r.estado, mensaje: r.mensaje },
+      }));
+    } catch {
+      // Caída de red o 504: se registra en la fila y el lote sigue con la siguiente.
+      setResultados((x) => ({ ...x, [id]: { estado: 'error', mensaje: 'No se pudo aplicar; reintenta.' } }));
+    } finally {
+      setOcupadas((o) => ({ ...o, [id]: false }));
+    }
   }
 
   async function aplicarTodas() {
     setConfirmar(false);
     setProgreso({ hechas: 0, total: listas.length });
-    // Una por una: cada pago es independiente y el usuario ve el avance (spec §7).
-    for (const [i, f] of listas.entries()) {
-      await aplicarUna(f.id);
-      setProgreso({ hechas: i + 1, total: listas.length });
+    try {
+      // Una por una: cada pago es independiente y el usuario ve el avance (spec §7).
+      for (const [i, f] of listas.entries()) {
+        await aplicarUna(f.id);
+        setProgreso({ hechas: i + 1, total: listas.length });
+      }
+    } finally {
+      setProgreso(null);
+      router.refresh();
     }
-    setProgreso(null);
-    router.refresh();
   }
 
   async function reintentar(id: number) {
-    await aplicarUna(id);
-    router.refresh();
+    if (ocupadas[id]) return;
+    try {
+      await aplicarUna(id);
+    } finally {
+      router.refresh();
+    }
   }
 
   return (
@@ -128,18 +144,20 @@ export function Corrida({
                   <summary className="cursor-pointer text-muted-foreground">
                     {f.asignaciones.length} factura(s)
                   </summary>
-                  <table className="mt-1 w-full text-left">
-                    <tbody>
-                      {f.asignaciones.map((a) => (
-                        <tr key={a.billId}>
-                          <td>{a.numero}</td>
-                          <td>{a.ubicacion}</td>
-                          <td>{a.fecha}</td>
-                          <td className="text-right tabular-nums">{pesos(a.monto)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="overflow-x-auto">
+                    <table className="mt-1 w-full text-left">
+                      <tbody>
+                        {f.asignaciones.map((a) => (
+                          <tr key={a.billId}>
+                            <td>{a.numero}</td>
+                            <td>{a.ubicacion}</td>
+                            <td>{a.fecha}</td>
+                            <td className="text-right tabular-nums">{pesos(a.monto)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </details>
               ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
@@ -164,7 +182,13 @@ export function Corrida({
                   </a>
                 ) : null}
                 {puedeAplicar && (estado === 'error' || estado === 'aplicada_sin_adjunto') ? (
-                  <Button type="button" variant="outline" size="sm" onClick={() => reintentar(f.id)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={ocupadas[f.id]}
+                    onClick={() => reintentar(f.id)}
+                  >
                     Reintentar
                   </Button>
                 ) : null}

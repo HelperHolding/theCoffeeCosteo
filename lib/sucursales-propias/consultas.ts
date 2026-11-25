@@ -10,7 +10,6 @@ export interface CorridaLista {
   subidoPor: string | null;
   totalRecibos: number;
   estados: string[];
-  avisos: number;
 }
 
 export interface CorridaFila {
@@ -24,11 +23,15 @@ export interface CorridaFila {
   avisos: string[];
 }
 
+// Lista explícita: sin la CLABE (dato sensible que la pantalla no necesita).
+const COLUMNAS_TRANSFERENCIA =
+  'id, llave, tipo, alias, concepto, monto, fecha_operacion, estado, error, proveedor_zoho_id, proveedor_nombre, sugerido, zoho_vendorpayment_id, archivo_pdf, aplicado_en, suc_pago_asignacion(*)';
+
 export async function listarCorridas(db: SupabaseClient): Promise<CorridaLista[]> {
   const { data, error } = await db
     .from('suc_pago_corrida')
     .select(
-      'id, archivo, subido_en, total_recibos, avisos, perfiles!suc_pago_corrida_subido_por_fkey(nombre), suc_pago_transferencia(estado)',
+      'id, archivo, subido_en, total_recibos, perfiles!suc_pago_corrida_subido_por_fkey(nombre), suc_pago_transferencia(estado)',
     )
     .order('subido_en', { ascending: false })
     .limit(50);
@@ -40,7 +43,6 @@ export async function listarCorridas(db: SupabaseClient): Promise<CorridaLista[]
     subidoPor: (c.perfiles as { nombre?: string } | null)?.nombre ?? null,
     totalRecibos: Number(c.total_recibos),
     estados: (c.suc_pago_transferencia as { estado: string }[]).map((t) => t.estado),
-    avisos: (c.avisos as string[]).length,
   }));
 }
 
@@ -50,7 +52,7 @@ export async function leerCorrida(
 ): Promise<{ corrida: CorridaFila; filas: FilaVista[] } | null> {
   const [c, t] = await Promise.all([
     db.from('suc_pago_corrida').select('*').eq('id', id).maybeSingle(),
-    db.from('suc_pago_transferencia').select('*, suc_pago_asignacion(*)').eq('corrida_id', id).order('id'),
+    db.from('suc_pago_transferencia').select(COLUMNAS_TRANSFERENCIA).eq('corrida_id', id).order('id'),
   ]);
   if (c.error) throw c.error;
   if (t.error) throw t.error;
