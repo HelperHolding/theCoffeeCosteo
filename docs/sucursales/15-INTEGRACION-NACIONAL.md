@@ -246,3 +246,57 @@ de los Lagos (778) tuvo 10 pedidos y Vía San Ángel Puebla (797) uno; se revisa
    ```
    npx.cmd tsx --conditions=react-server scripts/sucursales/corte.ts --companias 681,777,690,795 --desde 2025-10-27 --hasta <ayer>
    ```
+
+## Alta: Costera Acapulco (2026-11-26)
+
+Mathias avisó que la tienda nueva ya aparece en Looker. En la API The Coffee ya existe y vende desde el 25 de
+noviembre.
+
+| Sucursal (company_id / Jestor) | Ciudad | Zona | 25-nov (API) | 26-nov hasta las 15:57 |
+| --- | --- | --- | --- | --- |
+| Costera Acapulco (790 / 698) | Acapulco | hora del centro | 2 pedidos · $164.15 (app) | 2 · $359.55 (mostrador y app) |
+
+- **Identidad:**
+  - API: «The Coffee Costera Acapulco», con lookerStoreId 698.
+  - CRM: «Costera Acapulco - 698», en Av. Costera Miguel Alemán 1506, Magallanes. El número viene en el nombre y el
+    campo Jestor está vacío, como en el lote 7.
+- **Validación** con `scripts/sucursales/validar-sucursal.ts` y el 25 de noviembre:
+  - venta = suma por productos (0 ¢);
+  - horario posible en hora del centro: Guerrero no cambia de hora y no hubo pedidos después de la hora actual.
+  - El validador avisa «primer pedido a las 11h (atípico)» porque son sus primeros días y casi no vende todavía. No es
+    un problema de horario.
+- **Tablero:** Acapulco ya estaba en el mapa (Guerrero).
+- **Rappi:** no tiene tienda en `rappi_tiendas`. Entra solo con el POS; su Rappi del portal se prende cuando su tienda
+  aparezca en la cuenta del portal.
+
+**Después del merge, en el SQL Editor:**
+
+1. Accesos para quien hoy ve las 83 sucursales (9 usuarios, la vista nacional). Primero la vista previa; luego el
+   `insert`:
+
+   ```sql
+   with nacionales as (
+     select user_id from public.perfil_sucursales group by user_id having count(*) >= 83
+   )
+   select p.nombre, p.rol, u.email
+   from nacionales n join public.perfiles p using (user_id) join auth.users u on u.id = n.user_id;
+   ```
+
+   ```sql
+   with nacionales as (
+     select user_id from public.perfil_sucursales group by user_id having count(*) >= 83
+   )
+   insert into public.perfil_sucursales (user_id, company_id)
+   select n.user_id, 790 from nacionales n
+   on conflict do nothing;
+   ```
+
+2. **BI:** el siguiente corte la da de alta en `bi_tiendas` como «Franquicia» (`asegurarTiendasBi`). Faltan su
+   franquiciatario y su fecha de apertura.
+
+3. **Historial del BI:** no hace falta, porque sus pedidos empiezan el 25 de noviembre. Si el corte de esa noche no
+   la tomó:
+
+   ```
+   npx.cmd tsx --conditions=react-server scripts/sucursales/corte.ts --companias 790 --desde 2026-11-25 --hasta <ayer>
+   ```

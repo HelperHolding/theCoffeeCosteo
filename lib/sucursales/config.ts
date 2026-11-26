@@ -276,6 +276,11 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   conPortal(queretaro(777, 680, 'Plaza Toscana', 'Plaza Toscana')),
   conPortal(delPos('Los Cabos', 'America/Mazatlan')(690, 602, 'Puerto Paraíso', 'Cabo San Lucas')),
   delPos('Chihuahua', 'America/Chihuahua')(795, 702, 'San Felipe', 'San Felipe'),
+  // Costera Acapulco (2026-11-26): primeros pedidos el 25 de noviembre. API 790 «The Coffee Costera Acapulco»,
+  // lookerStoreId 698 = CRM «Costera Acapulco - 698» (el número viene en el nombre, como en el lote 7). Validada con el
+  // 25 de noviembre: venta = suma por productos (0 ¢) y horario posible en hora del centro (Guerrero no cambia de hora).
+  // Sin tienda en rappi_tiendas todavía: queda solo con el POS.
+  delPos('Acapulco')(790, 698, 'Costera Acapulco', 'Magallanes'),
 ];
 
 export const configDe = (companyId: number) =>
