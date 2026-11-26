@@ -664,7 +664,7 @@ export async function leerDatosCompras(db: unknown): Promise<{ datos: DatosCompr
     leerTodoCom<OcT>(db, 'com_compras_oc', 'zoho_po_id,folio,proveedor,comprador,emision,arribo,estado,received_status,monto_ins,por_categoria,es_registro', 'zoho_po_id'),
     leerTodoCom<RecT>(db, 'com_compras_recepcion', 'zoho_receive_id,zoho_po_id,fecha,monto,por_categoria', 'zoho_receive_id'),
     leerTodoCom<VentaT>(db, 'com_compras_venta_semana', 'semana,venta_total_ci,por_categoria_ci', 'semana'),
-    leerTodoCom<{ zoho_po_id: string; sku: string; cantidad: number; cantidad_recibida: number }>(db, 'com_zoho_oc_lineas', 'zoho_po_id,sku,cantidad,cantidad_recibida', 'zoho_po_id,sku'),
+    leerTodoCom<{ zoho_po_id: string; sku: string; cantidad: number; cantidad_recibida: number }>(db, 'com_zoho_oc_lineas', 'zoho_po_id,sku,cantidad,cantidad_recibida', 'zoho_po_id', (q) => q.order('sku')),
     leerTodoCom<{ sku: string; nombre: string | null }>(db, 'com_catalogo', 'sku,nombre', 'sku'),
     com(db).from('com_sync_log').select('fin').eq('proceso', 'zoho-compras-sync').eq('ok', true).not('fin', 'is', null)
       .order('fin', { ascending: false }).limit(1),
