@@ -1,6 +1,6 @@
 // tests/comercializadora/compras-filtros.test.ts
 import { describe, expect, it } from 'vitest';
-import { filtrosDeUrl, hrefCompras, textoFiltros } from '@/lib/comercializadora/compras/filtros';
+import { filtrosDeUrl, hrefCompras, hrefDescargaCompras, textoFiltros } from '@/lib/comercializadora/compras/filtros';
 
 describe('filtros del tablero de compras', () => {
   it('lee la URL; categoría desconocida o vacía es Todas', () => {
@@ -19,5 +19,10 @@ describe('filtros del tablero de compras', () => {
       .toBe('16 – 22 nov 2026 · Café · Proveedor: Prov A');
     expect(textoFiltros({ periodo: 'x', categoria: null, proveedor: null, comprador: 'CC' }, 'Noviembre 2026'))
       .toBe('Noviembre 2026 · Todas las categorías · Comprador: CC');
+  });
+  it('enlace de descarga con los mismos filtros, codificados', () => {
+    expect(hrefDescargaCompras({ periodo: '2026-11-16', categoria: 'CAF', proveedor: 'JOSÉ & HIJOS', comprador: null }))
+      .toBe('/comercializadora/compras/descargar?periodo=2026-11-16&categoria=CAF&proveedor=JOS%C3%89+%26+HIJOS');
+    expect(hrefDescargaCompras({ periodo: '', categoria: null, proveedor: null, comprador: null })).toBe('/comercializadora/compras/descargar');
   });
 });
