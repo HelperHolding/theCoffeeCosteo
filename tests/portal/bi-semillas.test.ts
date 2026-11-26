@@ -146,11 +146,11 @@ describe('generarSemillas', () => {
 });
 
 /**
- * Sucursales dadas de alta después de escribir la migración 41 (lote 8, 2026-11-20). La 41 es una foto ya aplicada:
- * se compara contra las sucursales configuradas de entonces, y las nuevas entran a bi_tiendas por el corte
- * (asegurarTiendasBi), no por la semilla.
+ * Sucursales dadas de alta después de escribir la migración 41 (lote 8, 2026-11-20; Costera Acapulco, 2026-11-26).
+ * La 41 es una foto ya aplicada: se compara contra las sucursales configuradas de entonces, y las nuevas entran a
+ * bi_tiendas por el corte (asegurarTiendasBi), no por la semilla.
  */
-const ALTAS_DESPUES_DE_LA_41 = [681, 690, 777, 795];
+const ALTAS_DESPUES_DE_LA_41 = [681, 690, 777, 795, 790];
 
 describe('migración 41 contra la evidencia', () => {
   it('coincide con lo que genera el script desde docs/bi/zoho/ (sin desvíos a mano)', () => {
