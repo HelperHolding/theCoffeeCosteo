@@ -1,7 +1,7 @@
 // supabase/functions/zoho-compras-sync/servicio_test.ts
 import { assertEquals, assertRejects } from "@std/assert";
 import { type ZohoClient, ZohoError } from "../_shared/zoho.ts";
-import { debeAvisar, enfriando, faseSinAvance, leerRecepciones, semanasTocadas } from "./servicio.ts";
+import { conLista, debeAvisar, enfriando, faseSinAvance, leerRecepciones, semanasTocadas } from "./servicio.ts";
 
 Deno.test("enfriando: 10 minutos desde la última corrida buena, salvo forzar", () => {
   const ahora = new Date("2026-11-25T12:00:00Z");
@@ -39,4 +39,10 @@ Deno.test("leerRecepciones: una sola recepción no pide detalle; si Zoho niega e
   assertEquals(await leerRecepciones(z(), dos), { R1: { line_items: [] }, R2: { line_items: [] } });
   assertEquals(await leerRecepciones(z(new ZohoError("You are not authorized to perform this operation", 401, 57)), dos), null);
   await assertRejects(() => leerRecepciones(z(new ZohoError("Too many requests", 429)), dos));
+});
+
+Deno.test("conLista: el comprador sale de la lista de Zoho (el detalle no trae created_by_name)", () => {
+  assertEquals(conLista({ purchaseorder_id: "P1" }, { created_by_name: "Compras Comercializadora" }).created_by_name, "Compras Comercializadora");
+  assertEquals(conLista({ created_by_name: "Victor" }, { created_by_name: "Otro" }).created_by_name, "Victor");
+  assertEquals(conLista({}, {}).created_by_name, undefined);
 });
