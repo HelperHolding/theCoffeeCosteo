@@ -68,6 +68,7 @@ export default async function InventarioPagina() {
     lineas,
     leadTimePorSku(catalogo, leadTimes, Number(config.data?.config?.compra?.lt_default) || 7),
     hoy,
+    { sinBorradores: true },
   );
   const editable = puedeEditarCom(accesos);
   const aperturasMes = Number(config.data?.config?.aper?.por_mes) || 0;

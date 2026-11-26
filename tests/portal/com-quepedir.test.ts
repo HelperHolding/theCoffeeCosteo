@@ -4,6 +4,7 @@ import {
   filasQuePedir,
   kpisQuePedir,
   leadTimePorSku,
+  ocsEnCamino,
   llegadaEnCamino,
   ordenQuePedir,
   proveedoresQuePedir,
@@ -299,5 +300,64 @@ describe('llegada de lo en camino (pedido del usuario 2026-11-25)', () => {
       atrasada: false,
       mas: 0,
     });
+  });
+});
+
+describe('en camino sin borradores y en borrador aparte (pedido del usuario 2026-11-26)', () => {
+  const lineas = [
+    {
+      sku: 'A',
+      status: 'draft',
+      cantidad: 10,
+      cantidad_recibida: 0,
+      po_number: 'OC-1',
+      fecha_oc: '2026-11-20',
+    },
+    {
+      sku: 'A',
+      status: 'open',
+      cantidad: 5,
+      cantidad_recibida: 0,
+      po_number: 'OC-2',
+      fecha_oc: '2026-11-24',
+    },
+    {
+      sku: 'A',
+      status: 'partially_received',
+      cantidad: 8,
+      cantidad_recibida: 2,
+      po_number: 'OC-3',
+      fecha_oc: '2026-11-10',
+    },
+    {
+      sku: 'A',
+      status: 'billed',
+      cantidad: 4,
+      cantidad_recibida: 0,
+      po_number: 'OC-4',
+      fecha_oc: '2026-11-15',
+    },
+    {
+      sku: 'B',
+      status: 'draft',
+      cantidad: 7,
+      cantidad_recibida: 0,
+      po_number: 'OC-5',
+      fecha_oc: '2026-11-20',
+    },
+  ];
+  it('en camino: emitidas, parcialmente recibidas y facturadas; en borrador: solo borradores', () => {
+    expect(enCamino(lineas, { sinBorradores: true })).toEqual({ A: 15 });
+    expect(enCamino(lineas, { soloBorradores: true })).toEqual({ A: 10, B: 7 });
+    expect(enCamino(lineas)).toEqual({ A: 25, B: 7 });
+  });
+  it('folios separados igual', () => {
+    expect(ocsEnCamino(lineas, { sinBorradores: true })).toEqual({ A: ['OC-2', 'OC-3', 'OC-4'] });
+    expect(ocsEnCamino(lineas, { soloBorradores: true })).toEqual({ A: ['OC-1'], B: ['OC-5'] });
+  });
+  it('la llegada solo mira lo en camino (sin borradores)', () => {
+    const r = llegadaEnCamino(lineas, () => 7, '2026-11-26', { sinBorradores: true });
+    expect(Object.keys(r)).toEqual(['A']);
+    expect(r.A.fecha).toBe('2026-11-17');
   });
 });

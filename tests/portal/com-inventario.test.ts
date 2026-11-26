@@ -71,7 +71,7 @@ describe('inventario (port de renderComInventario)', () => {
       filasInventario({ ...d, catalogo: [cat({ zoho_sync_at: null, saldo_cedis: 7 }) as never] })[0],
     ).toMatchObject({ fisico: 7, contable: null });
   });
-  it('en camino: pendiente de OCs abiertas (borradores sí), sin cerradas, recibidas ni marcador, con sus folios', () => {
+  it('en camino: pendiente de OCs abiertas sin borradores (van en "en borrador"), sin cerradas, recibidas ni marcador, con sus folios', () => {
     const lineas = [
       { sku: 'EQ-DEL-001', status: 'open', cantidad: 8, cantidad_recibida: 8, po_number: 'COM-OC-01325' },
       { sku: 'EQ-DEL-001', status: 'open', cantidad: 25, cantidad_recibida: 0, po_number: 'COM-OC-01342' },
@@ -89,10 +89,10 @@ describe('inventario (port de renderComInventario)', () => {
       lineas,
       yulius: true,
     });
-    expect(filas.map((f) => [f.sku, f.camino, f.ocsCamino])).toEqual([
-      ['EQ-DEL-001', 25, 'COM-OC-01342'],
-      ['B', 10, 'COM-OC-01343, COM-OC-01350'],
-      ['C', 0, ''],
+    expect(filas.map((f) => [f.sku, f.camino, f.ocsCamino, f.borrador, f.ocsBorrador])).toEqual([
+      ['EQ-DEL-001', 25, 'COM-OC-01342', 0, ''],
+      ['B', 5, 'COM-OC-01343', 5, 'COM-OC-01350'],
+      ['C', 0, '', 0, ''],
     ]);
   });
   it('valor del inventario: CEDIS + 3PL siempre, solo activos con costo; cuenta los que tienen stock sin costo', () => {
@@ -164,5 +164,26 @@ describe('llegada de lo en camino (pedido del usuario 2026-11-25)', () => {
       llegadaMas: 2,
     });
     expect(b).toMatchObject({ llegada: null, llegadaEstimada: false, llegadaAtrasada: false, llegadaMas: 0 });
+  });
+});
+
+describe('en camino y en borrador (pedido del usuario 2026-11-26)', () => {
+  it('en camino excluye borradores; en borrador los junta; el semáforo cuenta los dos', () => {
+    const d = {
+      catalogo: [cat({}) as never],
+      minmax: [
+        { sku: 'A', minimo: 20, maximo: 40, minimo_manual: null, maximo_manual: null, venta_diaria: 1 },
+      ],
+      ventas: [],
+      lineas: [
+        { sku: 'A', status: 'open', cantidad: 3, cantidad_recibida: 0, po_number: 'OC-2' },
+        { sku: 'A', status: 'draft', cantidad: 9, cantidad_recibida: 0, po_number: 'OC-1' },
+      ],
+      yulius: false,
+    };
+    const [f] = filasInventario(d);
+    expect(f).toMatchObject({ camino: 3, ocsCamino: 'OC-2', borrador: 9, ocsBorrador: 'OC-1' });
+    // físico 10 + 3 + 9 = 22 > mínimo 20 → amarillo (≤ 20 + 7); sin el borrador sería rojo.
+    expect(f.estado).toBe('amarillo');
   });
 });

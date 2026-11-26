@@ -140,6 +140,7 @@ describe('pantalla Inventario', () => {
       'Físico (Informativo)',
       'En camino',
       'Llegada',
+      'En borrador',
       'Venta diaria',
       'Cobertura (días)',
       'Cobertura c/aperturas (días)',

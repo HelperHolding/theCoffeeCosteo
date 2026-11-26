@@ -29,13 +29,29 @@ function pendienteOc(l: LineaOcZoho): number {
 }
 
 /**
- * Piezas en camino por SKU: lo pendiente de recibir de OCs de Zoho abiertas (renderComQuePedir).
- * sinFacturadas: deja fuera las OCs "billed", cuyas piezas ya cuentan en el contable (como en la simulación).
+ * Filtros de lo en camino:
+ * - sinFacturadas: deja fuera las OCs "billed", cuyas piezas ya cuentan en el contable (como en la simulación);
+ * - sinBorradores: solo OCs emitidas, parcialmente recibidas o facturadas (columna "En camino" de Inventario);
+ * - soloBorradores: solo OCs en borrador (columna "En borrador"). Pedido del usuario 2026-11-26.
  */
-export function enCamino(lineas: LineaOcZoho[], { sinFacturadas = false } = {}): Record<string, number> {
+export interface FiltroCamino {
+  sinFacturadas?: boolean;
+  sinBorradores?: boolean;
+  soloBorradores?: boolean;
+}
+function entra(l: LineaOcZoho, f: FiltroCamino): boolean {
+  const s = String(l.status ?? '').toLowerCase();
+  if (f.sinFacturadas && s === 'billed') return false;
+  if (f.sinBorradores && s === 'draft') return false;
+  if (f.soloBorradores && s !== 'draft') return false;
+  return true;
+}
+
+/** Piezas en camino por SKU: lo pendiente de recibir de OCs de Zoho abiertas (renderComQuePedir). */
+export function enCamino(lineas: LineaOcZoho[], filtro: FiltroCamino = {}): Record<string, number> {
   const r: Record<string, number> = {};
   for (const l of lineas) {
-    if (sinFacturadas && String(l.status ?? '').toLowerCase() === 'billed') continue;
+    if (!entra(l, filtro)) continue;
     const p = pendienteOc(l);
     if (p > 0) r[l.sku] = (r[l.sku] ?? 0) + p;
   }
@@ -43,10 +59,10 @@ export function enCamino(lineas: LineaOcZoho[], { sinFacturadas = false } = {}):
 }
 
 /** Folios de las OCs que aportan a lo en camino de cada SKU, sin repetir y en orden. */
-export function ocsEnCamino(lineas: LineaOcZoho[]): Record<string, string[]> {
+export function ocsEnCamino(lineas: LineaOcZoho[], filtro: FiltroCamino = {}): Record<string, string[]> {
   const r: Record<string, Set<string>> = {};
   for (const l of lineas) {
-    if (!(pendienteOc(l) > 0) || !l.po_number) continue;
+    if (!entra(l, filtro) || !(pendienteOc(l) > 0) || !l.po_number) continue;
     (r[l.sku] ??= new Set()).add(l.po_number);
   }
   return Object.fromEntries(
@@ -273,11 +289,11 @@ export function llegadaEnCamino(
   lineas: LineaOcZoho[],
   leadTime: (sku: string) => number,
   hoy: string,
-  { sinFacturadas = false } = {},
+  filtro: FiltroCamino = {},
 ): Record<string, LlegadaCamino> {
   const porSku = new Map<string, Map<string, { fecha: string; estimada: boolean }>>();
   for (const l of lineas) {
-    if (sinFacturadas && String(l.status ?? '').toLowerCase() === 'billed') continue;
+    if (!entra(l, filtro)) continue;
     if (!(pendienteOc(l) > 0)) continue;
     const fecha =
       l.fecha_entrega || (l.fecha_oc ? masDias(String(l.fecha_oc).slice(0, 10), leadTime(l.sku)) : null);
