@@ -28,6 +28,7 @@ import {
   ScrollText,
   Settings2,
   BarChart3,
+  PackageCheck,
   ShoppingCart,
   Banknote,
   Boxes,
@@ -193,6 +194,7 @@ const gruposComercializadora: Grupo[] = [
     enlaces: [
       { href: '/comercializadora/inicio', nombre: 'Inicio', icono: LayoutDashboard },
       { href: '/comercializadora/reporte-semanal', nombre: 'Reporte semanal', icono: FileBarChart },
+      { href: '/comercializadora/compras', nombre: 'Compras', icono: PackageCheck },
       { href: '/comercializadora/envios', nombre: 'Envíos', icono: Send },
       { href: '/comercializadora/traspasos', nombre: 'Traspasos', icono: ArrowLeftRight },
       { href: '/comercializadora/mapeo', nombre: 'Mapeo SKU', icono: Link2 },

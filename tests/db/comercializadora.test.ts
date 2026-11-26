@@ -8,6 +8,8 @@ const TABLAS = [
   'com_movimientos', 'com_oc_auto', 'com_oc_whatsapp', 'com_ovs_corridas', 'com_ovs_lineas', 'com_ovs_tiendas', 'com_pago_proyectado',
   'com_parametros', 'com_plan_config', 'com_plan_config_historial', 'com_proveedor_cierre', 'com_sku_mapping',
   'com_sync_cambios', 'com_sync_log', 'com_zoho_oc_lineas', 'com_zoho_proveedor',
+  'com_reporte_config', 'com_reporte_saldos', 'com_reporte_semanal_cache',
+  'com_compras_factura', 'com_compras_oc', 'com_compras_recepcion', 'com_compras_sync_estado', 'com_compras_venta_semana',
 ];
 
 async function sembrar(db: PGlite) {
@@ -27,7 +29,7 @@ describe('Comercializadora: tablas y acceso (migración 45)', () => {
     await sembrar(db);
   });
 
-  it('crea las 22 tablas con RLS (17 de la migración 45, 4 del piloto de OV de la 72 y la de WhatsApp de la 78)', async () => {
+  it('crea las 30 tablas con RLS (17 de la migración 45, 4 del piloto de OV de la 72, la de WhatsApp de la 78, 3 del reporte semanal y 5 de compras)', async () => {
     const r = await db.query<{ t: string; rls: boolean }>(`
       select c.relname t, c.relrowsecurity rls from pg_class c join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relkind = 'r' and c.relname like 'com\\_%' order by 1`);

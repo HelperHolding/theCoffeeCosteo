@@ -1,6 +1,6 @@
 import 'server-only';
 
-export type FuncionCom = 'com-minmax' | 'zoho-generar-oc' | 'zoho-sync' | 'zoho-proveedor-minimo' | 'zoho-reporte-semanal';
+export type FuncionCom = 'com-minmax' | 'zoho-generar-oc' | 'zoho-sync' | 'zoho-proveedor-minimo' | 'zoho-reporte-semanal' | 'zoho-compras-sync';
 
 /**
  * Llama una Edge Function de Comercializadora con el secreto compartido (plan 2, decisión 5; plan 3, decisión 5).

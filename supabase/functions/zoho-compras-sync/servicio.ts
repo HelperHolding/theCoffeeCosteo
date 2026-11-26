@@ -32,6 +32,9 @@ export const debeAvisar = (oks: boolean[]) => oks.length >= 3 && oks[0] === fals
 export const faseSinAvance = (f: { filas: unknown[]; omitidos: string[]; error: string | null }) =>
   !!f.error && f.filas.length === 0 && f.omitidos.length === 0;
 
+/** El detalle de la OC no trae created_by_name (solo created_by_id); la lista sí: el comprador se toma de ahí. */
+export const conLista = (po: J, x: J) => ({ ...po, created_by_name: po.created_by_name || x.created_by_name });
+
 /**
  * Detalle de recepciones solo cuando la OC tiene más de una. Zoho Books puede negar /purchasereceives al token
  * (401 o código 57): entonces null y la OC se guarda con el respaldo de ocDesdeDetalle. Otros errores se propagan.
@@ -93,7 +96,7 @@ export async function sincronizar(db: SupabaseClient, z: ZohoClient, ahora: Date
     const po = (await z.get<J>(`/purchaseorders/${x.purchaseorder_id}`)).purchaseorder;
     const recs = await leerRecepciones(z, po);
     if (recs == null) sinDetalle.push(String(po.purchaseorder_number ?? x.purchaseorder_id));
-    return ocDesdeDetalle(po, recs);
+    return ocDesdeDetalle(conLista(po, x), recs);
   }, { pausa, limite: LIMITE_MS / 2 });
   let nRec = 0;
   for (const { oc, recepciones } of ocs.filas) {
