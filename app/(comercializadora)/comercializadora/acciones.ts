@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { sesionComercializadora } from '@/lib/supabase/sesion';
 import { puedeEditarCom } from '@/lib/portal/modulos';
 import { invocarFuncion } from '@/lib/comercializadora/funciones';
+import { mensajeSync } from '@/lib/comercializadora/compras/sync';
 import {
   alcanceCambio,
   fechasCambiaron,
@@ -881,4 +882,13 @@ export async function guardarConfigReporte(f: FormConfigReporte): Promise<Result
   } catch (e) {
     return fallo(e);
   }
+}
+
+/** «Sincronizar ahora» del tablero de compras (editores). La función respeta su enfriamiento de 10 minutos. */
+export async function sincronizarCompras(): Promise<Resultado<{ mensaje: string }>> {
+  if (!(await editorCom())) return { error: SOLO_LECTURA };
+  const r = await invocarFuncion('zoho-compras-sync', {}, { timeoutMs: 140_000 });
+  if (!r.ok) return { error: r.error };
+  revalidatePath('/comercializadora/compras');
+  return { ok: true, mensaje: mensajeSync(r.datos as Parameters<typeof mensajeSync>[0]) };
 }
