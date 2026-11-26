@@ -39,9 +39,13 @@ export interface FilaInventario {
   fisicoZoho: number | null;
   comprometido: number;
   disponible: number;
+  /** Piezas pendientes de OCs emitidas, parcialmente recibidas o facturadas (sin borradores). */
   camino: number;
-  /** Folios de las OCs abiertas de Zoho que traen lo en camino, separados por coma ('' si no hay). */
+  /** Folios de esas OCs, separados por coma ('' si no hay). */
   ocsCamino: string;
+  /** Piezas en OCs que siguen en borrador en Zoho, y sus folios. */
+  borrador: number;
+  ocsBorrador: string;
   /** Llegada más próxima de lo en camino ('YYYY-MM-DD') o null; ver llegadaEnCamino. */
   llegada: string | null;
   llegadaEstimada: boolean;
@@ -82,13 +86,16 @@ export function comprometido(ventas: { sku: string; cantidad: number }[]): Recor
 export function filasInventario(d: DatosInventario): FilaInventario[] {
   const mm = new Map(d.minmax.map((m) => [m.sku, m]));
   const comp = comprometido(d.ventas);
-  const cam = enCamino(d.lineas);
-  const ocs = ocsEnCamino(d.lineas);
+  const cam = enCamino(d.lineas, { sinBorradores: true });
+  const borr = enCamino(d.lineas, { soloBorradores: true });
+  const ocs = ocsEnCamino(d.lineas, { sinBorradores: true });
+  const ocsBorr = ocsEnCamino(d.lineas, { soloBorradores: true });
   return d.catalogo.map((c) => {
     const m = mm.get(c.sku) ?? null;
     const fisico = saldoCedis(c);
     const disponible = fisico + (d.yulius ? n(c.saldo_yulius) : 0);
     const camino = n(cam[c.sku]);
+    const borrador = n(borr[c.sku]);
     const venta = n(m?.venta_diaria);
     return {
       sku: c.sku,
@@ -103,6 +110,8 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
       disponible,
       camino,
       ocsCamino: (ocs[c.sku] ?? []).join(', '),
+      borrador,
+      ocsBorrador: (ocsBorr[c.sku] ?? []).join(', '),
       llegada: d.llegadas?.[c.sku]?.fecha ?? null,
       llegadaEstimada: !!d.llegadas?.[c.sku]?.estimada,
       llegadaAtrasada: !!d.llegadas?.[c.sku]?.atrasada,
@@ -112,8 +121,9 @@ export function filasInventario(d: DatosInventario): FilaInventario[] {
       minManual: m?.minimo_manual != null,
       maxManual: m?.maximo_manual != null,
       venta,
-      cobertura: venta > 0 ? Math.round((disponible + camino) / venta) : null,
-      estado: semaforo(disponible, camino, m),
+      // Cobertura y semáforo cuentan lo en camino y lo en borrador: lo que ya está en una OC no se vuelve a pedir.
+      cobertura: venta > 0 ? Math.round((disponible + camino + borrador) / venta) : null,
+      estado: semaforo(disponible, camino + borrador, m),
       tresPl: n(c.saldo_yulius),
       costo: n(c.costo_unitario) > 0 ? Number(c.costo_unitario) : null,
     };

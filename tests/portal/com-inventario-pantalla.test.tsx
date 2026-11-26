@@ -74,7 +74,8 @@ describe('Inventario', () => {
     const encabezados = screen.getAllByRole('columnheader').map((th) => th.textContent?.trim());
     expect(encabezados.slice(0, 4)).toEqual(['Nombre', 'Inventario', 'Físico (Informativo)', 'En camino']);
     expect(encabezados[4]).toBe('Llegada');
-    expect(encabezados[5]).toBe('Venta diaria');
+    expect(encabezados[5]).toBe('En borrador');
+    expect(encabezados[6]).toBe('Venta diaria');
     const celdas = screen.getAllByRole('row')[1].querySelectorAll('td');
     expect(celdas[3].textContent).toContain('25');
     expect(celdas[3].textContent).toContain('COM-OC-01342');
@@ -113,7 +114,7 @@ describe('Inventario', () => {
     const texto = await (blob as unknown as Blob).text();
     const [encabezado, linea] = texto.replace(/^﻿/, '').split(/\r?\n/);
     expect(encabezado).toContain(
-      'Inventario (contable),Fisico (informativo),En camino (OC abiertas),OC en camino,Llegada,Llegada estimada,Venta diaria',
+      'Inventario (contable),Fisico (informativo),En camino (OC emitidas),OC en camino,Llegada,Llegada estimada,En borrador,OC en borrador,Venta diaria',
     );
     expect(linea).toContain('-6,,25,COM-OC-01342,2026-12-03,si');
     click.mockRestore();
@@ -170,5 +171,30 @@ describe('Inventario', () => {
     expect(celda(2)).toContain('atrasada');
     expect(celda(2)).not.toContain('estimada');
     expect(celda(3)).toBe('—');
+  });
+  it('columna En borrador: piezas en OCs que siguen en borrador, con sus folios', () => {
+    render(
+      <Inventario
+        filas={
+          [
+            fila({ camino: 3, ocsCamino: 'COM-OC-2', borrador: 9, ocsBorrador: 'COM-OC-1' }),
+            fila({ sku: 'B', nombre: 'Vasos', camino: 0, borrador: 0, ocsBorrador: '' }),
+          ] as never
+        }
+        valor={{ valor: 0, sinCosto: 0 }}
+        viejos={[]}
+        ultimoSync={null}
+        hoy="2026-11-26"
+        editable={false}
+        autorizadores={[]}
+        saldos3pl={{}}
+        ventaAviso={null}
+        aperturasMes={10}
+      />,
+    );
+    const celda = (r: number) => screen.getAllByRole('row')[r].querySelectorAll('td')[5].textContent;
+    expect(celda(1)).toContain('9');
+    expect(celda(1)).toContain('COM-OC-1');
+    expect(celda(2)).toBe('—');
   });
 });

@@ -138,10 +138,12 @@ export function Inventario(p: {
             ['categoria', 'Categoria'],
             ['inventario', 'Inventario (contable)'],
             ['fisicoZoho', 'Fisico (informativo)'],
-            ['camino', 'En camino (OC abiertas)'],
+            ['camino', 'En camino (OC emitidas)'],
             ['ocsCamino', 'OC en camino'],
             ['llegada', 'Llegada'],
             ['llegadaEstimada', 'Llegada estimada'],
+            ['borrador', 'En borrador'],
+            ['ocsBorrador', 'OC en borrador'],
             ['venta', 'Venta diaria (30 dias)'],
             ['cobertura', 'Cobertura (dias)'],
             ['kitApertura', 'Kit por apertura'],
@@ -173,7 +175,7 @@ export function Inventario(p: {
                 </th>
                 <th
                   className="text-right"
-                  title="Pendiente de recibir de OCs abiertas de Zoho (borradores incluidos)"
+                  title="Pendiente de recibir de OCs emitidas, parcialmente recibidas o facturadas en Zoho (sin borradores)"
                 >
                   En camino
                 </th>
@@ -182,6 +184,12 @@ export function Inventario(p: {
                   title="Llegada más próxima de lo en camino: la fecha de entrega de la OC en Zoho o, si no la tiene, fecha de la OC + lead time del artículo (estimada)"
                 >
                   Llegada
+                </th>
+                <th
+                  className="text-right"
+                  title="Pendiente de OCs que siguen en borrador en Zoho (todavía no se mandan al proveedor)"
+                >
+                  En borrador
                 </th>
                 <th className="text-right">Venta diaria</th>
                 <th className="text-right">Cobertura (días)</th>
@@ -228,6 +236,18 @@ export function Inventario(p: {
                             .filter(Boolean)
                             .join(' · ')}
                         </div>
+                      </>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="text-right tabular-nums" title={f.ocsBorrador || undefined}>
+                    {f.borrador > 0 ? (
+                      <>
+                        <div>{numero(f.borrador)}</div>
+                        {f.ocsBorrador ? (
+                          <div className="text-xs text-muted-foreground">{f.ocsBorrador}</div>
+                        ) : null}
                       </>
                     ) : (
                       '—'
