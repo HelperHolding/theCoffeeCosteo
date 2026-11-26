@@ -12,7 +12,7 @@ import { documento, esc, leyenda, nombreArchivo, seccion, tabla } from './html';
 export const archivoCompras = (t: TableroCompras, ext: 'html' | 'pdf') =>
   nombreArchivo(['compras', t.periodo.clave, t.filtros.categoria ?? 'todas', t.filtros.proveedor ?? '', t.filtros.comprador ?? ''].filter(Boolean), ext);
 
-const hora = (iso: string) => new Date(iso).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', '');
+const hora = (iso: string) => new Date(iso).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\./g, '');
 const tarjeta = (et: string, va: string, no = '', clase = '') =>
   `<div class="tarjeta"><div class="et">${esc(et)}</div><div class="va ${clase}">${esc(va)}</div><div class="no">${esc(no)}</div></div>`;
 const fecha = (iso: string | null) => (iso ? fechaCorta(iso) : '—');
@@ -34,7 +34,7 @@ function plan(p: PlanCompra, t: TableroCompras): string {
     ));
 }
 
-export function htmlTableroCompras(t: TableroCompras, o: { plan: PlanCompra | null; errorPlan: string | null; leidoEn: string; ultimaSync: string | null }): string {
+export function htmlTableroCompras(t: TableroCompras, o: { plan: PlanCompra | null; errorPlan: string | null; leidoEn: string; ultimaSync: string | null; syncVieja?: boolean }): string {
   const ind = tarjetasIndicadores(t, o.plan ? o.plan.faltan : null)
     .map((x) => tarjeta(x.etiqueta, x.valor, x.nota, x.tono === 'ok' ? 'ok' : x.tono === 'pierde' ? 'mal' : '')).join('');
   const aviso = t.sinDetalle.length
@@ -53,7 +53,10 @@ export function htmlTableroCompras(t: TableroCompras, o: { plan: PlanCompra | nu
     t.porLlegar.map((x) => [x.folio, x.proveedor, fecha(x.arribo), x.estado, pesos(x.monto), x.articulos.map((a) => `${a.sku} · ${a.nombre} ×${numero(a.pendiente)}`).join('; ')]),
     { derecha: [4] },
   );
-  const cuerpo = aviso
+  const vieja = o.syncVieja
+    ? '<p class="aviso">La última sincronización buena tiene más de 36 horas: las cifras pueden estar atrasadas.</p>'
+    : '';
+  const cuerpo = vieja + aviso
     + seccion('01', `Indicadores · ${t.periodo.etiqueta}`, `<div class="tarjetas">${ind}</div>`)
     + seccion('02', 'Evolución', evolucion)
     + '<div class="salto"></div>'

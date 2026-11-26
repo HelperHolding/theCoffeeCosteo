@@ -11,6 +11,7 @@ vi.mock('@/lib/comercializadora/exportar/pdf', () => ({ htmlAPdf: (...a: unknown
 
 import { GET } from '@/app/(comercializadora)/comercializadora/compras/descargar/route';
 import { SIN_DATOS } from '@/lib/comercializadora/compras/sync';
+import { semDelMotor } from '@/lib/comercializadora/compras/motor';
 
 const conDatos = {
   datos: {
@@ -49,6 +50,15 @@ describe('ruta de descarga del tablero de compras', () => {
     const r = await GET(url('formato=pdf'));
     expect([r.status, await r.text()]).toEqual([409, SIN_DATOS]);
     expect(pdf).not.toHaveBeenCalled();
+  });
+  it('si el plan de compra truena al armarse, el archivo sale con el error en esa sección (spec §5)', async () => {
+    leer.mockResolvedValue(conDatos);
+    vi.mocked(semDelMotor).mockResolvedValueOnce({ ok: true, S: { cat: null } as never, hoyIso: '2026-11-26' });
+    const r = await GET(url('periodo=2026-11-16&formato=html'));
+    expect(r.status).toBe(200);
+    const h = await r.text();
+    expect(h).toContain('No se pudo calcular el plan de compra');
+    expect(h).toContain('OCs por llegar');
   });
   it('si la lectura de Supabase falla: 500 con el mensaje de la lectura', async () => {
     leer.mockRejectedValue(new Error('No se pudieron leer los datos de Comercializadora. Intenta de nuevo.'));

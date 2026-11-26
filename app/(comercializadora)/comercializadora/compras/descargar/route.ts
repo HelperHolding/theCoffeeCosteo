@@ -4,7 +4,7 @@ import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { leerDatosCompras } from '@/lib/comercializadora/compras/datos';
 import { semDelMotor } from '@/lib/comercializadora/compras/motor';
 import { filtrosDeUrl } from '@/lib/comercializadora/compras/filtros';
-import { SIN_DATOS } from '@/lib/comercializadora/compras/sync';
+import { estadoSync, SIN_DATOS } from '@/lib/comercializadora/compras/sync';
 import { planCompra } from '@/lib/comercializadora/compras/plan';
 import { archivoCompras, htmlTableroCompras } from '@/lib/comercializadora/exportar/reporteCompras';
 import { htmlAPdf, MENSAJE_FALLA_PDF } from '@/lib/comercializadora/exportar/pdf';
@@ -36,11 +36,18 @@ export async function GET(req: Request) {
   const [{ datos, ultimaSync }, motor] = leido;
   if (faltanDatos(datos)) return respuestaError(409, SIN_DATOS);
   const t = armarTablero(datos, filtrosDeUrl(Object.fromEntries(sp)), hoy);
+  // Si el plan truena al armarse, el archivo sale con el error en esa sección (spec §5), como cuando el motor falla.
+  let plan = null, errorPlan = motor.ok ? null : motor.error;
+  if (motor.ok) {
+    try {
+      plan = planCompra(motor.S, t.filtros, hoy);
+    } catch {
+      errorPlan = 'No se pudo armar el plan con los datos del plan de abastos.';
+    }
+  }
+  const sync = estadoSync(ultimaSync, new Date());
   const html = htmlTableroCompras(t, {
-    plan: motor.ok ? planCompra(motor.S, t.filtros, hoy) : null,
-    errorPlan: motor.ok ? null : motor.error,
-    leidoEn: new Date().toISOString(),
-    ultimaSync,
+    plan, errorPlan, leidoEn: new Date().toISOString(), ultimaSync, syncVieja: sync.viejo && !sync.nunca,
   });
   if (formato === 'html') return respuestaArchivo(html, archivoCompras(t, 'html'), 'html');
   try {

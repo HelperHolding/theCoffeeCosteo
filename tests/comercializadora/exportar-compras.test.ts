@@ -44,6 +44,10 @@ describe('descarga del tablero de compras', () => {
     expect(h).toContain('Café &lt;grano&gt;');
     expect(h).not.toContain('Prov <A>');
   });
+  it('sincronización de más de 36 h: el archivo lo avisa, como la pantalla', () => {
+    expect(htmlTableroCompras(t, { ...opts, syncVieja: true })).toContain('La última sincronización buena tiene más de 36 horas');
+    expect(htmlTableroCompras(t, opts)).not.toContain('más de 36 horas');
+  });
   it('si el plan falla, sale el error y el resto del archivo', () => {
     const h = htmlTableroCompras(t, { ...opts, plan: null, errorPlan: 'Motor sin datos' });
     expect(h).toContain('No se pudo calcular el plan de compra: Motor sin datos');
