@@ -10,6 +10,7 @@ import { VistaModulos } from './modulos';
 import { VistaExpediente, VistaTiendas } from './crm';
 import { VISTAS_CRM, VistaExpedienteUnificado, VistaPipeline } from './crm-unificado';
 import { VistaSucursales } from './sucursales';
+import { VistaPagosPropias } from './pagos-propias';
 import { VistaTableroMexico } from './tablero-mexico';
 import { VistaBi } from './bi';
 import { VistaFranquiciatarios } from './franquiciatarios';
@@ -49,6 +50,8 @@ const vistaCrm = VISTAS_CRM[new URLSearchParams(window.location.search).get('vis
 createRoot(document.getElementById('root')!).render(
   vistaCrm ? (
     vistaCrm()
+  ) : new URLSearchParams(window.location.search).has('pagos-propias') ? (
+    <VistaPagosPropias />
   ) : new URLSearchParams(window.location.search).has('franquiciatarios') ? (
     <VistaFranquiciatarios />
   ) : window.location.search.includes('pipeline') ? (

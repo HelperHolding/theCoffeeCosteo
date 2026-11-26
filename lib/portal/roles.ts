@@ -10,3 +10,14 @@ export const tieneCosteo = (rol: string): boolean => (ROLES_COSTEO as readonly s
 export const ROLES_EXTERNOS = ['franquiciado', 'tienda'] as const satisfies readonly Rol[];
 export const marcaDe = (rol: string): 'holding' | 'thecoffee' =>
   (ROLES_EXTERNOS as readonly string[]).includes(rol) ? 'thecoffee' : 'holding';
+
+/** Empleados de Helper Holding: los únicos que pueden tener Pagos de Sucursales propias (la RLS usa la misma lista). */
+export const ROLES_HOLDING = [
+  'compras',
+  'operaciones',
+  'finanzas',
+  'admin',
+  'sucursales',
+  'interno',
+] as const satisfies readonly Rol[];
+export const esHolding = (rol: string): boolean => (ROLES_HOLDING as readonly string[]).includes(rol);

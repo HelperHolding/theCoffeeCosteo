@@ -62,7 +62,7 @@ type Enlace = {
   /** Entrada de un módulo: se marca activa por la sección (Costeo vive en /resumen, /productos…), no por la ruta. */
   modulo?: IdModulo;
 };
-type Grupo = { titulo: string; enlaces: Enlace[] };
+type Grupo = { titulo: string; enlaces: Enlace[]; separado?: boolean };
 export type Seccion = 'inicio' | IdModulo;
 /** Sucursal abierta en Franquiciatarios. gestor = gerente, franquiciatario o admin del módulo. */
 export type Franquicia = { companyId: number; nombre: string; gestor: boolean; varias: boolean };
@@ -169,13 +169,20 @@ const gruposCrm: Grupo[] = [
 
 const gruposSucursales: Grupo[] = [
   {
-    titulo: 'Sucursales',
+    titulo: 'Red',
     enlaces: [
       { href: '/sucursales', nombre: 'Directorio', icono: LayoutGrid, exacto: true },
       { href: '/sucursales/mexico', nombre: 'Tablero México', icono: MapPinned },
     ],
   },
 ];
+
+/** Pagos y administración de las sucursales propias: solo empleados Holding con 'sucursales_pagos' (spec §3). */
+const grupoPropias: Grupo = {
+  titulo: 'Sucursales propias · Helper Holding',
+  separado: true,
+  enlaces: [{ href: '/sucursales/propias/pagos', nombre: 'Pagos', icono: Wallet }],
+};
 
 const gruposBi: Grupo[] = [
   {
@@ -240,12 +247,30 @@ const gruposPorSeccion: Record<Seccion, Grupo[]> = {
  * Grupos de la sección: primero «Módulos» (Inicio y todos los módulos que el usuario puede ver, incluido el abierto),
  * luego los del módulo abierto. Franquiciatarios sin otros módulos no lleva «Módulos»: Inicio lo regresa a su sucursal.
  */
-export function gruposDe(seccion: Seccion, visibles: IdModulo[], franquicia?: Franquicia): Grupo[] {
-  const propios = seccion === 'franquiciatarios' ? (franquicia ? gruposFranquicia(franquicia) : []) : gruposPorSeccion[seccion];
+export function gruposDe(
+  seccion: Seccion,
+  visibles: IdModulo[],
+  franquicia?: Franquicia,
+  opciones: { red?: boolean; propias?: boolean } = {},
+): Grupo[] {
+  let propios =
+    seccion === 'franquiciatarios'
+      ? franquicia
+        ? gruposFranquicia(franquicia)
+        : []
+      : gruposPorSeccion[seccion];
+  if (seccion === 'sucursales')
+    propios = [
+      ...(opciones.red === false ? [] : gruposSucursales),
+      ...(opciones.propias ? [grupoPropias] : []),
+    ];
   if (visibles.every((m) => m === 'franquiciatarios') && seccion === 'franquiciatarios') return propios;
   const modulosGrupo: Grupo = {
     titulo: 'Módulos',
-    enlaces: [{ href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true }, ...visibles.map(entradaModulo)],
+    enlaces: [
+      { href: '/', nombre: 'Inicio', icono: LayoutGrid, exacto: true },
+      ...visibles.map(entradaModulo),
+    ],
   };
   return [modulosGrupo, ...propios];
 }
@@ -267,18 +292,20 @@ export function Navegacion({
   seccion = 'costeo',
   visibles = [],
   franquicia,
+  sucursales,
 }: {
   alNavegar?: () => void;
   seccion?: Seccion;
   visibles?: IdModulo[];
   franquicia?: Franquicia;
+  sucursales?: { red: boolean; propias: boolean };
 }) {
   const pathname = usePathname();
   const tab = useSearchParams().get('tab');
   return (
     <nav aria-label="Principal" className="flex flex-col gap-5">
-      {gruposDe(seccion, visibles, franquicia).map((g) => (
-        <div key={g.titulo}>
+      {gruposDe(seccion, visibles, franquicia, sucursales).map((g) => (
+        <div key={g.titulo} className={g.separado ? 'border-t border-line pt-4' : undefined}>
           <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[.22em] text-muted-foreground">
             {g.titulo}
           </p>

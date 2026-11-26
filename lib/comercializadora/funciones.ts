@@ -1,6 +1,12 @@
 import 'server-only';
 
-export type FuncionCom = 'com-minmax' | 'zoho-generar-oc' | 'zoho-sync' | 'zoho-proveedor-minimo' | 'zoho-reporte-semanal';
+export type FuncionCom =
+  | 'com-minmax'
+  | 'zoho-generar-oc'
+  | 'zoho-sync'
+  | 'zoho-proveedor-minimo'
+  | 'zoho-reporte-semanal'
+  | 'zoho-suc-pagos';
 
 /**
  * Llama una Edge Function de Comercializadora con el secreto compartido (plan 2, decisión 5; plan 3, decisión 5).
@@ -9,7 +15,14 @@ export type FuncionCom = 'com-minmax' | 'zoho-generar-oc' | 'zoho-sync' | 'zoho-
 export async function invocarFuncion(
   nombre: FuncionCom,
   body: object = {},
-  deps: { fetch?: typeof fetch; url?: string; secreto?: string; timeoutMs?: number } = {},
+  deps: {
+    fetch?: typeof fetch;
+    url?: string;
+    secreto?: string;
+    timeoutMs?: number;
+    /** Encabezados extra (p. ej. el JWT del usuario); nunca reemplazan x-com-secreto. */
+    encabezados?: Record<string, string>;
+  } = {},
 ): Promise<{ ok: true; datos: unknown } | { ok: false; error: string }> {
   const secreto = deps.secreto ?? process.env.COM_SECRETO ?? '';
   const base =
@@ -22,7 +35,7 @@ export async function invocarFuncion(
   try {
     const r = await (deps.fetch ?? fetch)(`${base}/${nombre}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-com-secreto': secreto },
+      headers: { 'Content-Type': 'application/json', ...deps.encabezados, 'x-com-secreto': secreto },
       body: JSON.stringify(body),
       cache: 'no-store',
       signal: AbortSignal.timeout(deps.timeoutMs ?? 150_000),

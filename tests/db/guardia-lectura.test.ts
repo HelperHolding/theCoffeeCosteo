@@ -13,6 +13,8 @@ const PREDICADOS = [
   /bi_[a-z_]+\(/,
   // Franquiciatarios (migración 75): módulo + membresía por sucursal o admin del módulo.
   /franq_[a-z_]+\(/,
+  // Pagos de Sucursales propias (migración 98): módulo solo para empleados Holding.
+  /suc_pagos_[a-z_]+\(/,
   /user_id = (\( SELECT )?auth\.uid\(\)/,
 ];
 const TIENE_ROL_EXTERNO = /tiene_rol\([^)]*'(interno|franquiciado|proveedor)'/;

@@ -1,15 +1,22 @@
 import type { NivelModulo } from '../supabase/database.types';
-import { tieneCosteo } from './roles';
+import { esHolding, tieneCosteo } from './roles';
 
 /** Módulos del portal. Para agregar uno: una entrada aquí, su route group y su navegación. */
 export type IdModulo = 'costeo' | 'crm' | 'sucursales' | 'bi' | 'comercializadora' | 'franquiciatarios';
 /**
  * Accesos explícitos por módulo (tabla perfil_modulos). Costeo no la necesita (sale de perfiles.rol).
  * 'sucursales_costeo': ver el Costeo de sus sucursales dentro de Sucursales, sin entrar al módulo Costeo.
+ * 'sucursales_pagos': pagos a proveedores de las sucursales propias (solo empleados Holding).
  */
 export type Accesos = Partial<
   Record<
-    'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios',
+    | 'crm'
+    | 'sucursales'
+    | 'sucursales_costeo'
+    | 'sucursales_pagos'
+    | 'bi'
+    | 'comercializadora'
+    | 'franquiciatarios',
     NivelModulo
   >
 >;
@@ -43,8 +50,8 @@ export const modulos: Modulo[] = [
     nombre: 'Sucursales',
     descripcion: 'Ventas en vivo por sucursal (mostrador, app y Rappi): venta, pedidos, productos y pagos.',
     href: '/sucursales',
-    // Además del módulo, cada sucursal requiere asignación explícita (perfil_sucursales).
-    acceso: (a) => a.sucursales !== undefined,
+    // Ventas: además, cada sucursal requiere asignación (perfil_sucursales). Pagos de Sucursales propias también abre el módulo.
+    acceso: (a, rol) => a.sucursales !== undefined || puedeVerPagos(a, rol),
   },
   {
     id: 'bi',
@@ -79,3 +86,10 @@ export const puedeEditarCrm = (accesos: Accesos) =>
 
 export const puedeEditarCom = (accesos: Accesos) =>
   accesos.comercializadora === 'desarrollador' || accesos.comercializadora === 'edicion';
+
+// Con `function` porque la entrada `sucursales` de `modulos`, definida antes, la usa.
+export function puedeVerPagos(accesos: Accesos, rol: string): boolean {
+  return accesos.sucursales_pagos !== undefined && esHolding(rol);
+}
+export const puedeAplicarPagos = (accesos: Accesos, rol: string) =>
+  esHolding(rol) && (accesos.sucursales_pagos === 'edicion' || accesos.sucursales_pagos === 'desarrollador');

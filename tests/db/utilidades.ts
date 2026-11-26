@@ -41,7 +41,14 @@ export async function crearUsuario(db: PGlite, rol: Rol): Promise<string> {
 export async function darModulo(
   db: PGlite,
   userId: string,
-  modulo: 'crm' | 'sucursales' | 'sucursales_costeo' | 'bi' | 'comercializadora' | 'franquiciatarios',
+  modulo:
+    | 'crm'
+    | 'sucursales'
+    | 'sucursales_costeo'
+    | 'bi'
+    | 'comercializadora'
+    | 'franquiciatarios'
+    | 'sucursales_pagos',
   nivel: 'desarrollador' | 'edicion' | 'lectura',
 ): Promise<void> {
   await db.query('insert into perfil_modulos (user_id, modulo, nivel) values ($1, $2, $3)', [
