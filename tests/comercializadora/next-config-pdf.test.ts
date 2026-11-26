@@ -8,4 +8,8 @@ describe('empaquetado de Chromium para el PDF', () => {
     const incluye = config.outputFileTracingIncludes?.['/comercializadora/reporte-semanal/descargar'] ?? [];
     expect(incluye).toContain('./node_modules/@sparticuz/chromium/bin/**/*');
   });
+  it('la descarga del tablero de compras también los incluye', () => {
+    const incluye = config.outputFileTracingIncludes?.['/comercializadora/compras/descargar'] ?? [];
+    expect(incluye).toContain('./node_modules/@sparticuz/chromium/bin/**/*');
+  });
 });

@@ -18,3 +18,6 @@ export function mensajeSync(d: { omitida?: string; ocs?: number; recepciones?: n
   const base = `Listo: ${d.ocs ?? 0} OCs, ${d.recepciones ?? 0} recepciones y ${d.facturas ?? 0} facturas leídas de Zoho`;
   return d.pendientes ? `${base}; aún faltan documentos por leer, el siguiente ciclo sigue.` : `${base}.`;
 }
+
+/** Respuesta de la descarga cuando la primera sincronización no ha dejado datos (spec §5). */
+export const SIN_DATOS = 'Todavía no hay datos de compras para descargar. La primera sincronización tarda varias corridas; intenta en unos minutos.';
