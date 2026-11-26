@@ -27,6 +27,8 @@ export type TableroCompras = {
   k: Indicadores; kAnt: Indicadores;
   vencidas: { n: number; monto: number };
   porLlegar: OcPorLlegar[]; proveedores: FilaProveedor[]; serie: PuntoSerie[];
+  /** Folios de OCs cuyo recibido en el periodo se contó con el respaldo de recepciones (ver recepcionesSinDetalle). */
+  sinDetalle: string[];
   opciones: { periodos: Periodo[]; proveedores: string[]; compradores: string[] };
 };
 
@@ -129,7 +131,28 @@ export function indicadores(d: DatosCompras, f: FiltrosCompras, p: Periodo): Ind
   };
 }
 
-const abierta = (o: OcT) => o.received_status !== "received";
+/** Sigue esperando mercancía: no recibida y no cerrada a mano en Zoho. Un solo criterio para vencidas, por llegar y pendientes. */
+const abierta = (o: OcT) => o.received_status !== "received" && o.estado !== "closed";
+
+/** Primera sincronización incompleta: sin OCs o sin venta guardada, el tablero saldría en ceros (spec §5). */
+export const faltanDatos = (d: DatosCompras) => d.ocs.length === 0 || d.ventas.length === 0;
+
+/**
+ * OCs cuyo recibido se contó con el respaldo (Zoho no dio el detalle de cada recepción): varias recepciones,
+ * todas en 0 salvo una, y esa cae en el periodo. Sus compras recibidas pueden estar en la semana equivocada.
+ */
+export function recepcionesSinDetalle(d: DatosCompras, p: Periodo): string[] {
+  const porOc = new Map<string, RecT[]>();
+  for (const r of d.recepciones) porOc.set(r.zoho_po_id, [...(porOc.get(r.zoho_po_id) ?? []), r]);
+  const folio = new Map(d.ocs.map((o) => [o.zoho_po_id, o.folio]));
+  const out: string[] = [];
+  for (const [id, rs] of porOc) {
+    const con = rs.filter((r) => r.monto !== 0);
+    if (rs.length > 1 && con.length === 1 && enRango(con[0].fecha, p.ini, p.fin)) out.push(folio.get(id) ?? id);
+  }
+  return out.sort();
+}
+
 export function vencidas(d: DatosCompras, f: FiltrosCompras, hoy: string) {
   const xs = d.ocs.filter((o) => pasa(o, f) && !o.es_registro && abierta(o) && !!o.arribo && o.arribo < hoy);
   return { n: xs.length, monto: xs.reduce((a, o) => a + montoCat(o.por_categoria, o.monto_ins, f.categoria), 0) };
@@ -139,7 +162,7 @@ export function porLlegar(d: DatosCompras, f: FiltrosCompras, hoy: string): OcPo
   const lineas = new Map<string, LineaAbierta[]>();
   for (const l of d.lineas) if (l.pendiente > 0) lineas.set(l.zoho_po_id, [...(lineas.get(l.zoho_po_id) ?? []), l]);
   return d.ocs
-    .filter((o) => pasa(o, f) && !o.es_registro && abierta(o) && o.estado !== "closed")
+    .filter((o) => pasa(o, f) && !o.es_registro && abierta(o))
     .map((o): OcPorLlegar => ({
       folio: o.folio, proveedor: o.proveedor, arribo: o.arribo,
       estado: !o.arribo ? "Sin fecha" : o.arribo < hoy ? "Vencida" : "En plazo",
@@ -165,7 +188,8 @@ export function proveedores(d: DatosCompras, f: FiltrosCompras, p: Periodo, hoy:
       x.leadSuma += dif(o.emision, pr);
       if (o.arribo && pr <= o.arribo) x.aTiempo++;
       else if (o.arribo) x.atrasadas++;
-    } else if (o.arribo && o.arribo < hoy) x.pendVencidas++;
+    } else if (!abierta(o)) continue;
+    else if (o.arribo && o.arribo < hoy) x.pendVencidas++;
     else x.pendEnPlazo++;
   }
   return [...m.values()]
@@ -194,6 +218,7 @@ export function armarTablero(d: DatosCompras, f: FiltrosCompras, hoy: string): T
     porLlegar: porLlegar(d, f, hoy),
     proveedores: proveedores(d, f, periodo, hoy),
     serie: serie(d, f, periodo),
+    sinDetalle: recepcionesSinDetalle(d, periodo),
     opciones: { periodos: periodos(d.ventas.map((v) => v.semana)), proveedores: unicos(validas.map((o) => o.proveedor)), compradores: unicos(validas.map((o) => o.comprador)) },
   };
 }

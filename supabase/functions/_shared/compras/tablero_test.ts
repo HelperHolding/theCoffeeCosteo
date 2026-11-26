@@ -2,9 +2,41 @@
 import { assertEquals } from "@std/assert";
 import {
   type DatosCompras, type FiltrosCompras, type OcT, armarTablero, indicadores, periodoAnterior, periodoDe, periodos,
-  porLlegar, proveedores, semaforo, serie, vencidas,
+  faltanDatos, porLlegar, proveedores, recepcionesSinDetalle, semaforo, serie, vencidas,
 } from "./tablero.ts";
 import { ocDesdeDetalle } from "./reglas.ts";
+
+Deno.test("faltanDatos: sin OCs o sin venta guardada es una primera sincronización incompleta", () => {
+  const d = (ocs: number, ventas: number) => ({ ocs: Array(ocs).fill({}), ventas: Array(ventas).fill({}), recepciones: [], lineas: [] }) as unknown as DatosCompras;
+  assertEquals([faltanDatos(d(0, 0)), faltanDatos(d(3, 0)), faltanDatos(d(0, 2)), faltanDatos(d(3, 2))], [true, true, true, false]);
+});
+
+Deno.test("una OC cerrada sin recibir no cuenta como vencida ni pendiente (igual que por llegar)", () => {
+  const d: DatosCompras = {
+    ocs: [{ zoho_po_id: "C1", folio: "COM-OC-9", proveedor: "Prov A", comprador: "CC", emision: "2026-11-17", arribo: "2026-11-18", estado: "closed", received_status: "", monto_ins: 100, por_categoria: { CAF: 100 }, es_registro: false }],
+    recepciones: [], ventas: [], lineas: [],
+  };
+  const f0: FiltrosCompras = { periodo: "2026-11-16", categoria: null, proveedor: null, comprador: null };
+  assertEquals(vencidas(d, f0, "2026-11-26"), { n: 0, monto: 0 });
+  assertEquals(porLlegar(d, f0, "2026-11-26"), []);
+  const p = proveedores(d, f0, periodoDe("2026-11-16", "2026-11-26"), "2026-11-26")[0];
+  assertEquals([p.pendVencidas, p.pendEnPlazo], [0, 0]);
+});
+
+Deno.test("recepcionesSinDetalle: OCs con varias recepciones donde todo cayó en una (respaldo) y esa cae en el periodo", () => {
+  const rec = (id: string, fecha: string, monto: number) => ({ zoho_po_id: id, fecha, monto, por_categoria: {} });
+  const d: DatosCompras = {
+    ocs: ["A", "B", "C", "D"].map((id) => ({ zoho_po_id: id, folio: `COM-OC-${id}`, proveedor: "P", comprador: "CC", emision: "2026-10-01", arribo: null, estado: "billed", received_status: "received", monto_ins: 1, por_categoria: {}, es_registro: false })),
+    recepciones: [
+      rec("A", "2026-10-28", 0), rec("A", "2026-11-17", 500), // respaldo, cae en 16–22
+      rec("B", "2026-11-17", 300), rec("B", "2026-11-18", 200), // detalle real: ambas con monto
+      rec("C", "2026-11-01", 0), rec("C", "2026-11-05", 900), // respaldo fuera del periodo
+      rec("D", "2026-11-19", 0), // una sola recepción en 0 (moneda extranjera)
+    ],
+    ventas: [], lineas: [],
+  };
+  assertEquals(recepcionesSinDetalle(d, periodoDe("2026-11-16", "2026-11-26")), ["COM-OC-A"]);
+});
 
 const oc = (o: Partial<OcT> = {}): OcT => ({
   zoho_po_id: "P1", folio: "COM-OC-1", proveedor: "Prov A", comprador: "CC", emision: "2026-11-17", arribo: "2026-11-19",
@@ -103,6 +135,7 @@ Deno.test("armarTablero: opciones con los valores de OCs válidas, ordenados", (
   assertEquals(t.opciones.compradores, ["CC", "VP"]);
   assertEquals(t.anterior.clave, "2026-11-09");
   assertEquals(t.kAnt.venta, 3000);
+  assertEquals(t.sinDetalle, []);
 });
 
 // Paridad con Gestion_Compras_Comercializadora_41.html (__DATA__.entregas_oc y ocs_proveedor, semana 16–22 nov).
