@@ -3,6 +3,7 @@ import {
   enCamino,
   filasQuePedir,
   kpisQuePedir,
+  FILTRO_QUE_PEDIR,
   leadTimePorSku,
   ocsEnCamino,
   llegadaEnCamino,
@@ -359,5 +360,18 @@ describe('en camino sin borradores y en borrador aparte (pedido del usuario 2026
     const r = llegadaEnCamino(lineas, () => 7, '2026-11-26', { sinBorradores: true });
     expect(Object.keys(r)).toEqual(['A']);
     expect(r.A.fecha).toBe('2026-11-17');
+  });
+});
+
+describe('Qué pedir: en camino sin borradores (pedido del usuario 2026-11-26)', () => {
+  it('cuenta emitidas y parcialmente recibidas; deja fuera borradores y facturadas (ya están en el contable)', () => {
+    const lineas = [
+      { sku: 'A', status: 'draft', cantidad: 10, cantidad_recibida: 0 },
+      { sku: 'A', status: 'open', cantidad: 5, cantidad_recibida: 0 },
+      { sku: 'A', status: 'partially_received', cantidad: 8, cantidad_recibida: 2 },
+      { sku: 'A', status: 'billed', cantidad: 4, cantidad_recibida: 0 },
+    ];
+    expect(FILTRO_QUE_PEDIR).toEqual({ sinFacturadas: true, sinBorradores: true });
+    expect(enCamino(lineas, FILTRO_QUE_PEDIR)).toEqual({ A: 11 });
   });
 });
