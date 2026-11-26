@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DescargarReporte } from '@/components/comercializadora/reporte-semanal/descargar';
+import { Descargar } from '@/components/comercializadora/descargar';
 
 const HTML = '/comercializadora/reporte-semanal/descargar?semana=2026-11-16&formato=html';
 
@@ -33,5 +34,27 @@ describe('botón Descargar', () => {
     clic.mockRestore();
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+});
+
+describe('botón Descargar genérico', () => {
+  it('agrega formato con & si la base ya trae filtros, o con ? si no', () => {
+    const { unmount } = render(<Descargar base="/comercializadora/compras/descargar?periodo=2026-11-16" archivoPdf="compras-2026-11-16-todas.pdf" />);
+    expect(screen.getByRole('link', { name: 'HTML' }).getAttribute('href')).toBe('/comercializadora/compras/descargar?periodo=2026-11-16&formato=html');
+    unmount();
+    render(<Descargar base="/comercializadora/compras/descargar" archivoPdf="compras.pdf" />);
+    expect(screen.getByRole('link', { name: 'HTML' }).getAttribute('href')).toBe('/comercializadora/compras/descargar?formato=html');
+  });
+  it('el PDF se baja con el nombre que le pasan', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob(['%PDF']), { status: 200 })));
+    vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:x', revokeObjectURL: vi.fn() }));
+    let nombre = '';
+    const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { nombre = this.download; });
+    render(<Descargar base="/comercializadora/compras/descargar?periodo=2026-11-16" archivoPdf="compras-2026-11-16-todas.pdf" />);
+    fireEvent.click(screen.getByRole('button', { name: /PDF/ }));
+    await waitFor(() => expect(clic).toHaveBeenCalled());
+    expect(nombre).toBe('compras-2026-11-16-todas.pdf');
+    clic.mockRestore();
+    vi.unstubAllGlobals();
   });
 });

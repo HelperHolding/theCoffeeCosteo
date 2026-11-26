@@ -26,6 +26,9 @@ export function hrefCompras(f: FiltrosCompras, cambio: Partial<FiltrosCompras> =
   return s ? `${RUTA}?${s}` : RUTA;
 }
 
+/** La ruta de descarga con los mismos filtros que la vista (spec §4). */
+export const hrefDescargaCompras = (f: FiltrosCompras) => hrefCompras(f).replace(RUTA, `${RUTA}/descargar`);
+
 export function textoFiltros(f: FiltrosCompras, etiquetaPeriodo: string): string {
   return [
     etiquetaPeriodo,

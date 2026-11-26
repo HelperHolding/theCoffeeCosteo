@@ -18,5 +18,5 @@ export function respuestaArchivo(cuerpo: string | Uint8Array, nombre: string, fo
   });
 }
 
-export const respuestaError = (estado: 401 | 403 | 500 | 502, mensaje: string) =>
+export const respuestaError = (estado: 401 | 403 | 409 | 500 | 502, mensaje: string) =>
   new Response(mensaje, { status: estado, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });

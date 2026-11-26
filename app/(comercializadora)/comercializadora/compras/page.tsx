@@ -5,7 +5,9 @@ import { puedeEditarCom } from '@/lib/portal/modulos';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import { leerDatosCompras } from '@/lib/comercializadora/compras/datos';
 import { semDelMotor } from '@/lib/comercializadora/compras/motor';
-import { filtrosDeUrl, textoFiltros, type ParamsCompras } from '@/lib/comercializadora/compras/filtros';
+import { filtrosDeUrl, hrefDescargaCompras, textoFiltros, type ParamsCompras } from '@/lib/comercializadora/compras/filtros';
+import { archivoCompras } from '@/lib/comercializadora/exportar/reporteCompras';
+import { Descargar } from '@/components/comercializadora/descargar';
 import { planCompra } from '@/lib/comercializadora/compras/plan';
 import { estadoSync } from '@/lib/comercializadora/compras/sync';
 import { armarTablero, faltanDatos } from '../../../../supabase/functions/_shared/compras/tablero.ts';
@@ -32,6 +34,7 @@ export default async function ComprasPagina({ searchParams }: { searchParams: Pr
       descripcion={`Venta, compras recibidas y entregas de proveedores · ${textoFiltros(t.filtros, t.periodo.etiqueta)}. Datos sincronizados desde Zoho Books.`}>
       <span className="text-sm text-ink-2">{sync.texto}</span>
       {editor && <SincronizarCompras />}
+      {!faltanDatos(datos) && <Descargar base={hrefDescargaCompras(t.filtros)} archivoPdf={archivoCompras(t, 'pdf')} />}
     </Encabezado>
   );
   if (faltanDatos(datos))
