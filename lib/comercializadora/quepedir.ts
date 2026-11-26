@@ -39,6 +39,9 @@ export interface FiltroCamino {
   sinBorradores?: boolean;
   soloBorradores?: boolean;
 }
+/** Lo en camino que usa Qué pedir: sin borradores (pedido del usuario 2026-11-26) y sin facturadas, que ya están en el contable. */
+export const FILTRO_QUE_PEDIR: FiltroCamino = { sinFacturadas: true, sinBorradores: true };
+
 function entra(l: LineaOcZoho, f: FiltroCamino): boolean {
   const s = String(l.status ?? '').toLowerCase();
   if (f.sinFacturadas && s === 'billed') return false;

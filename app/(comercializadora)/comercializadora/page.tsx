@@ -8,7 +8,7 @@ import {
   leerTodoCom,
   ultimaProyeccion,
 } from '@/lib/comercializadora/consultas';
-import { enCamino, leadTimePorSku, llegadaEnCamino } from '@/lib/comercializadora/quepedir';
+import { enCamino, FILTRO_QUE_PEDIR, leadTimePorSku, llegadaEnCamino } from '@/lib/comercializadora/quepedir';
 import { hoyCdmx } from '@/lib/comercializadora/fechas';
 import type { ArticuloCatalogo, CompraProyectada, LineaOcZoho, MinMax } from '@/lib/comercializadora/tipos';
 
@@ -67,12 +67,12 @@ export default async function QuePedirPagina() {
           catalogo,
           minmax,
           compras,
-          camino: enCamino(lineas, { sinFacturadas: true }),
+          camino: enCamino(lineas, FILTRO_QUE_PEDIR),
           llegadas: llegadaEnCamino(
             lineas,
             leadTimePorSku(catalogo, leadTimes, Number(config.data?.config?.compra?.lt_default) || 7),
             hoy,
-            { sinFacturadas: true },
+            FILTRO_QUE_PEDIR,
           ),
           yulius: config.data?.config?.inv?.yulius !== false,
           resumen: proy.resumen,
