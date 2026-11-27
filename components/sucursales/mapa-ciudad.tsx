@@ -1,70 +1,131 @@
 'use client';
-import { useId, useState } from 'react';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { Map as MapaGl, Marker } from 'maplibre-gl';
+import type { FeatureCollection, MultiLineString } from 'geojson';
 import { cn } from 'cn';
 import type { CiudadTablero } from '@/lib/sucursales/alcance';
 import { configDe } from '@/lib/sucursales/config';
-import type { Origen } from '@/lib/sucursales/normalizar';
-import { Tarjeta } from '@/components/portal/piezas';
-import { Segmentos } from '@/components/ui/segmentos';
 import type { ConsumoNacional, DesgloseConsumo } from '@/lib/sucursales/contratos';
 import { armarDesglose, type FilaInsumo } from '@/lib/sucursales/consumo-nacional';
 import type { FiltroOrigen } from '@/lib/sucursales/metricas';
+import { Tarjeta } from '@/components/portal/piezas';
 import { conCiudad } from './ciudad-tablero';
-import { ErrorCarga, Esqueleto } from './estados';
-import { useLectura } from './use-lectura';
-import { AZUL } from './colores';
 import { EnlaceSucursal } from './enlace-sucursal';
-import { dinero, numero } from './formato';
-import { Cambio, DIVERGENTE, compacto, useAncho, type Momento } from './graficas-mexico';
-import {
-  AVENIDAS_GDL,
-  MAPA_GDL,
-  MUNICIPIOS_GDL,
-  proyectarGdl,
-  type AvenidaTrazo,
-  type MunicipioTrazo,
-} from './mapa-guadalajara-trazos';
+import { ErrorCarga, Esqueleto } from './estados';
+import { estiloMapa, pinturaLimites, type TemaMapa } from './estilo-mapa';
+import { dinero } from './formato';
+import { Cambio, compacto, type Momento } from './graficas-mexico';
+import { LIMITES_GDL } from './mapa-guadalajara-limites';
+import { useLectura } from './use-lectura';
 
 /**
- * Mapa de una ciudad para su tablero (docs/sucursales/19): municipios y avenidas principales de OpenStreetMap y un punto
- * por sucursal en su ubicación (config, `coordenadas`). El punto lleva el número de su lugar en la lista de al lado, que
- * es también la vista de tabla del mapa. Sin mosaicos de terceros: todo es SVG propio.
+ * Mapa de una ciudad para su tablero (docs/sucursales/19): un mapa de calles real (MapLibre con los mosaicos de
+ * OpenFreeMap, datos de OpenStreetMap, sin llave), con el contorno de la ciudad y, en cada sucursal, un pin con su
+ * etiqueta: nombre, la cifra y el cambio. Las etiquetas se acomodan para no encimarse; con zoom se separan. La lista de
+ * al lado es la vista de tabla del mapa y se resalta junto con la etiqueta.
  */
-interface Trazos {
-  ancho: number;
-  alto: number;
-  municipios: MunicipioTrazo[];
-  avenidas: AvenidaTrazo[];
-  proyectar: (lon: number, lat: number) => [number, number];
-}
-const TRAZOS: Record<CiudadTablero['clave'], Trazos> = {
-  guadalajara: {
-    ancho: MAPA_GDL.ancho,
-    alto: MAPA_GDL.alto,
-    municipios: MUNICIPIOS_GDL,
-    avenidas: AVENIDAS_GDL,
-    proyectar: proyectarGdl,
-  },
-};
+type Limites = FeatureCollection<MultiLineString, { nombre: string; principal: boolean }>;
+const LIMITES: Record<CiudadTablero['clave'], Limites> = { guadalajara: LIMITES_GDL };
 
 const MXN = 'MXN';
 const UMBRAL = 0.03;
+const TEXTOS = {
+  'CooperativeGesturesHandler.WindowsHelpText': 'Usa Ctrl + rueda del ratón para acercar el mapa',
+  'CooperativeGesturesHandler.MacHelpText': 'Usa ⌘ + rueda del ratón para acercar el mapa',
+  'CooperativeGesturesHandler.MobileHelpText': 'Usa dos dedos para mover el mapa',
+  'NavigationControl.ZoomIn': 'Acercar',
+  'NavigationControl.ZoomOut': 'Alejar',
+  'AttributionControl.ToggleAttribution': 'Créditos del mapa',
+};
 
 export interface PuntoCiudad {
   companyId: number;
   nombre: string;
-  /** Lugar en la lista (1 = el primero); va dentro del punto. */
+  /** Lugar en la lista de al lado: en pantallas angostas el pin lleva solo este número. */
   numero: number;
-  /** Radio en unidades del SVG. */
-  radio: number;
-  fondo: string;
-  tinta: string;
-  /** Texto del tooltip y de lectores de pantalla. */
+  /** La cifra de la etiqueta: «$6.5 k» o «2,350 gr». */
+  valor: string;
+  /** Cambio contra la base; sin él la etiqueta no lo muestra. */
+  cambio?: number | null;
+  /** Para lectores de pantalla y el título de la etiqueta. */
   detalle: string[];
+  /** Sin venta o sin consumo: la etiqueta va atenuada. */
   vacio?: boolean;
 }
 
-/** El SVG con sus puntos; `activo` se comparte con la lista para resaltar la misma sucursal en los dos. */
+/** Día o noche, como el interruptor del portal (html[data-luz='noche']). */
+function useTemaMapa(): TemaMapa {
+  const [tema, setTema] = useState<TemaMapa>('dia');
+  useEffect(() => {
+    const leer = () => setTema(document.documentElement.dataset.luz === 'noche' ? 'noche' : 'dia');
+    leer();
+    const mo = new MutationObserver(leer);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-luz'] });
+    return () => mo.disconnect();
+  }, []);
+  return tema;
+}
+
+/** Dónde va cada etiqueta: el centro de la etiqueta respecto al pin, en píxeles. Una línea las une. */
+interface Lugar {
+  dx: number;
+  dy: number;
+}
+const ARRIBA: Lugar = { dx: 0, dy: -30 };
+/** Lugares posibles para una etiqueta de w × h, del preferido al último: arriba, a los lados, abajo y en diagonal,
+ * cada vez más lejos. */
+function lugaresPara(w: number, h: number): Lugar[] {
+  const res: Lugar[] = [];
+  for (const k of [0, 1, 2, 3]) {
+    const v = h / 2 + 14 + k * (h + 8);
+    const lado = w / 2 + 14 + k * 24;
+    res.push(
+      { dx: 0, dy: -v },
+      { dx: lado, dy: 0 },
+      { dx: -lado, dy: 0 },
+      { dx: 0, dy: v },
+      { dx: lado, dy: -v },
+      { dx: -lado, dy: -v },
+      { dx: lado, dy: v },
+      { dx: -lado, dy: v },
+    );
+  }
+  return res;
+}
+type Caja = { x0: number; y0: number; x1: number; y1: number };
+const cruce = (a: Caja, b: Caja) =>
+  Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) *
+  Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+
+function añadirLimites(mapa: MapaGl, limites: Limites, tema: TemaMapa) {
+  if (mapa.getSource('limites')) return;
+  const p = pinturaLimites(tema);
+  mapa.addSource('limites', { type: 'geojson', data: limites });
+  mapa.addLayer(
+    {
+      id: 'limites-vecinos',
+      type: 'line',
+      source: 'limites',
+      filter: ['!', ['get', 'principal']],
+      paint: { 'line-color': p.vecino.color, 'line-width': p.vecino.ancho, 'line-dasharray': [2, 2] },
+    },
+    'nombres-calles',
+  );
+  mapa.addLayer(
+    {
+      id: 'limites-ciudad',
+      type: 'line',
+      source: 'limites',
+      filter: ['==', ['get', 'principal'], true],
+      paint: { 'line-color': p.principal.color, 'line-width': p.principal.ancho },
+    },
+    'nombres-calles',
+  );
+}
+
+/** El mapa con sus etiquetas; `activo` se comparte con la lista para resaltar la misma sucursal en los dos. */
 export function MapaCiudad({
   clave,
   puntos,
@@ -78,144 +139,265 @@ export function MapaCiudad({
   alActivo: (id: number | null) => void;
   etiqueta: string;
 }) {
-  const t = TRAZOS[clave];
-  const id = useId();
-  // En pantallas angostas el SVG se reduce: los puntos y sus números se agrandan en la misma proporción (hasta 2.4×)
-  // para que en pantalla midan lo mismo que en escritorio.
-  const [ref, ancho] = useAncho<HTMLElement>();
-  const k = ancho > 0 ? Math.min(2.4, Math.max(1, 640 / ancho)) : 1;
-  const conXY = puntos
-    .map((p) => {
-      const c = configDe(p.companyId)?.coordenadas;
-      if (!c) return null;
-      const [x, y] = t.proyectar(c.lon, c.lat);
-      return { ...p, x, y, ubicacion: configDe(p.companyId)?.ubicacion ?? '' };
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== null)
-    // Los grandes primero: los chicos quedan encima y se pueden señalar.
-    .sort((a, b) => b.radio - a.radio);
-  const sel = conXY.find((p) => p.companyId === activo) ?? null;
-  // Separación del tooltip en píxeles de pantalla: el radio del punto escalado como se dibuja.
-  const separa = sel ? sel.radio * k * (ancho > 0 ? ancho / t.ancho : 1) + 10 : 0;
+  const tema = useTemaMapa();
+  const caja = useRef<HTMLDivElement>(null);
+  const mapa = useRef<MapaGl | null>(null);
+  const [listo, setListo] = useState(false);
+  const [fallo, setFallo] = useState(false);
+  const [elementos, setElementos] = useState<Map<number, HTMLElement>>(new Map());
+  const [lugares, setLugares] = useState<Record<number, Lugar>>({});
+  // En pantallas angostas no caben 11 etiquetas: cada pin lleva su número (el de la lista).
+  const [angosto, setAngosto] = useState(false);
+  useEffect(() => {
+    const el = caja.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => setAngosto(e.contentRect.width < 600));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Solo las sucursales con ubicación; en el orden recibido (el de la lista), que es el orden de prioridad al acomodar.
+  const conUbicacion = useMemo(
+    () =>
+      puntos
+        .map((p) => ({ ...p, c: configDe(p.companyId)?.coordenadas }))
+        .filter((p): p is typeof p & { c: NonNullable<typeof p.c> } => !!p.c),
+    [puntos],
+  );
+  const ids = conUbicacion.map((p) => p.companyId).join(',');
+  // El tema con el que se pintó el estilo actual (el handler de style.load lo lee para los límites).
+  const temaPintado = useRef(tema);
+
+  // El mapa, una vez por ciudad. maplibre-gl se carga aquí: no pesa en el resto del portal.
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      try {
+        const ml = await import('maplibre-gl');
+        if (cancelado || !caja.current) return;
+        // El worker se sirve desde public/ (los empaquetadores no lo copian); su nombre lleva la versión instalada.
+        ml.setWorkerUrl(`/maplibre/maplibre-gl-worker-${ml.getVersion()}.mjs`);
+        const m = new ml.Map({
+          container: caja.current,
+          style: estiloMapa(temaPintado.current),
+          center: [-103.37, 20.68],
+          zoom: 11.5,
+          minZoom: 9,
+          maxZoom: 17,
+          attributionControl: { compact: true },
+          cooperativeGestures: true,
+          dragRotate: false,
+          pitchWithRotate: false,
+          touchPitch: false,
+          locale: TEXTOS,
+        });
+        m.touchZoomRotate.disableRotation();
+        m.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
+        m.on('style.load', () => añadirLimites(m, LIMITES[clave], temaPintado.current));
+        m.on('load', () => {
+          // El crédito compacto arranca abierto y tapa el mapa en pantallas chicas: se cierra (el botón (i) lo abre).
+          m.getContainer()
+            .querySelector('.maplibregl-ctrl-attrib')
+            ?.classList.remove('maplibregl-compact-show');
+          setListo(true);
+        });
+        m.on('error', (e) => console.warn('[mapa]', e.error?.message));
+        mapa.current = m;
+      } catch {
+        if (!cancelado) setFallo(true);
+      }
+    })();
+    return () => {
+      cancelado = true;
+      mapa.current?.remove();
+      mapa.current = null;
+      setListo(false);
+    };
+  }, [clave]);
+
+  // Día o noche: cambia el estilo (los límites se vuelven a poner al cargar).
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || !listo || temaPintado.current === tema) return;
+    temaPintado.current = tema;
+    m.setStyle(estiloMapa(tema));
+  }, [tema, listo]);
+
+  // Un marcador por sucursal (se rehacen si cambia el conjunto) y el encuadre que las muestra a todas.
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || !listo) return;
+    let marcadores: Marker[] = [];
+    let cancelado = false;
+    (async () => {
+      const ml = await import('maplibre-gl');
+      if (cancelado) return;
+      const els = new Map<number, HTMLElement>();
+      marcadores = conUbicacion.map((p) => {
+        const el = document.createElement('div');
+        els.set(p.companyId, el);
+        return new ml.Marker({ element: el, anchor: 'center' }).setLngLat([p.c.lon, p.c.lat]).addTo(m);
+      });
+      setElementos(els);
+      if (conUbicacion.length) {
+        const lons = conUbicacion.map((p) => p.c.lon);
+        const lats = conUbicacion.map((p) => p.c.lat);
+        m.fitBounds(
+          [
+            [Math.min(...lons), Math.min(...lats)],
+            [Math.max(...lons), Math.max(...lats)],
+          ],
+          {
+            // Con etiquetas hace falta margen arriba y a los lados; con números (pantalla angosta), mucho menos.
+            padding:
+              m.getContainer().clientWidth < 600
+                ? { top: 40, bottom: 30, left: 30, right: 30 }
+                : { top: 90, bottom: 40, left: 80, right: 80 },
+            maxZoom: 14,
+            duration: 0,
+          },
+        );
+      }
+    })();
+    return () => {
+      cancelado = true;
+      marcadores.forEach((x) => x.remove());
+      setElementos(new Map());
+    };
+    // `ids` resume el conjunto; las cifras cambian sin rehacer los marcadores.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids, listo]);
+
+  // Acomodo de etiquetas: en el orden de la lista, cada una toma el primer lugar libre (sin tapar otras ni otros pines).
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || !elementos.size) return;
+    let cuadro = 0;
+    const acomodar = () => {
+      cancelAnimationFrame(cuadro);
+      cuadro = requestAnimationFrame(() => {
+        const W = m.getContainer().clientWidth;
+        const H = m.getContainer().clientHeight;
+        const pts = conUbicacion.map((p) => ({ id: p.companyId, xy: m.project([p.c.lon, p.c.lat]) }));
+        const ocupadas: Caja[] = pts.map(({ xy }) => ({
+          x0: xy.x - 8,
+          y0: xy.y - 8,
+          x1: xy.x + 8,
+          y1: xy.y + 8,
+        }));
+        const res: Record<number, Lugar> = {};
+        for (const { id, xy } of pts) {
+          const chip = elementos.get(id)?.querySelector<HTMLElement>('[data-etiqueta]');
+          const w = chip?.offsetWidth ?? 120;
+          const h = chip?.offsetHeight ?? 30;
+          const cajaDe = (l: Lugar): Caja => ({
+            x0: xy.x + l.dx - w / 2 - 4,
+            y0: xy.y + l.dy - h / 2 - 4,
+            x1: xy.x + l.dx + w / 2 + 4,
+            y1: xy.y + l.dy + h / 2 + 4,
+          });
+          const dentro = (c: Caja) => c.x0 >= 0 && c.y0 >= 0 && c.x1 <= W && c.y1 <= H;
+          const choque = (l: Lugar) => ocupadas.reduce((a, o) => a + cruce(o, cajaDe(l)), 0);
+          const opciones = lugaresPara(w, h);
+          const libre = opciones.find((l) => dentro(cajaDe(l)) && choque(l) === 0);
+          // Sin lugar libre (muy alejado o muy junto): el que menos tapa, dentro del mapa si se puede.
+          const l =
+            libre ??
+            [...opciones].sort(
+              (a, b) => Number(dentro(cajaDe(b))) - Number(dentro(cajaDe(a))) || choque(a) - choque(b),
+            )[0];
+          ocupadas.push(cajaDe(l));
+          res[id] = l;
+        }
+        setLugares(res);
+      });
+    };
+    acomodar();
+    m.on('move', acomodar);
+    m.on('resize', acomodar);
+    return () => {
+      cancelAnimationFrame(cuadro);
+      m.off('move', acomodar);
+      m.off('resize', acomodar);
+    };
+  }, [elementos, conUbicacion, angosto]);
+
   return (
-    <figure ref={ref} className="relative">
-      <svg
-        viewBox={`0 0 ${t.ancho} ${t.alto}`}
-        className="block h-auto w-full"
-        role="group"
-        aria-labelledby={`${id}-t`}
-      >
-        <title id={`${id}-t`}>{etiqueta}</title>
-        <g aria-hidden="true">
-          {t.municipios.map((m) => (
-            <path
-              key={m.clave}
-              d={m.d}
-              className="fill-surface-2 stroke-line"
-              strokeWidth={1.2}
-              strokeLinejoin="round"
-            />
-          ))}
-          {t.avenidas.map((a) => (
-            <path
-              key={a.nombre}
-              d={a.d}
-              fill="none"
-              className="stroke-ink/15"
-              strokeWidth={a.tipo === 'via-rapida' ? 2.4 : 1.3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <figure className="relative">
+      <div
+        ref={caja}
+        role="region"
+        aria-label={etiqueta}
+        className="h-[24rem] w-full overflow-hidden rounded-xl border border-line bg-surface-2 sm:h-[30rem] xl:h-[32rem]"
+      />
+      {fallo && (
+        <p className="absolute inset-0 grid place-items-center rounded-xl bg-surface-2 px-6 text-center text-sm text-muted-foreground">
+          Este navegador no puede dibujar el mapa. La lista de al lado tiene las mismas cifras.
+        </p>
+      )}
+      {conUbicacion.map((p) => {
+        const el = elementos.get(p.companyId);
+        if (!el) return null;
+        const l = lugares[p.companyId] ?? ARRIBA;
+        const esta = activo === p.companyId;
+        return createPortal(
+          <div className={cn('relative', esta && 'z-10')}>
+            <svg
+              aria-hidden="true"
+              width="1"
+              height="1"
+              className="pointer-events-none absolute left-0 top-0 overflow-visible"
             >
-              <title>{a.nombre}</title>
-            </path>
-          ))}
-          {t.municipios
-            .filter((m) => m.visible)
-            .map((m) => (
-              <text
-                key={m.clave}
-                x={m.x}
-                y={m.y}
-                textAnchor="middle"
-                className="fill-ink/35 font-display text-[15px] font-bold tracking-wide"
-              >
-                {m.nombre}
-              </text>
-            ))}
-        </g>
-        {conXY.map((p) => {
-          const esta = p.companyId === activo;
-          return (
-            <g
-              key={p.companyId}
-              tabIndex={0}
-              role="img"
+              <line
+                x1={0}
+                y1={0}
+                x2={l.dx}
+                y2={l.dy}
+                stroke="var(--color-ink-2)"
+                strokeOpacity={0.7}
+                strokeWidth={1.5}
+              />
+            </svg>
+            <span
+              aria-hidden="true"
+              className={cn(
+                'absolute left-0 top-0 block size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow',
+                p.vacio ? 'bg-ink/40' : 'bg-crema',
+              )}
+            />
+            <button
+              type="button"
+              data-etiqueta
               aria-label={[p.nombre, ...p.detalle].join('. ')}
+              title={[p.nombre, ...p.detalle].join(' · ')}
               onMouseEnter={() => alActivo(p.companyId)}
               onMouseLeave={() => alActivo(null)}
               onFocus={() => alActivo(p.companyId)}
               onBlur={() => alActivo(null)}
-              className="cursor-default outline-none [&:focus-visible>circle:first-child]:stroke-ink"
+              className={cn(
+                'absolute flex -translate-x-1/2 -translate-y-1/2 items-center whitespace-nowrap border bg-surface text-left shadow-card transition-[box-shadow,border-color] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crema',
+                angosto
+                  ? 'size-7 justify-center rounded-full font-display text-xs font-black tabular text-ink'
+                  : 'gap-2 rounded-lg px-2.5 py-1.5',
+                esta ? 'border-crema ring-2 ring-crema/60' : 'border-line',
+                p.vacio && 'opacity-70',
+              )}
+              style={{ left: l.dx, top: l.dy }}
             >
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r={(p.radio + (esta ? 2 : 0)) * k}
-                fill={p.vacio ? 'var(--color-surface)' : p.fondo}
-                stroke={esta ? 'var(--color-ink)' : 'var(--color-surface)'}
-                strokeWidth={(esta ? 2.5 : 2) * k}
-                strokeDasharray={p.vacio ? '3 2' : undefined}
-                className={cn(p.vacio && !esta && 'stroke-ink/40')}
-              />
-              <text
-                x={p.x}
-                y={p.y}
-                dy="0.35em"
-                textAnchor="middle"
-                fill={p.vacio ? 'var(--color-ink-2)' : p.tinta}
-                fontSize={11 * k}
-                className="pointer-events-none select-none font-display font-black tabular"
-              >
-                {p.numero}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-      {sel && (
-        <figcaption
-          role="status"
-          className="pointer-events-none absolute z-10 w-56 rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-card"
-          style={{
-            left: `clamp(0px, calc(${(sel.x / t.ancho) * 100}% - 7rem), calc(100% - 14rem))`,
-            // En la mitad de abajo se abre hacia arriba, para no salirse del mapa.
-            ...(sel.y / t.alto > 0.5
-              ? { bottom: `calc(${(1 - sel.y / t.alto) * 100}% + ${separa}px)` }
-              : { top: `calc(${(sel.y / t.alto) * 100}% + ${separa}px)` }),
-          }}
-        >
-          <span className="block font-semibold text-ink">
-            {sel.numero}. {sel.nombre}
-          </span>
-          {sel.ubicacion && <span className="block text-muted-foreground">{sel.ubicacion}</span>}
-          {sel.detalle.map((d) => (
-            <span key={d} className="block tabular text-ink-2">
-              {d}
-            </span>
-          ))}
-        </figcaption>
-      )}
-      <p className="mt-2 text-right text-[11px] text-muted-foreground">
-        Mapa:{' '}
-        <a
-          href="https://www.openstreetmap.org/copyright"
-          target="_blank"
-          rel="noreferrer"
-          className="underline-offset-2 hover:underline"
-        >
-          © OpenStreetMap
-        </a>
-      </p>
+              {angosto ? (
+                p.numero
+              ) : (
+                <>
+                  <span className="text-xs font-semibold text-ink">{p.nombre}</span>
+                  <span className="font-display text-sm font-black tabular text-ink">{p.valor}</span>
+                  {p.cambio !== undefined && <Cambio valor={p.cambio} umbral={UMBRAL} />}
+                </>
+              )}
+            </button>
+          </div>,
+          el,
+          String(p.companyId),
+        );
+      })}
     </figure>
   );
 }
@@ -227,52 +409,36 @@ export interface FilaMapaVenta {
   venta: number;
   pedidos: number;
   delta: number | null;
-  por: Partial<Record<Origen, number>>;
   sinCorte?: boolean;
 }
 
-/** Radio por área: el punto más grande mide `max` y el área es proporcional al valor. */
-export const radioPorArea = (valor: number, maximo: number, min = 9, max = 24) =>
-  maximo > 0 && valor > 0 ? Math.max(min, max * Math.sqrt(valor / maximo)) : min;
-
-/** Ventas: el mapa (tamaño = venta, o color = cambio) y la lista con el mismo número. */
+/** Ventas: el mapa con una etiqueta por sucursal (nombre, venta y cambio) y la lista de más a menos venta. */
 export function MapaCiudadTablero({
   ciudad,
   filas,
-  modo,
-  alModo,
   momento,
 }: {
   ciudad: CiudadTablero;
   filas: FilaMapaVenta[];
-  modo: 'venta' | 'cambio';
-  alModo: (m: 'venta' | 'cambio') => void;
   momento: Momento;
 }) {
   const [activo, setActivo] = useState<number | null>(null);
   const orden = [...filas].sort((a, b) => b.venta - a.venta || a.nombre.localeCompare(b.nombre));
-  const max = Math.max(0, ...orden.map((f) => f.venta));
-  const colorCambio = (d: number | null) =>
-    d === null ? { fondo: '#dcd7cd', tinta: '#2b2926' } : DIVERGENTE.find((x) => d < x.hasta)!;
-  const puntos: PuntoCiudad[] = orden.map((f, i) => {
-    const c = modo === 'cambio' ? colorCambio(f.delta) : { fondo: AZUL.fuerte, tinta: '#ffffff' };
-    return {
-      companyId: f.companyId,
-      nombre: f.nombre,
-      numero: i + 1,
-      radio: modo === 'venta' ? radioPorArea(f.venta, max) : 12,
-      fondo: c.fondo,
-      tinta: c.tinta,
-      vacio: f.venta === 0,
-      detalle: [
-        f.sinCorte ? 'Sin corte' : `Venta ${dinero(f.venta, MXN, false)}`,
-        `${numero(f.pedidos)} pedidos`,
-        f.delta === null
-          ? 'Sin base para comparar'
-          : `${f.delta >= 0 ? 'Sube' : 'Baja'} ${Math.abs(Math.round(f.delta * 100))} % contra ${momento.contra}`,
-      ],
-    };
-  });
+  const puntos: PuntoCiudad[] = orden.map((f, i) => ({
+    companyId: f.companyId,
+    nombre: f.nombre,
+    numero: i + 1,
+    valor: f.sinCorte ? 'sin corte' : compacto(f.venta),
+    cambio: f.delta,
+    vacio: f.venta === 0,
+    detalle: [
+      f.sinCorte ? 'Sin corte' : `Venta ${dinero(f.venta, MXN, false)}`,
+      `${f.pedidos} pedidos`,
+      f.delta === null
+        ? 'Sin base para comparar'
+        : `${f.delta >= 0 ? 'Sube' : 'Baja'} ${Math.abs(Math.round(f.delta * 100))} % contra ${momento.contra}`,
+    ],
+  }));
   const sinUbicar = orden.filter((f) => !configDe(f.companyId)?.coordenadas).map((f) => f.nombre);
   return (
     <div
@@ -283,22 +449,7 @@ export function MapaCiudadTablero({
       <Tarjeta
         className="xl:col-span-8"
         titulo={`${ciudad.nombre} ${momento.cuando}, por sucursal`}
-        descripcion={
-          modo === 'venta'
-            ? `El tamaño del punto es su venta ${momento.cuando}; el número, su lugar en la lista. Pasa el cursor o el foco por un punto para ver su detalle.`
-            : `El color es el cambio contra ${momento.contra}; el número, su lugar por venta en la lista.`
-        }
-        acciones={
-          <Segmentos
-            etiqueta="Qué muestra el mapa"
-            opciones={[
-              { id: 'venta', texto: 'Venta' },
-              { id: 'cambio', texto: 'Cambio' },
-            ]}
-            activa={modo}
-            alCambiar={(x) => alModo(x as 'venta' | 'cambio')}
-          />
-        }
+        descripcion={`Cada etiqueta es una sucursal en su ubicación, con su venta ${momento.cuando} y el cambio contra ${momento.contra}. Acerca el mapa para separar las que están juntas.`}
       >
         <MapaCiudad
           clave={ciudad.clave}
@@ -307,7 +458,6 @@ export function MapaCiudadTablero({
           alActivo={setActivo}
           etiqueta={`Mapa de ${ciudad.nombre} con ${puntos.length} sucursales`}
         />
-        <LeyendaMapa modo={modo} max={max} cuando={momento.cuando} />
         {sinUbicar.length > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
             Sin ubicación en el mapa: {sinUbicar.join(', ')}.
@@ -317,111 +467,51 @@ export function MapaCiudadTablero({
       <Tarjeta
         className="xl:col-span-4"
         titulo="Por sucursal"
-        descripcion={
-          modo === 'venta'
-            ? `De más a menos venta ${momento.cuando}, con el número del mapa.`
-            : `Cambio contra ${momento.contra}, con el color del mapa.`
-        }
+        descripcion={`De más a menos venta ${momento.cuando}.`}
       >
         <ol className="divide-y divide-line">
-          {orden.map((f, i) => {
-            const p = puntos[i];
-            return (
-              <li
-                key={f.companyId}
-                onMouseEnter={() => setActivo(f.companyId)}
-                onMouseLeave={() => setActivo(null)}
-                className={cn(
-                  'grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-1.5 transition-colors',
-                  activo === f.companyId && 'bg-surface-2/60',
-                )}
+          {orden.map((f, i) => (
+            <li
+              key={f.companyId}
+              onMouseEnter={() => setActivo(f.companyId)}
+              onMouseLeave={() => setActivo(null)}
+              className={cn(
+                'grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-3 py-2 transition-colors',
+                activo === f.companyId && 'bg-surface-2/60',
+              )}
+            >
+              <span className="text-right font-display text-sm font-black tabular text-muted-foreground">
+                {i + 1}
+              </span>
+              <EnlaceSucursal
+                companyId={f.companyId}
+                className="block truncate text-sm font-medium hover:underline"
               >
-                <span
-                  aria-hidden="true"
-                  className="grid size-7 place-items-center rounded-full font-display text-[11px] font-black tabular"
-                  style={
-                    p.vacio
-                      ? { border: '1.5px dashed var(--color-line)', color: 'var(--color-ink-2)' }
-                      : { backgroundColor: p.fondo, color: p.tinta }
-                  }
-                >
-                  {i + 1}
+                {f.nombre}
+              </EnlaceSucursal>
+              <span className="flex items-center gap-2 text-right">
+                <span className="text-sm font-semibold tabular">
+                  {f.sinCorte ? '—' : dinero(f.venta, MXN, false)}
                 </span>
-                <span className="min-w-0">
-                  <EnlaceSucursal
-                    companyId={f.companyId}
-                    className="block truncate text-sm font-medium hover:underline"
-                  >
-                    {f.nombre}
-                  </EnlaceSucursal>
-                </span>
-                <span className="flex items-center gap-2 text-right">
-                  <span className="text-sm font-semibold tabular">
-                    {f.sinCorte ? '—' : dinero(f.venta, MXN, false)}
-                  </span>
-                  <Cambio valor={f.delta} umbral={UMBRAL} />
-                </span>
-              </li>
-            );
-          })}
+                <Cambio valor={f.delta} umbral={UMBRAL} />
+              </span>
+            </li>
+          ))}
         </ol>
       </Tarjeta>
     </div>
   );
 }
 
-/** Leyenda: dos puntos de muestra (venta) o los cinco pasos del cambio. */
-function LeyendaMapa({ modo, max, cuando }: { modo: 'venta' | 'cambio'; max: number; cuando: string }) {
-  if (modo === 'cambio')
-    return (
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-2">
-        {DIVERGENTE.map((d) => (
-          <li key={d.texto} className="flex items-center gap-1.5">
-            <span aria-hidden="true" className="size-3 rounded-full" style={{ backgroundColor: d.fondo }} />
-            {d.texto}
-          </li>
-        ))}
-      </ul>
-    );
-  if (max <= 0) return <p className="mt-3 text-xs text-muted-foreground">Sin venta {cuando}.</p>;
-  const muestras = [max / 4, max];
-  return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-2">
-      {muestras.map((v) => {
-        const r = radioPorArea(v, max);
-        return (
-          <span key={v} className="flex items-center gap-2">
-            <svg width={r * 2 + 4} height={r * 2 + 4} aria-hidden="true">
-              <circle cx={r + 2} cy={r + 2} r={r} fill={AZUL.fuerte} opacity={0.85} />
-            </svg>
-            {compacto(v)}
-          </span>
-        );
-      })}
-      <span className="flex items-center gap-2">
-        <svg width={22} height={22} aria-hidden="true">
-          <circle
-            cx={11}
-            cy={11}
-            r={9}
-            fill="var(--color-surface)"
-            stroke="currentColor"
-            strokeDasharray="3 2"
-            strokeWidth={1.5}
-            className="text-ink/40"
-          />
-        </svg>
-        sin venta
-      </span>
-    </div>
-  );
-}
-
 const cantidad = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 });
+const cantidadCorta = (x: number, unidad: string) =>
+  x >= 10000 && (unidad === 'gr' || unidad === 'ml')
+    ? `${cantidad.format(x / 1000)} ${unidad === 'gr' ? 'kg' : 'L'}`
+    : `${cantidad.format(x)} ${unidad}`;
 
 /**
- * Consumo en el mapa (G5, docs/sucursales/19): un insumo a la vez (las unidades no se suman entre insumos). El tamaño
- * del punto es lo que pidieron las recetas de esa sucursal en el mes; la lista es la vista de tabla.
+ * Consumo en el mapa (G5, docs/sucursales/19): un ingrediente a la vez (las unidades no se suman entre ingredientes).
+ * Cada etiqueta dice cuánto pidieron las recetas de esa sucursal en el mes.
  */
 export function MapaConsumoCiudad({
   ciudad,
@@ -454,14 +544,11 @@ export function MapaConsumoCiudad({
   );
   if (!fila) return null;
   const r = d ? armarDesglose(d.filas, fila.insumoId, origen, datos.sucursales) : null;
-  const max = Math.max(0, ...(r?.sucursales.map((s) => s.cantidad) ?? [0]));
   const puntos: PuntoCiudad[] = (r?.sucursales ?? []).map((s, i) => ({
     companyId: s.companyId,
     nombre: s.nombre,
     numero: i + 1,
-    radio: radioPorArea(s.cantidad, max),
-    fondo: AZUL.fuerte,
-    tinta: '#ffffff',
+    valor: cantidadCorta(s.cantidad, fila.unidad),
     detalle: [`${cantidad.format(s.cantidad)} ${fila.unidad}`, `${Math.round(s.parte * 100)} % de la ciudad`],
   }));
   const idSelect = `insumo-${ciudad.clave}`;
@@ -470,7 +557,7 @@ export function MapaConsumoCiudad({
       <Tarjeta
         className="xl:col-span-8"
         titulo={`${fila.insumo} en ${ciudad.nombre}`}
-        descripcion="El tamaño del punto es lo que pidieron las recetas de lo vendido en el mes; el número, su lugar en la lista."
+        descripcion="Cada etiqueta es lo que pidieron las recetas de lo vendido en esa sucursal en el mes."
         acciones={
           <label htmlFor={idSelect} className="flex items-center gap-2 text-xs text-ink-2">
             Ingrediente
@@ -520,15 +607,11 @@ export function MapaConsumoCiudad({
                 onMouseEnter={() => setActivo(s.companyId)}
                 onMouseLeave={() => setActivo(null)}
                 className={cn(
-                  'grid grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-2',
+                  'grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-3 py-2',
                   activo === s.companyId && 'bg-surface-2/60',
                 )}
               >
-                <span
-                  aria-hidden="true"
-                  className="grid size-7 place-items-center rounded-full font-display text-[11px] font-black tabular text-white"
-                  style={{ backgroundColor: AZUL.fuerte }}
-                >
+                <span className="text-right font-display text-sm font-black tabular text-muted-foreground">
                   {i + 1}
                 </span>
                 <EnlaceSucursal

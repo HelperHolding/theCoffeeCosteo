@@ -19,7 +19,7 @@ vi.mock('next/link', () => ({
 
 import { EnlaceSucursal, SucursalesEnlazables } from '../../components/sucursales/enlace-sucursal';
 import { conCiudad } from '../../components/sucursales/ciudad-tablero';
-import { MAPA_GDL, proyectarGdl } from '../../components/sucursales/mapa-guadalajara-trazos';
+import { LIMITES_GDL } from '../../components/sucursales/mapa-guadalajara-limites';
 import { sucursalesDeCiudad } from '../../lib/sucursales/alcance';
 
 /** Tablero de ciudad (docs/sucursales/19): enlaces solo a lo asignado, la ciudad en la URL y el mapa con las 11. */
@@ -59,16 +59,42 @@ describe('tablero de ciudad', () => {
     );
   });
 
-  it('las 11 sucursales tienen coordenadas y caen dentro del mapa de Guadalajara', () => {
+  it('las 11 sucursales tienen coordenadas dentro del área metropolitana de los límites del mapa', () => {
     const gdl = sucursalesDeCiudad('guadalajara');
     expect(gdl).toHaveLength(11);
+    const pts = LIMITES_GDL.features.flatMap((f) => f.geometry.coordinates.flat());
+    const [lon0, lon1] = [Math.min(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[0]))];
+    const [lat0, lat1] = [Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[1]))];
+    expect(
+      LIMITES_GDL.features.filter((f) => f.properties.principal).map((f) => f.properties.nombre),
+    ).toEqual(['Guadalajara']);
     for (const s of gdl) {
       expect(s.coordenadas, s.nombre).toBeDefined();
-      const [x, y] = proyectarGdl(s.coordenadas!.lon, s.coordenadas!.lat);
-      expect(x, s.nombre).toBeGreaterThan(20);
-      expect(x, s.nombre).toBeLessThan(MAPA_GDL.ancho - 20);
-      expect(y, s.nombre).toBeGreaterThan(20);
-      expect(y, s.nombre).toBeLessThan(MAPA_GDL.alto - 20);
+      expect(s.coordenadas!.lon, s.nombre).toBeGreaterThan(lon0);
+      expect(s.coordenadas!.lon, s.nombre).toBeLessThan(lon1);
+      expect(s.coordenadas!.lat, s.nombre).toBeGreaterThan(lat0);
+      expect(s.coordenadas!.lat, s.nombre).toBeLessThan(lat1);
     }
+  });
+});
+
+describe('worker de MapLibre', () => {
+  it('public/maplibre trae el worker de la versión instalada, idéntico al del paquete', async () => {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const raiz = join(__dirname, '..', '..');
+    const version = JSON.parse(
+      readFileSync(join(raiz, 'node_modules/maplibre-gl/package.json'), 'utf8'),
+    ).version;
+    const copia = join(raiz, `public/maplibre/maplibre-gl-worker-${version}.mjs`);
+    expect(
+      existsSync(copia),
+      `falta ${copia}: cópialo de node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs`,
+    ).toBe(true);
+    expect(
+      readFileSync(copia).equals(
+        readFileSync(join(raiz, 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')),
+      ),
+    ).toBe(true);
   });
 });

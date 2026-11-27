@@ -71,11 +71,20 @@ se ven como texto, para no mandar a «Sucursal no disponible».
   - Las nuevas `sucursales_ciudad_*` cruzan lo pedido con `sucursales_ciudades`, solo para quien tiene el módulo
     (`sucursales_modulo_lectura`, nunca por OAuth). Llaman a la misma base.
   - No se abre ninguna tabla ni el detalle de otras sucursales. El costeo de ciudad pide además permiso de Costeo.
-- **D3, mapa.** Geometría de OpenStreetMap (© OpenStreetMap contributors, ODbL 1.0), descargada una vez de Overpass.
-  - `scripts/sucursales/trazos-ciudad.ts` la recorta al recuadro de las sucursales, la simplifica y la deja en
-    `components/sucursales/mapa-guadalajara-trazos.ts` (20 KB, sin mosaicos ni llaves).
-  - Los crudos quedan fuera del repo.
-  - Las coordenadas van en la config (`coordenadas`, con su precisión).
+- **D3, mapa.** Rehecho el 2026-11-27 por pedido de Carlos: los círculos no le gustaron y el mapa no se veía.
+  - Ahora es un mapa de calles real con zoom: MapLibre (`maplibre-gl` 6.16.0) con los mosaicos vectoriales de
+    OpenFreeMap. Usa datos de OpenStreetMap, es gratis y no pide llave; los créditos van en el mapa.
+  - No usa Google Maps: sus términos no permiten copiar sus mapas. El estilo (`components/sucursales/estilo-mapa.ts`)
+    replica el nocturno de Google que usa el equipo: azul marino, avenidas azules, verdes en verde azulado y colonias en
+    mayúsculas. De día es claro. Sigue el interruptor día/noche.
+  - El contorno de Guadalajara va en blanco y el de los municipios vecinos, punteado. Sale de
+    `components/sucursales/mapa-guadalajara-limites.ts`, generado por `scripts/sucursales/limites-ciudad.ts`.
+  - Cada sucursal es un pin con su etiqueta: nombre, cifra y cambio. Las etiquetas se acomodan solas para no encimarse
+    (arriba, a los lados, abajo o en diagonal) y una línea las une a su pin. En pantallas angostas el pin lleva el
+    número de la lista.
+  - El worker de MapLibre se sirve desde `public/maplibre/` con la versión en el nombre. Una prueba falla si se
+    actualiza el paquete sin copiarlo.
+  - Las coordenadas siguen en la config (`coordenadas`, con su precisión).
 - **D4, componente por ciudad.** Las vistas reciben la ciudad (`CiudadTablero`) y las rutas aceptan `?ciudad=`.
   - Otra ciudad pide cuatro cosas:
     - su clave en `CIUDADES_TABLERO` (`lib/sucursales/alcance.ts`);
