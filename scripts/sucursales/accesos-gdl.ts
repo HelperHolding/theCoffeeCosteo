@@ -63,9 +63,13 @@ async function estado(userId: string) {
     quienes.push({ ...x, userId: candidatos[0].user_id as string });
   }
 
-  const previo = Object.fromEntries(
+  type Estado = { userId: string } & Awaited<ReturnType<typeof estado>>;
+  const previo: Record<string, Estado> = Object.fromEntries(
     await Promise.all(
-      quienes.map(async (q) => [q.nombre, { userId: q.userId, ...(await estado(q.userId)) }]),
+      quienes.map(async (q): Promise<[string, Estado]> => [
+        q.nombre,
+        { userId: q.userId, ...(await estado(q.userId)) },
+      ]),
     ),
   );
   for (const [n, e] of Object.entries(previo))
