@@ -94,6 +94,36 @@ export const PRODUCTOS_RAPPI: Readonly<Record<string, string>> = {
   'urban chocolat': '4UC',
   'vainilla latte': '2VLT',
   'white bag 250g': '1CBWB',
+  // Auditoría de costeo (2026-11-27): nombres de Rappi sin enlace del 28-oct al 26-nov, cada uno igual a un producto del
+  // menú MEX - A del POS. Evidencia: mismo nombre (o el de Rappi con su texto en japonés) y precio de Rappi = precio del
+  // POS con el recargo de Rappi (Kraft $390 vs $300, Tumbler 240 $549 vs $426, Zoé $52 vs $45, Croque $98 vs $79…).
+  // Los 4 Peppermint Mocha van en el PR #148, con sus tamaños y personalizaciones.
+  'black edition 250g': '3CBBE',
+  'croque monsieur': 'CROQMNAPP',
+  'félix schorle': 'FELSCHAPP',
+  'focaccia ham': 'FOCJAMAPP',
+  'fresh soda passion fruit': 'FSOD4',
+  'fresh soda pink lemonade': 'FSOD2',
+  'gelato frappé chai': 'SHCI',
+  'gelato frappé matcha': 'SHMA',
+  'kit coffee editions ローストコーヒー豆': 'KITEDIAPP', // Kit Cafés Editions
+  'kit white bag 1kg': 'KITWHIAPP', // Kit Café White 1kg
+  'kraft edition 250g': '2CBKE',
+  'kraft edition 250g クラフト版': '2CBKE',
+  'sandwich jamón, queso. tomate y orégano': 'BR3', // Grilled Ham Cheese and Tomato Sandwich
+  totebags: '1TB',
+  'tumbler (240ml)': '4TBS',
+  'tumbler (240ml) タンブラーカップ': '4TBS',
+  'tumbler (360ml)': '3TBB',
+  'white bag 250g グラウンドコーヒー': '1CBWB',
+  'zoe water twist': 'ZOETWIAPP',
+  'zoé water': 'ZOEWATAPP',
+  // Partes de The Perfect Match (COMBOS_RAPPI) con otro nombre que el producto suelto.
+  'croissant jamón y queso': 'CROSTUAPP',
+  'iced vainilla': '1IC',
+  // Sin receta todavía (2026-11-27): ligadas a su código del POS; cuentan solas cuando el código tenga receta.
+  'coconut matcha latte': 'COCMALAAP',
+  'foam coconut matcha': 'FOACMAAPP',
 };
 
 /**
@@ -134,6 +164,12 @@ export const COMBOS_RAPPI: Readonly<Record<string, readonly ParteCombo[]>> = {
   'pan de muerto tradicional + true white': [
     { fijo: 'true white', personaliza: BEBIDA },
     { fijo: 'pan de muerto tradicional', personaliza: [] },
+  ],
+  // Desde el 2026-11-03 (341 unidades al 26-nov): bebida (Iced Latte, Salted Caramel, Iced Vainilla, True White o
+  // Salted Caramel Frappé) + match (Cinnamon Roll o Croissant de jamón y queso), con los jarabes de cada bebida.
+  'the perfect match': [
+    { eleccion: 'elige tu bebida', personaliza: [...BEBIDA, 'caramelo salado', 'vainilla', 'chispitas'] },
+    { eleccion: 'elige tu match', personaliza: ['con mayonesa de chipotle'] },
   ],
 };
 
@@ -269,6 +305,10 @@ const CATEGORIAS: Readonly<Record<string, (d: string, codigo: string) => string 
     })[d],
   // El sabor ya decidió el producto (SABORES_RAPPI): no es una personalización.
   [CATEGORIA_SABOR]: () => null,
+  // Sabor que no cambia el costo: los dos Félix Schorle cuestan $35 y los dos Zoe Twist $22 (insumos, 2026-11-27);
+  // la receta del Zoe Twist ya es mitad y mitad.
+  'elige el sabor de tú felix schorle': () => null,
+  'elige el sabor de tu zoe': () => null,
   // Combo del POS «Iced Latte + Ham & Cheese Sandwich»: solo nombran sus partes fijas.
   'personaliza tu iced latte': () => null,
   'personaliza tu sandwich': () => null,
