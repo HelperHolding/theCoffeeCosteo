@@ -228,6 +228,26 @@ export const PERSONALIZACIONES_NEUTRAS: Record<string, readonly string[]> = {
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
     'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
   ],
+  // Peppermint Mocha Iced Latte (alta 2026-11-17, como Mad Mocha)
+  '3e5d0c52-63d5-4fee-825c-1923222e6908': [
+    'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g, como Mad Mocha
+    'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g, como Mad Mocha
+  ],
+  // Peppermint Mocha Iced Matcha (alta 2026-11-17, como Matcha Iced Mint)
+  '6e3ce350-c788-45ac-a482-d84ca8c7b82c': [
+    'Milk', // leche entera, la de la receta
+  ],
+  // Peppermint Mocha Latte (alta 2026-11-17, como Mad Mocha)
+  '4fa37a2c-e30b-4e0b-89bc-210faa97522c': [
+    'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g, como Mad Mocha
+    'Milk', // leche entera, la de la receta
+    'Single Shot (18ml)', // la receta lleva 18 g de café: Single y Double usan 18 g, como Mad Mocha
+  ],
+  // Peppermint Mocha Matcha Latte (alta 2026-11-17, como Matcha Iced Mint)
+  '7378c4b9-2dc9-460b-8f35-5d27a38be89f': [
+    'Milk', // leche entera, la de la receta
+  ],
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': [
     'Double shot (36ml)', // la receta lleva 18 g de café: Single y Double usan 18 g (Carlo, 2026-10-30)
@@ -612,6 +632,36 @@ export const PERSONALIZACIONES_AJUSTADAS: Record<string, Readonly<Record<string,
   // Nutty Latte (Signature)
   '28d68f0b-1896-491a-9350-02ca52d7d1bd': {
     'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+  },
+  // Peppermint Mocha Iced Latte (alta 2026-11-17, como Mad Mocha)
+  '3e5d0c52-63d5-4fee-825c-1923222e6908': {
+    'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
+  },
+  // Peppermint Mocha Iced Matcha (alta 2026-11-17, como Matcha Iced Mint)
+  '6e3ce350-c788-45ac-a482-d84ca8c7b82c': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
+  },
+  // Peppermint Mocha Latte (alta 2026-11-17, como Mad Mocha)
+  '4fa37a2c-e30b-4e0b-89bc-210faa97522c': {
+    'Extra Double shot (36ml)': { cantidad: { insumo: CAFE_WHITE, valor: 36 } },
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
+  },
+  // Peppermint Mocha Matcha Latte (alta 2026-11-17, como Matcha Iced Mint)
+  '7378c4b9-2dc9-460b-8f35-5d27a38be89f': {
+    'Almond Milk': ALMENDRA_POR_ENTERA,
+    'Coconut Milk': COCO_POR_ENTERA,
+    'Lactose free': DESLACTOSADA_POR_ENTERA,
+    Oatmilk: AVENA_POR_ENTERA,
   },
   // Pumpkin Iced Latte
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': {
