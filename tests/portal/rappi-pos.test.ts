@@ -173,6 +173,29 @@ describe('líneas de un producto de Rappi', () => {
     expect(lineasDe(producto('Cookie Matcha & White Chocolate', 70))[0].codigo).toBe('COOMATAPP');
   });
 
+  it('auditoría 2026-11-27: los nombres de Rappi del menú del POS quedan ligados a su código, con o sin texto en japonés', () => {
+    const codigo = (nombre: string) => lineasDe(producto(nombre, 100))[0].codigo;
+    expect(codigo('Croque Monsieur')).toBe('CROQMNAPP');
+    expect(codigo('Kit White Bag 1kg')).toBe('KITWHIAPP');
+    expect(codigo('Kraft Edition 250g')).toBe('2CBKE');
+    expect(codigo('Kraft Edition 250g クラフト版')).toBe('2CBKE');
+    expect(codigo('White Bag 250g グラウンドコーヒー')).toBe('1CBWB');
+    expect(codigo('Gelato Frappé Chai')).toBe('SHCI');
+    expect(codigo('Sandwich Jamón, Queso. Tomate y Orégano.')).toBe('BR3');
+    expect(codigo('Zoé Water')).toBe('ZOEWATAPP');
+    // Sin receta todavía: ligados a su código, cuentan cuando el código tenga receta.
+    expect(codigo('Foam Coconut Matcha')).toBe('FOACMAAPP');
+  });
+
+  it('el sabor del Félix Schorle y del Zoe Twist no es personalización: los dos sabores cuestan lo mismo', () => {
+    const [felix] = lineasDe(
+      producto('Félix Schorle', 82, [['Elige el Sabor de tú Felix Schorle', 'Frambuesa Jalisco']]),
+    );
+    expect(felix).toMatchObject({ codigo: 'FELSCHAPP', customs: [] });
+    const [zoe] = lineasDe(producto('Zoe Water Twist', 58, [['Elige el sabor de tu zoe', 'Frutos Rojos']]));
+    expect(zoe).toMatchObject({ codigo: 'ZOETWIAPP', customs: [] });
+  });
+
   it('Pan de Muerto (doc 39): el Tradicional es el del POS; el de Naranja, su código propio de Rappi', () => {
     expect(lineasDe(producto('Pan de Muerto Tradicional.', 80))[0].codigo).toBe('PANMUEAPP');
     expect(lineasDe(producto('Pan de Muerto con Glaseado de Naranja.', 80))[0].codigo).toBe('RAPPIPANMUENAR');
@@ -219,6 +242,36 @@ describe('líneas de un producto de Rappi', () => {
     expect(pan.partes?.map((p) => [p.codigo, nombres(p.customs)])).toEqual([
       ['4TW', ['Regular - 240ml']],
       ['PANMUEAPP', []],
+    ]);
+  });
+
+  it('The Perfect Match (2026-11-27): bebida y match elegidos, con los jarabes de la bebida', () => {
+    const [l] = lineasDe(
+      producto('The Perfect Match', 236, [
+        ['Elige Tu Bebida', 'Iced Vainilla'],
+        ['Elige el Tamaño', 'Tradicional'],
+        ['Vainilla', 'Más'],
+        ['Leche.', 'Deslactosada'],
+        ['Elige Tu Match', 'Croissant Jamón y Queso'],
+        ['Con Mayonesa de Chipotle', 'Sin Mayonesa Chipotle'],
+      ]),
+    );
+    expect(l.codigo).toBe('RAPPI-COMBO:the perfect match');
+    expect(l.importeCent).toBe(23600);
+    expect(l.partes?.map((p) => [p.codigo, nombres(p.customs)])).toEqual([
+      ['1IC', ['Regular - 440ml', 'More Vanilla (20ml)', 'Lactose free']],
+      ['CROSTUAPP', ['Without Chipotle Mayo']],
+    ]);
+    const [caramelo] = lineasDe(
+      producto('The Perfect Match', 236, [
+        ['Elige tu Bebida', 'Salted caramel'],
+        ['Caramelo Salado', 'Medio'],
+        ['Elige tu Match', 'Cinnamon Roll'],
+      ]),
+    );
+    expect(caramelo.partes?.map((p) => [p.codigo, nombres(p.customs)])).toEqual([
+      ['2SC', ['Average Salted Caramel (cold)']],
+      ['5CR', []],
     ]);
   });
 });
