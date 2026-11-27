@@ -514,13 +514,7 @@ function Cuerpo({
 
       {/* 2. Dónde: el mapa de la ciudad con cada sucursal o el mapa por estado, con su lista del mismo color. */}
       {ciudad ? (
-        <MapaCiudadTablero
-          ciudad={ciudad}
-          filas={v.ciudades.flatMap((g) => g.sucursales)}
-          modo={modoMapa}
-          alModo={alModoMapa}
-          momento={m}
-        />
+        <MapaCiudadTablero ciudad={ciudad} filas={v.ciudades.flatMap((g) => g.sucursales)} momento={m} />
       ) : (
         <>
       <div data-entra style={{ '--i': 1 } as React.CSSProperties} className="grid grid-cols-1 gap-6 xl:grid-cols-12">
