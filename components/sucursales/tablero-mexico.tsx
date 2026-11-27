@@ -1,6 +1,5 @@
 'use client';
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { ChevronRight, RefreshCw } from 'lucide-react';
 import { cn } from 'cn';
 import type { TableroMexico } from '@/lib/sucursales/contratos';
@@ -49,6 +48,9 @@ import {
   type SemanaColumna,
 } from './graficas-mexico';
 import { ErrorCarga, Esqueleto } from './estados';
+import { EnlaceSucursal } from './enlace-sucursal';
+import { MapaCiudadTablero } from './mapa-ciudad';
+import type { CiudadTablero } from '@/lib/sucursales/alcance';
 import { diaMes, dinero, hace, numero, porcentaje } from './formato';
 import { NOTA_LINEAS } from './en-vivo';
 import { useLectura } from './use-lectura';
@@ -139,8 +141,9 @@ const hoyCdmx = () =>
  * Tablero de México (docs/sucursales/16): la venta de todas las sucursales del usuario, sumada. Lee solo los totales
  * del corte (cada 10 min); el filtro de origen y el modo del mapa se aplican aquí, sin volver a leer. El selector de
  * fechas cambia lo que se lee: hoy en vivo, un día o un rango.
+ * Con `ciudad` es el tablero de esa ciudad (docs/sucursales/19): todas sus sucursales, su mapa y el ranking.
  */
-export function TableroMexicoVista() {
+export function TableroMexicoVista({ ciudad }: { ciudad?: CiudadTablero } = {}) {
   const [semanas, setSemanas] = useState<(typeof SEMANAS)[number]>(8);
   const [origen, setOrigen] = useState<FiltroOrigen>('todos');
   const [modoMapa, setModoMapa] = useState<'venta' | 'cambio'>('venta');
@@ -152,7 +155,7 @@ export function TableroMexicoVista() {
         ? `&desde=${vista.desde}&hasta=${vista.hasta}`
         : '';
   const { datos, error, cargando, recargar } = useLectura<TableroMexico>(
-    `/api/sucursales/tablero?semanas=${semanas}${fechas}`,
+    `/api/sucursales/tablero?semanas=${semanas}${fechas}${ciudad ? `&ciudad=${ciudad.clave}` : ''}`,
     // Un día o un rango cerrados no cambian: solo hoy se vuelve a leer.
     { intervaloMs: vista.modo === 'vivo' ? 120_000 : undefined },
   );
@@ -226,6 +229,7 @@ export function TableroMexicoVista() {
         )
       ) : (
         <Cuerpo
+          ciudad={ciudad}
           datos={datos}
           v={v}
           origen={origen}
@@ -342,6 +346,7 @@ function CampoFecha({
 }
 
 function Cuerpo({
+  ciudad,
   datos,
   v,
   origen,
@@ -350,6 +355,7 @@ function Cuerpo({
   modoMapa,
   alModoMapa,
 }: {
+  ciudad?: CiudadTablero;
   datos: TableroMexico;
   v: Calculo;
   origen: FiltroOrigen;
@@ -505,8 +511,18 @@ function Cuerpo({
         </div>
       </section>
 
-      {/* 2. Dónde: el mapa por estado y la lista de estados con el mismo color. */}
-      <div data-entra style={{ '--i': 1 } as React.CSSProperties} className="grid gap-6 xl:grid-cols-12">
+      {/* 2. Dónde: el mapa de la ciudad con cada sucursal o el mapa por estado, con su lista del mismo color. */}
+      {ciudad ? (
+        <MapaCiudadTablero
+          ciudad={ciudad}
+          filas={v.ciudades.flatMap((g) => g.sucursales)}
+          modo={modoMapa}
+          alModo={alModoMapa}
+          momento={m}
+        />
+      ) : (
+        <>
+      <div data-entra style={{ '--i': 1 } as React.CSSProperties} className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <Tarjeta
           className="xl:col-span-8"
           titulo={`México ${m.cuando}, por estado`}
@@ -546,8 +562,11 @@ function Cuerpo({
         </Tarjeta>
       </div>
 
+        </>
+      )}
+
       {/* 3. Cuándo y de dónde: ritmo por hora (o lo más vendido del rango) y mezcla por origen. */}
-      <div data-entra style={{ '--i': 2 } as React.CSSProperties} className="grid gap-6 xl:grid-cols-12">
+      <div data-entra style={{ '--i': 2 } as React.CSSProperties} className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         {v.rango ? (
           <Tarjeta
             className="xl:col-span-7"
@@ -603,7 +622,11 @@ function Cuerpo({
       <div data-entra style={{ '--i': 3 } as React.CSSProperties}>
         <Tarjeta
           titulo={v.modo === 'vivo' ? 'Cómo va cada sucursal hoy' : `Cómo le fue a cada sucursal ${m.cuando}`}
-          descripcion={`Las 5 que más ${v.modo === 'vivo' ? 'venden' : 'vendieron'} y, abajo, cada ciudad: ábrela para ver todas sus sucursales. El cambio es contra ${m.contra}.`}
+          descripcion={
+            ciudad
+              ? `Las 5 que más ${v.modo === 'vivo' ? 'venden' : 'vendieron'} y, abajo, todas. El cambio es contra ${m.contra}.`
+              : `Las 5 que más ${v.modo === 'vivo' ? 'venden' : 'vendieron'} y, abajo, cada ciudad: ábrela para ver todas sus sucursales. El cambio es contra ${m.contra}.`
+          }
         >
           <div className="space-y-7">
             {v.top.length === 0 ? (
@@ -616,7 +639,16 @@ function Cuerpo({
                 }
               />
             )}
-            <Ciudades grupos={v.ciudades} momento={m} />
+            {ciudad ? (
+              <section aria-labelledby="mx-todas">
+                <h3 id="mx-todas" className="mb-2 text-sm font-semibold">
+                  Las {v.ciudades.reduce((a, g) => a + g.sucursales.length, 0)} sucursales de {ciudad.nombre}
+                </h3>
+                <TablaCiudad filas={v.ciudades.flatMap((g) => g.sucursales)} momento={m} />
+              </section>
+            ) : (
+              <Ciudades grupos={v.ciudades} momento={m} />
+            )}
             {v.sinTienda.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 Sin tienda en Rappi (no cuentan en este filtro):{' '}
@@ -688,7 +720,7 @@ function Cuerpo({
                 {v.periodo.ultima === null ? '—' : dinero(v.periodo.ultima, MXN, false)}
               </Numero>
             </dl>
-            <div className="grid gap-6 xl:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
               <Tarjeta
                 className="xl:col-span-7"
                 titulo="Venta por semana"
@@ -711,7 +743,7 @@ function Cuerpo({
                 <CalendarioVenta dias={v.calendario} desde={datos.periodo.desde} semanas={datos.semanas} />
               </Tarjeta>
             </div>
-            <div className="grid gap-6 xl:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
               <Tarjeta
                 className="xl:col-span-5"
                 titulo="Lo más vendido"
@@ -795,12 +827,12 @@ function Podio({ filas, titulo }: { filas: Calculo['top']; titulo: string }) {
               {i + 1}
             </span>
             <span className="min-w-0">
-              <Link
-                href={`/sucursales/${s.companyId}`}
+              <EnlaceSucursal
+                companyId={s.companyId}
                 className="block truncate font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 {s.nombre}
-              </Link>
+              </EnlaceSucursal>
               <span className="block truncate text-xs text-muted-foreground tabular">
                 {s.ciudad} · {numero(s.pedidos)} pedidos · ticket{' '}
                 {s.pedidos ? dinero(Math.round(s.venta / s.pedidos), MXN, false) : '—'}
@@ -972,9 +1004,9 @@ function TablaCiudad({
           {filas.map((s) => (
             <tr key={s.companyId}>
               <td className="py-2 pr-3">
-                <Link href={`/sucursales/${s.companyId}`} className="font-medium hover:underline">
+                <EnlaceSucursal companyId={s.companyId} className="font-medium hover:underline">
                   {s.nombre}
-                </Link>
+                </EnlaceSucursal>
                 {(s.sinCorte || !s.completa) && (
                   <span className="ml-2 text-xs text-muted-foreground">
                     {s.sinCorte
@@ -1067,9 +1099,9 @@ function TablaSucursales({ filas }: { filas: Calculo['tabla'] }) {
           {filas.map((f) => (
             <tr key={f.companyId}>
               <td>
-                <Link href={`/sucursales/${f.companyId}`} className="font-medium hover:underline">
+                <EnlaceSucursal companyId={f.companyId} className="font-medium hover:underline">
                   {f.nombre}
-                </Link>
+                </EnlaceSucursal>
                 <span className="block text-xs text-muted-foreground">
                   {f.ciudad} · {porcentaje(f.parte, 1)} del total
                 </span>

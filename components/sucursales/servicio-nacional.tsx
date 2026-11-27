@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { ArrowDown, Download } from 'lucide-react';
 import { cn } from 'cn';
 import { nombreTop, TIPOS_RECLAMO, type TipoReclamo, type Totales } from '@/lib/sucursales/servicio';
@@ -26,6 +25,8 @@ import { rango, SelectorPeriodo, type Periodo } from './periodo';
 import { useLectura } from './use-lectura';
 import { ApartadosServicio, MenuRappiNacional, apartadoDeUrl, type Apartado } from './menu-rappi';
 import './nivel-servicio.css';
+import { EnlaceSucursal } from './enlace-sucursal';
+import { conCiudad, useCiudadTablero } from './ciudad-tablero';
 
 /**
  * Tablero de México · Nivel de servicio (docs/rappi-portal/08, fase 3). Responde: ¿cómo está atendiendo México en
@@ -36,6 +37,7 @@ import './nivel-servicio.css';
 const ZONA = 'America/Mexico_City';
 
 export function ServicioNacionalVista() {
+  const ciudad = useCiudadTablero();
   const [periodo, setPeriodo] = useState<Periodo>({ id: '7d' });
   // Rappi publica cada día con 1 a 2 días de retraso: abre en el último día que ya publicó y avanza solo (se relee
   // cada 5 min). Al elegir otro periodo se usa ese.
@@ -48,8 +50,8 @@ export function ServicioNacionalVista() {
     apartado !== 'servicio'
       ? null
       : ultimo
-        ? '/api/sucursales/servicio-nacional?ultimo=1'
-        : `/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`,
+        ? conCiudad('/api/sucursales/servicio-nacional?ultimo=1', ciudad)
+        : conCiudad(`/api/sucursales/servicio-nacional?desde=${desde}&hasta=${hasta}`, ciudad),
     { intervaloMs: 5 * 60_000 },
   );
   const descargar = async () => {
@@ -128,7 +130,7 @@ export function ServicioNacionalVista() {
                     titulo={`${tituloPeriodo(datos.desde, datos.indicadoresHasta ?? datos.hasta)} en Rappi, ${datos.sucursales.length} sucursales`}
                     t={datos.totales}
                   />
-                  <div className="grid gap-6 lg:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <ReclamosPorDia d={datos} />
                     <SinDisponibilidadPorDia d={datos} />
                   </div>
@@ -207,12 +209,13 @@ function AhoraEnMexico({ d }: { d: RespuestaServicioNacional }) {
               {d.desactivadas.map((x) => (
                 <tr key={`${x.companyId}-${x.canal}`} className="border-t border-line">
                   <td className="px-5 py-2">
-                    <Link
+                    <EnlaceSucursal
+                      companyId={x.companyId}
                       href={`/sucursales/${x.companyId}?seccion=servicio`}
                       className="font-semibold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-ink"
                     >
                       {x.sucursal}
-                    </Link>
+                    </EnlaceSucursal>
                   </td>
                   <td className="px-3 py-2 text-ink-2">{CANAL[x.canal]}</td>
                   <td className="px-3 py-2 text-ink-2">{x.motivo ?? x.estado}</td>
@@ -310,12 +313,13 @@ function Ranking({ d }: { d: RespuestaServicioNacional }) {
             {filas.map((s) => (
               <tr key={s.companyId} className="border-t border-line hover:bg-surface-2/60">
                 <td className="px-5 py-2">
-                  <Link
+                  <EnlaceSucursal
+                    companyId={s.companyId}
                     href={`/sucursales/${s.companyId}?seccion=servicio`}
                     className="font-semibold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-ink"
                   >
                     {s.nombre}
-                  </Link>
+                  </EnlaceSucursal>
                   <span className="block text-[11px] text-muted-foreground">{s.ciudad}</span>
                 </td>
                 <td className="px-3 py-2">
@@ -403,7 +407,7 @@ function ReclamosMexico({ d }: { d: RespuestaServicioNacional }) {
   const [tipo, setTipo] = useState<TipoReclamo | 'todos'>('todos');
   const lista = tipo === 'todos' ? d.reclamos : d.reclamos.filter((r) => r.tipo === tipo);
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
       <Tarjeta
         titulo={`Reclamos (${numero(d.reclamos.length)})`}
         descripcion={`Compensado por Rappi: ${d.compensado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}.${lista.length > MAX_FILAS ? ` Se ven los ${MAX_FILAS} más recientes; el Excel trae todos.` : ''}`}
@@ -459,12 +463,13 @@ function ReclamosMexico({ d }: { d: RespuestaServicioNacional }) {
                       {r.fecha.slice(5).split('-').reverse().join('/')}
                     </td>
                     <td className="px-3 py-2.5 text-xs">
-                      <Link
+                      <EnlaceSucursal
+                        companyId={r.companyId}
                         href={`/sucursales/${r.companyId}?seccion=servicio`}
                         className="font-semibold hover:underline"
                       >
                         {r.sucursal}
-                      </Link>
+                      </EnlaceSucursal>
                       <span className="block text-muted-foreground">{CANAL[r.canal]}</span>
                     </td>
                     <td className="px-3 py-2.5 font-medium">{r.producto ?? '—'}</td>

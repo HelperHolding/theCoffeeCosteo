@@ -9,6 +9,11 @@ import { sucursalesConfiguradas, type ConfigSucursal } from './config';
  */
 export const CIUDADES_TABLERO = { guadalajara: 'Guadalajara' } as const;
 export type ClaveCiudad = keyof typeof CIUDADES_TABLERO;
+/** Lo que una vista de tablero necesita de su ciudad. */
+export interface CiudadTablero {
+  clave: ClaveCiudad;
+  nombre: string;
+}
 export const esCiudadTablero = (x: string): x is ClaveCiudad => Object.hasOwn(CIUDADES_TABLERO, x);
 
 /** Sucursales configuradas de la ciudad (ciudad de la config, la misma que agrupa el Directorio). */

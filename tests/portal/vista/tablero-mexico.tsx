@@ -13,6 +13,11 @@ import { diaLunes } from '../../../lib/sucursales/metricas';
 import type { Origen, PedidoNormal } from '../../../lib/sucursales/normalizar';
 import { leerConsulta } from '../../../lib/sucursales/tablero-fechas';
 import {
+  armarCosteoCiudad,
+  type CosteoCiudadRpc,
+  type OrigenCosteo,
+} from '../../../lib/sucursales/costeo-mes';
+import {
   armarHoy,
   armarPeriodo,
   armarRango,
@@ -54,8 +59,11 @@ const CIUDADES_LOTES = [
   'Monterrey',
   'Morelia',
 ];
-const sucursalesConfiguradas: ConfigSucursal[] =
-  parametros.get('completo') === '1'
+// ?tablero-guadalajara: el tablero de la ciudad (docs/sucursales/19) con sus 11 sucursales y el mapa de Guadalajara.
+const esGdl = window.location.search.includes('tablero-guadalajara');
+const sucursalesConfiguradas: ConfigSucursal[] = esGdl
+  ? configuradas.filter((c) => c.ciudad === 'Guadalajara')
+  : parametros.get('completo') === '1'
     ? [
         ...configuradas,
         ...CIUDADES_LOTES.map((ciudad, i) => ({
@@ -301,6 +309,13 @@ function rpcConsumo(mes: string): RpcConsumoNacional {
 const fetchNavegador = window.fetch.bind(window);
 window.fetch = async (entrada, init) => {
   const url = new URL(String(entrada), window.location.origin);
+  if (url.pathname === '/api/sucursales/costeo-ciudad') {
+    await new Promise((r) => setTimeout(r, 250));
+    const origen = (url.searchParams.get('origen') ?? 'todos') as OrigenCosteo;
+    return Response.json(
+      armarCosteoCiudad(costeoSintetico(url.searchParams.get('mes')), sucursalesConfiguradas, origen),
+    );
+  }
   if (url.pathname === '/api/sucursales/menu-nacional') {
     await new Promise((r) => setTimeout(r, 200));
     return Response.json(
@@ -419,6 +434,134 @@ window.fetch = async (entrada, init) => {
     });
   return Response.json({ ...base, hoy: armarHoy(rpcHoy(), sucursalesConfiguradas) });
 };
+
+/** Costeo de un mes por sucursal (sintético): margen entre 52 % y 72 %, cobertura alta y 14 productos. */
+const PRODUCTOS_COSTEO: [string, number, number][] = [
+  ['Iced Latte', 8900, 0.71],
+  ['Americano', 5200, 0.82],
+  ['Latte', 7400, 0.69],
+  ['Matcha Latte', 9200, 0.58],
+  ['Frappé Moka', 9900, 0.55],
+  ['Croissant', 6400, 0.42],
+  ['Cold Brew', 7800, 0.77],
+  ['Chai Latte', 8400, 0.61],
+  ['Focaccia', 15600, 0.39],
+  ['Brownie', 5800, 0.48],
+  ['Cookie Triple Chocolate', 4500, 0.35],
+  ['Espresso Tonic', 8800, 0.66],
+  ['Açai Bowl', 13900, 0.31],
+  ['Cappuccino', 6900, 0.7],
+];
+const vacioParcial = () => ({ lineas: 0, importeCent: 0, motivos: { tamano: 0, personalizacion: 0, costo: 0 } });
+function resumenSintetico(venta: number, pct: number, cob: number) {
+  const importe = Math.round(venta * 1.16);
+  const total = Math.round(importe / cob);
+  const generico = Math.round(total * 0.02);
+  return {
+    leidoEn: '2026-11-27T12:00:00.000Z',
+    iva: 0.16,
+    cobertura: {
+      totalCent: total,
+      genericoCent: generico,
+      identificableCent: total - generico,
+      sinCodigoCent: 0,
+      sinEnlaceCent: total - generico - importe,
+      conRecetaCent: importe,
+      sobreTotal: importe / total,
+      sobreIdentificable: importe / (total - generico),
+    },
+    completo: {
+      lineas: Math.round(venta / 8000),
+      importeCent: importe,
+      ventaSinIvaCent: venta,
+      costoCent: Math.round(venta * (1 - pct)),
+      margenCent: Math.round(venta * pct),
+      margenPct: pct,
+    },
+    parcial: vacioParcial(),
+  };
+}
+function costeoSintetico(pedido: string | null): CosteoCiudadRpc {
+  const meses = ['2026-10-01', '2026-09-01'];
+  const mes = pedido ? `${pedido}-01` : meses[0];
+  return {
+    mes,
+    meses,
+    // Chapu 67 todavía sin calcular: el aviso de «sin costeo» también se ve.
+    sucursales: sucursalesConfiguradas
+      .filter((c) => c.companyId !== 515)
+      .map((c, i) => {
+        const venta = 30_000_000 + ((c.companyId * 7919) % 45) * 1_000_000;
+        const pct = 0.52 + ((c.companyId * 31) % 20) / 100;
+        return {
+          company_id: c.companyId,
+          calculado_en: '2026-11-27T13:00:00Z',
+          costos_leidos_en: '2026-11-27T12:00:00Z',
+          completa: i !== 3,
+          resumen: {
+            todos: resumenSintetico(venta, pct, 0.9),
+            mostrador: resumenSintetico(Math.round(venta * 0.55), pct + 0.02, 0.92),
+            app: resumenSintetico(Math.round(venta * 0.2), pct + 0.01, 0.9),
+            rappi: resumenSintetico(Math.round(venta * 0.25), pct - 0.06, 0.86),
+          },
+          productos: PRODUCTOS_COSTEO.map(([nombre, precio, margen], k) => {
+            const lineas = 40 + ((c.companyId + k * 37) % 400);
+            const v = Math.round((lineas * precio) / 1.16);
+            return {
+              clave: `codigo:${k}`,
+              codigo: String(k),
+              nombre,
+              sinCodigo: false,
+              importeCent: lineas * precio,
+              lineas,
+              costeo: {
+                recetaId: String(k),
+                receta: nombre,
+                completo: {
+                  lineas,
+                  importeCent: lineas * precio,
+                  ventaSinIvaCent: v,
+                  costoCent: Math.round(v * (1 - margen)),
+                  margenCent: Math.round(v * margen),
+                },
+                parcial: vacioParcial(),
+              },
+            };
+          }),
+        };
+      }),
+  };
+}
+
+export function VistaTableroGuadalajara() {
+  return (
+    <Marco
+      perfil={{ nombre: 'Usuario Prueba', rol: 'admin' }}
+      seccion="sucursales"
+      visibles={['costeo', 'crm', 'sucursales']}
+    >
+      <div className="vitrina space-y-7">
+        <p className="aviso">
+          PRUEBA VISUAL · DATOS SINTÉTICOS · Sin Auth, sin token y sin conexión a la API
+        </p>
+        <Encabezado
+          area="Sucursales"
+          titulo="Tablero Guadalajara"
+          descripcion={`La venta (se actualiza cada 10 minutos), el costeo y el consumo por mes y el nivel de servicio en Rappi de las ${sucursalesConfiguradas.length} sucursales de Guadalajara.`}
+        />
+        <VistasMexico
+          vistaInicial={
+            (['costeo', 'consumo', 'servicio'] as const).find((v) => v === parametros.get('vista')) ?? 'ventas'
+          }
+          ciudad={{ clave: 'guadalajara', nombre: 'Guadalajara' }}
+          puedeCostear={parametros.get('sin-costeo') !== '1'}
+          // Como un usuario con solo dos de ellas asignadas: solo Namóra y Essentia abren su página.
+          asignadas={[513, 514]}
+        />
+      </div>
+    </Marco>
+  );
+}
 
 export function VistaTableroMexico() {
   return (
