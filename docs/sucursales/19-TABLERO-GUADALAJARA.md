@@ -106,9 +106,59 @@ calle sin número ubicable; «colonia» es la zona del código postal.
 **Por confirmar:** los puntos de Ventura y Aleden. Basta la ubicación en Google Maps de cada una para corregir su línea
 en `lib/sucursales/config.ts`.
 
-## Accesos (producción)
+## Aplicado en producción (2026-11-27)
 
-Pendiente de aplicar después del merge. Aquí van el estado previo y el posterior.
+- **PR #229** mergeado (bdbacff) y desplegado en Vercel.
+- **Migración 099** aplicada a mano y registrada en `schema_migrations` (`scripts/sucursales/aplicar-99.ts`):
+  - antes, ensayo con ROLLBACK sin errores;
+  - las 7 funciones que reemplaza eran idénticas en prod y en el repo;
+  - resultado: 11 filas en `sucursales_ciudades` y 8 funciones `sucursales_ciudad_*`.
+- **Costeo de octubre** de las 11:
+  `consumo-mes.ts --mes 2026-10 --companias <las 11> --solo-costeo`, 124 s, las 11 completas.
+  - Margen teórico de 66.0 % (Legacy) a 70.7 % (Gran Plaza); 68.6 % la ciudad.
+  - Cobertura de receta del 99–100 %.
+
+### Accesos de Dione y Claudia
+
+Con `scripts/sucursales/accesos-gdl.ts`. Identifica a cada una por su perfil, su rol y su correo: hay perfiles de
+franquiciado con nombres parecidos («Dione Acuña Velarde», «Claudia Villegas») que no se tocaron. El doc 18 tenía los
+correos al revés: Dione es dacuna@ y Claudia es clarios@.
+
+| | Antes (21:14 UTC) | Después |
+| --- | --- | --- |
+| `perfiles.rol` | `sucursales` | `operaciones` |
+| `perfil_modulos` | sucursales y sucursales_costeo (desarrollador) | sin cambio |
+| `perfil_sucursales` | 84 (todas) | 11: 384, 457, 459, 477, 513, 514, 515, 518, 532, 567, 631 |
+
+El estado previo completo (user_id y las 84 sucursales) quedó en un respaldo JSON local. La bitácora registra cada
+cambio.
+
+**Para revertir:**
+1. Volver a insertar las 73 sucursales que se quitaron: el `insert` de la vista nacional del doc 15 con sus dos
+   `user_id`.
+2. `update perfiles set rol = 'sucursales'` para las dos.
+
+**Verificación en prod** (con la sesión de cada una, en transacción con rollback):
+
+| Comprobación | Dione | Claudia |
+| --- | --- | --- |
+| `sucursales_acceso(532)` (GDL) | sí | sí |
+| `sucursales_acceso(612)` (Juárez) | no | no |
+| Sus sucursales | 11 | 11 |
+| `sucursales_puede_costeo(514)` | sí | sí |
+| Tablero de ciudad | 11 | 11 |
+| `tiene_rol('operaciones')` | sí | sí |
+| `tiene_rol('finanzas', 'admin')` (precios) | no | no |
+
+### Cuadre del tablero (G7)
+
+Total de la ciudad contra la suma sucursal por sucursal, en prod y por origen:
+
+| Periodo | Ciudad | Suma de las 11 |
+| --- | --- | --- |
+| Hoy, 27 nov (corte de la tarde) | 375 pedidos · $56,273.20 | igual por origen |
+| 25 nov (día cerrado) | 723 pedidos · $106,757.48 | igual por origen |
+| 17 al 23 nov (77 días = 11 × 7) | 4,964 pedidos · $727,216.05 | igual |
 
 ## Verificación
 
@@ -130,5 +180,8 @@ Pendiente de aplicar después del merge. Aquí van el estado previo y el posteri
 ## Pendientes
 
 - Confirmar los puntos de Ventura y Aleden.
-- Costeo de noviembre: correr `consumo-mes.ts --mes 2026-11 --costeo` a partir del 1 de diciembre (u octubre ya, con
-  `--solo-costeo`).
+- Costeo de noviembre: a partir del 1 de diciembre, correr `consumo-mes.ts --mes 2026-11 --costeo`. Para todo el país
+  calcula también el consumo; para solo las 11 de GDL, usar `--companias` y `--solo-costeo`.
+- Comprobar en el portal, con la sesión de Dione o Claudia, que el Directorio muestra las 11 y que Costeo deja editar
+  una receta.
+- El encargo 2 (Panel de admins) parte del modelo de permisos de este cierre: Costeo sigue siendo un rol por persona.
