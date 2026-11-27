@@ -230,4 +230,41 @@ describe('bi_tendencias', () => {
     const o = await tendencias(otro, { ...base, hoy: '2026-10-31' });
     expect(o.por_mes).toEqual([{ anio: 2026, mes: 10, venta_cent: 99900 }]);
   });
+
+  // Migración 95: la venta de cada carga queda en bi_cargas para no recorrer bi_lineas completa.
+  it('bi_guardar_dia deja en bi_cargas la venta neta del día', async () => {
+    const venta = async (fuente: string, c: number, f: string) =>
+      (await db.query<{ v: string }>('select venta_neto_cent::text v from bi_cargas where fuente=$1 and company_id=$2 and fecha=$3',
+        [fuente, c, f])).rows[0].v;
+    expect(await venta('pos', 513, '2026-10-05')).toBe(String(8000 + 5000 + 8000 + 9000));
+    expect(await venta('zoho_rappi', 384, '2026-10-05')).toBe('4000');
+    await guardar('pos', 384, '2026-10-07', [L('N', 1, { importe_cent: 7000, importe_neto_cent: 6500 })]);
+    expect(await venta('pos', 384, '2026-10-07')).toBe('6500');
+    await guardar('pos', 384, '2026-10-07', [L('N', 1, { importe_cent: 2000 })]);
+    expect(await venta('pos', 384, '2026-10-07')).toBe('2000');
+    await servicio(`delete from bi_lineas where company_id = 384 and fecha = '2026-10-07'`);
+    await servicio(`delete from bi_cargas where company_id = 384 and fecha = '2026-10-07'`);
+  });
+
+  it('sin filtros por línea suma bi_cargas (con el filtro de días); con filtros por línea, bi_lineas', async () => {
+    // Se altera solo bi_cargas: si Tendencias la usa, se nota en el total.
+    await db.query(`update bi_cargas set venta_neto_cent = venta_neto_cent + 1 where fuente='pos' and company_id=513 and fecha='2026-10-06'`);
+    try {
+      const r = await tendencias(u, { ...base, hoy: '2026-10-31' });
+      expect(r.por_mes).toEqual([
+        { anio: 2026, mes: 9, venta_cent: 3000 },
+        { anio: 2026, mes: 10, venta_cent: 49001 },
+      ]);
+      // Día de la semana: lunes 5-oct (1) sí; martes 6-oct no.
+      const lunes = await tendencias(u, { ...base, dias: [1], hoy: '2026-10-31' });
+      expect(lunes.por_mes).toEqual([{ anio: 2026, mes: 10, venta_cent: 41000 }]);
+      const hora = await tendencias(u, { ...base, horas: [9], hoy: '2026-10-31' });
+      expect(hora.por_mes).toEqual([
+        { anio: 2026, mes: 9, venta_cent: 3000 },
+        { anio: 2026, mes: 10, venta_cent: 8000 + 5000 + 9000 + 7000 + 4000 + 8000 },
+      ]);
+    } finally {
+      await db.query(`update bi_cargas set venta_neto_cent = venta_neto_cent - 1 where fuente='pos' and company_id=513 and fecha='2026-10-06'`);
+    }
+  });
 });

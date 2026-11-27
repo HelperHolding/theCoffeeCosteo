@@ -9,14 +9,16 @@ export const runtime = 'nodejs';
 
 /**
  * Tendencias del BI: la RPC ignora las fechas, así que no se valida el periodo. Las semanas se quitan de los
- * filtros; las opciones se leen con el año en curso solo para saber qué tiendas tiene con acceso.
+ * filtros. Las opciones se leen solo para saber qué tiendas tiene con acceso, y esas no dependen del periodo: se piden
+ * con el día de hoy. Con el año en curso, bi_opciones recorría todas las líneas del año (productos, pagos, semanas) y
+ * tardaba de 4 a 20 s, más que el límite de 8 s de la base para un usuario (medido el 2026-11-24).
  */
 export async function GET(req: Request) {
   const a = await accesoBi();
   if (!a.ok) return json({ error: a.mensaje }, a.status);
   const hoy = hoyMexico(new Date());
   const f = leerUrl(new URL(req.url).searchParams);
-  const o = await a.db.rpc('bi_opciones', { p: { desde: `${hoy.slice(0, 4)}-01-01`, hasta: hoy } });
+  const o = await a.db.rpc('bi_opciones', { p: { desde: hoy, hasta: hoy } });
   if (o.error || !o.data) {
     console.error('[bi] opciones', o.error);
     return json({ error: 'No se pudo leer el tablero.' }, 503);
