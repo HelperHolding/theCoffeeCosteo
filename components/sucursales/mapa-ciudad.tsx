@@ -95,6 +95,8 @@ export function MapaCiudad({
     // Los grandes primero: los chicos quedan encima y se pueden señalar.
     .sort((a, b) => b.radio - a.radio);
   const sel = conXY.find((p) => p.companyId === activo) ?? null;
+  // Separación del tooltip en píxeles de pantalla: el radio del punto escalado como se dibuja.
+  const separa = sel ? sel.radio * k * (ancho > 0 ? ancho / t.ancho : 1) + 10 : 0;
   return (
     <figure ref={ref} className="relative">
       <svg
@@ -163,7 +165,7 @@ export function MapaCiudad({
                 stroke={esta ? 'var(--color-ink)' : 'var(--color-surface)'}
                 strokeWidth={(esta ? 2.5 : 2) * k}
                 strokeDasharray={p.vacio ? '3 2' : undefined}
-                className={cn(p.vacio && 'stroke-ink/40')}
+                className={cn(p.vacio && !esta && 'stroke-ink/40')}
               />
               <text
                 x={p.x}
@@ -188,8 +190,8 @@ export function MapaCiudad({
             left: `clamp(0px, calc(${(sel.x / t.ancho) * 100}% - 7rem), calc(100% - 14rem))`,
             // En la mitad de abajo se abre hacia arriba, para no salirse del mapa.
             ...(sel.y / t.alto > 0.5
-              ? { bottom: `calc(${(1 - sel.y / t.alto) * 100}% + ${sel.radio + 10}px)` }
-              : { top: `calc(${(sel.y / t.alto) * 100}% + ${sel.radio + 10}px)` }),
+              ? { bottom: `calc(${(1 - sel.y / t.alto) * 100}% + ${separa}px)` }
+              : { top: `calc(${(sel.y / t.alto) * 100}% + ${separa}px)` }),
           }}
         >
           <span className="block font-semibold text-ink">

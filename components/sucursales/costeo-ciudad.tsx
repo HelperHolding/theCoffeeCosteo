@@ -233,7 +233,7 @@ function ListaProductos({
         <thead>
           <tr className="text-xs text-muted-foreground">
             <th className="py-1.5 text-left font-medium">Producto</th>
-            {conVenta && <th className="py-1.5 text-right font-medium">Venta</th>}
+            {conVenta && <th className="py-1.5 text-right font-medium">Venta con costeo</th>}
             <th className="py-1.5 text-right font-medium">Vendidos</th>
             <th className="py-1.5 text-right font-medium">Sucursales</th>
             <th className="py-1.5 text-right font-medium">Margen</th>
@@ -243,7 +243,9 @@ function ListaProductos({
           {filas.map((p) => (
             <tr key={p.clave}>
               <td className="py-1.5 pr-3 font-medium">{p.nombre}</td>
-              {conVenta && <td className="py-1.5 text-right tabular">{dinero(p.importeCent, MXN, false)}</td>}
+              {conVenta && (
+                <td className="py-1.5 text-right tabular">{dinero(p.completo.importeCent, MXN, false)}</td>
+              )}
               <td className="py-1.5 text-right tabular">{numero(p.lineas)}</td>
               <td className="py-1.5 text-right tabular">{p.sucursales}</td>
               <td className="py-1.5 text-right font-semibold tabular">

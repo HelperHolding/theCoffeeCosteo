@@ -51,6 +51,7 @@ import { ErrorCarga, Esqueleto } from './estados';
 import { EnlaceSucursal } from './enlace-sucursal';
 import { MapaCiudadTablero } from './mapa-ciudad';
 import type { CiudadTablero } from '@/lib/sucursales/alcance';
+import { configDe } from '@/lib/sucursales/config';
 import { diaMes, dinero, hace, numero, porcentaje } from './formato';
 import { NOTA_LINEAS } from './en-vivo';
 import { useLectura } from './use-lectura';
@@ -633,6 +634,7 @@ function Cuerpo({
               <Vacio titulo={v.modo === 'vivo' ? 'Sin ventas hoy todavía' : `Sin ventas ${m.cuando}`} />
             ) : (
               <Podio
+                enCiudad={!!ciudad}
                 filas={v.top}
                 titulo={
                   v.modo === 'vivo' ? 'Las 5 que más venden hoy' : `Las 5 que más vendieron ${m.cuando}`
@@ -805,7 +807,16 @@ function Numero({
 type Calculo = ReturnType<typeof calcular>;
 
 /** Las 5 sucursales que más venden: rango, nombre, barra por origen a la misma escala, venta y cambio. */
-function Podio({ filas, titulo }: { filas: Calculo['top']; titulo: string }) {
+function Podio({
+  filas,
+  titulo,
+  enCiudad = false,
+}: {
+  filas: Calculo['top'];
+  titulo: string;
+  /** Tablero de ciudad: en lugar de la ciudad (la misma en todas), la colonia de la sucursal. */
+  enCiudad?: boolean;
+}) {
   const max = Math.max(1, ...filas.map((f) => f.venta));
   return (
     <section aria-labelledby="mx-top">
@@ -834,7 +845,8 @@ function Podio({ filas, titulo }: { filas: Calculo['top']; titulo: string }) {
                 {s.nombre}
               </EnlaceSucursal>
               <span className="block truncate text-xs text-muted-foreground tabular">
-                {s.ciudad} · {numero(s.pedidos)} pedidos · ticket{' '}
+                {enCiudad ? (configDe(s.companyId)?.ubicacion ?? s.ciudad) : s.ciudad} · {numero(s.pedidos)}{' '}
+                pedidos · ticket{' '}
                 {s.pedidos ? dinero(Math.round(s.venta / s.pedidos), MXN, false) : '—'}
               </span>
             </span>
