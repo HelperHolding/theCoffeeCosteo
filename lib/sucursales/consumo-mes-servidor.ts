@@ -4,6 +4,9 @@ import type { ConfigSucursal } from './config';
 import type { DatosConsumo } from './consumo';
 import { consumoMesSucursal, leerMes, mesCerrado, rappiPorDias, type FilaConsumoMes } from './consumo-mes';
 import { datosConsumoDeRpc, type ConsumoRpc } from './consumo-servidor';
+import type { DatosCosteo } from './costeo';
+import { costeoMesSucursal, type FilaCosteoMes } from './costeo-mes';
+import { datosCosteoDeRpc, type CosteoRpc } from './costeo-servidor';
 import { conRappi, type FuenteRappi, type LecturaNormal } from './datos';
 import type { CatalogoNombres } from './metricas';
 
@@ -16,6 +19,8 @@ export interface DependenciasMes {
   leer: (cfg: ConfigSucursal, desde: string, hasta: string) => Promise<LecturaNormal>;
   rappi: (cfg: ConfigSucursal) => FuenteRappi | undefined;
   guardar: (f: FilaConsumoMes) => Promise<number>;
+  /** Costeo del mes (docs/sucursales/19), con la misma lectura. Solo si se pasan `costeo` y esta función. */
+  guardarCosteo?: (f: FilaCosteoMes) => Promise<void>;
   avance?: (texto: string) => void;
 }
 export interface ResultadoMes {
@@ -30,6 +35,8 @@ export async function calcularMes(a: {
   mes: string;
   sucursales: ConfigSucursal[];
   datos: DatosConsumo;
+  /** Costos actuales de Costeo: con ellos (y deps.guardarCosteo) también se guarda el costeo del mes. */
+  costeo?: DatosCosteo;
   catalogo?: CatalogoNombres;
   deps: DependenciasMes;
 }): Promise<ResultadoMes> {
@@ -56,6 +63,16 @@ export async function calcularMes(a: {
         piloto: !!cfg.rappiPortal,
       });
       const n = await a.deps.guardar(fila);
+      if (a.costeo && a.deps.guardarCosteo)
+        await a.deps.guardarCosteo(
+          costeoMesSucursal({
+            mes: a.mes,
+            companyId: cfg.companyId,
+            lectura: l,
+            datos: a.costeo,
+            catalogo: a.catalogo,
+          }),
+        );
       r.guardadas++;
       if (!fila.completa) r.incompletas.push(cfg.companyId);
       a.deps.avance?.(
@@ -93,5 +110,29 @@ export function guardarServicio(db: SupabaseClient): DependenciasMes['guardar'] 
     });
     if (r.error) throw new Error(`No se pudo guardar ${f.companyId}: ${r.error.message}`);
     return Number(r.data);
+  };
+}
+
+/** Costos actuales de Costeo por la función interna (solo service_role, migración 99), para el costeo del mes. */
+export async function costeoServicio(db: SupabaseClient): Promise<DatosCosteo | null> {
+  const r = await db.rpc('sucursales_datos_costeo_datos');
+  if (r.error || !r.data) return null;
+  const d = datosCosteoDeRpc(r.data as unknown as CosteoRpc, new Date().toISOString());
+  return Number.isFinite(d.iva) ? d : null;
+}
+
+export function guardarCosteoServicio(db: SupabaseClient): NonNullable<DependenciasMes['guardarCosteo']> {
+  return async (f) => {
+    const r = await db.rpc('sucursales_guardar_costeo_mes', {
+      p_mes: f.mes,
+      p_company: f.companyId,
+      p: {
+        costos_leidos_en: f.costosLeidosEn,
+        completa: f.completa,
+        resumen: f.resumen,
+        productos: f.productos,
+      },
+    });
+    if (r.error) throw new Error(`No se pudo guardar el costeo de ${f.companyId}: ${r.error.message}`);
   };
 }

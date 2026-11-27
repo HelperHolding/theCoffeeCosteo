@@ -1,5 +1,5 @@
 import { accesoSucursales } from '@/lib/supabase/sesion';
-import { sucursalesAccesibles } from '@/lib/sucursales/acceso';
+import { alcanceDe, rpcDelAlcance, vacioDe } from '@/lib/sucursales/alcance';
 import { SEMANAS_PERMITIDAS, hoyLocal } from '@/lib/sucursales/datos';
 import { diaLunes } from '@/lib/sucursales/metricas';
 import { armarHoy, armarPeriodo, armarRango, type RpcHoy, type RpcPeriodo } from '@/lib/sucursales/resumen';
@@ -14,13 +14,16 @@ export const runtime = 'nodejs';
  * Tablero de México (docs/sucursales/16): solo lee los totales que guarda el corte, de las sucursales asignadas Y
  * configuradas del usuario (sucursales_acceso en la base, además del filtro aquí). Nunca lee pedidos.
  * Sin fechas es hoy en vivo; con `dia` es un día cerrado y con `desde` y `hasta`, un rango de días cerrados.
+ * Con `ciudad` es el tablero de esa ciudad (docs/sucursales/19): todas sus sucursales, para quien tiene el módulo.
  */
 export async function GET(req: Request) {
   const a = await accesoSucursales();
   if (!a.ok) return json({ error: a.mensaje }, a.status);
-  const sucursales = sucursalesAccesibles(a.companias);
-  if (!sucursales.length) return json({ error: 'Sin sucursales asignadas.' }, 404);
   const q = new URL(req.url).searchParams;
+  const alcance = alcanceDe(q, a.companias);
+  if ('error' in alcance) return json({ error: alcance.error }, alcance.status);
+  const sucursales = alcance.sucursales;
+  if (!sucursales.length) return json({ error: vacioDe(alcance) }, 404);
   const semanas = Number(q.get('semanas') ?? '8');
   if (!(SEMANAS_PERMITIDAS as readonly number[]).includes(semanas))
     return json({ error: 'Semanas: 4, 8 o 12.' }, 400);
@@ -43,11 +46,15 @@ export async function GET(req: Request) {
   const desde = sumarDias(lunes, -7 * semanas);
   const companias = sucursales.map((s) => s.companyId);
   const periodo = (d: string, h: string) =>
-    a.db.rpc('sucursales_tablero_periodo', { p_companias: companias, p_desde: d, p_hasta: h });
+    rpcDelAlcance(a.db, alcance, 'sucursales_tablero_periodo', {
+      p_companias: companias,
+      p_desde: d,
+      p_hasta: h,
+    });
   const [h, p, r, rp] = await Promise.all([
     consulta.modo === 'rango'
       ? null
-      : a.db.rpc('sucursales_tablero_hoy', {
+      : rpcDelAlcance(a.db, alcance, 'sucursales_tablero_hoy', {
           p_companias: companias,
           p_hoys: consulta.modo === 'dia' ? companias.map(() => consulta.dia) : hoys,
         }),
