@@ -21,7 +21,7 @@ export const rpcAusente = (e: { code?: string } | null) => e?.code === 'PGRST202
 export type LecturaCosteo =
   { estado: 'ok'; datos: DatosCosteo } | { estado: 'sin-permiso' } | { estado: 'error' };
 
-interface CosteoRpc {
+export interface CosteoRpc {
   iva: number | string;
   enlaces: { codigo: string; receta_id: string; receta: string }[];
   costos: { receta_id: string; tamano: string; costo: number | string; usa_inactivo: boolean }[];
@@ -73,6 +73,33 @@ export async function puedeCostear(db: Db, companyId: number, perfil: { rol: str
   }
 }
 
+/** Respuesta de sucursales_datos_costeo (o de su base, solo service_role) → DatosCosteo. */
+export function datosCosteoDeRpc(d: CosteoRpc, leidoEn: string): DatosCosteo {
+  return {
+    leidoEn,
+    iva: Number(d.iva),
+    enlaces: new Map(d.enlaces.map((e) => [e.codigo, { recetaId: e.receta_id, receta: e.receta }])),
+    costos: new Map(
+      d.costos.map((c) => [
+        claveCosto(c.receta_id, c.tamano),
+        { costoCent: centavos(Number(c.costo)), usaInactivo: !!c.usa_inactivo },
+      ]),
+    ),
+    unicas: new Set(d.unicas),
+    ...(d.lineas ? { lineas: agruparLineas(d.lineas) } : {}),
+    ...(d.sustitutos
+      ? {
+          sustitutos: new Map(
+            d.sustitutos.map((s) => [
+              s.insumo,
+              { costoUnitario: Number(s.costo_unitario), activo: !!s.activo },
+            ]),
+          ),
+        }
+      : {}),
+  };
+}
+
 /** Enlaces, costos actuales y tamaños de Costeo de una sucursal. Falla cerrado. */
 export async function leerDatosCosteo(
   db: Db,
@@ -84,30 +111,7 @@ export async function leerDatosCosteo(
     const r = await db.rpc('sucursales_datos_costeo', { p_company: companyId });
     if (!r.error) {
       if (!r.data) return { estado: 'sin-permiso' };
-      const d = r.data as unknown as CosteoRpc;
-      const datos: DatosCosteo = {
-        leidoEn: ahora().toISOString(),
-        iva: Number(d.iva),
-        enlaces: new Map(d.enlaces.map((e) => [e.codigo, { recetaId: e.receta_id, receta: e.receta }])),
-        costos: new Map(
-          d.costos.map((c) => [
-            claveCosto(c.receta_id, c.tamano),
-            { costoCent: centavos(Number(c.costo)), usaInactivo: !!c.usa_inactivo },
-          ]),
-        ),
-        unicas: new Set(d.unicas),
-        ...(d.lineas ? { lineas: agruparLineas(d.lineas) } : {}),
-        ...(d.sustitutos
-          ? {
-              sustitutos: new Map(
-                d.sustitutos.map((s) => [
-                  s.insumo,
-                  { costoUnitario: Number(s.costo_unitario), activo: !!s.activo },
-                ]),
-              ),
-            }
-          : {}),
-      };
+      const datos = datosCosteoDeRpc(r.data as unknown as CosteoRpc, ahora().toISOString());
       return Number.isFinite(datos.iva) ? { estado: 'ok', datos } : { estado: 'error' };
     }
     if (!rpcAusente(r.error)) return { estado: 'error' };

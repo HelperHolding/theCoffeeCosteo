@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Clock3, Gauge, Info, ListChecks, TriangleAlert } from 'lucide-react';
 import { cn } from 'cn';
 import type { CanalServicio } from '@/lib/sucursales/servicio';
@@ -19,6 +18,8 @@ import { ErrorCarga, Esqueleto } from './estados';
 import { AZUL } from './colores';
 import { fechaCorta, hace, horaDe, numero, porcentaje } from './formato';
 import { useLectura } from './use-lectura';
+import { EnlaceSucursal } from './enlace-sucursal';
+import { conCiudad, useCiudadTablero } from './ciudad-tablero';
 
 /**
  * Menú/Carta de Rappi (docs/rappi-portal/09): qué productos y toppings tiene apagados cada tienda, desde cuándo y qué hay
@@ -305,12 +306,13 @@ function ListaRevisar({
                   {conSucursal && (
                     <td className="px-3 py-2.5 align-top">
                       {x.companyId ? (
-                        <Link
+                        <EnlaceSucursal
+                          companyId={x.companyId}
                           href={`/sucursales/${x.companyId}?seccion=servicio&apartado=menu`}
                           className="font-medium hover:underline"
                         >
                           {x.sucursal}
-                        </Link>
+                        </EnlaceSucursal>
                       ) : (
                         x.sucursal
                       )}
@@ -507,7 +509,8 @@ function CambiosRecientes({ d }: { d: RespuestaMenu }) {
 
 // ── Tablero de México ────────────────────────────────────────────────────────────────────────────────────────────
 export function MenuRappiNacional() {
-  const { datos, error, recargar } = useLectura<RespuestaMenuNacional>('/api/sucursales/menu-nacional', {
+  const ciudad = useCiudadTablero();
+  const { datos, error, recargar } = useLectura<RespuestaMenuNacional>(conCiudad('/api/sucursales/menu-nacional', ciudad), {
     intervaloMs: RELEER_MS,
   });
   if (!datos) return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={3} />;
@@ -583,12 +586,13 @@ function TopSucursales({ d }: { d: RespuestaMenuNacional }) {
               >
                 <span className="font-display text-lg font-black tabular text-ink-2">{i + 1}</span>
                 <span className="min-w-0">
-                  <Link
+                  <EnlaceSucursal
+                    companyId={s.companyId}
                     href={`/sucursales/${s.companyId}?seccion=servicio&apartado=menu`}
                     className="block truncate font-semibold hover:underline"
                   >
                     {s.nombre}
-                  </Link>
+                  </EnlaceSucursal>
                   <span className="block truncate text-xs text-muted-foreground">
                     {s.ciudad}
                     {s.conteo.toppingsApagados ? ` · ${numero(s.conteo.toppingsApagados)} toppings` : ''}

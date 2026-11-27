@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   Tags,
   LayoutGrid,
+  Landmark,
   MapPinned,
   Store,
   UsersRound,
@@ -174,6 +175,8 @@ const gruposSucursales: Grupo[] = [
     enlaces: [
       { href: '/sucursales', nombre: 'Directorio', icono: LayoutGrid, exacto: true },
       { href: '/sucursales/mexico', nombre: 'Tablero México', icono: MapPinned },
+      // Tablero de ciudad (docs/sucursales/19): lo ve todo usuario con el módulo Sucursales.
+      { href: '/sucursales/guadalajara', nombre: 'Tablero Guadalajara', icono: Landmark },
     ],
   },
 ];

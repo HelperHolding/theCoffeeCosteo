@@ -2,7 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { leerEnvLocal } from '../zoho/cliente';
 import { sucursalesConfiguradas } from '../../lib/sucursales/config';
 import { elegirSucursales, leerMes, mesCerrado } from '../../lib/sucursales/consumo-mes';
-import { calcularMes, guardarServicio, recetasServicio } from '../../lib/sucursales/consumo-mes-servidor';
+import {
+  calcularMes,
+  costeoServicio,
+  guardarCosteoServicio,
+  guardarServicio,
+  recetasServicio,
+} from '../../lib/sucursales/consumo-mes-servidor';
 import { catalogoServicio, rappiServicio } from '../../lib/sucursales/corte-servidor';
 import { leerDias } from '../../lib/sucursales/datos';
 
@@ -12,9 +18,15 @@ import { leerDias } from '../../lib/sucursales/datos';
  * NEXT_PUBLIC_SUPABASE_URL con SUPABASE_SECRET_KEY de .env.local: solo con OK.
  *
  *   npx.cmd tsx --conditions=react-server scripts/sucursales/consumo-mes.ts --mes 2026-10 [--companias 513,384]
+ *     [--costeo | --solo-costeo]
+ *
+ * --costeo también guarda el costeo del mes (docs/sucursales/19, migración 99) con la misma lectura y los costos de hoy.
+ * --solo-costeo guarda solo el costeo y deja el consumo de ese mes como estaba.
  */
 const args = process.argv.slice(2);
 const opcion = (n: string) => (args.includes(n) ? args[args.indexOf(n) + 1] : undefined);
+const soloCosteo = args.includes('--solo-costeo');
+const conCosteo = soloCosteo || args.includes('--costeo');
 const m = leerMes(opcion('--mes') ?? '');
 if (!m) throw new Error('Falta --mes AAAA-MM');
 const ids = (opcion('--companias') ?? '').split(',').filter(Boolean).map(Number);
@@ -32,12 +44,21 @@ if (!datos) throw new Error('No se pudieron leer las recetas (¿la migración 38
 // Sin catálogo POS las cantidades guardadas saldrían menores (productos sin código): mejor no calcular.
 const catalogo = await catalogoServicio(db);
 if (!catalogo) throw new Error('No se pudo leer el catálogo POS (producto_codigo_pos)');
+const costeo = conCosteo ? await costeoServicio(db) : undefined;
+if (conCosteo && !costeo) throw new Error('No se pudieron leer los costos (¿la migración 99 está aplicada?).');
 const r = await calcularMes({
   mes: m.mes,
   sucursales,
   datos,
+  costeo: costeo ?? undefined,
   catalogo,
-  deps: { leer: leerDias, rappi: (cfg) => rappiServicio(db, cfg), guardar: guardarServicio(db), avance: console.log },
+  deps: {
+    leer: leerDias,
+    rappi: (cfg) => rappiServicio(db, cfg),
+    guardar: soloCosteo ? async () => 0 : guardarServicio(db),
+    ...(conCosteo ? { guardarCosteo: guardarCosteoServicio(db) } : {}),
+    avance: console.log,
+  },
 });
 console.log(
   `\n${m.mes.slice(0, 7)}: ${r.guardadas} de ${sucursales.length} sucursales guardadas en ${Math.round(r.ms / 1000)} s.` +

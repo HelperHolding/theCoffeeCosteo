@@ -1,5 +1,6 @@
 import { sumarDias } from './tiempo';
 import type { RpcServicio } from './servicio';
+import { rpcDelAlcance, type Alcance } from './alcance';
 
 /**
  * Hasta qué día publicó Rappi el Nivel de servicio (docs/rappi-portal/08). Rappi procesa cada día con 1 a 2 días de
@@ -51,14 +52,15 @@ export async function leerPublicadoHasta(
   db: LectorRpc,
   companias: number[],
   hoy: string,
+  /** Tablero de ciudad (docs/sucursales/19): lee con la RPC de la ciudad. */
+  alcance?: Alcance,
 ): Promise<string | null> {
   if (!companias.length) return null;
   for (const atras of [6, 61]) {
-    const r = await db.rpc('sucursales_servicio_nacional', {
-      p_companias: companias,
-      p_desde: sumarDias(hoy, -atras),
-      p_hasta: hoy,
-    });
+    const args = { p_companias: companias, p_desde: sumarDias(hoy, -atras), p_hasta: hoy };
+    const r = await (alcance
+      ? rpcDelAlcance(db, alcance, 'sucursales_servicio_nacional', args)
+      : db.rpc('sucursales_servicio_nacional', args));
     if (r.error || !r.data) return null;
     const ultimo = ultimoDiaPublicado(
       ((r.data as { por_dia?: { fecha: string; pedidos: Num; finalizados: Num; disp_suma: Num }[] })

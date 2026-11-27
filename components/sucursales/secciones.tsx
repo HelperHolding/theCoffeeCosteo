@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Calculator, Gauge, Milk, ReceiptText, type LucideIcon } from 'lucide-react';
+import { Calculator, Gauge, Milk, ReceiptText } from 'lucide-react';
 import { cn } from 'cn';
 import type { SucursalInfo } from '@/lib/sucursales/contratos';
 import { etiquetaOrigen, filtrosOrigen, type FiltroOrigen } from '@/lib/sucursales/metricas';
@@ -9,9 +9,10 @@ import { SeccionCosteo } from './seccion-costeo';
 import { SeccionConsumo } from './consumo';
 import { SeccionServicio } from './nivel-servicio';
 import { guardarPeriodoEnUrl, type Periodo } from './periodo';
+import { BarraSecciones, type Seccion } from './barra-secciones';
 
 export type IdSeccion = 'ventas' | 'costeo' | 'consumo' | 'servicio';
-const SECCIONES: { id: IdSeccion; nombre: string; detalle: string; icono: LucideIcon }[] = [
+const SECCIONES: Seccion<IdSeccion>[] = [
   { id: 'ventas', nombre: 'Ventas', detalle: 'En vivo, tendencias, productos y pedidos', icono: ReceiptText },
   {
     id: 'costeo',
@@ -94,52 +95,12 @@ export function SeccionesSucursal({
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Secciones de la sucursal" className="rounded-2xl bg-ink p-1.5 shadow-card">
-        {/* En móvil, una fila compacta (icono sobre nombre); desde sm, con su descripción. */}
-        <ul className="grid auto-cols-fr grid-flow-col gap-1.5">
-          {visibles.map((s) => {
-            const activa = s.id === seccion;
-            const Icono = s.icono;
-            return (
-              <li key={s.id} className="min-w-0">
-                <button
-                  type="button"
-                  aria-current={activa ? 'page' : undefined}
-                  onClick={() => elegirSeccion(s.id)}
-                  className={cn(
-                    'flex h-full w-full flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-crema sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left',
-                    activa
-                      ? 'bg-crema text-ink shadow-card'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'grid size-9 shrink-0 place-items-center rounded-lg',
-                      activa ? 'bg-ink text-crema' : 'bg-white/10',
-                    )}
-                  >
-                    <Icono size={18} aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 max-w-full">
-                    <span className="block font-display text-sm font-bold leading-tight sm:text-base">
-                      {s.nombre}
-                    </span>
-                    <span
-                      className={cn(
-                        'hidden truncate text-xs sm:block',
-                        activa ? 'text-ink-2' : 'text-white/60',
-                      )}
-                    >
-                      {s.detalle}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <BarraSecciones
+        etiqueta="Secciones de la sucursal"
+        secciones={visibles}
+        activa={seccion}
+        alElegir={elegirSeccion}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-card">
         <div className="flex flex-wrap items-center gap-2 text-xs">

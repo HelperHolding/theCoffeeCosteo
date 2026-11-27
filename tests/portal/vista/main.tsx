@@ -10,7 +10,7 @@ import { VistaModulos } from './modulos';
 import { VistaExpediente, VistaTiendas } from './crm';
 import { VISTAS_CRM, VistaExpedienteUnificado, VistaPipeline } from './crm-unificado';
 import { VistaSucursales } from './sucursales';
-import { VistaTableroMexico } from './tablero-mexico';
+import { VistaTableroGuadalajara, VistaTableroMexico } from './tablero-mexico';
 import { VistaBi } from './bi';
 import { VistaFranquiciatarios } from './franquiciatarios';
 import { CalculadoraPromociones } from '../../../components/recetas/calculadora-promociones';
@@ -59,6 +59,8 @@ createRoot(document.getElementById('root')!).render(
     <VistaBi />
   ) : window.location.search.includes('tablero-mexico') ? (
     <VistaTableroMexico />
+  ) : window.location.search.includes('tablero-guadalajara') ? (
+    <VistaTableroGuadalajara />
   ) : window.location.search.includes('sucursales') ? (
     <VistaSucursales />
   ) : window.location.search.includes('chat') ? (

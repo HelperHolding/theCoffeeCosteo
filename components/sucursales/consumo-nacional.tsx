@@ -10,6 +10,8 @@ import { Segmentos } from '@/components/ui/segmentos';
 import { cn } from '@/lib/utils';
 import { ErrorCarga, Esqueleto } from './estados';
 import { useLectura } from './use-lectura';
+import { conCiudad, useCiudadTablero } from './ciudad-tablero';
+import { MapaConsumoCiudad } from './mapa-ciudad';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 export const nombreMes = (mes: string) => `${MESES[Number(mes.slice(5, 7)) - 1]} ${mes.slice(0, 4)}`;
@@ -32,11 +34,12 @@ const cantidadTexto = (x: number, unidad: string) => {
 
 /** Consumo nacional por mes (docs/sucursales/17): lee lo que guardó el script; el filtro de origen se aplica aquí. */
 export function ConsumoNacionalVista() {
+  const ciudad = useCiudadTablero();
   const [mes, setMes] = useState<string | null>(null);
   const [origen, setOrigen] = useState<FiltroOrigen>('todos');
   const [abierto, setAbierto] = useState<string | null>(null);
   const { datos, error, recargar } = useLectura<ConsumoNacional>(
-    `/api/sucursales/consumo-nacional${mes ? `?mes=${mes.slice(0, 7)}` : ''}`,
+    conCiudad(`/api/sucursales/consumo-nacional${mes ? `?mes=${mes.slice(0, 7)}` : ''}`, ciudad),
   );
   // Al cambiar de mes useLectura vacía los datos: la barra se sigue pintando con el último resultado bueno
   // para no perder el foco ni mover el diseño; solo el cuerpo muestra el esqueleto.
@@ -98,6 +101,7 @@ function CuerpoConsumo({
   abierto: string | null;
   setAbierto: (id: string | null) => void;
 }) {
+  const ciudad = useCiudadTablero();
   const mes = datos.mes!;
   const todas = v.categorias.flatMap((c) => c.filas);
   const comparable = datos.sucursalesAnterior > 0;
@@ -138,6 +142,8 @@ function CuerpoConsumo({
           solo con esas.
         </p>
       )}
+
+      {ciudad && <MapaConsumoCiudad ciudad={ciudad} datos={datos} filas={todas} origen={origen} />}
 
       <BotonExportar datos={datos} origen={origen} filas={todas} />
 
@@ -236,14 +242,15 @@ function FilaTabla({ fila: f, abierta, alAbrir }: { fila: FilaInsumo; abierta: b
 }
 
 function Desglose({ datos, fila, origen }: { datos: ConsumoNacional; fila: FilaInsumo; origen: FiltroOrigen }) {
+  const ciudad = useCiudadTablero();
   const { datos: d, error, recargar } = useLectura<DesgloseConsumo>(
-    `/api/sucursales/consumo-nacional/desglose?mes=${datos.mes!.slice(0, 7)}&insumo=${fila.insumoId}`,
+    conCiudad(`/api/sucursales/consumo-nacional/desglose?mes=${datos.mes!.slice(0, 7)}&insumo=${fila.insumoId}`, ciudad),
   );
   if (!d) return error ? <ErrorCarga error={error} alReintentar={recargar} /> : <Esqueleto filas={1} />;
   const r = armarDesglose(d.filas, fila.insumoId, origen, datos.sucursales);
   return (
     <section aria-label={`Desglose de ${fila.insumo}`} className="grid gap-4 bg-muted/40 p-3 sm:grid-cols-2">
-      <div>
+      <div className={ciudad ? 'hidden' : undefined}>
         <h4 className="text-xs font-semibold text-muted-foreground">Por ciudad</h4>
         <ul className="mt-1 space-y-1 text-sm">
           {r.ciudades.map((c) => (
@@ -270,13 +277,14 @@ function Desglose({ datos, fila, origen }: { datos: ConsumoNacional; fila: FilaI
 }
 
 function BotonExportar({ datos, origen, filas }: { datos: ConsumoNacional; origen: FiltroOrigen; filas: FilaInsumo[] }) {
+  const ciudad = useCiudadTablero();
   const [ocupado, setOcupado] = useState(false);
   const [fallo, setFallo] = useState(false);
   const exportar = async () => {
     setOcupado(true);
     setFallo(false);
     try {
-      const r = await fetch(`/api/sucursales/consumo-nacional/desglose?mes=${datos.mes!.slice(0, 7)}`);
+      const r = await fetch(conCiudad(`/api/sucursales/consumo-nacional/desglose?mes=${datos.mes!.slice(0, 7)}`, ciudad));
       if (!r.ok) throw new Error(String(r.status));
       const d = (await r.json()) as DesgloseConsumo;
       const h = hojasConsumo({ datos, origen, filas, desglose: d.filas });

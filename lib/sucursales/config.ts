@@ -35,7 +35,44 @@ export interface ConfigSucursal {
   alcance: string;
   /** TEMPORAL (pedido por Carlo, 2026-10-22): audio que suena en En vivo por cada pedido nuevo. */
   sonidoVenta?: string;
+  /** Ubicación en el mapa del Tablero de ciudad (docs/sucursales/19). */
+  coordenadas?: Coordenadas;
 }
+
+/**
+ * Punto de la sucursal en el mapa de su ciudad. `precision` dice de dónde salió: la tienda o su plaza en OpenStreetMap,
+ * su calle (la dirección del CRM sin número ubicable) o solo su colonia. Revisadas a mano contra la dirección del CRM
+ * (docs/sucursales/19); las de calle o colonia se corrigen aquí si alguien da el punto exacto.
+ */
+export interface Coordenadas {
+  lat: number;
+  lon: number;
+  precision: 'tienda' | 'plaza' | 'calle' | 'colonia';
+}
+const COORDENADAS: Record<number, Coordenadas> = {
+  // Córdoba 2740, Providencia (Jardines de Providencia).
+  532: { lat: 20.70238, lon: -103.38059, precision: 'calle' },
+  // Av. Central Guillermo González Camarena 500, C.P. 45116 Zapopan: la calle no está en OSM; zona de Puerta de Hierro.
+  384: { lat: 20.7095, lon: -103.42, precision: 'colonia' },
+  // Av. Universidad 1011, Zapopan: la avenida corre de Royal Country a San Juan de Ocotán; el número no está en OSM.
+  457: { lat: 20.7036, lon: -103.437, precision: 'calle' },
+  // Av. de los Empresarios 62, Puerta de Hierro (Puerta Plata).
+  459: { lat: 20.70825, lon: -103.41468, precision: 'calle' },
+  // Calzada Central 270, Ciudad Granja.
+  477: { lat: 20.67827, lon: -103.44659, precision: 'calle' },
+  // Av. Chapultepec Norte 67, al norte de Av. Vallarta.
+  515: { lat: 20.676, lon: -103.369, precision: 'calle' },
+  // Av. Circunvalación Jorge Álvarez del Castillo 1433, Country Club.
+  514: { lat: 20.6996, lon: -103.3725, precision: 'calle' },
+  // Calle Ottawa 1560, Providencia.
+  518: { lat: 20.69812, lon: -103.37747, precision: 'calle' },
+  // Av. Chapultepec Sur 29: la tienda está en OSM (con otro nombre) justo al sur de Av. Vallarta.
+  513: { lat: 20.67348, lon: -103.36842, precision: 'tienda' },
+  // Av. Vallarta 3959, La Gran Plaza.
+  567: { lat: 20.67362, lon: -103.40487, precision: 'plaza' },
+  // Blvd. Marcelino García Barragán 2077, Forum Tlaquepaque (municipio de Guadalajara, Prados del Nilo).
+  631: { lat: 20.64799, lon: -103.3207, precision: 'plaza' },
+};
 
 /** Rappi no llega por la API del POS: se lee del portal de Rappi (docs/rappi-portal) y se suma a las ventas. */
 const ALCANCE_POS_RAPPI_PORTAL =
@@ -114,7 +151,7 @@ const gdl = (
   alcance: ALCANCE_POS_RAPPI_PORTAL,
 });
 
-export const sucursalesConfiguradas: ConfigSucursal[] = [
+const configuradas: ConfigSucursal[] = [
   {
     companyId: 612,
     lookerStoreId: 477,
@@ -282,6 +319,10 @@ export const sucursalesConfiguradas: ConfigSucursal[] = [
   // Sin tienda en rappi_tiendas todavía: queda solo con el POS.
   delPos('Acapulco')(790, 698, 'Costera Acapulco', 'Magallanes'),
 ];
+
+export const sucursalesConfiguradas: ConfigSucursal[] = configuradas.map((c) =>
+  COORDENADAS[c.companyId] ? { ...c, coordenadas: COORDENADAS[c.companyId] } : c,
+);
 
 export const configDe = (companyId: number) =>
   sucursalesConfiguradas.find((s) => s.companyId === companyId) ?? null;
