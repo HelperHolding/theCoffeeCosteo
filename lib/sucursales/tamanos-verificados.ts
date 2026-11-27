@@ -63,6 +63,16 @@ export const TAMANOS_VERIFICADOS: Record<string, Partial<Record<'Regular' | 'Lar
   'c7ca994c-897c-45d7-a62f-a7ba2f66bbce': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
   // Matcha Vanilla Latte (7MVT)
   '3f7f8456-b0a4-49fd-be25-32c1f4b0e17c': { Regular: 'Chica', Large: 'Grande' }, // E1, doc 16
+  // Peppermint Mocha (alta 2026-11-17, docs/bi/04): el POS los vende en Regular $99 y Large $109 (+$10) y Rappi en
+  // tradicional/mediano y grande (+$12), como Mad Mocha (calientes 240/355 ml) y Matcha Iced Mint (fríos 440/600 ml).
+  // Peppermint Mocha Iced Latte (PEPMIALPP)
+  '3e5d0c52-63d5-4fee-825c-1923222e6908': { Regular: 'Chica', Large: 'Grande' },
+  // Peppermint Mocha Iced Matcha (PEPIMLAPP)
+  '6e3ce350-c788-45ac-a482-d84ca8c7b82c': { Regular: 'Chica', Large: 'Grande' },
+  // Peppermint Mocha Latte (PEPMOLAPP)
+  '4fa37a2c-e30b-4e0b-89bc-210faa97522c': { Regular: 'Chica', Large: 'Grande' },
+  // Peppermint Mocha Matcha Latte (PEPMMLAPP)
+  '7378c4b9-2dc9-460b-8f35-5d27a38be89f': { Regular: 'Chica', Large: 'Grande' },
   // Pumpkin Iced Latte (CPUMICAPP)
   '38847fe5-2d6f-4050-9fd7-aa94bb3d4024': { Regular: 'Chica', Large: 'Grande' }, // lote 3, doc 26
   // Pumpkin Latte (CPUMLAAPP)

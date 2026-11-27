@@ -173,6 +173,31 @@ describe('líneas de un producto de Rappi', () => {
     expect(lineasDe(producto('Cookie Matcha & White Chocolate', 70))[0].codigo).toBe('COOMATAPP');
   });
 
+  it('Peppermint Mocha (alta 2026-11-17): los 4 nombres de Rappi van al código del POS, con su vaso y su leche', () => {
+    const codigo = (nombre: string) => lineasDe(producto(nombre, 99))[0].codigo;
+    expect(codigo('Peppermint Mocha Latte')).toBe('PEPMOLAPP');
+    expect(codigo('Peppermint Mocha Iced Latte')).toBe('PEPMIALPP');
+    expect(codigo('Peppermint Mocha Matcha Latte')).toBe('PEPMMLAPP');
+    // En Rappi el Iced Matcha del POS se llama «Matcha Iced Latte».
+    expect(codigo('Peppermint Mocha Matcha Iced Latte')).toBe('PEPIMLAPP');
+    // Opciones tal como llegan en los pedidos reales (punto final y espacios dobles incluidos).
+    const [l] = lineasDe(
+      producto('Peppermint Mocha Iced Latte', 111, [
+        ['Elige el tamaño', 'Grande 590 ml.', 12],
+        ['Leche.', 'Deslactosada', 13],
+        ['Café', 'Double shot (36ml)'],
+      ]),
+    );
+    expect(nombres(l.customs)).toEqual(['Large - 600ml', 'Lactose free', 'Double shot (36ml)']);
+    expect(
+      nombres(
+        lineasDe(
+          producto('Peppermint Mocha Matcha Iced Latte', 99, [['Elige el tamaño', 'Mediano 440  ml']]),
+        )[0].customs,
+      ),
+    ).toEqual(['Regular - 440ml']);
+  });
+
   it('auditoría 2026-11-27: los nombres de Rappi del menú del POS quedan ligados a su código, con o sin texto en japonés', () => {
     const codigo = (nombre: string) => lineasDe(producto(nombre, 100))[0].codigo;
     expect(codigo('Croque Monsieur')).toBe('CROQMNAPP');
